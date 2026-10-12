@@ -370,14 +370,22 @@ export function startUI(E,app){
         <div class="stat"><div><b>${s.maxHp}</b><span>HP</span></div><div><b>${sg(s.atk)}</b><span>공격</span></div><div><b>${sg(s.eva)}</b><span>회피</span></div><div><b>${sg(s.spd)}</b><span>속도</span></div></div>
         <div class="chips">${b.deck.map(id=>`<span class="chip">${D.cards[id].n}</span>`).join('')}</div></div>
       ${b.relicPick?`<div class="panel stack" style="gap:8px"><span class="eyebrow">유물 적성 · 하나를 고른다</span><p class="small dim">적성은 가지고 있으나 온전히 다루기 어렵다.</p>${Object.entries(D.relics).map(([k,r])=>`<button class="btn${UI.relic===k?' primary':''}" data-a="relic" data-i="${k}"><b>${esc(r.n)}</b><span class="mono small" style="color:var(--gold)">${esc(r.e)}</span></button>`).join('')}</div>`:''}
-      ${vJobPick()}
+      ${vJobRoll()}${vJobPick()}
       <div class="stack"><button class="btn primary" data-a="live" ${b.relicPick&&!UI.relic?'disabled':''}>${b.relicPick&&!UI.relic?'유물을 먼저 고른다':'이 삶을 산다'}</button>
       <button class="btn quiet" data-a="reroll">다시 태어난다</button></div>${vSettings()}`;
   }
   /* 히든 직업: 이 브라우저에서 해금한 직업만 고를 수 있다 */
+  /* 해금한 사람이 평범하게 굴려 출신 1(발톱)·100(조율자)이 나오면 원래 출신과 히든 직업 중 고른다 */
+  function vJobRoll(){
+    const b=BC,u=loadUnlocks();if(UI.job&&!UI.jobAuto)return '';
+    const k=Object.keys(D.hiddenJobs).find(j=>u.includes(j)&&D.hiddenJobs[j].roll===(UI.jobAuto?D.hiddenJobs[UI.job].roll:b.r.o));if(!k)return '';
+    const J=D.hiddenJobs[k],base=UI.jobAuto?UI.jobBase:b.o.n;
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">출신 ${J.roll} · 히든 직업을 고를 수 있다</span>
+      <div class="row" style="gap:8px"><button class="btn${!UI.jobAuto?' primary':''}" style="flex:1" data-a="jobroll" data-i="">${esc(base)}</button><button class="btn${UI.jobAuto?' primary':''}" style="flex:1" data-a="jobroll" data-i="${k}">${esc(J.n)}</button></div></div>`;
+  }
   function vJobPick(){
     const u=loadUnlocks().filter(k=>D.hiddenJobs[k]);if(!u.length)return '';
-    const cur=UI.job&&u.includes(UI.job)?UI.job:null;
+    const cur=UI.job&&!UI.jobAuto&&u.includes(UI.job)?UI.job:null;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">히든 직업 · 해금됨</span>
       <p class="small dim">머리 소속으로 시작한다. 승급과 해결사 등록은 없고, 전용 의뢰가 찾아온다.</p>
       <button class="btn${!cur?' primary':''}" data-a="job" data-i="">평범하게 태어난다</button>
@@ -722,11 +730,12 @@ export function startUI(E,app){
       render();const b=$('shareBox');if(b)b.select();
     },
     start(){UI.shareText=UI.shareMsg=UI.imgUrl=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
-    reroll(){UI.relic=null;born(newSeed(),BC&&BC.name);render()},
-    seed(){UI.relic=null;const v=parseInt(($('seedIn')||{}).value,10);if(!(v>=0)){const i=$('seedIn');if(i){i.value='';i.placeholder='숫자만 넣을 수 있다'}return}born(v,BC&&BC.name);render()},
+    reroll(){UI.relic=null;if(UI.jobAuto){UI.job=null;UI.jobAuto=false}born(newSeed(),BC&&BC.name);render()},
+    seed(){UI.relic=null;if(UI.jobAuto){UI.job=null;UI.jobAuto=false}const v=parseInt(($('seedIn')||{}).value,10);if(!(v>=0)){const i=$('seedIn');if(i){i.value='';i.placeholder='숫자만 넣을 수 있다'}return}born(v,BC&&BC.name);render()},
     color(i){E.setColor(BC,+i);BC.fresh=false;render()},
     relic(k){UI.relic=k;render()},
-    job(k){UI.job=k||null;UI.relic=null;born(BC.seed,BC.name);render()},
+    job(k){UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
+    jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
     live(){if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
