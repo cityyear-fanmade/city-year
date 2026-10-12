@@ -682,7 +682,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       let ra=d(100),ra2=0,pnote='';
       /* 앙갚음 장부: 3스택이면 이번 명중 굴림은 1d110, 스택 소모 */
       if(A.passive&&A.passive.id==='ledger'&&(A.ledger||0)>=A.passive.need){ra=d(110);A.ledger=0;pnote=` ${A.passive.n}(1d110)`}
-      if(c.adv||(A.adv&&!A.advUsed)){ra2=d(100);if(ra2>ra)[ra,ra2]=[ra2,ra]}
+      /* 장비 두 번 굴림: adv 1 이상이면 라운드 첫 공격마다, 1 미만이면 그 확률로 */
+      if(c.adv||(A.adv&&!A.advUsed&&(A.adv>=1||d(100)<=A.adv*100))){ra2=d(100);if(ra2>ra)[ra,ra2]=[ra2,ra]}
       A.advUsed=true;
       /* 회피 주사위: 적은 단계별 크기(CFG.enemyEvadeDie), 플레이어는 1d100 */
       const rdMax=B.isP?100:(D.enemies[C.id].evadeDie||CFG.enemyEvadeDie[D.enemies[C.id].tier]||100),rd=d(rdMax);
