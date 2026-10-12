@@ -1521,7 +1521,7 @@ function startUI(E,app){
     const row=(l,v,k)=>{const g=k?gsum(k):0;return `<div class="invr"><span>${l}</span><b class="mono">${v}</b><span class="mono small dim">${g?'장비 '+sg(g):''}</span></div>`};
     const stats=[row('최대 HP',s.maxHp,'maxHp'),row('공격 (명중 보정)',sg(s.atk),'atk'),row('회피',sg(s.eva),'eva'),row('속도 (순서 보정)',sg(s.spd),'spd'),
       row('사건 판정',sg(s.check),'check'),row('피해 주사위 최소',s.dmin,null),row('전투 시작 출혈',s.startBleed,null),row('전투 시작 호흡',s.startBreath,null),
-      ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림','있음',null)]:[])].join('');
+      ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림',s.adv>=1?'있음':Math.round(s.adv*100)+'% 확률',null)]:[])].join('');
     const eq=Object.entries(D.slots).map(([k,n])=>{const g=ch.gear[k];return `<div class="invr"><span>${n}</span><b>${g?esc(g.n):'<span class="dim">없음</span>'}</b><span class="mono" style="color:var(--gold)">${g?esc(g.e||''):''}</span></div>`}).join('');
     const cnt={};ch.deck.forEach(id=>cnt[id]=(cnt[id]||0)+1);
     const cards=Object.entries(cnt).map(([id,n])=>{const c=D.cards[id];return `<div class="invc"><span class="cost">${c.c}</span><div><b>${esc(c.n)}${n>1?` <span class="dim">×${n}</span>`:''}</b><div class="small dim">${c.t==='def'?'방어 · ':c.t==='buff'?'버프 · ':''}${cardLine(c)||''}</div>${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</div></div>`}).join('');
