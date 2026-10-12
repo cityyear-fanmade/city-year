@@ -19,7 +19,8 @@
    "assoc": 260,
    "wing": 300,
    "finger": 220,
-   "head": 400
+   "head": 400,
+   "workshop": 160
   },
   "rankSalary": 25,
   "bounty": {
@@ -54,7 +55,8 @@
    "wing": 2,
    "finger": 2,
    "assoc": 3,
-   "head": 3
+   "head": 3,
+   "workshop": 2
   },
   "rankBonus": {
    "rank": 5,

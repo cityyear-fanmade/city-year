@@ -137,9 +137,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.gear[it.slot]&&ch.gear[it.slot].id===id)return 'owned';
     if(inStash(ch,id))return 'stash';
     if(it.grade>shopAccess(ch))return 'locked';
-    if(ch.money<it.price)return 'money';
+    if(ch.money<priceOf(ch,id))return 'money';
     return 'ok';
   }
+  /* 공방 해결사: 공방 물건 할인, 보관함 장비 판매 */
+  const WF=CFG.workshopFixer;
+  const isWs=ch=>!!ch.aff&&ch.aff.type==='workshop';
+  const priceOf=(ch,id)=>{const p=D.items[id].price;return isWs(ch)?Math.round(p*(1-WF.discount)):p};
+  const sellValue=it=>Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
+  function sellStash(ch,i){const st=ch.stash||[];if(!isWs(ch)||!st[i])return 0;const v=sellValue(st[i]);st.splice(i,1);ch.money+=v;return v}
   /* 암시장: 영구 강화(한 번만)와 특수 장비 */
   function canBuySpecial(ch,id){
     const it=D.special[id];
@@ -157,7 +163,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function buy(ch,id){
     if(canBuy(ch,id)!=='ok')return false;
-    const it=D.items[id];ch.money-=it.price;equip(ch,Object.assign({id},it));return true;
+    const it=D.items[id];ch.money-=priceOf(ch,id);equip(ch,Object.assign({id},it));return true;
   }
   /* 해마다 들어오는 돈: 소속 봉급 + 해결사 급수 수당 */
   const income=ch=>(D.money.salary[ch.aff?ch.aff.type:'none']||0)+(ch.licensed?(T.rankStart-ch.rank)*D.money.rankSalary:0)
@@ -401,6 +407,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
+    if(mc.affRetry&&!mc.aff){mc.affRetry=false;return {type:'event',ev:D.affiliation}}
     if(mc.voicePend&&!mc.voiceUsed&&!mc.ego){mc.voicePend=false;mc.voiceUsed=true;return {type:'event',ev:D.mindEvents.voice}}
     G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
@@ -425,7 +432,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       const e=encounter(G.ch,f);return {type:'fight',enemy:e.id,enc:e};
     }
-    if(G.year===CFG.affiliationYear&&!G.ch.aff)return {type:'event',ev:D.affiliation};
+    /* 갈림길: 공방 해결사 제안이 가끔(WF.chance%) 끼어든다 */
+    if(G.year===CFG.affiliationYear&&!G.ch.aff){
+      if(D.workshopChoice&&!noFixer(G.ch)&&d(100)<=WF.chance)return {type:'event',ev:Object.assign({},D.affiliation,{x:D.affiliation.x+(D.workshopIntro||''),c:[...D.affiliation.c,D.workshopChoice]})};
+      return {type:'event',ev:D.affiliation};
+    }
     /* 승급 심사·특색 심사는 조건이 되면 다른 사건보다 먼저 (심사를 미룬 해의 다음 해까지는 다시 묻지 않음) */
     const ch=G.ch;
     if(topReady(ch))return {type:'event',ev:topEvent(ch)};
@@ -466,6 +477,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const {chips,licensed}=applyFx(ch,fx);
     /* 선택지의 정신력: mind -1이면 2d3 감소, +1이면 2d3 회복 */
     if(c.mind){const x=d(3)+d(3);if(c.mind<0)loseMind(ch,x,t=>chips.push(t+' · 2d3'));else{const g=gainMind(ch,x);if(g)chips.push(`정신력 +${g} (${ch.mind}/${M.max})`)}}
+    if(fx.wsRoll){
+      const r=d(WF.die);chips.push(`1d${WF.die} · ${r} (${WF.minRoll} 이상)`);
+      if(r>=WF.minRoll){const was=ch.licensed;if(!was)license(ch);ch.aff={type:'workshop',name:'공방 해결사'};
+        chips.push(`소속 · 공방 해결사${was?'':' · '+T.licenseGained+' '+ch.rank+T.rankUnit}`);chips.push('공방 물건 20% 할인 · 보관함 장비 판매');}
+      else{chips.push('공방 주인이 고개를 젓는다 · 다른 길을 고른다');ch.affRetry=true}
+    }
     if(fx.voice){
       const rs=[];for(let i=0;i<M.voiceRolls;i++)rs.push(d(M.voiceDie));
       const ok=rs.every(r=>r>=M.voiceDc);chips.push(`1d${M.voiceDie} × ${M.voiceRolls} · ${rs.join(' / ')} (${M.voiceDc} 이상 ${rs.filter(r=>r>=M.voiceDc).length}/${M.voiceRolls})`);
@@ -779,6 +796,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

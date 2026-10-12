@@ -279,7 +279,7 @@ export function startUI(E,app){
       const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
         const note=st==='owned'?'장착 중':st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
-        return `<button class="btn" data-a="buy" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(it.price)}</span></span>
+        return `<button class="btn" data-a="buy" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.isWs(ch)?`<s class="dim">${E.money(it.price)}</s> `:''}${E.money(E.priceOf(ch,id))}</span></span>
           <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${D.slots[it.slot]} · ${note}</span></button>`;
       }).join('');
       return `<div class="panel stack" style="gap:8px${open?'':';opacity:.6'}"><div class="row between"><b class="serif">${w.n}</b><span class="chip${open?'':' dim'}">${w.grade}등급${open?'':' · 잠김'}</span></div>
@@ -287,8 +287,16 @@ export function startUI(E,app){
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
     return `${vHud()}<div class="stack" style="gap:6px"><div class="eyebrow">공방 · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
-      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vBlack()}${vDelCard()}
+      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vBlack()}${vSell()}${vDelCard()}
       <button class="btn primary" data-a="unshop">공방을 나간다</button>`;
+  }
+  /* 공방 해결사: 보관함 장비 판매 */
+  function vSell(){
+    const ch=G.ch;if(!E.isWs(ch))return '';const st=ch.stash||[];
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">보관함 팔기</b><span class="chip">공방 해결사</span></div>
+      <p class="small dim">보관함에 있는 장비를 공방에 넘긴다. 장착 중인 장비는 팔 수 없다.</p>
+      ${UI.sold?`<p class="good small">${esc(UI.sold)}</p>`:''}
+      ${st.length?st.map((g,i)=>`<button class="btn" data-a="sell" data-i="${i}"><span class="row between"><b>${esc(g.n)}</b><span class="mono" style="color:var(--gold)">+${E.money(E.sellValue(g))}</span></span><span class="mono small dim">${D.slots[g.slot]} · ${esc(g.e||'')}</span></button>`).join(''):'<p class="small dim">보관함이 비어 있다.</p>'}</div>`;
   }
   /* 공방: 카드 지우기 (방문 한 번에 1장, 덱 최소 장수 유지) */
   function vDelCard(){
@@ -333,7 +341,7 @@ export function startUI(E,app){
     return `<div class="check">플레이테스트 · ${new Date(EXP).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}까지 (약 ${left}분 남음)</div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.2</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.3</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vPlaytest()}
@@ -668,7 +676,7 @@ export function startUI(E,app){
     /* 공방 거리: 1년차부터 3년마다 들를지 묻는다. 들러도 해는 넘어가지 않는다 */
     if((G.year-1)%CFG.shop.every===0){
       UI.stock=G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[];
-      UI.bought=null;UI.deleted=null;UI.screen='shopask';render();return;
+      UI.bought=null;UI.deleted=null;UI.sold=null;UI.screen='shopask';render();return;
     }
     UI.stock=[];UI.screen='event';render();
   }
@@ -702,6 +710,7 @@ export function startUI(E,app){
       const ty=UI.egoType||'atk';E.setEgo(G.ch,ty,n);UI.egoErr='';UI.egoName='';UI.egoType=null;
       UI.res.chips=[...UI.res.chips,`E.G.O · ${n} (${CFG.mind.ego[ty].n})`];render();
     },
+    sell(i){const g=(G.ch.stash||[])[+i];if(!g)return;const v=E.sellStash(G.ch,+i);if(v){UI.sold=`${g.n}을(를) ${E.money(v)}에 팔았다.`;render()}},
     delcard(i){if((UI.deleted||[]).length>=CFG.shop.delMax)return;const c=E.delCard(G.ch,+i);if(c){(UI.deleted=UI.deleted||[]).push(D.cards[c].n);render()}},
     tname(){
       const ch=G.ch,adj=D.colors[ch.ci].adj,w=(($('tw')||{}).value||'').trim();

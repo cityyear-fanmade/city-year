@@ -42,6 +42,8 @@ export const CFG = {
     ego: {atk: {n: '공격용', hit: 10, floor: 20}, def: {n: '방어용', hp: 30, floor: 11}}},
   /* 공방 거리: 1년차부터 every년마다 들를지 묻는다(해는 넘어가지 않음). blackFrom년차부터 암시장 물건 blackStock개 진열 */
   shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4},
+  /* 공방 해결사: 4년차 갈림길에 chance% 확률로 제안. 1d die에서 minRoll 이상이면 성공. 공방 물건 할인율, 보관함 판매 비율 */
+  workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100},
   /* 출신 진로 보정: 그 진로의 권유 사건이 (보정값 × 이 값)% 확률로 먼저 나온다 */
   pathEventMul: 2,
   /* 전투 승리 후 해결사 등록 판정 난이도 (1d100 + 해결사 진로 보정) */
