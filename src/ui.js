@@ -202,8 +202,10 @@ export function startUI(E,app){
   function kwChips(c){
     return (c.kw||[]).map(([k,n,to])=>`<span class="chip" style="color:${kwc(k)};border-color:${kwc(k)}">${D.keywords[k].n} +${n}${to==='s'?' 자신':''}</span>`).join('');
   }
-  function cardLine(c){
+  function cardLine(c,wx){
     if(c.t!=='atk')return c.d;
+    /* 전용 무기 주사위가 있으면 실제로 굴리는 주사위로 표시 */
+    if(wx&&wx.dice&&!c.die){const n=Math.max(wx.dice[0],c.dice);return `${c.hits>1?c.hits+'타 · ':''}${n}d${wx.dice[1]}${c.b?sg(c.b):''} · 명중 ${sg(c.hit)} · 무기 주사위`}
     const x=[];
     if(c.adv)x.push('명중 2회 굴림');
     if(c.rr)x.push('낮은 피해 재굴림');
@@ -579,7 +581,7 @@ export function startUI(E,app){
       const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&c.c>left);
       return `<button class="card ${si>=0?'sel':''}" data-a="pick" data-i="${i}" ${dis?'disabled':''}>
         <span class="cost">${c.c}</span>${si>=0?`<em class="ord">${si+1}</em>`:''}
-        <span class="nm">${c.n}${lk?` <span class="bad small">잠김 · ${esc(C.E.passive.n)}</span>`:''}</span>${c.t==='atk'?`<span class="mono small" style="color:var(--gold)">최종 명중 ${sg(P.atk+c.hit+(P.passHit||0))}${P.fsOn&&P.fs?' (+선제 '+CFG.firstHit+')':''}</span>`:''}<span class="cd">${cardLine(c)}</span>
+        <span class="nm">${c.n}${lk?` <span class="bad small">잠김 · ${esc(C.E.passive.n)}</span>`:''}</span>${c.t==='atk'?`<span class="mono small" style="color:var(--gold)">최종 명중 ${sg(P.atk+c.hit+(P.passHit||0))}${P.fsOn&&P.fs?' (+선제 '+CFG.firstHit+')':''}</span>`:''}<span class="cd">${cardLine(c,P.wx)}</span>
         ${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</button>`;
     }).join('');
     return `${M?duo({E:X,P})+vOrder(true):entHtml('E',X,X)+arenaHtml(false)+entHtml('P',P,P)+vOrder()+log}

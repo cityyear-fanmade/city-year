@@ -723,7 +723,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 전용 무기 피해 주사위: 카드 주사위 대신 무기 주사위 (Furioso처럼 주사위가 정해진 카드는 그대로) */
       const wd=!c.die&&A.wx?(sub?sub.dice:A.wx.dice):null;
       if(sub&&sub.range&&!c.die)rolls.push(sub.range[0]-1+d(sub.range[1]-sub.range[0]+1));
-      else if(wd){for(let i=0;i<wd[0];i++)rolls.push(Math.max(Math.min(lo,wd[1]),d(wd[1])))}
+      /* 무기 주사위: 면 수는 무기, 개수는 카드와 무기 중 많은 쪽 */
+      else if(wd){const n=Math.max(wd[0],c.dice);for(let i=0;i<n;i++)rolls.push(Math.max(Math.min(lo,wd[1]),d(wd[1])))}
       else for(let i=0;i<c.dice;i++)rolls.push(Math.max(lo2,d(die)));
       let note=fsb?' 선제':'';
       if(c.rr&&rolls.length){
