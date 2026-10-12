@@ -354,7 +354,7 @@ export function startUI(E,app){
     return `<div class="check">플레이테스트 · ${new Date(EXP).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}까지 (약 ${left}분 남음)</div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.7</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.8</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vUpdates()}
@@ -393,7 +393,7 @@ export function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const UPDATES={v:'v5.7',items:['레바테인 개편: 화상을 30번 걸면 해방, 해방하면 푸른 화염을 다룬다 (대가가 크다)','히든 보스를 쓰러뜨리면 보스마다 전용 무기 (자세한 내용은 공지)','히든 보스전: 시작 체력 보정과 승리 후 추가 회복','뇌횡 상향 · 출처 모를 장비 하향','이어서 하기 · 오늘의 시드 · 기록실 · 기록 공유 링크']};
+  const UPDATES={v:'v5.8',items:['난이도 상향: 해가 갈수록 적이 훨씬 빠르게 강해진다 (모든 적 체급도 상승)','카드 등급: 16·31·46년차에 내 공격 카드가 한 단계씩 강해진다','히든 보스는 13년차부터 나타나고, 오래 성장한 뒤에야 겨우 상대할 수 있다','약지 소속에게 새로운 이야기가 열린다','이어서 하기 · 오늘의 시드 · 기록실 · 기록 공유 링크']};
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};

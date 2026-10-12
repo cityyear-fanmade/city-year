@@ -547,7 +547,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         ch.deck=td.deck.slice();ch.deckLocked=true;chips.push(`전리품 · ${td.n} 장착 (${td.gear.e})`);chips.push('엄지 검술 · 덱이 검술 10장으로 바뀐다. 이제 카드를 더 받지 않고, 대신 돈을 받는다')}
       if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
         if(dr.gear){equip(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 장착 · ${dr.gear.n} (${dr.gear.e})`)}
-        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
+        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.deck=dr.cards.slice();ch.deckLocked=true;chips.push('전용 책장 · 덱이 책장 '+dr.cards.length+'장으로 바뀐다. 이제 카드를 더 받지 않고, 대신 돈을 받는다')}
+        else for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
       if(foe.unlock&&!ch.unlocks.includes(foe.unlock)){ch.unlocks.push(foe.unlock);unlock=foe.unlock;chips.push('해금 · '+(T.jobs[foe.unlock]||foe.unlock))}
     }
     /* 미니보스 전리품(once): 처음 이겼을 때만 */
@@ -677,7 +678,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
-    if(c.t==='buff'){if(c.shield)A.shield=(A.shield||0)+c.shield;L('sys',`${A.name} · ${c.n} (버프)${c.gain?` · 빛 +${c.gain}`:''}${c.shield?` · 보호막 ${A.shield}`:''}`);applyKw(A,B,c,L);push({k:'buff',side:A.uid,card:c});return}
+    if(c.t==='buff'){if(c.shield)A.shield=(A.shield||0)+c.shield+(A.isP&&A.cg?5*CFG.cardGrade.indexOf(A.cg):0);L('sys',`${A.name} · ${c.n} (버프)${c.gain?` · 빛 +${c.gain}`:''}${c.shield?` · 보호막 ${A.shield}`:''}`);applyKw(A,B,c,L);push({k:'buff',side:A.uid,card:c});return}
     const hits=c.hits+(c.t==='atk'&&A.wx&&A.wx.extraHit?A.wx.extraHit:0);
     for(let h=0;h<hits;h++){
       if(A.hp<=0||B.hp<=0)return;
