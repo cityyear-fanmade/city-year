@@ -311,6 +311,7 @@ export function startUI(E,app){
   }
   /* 공방: 카드 지우기 (방문 한 번에 1장, 덱 최소 장수 유지) */
   function vDelCard(){
+    if(G.ch.deckLocked)return `<div class="panel stack" style="gap:6px"><b class="serif">카드 지우기</b><p class="small dim">엄지 검술을 익혀 덱이 고정되었다. 카드를 지울 수 없다.</p></div>`;
     const ch=G.ch,S=CFG.shop,del=UI.deleted||[],left=S.delMax-del.length,can=left>0&&ch.money>=S.delCost&&ch.deck.length>S.minDeck;
     return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 지우기</b><span class="mono" style="color:var(--gold)">${E.money(S.delCost)} · 이번 방문 ${del.length}/${S.delMax}</span></div>
       <p class="small dim">덱에서 카드를 지운다. 공방에 들를 때마다 ${S.delMax}장까지, 덱은 ${S.minDeck}장 아래로 줄일 수 없다.</p>
@@ -391,7 +392,7 @@ export function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const UPDATES={v:'v5.6',items:['히든 보스 전리품이 전용 무기로: 보스마다 고유 효과','검은 침묵의 장갑: 공격마다 9종 무기 중 하나, 3종을 쓰면 Furioso','특색 아래급 보스 무기: 적중 시 파열 · 피격 시 반격','이어서 하기 · 오늘의 시드 · 기록실 · 기록 공유 링크 (v5.5)','엔딩 화면을 그대로 이미지로 저장']};
+  const UPDATES={v:'v5.6',items:['히든 보스를 쓰러뜨리면 보스마다 전용 무기를 얻는다 (자세한 내용은 공지)','일부 전용 무기에 새 디버프: 지령 · 왜곡 · 표적 · 원한 · 감전','엄지 소속으로만 얻을 수 있는 특별한 보상이 있다','이어서 하기 · 오늘의 시드 · 기록실 · 기록 공유 링크 (v5.5)','엔딩 화면을 그대로 이미지로 저장']};
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};

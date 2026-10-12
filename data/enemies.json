@@ -747,7 +747,7 @@
     "fx": {
      "maxHp": 5
     },
-    "e": "무기 · 적중마다 1d2 두 개 추가 · HP+5",
+    "e": "HP+5 · 무기 천퇴성도",
     "gear": {
      "id": "cheontoe",
      "slot": "weapon",
@@ -768,6 +768,37 @@
        "n": 1
       }
      }
+    }
+   },
+   "thumbDrop": {
+    "n": "동부십검",
+    "req": "affname:엄지",
+    "e": "엄지 검술 · 덱이 검술 10장으로 고정, 이후 카드 대신 돈",
+    "gear": {
+     "id": "dongbu",
+     "slot": "weapon",
+     "n": "동부십검",
+     "e": "공+14 · 회피+8 · 적중마다 1d2×2 추가 · 엄지 검술",
+     "fx": {
+      "atk": 14,
+      "eva": 8,
+      "extraD2": 2
+     }
+    },
+    "deck": [
+     "t_double",
+     "t_double",
+     "t_double",
+     "t_triple",
+     "t_triple",
+     "t_triple",
+     "t_burst",
+     "t_burst",
+     "t_kwaedo",
+     "t_maengho"
+    ],
+    "fx": {
+     "maxHp": 5
     }
    }
   },

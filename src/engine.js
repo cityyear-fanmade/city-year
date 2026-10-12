@@ -121,7 +121,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     s.dmin=Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1));
     /* 무기 피해 주사위 면 수 (궁니르 d10). 장비 중 가장 큰 값, 기본 d6 */
     s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
-    if(item.card&&!ch.deck.includes(item.card))ch.deck.push(item.card);
+    if(item.card&&!ch.deck.includes(item.card)&&!ch.deckLocked)ch.deck.push(item.card);
   }
   /* 보관함의 장비를 꺼내 장착 (지금 장비는 보관함으로) */
   function equipStash(ch,i){const st=ch.stash||[];if(!st[i])return false;equip(ch,st.splice(i,1)[0]);return true}
@@ -270,6 +270,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 날개·손가락 진로면 해결사 급수 대신 그 진로의 직급을 보여 준다 (해결사 급수는 그 진로에서 오르지 않는다) */
   const rankLabel=ch=>{if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr)return ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n;return rankLabel0(ch)};
   const rankLabel0=ch=>!ch.licensed?T.unranked:ch.title?`${ch.title} · ${ch.rank}${T.rankUnit}`:`${ch.rank}${T.rankUnit} ${T.licensed}`;
+  /* 카드 얻기: 덱이 고정(엄지 검술)이면 카드 대신 돈 */
+  function addCard(ch,cid,chips,label){
+    if(!cid)return;
+    if(ch.deckLocked){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;chips&&chips.push(`엄지 검술 · ${D.cards[cid].n} 대신 +${money(m)}`);return}
+    ch.deck.push(cid);chips&&chips.push((label||'카드')+' · '+D.cards[cid].n);
+  }
   function rewardCard(ch){const pool=D.rewards.filter(id=>!ch.deck.includes(id));return pool.length?one(pool):null}
   /* 사건·성장·보상 효과를 적용하고 화면용 칩을 돌려준다 */
   function applyFx(ch,fx){
@@ -281,7 +287,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.check){s.check+=fx.check;chips.push('사건 판정 '+sg(fx.check))}
     if(fx.startBreath){s.startBreath+=fx.startBreath;chips.push('시작 '+D.keywords.breath.n+' +'+fx.startBreath)}
     const cid=fx.card||(fx.reward?rewardCard(ch):null);
-    if(cid){ch.deck.push(cid);chips.push('카드 · '+D.cards[cid].n)}
+    addCard(ch,cid,chips);
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
     for(const f of [].concat(fx.flag||[]))ch.flags[f]=(ch.flags[f]||0)+1;
     if(fx.join){
@@ -401,6 +407,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const lastYear=G=>CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0);
   const gradeAt=y=>y>CFG.years?Math.min(CFG.endless.grades.length-1,Math.floor((y-CFG.years-1)/CFG.endless.span)):-1;
   function delCard(ch,i){
+    if(ch.deckLocked)return false;
     if(ch.money<CFG.shop.delCost||ch.deck.length<=CFG.shop.minDeck||!ch.deck[i])return false;
     ch.money-=CFG.shop.delCost;return ch.deck.splice(i,1)[0];
   }
@@ -524,23 +531,26 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function winRewards(G,C){
     const ch=G.ch,chips=[];
     ch.hp=clamp(C.P.hp+CFG.winHeal,1,ch.stats.maxHp);chips.push('HP +'+CFG.winHeal);
-    const cid=rewardCard(ch);if(cid){ch.deck.push(cid);chips.push('카드 · '+D.cards[cid].n)}
+    addCard(ch,rewardCard(ch),chips);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     let title=null,tlabel=null,newly=false,colorRoll=null,unlock=null;
     const foe=D.enemies[C.id];
     if(foe.hidden){
       ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
-      /* 히든 보스 전리품: 전용 카드 + 영구 능력치 */
-      if(foe.drop){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
+      /* 엄지 소속으로 뇌횡: 동부십검 + 엄지 검술 (덱 고정) */
+      const td=foe.thumbDrop&&meets(ch,foe.thumbDrop.req)?foe.thumbDrop:null;
+      if(td){addStats(ch.stats,td.fx);ch.hp+=td.fx.maxHp||0;(ch.relics=ch.relics||[]).push(td.n,'엄지 검술');equip(ch,Object.assign({grade:5},td.gear));
+        ch.deck=td.deck.slice();ch.deckLocked=true;chips.push(`전리품 · ${td.n} 장착 (${td.gear.e})`);chips.push('엄지 검술 · 덱이 검술 10장으로 바뀐다. 이제 카드를 더 받지 않고, 대신 돈을 받는다')}
+      if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
         if(dr.gear){equip(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 장착 · ${dr.gear.n} (${dr.gear.e})`)}
-        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card){ch.deck.push(dr.card);chips.push('전용 카드 · '+D.cards[dr.card].n)}}
+        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');}
       if(foe.unlock&&!ch.unlocks.includes(foe.unlock)){ch.unlocks.push(foe.unlock);unlock=foe.unlock;chips.push('해금 · '+(T.jobs[foe.unlock]||foe.unlock))}
     }
     /* 미니보스 전리품(once): 처음 이겼을 때만 */
     if(!foe.hidden&&foe.drop&&!(ch.minis||[]).includes(C.id)){
       (ch.minis=ch.minis||[]).push(C.id);const dr=foe.drop;if(dr.ego)ch.egoGear=(ch.egoGear||0)+1;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
-      chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card){ch.deck.push(dr.card);chips.push('전용 카드 · '+D.cards[dr.card].n)}
+      chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');
     }
     /* 전투 승리 후 등록: 소속이 없거나 사무소 소속일 때만, 소문 판정(1d100 + 해결사 진로 보정 ≥ winLicenseDc) */
     if(!ch.licensed){
