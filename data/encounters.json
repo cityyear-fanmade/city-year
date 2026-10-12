@@ -10,184 +10,328 @@
   "tables": {
    "early": [
     {
-     "max": 25,
+     "max": 9,
      "enemy": "lamp"
     },
     {
-     "max": 45,
+     "max": 18,
      "enemy": "echo"
     },
     {
-     "max": 70,
+     "max": 27,
      "enemy": "thug"
     },
     {
-     "max": 85,
+     "max": 36,
      "enemy": "strays"
     },
     {
-     "max": 93,
+     "max": 45,
      "enemy": "collector"
     },
     {
-     "max": 100,
+     "max": 55,
      "enemy": "sentry"
+    },
+    {
+     "max": 64,
+     "enemy": "rats"
+    },
+    {
+     "max": 73,
+     "enemy": "unlicensed"
+    },
+    {
+     "max": 82,
+     "enemy": "armthief"
+    },
+    {
+     "max": 91,
+     "enemy": "courier"
+    },
+    {
+     "max": 100,
+     "enemy": "pickpocket"
     }
    ],
    "early@finger": [
     {
-     "max": 20,
+     "max": 9,
      "enemy": "lamp"
     },
     {
-     "max": 35,
+     "max": 18,
      "enemy": "echo"
     },
     {
-     "max": 55,
+     "max": 27,
      "enemy": "thug"
     },
     {
-     "max": 90,
-     "enemy": "collector"
+     "max": 36,
+     "enemy": "strays"
+    },
+    {
+     "max": 45,
+     "enemy": "rats"
+    },
+    {
+     "max": 55,
+     "enemy": "unlicensed"
+    },
+    {
+     "max": 64,
+     "enemy": "armthief"
+    },
+    {
+     "max": 73,
+     "enemy": "pickpocket"
     },
     {
      "max": 100,
-     "enemy": "strays"
+     "enemy": "collector"
     }
    ],
    "early@wing": [
     {
-     "max": 20,
+     "max": 8,
      "enemy": "lamp"
     },
     {
-     "max": 35,
+     "max": 17,
      "enemy": "echo"
     },
     {
-     "max": 50,
+     "max": 25,
      "enemy": "thug"
     },
     {
-     "max": 90,
-     "enemy": "sentry"
+     "max": 33,
+     "enemy": "strays"
+    },
+    {
+     "max": 42,
+     "enemy": "rats"
+    },
+    {
+     "max": 50,
+     "enemy": "unlicensed"
+    },
+    {
+     "max": 58,
+     "enemy": "armthief"
+    },
+    {
+     "max": 67,
+     "enemy": "pickpocket"
+    },
+    {
+     "max": 75,
+     "enemy": "courier"
     },
     {
      "max": 100,
-     "enemy": "strays"
+     "enemy": "sentry"
     }
    ],
    "mid": [
     {
-     "max": 30,
+     "max": 10,
      "enemy": "lullaby"
     },
     {
-     "max": 50,
+     "max": 20,
      "enemy": "bloodman"
     },
     {
-     "max": 70,
+     "max": 30,
      "enemy": "doll"
     },
     {
-     "max": 85,
+     "max": 40,
      "enemy": "hunter"
     },
     {
-     "max": 100,
+     "max": 50,
      "enemy": "lieutenant"
+    },
+    {
+     "max": 60,
+     "enemy": "sweeper"
+    },
+    {
+     "max": 70,
+     "enemy": "turncoat"
+    },
+    {
+     "max": 80,
+     "enemy": "cleanup"
+    },
+    {
+     "max": 90,
+     "enemy": "youngsters"
+    },
+    {
+     "max": 100,
+     "enemy": "porter"
     }
    ],
    "mid@finger": [
     {
-     "max": 20,
+     "max": 10,
      "enemy": "lullaby"
     },
     {
-     "max": 40,
+     "max": 20,
      "enemy": "bloodman"
     },
     {
-     "max": 55,
+     "max": 30,
      "enemy": "doll"
     },
     {
-     "max": 100,
+     "max": 40,
+     "enemy": "sweeper"
+    },
+    {
+     "max": 50,
+     "enemy": "turncoat"
+    },
+    {
+     "max": 60,
+     "enemy": "porter"
+    },
+    {
+     "max": 80,
      "enemy": "lieutenant"
+    },
+    {
+     "max": 100,
+     "enemy": "youngsters"
     }
    ],
    "mid@wing": [
     {
-     "max": 35,
+     "max": 10,
      "enemy": "lullaby"
     },
     {
-     "max": 50,
+     "max": 20,
      "enemy": "bloodman"
     },
     {
-     "max": 85,
+     "max": 30,
      "enemy": "doll"
     },
     {
-     "max": 100,
+     "max": 40,
      "enemy": "hunter"
+    },
+    {
+     "max": 50,
+     "enemy": "sweeper"
+    },
+    {
+     "max": 60,
+     "enemy": "turncoat"
+    },
+    {
+     "max": 70,
+     "enemy": "porter"
+    },
+    {
+     "max": 100,
+     "enemy": "cleanup"
     }
    ],
    "backstreet": [
     {
-     "max": 35,
+     "max": 17,
      "enemy": "lamp"
     },
     {
-     "max": 75,
+     "max": 33,
      "enemy": "thug"
     },
     {
-     "max": 100,
+     "max": 50,
      "enemy": "collector"
+    },
+    {
+     "max": 67,
+     "enemy": "rats"
+    },
+    {
+     "max": 83,
+     "enemy": "pickpocket"
+    },
+    {
+     "max": 100,
+     "enemy": "unlicensed"
     }
    ],
    "outskirts": [
     {
-     "max": 50,
+     "max": 25,
      "enemy": "strays"
     },
     {
-     "max": 80,
+     "max": 50,
      "enemy": "echo"
     },
     {
-     "max": 100,
+     "max": 75,
      "enemy": "hunter"
+    },
+    {
+     "max": 100,
+     "enemy": "armthief"
     }
    ],
    "late": [
     {
-     "max": 20,
+     "max": 10,
      "enemy": "lullaby"
     },
     {
-     "max": 40,
+     "max": 19,
      "enemy": "bloodman"
     },
     {
-     "max": 55,
+     "max": 29,
      "enemy": "doll"
     },
     {
-     "max": 75,
+     "max": 39,
      "enemy": "lieutenant"
     },
     {
-     "max": 90,
+     "max": 49,
      "enemy": "hunter"
     },
     {
-     "max": 100,
+     "max": 58,
      "enemy": "guest"
+    },
+    {
+     "max": 68,
+     "enemy": "inspector"
+    },
+    {
+     "max": 78,
+     "enemy": "bountyhunter"
+    },
+    {
+     "max": 87,
+     "enemy": "subject"
+    },
+    {
+     "max": 97,
+     "enemy": "ringwork"
+    },
+    {
+     "max": 100,
+     "enemy": "pianist"
     }
    ]
   }

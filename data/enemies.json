@@ -516,6 +516,278 @@
      }
     }
    }
+  },
+  "rats": {
+   "n": "골목 쥐 패거리",
+   "color": "#8a7f6a",
+   "hp": 24,
+   "atk": 0,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "slash",
+    "thrust",
+    "lunge"
+   ],
+   "intro": "골목 끝에서 서너 명이 동시에 일어선다. 가진 건 녹슨 칼과 머릿수뿐이다.",
+   "tier": "early"
+  },
+  "unlicensed": {
+   "n": "무허가 해결사",
+   "color": "#7d8a96",
+   "hp": 28,
+   "atk": 1,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "slash",
+    "thrust",
+    "aim",
+    "guard"
+   ],
+   "intro": "자격증 없이 의뢰를 받는 해결사다. 오늘 의뢰서에는 당신의 인상착의가 적혀 있다.",
+   "tier": "early"
+  },
+  "armthief": {
+   "n": "녹슨 의수 강도",
+   "color": "#9b6b4a",
+   "hp": 30,
+   "atk": 2,
+   "eva": 0,
+   "spd": 0,
+   "deck": [
+    "smash",
+    "rustblade",
+    "guard"
+   ],
+   "intro": "삐걱거리는 의수가 담벼락을 긁는다. 강도는 그 팔값을 아직 다 갚지 못했다.",
+   "tier": "early"
+  },
+  "courier": {
+   "n": "고장 난 배달 기계",
+   "color": "#6f8fa0",
+   "hp": 30,
+   "atk": 0,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "glare",
+    "guard"
+   ],
+   "intro": "주소를 잃은 배달 기계가 당신을 수령인으로 인식했다. 상자 대신 팔이 날아온다.",
+   "tier": "early"
+  },
+  "pickpocket": {
+   "n": "골목 소매치기",
+   "color": "#a08a5c",
+   "hp": 20,
+   "atk": 1,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "thrust",
+    "thrust",
+    "faint",
+    "shadowstep"
+   ],
+   "intro": "주머니가 가벼워진 느낌에 돌아보니, 작은 그림자가 칼을 꺼내 든다.",
+   "tier": "early"
+  },
+  "sweeper": {
+   "n": "밤의 청소부",
+   "color": "#4f5d6b",
+   "hp": 36,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "e_sweep",
+    "bloodlet",
+    "e_sweep",
+    "guard"
+   ],
+   "intro": "정해진 시각이 지났다. 골목을 청소하러 온 무리가 당신을 남은 것으로 본다.",
+   "tier": "mid"
+  },
+  "turncoat": {
+   "n": "배신한 사무소 해결사",
+   "color": "#8c6f7d",
+   "hp": 36,
+   "atk": 3,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "lunge",
+    "precise",
+    "rend",
+    "guard"
+   ],
+   "intro": "한때 같은 사무소 명패 아래 있던 얼굴이다. 이번 의뢰인은 그쪽에 더 많이 냈다.",
+   "tier": "mid"
+  },
+  "cleanup": {
+   "n": "날개 처리반",
+   "color": "#5a7a8c",
+   "hp": 40,
+   "atk": 3,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "smash",
+    "heavy",
+    "thrust",
+    "guard"
+   ],
+   "intro": "회색 방호복의 처리반이 서류를 확인한다. 처리 대상 목록 맨 아래에 당신이 있다.",
+   "tier": "mid"
+  },
+  "youngsters": {
+   "n": "중지 막내들",
+   "color": "#7a5c8c",
+   "hp": 34,
+   "atk": 2,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "e_gang",
+    "rend",
+    "slash",
+    "guard"
+   ],
+   "intro": "형님의 원수를 갚겠다는 막내들이다. 누가 원수인지는 별로 중요하지 않아 보인다.",
+   "tier": "mid"
+  },
+  "porter": {
+   "n": "뒤틀린 짐꾼",
+   "color": "#6b5a4a",
+   "hp": 42,
+   "atk": 2,
+   "eva": 0,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "tremor",
+    "e_burden",
+    "guard"
+   ],
+   "intro": "등에 진 짐이 몸과 붙어 버린 사람이 다가온다. 짐이 먼저 당신을 본다.",
+   "tier": "mid"
+  },
+  "inspector": {
+   "n": "협회 감찰관",
+   "color": "#8a8f5a",
+   "hp": 44,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "e_audit",
+    "precise",
+    "thrust",
+    "guard"
+   ],
+   "intro": "협회 감찰관이 장부를 덮는다. 당신의 기록에서 고칠 부분을 찾았다고 한다.",
+   "tier": "late"
+  },
+  "bountyhunter": {
+   "n": "현상금 사냥꾼",
+   "color": "#9c6a4f",
+   "hp": 46,
+   "atk": 5,
+   "eva": 3,
+   "spd": 5,
+   "deck": [
+    "lunge",
+    "aim",
+    "e_mark",
+    "guard"
+   ],
+   "intro": "상위 등급 해결사가 수배서를 접어 넣는다. 금액이 마음에 든 모양이다.",
+   "tier": "late"
+  },
+  "subject": {
+   "n": "특이점 시험체",
+   "color": "#5f8f8a",
+   "hp": 54,
+   "atk": 4,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "e_surge",
+    "shard",
+    "tremor",
+    "guard"
+   ],
+   "intro": "날개의 실험 기록에서 지워진 몸이 골목으로 걸어 나왔다. 아직 실험은 끝나지 않았다.",
+   "tier": "late"
+  },
+  "ringwork": {
+   "n": "약지의 \"작품\"",
+   "color": "#a05c7a",
+   "hp": 44,
+   "atk": 4,
+   "eva": 4,
+   "spd": 4,
+   "deck": [
+    "e_brush",
+    "noon",
+    "e_brush",
+    "guard"
+   ],
+   "intro": "누군가 서명을 남긴 사람 모양의 작품이다. 마무리할 색이 하나 부족하다고 한다.",
+   "tier": "late"
+  },
+  "pianist": {
+   "n": "피아니스트",
+   "color": "#3d3550",
+   "hp": 64,
+   "atk": 5,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "p_key",
+    "p_crescendo",
+    "p_key",
+    "guard"
+   ],
+   "intro": "어디선가 피아노 소리가 들린다. 골목 전체가 한 곡의 악보처럼 움직이기 시작한다.",
+   "tier": "boss",
+   "once": true,
+   "passive": {
+    "id": "recital",
+    "n": "연주",
+    "every": 4,
+    "dmg": 12,
+    "d": "라운드마다 악장 1. 4악장마다 절정: 고정 피해 12 (그 라운드 방어 자세면 절반)"
+   },
+   "drop": {
+    "n": "피아니스트의 악보",
+    "card": "p_score",
+    "fx": {
+     "spd": 1,
+     "maxHp": 5
+    },
+    "e": "속도+1 · HP+5"
+   },
+   "endText": "연주가 멎었다. 골목에는 악보 한 장만 남았다."
+  },
+  "impurity": {
+   "n": "이름 없는 불순물",
+   "color": "#2a2a2a",
+   "hp": 100,
+   "atk": 5,
+   "eva": 4,
+   "spd": 7,
+   "deck": [
+    "i_nameless",
+    "precise",
+    "guard",
+    "x_bluewave"
+   ],
+   "intro": "도시가 걸러 내지 못한 무언가가 당신 앞에 선다. 이름을 붙이려 하면 생각이 미끄러진다.",
+   "tier": "boss"
   }
  },
  "fixedFights": {
@@ -673,12 +945,12 @@
     "spec": "table:mid"
    },
    {
-    "until": 44,
+    "until": 54,
     "spec": "table:late"
    }
   ],
   "final": {
-   "45": "guest"
+   "55": "guest"
   }
  }
 }

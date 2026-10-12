@@ -308,7 +308,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const name=s.slice(6),T_=D.encounters.tables;
     const key=ch.aff&&T_[`${name}@${ch.aff.type}`]?`${name}@${ch.aff.type}`:name;
     const r=d(100);
-    return {id:pick(T_[key],r).enemy,roll:r,table:name,label:D.encounters.labels[name]||name};
+    let id=pick(T_[key],r).enemy;
+    /* once: 한 번 이긴 미니보스는 다시 나오지 않는다 (표의 첫 적으로 바뀜) */
+    if(D.enemies[id].once&&(ch.minis||[]).includes(id))id=T_[key][0].enemy;
+    return {id,roll:r,table:name,label:D.encounters.labels[name]||name};
   }
 
   /* ===== 진행 (7년) ===== */
@@ -336,6 +339,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.startsWith('aff:'))return !!ch.aff&&ch.aff.type===req.slice(4);
     return true;
   }
+  /* 무한런: 마지막 해, 지금 위협 등급(-1이면 아직 기본 연차) */
+  const lastYear=G=>CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0);
+  const gradeAt=y=>y>CFG.years?Math.min(CFG.endless.grades.length-1,Math.floor((y-CFG.years-1)/CFG.endless.span)):-1;
   function newGame(ch){return {ch,year:0,pool:sample(D.events.map((_,i)=>i),D.events.length)}}
   const age=G=>CFG.startAge+G.year-1;
   /* 다음 해: 끝 / 고정 전투 / 사건 */
@@ -349,12 +355,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function advanceYear(G){
     G.year++;
-    if(G.year>CFG.years){G.year=CFG.years;return {type:'end',win:true}}
+    if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);G.lastIncome=income(G.ch);G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
     if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year;
-    const f=fixedSpec(G.year);
+    let f=fixedSpec(G.year);
+    /* 무한런 등급 전투: 등급 마지막 해. 도시의 별 등급은 피아니스트(이미 이겼으면 후반 조우), 마지막 등급은 최종 상대 */
+    const X_=CFG.endless,k_=G.year-CFG.years;
+    if(k_>0)f=k_%X_.span?null:gradeAt(G.year)===X_.grades.length-1?X_.final:gradeAt(G.year)===X_.grades.indexOf('도시의 별')&&!(G.ch.minis||[]).includes(X_.star)?X_.star:'table:late';
+    if(f&&k_>0&&gradeAt(G.year)===X_.grades.length-1)return {type:'fight',enemy:f,enc:{label:X_.grades[gradeAt(G.year)]+' · 마지막 등급 전투'}};
     if(f){
       /* 히든 보스: 목록 위에서부터 조건(과 확률)이 맞는 첫 보스가 불길한 예감(omen)으로 먼저 나타난다.
          맞서면 그 보스와 싸우고(다시 나오지 않음), 돌아서면 평소 조우로 넘어간다(조건이 맞으면 다음에 또 나올 수 있다) */
@@ -430,6 +440,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card){ch.deck.push(dr.card);chips.push('전용 카드 · '+D.cards[dr.card].n)}}
       if(foe.unlock&&!ch.unlocks.includes(foe.unlock)){ch.unlocks.push(foe.unlock);unlock=foe.unlock;chips.push('해금 · '+(T.jobs[foe.unlock]||foe.unlock))}
     }
+    /* 미니보스 전리품(once): 처음 이겼을 때만 */
+    if(!foe.hidden&&foe.drop&&!(ch.minis||[]).includes(C.id)){
+      (ch.minis=ch.minis||[]).push(C.id);const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
+      chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card){ch.deck.push(dr.card);chips.push('전용 카드 · '+D.cards[dr.card].n)}
+    }
     /* 전투 승리 후 등록: 소속이 없거나 사무소 소속일 때만, 소문 판정(1d100 + 해결사 진로 보정 ≥ winLicenseDc) */
     if(!ch.licensed){
       if((!ch.aff||ch.aff.type==='office')&&d(100)+(ch.paths.fixer||0)>=CFG.winLicenseDc&&license(ch)){
@@ -437,7 +452,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
     }
     addPts(ch,foe.hidden?CFG.promo.gain.hidden:(CFG.promo.gain[foe.tier]||0),chips);
-    return {chips,title,tlabel,newly,colorRoll,unlock,hidden:!!foe.hidden,endText:foe.endText||null,last:G.year>=CFG.years};
+    return {chips,title,tlabel,newly,colorRoll,unlock,hidden:!!foe.hidden,endText:foe.endText||null,last:G.year>=lastYear(G)};
   }
 
   /* ===== 전투 (1:1) =====
@@ -450,8 +465,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const P=mkEnt({uid:'P',name:ch.name||T.you,color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
       bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',odin:!!ch.odin,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
     const S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy;
-    const H_=CFG.hidden,eh=Math.round((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul:S_.hpMul)),up=Math.floor(grow/S_.atkEvery)+(e.hidden?H_.atk:0);
-    const E=mkEnt({uid:'E',name:e.n,color:e.color,hp:eh,maxHp:eh,atk:e.atk+up,eva:e.eva+up,spd:e.spd,deck:e.deck,isP:false,passive:e.passive||null});
+    const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from):0,g=gradeAt(ch.year||0)+1,X_=CFG.endless;
+    const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul:S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*g));
+    const up=Math.floor(grow/S_.atkEvery)+(e.hidden?H_.atk+Math.floor(hy/HL.atkEvery):0),xa=X_.atk*g;
+    const E=mkEnt({uid:'E',name:e.n,color:e.color,hp:eh,maxHp:eh,atk:e.atk+up+xa,eva:e.eva+up,spd:e.spd,deck:e.deck,isP:false,passive:e.passive||null});
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;
@@ -646,6 +663,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       act(C,A,c,L,push);
     });
     C.step=-1;
+    /* 연주(피아니스트): 라운드마다 악장 1. every에 닿으면 고정 피해 dmg, 그 라운드에 방어 자세였으면 절반 */
+    if(E.passive&&E.passive.id==='recital'&&E.hp>0&&P.hp>0){
+      const R=E.passive;E.recital=(E.recital||0)+1;
+      if(E.recital>=R.every){const x=P.guarding?Math.floor(R.dmg/2):R.dmg;P.hp=Math.max(0,P.hp-x);E.recital=0;L('dmg',`${E.name} · ${R.n} · 절정 · ${P.name} 고정 피해 ${x}${P.guarding?' (방어 자세로 절반)':''}`)}
+      else L('kw',`${E.name} · ${R.n} ${E.recital}/${R.every}${E.recital===R.every-1?' · 다음 라운드 끝에 절정 (방어 자세면 절반)':''}`);
+      push({k:'buff',side:'E',card:{n:R.n}});
+    }
     for(const X of [P,E])if(X.burn>0)X.burn--;
     if(P.hp<=0)C.over='lose';else if(E.hp<=0)C.over='win';
   }
@@ -690,5 +714,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    lastYear,gradeAt,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
