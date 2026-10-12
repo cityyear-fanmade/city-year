@@ -212,12 +212,18 @@ export function startUI(E,app){
   }
   const affLabel=ch=>(ch.aff?`<span class="chip">${esc(ch.aff.name)}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+ch.fr.n:''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
     +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
+  function vMind(ch){
+    const m=ch.mind,mx=CFG.mind.max,t=E.mindTier(ch),low=m<=CFG.mind.voiceAt;
+    return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor}`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}</span></div>
+      <div class="bar" style="height:4px"><span style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></span></div>`;
+  }
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `<div class="panel stack">
       <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${esc(ch.name||T.you)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}</div>
       <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
       ${bar(ch.hp,s.maxHp)}
+      ${vMind(ch)}
       <div class="mono small dim">HP ${ch.hp}/${s.maxHp} · 공격 ${sg(s.atk)} · 회피 ${sg(s.eva)} · 속도 ${sg(s.spd)} · 판정 ${sg(s.check)} · 카드 ${ch.deck.length}장</div>
       <div class="mono small dim">Lv ${ch.lv} · 경험치 ${ch.xp}${nx!=null?'/'+nx:' (최고)'}${E.canPromote(ch)?` · ${E.ptsName(ch)} ${ch.pp||0}/${E.promoNeed(ch)}`:''} · ${Object.values(ch.gear).map(g=>esc(g.n)).join(' · ')}</div>
       <div class="row between"><span class="mono small" style="color:var(--gold)">자산 ${E.money(ch.money)}${G.lastIncome&&UI.showIncome?` <span class="dim">(올해 수입 +${E.money(G.lastIncome)})</span>`:''}</span>
@@ -281,8 +287,16 @@ export function startUI(E,app){
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
     return `${vHud()}<div class="stack" style="gap:6px"><div class="eyebrow">공방 · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
-      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vBlack()}
+      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vBlack()}${vDelCard()}
       <button class="btn primary" data-a="unshop">공방을 나간다</button>`;
+  }
+  /* 공방: 카드 지우기 (방문 한 번에 1장, 덱 최소 장수 유지) */
+  function vDelCard(){
+    const ch=G.ch,S=CFG.shop,can=!UI.deleted&&ch.money>=S.delCost&&ch.deck.length>S.minDeck;
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 지우기</b><span class="mono" style="color:var(--gold)">${E.money(S.delCost)}</span></div>
+      <p class="small dim">덱에서 카드 1장을 지운다. 공방에 들를 때마다 1장까지, 덱은 ${S.minDeck}장 아래로 줄일 수 없다.</p>
+      ${UI.deleted?`<p class="good small">${esc(UI.deleted)}을(를) 지웠다.</p>`:`<div class="chips">${ch.deck.map((id,i)=>`<button class="chip" data-a="delcard" data-i="${i}" ${can?'':'disabled'}>${D.cards[id].n} ×</button>`).join('')}</div>`}
+      ${!UI.deleted&&!can?`<p class="small dim">${ch.deck.length<=S.minDeck?'덱이 더 줄어들 수 없다.':'돈이 모자란다.'}</p>`:''}</div>`;
   }
   function vRules(){
     return `<details><summary>규칙 요약</summary><ul>
@@ -318,7 +332,7 @@ export function startUI(E,app){
     return `<div class="check">플레이테스트 · ${new Date(EXP).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}까지 (약 ${left}분 남음)</div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.0</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.1</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vPlaytest()}
@@ -388,10 +402,20 @@ export function startUI(E,app){
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d100 · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>
-      ${G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~3글자)를 직접 적는다 */
   const TW_OK=/^[가-힣A-Za-z0-9]{2,3}$/;
+  function vEgoPick(){
+    const X=CFG.mind.ego,ty=UI.egoType||'atk';
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">E.G.O 개화</span>
+      <p class="small">마음이 무너지기 직전, 그것을 붙잡은 모양이 힘이 되었다. 종류와 이름을 정한다.</p>
+      <div class="row" style="gap:8px">${['atk','def'].map(k=>`<button class="btn ${ty===k?'primary':'quiet'}" style="flex:1" data-a="egotype" data-i="${k}">${X[k].n}<br><span class="small">${k==='atk'?`명중 +${X.atk.hit} · 정신력 ${X.atk.floor} 밑으로 안 떨어짐`:`체력 +${X.def.hp} · 정신력 ${X.def.floor} 밑으로 안 떨어짐`}</span></button>`).join('')}</div>
+      <div class="row"><span class="small">이름</span><input id="egoname" maxlength="5" value="${esc(UI.egoName||'')}" autocomplete="off" placeholder="1~5글자" style="width:9em"></div>
+      <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
+      <span class="small bad">${UI.egoErr||''}</span>
+      <button class="btn primary" data-a="egoset">이 E.G.O로 정한다</button></div>`;
+  }
   function vTitlePick(){
     const ch=G.ch,adj=D.colors[ch.ci].adj,cur=ch.title.slice(adj.length+1);
     return `<div class="panel stack" style="gap:8px;border-color:${ch.color}"><span class="eyebrow">${T.titleLabel} 이름 정하기</span>
@@ -411,8 +435,8 @@ export function startUI(E,app){
   const isMobile=()=>true;
   function entHtml(side,X,v,compact){
     const col=X.color;PREV[side]={...v};
-    const head=compact?`<div class="entname"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${esc(X.name)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}</span>`
-      :`<div class="row between"><div class="row"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${esc(X.name)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}</span></div>`;
+    const head=compact?`<div class="entname"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${esc(X.name)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span>`
+      :`<div class="row between"><div class="row"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${esc(X.name)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span></div>`;
     return `<div class="panel stack ent${compact?' compact':''}" id="ent-${side}" style="background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
       ${head}
       <div class="bar" id="bar-${side}"><i style="width:${clamp(v.hp/X.maxHp*100,0,100)}%;background:${col}"></i></div>
@@ -505,13 +529,13 @@ export function startUI(E,app){
   }
   function vEnd(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),tr=w&&UI.trueEnd;
-    return `<div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow">${tr?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':'도시는 당신을 기억하지 않는다'} · ${E.age(G)}세</div>
+    return `<div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow">${tr?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':'도시는 당신을 기억하지 않는다'} · ${E.age(G)}세</div>
       <h1 style="color:${c.color}">${esc(c.name||careerLine(c))}</h1>
       ${c.name?`<div class="mono small" style="color:${c.color}">${careerLine(c)}</div>`:''}
       ${c.title?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${c.titleKind==='top'?'칭호':T.titleLabel} · ${esc(c.title)}</span></div>`:''}
-      ${!w&&dt?`<div class="mono small bad">${dt.year}년차 · ${esc(dt.foe)}에게 쓰러졌다${dt.hidden?' (히든 보스)':''}</div>`:''}
+      ${!w&&dt?`<div class="mono small bad">${dt.year}년차 · ${dt.cause==='distort'?'뒤틀림':dt.cause==='mind'?'정신 붕괴로 쓰러졌다':esc(dt.foe)+'에게 쓰러졌다'}${dt.hidden?' (히든 보스)':''}</div>`:''}
       <div class="mono small dim">시드 ${c.seed}</div>
-      <p class="lead">${tr?'도시가 붙일 수 있는 가장 높은 이름 너머까지 걸어갔다. 그 뒤로 당신을 부르는 이름은 도시의 어느 장부에도 맞지 않았다.':endLead(c,w)}</p>
+      <p class="lead">${dt&&dt.cause==='distort'?'당신의 모양을 한 무언가가 골목에 남았다. 사람들은 그것을 더 이상 당신의 이름으로 부르지 않는다.':dt&&dt.cause==='mind'?'몸은 멀쩡했지만, 마음이 먼저 꺼졌다.':tr?'도시가 붙일 수 있는 가장 높은 이름 너머까지 걸어갔다. 그 뒤로 당신을 부르는 이름은 도시의 어느 장부에도 맞지 않았다.':endLead(c,w)}</p>
       ${vRecord(c,w,gi)}
       ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${c.beaten.map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
       <div class="panel stack"><div class="stat"><div><b>${c.lv}</b><span>레벨</span></div><div><b>${sg(c.stats.atk)}</b><span>공격</span></div><div><b>${sg(c.stats.eva)}</b><span>회피</span></div><div><b>${sg(c.stats.spd)}</b><span>속도</span></div></div>
@@ -526,12 +550,12 @@ export function startUI(E,app){
   /* 공유용 기록 글 */
   function shareText(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
-    const head=w&&UI.trueEnd?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':'도시는 나를 기억하지 않는다';
+    const head=w&&UI.trueEnd?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':dt&&dt.cause==='distort'?'나는 뒤틀렸다':'도시는 나를 기억하지 않는다';
     const foes=[...c.beaten,...(c.minis||[])].map(id=>D.enemies[id].n);
     const url=/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.href.split('#')[0]:'https://cityyear-fanmade.github.io/city-year/';
     return [`[도시의 한 해] ${head}`,(c.name?`${c.name} · `:'')+careerLine(c).replace(/<[^>]*>/g,'')+(c.title?` · ${c.title}`:''),
       `${lived}년 · ${E.age(G)}세`+(G.endless&&gi>=0?` · 위협 등급 ${X.grades[gi]}`:''),
-      !w&&dt?`${dt.year}년차 · ${dt.foe}에게 쓰러짐`:null,foes.length?`쓰러뜨린 상대 · ${foes.join(', ')}`:null,
+      !w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:null,c.ego?`E.G.O · ${c.ego.n}`:null,foes.length?`쓰러뜨린 상대 · ${foes.join(', ')}`:null,
       `${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`시드 ${c.seed}`,url].filter(Boolean).join('\n');
   }
   /* 엔딩 카드 이미지 (1080×1350): 캔버스에 직접 그린다. 외부 라이브러리 없음 */
@@ -546,7 +570,7 @@ export function startUI(E,app){
     g.fillStyle=col;g.fillRect(52,52,W-104,10);
     const T_=(t,x,y,f,cl,al)=>{g.font=f;g.fillStyle=cl;g.textAlign=al||'left';g.fillText(t,x,y)};
     const fit=(t,max,size,fam,weight)=>{let z=size;do{g.font=`${weight||''} ${z}px ${fam}`;z-=2}while(g.measureText(t).width>max&&z>20);return g.font};
-    const head=w&&UI.trueEnd?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':'도시는 당신을 기억하지 않는다';
+    const head=w&&UI.trueEnd?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':'도시는 당신을 기억하지 않는다';
     T_('도시의 한 해',W/2,140,`500 34px ${mono}`,gold,'center');
     T_(head,W/2,200,`400 30px ${sans}`,w?gold:'#c46a5a','center');
     const nm=c.name||careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&');
@@ -558,6 +582,8 @@ export function startUI(E,app){
     const rows=[['산 햇수',`${lived}년 · ${E.age(G)}세`]];
     if(G.endless)rows.push(['위협 등급',gi>=0?X.grades[gi]:'—']);
     if(!w&&dt)rows.push(['마지막',`${dt.year}년차 · ${dt.foe}`]);
+    if(c.ego)rows.push(['E.G.O',`${c.ego.n} · ${CFG.mind.ego[c.ego.type].n}`]);
+    rows.push(['정신력',`${c.mind}/${CFG.mind.max}`]);
     rows.push(['레벨',`Lv ${c.lv} · 공격 ${sg(c.stats.atk)} · 회피 ${sg(c.stats.eva)} · 속도 ${sg(c.stats.spd)}`]);
     rows.push(['출신',`${c.o.n} · ${c.t.n}`]);
     for(const [k,v] of rows){T_(k,140,y,`400 32px ${sans}`,dim);g.font=fit(v,W-480,36,sans,'500');g.fillStyle=ink;g.textAlign='right';g.fillText(v,W-140,y);y+=72}
@@ -614,14 +640,14 @@ export function startUI(E,app){
   function nextYear(){
     const st=E.advanceYear(G);
     UI.fight=null;UI.pending=null;
-    if(st.type==='end'){UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.death=null;UI.screen='end';render();return}
+    if(st.type==='end'){UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.death=st.cause?{year:G.year,foe:st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;UI.screen='end';render();return}
     UI.omen=null;UI.showIncome=G.year>1;
     if(st.type==='omen')UI.omen=st;
     else if(st.type==='fight'){UI.fight=st.enemy;UI.enc=st.enc}else UI.ev=st.ev;
     /* 공방 거리: 1년차부터 3년마다 들를지 묻는다. 들러도 해는 넘어가지 않는다 */
     if((G.year-1)%CFG.shop.every===0){
       UI.stock=G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[];
-      UI.bought=null;UI.screen='shopask';render();return;
+      UI.bought=null;UI.deleted=null;UI.screen='shopask';render();return;
     }
     UI.stock=[];UI.screen='event';render();
   }
@@ -648,6 +674,14 @@ export function startUI(E,app){
   function startCombat(id){C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.screen='combat';render()}
 
   const ACT={
+    egotype(k){UI.egoName=(($('egoname')||{}).value||UI.egoName||'');UI.egoType=k;render()},
+    egoset(){
+      const n=(($('egoname')||{}).value||'').trim(),err=E.egoNameErr(n);
+      if(err){UI.egoErr=err;UI.egoName=n;render();return}
+      const ty=UI.egoType||'atk';E.setEgo(G.ch,ty,n);UI.egoErr='';UI.egoName='';UI.egoType=null;
+      UI.res.chips=[...UI.res.chips,`E.G.O · ${n} (${CFG.mind.ego[ty].n})`];render();
+    },
+    delcard(i){const c=E.delCard(G.ch,+i);if(c){UI.deleted=D.cards[c].n;render()}},
     tname(){
       const ch=G.ch,adj=D.colors[ch.ci].adj,w=(($('tw')||{}).value||'').trim();
       if(!TW_OK.test(w)){UI.twErr='2~3글자로 적어 주세요 (한글·영문·숫자, 띄어쓰기 없이)';render();return}
@@ -711,7 +745,7 @@ export function startUI(E,app){
     skip(){SKIP=true;if(wake)wake();if(tapWake)tapWake()},
     tap(){if(tapWake)tapWake()},
     fin(){
-      if(C.over==='lose'){UI.endWin=false;UI.trueEnd=false;UI.death={year:G.year,foe:D.enemies[C.id].n,hidden:!!D.enemies[C.id].hidden};UI.screen='end';render();return}
+      if(C.over==='lose'){UI.endWin=false;UI.trueEnd=false;UI.death=G.ch.mindDead?{year:G.year,foe:'정신 붕괴',cause:'mind'}:{year:G.year,foe:D.enemies[C.id].n,hidden:!!D.enemies[C.id].hidden};UI.screen='end';render();return}
       const r=E.winRewards(G,C);
       if(r.unlock)addUnlock(r.unlock);
       if(r.endText)UI.endText=r.endText;
@@ -742,6 +776,8 @@ export function startUI(E,app){
   return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff}),
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
     testCard:()=>ACT.testCard(),
+    testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
+    testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
     testDeath(y,foe){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false};UI.screen='end';render()},
     testEnd(y){if(!G)return;G.year=G.ch.year=y||CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testFight(id,hp){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;render()},

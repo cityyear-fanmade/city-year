@@ -136,112 +136,136 @@
    ],
    "mid": [
     {
-     "max": 10,
+     "max": 9,
      "enemy": "lullaby"
     },
     {
-     "max": 20,
+     "max": 19,
      "enemy": "bloodman"
     },
     {
-     "max": 30,
+     "max": 28,
      "enemy": "doll"
     },
     {
-     "max": 40,
+     "max": 38,
      "enemy": "hunter"
     },
     {
-     "max": 50,
+     "max": 47,
      "enemy": "lieutenant"
     },
     {
-     "max": 60,
+     "max": 57,
      "enemy": "sweeper"
     },
     {
-     "max": 70,
+     "max": 66,
      "enemy": "turncoat"
     },
     {
-     "max": 80,
+     "max": 75,
      "enemy": "cleanup"
     },
     {
-     "max": 90,
+     "max": 85,
      "enemy": "youngsters"
     },
     {
-     "max": 100,
+     "max": 94,
      "enemy": "porter"
+    },
+    {
+     "max": 97,
+     "enemy": "freischutz"
+    },
+    {
+     "max": 100,
+     "enemy": "wolf"
     }
    ],
    "mid@finger": [
     {
-     "max": 10,
+     "max": 9,
      "enemy": "lullaby"
     },
     {
-     "max": 20,
+     "max": 19,
      "enemy": "bloodman"
     },
     {
-     "max": 30,
+     "max": 28,
      "enemy": "doll"
     },
     {
-     "max": 40,
+     "max": 38,
      "enemy": "sweeper"
     },
     {
-     "max": 50,
+     "max": 47,
      "enemy": "turncoat"
     },
     {
-     "max": 60,
+     "max": 57,
      "enemy": "porter"
     },
     {
-     "max": 80,
+     "max": 75,
      "enemy": "lieutenant"
     },
     {
-     "max": 100,
+     "max": 94,
      "enemy": "youngsters"
+    },
+    {
+     "max": 97,
+     "enemy": "freischutz"
+    },
+    {
+     "max": 100,
+     "enemy": "wolf"
     }
    ],
    "mid@wing": [
     {
-     "max": 10,
+     "max": 9,
      "enemy": "lullaby"
     },
     {
-     "max": 20,
+     "max": 19,
      "enemy": "bloodman"
     },
     {
-     "max": 30,
+     "max": 28,
      "enemy": "doll"
     },
     {
-     "max": 40,
+     "max": 38,
      "enemy": "hunter"
     },
     {
-     "max": 50,
+     "max": 47,
      "enemy": "sweeper"
     },
     {
-     "max": 60,
+     "max": 57,
      "enemy": "turncoat"
     },
     {
-     "max": 70,
+     "max": 66,
      "enemy": "porter"
     },
     {
-     "max": 100,
+     "max": 94,
      "enemy": "cleanup"
+    },
+    {
+     "max": 97,
+     "enemy": "freischutz"
+    },
+    {
+     "max": 100,
+     "enemy": "wolf"
     }
    ],
    "backstreet": [
@@ -290,48 +314,56 @@
    ],
    "late": [
     {
-     "max": 10,
+     "max": 9,
      "enemy": "lullaby"
     },
     {
-     "max": 19,
+     "max": 18,
      "enemy": "bloodman"
     },
     {
-     "max": 29,
+     "max": 27,
      "enemy": "doll"
     },
     {
-     "max": 39,
+     "max": 37,
      "enemy": "lieutenant"
     },
     {
-     "max": 49,
+     "max": 46,
      "enemy": "hunter"
     },
     {
-     "max": 58,
+     "max": 55,
      "enemy": "guest"
     },
     {
-     "max": 68,
+     "max": 64,
      "enemy": "inspector"
     },
     {
-     "max": 78,
+     "max": 74,
      "enemy": "bountyhunter"
     },
     {
-     "max": 87,
+     "max": 82,
      "enemy": "subject"
     },
     {
-     "max": 97,
+     "max": 92,
      "enemy": "ringwork"
     },
     {
-     "max": 100,
+     "max": 94,
      "enemy": "pianist"
+    },
+    {
+     "max": 97,
+     "enemy": "bigbird"
+    },
+    {
+     "max": 100,
+     "enemy": "knight"
     }
    ]
   }

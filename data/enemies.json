@@ -13,7 +13,8 @@
     "glare"
    ],
    "intro": "골목 끝의 가로등이 고개를 돌린다. 불빛이 웃는 모양으로 일그러진다.",
-   "tier": "early"
+   "tier": "early",
+   "abno": true
   },
   "lullaby": {
    "n": "녹슨 자장가",
@@ -29,7 +30,8 @@
     "guard"
    ],
    "intro": "어디선가 녹슨 자장가가 들린다. 소리가 가까워질수록 손목이 따끔하다.",
-   "tier": "mid"
+   "tier": "mid",
+   "abno": true
   },
   "guest": {
    "n": "열두 번째 손님",
@@ -45,7 +47,8 @@
     "guard"
    ],
    "intro": "식탁에는 열두 번째 의자가 비어 있었다. 그 의자가 당신을 향해 천천히 당겨진다.",
-   "tier": "boss"
+   "tier": "boss",
+   "abno": true
   },
   "echo": {
    "n": "꺼진 메아리",
@@ -61,7 +64,8 @@
     "guard"
    ],
    "intro": "벽 속에서 같은 문장이 되풀이된다. 목소리가 점점 낮아지고, 그림자가 한 걸음 앞으로 나온다.",
-   "tier": "early"
+   "tier": "early",
+   "abno": true
   },
   "thug": {
    "n": "골목 칼잡이",
@@ -154,7 +158,8 @@
     "guard"
    ],
    "intro": "버려진 아이 방에서 인형이 일어선다. 환상체다. 눈꺼풀이 꿰매져 있지만 이쪽을 보고 있다.",
-   "tier": "mid"
+   "tier": "mid",
+   "abno": true
   },
   "lieutenant": {
    "n": "조직 행동대장",
@@ -788,6 +793,127 @@
    ],
    "intro": "도시가 걸러 내지 못한 무언가가 당신 앞에 선다. 이름을 붙이려 하면 생각이 미끄러진다.",
    "tier": "boss"
+  },
+  "freischutz": {
+   "n": "마탄의 사수",
+   "color": "#5a6f4f",
+   "hp": 50,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "a_bullet",
+    "aim",
+    "a_bullet",
+    "guard"
+   ],
+   "intro": "멀리서 총구가 반짝인다. 일곱 번째 탄환이 누구를 향할지는 쏘는 쪽도 모른다.",
+   "tier": "boss",
+   "once": true,
+   "abno": true,
+   "drop": {
+    "n": "마탄",
+    "ego": true,
+    "fx": {
+     "atk": 5
+    },
+    "e": "공격+5 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   },
+   "endText": "총성이 멎었다. 탄환 하나가 손 안에서 식어 간다."
+  },
+  "wolf": {
+   "n": "크고 나쁜 늑대",
+   "color": "#4a5f7a",
+   "hp": 56,
+   "atk": 3,
+   "eva": 2,
+   "spd": 5,
+   "deck": [
+    "a_maw",
+    "lunge",
+    "a_maw",
+    "guard"
+   ],
+   "intro": "골목 끝에서 커다란 그림자가 입맛을 다신다. 배 속에서 누군가 우는 소리가 들린다.",
+   "tier": "boss",
+   "once": true,
+   "abno": true,
+   "drop": {
+    "n": "푸른 흉터",
+    "ego": true,
+    "fx": {
+     "atk": 5
+    },
+    "e": "공격+5 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   },
+   "endText": "늑대가 쓰러졌다. 푸른 털 몇 가닥이 손에 남았다."
+  },
+  "bigbird": {
+   "n": "큰 새",
+   "color": "#8a7a3a",
+   "hp": 70,
+   "atk": 4,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "a_lamp",
+    "a_eyes",
+    "a_lamp",
+    "guard"
+   ],
+   "intro": "어둠 속에서 등불 하나가 흔들린다. 그 빛을 따라가면 안전할 것 같은 기분이 든다.",
+   "tier": "boss",
+   "once": true,
+   "abno": true,
+   "drop": {
+    "n": "등불",
+    "ego": true,
+    "fx": {
+     "maxHp": 15
+    },
+    "e": "HP+15 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   },
+   "passive": {
+    "id": "lock",
+    "n": "매혹",
+    "every": 3,
+    "d": "3라운드마다 내 손패 1장을 그 라운드 동안 잠근다"
+   },
+   "endText": "등불이 꺼졌다. 숲은 다시 조용해졌다."
+  },
+  "knight": {
+   "n": "절망의 기사",
+   "color": "#6a7f9a",
+   "hp": 76,
+   "atk": 5,
+   "eva": 4,
+   "spd": 3,
+   "deck": [
+    "a_tears",
+    "a_vow",
+    "guard",
+    "a_tears"
+   ],
+   "intro": "눈물을 흘리는 기사가 칼을 든다. 당신을 지켜 주겠다고 말하면서.",
+   "tier": "boss",
+   "once": true,
+   "abno": true,
+   "drop": {
+    "n": "눈물로 벼린 검",
+    "ego": true,
+    "fx": {
+     "maxHp": 15
+    },
+    "e": "HP+15 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   },
+   "passive": {
+    "id": "mask",
+    "n": "보호",
+    "every": 3,
+    "eva": 8,
+    "d": "3라운드마다 그 라운드 동안 회피 +8"
+   },
+   "endText": "기사가 무릎을 꿇었다. 젖은 칼 한 자루가 남았다."
   }
  },
  "fixedFights": {
