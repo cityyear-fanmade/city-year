@@ -1439,7 +1439,7 @@ function startUI(E,app){
       const note=st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${D.slots[it.slot]} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
       return `<button class="btn" data-a="bspecial" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(it.price)}</span></span>
         <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${note}</span></button>`}).join('');
-    return `<div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">암시장</b><span class="chip">오늘만</span></div>
+    return `<div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">암시장</b><span class="chip">이번 방문만</span></div>
       <p class="small dim">출처를 묻지 않는 물건들. 이번에 지나가면 다음엔 다른 물건이 나온다.</p><div class="stack">${items}</div></div>`;
   }
   function vShop(){
@@ -1832,7 +1832,7 @@ function startUI(E,app){
   function vShopAsk(){
     const nb=(G.year-1)+CFG.shop.every+1;
     return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · 공방 거리</div><h2>공방 거리를 지난다</h2>
-      <p class="lead">장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.${UI.stock.length?' 골목 안쪽에 오늘만 열린 암시장 문도 보인다.':''}</p>
+      <p class="lead">장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
       <p class="small dim">다음 기회는 ${Math.min(nb,CFG.years)}년차.</p></div>
       <div class="stack"><button class="btn primary" data-a="shop">들른다</button><button class="btn" data-a="unshop">지나간다</button></div>`;
   }
