@@ -1631,7 +1631,20 @@ function startUI(E,app){
       <div class="chips">${c.deck.map(id=>`<span class="chip">${D.cards[id].n}</span>`).join('')}</div>
       <div class="mono small dim">${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(c.aff.name):c.licensed?' · '+T.licensed:''}</div></div>
       ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">무한런</span><p class="small">여기서 끝내도 된다. 계속 살아가면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 진짜 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">계속 살아간다</button></div>`:''}
+      <button class="btn quiet" data-a="share">기록 공유</button>
+      ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<textarea id="shareBox" readonly rows="9" style="width:100%;font:inherit;font-size:13px">${esc(UI.shareText)}</textarea>`:''}
       <button class="btn ${w&&!G.endless?'quiet':'primary'}" data-a="start">다시 태어난다</button><button class="btn quiet" data-a="title">처음 화면</button>`;
+  }
+  /* 공유용 기록 글 */
+  function shareText(){
+    const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
+    const head=w&&UI.trueEnd?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':'도시는 나를 기억하지 않는다';
+    const foes=[...c.beaten,...(c.minis||[])].map(id=>D.enemies[id].n);
+    const url=/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.href.split('#')[0]:'https://cityyear-fanmade.github.io/city-year/';
+    return [`[도시의 한 해] ${head}`,(c.name?`${c.name} · `:'')+careerLine(c).replace(/<[^>]*>/g,'')+(c.title?` · ${c.title}`:''),
+      `${lived}년 · ${E.age(G)}세`+(G.endless&&gi>=0?` · 위협 등급 ${X.grades[gi]}`:''),
+      !w&&dt?`${dt.year}년차 · ${dt.foe}에게 쓰러짐`:null,foes.length?`쓰러뜨린 상대 · ${foes.join(', ')}`:null,
+      `${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`시드 ${c.seed}`,url].filter(Boolean).join('\n');
   }
   /* 엔딩 기록: 산 햇수, 도달 등급, 쓰러뜨린 상대 */
   function vRecord(c,w,gi){
@@ -1717,8 +1730,15 @@ function startUI(E,app){
     mode(i){MODE=i;store.set('cityYearMode',i);render()},
     fightmode(i){FIGHT=i;store.set('cityYearFight',i);render()},
     skin(i){SKIN=i;store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
-    endless(){G.endless=true;nextYear()},
-    start(){if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
+    endless(){G.endless=true;UI.shareText=UI.shareMsg=null;nextYear()},
+    async share(){
+      const t=shareText();UI.shareText=null;
+      try{if(navigator.share){await navigator.share({text:t});UI.shareMsg='공유 창을 열었다.';render();return}}catch(e){if(e&&e.name==='AbortError')return}
+      try{await navigator.clipboard.writeText(t);UI.shareMsg='기록을 복사했다. 붙여 넣어 공유하면 된다.'}
+      catch(e){UI.shareMsg='복사가 막혀 있다. 아래 글을 길게 눌러 복사한다.';UI.shareText=t}
+      render();const b=$('shareBox');if(b)b.select();
+    },
+    start(){UI.shareText=UI.shareMsg=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     reroll(){UI.relic=null;born(newSeed(),BC&&BC.name);render()},
     seed(){UI.relic=null;const v=parseInt(($('seedIn')||{}).value,10);if(!(v>=0)){const i=$('seedIn');if(i){i.value='';i.placeholder='숫자만 넣을 수 있다'}return}born(v,BC&&BC.name);render()},
     color(i){E.setColor(BC,+i);BC.fresh=false;render()},
