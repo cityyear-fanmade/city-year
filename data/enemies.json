@@ -725,11 +725,11 @@
   "leihuang": {
    "n": "뇌횡",
    "color": "#e0c060",
-   "hp": 150,
+   "hp": 170,
    "atk": 12,
-   "eva": 4,
+   "eva": 6,
    "spd": 7,
-   "evadeDie": 75,
+   "evadeDie": 85,
    "deck": [
     "x_lh_double",
     "x_lh_triple",
