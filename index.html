@@ -371,7 +371,8 @@ const CFG = {
   /* 연차가 쌓일수록 일반 적이 강해진다: from년차 뒤 해마다 HP +hpPerYear 배, atkEvery년마다 공격·회피 +1 */
   enemyScale: {hpMul: 0.6, from: 8, hpPerYear: 0.01, atkEvery: 5},
   /* 히든 보스(발톱·조율자·도서관 등): 데이터 수치에 체력 배수와 공격·회피 가산 */
-  hidden: {hpMul: 1.15, atk: 1},
+  hidden: {hpMul: 1.15, atk: 1, minHp: 30, winHeal: 15},
+  /* minHp: 히든 보스 전투를 시작할 때 체력이 이보다 낮으면 여기까지 채운다. winHeal: 히든 보스를 이기면 평소 승리 회복에 더해 회복 */
   /* 히든 보스 후반 보정: from년차부터 해마다 체력 +hpPerYear, atkEvery년마다 공격 +1 (40년차 +30 · +5) */
   hiddenLate: {from: 25, hpPerYear: 2, atkEvery: 3},
   /* 무한런: years년 엔딩 뒤 이어서 산다. span년마다 위협 등급이 하나 오르고 그 끝에 등급 전투.
@@ -944,6 +945,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     const foe=D.enemies[C.id];
     if(foe.hidden){
       ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
+      {const h=Math.min(CFG.hidden.winHeal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('숨을 돌린다 · HP +'+h)}}
       /* 엄지 소속으로 뇌횡: 동부십검 + 엄지 검술 (덱 고정) */
       const td=foe.thumbDrop&&meets(ch,foe.thumbDrop.req)?foe.thumbDrop:null;
       if(td){addStats(ch.stats,td.fx);ch.hp+=td.fx.maxHp||0;(ch.relics=ch.relics||[]).push(td.n,'엄지 검술');equip(ch,Object.assign({grade:5},td.gear));
@@ -986,8 +988,11 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;
     if(pen&&!(ch.licensed&&ch.rank<=pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
+    /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
+    let hpNote=null;
+    if(e.hidden&&P.hp<Math.min(CFG.hidden.minHp,P.maxHp)){const t=Math.min(CFG.hidden.minHp,P.maxHp);hpNote=`불길한 예감에 숨을 고른다 · HP ${P.hp} → ${t}`;P.hp=t;ch.hp=t}
     /* 정신력: 환상체와 마주치면 2d3 감소, 그다음 정신력 구간 보정(호흡·회피) */
-    let mindNote=[];
+    let mindNote=hpNote?[hpNote]:[];
     if(e.abno)loseMind(ch,d(3)+d(3),t=>mindNote.push(`환상체와 마주쳤다 · ${t} · 2d3`));
     const mt=mindTier(ch);if(mt){P.breath+=mt.breath;P.eva+=mt.eva;mindNote.push(`정신력 ${ch.mind} · 호흡 +${mt.breath}${mt.eva?` · 회피 +${mt.eva}`:''}`)}
     const C={ch,P,E,id,penalty,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
