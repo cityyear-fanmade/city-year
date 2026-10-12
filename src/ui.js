@@ -392,7 +392,7 @@ export function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const UPDATES={v:'v5.7',items:['레바테인 개편: 화상을 30번 걸면 해방, 해방하면 푸른 화염을 다룬다 (대가가 크다)','히든 보스를 쓰러뜨리면 보스마다 전용 무기 (자세한 내용은 공지)','히든 보스전: 시작 체력 보정과 승리 후 추가 회복','뇌횡 상향 · 출처 모를 장비 하향','이어서 하기 · 오늘의 시드 · 기록실 · 기록 공유 링크']};
+  const UPDATES={v:'v5.7',items:['레바테인 개편: 화상을 30번 걸면 해방, 해방하면 푸른 화염을 다룬다 (대가가 크다)','도서관의 사서를 쓰러뜨리면 드물게 책장 카드를 얻는다 (빛을 다루는 카드 2종)','히든 보스를 쓰러뜨리면 보스마다 전용 무기 (자세한 내용은 공지)','히든 보스전: 시작 체력 보정과 승리 후 추가 회복','뇌횡 상향 · 출처 모를 장비 하향','이어서 하기 · 오늘의 시드 · 기록실 · 기록 공유 링크']};
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -573,7 +573,8 @@ export function startUI(E,app){
       return `${M?duo({E:X,P}):entHtml('E',X,X)+entHtml('P',P,P)}<div class="panel stack"><h2 class="${w?'good':'bad'}">${w?esc(X.name)+'이(가) 쓰러졌다':'당신은 쓰러졌다'}</h2>
         <button class="btn primary" data-a="fin">${w?'전리품을 챙긴다':'결말을 본다'}</button></div>${log}`;
     }
-    const cost=UI.sel.reduce((a,i)=>a+D.cards[P.hand[i]].c,0),left=P.light-cost;
+    /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
+    const cost=UI.sel.reduce((a,i)=>a+D.cards[P.hand[i]].c-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
     const cards=P.hand.map((id,i)=>{
       const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&c.c>left);
       return `<button class="card ${si>=0?'sel':''}" data-a="pick" data-i="${i}" ${dis?'disabled':''}>
@@ -875,7 +876,10 @@ export function startUI(E,app){
       UI.screen='result';render();
     },
     grow(i){const ch=G.ch;E.applyGrowth(ch,ch.lvOpts[+i].g.fx);ch.lvPend--;ch.lvOpts=null;flow()},
-    pick(i){i=+i;const at=UI.sel.indexOf(i);if(at>=0)UI.sel.splice(at,1);else UI.sel.push(i);render()},
+    pick(i){i=+i;const at=UI.sel.indexOf(i);if(at>=0){UI.sel.splice(at,1);
+        /* 빛 회복 카드를 빼서 빛이 모자라면 뒤에 고른 카드부터 뺀다 */
+        const H=C.P.hand,net=()=>UI.sel.reduce((a,j)=>a+D.cards[H[j]].c-(D.cards[H[j]].gain||0),0);while(UI.sel.length&&net()>C.P.light)UI.sel.pop()}
+      else UI.sel.push(i);render()},
     go(){
       const pp=UI.sel.map(i=>D.cards[C.P.hand[i]]);
       const lb=C.log.length;PRE=E.snap(C);UI.lastPP=pp;

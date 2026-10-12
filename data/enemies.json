@@ -343,7 +343,17 @@
       "ward": 3
      }
     }
-   }
+   },
+   "bonusCards": [
+    {
+     "card": "lib_blank",
+     "chance": 10
+    },
+    {
+     "card": "lib_guest",
+     "chance": 10
+    }
+   ]
   },
   "proxy": {
    "n": "검지 대행자",
