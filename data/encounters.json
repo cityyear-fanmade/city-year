@@ -1,0 +1,195 @@
+{
+ "encounters": {
+  "labels": {
+   "early": "초반 조우",
+   "mid": "중반 조우",
+   "backstreet": "뒷골목",
+   "outskirts": "외곽",
+   "late": "후반 조우"
+  },
+  "tables": {
+   "early": [
+    {
+     "max": 25,
+     "enemy": "lamp"
+    },
+    {
+     "max": 45,
+     "enemy": "echo"
+    },
+    {
+     "max": 70,
+     "enemy": "thug"
+    },
+    {
+     "max": 85,
+     "enemy": "strays"
+    },
+    {
+     "max": 93,
+     "enemy": "collector"
+    },
+    {
+     "max": 100,
+     "enemy": "sentry"
+    }
+   ],
+   "early@finger": [
+    {
+     "max": 20,
+     "enemy": "lamp"
+    },
+    {
+     "max": 35,
+     "enemy": "echo"
+    },
+    {
+     "max": 55,
+     "enemy": "thug"
+    },
+    {
+     "max": 90,
+     "enemy": "collector"
+    },
+    {
+     "max": 100,
+     "enemy": "strays"
+    }
+   ],
+   "early@wing": [
+    {
+     "max": 20,
+     "enemy": "lamp"
+    },
+    {
+     "max": 35,
+     "enemy": "echo"
+    },
+    {
+     "max": 50,
+     "enemy": "thug"
+    },
+    {
+     "max": 90,
+     "enemy": "sentry"
+    },
+    {
+     "max": 100,
+     "enemy": "strays"
+    }
+   ],
+   "mid": [
+    {
+     "max": 30,
+     "enemy": "lullaby"
+    },
+    {
+     "max": 50,
+     "enemy": "bloodman"
+    },
+    {
+     "max": 70,
+     "enemy": "doll"
+    },
+    {
+     "max": 85,
+     "enemy": "hunter"
+    },
+    {
+     "max": 100,
+     "enemy": "lieutenant"
+    }
+   ],
+   "mid@finger": [
+    {
+     "max": 20,
+     "enemy": "lullaby"
+    },
+    {
+     "max": 40,
+     "enemy": "bloodman"
+    },
+    {
+     "max": 55,
+     "enemy": "doll"
+    },
+    {
+     "max": 100,
+     "enemy": "lieutenant"
+    }
+   ],
+   "mid@wing": [
+    {
+     "max": 35,
+     "enemy": "lullaby"
+    },
+    {
+     "max": 50,
+     "enemy": "bloodman"
+    },
+    {
+     "max": 85,
+     "enemy": "doll"
+    },
+    {
+     "max": 100,
+     "enemy": "hunter"
+    }
+   ],
+   "backstreet": [
+    {
+     "max": 35,
+     "enemy": "lamp"
+    },
+    {
+     "max": 75,
+     "enemy": "thug"
+    },
+    {
+     "max": 100,
+     "enemy": "collector"
+    }
+   ],
+   "outskirts": [
+    {
+     "max": 50,
+     "enemy": "strays"
+    },
+    {
+     "max": 80,
+     "enemy": "echo"
+    },
+    {
+     "max": 100,
+     "enemy": "hunter"
+    }
+   ],
+   "late": [
+    {
+     "max": 20,
+     "enemy": "lullaby"
+    },
+    {
+     "max": 40,
+     "enemy": "bloodman"
+    },
+    {
+     "max": 55,
+     "enemy": "doll"
+    },
+    {
+     "max": 75,
+     "enemy": "lieutenant"
+    },
+    {
+     "max": 90,
+     "enemy": "hunter"
+    },
+    {
+     "max": 100,
+     "enemy": "guest"
+    }
+   ]
+  }
+ }
+}

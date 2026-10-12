@@ -1,0 +1,32 @@
+{
+ "you": "당신",
+ "licensed": "해결사",
+ "licenseGained": "해결사 등록",
+ "titleLabel": "특색",
+ "promote": "승급",
+ "rankUnit": "급",
+ "rankStart": 9,
+ "rankTop": 1,
+ "unranked": "무명",
+ "unnamed": "이름 없는 사람",
+ "affTypes": {
+  "office": "사무소",
+  "assoc": "협회",
+  "wing": "날개",
+  "finger": "손가락"
+ },
+ "paths": {
+  "fixer": "해결사",
+  "assoc": "협회",
+  "wing": "날개",
+  "finger": "손가락"
+ },
+ "hiddenBoss": "히든 보스",
+ "hiddenWin": "히든 보스 격파",
+ "jobs": {
+  "arbiter": "머리의 조율자",
+  "claw": "머리의 발톱"
+ },
+ "pinky": "소지",
+ "promoPoints": "실적"
+}

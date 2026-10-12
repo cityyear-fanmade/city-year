@@ -1,0 +1,859 @@
+<title>도시의 한 해</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;900&display=swap">
+<style>
+/* 레이아웃: 한 열짜리 텍스트 어드벤처. 전투는 적 / 주사위 무대 / 나 / 기록 / 손패 순서. 적과 나는 각자의 색으로 구분한다. */
+:root{
+  --bg:#0c0e13; --panel:#131722; --panel2:#1a1f2d; --line:#262c3b; --line2:#3a4256;
+  --fg:#e7e2d7; --dim:#8d93a3; --gold:#c8a35a; --gold-ink:#1a1405;
+  --bleed:#d1686b; --rupture:#7ba6dc; --breath:#79c2b3; --good:#8fbf7a;
+  --serif:"Noto Serif KR","Nanum Myeongjo",serif;
+  --sans:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans);padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3,p{margin:0}
+h1{font:900 clamp(34px,10vw,48px)/1.1 var(--serif);letter-spacing:-.01em;text-wrap:balance}
+h2{font:600 22px/1.35 var(--serif);text-wrap:balance}
+.serif{font-family:var(--serif)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dim{color:var(--dim)}
+.small{font-size:12.5px}
+.eyebrow{font:500 11.5px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.row{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:10px}
+.btn{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line2);border-radius:5px;padding:12px 14px;min-height:46px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;width:100%}
+.btn:hover:not(:disabled){border-color:var(--gold)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--gold-ink);font-weight:700;align-items:center;justify-content:center;text-align:center}
+.btn.quiet{background:transparent}
+.btn b{font-weight:700}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.bar{height:8px;background:#222836;border-radius:2px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--gold);transition:width .3s}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12px/1 var(--mono);padding:5px 7px;border:1px solid var(--line2);border-radius:3px;color:var(--fg);white-space:nowrap}
+.swatch{width:12px;height:12px;border-radius:2px;flex:none}
+.lead{color:var(--dim);text-wrap:pretty}
+.roll{display:grid;grid-template-columns:64px 44px minmax(0,1fr);gap:10px;align-items:baseline;padding-block:10px;border-top:1px solid var(--line)}
+.roll:first-of-type{border-top:0}
+.roll .v{font:500 20px/1 var(--mono);color:var(--gold)}
+.roll .n{display:flex;flex-direction:column;gap:2px}
+.roll .n span{color:var(--dim);font-size:13px}
+.log{font:400 12.5px/1.7 var(--mono);max-height:200px;overflow-y:auto;background:#0f1219;border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.log div{padding-block:1px;overflow-wrap:anywhere}
+.log .head{color:var(--gold);padding-top:6px}
+.log .sys{color:var(--dim)}
+.log .hit{color:var(--fg)}
+.log .miss{color:var(--dim)}
+.log .dmg{color:var(--bleed)}
+.log .kw{color:var(--rupture)}
+.hand{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.card{position:relative;font:inherit;color:var(--fg);text-align:left;background:var(--panel2);border:1px solid var(--line2);border-radius:5px;padding:10px 10px 10px 42px;min-height:84px;display:flex;flex-direction:column;gap:5px;cursor:pointer}
+.card:disabled{opacity:.38;cursor:default}
+.card.sel{border-color:var(--gold);background:#231f15}
+.card .cost{position:absolute;left:9px;top:10px;width:24px;height:24px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);display:grid;place-items:center;font:500 13px/1 var(--mono)}
+.card .ord{position:absolute;right:8px;top:8px;font:500 12px/1 var(--mono);color:var(--gold-ink);background:var(--gold);border-radius:3px;padding:3px 5px;font-style:normal}
+.card .nm{font-weight:700;font-size:14px;line-height:1.3;padding-right:20px}
+.card .cd{font:400 11.5px/1.5 var(--mono);color:var(--dim)}
+.card .chips{gap:4px}
+.card .chip{font-size:11px;padding:3px 5px}
+.stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;text-align:center}
+.stat div{background:var(--panel2);border-radius:4px;padding:8px 4px}
+.stat b{display:block;font:500 17px/1.2 var(--mono);color:var(--gold)}
+.stat span{font-size:11.5px;color:var(--dim)}
+details{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--panel)}
+summary{cursor:pointer;font-weight:700}
+details ul{margin:10px 0 0;padding-left:18px;color:var(--dim);font-size:13.5px}
+details li{margin-block:3px}
+table{width:100%;border-collapse:collapse;font:400 13px/1.5 var(--mono)}
+th,td{padding:8px 6px;border-top:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left;font-family:var(--sans)}
+th{color:var(--dim);font-weight:400;border-top:0}
+.tbl{overflow-x:auto}
+.check{font:400 13px/1.6 var(--mono);color:var(--dim);border-left:2px solid var(--gold);padding-left:10px}
+.good{color:var(--good)}.bad{color:var(--bleed)}
+
+/* 색 고르기 / 연출 설정 */
+.sws{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:32px;height:32px;border-radius:6px;border:2px solid transparent;cursor:pointer;padding:0}
+.sw.on{border-color:var(--fg);outline:2px solid var(--bg);outline-offset:-4px}
+.seg{display:flex;border:1px solid var(--line2);border-radius:5px;overflow:hidden}
+.seg button{flex:1;font:inherit;font-size:13px;padding:10px 6px;background:transparent;color:var(--dim);border:0;border-left:1px solid var(--line2);cursor:pointer;min-height:42px}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--gold);color:var(--gold-ink);font-weight:700}
+
+/* 전투 무대 */
+.ent{position:relative}
+.arena{background:#0f1219;border:1px solid var(--line);border-radius:6px;padding:12px;min-height:76px;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center}
+.alabel{font:500 13px/1.4 var(--mono);color:var(--dim);text-align:center;min-height:18px}
+.dice{display:flex;gap:12px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.dwrap{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:76px}
+.dcap{font:500 11px/1 var(--mono);letter-spacing:.1em;color:var(--dim)}
+.die{width:64px;height:64px;border:2px solid var(--line2);border-radius:12px;display:grid;place-items:center;background:var(--panel2)}
+.die.big{width:72px;height:72px}
+.die b{font:500 26px/1 var(--mono);font-variant-numeric:tabular-nums}
+.die.rolling{animation:wob .24s linear infinite}
+.die.win{box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 55%,transparent)}
+.die.lose{opacity:.6}
+.dsum{font:400 12px/1.4 var(--mono);color:var(--dim);min-height:17px;text-align:center;max-width:150px}
+.vs{align-self:center;font:500 12px/1 var(--mono);color:var(--dim);padding-top:14px}
+.d6s{display:flex;gap:6px;min-height:64px;align-items:center}
+.d6{width:42px;height:42px;border-radius:9px;border:2px solid var(--gold);display:grid;place-items:center;background:var(--panel2)}
+.d6 b{font:500 20px/1 var(--mono)}
+.float{position:absolute;right:14px;top:8px;font:700 22px/1 var(--mono);pointer-events:none;animation:flt .95s ease-out forwards;text-shadow:0 1px 6px #000}
+@keyframes wob{0%{transform:rotate(-8deg) translateY(0)}25%{transform:rotate(6deg) translateY(-4px)}50%{transform:rotate(-5deg)}75%{transform:rotate(8deg) translateY(-3px)}100%{transform:rotate(-8deg)}}
+@keyframes settle{0%{transform:scale(1.22)}100%{transform:scale(1)}}
+@keyframes lungeUp{0%{transform:translateY(0)}35%{transform:translateY(-18px)}100%{transform:translateY(0)}}
+@keyframes lungeDown{0%{transform:translateY(0)}35%{transform:translateY(18px)}100%{transform:translateY(0)}}
+@keyframes hurt{0%{transform:translateX(0);box-shadow:inset 0 0 0 0 transparent}15%{transform:translateX(-9px);box-shadow:inset 0 0 0 2px var(--bleed)}35%{transform:translateX(8px)}55%{transform:translateX(-5px);box-shadow:inset 0 0 0 2px var(--bleed)}80%{transform:translateX(3px)}100%{transform:translateX(0);box-shadow:inset 0 0 0 0 transparent}}
+@keyframes dodge{0%{transform:translateX(0);opacity:1}35%{transform:translateX(24px) skewX(-8deg);opacity:.5}100%{transform:translateX(0);opacity:1}}
+@keyframes guard{0%{box-shadow:0 0 0 0 var(--rupture)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--rupture) 70%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes flt{0%{opacity:0;transform:translateY(0)}15%{opacity:1}100%{opacity:0;transform:translateY(-36px)}}
+.settle{animation:settle .3s ease-out}
+.lunge-up{animation:lungeUp .45s ease-out}
+.lunge-down{animation:lungeDown .45s ease-out}
+.hurt{animation:hurt .5s ease-out}
+.dodge{animation:dodge .55s ease-out}
+.guard{animation:guard .7s ease-out}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+</style>
+
+<div id="app"></div>
+
+<script>
+/* ===== 임시 수치: 여기만 바꾸면 밸런스가 바뀐다 ===== */
+const CFG = {
+  baseHp: 54, light: 3, lightMax: 5, hand: 4, stackCap: 10,
+  breathCritPer: 5, critMult: 1.5, orderBonusLight: 1, catchupBonus: 10,
+  gapFirst: 30, firstHit: 10, defBonus: 15,
+  years: 7, startAge: 17, yearHeal: 6, winHeal: 8, chainHeal: 14
+};
+
+/* ===== 데이터 (세계관 용어는 이름·설명 문자열에만 있다) ===== */
+const KW = {
+  bleed:{n:'출혈',c:'var(--bleed)'},
+  rupture:{n:'파열',c:'var(--rupture)'},
+  breath:{n:'호흡',c:'var(--breath)'}
+};
+const CARDS = {
+  slash:{n:'가르기',c:1,t:'atk',hits:1,dice:1,b:0,hit:0},
+  thrust:{n:'찌르기',c:1,t:'atk',hits:1,dice:1,b:0,hit:10},
+  smash:{n:'내려치기',c:2,t:'atk',hits:1,dice:2,b:0,hit:-5},
+  guard:{n:'방어 태세',c:1,t:'def',d:'이번 라운드 회피 +15'},
+  fissure:{n:'균열 보행',c:1,t:'atk',hits:1,dice:1,b:0,hit:0,kw:[['rupture',2,'t']]},
+  rustblade:{n:'녹슨 칼날',c:1,t:'atk',hits:1,dice:1,b:0,hit:0,kw:[['bleed',2,'t']]},
+  breathe:{n:'호흡 고르기',c:1,t:'buff',d:'호흡을 가다듬는다',kw:[['breath',3,'s']]},
+  ripple:{n:'은빛 파문',c:2,t:'atk',hits:1,dice:2,b:1,hit:5},
+  echo:{n:'잔향 절단',c:2,t:'atk',hits:2,dice:1,b:0,hit:-5},
+  cog:{n:'속삭이는 톱니',c:1,t:'atk',hits:1,dice:1,b:0,hit:0,kw:[['bleed',1,'t'],['rupture',1,'t']]},
+  noon:{n:'붉은 정오',c:3,t:'atk',hits:1,dice:3,b:0,hit:-10,kw:[['bleed',3,'t']]},
+  shard:{n:'유리 파편',c:1,t:'atk',hits:1,dice:1,b:0,hit:0,kw:[['rupture',3,'t']]},
+  brand:{n:'불면의 낙인',c:1,t:'buff',d:'자신에게 호흡, 상대에게 파열',kw:[['breath',2,'s'],['rupture',2,'t']]},
+  lamp:{n:'가로등 휘두르기',c:1,t:'atk',hits:1,dice:1,b:0,hit:0},
+  glare:{n:'눈부신 빛',c:2,t:'atk',hits:1,dice:2,b:0,hit:-5},
+  rustnote:{n:'녹슨 소절',c:1,t:'atk',hits:1,dice:1,b:0,hit:0,kw:[['bleed',2,'t']]},
+  drawl:{n:'늘어진 가락',c:2,t:'atk',hits:1,dice:2,b:0,hit:0},
+  tknife:{n:'식탁 위의 칼',c:1,t:'atk',hits:1,dice:1,b:0,hit:0,kw:[['rupture',2,'t']]},
+  supper:{n:'마지막 만찬',c:3,t:'atk',hits:1,dice:3,b:0,hit:-5,kw:[['bleed',2,'t']]},
+  lunge:{n:'돌진',c:2,t:'atk',hits:1,dice:2,b:0,hit:10},
+  flurry:{n:'난타',c:3,t:'atk',hits:3,dice:1,b:0,hit:-10},
+  shadowstep:{n:'그림자 걸음',c:2,t:'def',eva:30,d:'이번 라운드 회피 +30'},
+  bloodlet:{n:'피 가르기',c:2,t:'atk',hits:1,dice:1,b:0,hit:0,kw:[['bleed',4,'t']]},
+  tremor:{n:'균열 확장',c:2,t:'atk',hits:1,dice:1,b:0,hit:0,kw:[['rupture',4,'t']]},
+  lantern:{n:'등불 켜기',c:2,t:'buff',d:'호흡을 크게 끌어올린다',kw:[['breath',5,'s']]},
+  rend:{n:'찢는 일격',c:2,t:'atk',hits:1,dice:2,b:0,hit:0,kw:[['bleed',1,'t'],['rupture',1,'t']]},
+  finale:{n:'마지막 소절',c:3,t:'atk',hits:1,dice:3,b:2,hit:0},
+  faint:{n:'흐려진 손길',c:1,t:'atk',hits:1,dice:1,b:0,hit:0,kw:[['rupture',1,'t']]},
+  hollow:{n:'텅 빈 울림',c:2,t:'atk',hits:1,dice:2,b:0,hit:-5}
+};
+const REWARDS = ['cog','echo','noon','shard','brand','ripple','fissure','rustblade','breathe','lunge','flurry','shadowstep','bloodlet','tremor','lantern','rend','finale'];
+const ENEMIES = {
+  lamp:{n:'웃는 가로등',color:'#e3b341',hp:26,atk:0,eva:0,spd:0,deck:['lamp','lamp','glare'],
+    intro:'골목 끝의 가로등이 고개를 돌린다. 불빛이 웃는 모양으로 일그러진다.'},
+  lullaby:{n:'녹슨 자장가',color:'#c0693a',hp:32,atk:2,eva:2,spd:2,deck:['rustnote','rustnote','drawl','guard'],
+    intro:'어디선가 녹슨 자장가가 들린다. 소리가 가까워질수록 손목이 따끔하다.'},
+  guest:{n:'열두 번째 손님',color:'#9a84c4',hp:40,atk:3,eva:3,spd:3,deck:['tknife','tknife','supper','guard'],
+    intro:'식탁에는 열두 번째 의자가 비어 있었다. 그 의자가 당신을 향해 천천히 당겨진다.'},
+  echo:{n:'꺼진 메아리',color:'#6b7388',hp:30,atk:1,eva:4,spd:1,deck:['faint','faint','hollow','guard'],
+    intro:'벽 속에서 같은 문장이 되풀이된다. 목소리가 점점 낮아지고, 그림자가 한 걸음 앞으로 나온다.'}
+};
+const FIGHT = {3:'lamp',6:'lullaby',7:'guest'};
+
+/* 색: 플레이어가 고르거나 무작위. 해결사가 되면 색 + 가장 높은 능력치로 특색 칭호가 정해진다 */
+const COLORS = [
+  {adj:'푸른',hex:'#6f9bd1'},{adj:'붉은',hex:'#d1686b'},{adj:'잿빛',hex:'#9a948c'},
+  {adj:'검은',hex:'#7a8298'},{adj:'보랏빛',hex:'#9a84c4'},{adj:'금빛',hex:'#c8a35a'},
+  {adj:'은빛',hex:'#b9c2cf'},{adj:'창백한',hex:'#cfd8d4'},{adj:'주홍',hex:'#d9784a'},{adj:'옥빛',hex:'#79c2b3'}
+];
+const TITLE_WORDS = {
+  atk:['정오','낙인'], eva:['서리','그림자'], spd:['여명','잔향'], hp:['적막','침묵']
+};
+
+const ORIGINS = [
+  {max:25,n:'뒷골목 태생',t:'빛이 닿지 않는 골목에서 눈치로 자랐다.',e:'회피 +3 · 카드 균열 보행',fx:{eva:3},card:'fissure'},
+  {max:50,n:'둥지 노동자',t:'공장 소음 속에서 몸으로 먹고살았다.',e:'최대 HP +10 · 카드 녹슨 칼날',fx:{maxHp:10},card:'rustblade'},
+  {max:75,n:'날개의 하급직',t:'규칙과 서류 사이에서 버티는 법을 안다.',e:'공격 +1 · 회피 +1 · 카드 호흡 고르기',fx:{atk:1,eva:1},card:'breathe'},
+  {max:90,n:'몰락한 가문',t:'이름만 남은 집의 마지막 세대.',e:'공격 +3 · 카드 은빛 파문',fx:{atk:3},card:'ripple'},
+  {max:100,n:'도서관의 손님',t:'어느 날 초대장을 받고 돌아온 사람.',e:'속도 +5 · 카드 잔향 절단',fx:{spd:5},card:'echo'}
+];
+const TALENTS = [
+  {max:20,n:'픽서의 자질',t:'싸움의 요령을 타고났다.',e:'공격 +2',fx:{atk:2}},
+  {max:40,n:'도시의 눈',t:'남보다 먼저 움직임을 본다.',e:'속도 +3',fx:{spd:3}},
+  {max:60,n:'질긴 몸',t:'웬만한 상처엔 쓰러지지 않는다.',e:'최대 HP +8',fx:{maxHp:8}},
+  {max:80,n:'예민한 감각',t:'숨소리까지 들린다.',e:'회피 +2 · 전투 시작 호흡 +1',fx:{eva:2,startBreath:1}},
+  {max:100,n:'끊이지 않는 인연',t:'어딜 가도 아는 얼굴이 있다.',e:'사건 판정 +5',fx:{check:5}}
+];
+const FLAWS = [
+  {max:20,n:'갚지 못한 빚',t:'몸이 담보로 잡혀 있다.',e:'최대 HP -5',fx:{maxHp:-5}},
+  {max:40,n:'불면',t:'잠든 기억이 없다.',e:'속도 -2',fx:{spd:-2}},
+  {max:60,n:'낙인',t:'이름 위에 지워지지 않는 표시가 있다.',e:'사건 판정 -5',fx:{check:-5}},
+  {max:80,n:'광기',t:'가끔 자신이 두 명처럼 느껴진다.',e:'전투 시작: 출혈 2, 호흡 3',fx:{startBleed:2,startBreath:3}},
+  {max:100,n:'추적자',t:'누군가 계속 따라온다.',e:'적 HP +5',fx:{enemyHp:5}}
+];
+
+/* 사건: c = 선택지, check = 1d100 + 능력치 + 판정보정 ≥ dc */
+const EVENTS = [
+  {t:'뒷골목의 의뢰',x:'골목 끝에서 낯선 사람이 봉투를 내민다. 운반만 하면 된다고 한다. 봉투는 생각보다 무겁다.',c:[
+    {l:'받아서 옮긴다',check:{s:'spd',dc:50},
+      ok:{t:'아무도 눈치채지 못했다. 사례로 쓸 만한 파편 하나를 받았다.',fx:{spd:1,card:'shard'}},
+      fail:{t:'도중에 누군가 길을 막았다. 봉투는 미끼였다.',fx:{combat:'lamp'}}},
+    {l:'거절하고 돌아선다',ok:{t:'등 뒤에서 누군가 웃는 소리가 들렸지만 돌아보지 않았다.',fx:{eva:1}}}]},
+  {t:'낡은 책 한 권',x:'가로등 아래에 낡은 책이 놓여 있다. 표지에는 아무 글자도 없다.',c:[
+    {l:'펼쳐 읽는다',check:{s:null,dc:45},
+      ok:{t:'글자가 손끝에 달라붙는다. 문장 하나가 날이 되어 남았다.',fx:{card:'cog'}},
+      fail:{t:'글자가 눈에 박힌다. 한참 두통이 가시지 않았다.',fx:{hp:-6}}},
+    {l:'태워서 불을 쬔다',ok:{t:'종이는 금방 재가 되었다. 손은 따뜻해졌다.',fx:{hp:6}}}]},
+  {t:'둥지의 소문',x:'둥지에서 소문이 돈다. 옆 구역 공장에서 일손을 구하는데 일당이 두 배라고 한다. 이유는 아무도 말하지 않는다.',c:[
+    {l:'찾아가서 일한다',check:{s:'atk',dc:45},
+      ok:{t:'무거운 짐을 나르며 몸이 단단해졌다.',fx:{maxHp:4}},
+      fail:{t:'사고가 났다. 튀어 오른 파편이 팔을 스쳤다.',fx:{hp:-7}}},
+    {l:'소문은 소문으로 둔다',ok:{t:'그날 밤 공장 쪽에서 사이렌이 길게 울렸다.',fx:{hp:4}}}]},
+  {t:'사무소의 제안',req:'nofixer',x:'작은 사무소가 계약서를 내민다. 해결사로 등록하면 위험수당이 붙는 일이다. 서명란이 비어 있다.',c:[
+    {l:'바로 서명한다',ok:{t:'손에 익지 않은 장비를 받았다. 위험을 감수한 만큼 날이 선다.',fx:{atk:1,hp:-5,fixer:true}}},
+    {l:'조건을 협상한다',check:{s:null,dc:55},
+      ok:{t:'조건이 바뀌었다. 계약금 대신 쓸 만한 물건을 받아 냈다.',fx:{reward:true,fixer:true}},
+      fail:{t:'담당자가 얼굴을 찡그렸다. 그날 일당이 깎였다.',fx:{hp:-4}}},
+    {l:'거절한다',ok:{t:'계약서는 접혀서 서랍 속으로 들어갔다.',fx:{eva:1}}}]},
+  {t:'도서관의 초대장',x:'우편함에 초대장이 꽂혀 있다. 보낸 이의 이름은 없고 주소만 적혀 있다. 도착 시각은 오늘 밤이다.',c:[
+    {l:'초대에 응한다',check:{s:'spd',dc:50},
+      ok:{t:'돌아오는 길, 손에는 책 한 권이 들려 있었다.',fx:{reward:true,hp:-4}},
+      fail:{t:'돌아오는 길은 갈 때와 달랐다. 한참을 헤맸다.',fx:{hp:-8}}},
+    {l:'무시하고 잔다',ok:{t:'오랜만에 깊이 잤다.',fx:{spd:1,hp:4}}}]},
+  {t:'병원 골목',x:'골목 구석에 쓰러진 사람이 있다. 숨은 붙어 있지만 오래 버티지 못할 것 같다.',c:[
+    {l:'부축해서 병원까지 간다',check:{s:'atk',dc:40},
+      ok:{t:'누군가를 살렸다는 감각이 오래 남았다.',fx:{maxHp:3,hp:3}},
+      fail:{t:'부축하다 넘어져 같이 굴렀다.',fx:{hp:-6}}},
+    {l:'지나친다',ok:{t:'지나치는 데 익숙해졌다.',fx:{eva:1}}}]},
+  {t:'평범한 한 해',x:'아무 일도 일어나지 않은 한 해. 이런 해는 드물다.',c:[
+    {l:'쉬어 간다',ok:{t:'몸이 가벼워졌다.',fx:{hp:12}}},
+    {l:'몸을 단련한다',check:{s:null,dc:35},
+      ok:{t:'꾸준히 휘두른 만큼 손이 빨라졌다.',fx:{atk:1}},
+      fail:{t:'무리하다 근육이 뭉쳤다.',fx:{hp:-3}}}]},
+  {t:'빗속의 호송',x:'비가 쏟아지는 날, 사람들을 다른 구역까지 데려다 달라는 부탁이 들어온다. 길은 미끄럽고 골목은 어둡다.',c:[
+    {l:'앞장서서 길을 연다',check:{s:'eva',dc:45},
+      ok:{t:'비를 맞으며 모두를 무사히 데려다 줬다. 사례로 몸 쓰는 요령을 배웠다.',fx:{card:'shadowstep'}},
+      fail:{t:'미끄러져 넘어졌다. 호송은 다른 사람이 마무리했다.',fx:{hp:-5}}},
+    {l:'뒤에서 따라간다',ok:{t:'무사히 도착했다. 아무 일도 없었다.',fx:{hp:3}}}]},
+  {t:'시장의 소매치기',x:'붐비는 시장 한가운데에서 누군가 지갑을 낚아채 달아난다. 당신 지갑은 아니다.',c:[
+    {l:'쫓아간다',check:{s:'spd',dc:50},
+      ok:{t:'골목 끝에서 따라잡았다. 상대는 품에서 쓸 만한 것을 내놓았다.',fx:{reward:true,spd:1}},
+      fail:{t:'놓쳤다. 숨이 가쁘고 무릎이 아프다.',fx:{hp:-4}}},
+    {l:'소리쳐 알린다',ok:{t:'목소리는 인파에 묻혔다. 대신 이름을 아는 사람이 하나 늘었다.',fx:{eva:1}}}]},
+  {t:'골목 도박판',x:'낡은 상자 위에 주사위 두 개가 놓여 있다. 판돈은 한 번의 굴림이다.',c:[
+    {l:'주사위를 던진다',check:{s:null,dc:50},
+      ok:{t:'운이 따랐다. 주사위가 멈추는 순간 판이 조용해졌다.',fx:{reward:true}},
+      fail:{t:'숫자가 틀어졌다. 판돈 대신 멍이 남았다.',fx:{hp:-6}}},
+    {l:'구경만 한다',ok:{t:'남이 잃는 모습을 보며 배운 것이 있다.',fx:{eva:1}}}]},
+  {t:'환상체의 흔적',x:'벽에 긁힌 자국이 길게 이어진다. 자국은 방금 생긴 것처럼 축축하다.',c:[
+    {l:'자국을 따라간다',check:{s:'atk',dc:55},
+      ok:{t:'끝에서 남은 조각을 주웠다. 날이 한층 예리해졌다.',fx:{atk:1,reward:true}},
+      fail:{t:'자국의 끝에서 무언가 몸을 일으켰다.',fx:{combat:'echo'}}},
+    {l:'우회한다',ok:{t:'긁히는 소리가 한참 뒤에서 따라왔지만 멀어졌다.',fx:{spd:1}}}]},
+  {t:'낡은 기차역',x:'운행이 끊긴 역 승강장에 사람 하나가 서 있다. 표 한 장을 내밀며 어디든 가라고 한다.',c:[
+    {l:'표를 받는다',check:{s:null,dc:45},
+      ok:{t:'도착한 곳은 기억에 없는 거리였다. 돌아올 때 호주머니에 무언가 들어 있었다.',fx:{reward:true}},
+      fail:{t:'어디에도 닿지 못한 채 새벽에 같은 승강장에서 깼다.',fx:{hp:-5}}},
+    {l:'돌려보낸다',ok:{t:'표는 바람에 날려 선로 아래로 떨어졌다.',fx:{hp:5}}}]},
+  {t:'가족의 편지',x:'오랫동안 소식이 없던 사람에게서 편지가 왔다. 봉투는 얇고 주소는 지워져 있다.',c:[
+    {l:'답장을 쓴다',ok:{t:'쓰고 지우기를 반복하다 밤이 지났다. 마음이 조금 가라앉았다.',fx:{maxHp:2,hp:4}}},
+    {l:'서랍에 넣어 둔다',ok:{t:'언젠가 읽을 날이 올 것이다.',fx:{spd:1}}}]},
+  {t:'밤샘 근무',x:'둥지 공장이 야간 인력을 구한다. 졸음을 이기면 일당이 곱절이다.',c:[
+    {l:'밤새 일한다',check:{s:null,dc:40},
+      ok:{t:'새벽 종이 울릴 때까지 버텼다. 호흡이 길어졌다.',fx:{card:'lantern'}},
+      fail:{t:'졸다가 기계에 손을 부딪혔다.',fx:{hp:-6}}},
+    {l:'집에서 잔다',ok:{t:'푹 잤다.',fx:{hp:8}}}]},
+  {t:'의뢰 게시판',req:'fixer',x:'사무소 게시판에 의뢰서가 가득하다. 난이도가 높을수록 수당이 두껍다.',c:[
+    {l:'쉬운 의뢰',check:{s:'spd',dc:35},
+      ok:{t:'어렵지 않은 일이었다. 수당으로 쓸 만한 것을 샀다.',fx:{reward:true}},
+      fail:{t:'쉬운 줄 알았는데 발목을 접질렸다.',fx:{hp:-3}}},
+    {l:'어려운 의뢰',check:{s:'atk',dc:60},
+      ok:{t:'까다로운 일을 해냈다. 사무소 사람들이 이름을 기억한다.',fx:{atk:1,reward:true}},
+      fail:{t:'일이 틀어졌다. 의뢰 대상이 먼저 움직였다.',fx:{combat:'echo'}}}]},
+  {t:'선배 해결사',req:'fixer',x:'휴게실에서 오래된 해결사가 말을 건다. 한 수 가르쳐 주겠다고 한다.',c:[
+    {l:'대련을 청한다',check:{s:'eva',dc:50},
+      ok:{t:'세 번 넘어지고 한 번 버텼다. 그 한 번이 오래 남았다.',fx:{eva:1,card:'shadowstep'}},
+      fail:{t:'단 한 번도 버티지 못했다.',fx:{hp:-5}}},
+    {l:'조언만 듣는다',ok:{t:'말은 짧았지만 정확했다.',fx:{spd:1,hp:4}}}]}
+];
+/* 해결사가 된 뒤 4년차에 열리는 소속 선택 */
+const OFFICE_EVENT = {t:'사무소 배정',x:'해결사로 이름이 올랐으니 어디 소속으로 일할지 정해야 한다. 세 곳에서 연락이 왔다.',c:[
+  {l:'골목 사무소',h:'속도 +2 · 회피 +1',ok:{t:'좁은 골목 안쪽의 작은 사무소. 발이 빠른 사람들이 모여 있다.',fx:{office:'골목 사무소',spd:2,eva:1}}},
+  {l:'철문 사무소',h:'최대 HP +6 · 공격 +1',ok:{t:'무거운 철문 뒤에서 장비 손질 소리가 난다. 몸이 먼저인 사람들이다.',fx:{office:'철문 사무소',maxHp:6,atk:1}}},
+  {l:'등불 사무소',h:'카드 · 등불 켜기',ok:{t:'창가마다 등불이 켜져 있다. 숨을 고르는 법부터 가르친다.',fx:{office:'등불 사무소',card:'lantern'}}}
+]};
+
+/* ===== 유틸 ===== */
+const d = n => 1 + Math.floor(Math.random()*n);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const sg = n => n>=0 ? '+'+n : '−'+Math.abs(n);
+const STAT = {atk:'공격',eva:'회피',spd:'속도'};
+function sample(arr,k){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,k)}
+const pick = (tbl,r) => tbl.find(x=>r<=x.max);
+
+/* ===== 캐릭터 ===== */
+function newChar(){
+  const r={o:d(100),t:d(100),f:d(100),n:d(100)};
+  const o=pick(ORIGINS,r.o),t=pick(TALENTS,r.t),f=pick(FLAWS,r.f),ci=Math.floor((r.n-1)/10);
+  const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0};
+  for(const x of [o,t,f]) for(const k in x.fx) s[k]+=x.fx[k];
+  return {r,o,t,f,ci,color:COLORS[ci].hex,fixer:false,title:null,stats:s,hp:s.maxHp,deck:['slash','thrust','smash','guard',o.card]};
+}
+/* 해결사 등록: 색 + 가장 높은 능력치의 단어 = 특색 칭호 */
+function becomeFixer(ch){
+  if(ch.fixer)return null;
+  const s=ch.stats;
+  const c=sample([['atk',s.atk],['eva',s.eva],['spd',s.spd],['hp',(s.maxHp-CFG.baseHp)/4]],4);
+  let best=c[0];for(const x of c)if(x[1]>best[1])best=x;
+  const words=TITLE_WORDS[best[0]];
+  ch.fixer=true;ch.rank=9;ch.dom=best[0];
+  ch.title=COLORS[ch.ci].adj+' '+words[Math.floor(Math.random()*words.length)];
+  return ch.title;
+}
+/* 승급: 급수가 2 오르고 가장 높은 능력치가 한 단계 자란다 */
+function promote(ch){
+  ch.rank=Math.max(3,ch.rank-2);
+  const k=ch.dom,s=ch.stats,chips=['승급 · '+ch.rank+'급'];
+  if(k==='hp'){s.maxHp+=4;ch.hp+=4;chips.push('최대 HP +4')}else{s[k]+=1;chips.push(STAT[k]+' +1')}
+  return chips;
+}
+const rankLabel=ch=>ch.fixer?`${ch.title} · ${ch.rank}급`:'무명';
+
+/* ===== 전투 엔진 (화면과 무관, 연출용 이벤트를 함께 기록) ===== */
+function mkEntity(o){return Object.assign({bleed:0,rupture:0,breath:0,evaB:0,fs:false},o)}
+function snap(C){
+  const f=X=>({hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath});
+  return {P:f(C.P),E:f(C.E)};
+}
+function mkCombat(ch,id,quiet){
+  const s=ch.stats,e=ENEMIES[id];
+  const P=mkEntity({name:'당신',color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,bleed:s.startBleed,breath:s.startBreath,deck:ch.deck,isP:true});
+  const eh=e.hp+s.enemyHp;
+  const E=mkEntity({name:e.n,color:e.color,hp:eh,maxHp:eh,atk:e.atk,eva:e.eva,spd:e.spd,deck:e.deck,isP:false});
+  const C={P,E,id,round:0,log:[],cur:[],evs:[],logBefore:0,catchup:null,over:null,hand:[],sel:[],order:null,light:{P:0,E:0},quiet:!!quiet};
+  newRound(C);
+  return C;
+}
+function newRound(C){
+  C.round++;
+  const {P,E}=C;
+  const rp=d(100),re=d(100);
+  const tp=rp+P.spd+(C.catchup==='P'?CFG.catchupBonus:0);
+  const te=re+E.spd+(C.catchup==='E'?CFG.catchupBonus:0);
+  const first=tp>te?'P':te>tp?'E':(P.spd>=E.spd?'P':'E');
+  const gap=Math.abs(tp-te);
+  C.order={rp,re,tp,te,first,gap,cp:C.catchup==='P',ce:C.catchup==='E',fs:gap>=CFG.gapFirst};
+  C.catchup=first==='P'?'E':'P';
+  C.light={P:CFG.light,E:CFG.light};
+  C.light[first]=Math.min(CFG.lightMax,C.light[first]+CFG.orderBonusLight);
+  P.fs=E.fs=false;
+  if(C.order.fs)(first==='P'?P:E).fs=true;
+  C.hand=sample(P.deck,CFG.hand);
+  C.sel=[];
+}
+function autoPlay(hand,light){
+  const plays=[];let l=light;
+  for(const id of sample(hand,hand.length)){const c=CARDS[id];if(c.c<=l){plays.push(c);l-=c.c}}
+  return plays;
+}
+const aiPlan=(E,light)=>autoPlay(sample(E.deck,CFG.hand),light);
+
+function applyKw(A,D,c,L){
+  for(const [k,n,to] of (c.kw||[])){
+    const X=to==='s'?A:D;
+    X[k]=Math.min(CFG.stackCap,X[k]+n);
+    L('kw',`${X.name} ${KW[k].n} +${n} (${X[k]})`);
+  }
+}
+function act(C,A,D,c,L,push){
+  const sideA=A.isP?'P':'E',sideD=D.isP?'P':'E';
+  if(c.t==='buff'){L('sys',`${A.name} · ${c.n}`);applyKw(A,D,c,L);push({k:'buff',side:sideA,card:c});return}
+  for(let h=0;h<c.hits;h++){
+    if(A.hp<=0||D.hp<=0)return;
+    const ra=d(100),rd=d(100);
+    const fsb=A.fs?CFG.firstHit:0;A.fs=false;
+    const am=A.atk+c.hit+fsb,dm=D.eva+D.evaB;
+    const sa=ra+am,sd=rd+dm;
+    const base={k:'atk',att:sideA,def:sideD,card:c,ra,rd,am,dm,sa,sd,b:c.b};
+    if(sa<=sd){
+      L('miss',`${A.name} · ${c.n}  ${sa} ≤ ${sd}  빗나감`);
+      push(Object.assign(base,{hit:false,rolls:[],dmg:0,note:''}));
+      continue;
+    }
+    const rolls=[];for(let i=0;i<c.dice;i++)rolls.push(d(6));
+    let dmg=rolls.reduce((a,b)=>a+b,0)+c.b,note=fsb?' 선제':'';
+    if(A.breath>0){
+      if(d(100)<=A.breath*CFG.breathCritPer){dmg=Math.ceil(dmg*CFG.critMult);note+=' 치명'}
+      A.breath--;
+    }
+    if(D.rupture>0){dmg+=D.rupture;note+=` 파열+${D.rupture}`;D.rupture--}
+    D.hp-=dmg;
+    L('hit',`${A.name} · ${c.n}  ${sa} > ${sd}  명중 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
+    applyKw(A,D,c,L);
+    push(Object.assign(base,{hit:true,rolls,dmg,note}));
+  }
+}
+function resolveRound(C,pp,ep){
+  const {P,E}=C;
+  C.cur=[];C.evs=[];
+  const L=(t,s)=>{if(C.quiet)return;C.log.push({t,s});C.cur.push({t,s})};
+  const push=ev=>{if(C.quiet)return;ev.lines=C.cur;C.cur=[];ev.snap=snap(C);C.evs.push(ev)};
+  const o=C.order;
+  L('head',`— ${C.round}라운드 · ${o.first==='P'?'당신':E.name} 선공 —`);
+  push({k:'head'});
+  P.evaB=E.evaB=0;
+  const plays={P:pp,E:ep};
+  for(const side of ['P','E']){
+    const X=side==='P'?P:E;
+    for(const c of plays[side])if(c.t==='def'){
+      const ev=c.eva||CFG.defBonus;X.evaB+=ev;L('sys',`${X.name} · ${c.n} (회피 +${ev})`);push({k:'def',side,card:c});
+    }
+  }
+  const f=o.first,s=f==='P'?'E':'P';
+  const q={P:pp.filter(c=>c.t!=='def'),E:ep.filter(c=>c.t!=='def')};
+  const n=Math.max(q.P.length,q.E.length);
+  for(let i=0;i<n;i++){
+    for(const side of [f,s]){
+      const c=q[side][i];if(!c)continue;
+      const A=side==='P'?P:E,D=side==='P'?E:P;
+      if(P.hp<=0||E.hp<=0)continue;
+      act(C,A,D,c,L,push);
+    }
+  }
+  for(const side of ['P','E']){
+    const X=side==='P'?P:E;
+    if(X.hp>0&&X.bleed>0){
+      const dmg=X.bleed;X.hp-=dmg;L('dmg',`${X.name} 출혈 ${dmg} 피해`);X.bleed=Math.floor(X.bleed/2);
+      push({k:'bleed',side,dmg});
+    }
+  }
+  P.hp=Math.max(0,P.hp);E.hp=Math.max(0,E.hp);
+  if(P.hp<=0)C.over='lose';else if(E.hp<=0)C.over='win';
+}
+function fightAuto(ch,id){
+  const C=mkCombat(ch,id,true);let g=0;
+  while(!C.over&&g++<80){
+    resolveRound(C,autoPlay(C.hand,C.light.P),aiPlan(C.E,C.light.E));
+    if(!C.over)newRound(C);
+  }
+  return C;
+}
+function simAll(n){
+  const rows=[];
+  for(const id of Object.keys(ENEMIES)){
+    let w=0,rs=0,hl=0;
+    for(let i=0;i<n;i++){
+      const C=fightAuto(newChar(),id);rs+=C.round;
+      if(C.over==='win'){w++;hl+=C.P.hp}
+    }
+    rows.push({n:ENEMIES[id].n,win:w/n,rounds:rs/n,left:w?hl/w:0});
+  }
+  let clear=0;
+  for(let i=0;i<n;i++){
+    const ch=newChar();let hp=ch.stats.maxHp,ok=true;
+    for(const id of ['lamp','lullaby','guest']){
+      const C=fightAuto(Object.assign({},ch,{hp}),id);
+      if(C.over!=='win'){ok=false;break}
+      hp=Math.min(ch.stats.maxHp,C.P.hp+CFG.chainHeal);
+    }
+    if(ok)clear++;
+  }
+  return {rows,chain:clear/n};
+}
+
+/* ===== 연출 (주사위 굴림, 공격·회피 모션) ===== */
+let MODE='slow';   // slow | fast | off
+try{
+  const m=localStorage.getItem('cityYearMode');
+  if(m)MODE=m;else if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)MODE='off';
+}catch(e){}
+let PLAYING=false,SKIP=false,PRE=null,wake=null;
+const $=id=>document.getElementById(id);
+const tm=()=>MODE==='fast'?0.45:1;
+function wait(ms){return SKIP?Promise.resolve():new Promise(r=>{wake=r;setTimeout(()=>{wake=null;r()},ms*tm())})}
+async function rollNum(el,final,ms,max){
+  if(!el)return;
+  if(MODE==='off'||SKIP){el.textContent=final;return}
+  const end=Date.now()+ms*tm();
+  while(Date.now()<end&&!SKIP&&el.isConnected){
+    el.textContent=1+Math.floor(Math.random()*max);
+    await new Promise(r=>setTimeout(r,55));
+  }
+  el.textContent=final;
+}
+function anim(el,cls,ms){
+  if(!el)return;
+  el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),ms||600);
+}
+function floatTxt(side,txt,color){
+  const p=$('ent-'+side);if(!p)return;
+  const s=document.createElement('span');
+  s.className='float';s.textContent=txt;s.style.color=color;
+  p.appendChild(s);setTimeout(()=>s.remove(),1000);
+}
+function applySnap(sn){
+  for(const side of ['P','E']){
+    const X=side==='P'?C.P:C.E,v=sn[side],h=$('hp-'+side);
+    if(!h)return;
+    h.textContent=`HP ${v.hp}/${X.maxHp}`;
+    $('bar-'+side).firstElementChild.style.width=clamp(v.hp/X.maxHp*100,0,100)+'%';
+    $('chips-'+side).innerHTML=stacks(v);
+  }
+}
+function appendLog(lines){
+  const lg=$('log');if(!lg)return;
+  for(const l of lines){const dv=document.createElement('div');dv.className=l.t;dv.textContent=l.s;lg.appendChild(dv)}
+  lg.scrollTop=lg.scrollHeight;
+}
+function setLabel(t){const a=$('alabel');if(a)a.textContent=t}
+
+async function playEvent(e){
+  const nmOf=s=>s==='P'?'당신':C.E.name;
+  if(e.k==='head'){setLabel(e.lines[0]?e.lines[0].s:'');appendLog(e.lines);await wait(500);return}
+  if(e.k==='def'){setLabel(`${nmOf(e.side)} · ${e.card.n}`);anim($('ent-'+e.side),'guard',700);appendLog(e.lines);await wait(450);return}
+  if(e.k==='buff'){setLabel(`${nmOf(e.side)} · ${e.card.n}`);anim($('ent-'+e.side),'guard',700);appendLog(e.lines);applySnap(e.snap);await wait(500);return}
+  if(e.k==='bleed'){
+    setLabel(`${nmOf(e.side)} · 출혈`);anim($('ent-'+e.side),'hurt',500);
+    floatTxt(e.side,'−'+e.dmg,'var(--bleed)');appendLog(e.lines);applySnap(e.snap);await wait(550);return;
+  }
+  const X=e.att==='P'?C.P:C.E,Y=e.def==='P'?C.P:C.E;
+  const dA=$('dA'),dD=$('dD');
+  if(!dA||!dD)return;
+  setLabel(`${nmOf(e.att)} · ${e.card.n}`);
+  dA.className='die rolling';dD.className='die rolling';
+  dA.style.borderColor=X.color;dD.style.borderColor=Y.color;
+  $('dmgw').hidden=true;$('sA').textContent='';$('sD').textContent='';
+  await Promise.all([
+    rollNum(dA.firstElementChild,e.ra,650,100).then(()=>{dA.classList.remove('rolling');anim(dA,'settle',320)}),
+    rollNum(dD.firstElementChild,e.rd,900,100).then(()=>{dD.classList.remove('rolling');anim(dD,'settle',320)})
+  ]);
+  $('sA').textContent=`${e.ra}${e.am?sg(e.am):''} = ${e.sa}`;
+  $('sD').textContent=`${e.rd}${e.dm?sg(e.dm):''} = ${e.sd}`;
+  dA.classList.add(e.hit?'win':'lose');dD.classList.add(e.hit?'lose':'win');
+  await wait(350);
+  anim($('ent-'+e.att),e.att==='P'?'lunge-up':'lunge-down',500);
+  await wait(200);
+  if(e.hit){
+    anim($('ent-'+e.def),'hurt',520);
+    const box=$('dmgd');$('dmgw').hidden=false;
+    box.innerHTML=e.rolls.map(()=>'<div class="d6"><b>–</b></div>').join('');
+    await Promise.all([...box.children].map((el,i)=>rollNum(el.firstElementChild,e.rolls[i],500+i*130,6)));
+    $('sM').textContent=`${e.rolls.join('+')}${e.b?sg(e.b):''}${e.note} = ${e.dmg}`;
+    floatTxt(e.def,'−'+e.dmg,'var(--bleed)');
+    applySnap(e.snap);appendLog(e.lines);
+    await wait(600);
+  }else{
+    anim($('ent-'+e.def),'dodge',600);floatTxt(e.def,'회피','var(--rupture)');
+    appendLog(e.lines);applySnap(e.snap);
+    await wait(500);
+  }
+}
+async function runPlayback(evs){
+  PLAYING=true;SKIP=false;
+  for(const e of evs){if(SKIP)break;await playEvent(e)}
+  PLAYING=false;SKIP=false;
+  if(!C.over)newRound(C);
+  render();
+}
+async function resultAnim(){
+  const r=UI.res.roll;SKIP=false;
+  const die=$('rd'),b=$('rdb');
+  if(die){
+    die.classList.add('rolling');
+    await rollNum(b,r.r,900,100);
+    die.classList.remove('rolling');anim(die,'settle',320);
+    await wait(350);
+  }
+  const a=$('after');if(a)a.style.visibility='visible';
+}
+function birthAnim(){
+  document.querySelectorAll('[data-roll]').forEach((el,i)=>{
+    el.textContent='–';
+    setTimeout(()=>rollNum(el,+el.dataset.roll,650,100),i*260);
+  });
+}
+
+/* ===== 화면 ===== */
+const app=document.getElementById('app');
+let UI={screen:'title'},G=null,C=null,BC=null,SIM=null,lastScreen='';
+
+function bar(v,max){return `<div class="bar"><i style="width:${clamp(v/max*100,0,100)}%"></i></div>`}
+function stacks(X){
+  const out=Object.keys(KW).filter(k=>X[k]>0).map(k=>`<span class="chip" style="color:${KW[k].c};border-color:${KW[k].c}">${KW[k].n} ${X[k]}</span>`);
+  return out.length?out.join(''):'<span class="chip dim">상태 없음</span>';
+}
+function kwChips(c){
+  return (c.kw||[]).map(([k,n,to])=>`<span class="chip" style="color:${KW[k].c};border-color:${KW[k].c}">${KW[k].n} +${n}${to==='s'?' 자신':''}</span>`).join('');
+}
+function cardLine(c){
+  if(c.t==='atk')return `${c.hits>1?c.hits+'타 · ':''}${c.dice}d6${c.b?sg(c.b):''} · 명중 ${sg(c.hit)}`;
+  return c.d;
+}
+function vMode(){
+  const b=(k,l)=>`<button class="${MODE===k?'on':''}" data-a="mode" data-i="${k}">${l}</button>`;
+  return `<div class="stack" style="gap:6px"><span class="eyebrow">주사위 · 전투 연출</span><div class="seg">${b('slow','굴림')}${b('fast','빠르게')}${b('off','끔')}</div></div>`;
+}
+function vHud(){
+  const c=G.ch,s=c.stats;
+  return `<div class="panel stack">
+    <div class="row between"><div class="row"><span class="swatch" style="background:${c.color}"></span><b class="serif" style="color:${c.color}">${rankLabel(c)}</b>${c.office?`<span class="chip">${c.office}</span>`:c.fixer?'<span class="chip">해결사</span>':''}</div>
+    <span class="mono small dim">${CFG.startAge+G.year-1}세 · ${G.year}/${CFG.years}년차</span></div>
+    ${bar(c.hp,s.maxHp)}
+    <div class="mono small dim">HP ${c.hp}/${s.maxHp} · 공격 ${sg(s.atk)} · 회피 ${sg(s.eva)} · 속도 ${sg(s.spd)} · 카드 ${c.deck.length}장</div>
+  </div>`;
+}
+function vRules(){
+  return `<details><summary>규칙 요약</summary><ul>
+    <li><b>명중</b> 1d100 + 공격 + 카드 보정 &gt; 상대 1d100 + 회피면 명중, 아니면 회피당한다.</li>
+    <li><b>피해</b> 카드의 d6 개수만큼 굴려 합산. 코스트가 높은 카드는 주사위가 많다.</li>
+    <li><b>순서</b> 라운드마다 1d100 + 속도. 1등은 빛 +1, 격차 30 이상이면 첫 공격 명중 +10. 꼴등은 다음 라운드 순서 +10.</li>
+    <li><b>빛</b> 라운드마다 3. 남은 빛으로 손패 카드를 원하는 순서로 낸다. 남긴 빛은 사라진다.</li>
+    <li><b>출혈</b> 라운드 끝에 스택만큼 피해, 그 뒤 스택 절반.</li>
+    <li><b>파열</b> 피격 시 스택만큼 추가 피해, 피격마다 스택 1 감소.</li>
+    <li><b>호흡</b> 스택당 치명 확률 5%(피해 ×1.5). 명중할 때마다 스택 1 소모.</li>
+    <li><b>해결사</b> 사무소와 계약하거나 첫 전투에서 이기면 해결사로 등록된다. 이때 내 색과 가장 높은 능력치에 맞춰 특색 칭호를 받는다.</li>
+    <li><b>사무소</b> 해결사가 되면 4년차에 소속을 고른다. 속도형, 체력형, 호흡형 중 하나.</li>
+    <li><b>승급</b> 해결사가 된 뒤 3·6·7년차 전투에서 이기면 급수가 2 오르고, 가장 높은 능력치가 자란다.</li>
+  </ul></details>`;
+}
+function vTitle(){
+  return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">프로젝트문 세계관 기반 · 1인 TRPG · 임시 v0.3</div>
+    <h1>도시의 한 해</h1></div>
+    <p class="lead">무작위로 태어나 일곱 해를 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
+    <div class="stack"><button class="btn primary" data-a="start">태어난다</button>
+    <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다</span></button></div>
+    ${vMode()}${vRules()}`;
+}
+function vBirth(){
+  const b=BC,s=b.stats,fresh=b.fresh&&MODE!=='off';
+  const v=r=>`<span class="v" ${fresh?`data-roll="${r}"`:''}>${r}</span>`;
+  const row=(lab,r,x)=>`<div class="roll"><span class="mono small dim">${lab}</span>${v(r)}<div class="n"><b>${x.n}</b><span>${x.t}</span><span class="mono small" style="color:var(--gold)">${x.e}</span></div></div>`;
+  const sw=COLORS.map((c,i)=>`<button class="sw ${i===b.ci?'on':''}" data-a="color" data-i="${i}" style="background:${c.hex}" aria-label="${c.adj} 색" title="${c.adj}"></button>`).join('');
+  return `<div class="stack" style="gap:6px"><div class="eyebrow">무작위 출생 · 1d100</div><h2>당신은 이렇게 태어났다</h2></div>
+    <div class="panel">${row('출신',b.r.o,b.o)}${row('재능',b.r.t,b.t)}${row('결점',b.r.f,b.f)}</div>
+    <div class="panel stack">
+      <div class="row between"><span class="mono small dim">당신의 색 · 1d100 → ${b.r.n}</span><b style="color:${b.color}">${COLORS[b.ci].adj} 빛</b></div>
+      <div class="sws">${sw}</div>
+      <p class="small dim">색은 직접 바꿀 수 있다. 해결사가 되면 이 색과 가장 높은 능력치에 맞춰 특색 칭호를 받는다. 예: ${COLORS[b.ci].adj} 잔향</p>
+      <div class="stat"><div><b>${s.maxHp}</b><span>HP</span></div><div><b>${sg(s.atk)}</b><span>공격</span></div><div><b>${sg(s.eva)}</b><span>회피</span></div><div><b>${sg(s.spd)}</b><span>속도</span></div></div>
+      <div class="chips">${b.deck.map(id=>`<span class="chip">${CARDS[id].n}</span>`).join('')}</div></div>
+    <div class="stack"><button class="btn primary" data-a="live">이 삶을 산다</button>
+    <button class="btn quiet" data-a="reroll">다시 태어난다</button></div>${vMode()}`;
+}
+function vEvent(){
+  const ev=UI.ev,st=G.ch.stats;
+  const btns=ev.c.map((c,i)=>{
+    let hint=c.h||'판정 없음';
+    if(c.check){const mod=(c.check.s?st[c.check.s]:0)+st.check;hint=`${c.check.s?STAT[c.check.s]+' 판정':'운 판정'} · 난이도 ${c.check.dc} · 내 보정 ${sg(mod)}`}
+    if(c.ok&&c.ok.fx&&c.ok.fx.combat&&!c.ok.t)hint=`전투 · ${ENEMIES[c.ok.fx.combat].n}`;
+    return `<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`;
+  }).join('');
+  return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${CFG.startAge+G.year-1}세의 해</div><h2>${ev.t}</h2><p class="lead">${ev.x}</p></div><div class="stack">${btns}</div>`;
+}
+function vResult(){
+  const r=UI.res,an=r.anim&&r.roll;
+  const roll=r.roll?`<div class="check">1d100 ${r.roll.r} ${sg(r.roll.mod)} = ${r.roll.tot} / 난이도 ${r.roll.dc} → <b class="${r.roll.ok?'good':'bad'}">${r.roll.ok?'성공':'실패'}</b></div>`:'';
+  const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d100 · 난이도 ${r.roll.dc}</span></div>`:'';
+  const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||'특색 칭호'}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
+  return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>
+    <button class="btn primary" data-a="next">${r.next.l}</button></div>`;
+}
+function entHtml(side,X,v){
+  const col=X.color;
+  return `<div class="panel stack ent" id="ent-${side}" style="background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
+    <div class="row between"><div class="row"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${X.name}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}</span></div>
+    <div class="bar" id="bar-${side}"><i style="width:${clamp(v.hp/X.maxHp*100,0,100)}%;background:${col}"></i></div>
+    <div class="chips" id="chips-${side}">${stacks(v)}</div></div>`;
+}
+function arenaHtml(play){
+  if(!play)return MODE==='off'?'':`<div class="arena"><div class="alabel">손패를 고르고 행동 개시를 누르면 주사위가 굴러간다</div></div>`;
+  return `<div class="arena"><div class="alabel" id="alabel"></div><div class="dice">
+    <div class="dwrap"><span class="dcap">명중 1d100</span><div class="die" id="dA"><b>–</b></div><span class="dsum" id="sA"></span></div>
+    <span class="vs">vs</span>
+    <div class="dwrap"><span class="dcap">회피 1d100</span><div class="die" id="dD"><b>–</b></div><span class="dsum" id="sD"></span></div>
+    <div class="dwrap" id="dmgw" hidden><span class="dcap">피해</span><div class="d6s" id="dmgd"></div><span class="dsum" id="sM"></span></div>
+  </div></div>`;
+}
+function vCombat(){
+  const {P,E,order:o}=C;
+  const logLines=(arr)=>arr.map(l=>`<div class="${l.t}">${l.s}</div>`).join('');
+  if(PLAYING){
+    return `${entHtml('E',E,PRE.E)}${arenaHtml(true)}${entHtml('P',P,PRE.P)}
+      <div class="log" id="log">${logLines(C.log.slice(0,C.logBefore).slice(-40))}</div>
+      <button class="btn quiet" data-a="skip">연출 건너뛰기</button>`;
+  }
+  const log=`<div class="log" id="log">${logLines(C.log.slice(-60))||'<div class="sys">전투가 시작되었다.</div>'}</div>`;
+  if(C.over){
+    const w=C.over==='win';
+    return `${entHtml('E',E,E)}${entHtml('P',P,P)}${log}<div class="panel stack"><h2 class="${w?'good':'bad'}">${w?E.name+'이(가) 쓰러졌다':'당신은 쓰러졌다'}</h2>
+      <button class="btn primary" data-a="fin">${w?'전리품을 챙긴다':'결말을 본다'}</button></div>`;
+  }
+  const cost=C.sel.reduce((a,i)=>a+CARDS[C.hand[i]].c,0),left=C.light.P-cost;
+  const fp=o.first==='P';
+  const ord=`<div class="panel stack" style="gap:6px"><div class="row between"><span class="eyebrow">${C.round}라운드 · 순서</span><b style="color:var(--gold)">${fp?'당신':E.name} 선공</b></div>
+    <div class="mono small dim">당신 ${o.rp}${P.spd?sg(P.spd):''}${o.cp?' +10':''} = ${o.tp} · ${E.name} ${o.re}${E.spd?sg(E.spd):''}${o.ce?' +10':''} = ${o.te}</div>
+    <div class="mono small dim">${fp?'당신':E.name} 빛 +${CFG.orderBonusLight}${o.fs?' · 선제(첫 공격 명중 +'+CFG.firstHit+')':''}${o.cp||o.ce?' · 추격 보정 반영':''}</div></div>`;
+  const cards=C.hand.map((id,i)=>{
+    const c=CARDS[id],si=C.sel.indexOf(i),dis=si<0&&c.c>left;
+    return `<button class="card ${si>=0?'sel':''}" data-a="pick" data-i="${i}" ${dis?'disabled':''}>
+      <span class="cost">${c.c}</span>${si>=0?`<em class="ord">${si+1}</em>`:''}
+      <span class="nm">${c.n}</span><span class="cd">${cardLine(c)}</span>
+      ${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</button>`;
+  }).join('');
+  return `${entHtml('E',E,E)}${arenaHtml(false)}${entHtml('P',P,P)}${ord}${log}
+    <div class="row between"><span class="eyebrow">손패 · 선택한 순서대로 발동</span><span class="mono" style="color:var(--gold)">빛 ${left}/${C.light.P}</span></div>
+    <div class="hand">${cards}</div>
+    <button class="btn primary" data-a="go">${C.sel.length?'행동 개시':'아무것도 내지 않고 넘긴다'}</button>${vMode()}`;
+}
+function vEnd(){
+  const c=G.ch,w=UI.endWin;
+  return `<div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow">${w?'일곱 해를 살아냈다':'도시는 당신을 기억하지 않는다'}</div>
+    <h1 style="color:${c.color}">${c.fixer?rankLabel(c):'이름 없는 사람'}</h1>
+    <p class="lead">${w?'도시는 여전히 그 자리에 있고, 당신은 한 해를 더 살 수 있다.':'이름을 부르는 사람은 없었다. 가로등만 계속 깜빡였다.'}</p></div>
+    <div class="panel stack"><div class="stat"><div><b>${G.year}</b><span>도달 연차</span></div><div><b>${sg(c.stats.atk)}</b><span>공격</span></div><div><b>${sg(c.stats.eva)}</b><span>회피</span></div><div><b>${sg(c.stats.spd)}</b><span>속도</span></div></div>
+    <div class="chips">${c.deck.map(id=>`<span class="chip">${CARDS[id].n}</span>`).join('')}</div>
+    <div class="mono small dim">${c.o.n} · ${c.t.n} · ${c.f.n}${c.office?' · '+c.office:c.fixer?' · 해결사':''}</div></div>
+    <button class="btn primary" data-a="start">다시 태어난다</button><button class="btn quiet" data-a="title">처음 화면</button>`;
+}
+function vSim(){
+  const s=SIM,pc=x=>Math.round(x*100)+'%';
+  return `<div class="stack" style="gap:6px"><div class="eyebrow">밸런스 측정 · 각 ${s.n}회</div><h2>자동 전투 결과</h2></div>
+    <div class="panel tbl"><table><thead><tr><th>적</th><th>승률</th><th>평균 라운드</th><th>승리 시 잔여 HP</th></tr></thead><tbody>
+    ${s.r.rows.map(r=>`<tr><td>${r.n}</td><td>${pc(r.win)}</td><td>${r.rounds.toFixed(1)}</td><td>${r.left.toFixed(0)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="panel"><div class="row between"><span>연속 3전 클리어</span><b class="mono" style="color:var(--gold)">${pc(s.r.chain)}</b></div>
+    <p class="small dim" style="margin-top:6px">무작위 캐릭터, 카드는 손패에서 무작위로 낸다. 전투 사이 HP ${CFG.chainHeal} 회복. 보상 카드와 사건 효과는 반영하지 않은 보수적인 값이다.</p></div>
+    <button class="btn primary" data-a="sim">다시 측정</button><button class="btn quiet" data-a="title">돌아가기</button>`;
+}
+function render(){
+  const s=UI.screen;
+  const h={title:vTitle,birth:vBirth,event:vEvent,result:vResult,combat:vCombat,end:vEnd,sim:vSim}[s]();
+  app.innerHTML=`<div class="wrap">${h}</div>`;
+  const lg=$('log');if(lg)lg.scrollTop=lg.scrollHeight;
+  if(s!==lastScreen){window.scrollTo(0,0);lastScreen=s}
+  if(s==='birth'&&BC.fresh&&MODE!=='off'){BC.fresh=false;birthAnim()}
+  if(s==='result'&&UI.res.anim&&UI.res.roll){UI.res.anim=false;resultAnim()}
+}
+
+/* ===== 진행 ===== */
+function applyFx(fx){
+  const ch=G.ch,s=ch.stats,chips=[];
+  if(fx.maxHp){s.maxHp+=fx.maxHp;ch.hp+=fx.maxHp;chips.push('최대 HP '+sg(fx.maxHp))}
+  if(fx.hp){ch.hp=clamp(ch.hp+fx.hp,1,s.maxHp);chips.push('HP '+sg(fx.hp))}
+  for(const k of ['atk','eva','spd'])if(fx[k]){s[k]+=fx[k];chips.push(STAT[k]+' '+sg(fx[k]))}
+  const cid=fx.card||(fx.reward?rewardCard():null);
+  if(cid){ch.deck.push(cid);chips.push('카드 · '+CARDS[cid].n)}
+  if(fx.office){ch.office=fx.office;chips.push('소속 · '+fx.office)}
+  let title=null;
+  if(fx.fixer){title=becomeFixer(ch);if(title)chips.push('해결사 등록')}
+  return {chips,title};
+}
+function rewardCard(){
+  const pool=REWARDS.filter(id=>!G.ch.deck.includes(id));
+  return pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
+}
+/* 해결사가 된 4년차에는 소속 선택, 그 밖에는 조건에 맞는 사건을 뽑는다 */
+function nextEvent(){
+  const ch=G.ch;
+  if(G.year===4&&ch.fixer&&!ch.office)return OFFICE_EVENT;
+  while(G.pool.length){
+    const ev=EVENTS[G.pool.pop()];
+    if(ev.req==='fixer'&&!ch.fixer)continue;
+    if(ev.req==='nofixer'&&ch.fixer)continue;
+    return ev;
+  }
+  return EVENTS[6];
+}
+function advanceYear(){
+  G.year++;
+  if(G.year>CFG.years){G.year=CFG.years;UI.endWin=true;UI.screen='end';render();return}
+  if(G.year>1)G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);
+  const f=FIGHT[G.year];
+  UI.ev=f?{t:ENEMIES[f].n,x:ENEMIES[f].intro,c:[{l:'맞선다',ok:{t:'',fx:{combat:f}}}]}:nextEvent();
+  UI.screen='event';render();
+}
+function startCombat(id){C=mkCombat(G.ch,id);PLAYING=false;UI.screen='combat';render()}
+
+const ACT={
+  title(){UI.screen='title';render()},
+  mode(i){MODE=i;try{localStorage.setItem('cityYearMode',i)}catch(e){}render()},
+  start(){BC=newChar();BC.fresh=true;UI.screen='birth';render()},
+  reroll(){BC=newChar();BC.fresh=true;render()},
+  color(i){BC.ci=+i;BC.color=COLORS[+i].hex;BC.fresh=false;render()},
+  live(){G={ch:BC,year:0,pool:sample(EVENTS.map((_,i)=>i),EVENTS.length)};advanceYear()},
+  choose(i){
+    const c=UI.ev.c[i];let res=c.ok,roll=null;
+    if(c.check){
+      const st=G.ch.stats,mod=(c.check.s?st[c.check.s]:0)+st.check,r=d(100),tot=r+mod,ok=tot>=c.check.dc;
+      roll={r,mod,tot,dc:c.check.dc,ok};res=ok?c.ok:c.fail;
+    }
+    const fx=res.fx||{};
+    const {chips,title}=applyFx(fx);
+    if(fx.combat&&!res.t){startCombat(fx.combat);return}
+    UI.res={t:res.t,chips,roll,title:title?rankLabel(G.ch):null,anim:!!roll&&MODE!=='off',next:fx.combat?{l:'맞선다',combat:fx.combat}:{l:'다음 해로'}};
+    UI.screen='result';render();
+  },
+  next(){UI.res.next.combat?startCombat(UI.res.next.combat):advanceYear()},
+  pick(i){
+    i=+i;const at=C.sel.indexOf(i);
+    if(at>=0)C.sel.splice(at,1);else C.sel.push(i);
+    render();
+  },
+  go(){
+    const pp=C.sel.map(i=>CARDS[C.hand[i]]);
+    const lb=C.log.length;PRE=snap(C);
+    resolveRound(C,pp,aiPlan(C.E,C.light.E));
+    if(MODE==='off'){if(!C.over)newRound(C);render();return}
+    C.logBefore=lb;PLAYING=true;render();runPlayback(C.evs);
+  },
+  skip(){SKIP=true;if(wake)wake()},
+  fin(){
+    if(C.over==='lose'){UI.endWin=false;UI.screen='end';render();return}
+    const ch=G.ch;
+    ch.hp=clamp(C.P.hp+CFG.winHeal,1,ch.stats.maxHp);
+    const chips=['HP +'+CFG.winHeal],cid=rewardCard();
+    if(cid){ch.deck.push(cid);chips.push('카드 · '+CARDS[cid].n)}
+    let title=null,tlabel=null,extra='';
+    if(!ch.fixer){
+      if(becomeFixer(ch)){chips.push('해결사 등록');title=rankLabel(ch);tlabel='특색 칭호';extra=' 소문을 들은 사무소가 해결사로 등록해 주었다.'}
+    }else if(FIGHT[G.year]&&ch.rank>3){
+      chips.push(...promote(ch));title=rankLabel(ch);tlabel='승급';extra=' 사무소가 급수를 올려 주었다.';
+    }
+    UI.res={t:`${C.E.name}의 잔해 속에서 쓸 만한 것을 주웠다.${extra}`,chips,roll:null,title,tlabel,next:{l:G.year>=CFG.years?'결말을 본다':'다음 해로'}};
+    UI.screen='result';render();
+  },
+  sim(){SIM={n:300,r:simAll(300)};UI.screen='sim';render()}
+};
+app.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');
+  if(!b||b.disabled)return;
+  ACT[b.dataset.a](b.dataset.i);
+});
+render();
+</script>

@@ -1,0 +1,748 @@
+{
+ "keywords": {
+  "bleed": {
+   "n": "출혈"
+  },
+  "rupture": {
+   "n": "파열"
+  },
+  "breath": {
+   "n": "호흡"
+  },
+  "burn": {
+   "n": "화상"
+  }
+ },
+ "cards": {
+  "slash": {
+   "n": "가르기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0
+  },
+  "thrust": {
+   "n": "찌르기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 10
+  },
+  "smash": {
+   "n": "내려치기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": -5
+  },
+  "guard": {
+   "n": "방어 태세",
+   "c": 1,
+   "t": "def",
+   "d": "이번 라운드 회피 +15"
+  },
+  "fissure": {
+   "n": "균열 보행",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "rupture",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "rustblade": {
+   "n": "녹슨 칼날",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "bleed",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "breathe": {
+   "n": "호흡 고르기",
+   "c": 1,
+   "t": "buff",
+   "d": "호흡을 가다듬는다",
+   "kw": [
+    [
+     "breath",
+     3,
+     "s"
+    ]
+   ]
+  },
+  "ripple": {
+   "n": "은빛 파문",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 1,
+   "hit": 5
+  },
+  "echo": {
+   "n": "잔향 절단",
+   "c": 2,
+   "t": "atk",
+   "hits": 2,
+   "dice": 1,
+   "b": 0,
+   "hit": -5
+  },
+  "cog": {
+   "n": "속삭이는 톱니",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "bleed",
+     1,
+     "t"
+    ],
+    [
+     "rupture",
+     1,
+     "t"
+    ]
+   ]
+  },
+  "noon": {
+   "n": "붉은 정오",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 0,
+   "hit": -10,
+   "kw": [
+    [
+     "bleed",
+     3,
+     "t"
+    ]
+   ]
+  },
+  "shard": {
+   "n": "유리 파편",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "rupture",
+     3,
+     "t"
+    ]
+   ]
+  },
+  "brand": {
+   "n": "불면의 낙인",
+   "c": 1,
+   "t": "buff",
+   "d": "자신에게 호흡, 상대에게 파열",
+   "kw": [
+    [
+     "breath",
+     2,
+     "s"
+    ],
+    [
+     "rupture",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "lamp": {
+   "n": "가로등 휘두르기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0
+  },
+  "glare": {
+   "n": "눈부신 빛",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": -5
+  },
+  "rustnote": {
+   "n": "녹슨 소절",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "bleed",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "drawl": {
+   "n": "늘어진 가락",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": 0
+  },
+  "tknife": {
+   "n": "식탁 위의 칼",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "rupture",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "supper": {
+   "n": "마지막 만찬",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 0,
+   "hit": -5,
+   "kw": [
+    [
+     "bleed",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "lunge": {
+   "n": "돌진",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": 10
+  },
+  "flurry": {
+   "n": "난타",
+   "c": 3,
+   "t": "atk",
+   "hits": 3,
+   "dice": 1,
+   "b": 0,
+   "hit": -10
+  },
+  "shadowstep": {
+   "n": "그림자 걸음",
+   "c": 2,
+   "t": "def",
+   "eva": 30,
+   "d": "이번 라운드 회피 +30"
+  },
+  "bloodlet": {
+   "n": "피 가르기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "bleed",
+     4,
+     "t"
+    ]
+   ]
+  },
+  "tremor": {
+   "n": "균열 확장",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "rupture",
+     4,
+     "t"
+    ]
+   ]
+  },
+  "lantern": {
+   "n": "등불 켜기",
+   "c": 2,
+   "t": "buff",
+   "d": "호흡을 크게 끌어올린다",
+   "kw": [
+    [
+     "breath",
+     5,
+     "s"
+    ]
+   ]
+  },
+  "rend": {
+   "n": "찢는 일격",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "bleed",
+     1,
+     "t"
+    ],
+    [
+     "rupture",
+     1,
+     "t"
+    ]
+   ]
+  },
+  "finale": {
+   "n": "마지막 소절",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 2,
+   "hit": 0
+  },
+  "faint": {
+   "n": "흐려진 손길",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "rupture",
+     1,
+     "t"
+    ]
+   ]
+  },
+  "hollow": {
+   "n": "텅 빈 울림",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": -5
+  },
+  "aim": {
+   "n": "겨누기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "b": 0,
+   "hit": 0,
+   "adv": 1
+  },
+  "precise": {
+   "n": "정밀 타격",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": 0,
+   "rr": 1
+  },
+  "heavy": {
+   "n": "무게 싣기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": -5,
+   "min": 3
+  },
+  "x_exec": {
+   "n": "처형",
+   "c": 2,
+   "t": "atk",
+   "hits": 2,
+   "dice": 2,
+   "b": 1,
+   "hit": 5
+  },
+  "x_blink": {
+   "n": "순간 이동 참격",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": 15
+  },
+  "x_bind": {
+   "n": "구속",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": 5,
+   "kw": [
+    [
+     "rupture",
+     4,
+     "t"
+    ]
+   ]
+  },
+  "x_pillar": {
+   "n": "빛의 기둥",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 4,
+   "b": 2,
+   "hit": 0
+  },
+  "x_prescript": {
+   "n": "지령 집행",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": 5,
+   "kw": [
+    [
+     "bleed",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "x_resonance": {
+   "n": "잔향",
+   "c": 2,
+   "t": "atk",
+   "hits": 2,
+   "dice": 1,
+   "b": 0,
+   "hit": 5,
+   "kw": [
+    [
+     "rupture",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "x_bluewave": {
+   "n": "푸른 파동",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 2,
+   "hit": 0
+  },
+  "x_furioso": {
+   "n": "Furioso",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 9,
+   "die": 2,
+   "b": 0,
+   "hit": 0,
+   "rngDebuff": [
+    "bleed",
+    "rupture"
+   ]
+  },
+  "x_blade": {
+   "n": "검은 칼날",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 2,
+   "hit": 10
+  },
+  "x_page": {
+   "n": "책장 넘기기",
+   "c": 1,
+   "t": "buff",
+   "d": "호흡을 가다듬고 상대에게 파열을 남긴다",
+   "kw": [
+    [
+     "breath",
+     2,
+     "s"
+    ],
+    [
+     "rupture",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "x_story": {
+   "n": "이야기의 무게",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "bleed",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "x_volley": {
+   "n": "일제 사격",
+   "c": 2,
+   "t": "atk",
+   "hits": 3,
+   "dice": 1,
+   "b": 1,
+   "hit": 5
+  },
+  "x_etiquette": {
+   "n": "예법 교정",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 1,
+   "hit": 10
+  },
+  "x_vendetta": {
+   "n": "되갚음",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 0,
+   "hit": 5,
+   "kw": [
+    [
+     "bleed",
+     3,
+     "t"
+    ]
+   ]
+  },
+  "x_oath": {
+   "n": "가족의 맹세",
+   "c": 3,
+   "t": "atk",
+   "hits": 2,
+   "dice": 2,
+   "b": 0,
+   "hit": 0,
+   "kw": [
+    [
+     "rupture",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "x_shelf": {
+   "n": "무너지는 서가",
+   "c": 3,
+   "t": "atk",
+   "hits": 2,
+   "dice": 2,
+   "b": 1,
+   "hit": 0,
+   "kw": [
+    [
+     "rupture",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "x_index": {
+   "n": "색인 찌르기",
+   "c": 1,
+   "t": "atk",
+   "hits": 2,
+   "dice": 1,
+   "b": 1,
+   "hit": 5
+  },
+  "x_twisted": {
+   "n": "어긋난 지령",
+   "c": 2,
+   "t": "atk",
+   "hits": 2,
+   "dice": 2,
+   "b": 0,
+   "hit": 5,
+   "kw": [
+    [
+     "bleed",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "x_citysound": {
+   "n": "도시의 목소리",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 4,
+   "b": 2,
+   "hit": 0,
+   "kw": [
+    [
+     "rupture",
+     3,
+     "t"
+    ]
+   ]
+  },
+  "x_falsescript": {
+   "n": "거짓 지령",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 2,
+   "hit": 10,
+   "kw": [
+    [
+     "bleed",
+     2,
+     "t"
+    ]
+   ]
+  },
+  "x_lh_double": {
+   "n": "이연참",
+   "c": 1,
+   "t": "atk",
+   "hits": 2,
+   "dice": 1,
+   "b": 1,
+   "hit": 5
+  },
+  "x_lh_triple": {
+   "n": "삼연격",
+   "c": 2,
+   "t": "atk",
+   "hits": 3,
+   "dice": 1,
+   "b": 1,
+   "hit": 0
+  },
+  "x_lh_burst": {
+   "n": "폭쇄참",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 3,
+   "hit": 0
+  },
+  "x_lh_kwaedo": {
+   "n": "쾌도난마",
+   "c": 3,
+   "t": "atk",
+   "hits": 2,
+   "dice": 2,
+   "b": 1,
+   "hit": 5,
+   "next": "x_lh_chojeol"
+  },
+  "x_lh_chojeol": {
+   "n": "초절맹호살격난참",
+   "c": 5,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 20,
+   "b": 0,
+   "hit": 10
+  }
+ },
+ "rewards": [
+  "cog",
+  "echo",
+  "noon",
+  "shard",
+  "brand",
+  "ripple",
+  "fissure",
+  "rustblade",
+  "breathe",
+  "lunge",
+  "flurry",
+  "shadowstep",
+  "bloodlet",
+  "tremor",
+  "lantern",
+  "rend",
+  "finale",
+  "aim",
+  "precise",
+  "heavy"
+ ]
+}

@@ -1,0 +1,684 @@
+{
+ "enemies": {
+  "lamp": {
+   "n": "웃는 가로등",
+   "color": "#e3b341",
+   "hp": 26,
+   "atk": 0,
+   "eva": 0,
+   "spd": 0,
+   "deck": [
+    "lamp",
+    "lamp",
+    "glare"
+   ],
+   "intro": "골목 끝의 가로등이 고개를 돌린다. 불빛이 웃는 모양으로 일그러진다.",
+   "tier": "early"
+  },
+  "lullaby": {
+   "n": "녹슨 자장가",
+   "color": "#c0693a",
+   "hp": 32,
+   "atk": 2,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "rustnote",
+    "rustnote",
+    "drawl",
+    "guard"
+   ],
+   "intro": "어디선가 녹슨 자장가가 들린다. 소리가 가까워질수록 손목이 따끔하다.",
+   "tier": "mid"
+  },
+  "guest": {
+   "n": "열두 번째 손님",
+   "color": "#9a84c4",
+   "hp": 40,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "tknife",
+    "tknife",
+    "supper",
+    "guard"
+   ],
+   "intro": "식탁에는 열두 번째 의자가 비어 있었다. 그 의자가 당신을 향해 천천히 당겨진다.",
+   "tier": "boss"
+  },
+  "echo": {
+   "n": "꺼진 메아리",
+   "color": "#6b7388",
+   "hp": 30,
+   "atk": 1,
+   "eva": 4,
+   "spd": 1,
+   "deck": [
+    "faint",
+    "faint",
+    "hollow",
+    "guard"
+   ],
+   "intro": "벽 속에서 같은 문장이 되풀이된다. 목소리가 점점 낮아지고, 그림자가 한 걸음 앞으로 나온다.",
+   "tier": "early"
+  },
+  "thug": {
+   "n": "골목 칼잡이",
+   "color": "#b7a07a",
+   "hp": 26,
+   "atk": 1,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "slash",
+    "thrust",
+    "slash",
+    "guard"
+   ],
+   "intro": "좁은 골목에서 누군가 칼을 꺼낸다. 지갑이 목적인지 목숨이 목적인지 알 수 없다.",
+   "tier": "early"
+  },
+  "strays": {
+   "n": "외곽 들개 떼",
+   "color": "#8a9a6b",
+   "hp": 22,
+   "atk": 0,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "lunge",
+    "slash",
+    "slash"
+   ],
+   "intro": "성벽 틈으로 들어온 들개 떼가 이빨을 드러낸다. 외곽의 냄새가 난다.",
+   "tier": "early"
+  },
+  "collector": {
+   "n": "손가락 수금원",
+   "color": "#a8576a",
+   "hp": 28,
+   "atk": 2,
+   "eva": 0,
+   "spd": 1,
+   "deck": [
+    "rustblade",
+    "slash",
+    "guard"
+   ],
+   "intro": "장부를 든 수금원이 앞을 막는다. 이 구역의 상납금은 아직 덜 걷혔다고 한다.",
+   "tier": "early"
+  },
+  "sentry": {
+   "n": "날개 경비 기계",
+   "color": "#9fb3c8",
+   "hp": 32,
+   "atk": 0,
+   "eva": 0,
+   "spd": 0,
+   "deck": [
+    "smash",
+    "smash",
+    "guard"
+   ],
+   "intro": "담장 앞의 경비 기계가 붉은 눈을 켠다. 출입 허가가 확인되지 않았다는 안내가 반복된다.",
+   "tier": "early"
+  },
+  "bloodman": {
+   "n": "피를 모으는 자",
+   "color": "#c23b4b",
+   "hp": 30,
+   "atk": 2,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "bloodlet",
+    "rustnote",
+    "slash",
+    "guard"
+   ],
+   "intro": "골목 바닥에 병이 줄지어 놓여 있다. 병마다 무언가가 반쯤 차 있다.",
+   "tier": "mid"
+  },
+  "doll": {
+   "n": "잠들지 못한 인형",
+   "color": "#c9a3c7",
+   "hp": 30,
+   "atk": 1,
+   "eva": 3,
+   "spd": 2,
+   "deck": [
+    "shard",
+    "tremor",
+    "hollow",
+    "guard"
+   ],
+   "intro": "버려진 아이 방에서 인형이 일어선다. 환상체다. 눈꺼풀이 꿰매져 있지만 이쪽을 보고 있다.",
+   "tier": "mid"
+  },
+  "lieutenant": {
+   "n": "조직 행동대장",
+   "color": "#7f4a8c",
+   "hp": 40,
+   "atk": 4,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "rend",
+    "thrust",
+    "guard"
+   ],
+   "intro": "조직의 행동대장이 장갑을 고쳐 낀다. 오늘 할 일 목록에 당신 이름이 있다.",
+   "tier": "mid"
+  },
+  "hunter": {
+   "n": "외곽 사냥꾼",
+   "color": "#6b8f71",
+   "hp": 34,
+   "atk": 3,
+   "eva": 2,
+   "spd": 4,
+   "deck": [
+    "lunge",
+    "thrust",
+    "aim",
+    "guard"
+   ],
+   "intro": "외곽에서 괴물을 잡던 사냥꾼이다. 도시 안의 사냥감은 처음이라며 웃는다.",
+   "tier": "mid"
+  },
+  "claw": {
+   "n": "발톱",
+   "color": "#e8e2d0",
+   "hp": 128,
+   "atk": 7,
+   "eva": 6,
+   "spd": 8,
+   "deck": [
+    "x_exec",
+    "x_blink",
+    "x_blink",
+    "guard"
+   ],
+   "hidden": true,
+   "unlock": "claw",
+   "intro": "새벽, 문이 소리 없이 열린다. 하얀 옷의 집행자가 서류 한 장을 읽는다. 금기 위반, 항소 없음.",
+   "endText": "머리의 집행자를 쓰러뜨렸다. 도시는 이 일을 기록하지 않았지만, 머리는 당신의 이름을 기억하게 되었다.",
+   "tier": "hidden",
+   "passive": {
+    "id": "claw",
+    "n": "발톱",
+    "d": "적중할 때마다 피해 주사위 1d4를 하나 더 굴린다"
+   },
+   "drop": {
+    "n": "하얀 옷자락",
+    "card": "x_exec",
+    "fx": {
+     "atk": 2,
+     "spd": 2,
+     "maxHp": 5
+    },
+    "e": "공+2 · 속도+2 · HP+5"
+   }
+  },
+  "arbiter": {
+   "n": "조율자",
+   "color": "#f2d27a",
+   "hp": 224,
+   "atk": 11,
+   "eva": 11,
+   "spd": 7,
+   "deck": [
+    "x_bind",
+    "x_pillar",
+    "x_bind",
+    "guard"
+   ],
+   "hidden": true,
+   "unlock": "arbiter",
+   "intro": "두 번째 금기. 이번에는 집행자가 아니라 조율자가 직접 왔다. 공기가 굳고, 숨이 무거워진다.",
+   "endText": "조율자가 무릎을 꿇었다. 금기를 정하는 쪽의 자리가 처음으로 흔들렸다.",
+   "tier": "hidden",
+   "passive": {
+    "id": "lock",
+    "n": "봉인",
+    "every": 3,
+    "d": "3라운드마다 내 손패 1장을 그 라운드 동안 잠근다"
+   },
+   "drop": {
+    "n": "봉인의 파편",
+    "card": "x_pillar",
+    "fx": {
+     "atk": 3,
+     "eva": 3,
+     "maxHp": 5
+    },
+    "e": "공+3 · 회피+3 · HP+5"
+   }
+  },
+  "library": {
+   "n": "도서관의 사서",
+   "color": "#d7b56d",
+   "hp": 95,
+   "atk": 7,
+   "eva": 6,
+   "spd": 6,
+   "deck": [
+    "x_page",
+    "x_story",
+    "x_story",
+    "x_shelf",
+    "x_index",
+    "guard"
+   ],
+   "hidden": true,
+   "intro": "두 번째 초대장의 주소로 가자 끝이 보이지 않는 서가가 나타났다. 사서가 책을 펼친다. 손님은 책이 되거나, 책을 얻는다.",
+   "endText": "도서관에서 살아 나왔다. 손에는 당신의 이름이 적힌 책 한 권이 들려 있었다.",
+   "tier": "hidden",
+   "drop": {
+    "n": "찢어진 책장",
+    "card": "x_story",
+    "fx": {
+     "maxHp": 15
+    },
+    "e": "HP+15"
+   }
+  },
+  "proxy": {
+   "n": "검지 대행자",
+   "color": "#5aa9e6",
+   "hp": 99,
+   "atk": 5,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "x_prescript",
+    "x_prescript",
+    "slash",
+    "guard"
+   ],
+   "hidden": true,
+   "intro": "지령이 내려왔다. 이번 지령의 대상은 당신이다. 대행자는 망설이지 않는다.",
+   "endText": "대행자를 꺾었다. 다음 지령이 누구를 향할지는 아무도 모른다.",
+   "tier": "hidden",
+   "drop": {
+    "n": "지령서 한 장",
+    "card": "x_prescript",
+    "fx": {
+     "atk": 1,
+     "check": 5,
+     "maxHp": 5
+    },
+    "e": "공+1 · 판정+5 · HP+5"
+   }
+  },
+  "blue": {
+   "n": "푸른 잔향",
+   "color": "#6f9bd1",
+   "hp": 70,
+   "atk": 6,
+   "eva": 6,
+   "spd": 7,
+   "deck": [
+    "x_resonance",
+    "x_resonance",
+    "x_bluewave",
+    "guard"
+   ],
+   "hidden": true,
+   "intro": "공연장도 아닌 골목에서 음악이 들린다. 특색 해결사, 푸른 잔향이 이쪽을 돌아본다.",
+   "endText": "잔향이 멎었다. 특색과 맞서고 살아남은 해결사의 이름은 금방 퍼진다.",
+   "tier": "hidden",
+   "passive": {
+    "id": "echo",
+    "n": "잔향",
+    "need": 7,
+    "dmg": 3,
+    "d": "적중할 때마다 상대에게 잔향 1. 7이 되면 고정 피해 3을 주고 잔향을 비운다"
+   },
+   "drop": {
+    "n": "잔향의 악보",
+    "card": "x_resonance",
+    "fx": {
+     "spd": 2,
+     "maxHp": 5
+    },
+    "e": "속도+2 · HP+5"
+   }
+  },
+  "black": {
+   "n": "검은 침묵",
+   "color": "#3c3f48",
+   "hp": 96,
+   "atk": 10,
+   "eva": 8,
+   "spd": 6,
+   "deck": [
+    "x_furioso",
+    "x_blade",
+    "x_blade",
+    "guard"
+   ],
+   "hidden": true,
+   "intro": "검은 장갑을 고쳐 끼는 해결사가 있다. 말이 없다. 특색, 검은 침묵이다.",
+   "endText": "침묵을 깨뜨렸다. 이 도시에서 그 일을 해낸 사람은 손에 꼽는다.",
+   "tier": "hidden",
+   "passive": {
+    "id": "mask",
+    "n": "인식 저해 가면",
+    "every": 4,
+    "eva": 9,
+    "d": "4라운드마다 그 라운드 동안 회피 +9"
+   },
+   "drop": {
+    "n": "랑아공방",
+    "card": "x_blade",
+    "fx": {
+     "eva": 3,
+     "maxHp": 5
+    },
+    "e": "회피+3 · HP+5"
+   }
+  },
+  "godfather": {
+   "n": "엄지의 대부",
+   "color": "#c8a35a",
+   "hp": 122,
+   "atk": 11,
+   "eva": 10,
+   "spd": 6,
+   "deck": [
+    "x_volley",
+    "x_etiquette",
+    "x_etiquette",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "intro": "검은 차 여러 대가 골목을 막는다. 가운데 차에서 내린 사람에게 모두가 허리를 숙인다. 엄지의 대부다.",
+   "endText": "대부가 쓰러지자 주위의 누구도 총을 들지 않았다. 예법에 없는 일이었기 때문이다.",
+   "passive": {
+    "id": "godfather",
+    "n": "예법의 대가",
+    "d": "회피에 성공하면 다음 적중 때 피해 주사위 1d2를 하나 더 굴린다"
+   },
+   "drop": {
+    "n": "대부의 반지",
+    "card": "x_volley",
+    "fx": {
+     "atk": 2,
+     "maxHp": 5
+    },
+    "e": "공+2 · HP+5"
+   }
+  },
+  "bigsis": {
+   "n": "중지의 큰누님",
+   "color": "#9a84c4",
+   "hp": 100,
+   "atk": 9,
+   "eva": 8,
+   "spd": 7,
+   "deck": [
+    "x_vendetta",
+    "x_vendetta",
+    "x_oath",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "intro": "당신이 쓰러뜨린 누군가가 중지의 동생이었다. 큰누님이 직접 장부를 들고 찾아왔다.",
+   "endText": "큰누님은 끝까지 장부를 놓지 않았다. 중지는 이 빚을 잊지 않겠지만, 오늘 밤은 아니다.",
+   "passive": {
+    "id": "ledger",
+    "n": "앙갚음 장부",
+    "need": 3,
+    "d": "공격을 맞을 때마다 장부 1. 3이 되면 다음 명중 굴림을 1d110으로 굴리고 장부를 비운다"
+   },
+   "drop": {
+    "n": "빛바랜 장부",
+    "card": "x_vendetta",
+    "fx": {
+     "atk": 1,
+     "maxHp": 13
+    },
+    "e": "공+1 · HP+13"
+   }
+  },
+  "yan": {
+   "n": "뒤틀린 얀",
+   "color": "#7fb3e0",
+   "hp": 80,
+   "atk": 7,
+   "eva": 5,
+   "spd": 7,
+   "deck": [
+    "x_twisted",
+    "x_twisted",
+    "x_citysound",
+    "x_prescript",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "passive": {
+    "id": "claw",
+    "n": "왜곡된 지령",
+    "d": "적중할 때마다 피해 주사위 1d4를 하나 더 굴린다"
+   },
+   "intro": "지령이 만들어지는 곳. 종이 소리 사이로, 사람이었던 무언가가 고개를 든다. 대행자들이 부르던 이름은 얀이었다.",
+   "endText": "소리가 멎었다. 지령을 쓰던 손이 멈췄고, 책상 위에는 끝나지 않은 지령서 한 장이 남았다.",
+   "drop": {
+    "n": "거짓 지령",
+    "card": "x_falsescript",
+    "fx": {
+     "check": 7,
+     "maxHp": 5
+    },
+    "e": "판정+7 · HP+5"
+   }
+  },
+  "leihuang": {
+   "n": "뇌횡",
+   "color": "#e0c060",
+   "hp": 150,
+   "atk": 12,
+   "eva": 4,
+   "spd": 7,
+   "evadeDie": 75,
+   "deck": [
+    "x_lh_double",
+    "x_lh_triple",
+    "x_lh_burst",
+    "x_lh_kwaedo",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "intro": "골목 끝에 정장 차림의 사내가 검을 짚고 서 있다. 엄지의 카포이자 동부 십검의 하나, 뇌횡이다.",
+   "endText": "뇌횡이 검을 거두었다. 예법대로 고개를 숙이고, 쓰러지기 전에 검을 당신 쪽으로 밀어 두었다.",
+   "drop": {
+    "n": "천퇴성도",
+    "card": "x_lh_burst",
+    "fx": {
+     "maxHp": 5
+    },
+    "e": "무기 · 적중마다 1d2 두 개 추가 · HP+5",
+    "gear": {
+     "id": "tianchui",
+     "slot": "weapon",
+     "n": "천퇴성도",
+     "price": 0,
+     "e": "적중마다 피해 1d2 ×2 추가",
+     "fx": {
+      "extraD2": 2
+     }
+    }
+   }
+  }
+ },
+ "fixedFights": {
+  "3": "table:early",
+  "6": "table:mid",
+  "7": "guest"
+ },
+ "hiddenBosses": [
+  {
+   "id": "arbiter",
+   "req": [
+    "flag:taboo>=2",
+    "beat:blue|black|library|proxy|godfather|bigsis"
+   ],
+   "omen": {
+    "x": "거리의 소리가 한꺼번에 멎었다. 도망칠 곳이 없다는 것을 몸이 먼저 안다.",
+    "go": "맞선다"
+   },
+   "noEscape": true,
+   "from": 7
+  },
+  {
+   "id": "claw",
+   "req": [
+    "flag:taboo",
+    "beat:blue|black|library|proxy|godfather|bigsis"
+   ],
+   "omen": {
+    "x": "문 앞에 하얀 종이가 붙어 있다. 오늘 밤 누군가 온다는 예감이 든다. 집 안의 공기가 이상하게 차갑다.",
+    "go": "문을 열고 기다린다",
+    "away": "짐을 싸서 구역을 벗어난다",
+    "awayT": "밤새 걸어 다른 구역에 숨었다. 하얀 종이는 다음 해에도 붙어 있을지 모른다."
+   },
+   "from": 6
+  },
+  {
+   "id": "library",
+   "req": "flag:libraryGuest",
+   "omen": {
+    "x": "주머니 속 초대장이 따뜻해진다. 오늘 밤, 서가로 가는 길이 열려 있다는 예감이 든다.",
+    "go": "초대에 응한다",
+    "away": "오늘은 가지 않는다",
+    "awayT": "초대장을 서랍에 넣었다. 서가의 냄새가 한동안 남았다."
+   },
+   "from": 7
+  },
+  {
+   "id": "proxy",
+   "req": {
+    "any": [
+     "affname:검지",
+     "flag:defied"
+    ]
+   },
+   "omen": {
+    "x": "문틈으로 지령 봉투가 들어왔다. 봉투에 적힌 대상의 이름이 낯익다. 당신 이름이다.",
+    "go": "지령을 받은 자를 기다린다",
+    "away": "구역을 벗어난다",
+    "awayT": "봉투를 태우고 구역을 떠났다. 대행자가 끝까지 쫓아오지는 않았다. 아직은."
+   },
+   "from": 7,
+   "chance": 30,
+   "chanceBonus": {
+    "req": "affname:검지",
+    "add": 30
+   }
+  },
+  {
+   "id": "black",
+   "req": "rank<=3",
+   "chance": 12,
+   "penalty": {
+    "fullRank": 1,
+    "atk": -15,
+    "eva": -15,
+    "label": "급수 부족"
+   },
+   "omen": {
+    "x": "골목이 너무 조용하다. 발소리조차 울리지 않는다. 무언가 안 좋은 예감이 든다. 이 길로 갈까?",
+    "go": "이 길로 간다",
+    "away": "돌아선다",
+    "awayT": "걸음을 돌렸다. 골목 끝의 정적은 끝내 깨지지 않았다."
+   },
+   "from": 7
+  },
+  {
+   "id": "blue",
+   "req": "rank<=3",
+   "chance": 20,
+   "penalty": {
+    "fullRank": 1,
+    "atk": -15,
+    "eva": -15,
+    "label": "급수 부족"
+   },
+   "omen": {
+    "x": "공연장도 아닌 골목에서 음악이 들린다. 무언가 안 좋은 예감이 든다. 소리를 따라가 볼까?",
+    "go": "이 길로 간다",
+    "away": "돌아선다",
+    "awayT": "음악을 등지고 다른 골목으로 들어섰다. 등 뒤의 선율이 멀어졌다."
+   },
+   "from": 7
+  },
+  {
+   "id": "godfather",
+   "req": "beat:any",
+   "chance": 15,
+   "from": 10,
+   "omen": {
+    "x": "골목 끝에 검은 차가 서 있다. 창문이 반쯤 내려가 있고, 누군가 이쪽을 보고 있다.",
+    "go": "차 쪽으로 걸어간다",
+    "away": "모르는 척 돌아선다",
+    "awayT": "다른 길로 돌아왔다. 검은 차는 따라오지 않았다. 아직은."
+   }
+  },
+  {
+   "id": "bigsis",
+   "req": "beat:any",
+   "chance": 15,
+   "from": 10,
+   "omen": {
+    "x": "문 아래로 봉투가 들어와 있다. 안에는 숫자만 적힌 장부 한 장. 맨 아래에 당신의 이름이 있다.",
+    "go": "장부를 들고 나간다",
+    "away": "봉투를 태운다",
+    "awayT": "봉투는 재가 되었다. 장부의 숫자는 그대로 남아 있을 것이다."
+   }
+  },
+  {
+   "id": "leihuang",
+   "req": {
+    "any": [
+     "affname:엄지",
+     "beat:any"
+    ]
+   },
+   "chance": 15,
+   "chanceBonus": {
+    "req": "affname:엄지",
+    "add": 60
+   },
+   "from": 10,
+   "omen": {
+    "x": "빗소리 사이로 쇠가 끌리는 소리가 들린다. 정장 차림의 사내가 검을 짚고 골목 끝에 서 있다. 엄지의 카포, 뇌횡이다.",
+    "go": "뇌횡에게 질문한다",
+    "away": "흘려보낸다",
+    "awayT": "고개를 숙이고 지나갔다. 뇌횡은 아무 말도 하지 않았다. 쇠 끌리는 소리만 오래 귀에 남았다."
+   }
+  }
+ ],
+ "fixedRule": {
+  "every": 5,
+  "tiers": [
+   {
+    "until": 15,
+    "spec": "table:mid"
+   },
+   {
+    "until": 44,
+    "spec": "table:late"
+   }
+  ],
+  "final": {
+   "45": "guest"
+  }
+ }
+}

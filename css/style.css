@@ -1,0 +1,326 @@
+/* 레이아웃: 한 열짜리 텍스트 어드벤처. 전투는 적 / 주사위 무대 / 파티 / 순서 / 기록 / 손패 순서. 각자의 색으로 구분한다. */
+:root{
+  --bg:#0c0e13; --panel:#131722; --panel2:#1a1f2d; --line:#262c3b; --line2:#3a4256;
+  --fg:#e7e2d7; --dim:#8d93a3; --gold:#c8a35a; --gold-ink:#1a1405;
+  --bleed:#d1686b; --rupture:#7ba6dc; --breath:#79c2b3; --good:#8fbf7a;
+  --serif:"Noto Serif KR","Nanum Myeongjo",serif;
+  --sans:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans);padding-inline:16px;padding-block:20px 40px}
+/* 프레임 크기는 모든 테마가 같다: 테두리 두께(--bw)가 달라도 테두리+여백 합은 고정 → 테마를 바꿔도 내용이 밀리지 않는다 */
+.wrap{--bw:0px;position:relative;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px;
+  border:var(--bw) solid transparent;padding:calc(18px - var(--bw)) calc(14px - var(--bw)) calc(16px - var(--bw))}
+h1,h2,h3,p{margin:0}
+h1{font:900 clamp(34px,10vw,48px)/1.1 var(--serif);letter-spacing:-.01em;text-wrap:balance}
+h2{font:600 22px/1.35 var(--serif);text-wrap:balance}
+.serif{font-family:var(--serif)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dim{color:var(--dim)}
+.small{font-size:12.5px}
+.eyebrow{font:500 11.5px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.row{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:10px}
+.btn{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line2);border-radius:5px;padding:12px 14px;min-height:46px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;width:100%}
+.btn:hover:not(:disabled){border-color:var(--gold)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--gold-ink);font-weight:700;align-items:center;justify-content:center;text-align:center}
+.btn.quiet{background:transparent}
+.btn b{font-weight:700}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.bar{height:8px;background:#222836;border-radius:2px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--gold);transition:width .3s}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12px/1 var(--mono);padding:5px 7px;border:1px solid var(--line2);border-radius:3px;color:var(--fg);white-space:nowrap}
+.swatch{width:12px;height:12px;border-radius:2px;flex:none}
+.lead{color:var(--dim);text-wrap:pretty}
+.roll{display:grid;grid-template-columns:64px 44px minmax(0,1fr);gap:10px;align-items:baseline;padding-block:10px;border-top:1px solid var(--line)}
+.roll:first-of-type{border-top:0}
+.roll .v{font:500 20px/1 var(--mono);color:var(--gold)}
+.roll .n{display:flex;flex-direction:column;gap:2px}
+.roll .n span{color:var(--dim);font-size:13px}
+.log{font:400 12.5px/1.7 var(--mono);max-height:200px;overflow-y:auto;background:#0f1219;border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.log div{padding-block:1px;overflow-wrap:anywhere}
+.log .head{color:var(--gold);padding-top:6px}
+.log .sys{color:var(--dim)}
+.log .hit{color:var(--fg)}
+.log .miss{color:var(--dim)}
+.log .dmg{color:var(--bleed)}
+.log .kw{color:var(--rupture)}
+.hand{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.card{position:relative;font:inherit;color:var(--fg);text-align:left;background:var(--panel2);border:1px solid var(--line2);border-radius:5px;padding:10px 10px 10px 42px;min-height:84px;display:flex;flex-direction:column;gap:5px;cursor:pointer}
+.card:disabled{opacity:.38;cursor:default}
+.card.sel{border-color:var(--gold);background:#231f15}
+.card .cost{position:absolute;left:9px;top:10px;width:24px;height:24px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);display:grid;place-items:center;font:500 13px/1 var(--mono)}
+.card .ord{position:absolute;right:8px;top:8px;font:500 12px/1 var(--mono);color:var(--gold-ink);background:var(--gold);border-radius:3px;padding:3px 5px;font-style:normal}
+.card .nm{font-weight:700;font-size:14px;line-height:1.3;padding-right:20px}
+.card .cd{font:400 11.5px/1.5 var(--mono);color:var(--dim)}
+.card .chips{gap:4px}
+.card .chip{font-size:11px;padding:3px 5px}
+.stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;text-align:center}
+.stat div{background:var(--panel2);border-radius:4px;padding:8px 4px}
+.stat b{display:block;font:500 17px/1.2 var(--mono);color:var(--gold)}
+.stat span{font-size:11.5px;color:var(--dim)}
+details{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--panel)}
+summary{cursor:pointer;font-weight:700}
+details ul{margin:10px 0 0;padding-left:18px;color:var(--dim);font-size:13.5px}
+details li{margin-block:3px}
+table{width:100%;border-collapse:collapse;font:400 13px/1.5 var(--mono)}
+th,td{padding:8px 6px;border-top:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left;font-family:var(--sans)}
+th{color:var(--dim);font-weight:400;border-top:0}
+.tbl{overflow-x:auto}
+.check{font:400 13px/1.6 var(--mono);color:var(--dim);border-left:2px solid var(--gold);padding-left:10px}
+.good{color:var(--good)}.bad{color:var(--bleed)}
+
+/* 색 고르기 / 연출 설정 */
+.sws{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:32px;height:32px;border-radius:6px;border:2px solid transparent;cursor:pointer;padding:0}
+.sw.on{border-color:var(--fg);outline:2px solid var(--bg);outline-offset:-4px}
+.seg{display:flex;border:1px solid var(--line2);border-radius:5px;overflow:hidden}
+.seg button{flex:1;font:inherit;font-size:13px;padding:10px 6px;background:transparent;color:var(--dim);border:0;border-left:1px solid var(--line2);cursor:pointer;min-height:42px}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--gold);color:var(--gold-ink);font-weight:700}
+
+/* 전투 무대 */
+.ent{position:relative}
+.arena{background:#0f1219;border:1px solid var(--line);border-radius:6px;padding:12px;min-height:76px;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center}
+.alabel{font:500 13px/1.4 var(--mono);color:var(--dim);text-align:center;min-height:18px}
+.dice{display:flex;gap:12px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.dwrap{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:76px}
+.dcap{font:500 11px/1 var(--mono);letter-spacing:.1em;color:var(--dim)}
+.die{width:64px;height:64px;border:2px solid var(--line2);border-radius:12px;display:grid;place-items:center;background:var(--panel2)}
+.die.big{width:72px;height:72px}
+.die b{font:500 26px/1 var(--mono);font-variant-numeric:tabular-nums}
+.die.rolling{animation:wob .24s linear infinite}
+.die.win{box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 55%,transparent)}
+.die.lose{opacity:.6}
+.dsum{font:400 12px/1.4 var(--mono);color:var(--dim);min-height:17px;text-align:center;max-width:150px}
+.vs{align-self:center;font:500 12px/1 var(--mono);color:var(--dim);padding-top:14px}
+.d6s{display:flex;gap:6px;min-height:64px;align-items:center}
+.d6{width:42px;height:42px;border-radius:9px;border:2px solid var(--gold);display:grid;place-items:center;background:var(--panel2)}
+.d6 b{font:500 20px/1 var(--mono)}
+.float{position:absolute;right:14px;top:8px;font:700 22px/1 var(--mono);pointer-events:none;animation:flt .95s ease-out forwards;text-shadow:0 1px 6px #000}
+@keyframes wob{0%{transform:rotate(-8deg) translateY(0)}25%{transform:rotate(6deg) translateY(-4px)}50%{transform:rotate(-5deg)}75%{transform:rotate(8deg) translateY(-3px)}100%{transform:rotate(-8deg)}}
+@keyframes settle{0%{transform:scale(1.22)}100%{transform:scale(1)}}
+@keyframes lungeUp{0%{transform:translateY(0)}35%{transform:translateY(-18px)}100%{transform:translateY(0)}}
+@keyframes lungeDown{0%{transform:translateY(0)}35%{transform:translateY(18px)}100%{transform:translateY(0)}}
+@keyframes hurt{0%{transform:translateX(0);box-shadow:inset 0 0 0 0 transparent}15%{transform:translateX(-9px);box-shadow:inset 0 0 0 2px var(--bleed)}35%{transform:translateX(8px)}55%{transform:translateX(-5px);box-shadow:inset 0 0 0 2px var(--bleed)}80%{transform:translateX(3px)}100%{transform:translateX(0);box-shadow:inset 0 0 0 0 transparent}}
+@keyframes dodge{0%{transform:translateX(0);opacity:1}35%{transform:translateX(24px) skewX(-8deg);opacity:.5}100%{transform:translateX(0);opacity:1}}
+@keyframes guard{0%{box-shadow:0 0 0 0 var(--rupture)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--rupture) 70%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes flt{0%{opacity:0;transform:translateY(0)}15%{opacity:1}100%{opacity:0;transform:translateY(-36px)}}
+.settle{animation:settle .3s ease-out}
+.lunge-up{animation:lungeUp .45s ease-out}
+.lunge-down{animation:lungeDown .45s ease-out}
+.hurt{animation:hurt .5s ease-out}
+.dodge{animation:dodge .55s ease-out}
+.guard{animation:guard .7s ease-out}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+
+
+/* ===== 배경 테마: html[data-skin] = base | dante | library =====
+   단테의 노트: 녹슨 적갈색 금속 프레임, 깎인 모서리, 주황 탭 제목.
+   도서관: 오래된 종이와 나무 서가 색, 금박 제목. 둘 다 이미지 없이 CSS로만 그린다. */
+html{background:var(--bg)}
+.skin-tab{display:inline-flex;align-items:center;align-self:center;height:26px;padding:0 18px;font:500 11.5px/1 var(--mono);letter-spacing:.14em;color:var(--dim);border:1px solid var(--line)}
+html[data-skin="dante"]{
+  --bg:#0d0807; --panel:#1a100d; --panel2:#24150f; --line:#4a2418; --line2:#7a3a22;
+  --fg:#efe1cf; --dim:#a68b78; --gold:#f0a23b; --gold-ink:#1d0d04;
+  --frame:#5b2618; --frame2:#8e4325; --rivet:#c8743a;
+}
+html[data-skin="dante"] body{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(142,67,37,.18),transparent 60%),
+    repeating-linear-gradient(135deg,rgba(255,255,255,.018) 0 2px,transparent 2px 9px),
+    var(--bg);
+  background-attachment:fixed;
+}
+html[data-skin="dante"] .wrap{
+  --bw:3px;
+  background:linear-gradient(180deg,#160c09,#100806);
+  border-color:var(--frame);
+  box-shadow:inset 0 0 0 1px #2a120b,inset 0 0 0 4px #120806,inset 0 0 0 5px var(--frame2),0 10px 30px rgba(0,0,0,.6);
+  clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 16px,100% calc(100% - 16px),calc(100% - 16px) 100%,16px 100%,0 calc(100% - 16px),0 16px);
+}
+html[data-skin="dante"] .wrap::before,html[data-skin="dante"] .wrap::after{
+  content:"";position:absolute;top:8px;width:7px;height:7px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#f3b27a,var(--rivet) 45%,#4d1d0f);
+}
+html[data-skin="dante"] .wrap::before{left:22px}
+html[data-skin="dante"] .wrap::after{right:22px}
+html[data-skin="dante"] .skin-tab{
+  font-family:var(--sans);font-weight:700;letter-spacing:.08em;color:var(--fg);padding:0 26px;
+  background:linear-gradient(180deg,#3a1a10,#24110a);border-color:var(--frame2);
+  clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,10px 100%,0 50%);
+}
+html[data-skin="dante"] .panel,html[data-skin="dante"] details,html[data-skin="dante"] .log,html[data-skin="dante"] .arena{
+  border:1px solid var(--line2);border-radius:0;
+  box-shadow:inset 0 0 0 1px #0c0504,inset 0 0 0 3px var(--line);
+  clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px);
+}
+html[data-skin="dante"] .btn,html[data-skin="dante"] .card{border-radius:0;clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
+html[data-skin="dante"] .btn.primary{background:linear-gradient(180deg,#f3b04d,#d9822a);border-color:#ffcf7a;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+html[data-skin="dante"] .eyebrow{color:var(--gold)}
+html[data-skin="dante"] h1,html[data-skin="dante"] h2{text-shadow:0 1px 0 #000,0 0 14px rgba(240,162,59,.18)}
+html[data-skin="dante"] .chip{border-radius:0}
+html[data-skin="dante"] .card.sel{background:#3a1d0e}
+html[data-skin="dante"] .arena,html[data-skin="dante"] .log{background:#110907}
+html[data-skin="dante"] .die,html[data-skin="dante"] .d6{border-radius:4px}
+
+html[data-skin="terminal"]{
+  --bg:#050607; --panel:#04080c; --panel2:#071019; --line:#12324a; --line2:#1d5a82;
+  --fg:#c9e4f1; --dim:#7fa3b8; --gold:#5cc3f2; --gold-ink:#02121c;
+  --bleed:#ff6b7a; --rupture:#8fb4ff; --breath:#6ff0d2; --good:#7dffb0;
+  --shell:#e9edf0; --shell2:#aeb6bd; --shell3:#6d767e;
+}
+html[data-skin="terminal"] body{background:radial-gradient(ellipse at 50% 30%,#0b1117,#020304 70%);background-attachment:fixed}
+/* 흰 금속 외곽(단말기 몸체) + 안쪽 검은 화면 */
+html[data-skin="terminal"] .wrap{
+  --bw:8px;
+  background:linear-gradient(180deg,#03070b,#010304);
+  border-color:var(--shell);
+  border-image:linear-gradient(160deg,#ffffff,var(--shell) 30%,var(--shell2) 60%,var(--shell3)) 1;
+  box-shadow:0 0 0 2px #2a2f34,0 0 0 4px var(--shell2),0 14px 40px rgba(0,0,0,.8),inset 0 0 40px rgba(89,200,255,.07);
+  clip-path:polygon(22px 0,calc(100% - 22px) 0,100% 22px,100% calc(100% - 22px),calc(100% - 22px) 100%,22px 100%,0 calc(100% - 22px),0 22px);
+}
+/* 화면 주사선 */
+html[data-skin="terminal"] .wrap::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(127,214,255,.018) 0 1px,transparent 1px 4px)}
+html[data-skin="terminal"] .skin-tab{align-self:flex-start;letter-spacing:.2em;color:var(--gold-ink);background:var(--shell);border-color:var(--shell);padding:0 12px}
+/* 빛 번짐은 제목과 큰 숫자에만 약하게. 본문은 번짐 없이 또렷하게 */
+html[data-skin="terminal"] h1,html[data-skin="terminal"] h2,html[data-skin="terminal"] .roll .v,html[data-skin="terminal"] .stat b{
+  text-shadow:0 0 8px rgba(92,195,242,.28)}
+html[data-skin="terminal"] .panel,html[data-skin="terminal"] details,html[data-skin="terminal"] .log,html[data-skin="terminal"] .arena{background:rgba(5,14,22,.85);border-color:var(--line2);border-radius:2px}
+html[data-skin="terminal"] .btn,html[data-skin="terminal"] .card,html[data-skin="terminal"] .die,html[data-skin="terminal"] .d6{border-radius:2px;background:#061220}
+html[data-skin="terminal"] .btn.primary{background:var(--gold);color:var(--gold-ink);text-shadow:none}
+html[data-skin="terminal"] .btn.primary b{text-shadow:none}
+html[data-skin="terminal"] .bar{background:#0a1a26}
+
+/* 행동 순서표, 성장 */
+.ent.down{opacity:.45;filter:grayscale(.7)}
+.ent.turn{outline:2px solid var(--gold);outline-offset:2px}
+.order{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.order li{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13.5px}
+.order li .mono{margin-left:auto}
+.grow .v{font:500 18px/1 var(--mono);color:var(--gold);min-width:34px}
+/* 칩 모양 버튼(공방에 들른다 등): 브라우저 기본 회색 대신 테마 색 */
+button.chip{background:transparent;color:var(--gold);border-color:var(--gold);cursor:pointer}
+button.chip:hover{background:color-mix(in srgb,var(--gold) 14%,transparent)}
+/* 전투: 행동 순서표, 공격하는 쪽/맞는 쪽, 판정 결과 */
+.queue{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.queue li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:baseline;font-size:13.5px;padding:5px 6px;border-radius:4px;border-left:3px solid transparent}
+.queue li.foe{background:color-mix(in srgb,var(--bleed) 7%,transparent)}
+.queue li.now{border-left-color:var(--gold);background:color-mix(in srgb,var(--gold) 16%,transparent)}
+.queue li.done{opacity:.45}
+.queue .qn{font:500 12px/1.4 var(--mono);color:var(--dim);text-align:right}
+.ent.acting{box-shadow:0 0 0 2px var(--gold)}
+.ent.target{box-shadow:0 0 0 2px var(--bleed)}
+.alabel b{font-weight:700}
+.verdict{font:700 16px/1.3 var(--sans);min-height:21px;text-align:center}
+.verdict.bad{color:var(--bleed)}.verdict.miss{color:var(--rupture)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input,#seedIn,#tw{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line2);border-radius:5px;padding:10px 12px;min-height:44px;width:100%}
+.dfinal{font:700 22px/1 var(--mono);font-variant-numeric:tabular-nums;color:var(--fg);min-height:22px}
+.dfinal.good{color:var(--good)}.dfinal.bad{color:var(--bleed)}
+/* hidden 속성은 항상 숨김 (.btn·.dwrap의 display보다 우선) */
+[hidden]{display:none!important}
+/* 피해 주사위는 명중·회피 아래 줄에 따로: 나타날 때 줄이 접히며 흔들리지 않게 */
+#dmgw{flex-basis:100%}
+/* 휴대폰 전투(폭 600px 이하에서만 쓰는 배치): 적·나 HP를 나란히 작게, 기록·설정은 접어 둔다 */
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ent.compact{padding:8px 10px;gap:5px}
+.ent.compact .entname{display:flex;align-items:center;gap:6px;min-width:0}
+.ent.compact .entname b{font-size:14px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ent.compact .bar{height:6px}
+.ent.compact .chip{font-size:10.5px;padding:3px 5px}
+.ordline{font-size:13.5px;line-height:1.7}
+.logbox{padding:10px 12px}.logbox summary{font-size:13.5px}.logbox .log{margin-top:8px}
+/* 주사위 무대: 명중·회피 주사위를 항상 한 줄에 나란히, 피해는 아래 줄 (이름이 길어도 세로로 접히지 않게) */
+.dice{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;justify-items:center;gap:8px 6px}
+.dice .dwrap{min-width:0;width:100%}
+.dice .dcap{white-space:normal;text-align:center;line-height:1.35;font-size:11px;letter-spacing:.04em}
+#dmgw{grid-column:1/-1}
+@media (max-width:600px){.die{width:56px;height:56px}.die b{font-size:22px}.arena{padding:10px 8px}}
+.roundbox summary{cursor:pointer;font-size:13.5px;line-height:1.6}
+.roundbox .qnow{font-size:13px}
+/* PC(폭 900px 이상): 같은 배치를 넓게. 본문 폭을 넓히고 손패를 한 줄에 4장 */
+@media (min-width:900px){.wrap{max-width:780px}.hand{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* 걸려 있는 키워드 칩: 색을 채우고 다음 효과를 작게 붙인다 */
+.chip.stk{display:inline-flex;align-items:baseline;gap:6px;color:var(--kc);border-color:var(--kc);background:color-mix(in srgb,var(--kc) 16%,transparent);font-size:13px;padding:5px 8px}
+.chip.stk small{font-size:11px;opacity:.8}
+.float.kwf{top:auto;bottom:10px;left:14px;right:auto;font-size:16px}
+.chip.stk{flex-wrap:wrap;white-space:normal;max-width:100%}
+
+/* 소지품 칸 */
+.inv summary{cursor:pointer;font:600 13px/1.4 var(--sans,inherit);color:var(--gold)}
+.invr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:5px 0;border-bottom:1px solid var(--line)}
+.invr>span:last-child{grid-column:1/-1}
+.invr>span:last-child:empty{display:none}
+.invcards{display:grid;gap:6px;margin-top:6px}
+.invc{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;padding:6px 8px;border:1px solid var(--line);border-radius:4px}
+.invc .cost{width:24px;height:24px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);display:grid;place-items:center;font:500 13px/1 var(--mono)}
+
+.invtabs{display:flex;flex-wrap:wrap;gap:4px}.invtabs button{flex:1 1 auto;font-size:12px;padding:6px 8px}
+
+/* 도서관 초대장: 검은 바탕 + 옅은 금빛. 단테(붉은 갈색·잘린 모서리)와 달리 둥근 아치·모서리 꺾쇠·금빛 번짐 */
+html[data-skin="ruina"]{
+  --bg:#010101; --panel:#060504; --panel2:#0a0806; --line:#3a3020; --line2:#8c7448;
+  --fg:#eadfc6; --dim:#97896f; --gold:#ecc97f; --gold-ink:#140f06;
+  --g:#e2c07a; --g2:rgba(226,192,122,.45); --glow:rgba(236,201,127,.16);
+}
+html[data-skin="ruina"] body{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(236,201,127,.05),transparent 45%),
+    radial-gradient(ellipse at 50% 100%,rgba(236,201,127,.025),transparent 40%),
+    conic-gradient(from 45deg at 50% 50%,rgba(226,192,122,.012) 0 25%,transparent 0 50%,rgba(226,192,122,.012) 0 75%,transparent 0) 0 0/46px 46px,
+    var(--bg);
+  background-attachment:fixed;
+}
+/* 바깥 틀: 위가 둥근 아치, 금선 두 겹 + 금빛 번짐 */
+html[data-skin="ruina"] .wrap{
+  --bw:1px;border-color:var(--g);border-radius:120px 120px 6px 6px/40px 40px 6px 6px;
+  background:radial-gradient(ellipse at 50% 0%,#0a0805,#020202 55%);
+  box-shadow:0 0 0 5px #050403,0 0 0 6px var(--g2),0 0 30px var(--glow),inset 0 0 0 6px #080604,inset 0 0 0 7px var(--g2);
+}
+/* 맨 위 표식: 상자 대신 양옆으로 뻗는 금선 + 가운데 마름모 */
+html[data-skin="ruina"] .skin-tab{
+  align-self:stretch;justify-content:center;gap:12px;border:0;height:30px;padding:0;
+  font:700 14px/1 var(--serif);letter-spacing:.3em;color:var(--g);text-shadow:0 0 10px var(--glow)}
+html[data-skin="ruina"] .skin-tab::before,html[data-skin="ruina"] .skin-tab::after{content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--g) 70%,var(--g));box-shadow:0 0 6px var(--glow)}
+html[data-skin="ruina"] .skin-tab::after{background:linear-gradient(270deg,transparent,var(--g) 70%,var(--g))}
+/* 칸: 얇은 금선 + 네 모서리 꺾쇠 장식 */
+html[data-skin="ruina"] .panel,html[data-skin="ruina"] details,html[data-skin="ruina"] .log,html[data-skin="ruina"] .arena{
+  border:1px solid var(--g2);border-radius:2px;
+  background:
+    linear-gradient(var(--g),var(--g)) top left/14px 1px no-repeat,linear-gradient(var(--g),var(--g)) top left/1px 14px no-repeat,
+    linear-gradient(var(--g),var(--g)) top right/14px 1px no-repeat,linear-gradient(var(--g),var(--g)) top right/1px 14px no-repeat,
+    linear-gradient(var(--g),var(--g)) bottom left/14px 1px no-repeat,linear-gradient(var(--g),var(--g)) bottom left/1px 14px no-repeat,
+    linear-gradient(var(--g),var(--g)) bottom right/14px 1px no-repeat,linear-gradient(var(--g),var(--g)) bottom right/1px 14px no-repeat,
+    linear-gradient(180deg,rgba(8,7,5,.96),rgba(2,2,1,.96));
+  box-shadow:inset 0 0 0 4px rgba(5,4,3,.9),inset 0 0 0 5px rgba(226,192,122,.18),0 0 12px rgba(0,0,0,.6);
+}
+/* 손패 카드: 위가 둥근 책 표지 */
+html[data-skin="ruina"] .card{border:1px solid var(--g2);border-radius:28px 28px 3px 3px/16px 16px 3px 3px;
+  background:linear-gradient(180deg,#0a0806,#030302);box-shadow:inset 0 0 0 4px #030302,inset 0 0 0 5px rgba(226,192,122,.28)}
+html[data-skin="ruina"] .card.sel{border-color:var(--g);background:linear-gradient(180deg,#2a2112,#120e08);box-shadow:inset 0 0 0 4px #120e08,inset 0 0 0 5px var(--g),0 0 16px var(--glow)}
+html[data-skin="ruina"] .card .cost{border-color:var(--g);color:var(--g);box-shadow:0 0 6px var(--glow)}
+html[data-skin="ruina"] .btn{border-radius:2px;border-color:var(--g2);background:rgba(4,3,2,.92)}
+/* 주 버튼: 양끝 뾰족한 금테 띠 + 안쪽 금선 */
+html[data-skin="ruina"] .btn.primary{
+  background:linear-gradient(180deg,#0e0b07,#030302);color:var(--fg);border:1px solid var(--g);border-radius:0;
+  box-shadow:inset 0 0 0 3px #030302,inset 0 0 0 4px var(--g2),0 0 18px var(--glow);
+  clip-path:polygon(18px 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,18px 100%,0 50%);
+  font-family:var(--serif);letter-spacing:.12em;text-shadow:0 0 8px var(--glow)}
+html[data-skin="ruina"] .btn.primary b{color:var(--fg)}
+html[data-skin="ruina"] .eyebrow{color:var(--g);font-family:var(--serif);letter-spacing:.16em}
+html[data-skin="ruina"] h1,html[data-skin="ruina"] h2{font-family:var(--serif);color:#f6dfa6;text-shadow:0 0 14px rgba(236,201,127,.45),0 1px 0 #000}
+html[data-skin="ruina"] .chip{border-radius:2px;border-color:var(--g2)}
+html[data-skin="ruina"] .die,html[data-skin="ruina"] .d6{border-radius:50%;border-color:var(--g);background:#0c0a07;box-shadow:0 0 10px var(--glow)}
+html[data-skin="ruina"] .seg{border-color:var(--g2);border-radius:2px}
+html[data-skin="ruina"] .seg button.on{background:linear-gradient(180deg,#f0d38f,#c99a4a);color:var(--gold-ink)}

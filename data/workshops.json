@@ -1,0 +1,250 @@
+{
+ "money": {
+  "unit": "안",
+  "start": {
+   "평범한 둥지 시민": 400,
+   "뒷골목 태생": 150,
+   "둥지 노동자": 300,
+   "조직 출신": 250,
+   "날개 직원 집안": 500,
+   "외곽 생존자": 80,
+   "몰락한 가문": 700,
+   "도서관의 손님": 250,
+   "혈귀": 150,
+   "유물 적성자": 300
+  },
+  "salary": {
+   "none": 60,
+   "office": 160,
+   "assoc": 260,
+   "wing": 300,
+   "finger": 220
+  },
+  "rankSalary": 25,
+  "bounty": {
+   "early": 90,
+   "mid": 200,
+   "boss": 400,
+   "hidden": 700,
+   "late": 300
+  }
+ },
+ "workshops": [
+  {
+   "grade": 1,
+   "n": "뒷골목 공방",
+   "t": "골목 안쪽, 간판도 없는 작업장. 값은 싸고 물건은 정직하다."
+  },
+  {
+   "grade": 2,
+   "n": "협력 공방",
+   "t": "소속이 보증하는 손님만 받는 공방. 규격품이 깔끔하다."
+  },
+  {
+   "grade": 3,
+   "n": "명장 공방",
+   "t": "협회가 특허를 관리하는 명장의 작업장. 소개 없이는 문도 열리지 않는다."
+  }
+ ],
+ "access": {
+  "base": 1,
+  "aff": {
+   "office": 2,
+   "wing": 2,
+   "finger": 2,
+   "assoc": 3
+  },
+  "rankBonus": {
+   "rank": 5,
+   "plus": 1
+  },
+  "max": 3
+ },
+ "slots": {
+  "weapon": "무기",
+  "armor": "방어구",
+  "aug": "의수"
+ },
+ "items": {
+  "club": {
+   "grade": 1,
+   "slot": "weapon",
+   "n": "무거운 쇠몽둥이",
+   "price": 350,
+   "e": "공+1 · D6≥2",
+   "fx": {
+    "atk": 1,
+    "dmin": 2
+   }
+  },
+  "dagger": {
+   "grade": 1,
+   "slot": "weapon",
+   "n": "날 세운 단검",
+   "price": 400,
+   "e": "공+2 · 속도+1",
+   "fx": {
+    "atk": 2,
+    "spd": 1
+   }
+  },
+  "leather": {
+   "grade": 1,
+   "slot": "armor",
+   "n": "덧댄 가죽옷",
+   "price": 250,
+   "e": "HP+6",
+   "fx": {
+    "maxHp": 6
+   }
+  },
+  "sword": {
+   "grade": 2,
+   "slot": "weapon",
+   "n": "규격 장검",
+   "price": 700,
+   "e": "공+3 · D6≥2",
+   "fx": {
+    "atk": 3,
+    "dmin": 2
+   }
+  },
+  "coat": {
+   "grade": 2,
+   "slot": "armor",
+   "n": "경량 방탄 코트",
+   "price": 620,
+   "e": "HP+10 · 회피+1",
+   "fx": {
+    "maxHp": 10,
+    "eva": 1
+   }
+  },
+  "reflex": {
+   "grade": 2,
+   "slot": "aug",
+   "n": "반응 강화 의수",
+   "price": 680,
+   "e": "속도+3 · 회피+1",
+   "fx": {
+    "spd": 3,
+    "eva": 1
+   }
+  },
+  "greatsword": {
+   "grade": 3,
+   "slot": "weapon",
+   "n": "명장의 대검",
+   "price": 1200,
+   "e": "공+4 · D6≥3 · 카드 마지막 소절",
+   "fx": {
+    "atk": 4,
+    "dmin": 3
+   },
+   "card": "finale"
+  },
+  "plate": {
+   "grade": 3,
+   "slot": "armor",
+   "n": "명장 제작 방어구",
+   "price": 1050,
+   "e": "HP+16 · 회피+2 · 방어 카드 회피+5",
+   "fx": {
+    "maxHp": 16,
+    "eva": 2,
+    "defUp": 5
+   }
+  },
+  "singular": {
+   "grade": 3,
+   "slot": "aug",
+   "n": "특이점 응용 의수",
+   "price": 1150,
+   "e": "공+2 · 라운드 첫 공격 명중 2회 굴림",
+   "fx": {
+    "atk": 2,
+    "adv": 1
+   }
+  },
+  "workclothes": {
+   "grade": 1,
+   "slot": "armor",
+   "n": "누빈 작업복",
+   "price": 120,
+   "e": "HP+4",
+   "fx": {
+    "maxHp": 4
+   }
+  },
+  "usedarm": {
+   "grade": 1,
+   "slot": "aug",
+   "n": "중고 의수",
+   "price": 280,
+   "e": "속도+1 · 회피+1",
+   "fx": {
+    "spd": 1,
+    "eva": 1
+   }
+  }
+ },
+ "special": {
+  "neural": {
+   "n": "신경 가속 시술",
+   "price": 4500,
+   "perm": true,
+   "e": "속도+3 (영구, 한 번만)",
+   "fx": {
+    "spd": 3
+   }
+  },
+  "fiber": {
+   "n": "근섬유 이식",
+   "price": 5500,
+   "perm": true,
+   "e": "HP+15 (영구, 한 번만)",
+   "fx": {
+    "maxHp": 15
+   }
+  },
+  "focus": {
+   "n": "판단 보조 칩",
+   "price": 3500,
+   "perm": true,
+   "e": "판정+6 (영구, 한 번만)",
+   "fx": {
+    "check": 6
+   }
+  },
+  "rustpart": {
+   "n": "녹슨 특이점 부품",
+   "price": 4000,
+   "slot": "aug",
+   "e": "공+2 · 회피+2",
+   "fx": {
+    "atk": 2,
+    "eva": 2
+   }
+  },
+  "namelessblade": {
+   "n": "이름 없는 공방의 칼",
+   "price": 5000,
+   "slot": "weapon",
+   "e": "공+5 · D6≥3",
+   "fx": {
+    "atk": 5,
+    "dmin": 3
+   }
+  },
+  "layeredcoat": {
+   "n": "겹겹이 기운 외투",
+   "price": 4500,
+   "slot": "armor",
+   "e": "HP+20 · 회피+2",
+   "fx": {
+    "maxHp": 20,
+    "eva": 2
+   }
+  }
+ }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "city-year",
+  "version": "0.5.0",
+  "private": true,
+  "description": "도시의 한 해 — 1인 TRPG 텍스트 어드벤처 (프로젝트문 세계관 팬게임)",
+  "type": "module",
+  "scripts": {
+    "sim": "node tools/sim.mjs",
+    "check": "node tools/check.mjs",
+    "dev": "node tools/serve.mjs",
+    "build": "node tools/build.mjs",
+    "pages": "node tools/build.mjs --pages",
+    "guide": "node tools/guide.mjs"
+  },
+  "engines": {"node": ">=18"}
+}
