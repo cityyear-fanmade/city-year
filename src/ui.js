@@ -292,11 +292,12 @@ export function startUI(E,app){
   }
   /* 공방: 카드 지우기 (방문 한 번에 1장, 덱 최소 장수 유지) */
   function vDelCard(){
-    const ch=G.ch,S=CFG.shop,can=!UI.deleted&&ch.money>=S.delCost&&ch.deck.length>S.minDeck;
-    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 지우기</b><span class="mono" style="color:var(--gold)">${E.money(S.delCost)}</span></div>
-      <p class="small dim">덱에서 카드 1장을 지운다. 공방에 들를 때마다 1장까지, 덱은 ${S.minDeck}장 아래로 줄일 수 없다.</p>
-      ${UI.deleted?`<p class="good small">${esc(UI.deleted)}을(를) 지웠다.</p>`:`<div class="chips">${ch.deck.map((id,i)=>`<button class="chip" data-a="delcard" data-i="${i}" ${can?'':'disabled'}>${D.cards[id].n} ×</button>`).join('')}</div>`}
-      ${!UI.deleted&&!can?`<p class="small dim">${ch.deck.length<=S.minDeck?'덱이 더 줄어들 수 없다.':'돈이 모자란다.'}</p>`:''}</div>`;
+    const ch=G.ch,S=CFG.shop,del=UI.deleted||[],left=S.delMax-del.length,can=left>0&&ch.money>=S.delCost&&ch.deck.length>S.minDeck;
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 지우기</b><span class="mono" style="color:var(--gold)">${E.money(S.delCost)} · 이번 방문 ${del.length}/${S.delMax}</span></div>
+      <p class="small dim">덱에서 카드를 지운다. 공방에 들를 때마다 ${S.delMax}장까지, 덱은 ${S.minDeck}장 아래로 줄일 수 없다.</p>
+      ${del.length?`<p class="good small">지운 카드 · ${del.map(esc).join(', ')}</p>`:''}
+      ${left>0?`<div class="chips">${ch.deck.map((id,i)=>`<button class="chip" data-a="delcard" data-i="${i}" ${can?'':'disabled'}>${D.cards[id].n} ×</button>`).join('')}</div>`:''}
+      ${left>0&&!can?`<p class="small dim">${ch.deck.length<=S.minDeck?'덱이 더 줄어들 수 없다.':'돈이 모자란다.'}</p>`:''}${left<=0?'<p class="small dim">이번 방문에는 더 지울 수 없다.</p>':''}</div>`;
   }
   function vRules(){
     return `<details><summary>규칙 요약</summary><ul>
@@ -701,7 +702,7 @@ export function startUI(E,app){
       const ty=UI.egoType||'atk';E.setEgo(G.ch,ty,n);UI.egoErr='';UI.egoName='';UI.egoType=null;
       UI.res.chips=[...UI.res.chips,`E.G.O · ${n} (${CFG.mind.ego[ty].n})`];render();
     },
-    delcard(i){const c=E.delCard(G.ch,+i);if(c){UI.deleted=D.cards[c].n;render()}},
+    delcard(i){if((UI.deleted||[]).length>=CFG.shop.delMax)return;const c=E.delCard(G.ch,+i);if(c){(UI.deleted=UI.deleted||[]).push(D.cards[c].n);render()}},
     tname(){
       const ch=G.ch,adj=D.colors[ch.ci].adj,w=(($('tw')||{}).value||'').trim();
       if(!TW_OK.test(w)){UI.twErr='2~3글자로 적어 주세요 (한글·영문·숫자, 띄어쓰기 없이)';render();return}

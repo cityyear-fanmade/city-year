@@ -41,7 +41,7 @@ export const CFG = {
     tiers: [{at: 45, breath: 5, eva: 5}, {at: 30, breath: 3, eva: 3}, {at: 20, breath: 1, eva: 0}],
     ego: {atk: {n: '공격용', hit: 10, floor: 20}, def: {n: '방어용', hp: 30, floor: 11}}},
   /* 공방 거리: 1년차부터 every년마다 들를지 묻는다(해는 넘어가지 않음). blackFrom년차부터 암시장 물건 blackStock개 진열 */
-  shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, minDeck: 4},
+  shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4},
   /* 출신 진로 보정: 그 진로의 권유 사건이 (보정값 × 이 값)% 확률로 먼저 나온다 */
   pathEventMul: 2,
   /* 전투 승리 후 해결사 등록 판정 난이도 (1d100 + 해결사 진로 보정) */
