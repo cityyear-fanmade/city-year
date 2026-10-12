@@ -742,7 +742,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const nv=Math.max(lo2,d(die));if(nv>rolls[mi]){note+=` 재굴림 ${rolls[mi]}→${nv}`;rolls[mi]=nv}
       }
       let dmg=rolls.reduce((a,b)=>a+b,0)+c.b+(gr?gr.b:0);
-      if(gr&&gr.n)note+=` 등급${gr.n}`;
+      if(gr&&gr.n)note+=` 등급${gr.n}(피해+${gr.b})`;
       note+=pnote;
       /* 장비 추가 주사위 (천퇴성도: 적중마다 1d2 × N) */
       if(A.extraD2){let x=0;for(let i=0;i<A.extraD2;i++)x+=d(2);dmg+=x;note+=` 추가 1d2×${A.extraD2}+${x}`}

@@ -255,7 +255,8 @@ export function startUI(E,app){
       ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림',s.adv>=1?'있음':Math.round(s.adv*100)+'% 확률',null)]:[])].join('');
     const eq=Object.entries(D.slots).map(([k,n])=>{const g=ch.gear[k];return `<div class="invr"><span>${n}</span><b>${g?esc(g.n):'<span class="dim">없음</span>'}</b><span class="mono" style="color:var(--gold)">${g?esc(g.e||''):''}</span></div>`}).join('');
     const cnt={};ch.deck.forEach(id=>cnt[id]=(cnt[id]||0)+1);
-    const cards=Object.entries(cnt).map(([id,n])=>{const c=D.cards[id];return `<div class="invc"><span class="cost">${c.c}</span><div><b>${esc(c.n)}${n>1?` <span class="dim">×${n}</span>`:''}</b><div class="small dim">${c.t==='def'?'방어 · ':c.t==='buff'?'버프 · ':''}${cardLine(c)||''}</div>${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</div></div>`}).join('');
+    const g_=E.cardGrade(ch.year),wx_=ch.gear.weapon&&ch.gear.weapon.wx||null;
+    const cards=Object.entries(cnt).map(([id,n])=>{const c=D.cards[id],ga=c.t==='atk'&&g_.n;return `<div class="invc"><span class="cost">${c.c}</span><div><b>${esc(c.n)}${ga?` <span style="color:var(--gold)">${g_.n}</span>`:''}${n>1?` <span class="dim">×${n}</span>`:''}</b><div class="small dim">${c.t==='def'?'방어 · ':c.t==='buff'?'버프 · ':''}${cardLine(c,c.t==='atk'?g_:null,wx_)||''}${c.shield&&CFG.cardGrade.indexOf(g_)>0?` (지금 보호막 ${c.shield+5*CFG.cardGrade.indexOf(g_)})`:''}</div>${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</div></div>`}).join('');
     const tabs=[['stat','능력치'],['gear','장비'+((ch.stash||[]).length?' '+ch.stash.length:'')],['card','카드 '+ch.deck.length],['relic','전리품'+((ch.relics||[]).length?' '+ch.relics.length:'')]];
     const tab=UI.invTab||'stat';
     const body={stat:`<div>${stats}</div><div class="small dim">${esc(ch.o.n)} · ${esc(ch.t.n)} · ${esc(ch.f.n)} · ${esc(ch.w.n)}</div>`,
