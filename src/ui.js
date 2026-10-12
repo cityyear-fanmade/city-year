@@ -388,7 +388,7 @@ export function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const UPDATES={v:'v5.5',items:['이어서 하기: 자동 저장 (사건·선택 결과까지), 새로 시작하기는 한 번 더 확인','오늘의 시드: 날짜마다 모두 같은 출생','기록실: 만난 적·엔딩·해금·타고난 것·최고 기록','전투 전 환상체 표시','히든 직업 전용 패시브 (발톱 질주 · 조율자 봉인)']};
+  const UPDATES={v:'v5.5',items:['이어서 하기: 자동 저장 (사건·선택 결과까지), 새로 시작하기는 한 번 더 확인','오늘의 시드: 날짜마다 모두 같은 출생','기록실: 만난 적·엔딩·해금·타고난 것·최고 기록','전투 전 환상체 표시','히든 직업 전용 패시브 (발톱 질주 · 조율자 봉인)','기록 공유가 링크로: 받은 사람은 기록을 보고 같은 시드로 바로 도전']};
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -618,8 +618,34 @@ export function startUI(E,app){
       ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">무한런</span><p class="small">여기서 끝내도 된다. 계속 살아가면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 진짜 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">계속 살아간다</button></div>`:''}
       <div class="row" style="gap:8px"><button class="btn quiet" style="flex:1" data-a="share">기록 공유</button><button class="btn quiet" style="flex:1" data-a="saveimg">이미지로 저장</button></div>
       ${UI.imgUrl?`<p class="small dim">저장이 막힌 환경이다. 아래 이미지를 길게 눌러 저장한다.</p><img src="${UI.imgUrl}" alt="엔딩 기록 이미지" style="width:100%;border-radius:8px">`:''}
-      ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<textarea id="shareBox" readonly rows="9" style="width:100%;font:inherit;font-size:13px">${esc(UI.shareText)}</textarea>`:''}
+      ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<input id="shareBox" readonly value="${esc(UI.shareText)}" onclick="this.select()" style="width:100%;font:inherit;font-size:13px">`:''}
       <button class="btn ${w&&!G.endless?'quiet':'primary'}" data-a="start">다시 태어난다</button><button class="btn quiet" data-a="title">처음 화면</button>`;
+  }
+  /* 기록 링크: 기록을 주소(#r=...) 안에 담는다. 서버 없이 열린다 */
+  const PAGES='https://cityyear-fanmade.github.io/city-year/';
+  const b64e=o=>{const u=new TextEncoder().encode(JSON.stringify(o));let x='';u.forEach(c=>x+=String.fromCharCode(c));return btoa(x).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
+  const b64d=t=>{const x=atob(t.replace(/-/g,'+').replace(/_/g,'/'));return JSON.parse(new TextDecoder().decode(Uint8Array.from(x,c=>c.charCodeAt(0))))};
+  function shareHead(){const w=UI.endWin,dt=UI.death;return w&&UI.trueEnd?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':dt&&dt.cause==='distort'?'뒤틀렸다':'도시는 나를 기억하지 않는다'}
+  function shareLink(){
+    const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
+    const o={v:1,h:shareHead(),w:w?1:0,n:c.name||'',k:careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&'),t:c.title||'',col:c.color,y:lived,a:E.age(G),
+      g:G.endless&&gi>=0?X.grades[gi]:'',d:!w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:'',f:[...c.beaten,...(c.minis||[])].map(id=>D.enemies[id].n),
+      e:c.ego?c.ego.n:'',i:innateName(c)||'',o:`${c.o.n} · ${c.t.n} · ${c.f.n}`,lv:c.lv,st:[c.stats.atk,c.stats.eva,c.stats.spd],s:c.seed,dy:c.daily||'',ver:UPDATES.v};
+    const base=/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.origin+location.pathname:PAGES;
+    return base+'#r='+b64e(o);
+  }
+  function vShared(){
+    const r=UI.shared;
+    const row=(k,v)=>v?`<div class="row between"><span class="dim">${k}</span><b class="mono" style="text-align:right">${esc(String(v))}</b></div>`:'';
+    return `<div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow">공유된 기록 · ${esc(r.ver||'')}</div>
+      <div class="eyebrow" style="color:${r.w?'var(--gold)':'#c46a5a'}">${esc(r.h)} · ${r.a}세</div>
+      <h1 style="color:${esc(r.col||'')}">${esc(r.n||r.k)}</h1>${r.n?`<div class="mono small" style="color:${esc(r.col||'')}">${esc(r.k)}</div>`:''}
+      ${r.t?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${esc(r.t)}</span></div>`:''}</div>
+      <div class="panel stack" style="gap:6px">${row('산 햇수',r.y+'년')}${row('위협 등급',r.g)}${row('마지막',r.d)}${row('타고난 것',r.i)}${row('E.G.O',r.e)}
+        ${row('레벨',`Lv ${r.lv} · 공격 ${sg(r.st[0])} · 회피 ${sg(r.st[1])} · 속도 ${sg(r.st[2])}`)}${row('출신',r.o)}${row('시드',r.s+(r.dy?' · 오늘의 시드 '+r.dy:''))}
+        ${r.f&&r.f.length?`<div class="small"><span class="dim">쓰러뜨린 이름난 상대</span><br><b>${r.f.map(esc).join(' · ')}</b></div>`:''}</div>
+      <button class="btn primary" data-a="sharedSeed"><b>같은 시드로 태어나기</b><span class="small">시드 ${r.s}</span></button>
+      <button class="btn quiet" data-a="title">처음 화면</button>`;
   }
   /* 공유용 기록 글 */
   function shareText(){
@@ -699,7 +725,7 @@ export function startUI(E,app){
   }
   function render(){
     const s=UI.screen;
-    const h={records:vRecords,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
+    const h={shared:vShared,records:vRecords,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
     app.innerHTML=`<div class="wrap">${tab}${h}</div>`;
     const lg=$('log');if(lg)lg.scrollTop=lg.scrollHeight;
@@ -778,7 +804,7 @@ export function startUI(E,app){
       const old=ch.title;ch.title=adj+' '+w;ch.titlePick=false;UI.twErr='';
       UI.res.chips=UI.res.chips.map(x=>x===T.titleLabel+' · '+old?T.titleLabel+' · '+ch.title:x);render();
     },
-    title(){UI.confirmNew=null;UI.screen='title';render()},
+    title(){UI.confirmNew=null;if(UI.shared){UI.shared=null;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}UI.screen='title';render()},
     mode(i){MODE=i;store.set('cityYearMode',i);render()},
     fightmode(i){FIGHT=i;store.set('cityYearFight',i);render()},
     skin(i){SKIN=i;store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
@@ -793,12 +819,14 @@ export function startUI(E,app){
     },
     testCard:async()=>(await endCard()).toDataURL('image/png'),
     async share(){
-      const t=shareText();UI.shareText=null;
-      try{if(navigator.share){await navigator.share({text:t});UI.shareMsg='공유 창을 열었다.';render();return}}catch(e){if(e&&e.name==='AbortError')return}
-      try{await navigator.clipboard.writeText(t);UI.shareMsg='기록을 복사했다. 붙여 넣어 공유하면 된다.'}
-      catch(e){UI.shareMsg='복사가 막혀 있다. 아래 글을 길게 눌러 복사한다.';UI.shareText=t}
-      render();const b=$('shareBox');if(b)b.select();
+      const url=shareLink();UI.shareText=null;UI.shareMsg=null;
+      try{if(navigator.share){await navigator.share({title:'도시의 한 해 · 내 기록',text:shareHead(),url});UI.shareMsg='공유 창을 열었다.';render();return}}catch(e){if(e&&e.name==='AbortError')return}
+      try{await navigator.clipboard.writeText(url);UI.shareMsg='기록 링크를 복사했다. 붙여 넣기만 하면 된다.';render();return}catch(e){}
+      UI.shareText=url;render();const b=$('shareBox');
+      if(b){b.focus();b.select();try{if(document.execCommand('copy')){UI.shareMsg='기록 링크를 복사했다. 붙여 넣기만 하면 된다.';UI.shareText=null;render();return}}catch(e){}}
+      UI.shareMsg='이 화면에서는 자동 복사가 막혀 있다. 아래 링크를 눌러 복사한다.';render();const b2=$('shareBox');if(b2)b2.select();
     },
+    sharedSeed(){const r=UI.shared;history.replaceState&&history.replaceState(null,'',location.pathname+location.search);UI.shared=null;UI.job=null;born(+r.s,'');UI.screen='birth';render()},
     start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='title')store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     cont(){const o=loadSave();if(!o)return;G=o.G;C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
@@ -867,11 +895,14 @@ export function startUI(E,app){
     if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode'].includes(b.dataset.a))return;
     ACT[b.dataset.a](b.dataset.i);
   });
+  /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */
+  try{const m=/#r=([\w-]+)/.exec(location.hash||'');if(m){const r=b64d(m[1]);if(r&&r.s!=null){UI.shared=r;UI.screen='shared'}}}catch(e){}
   render();
   /* 자동 테스트용 상태 조회 */
   return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff}),
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
     testCard:()=>ACT.testCard(),
+    testShareLink:()=>shareLink(),
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
     testDeath(y,foe){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false};UI.screen='end';render()},
