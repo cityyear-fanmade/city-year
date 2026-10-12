@@ -726,8 +726,8 @@ export function startUI(E,app){
     seed(){UI.relic=null;const v=parseInt(($('seedIn')||{}).value,10);if(!(v>=0)){const i=$('seedIn');if(i){i.value='';i.placeholder='숫자만 넣을 수 있다'}return}born(v,BC&&BC.name);render()},
     color(i){E.setColor(BC,+i);BC.fresh=false;render()},
     relic(k){UI.relic=k;render()},
-    job(k){UI.job=k||null;render()},
-    live(){if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(UI.job&&loadUnlocks().includes(UI.job))E.giveJob(BC,UI.job);G=E.newGame(BC);nextYear()},
+    job(k){UI.job=k||null;UI.relic=null;born(BC.seed,BC.name);render()},
+    live(){if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.showIncome=false;UI.screen='shop';render()},
@@ -769,7 +769,7 @@ export function startUI(E,app){
   };
   /* 시드: 브라우저 암호 난수로 새로 뽑는다. 같은 시드면 같은 출생과 같은 굴림 */
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
-  function born(seed,name){E.reseed(seed);BC=E.newChar();BC.seed=seed;BC.name=name||'';BC.fresh=true}
+  function born(seed,name){E.reseed(seed);BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null);BC.seed=seed;BC.name=name||'';BC.fresh=true}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
   window.addEventListener('resize',()=>{if(UI.screen==='combat'&&!PLAYING&&UI.wasMobile!==isMobile())render()});
   app.addEventListener('toggle',e=>{const t=e.target;if(!t.classList)return;

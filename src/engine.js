@@ -80,9 +80,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function childhood(s){
     return D.childhood.stages.map(st=>{const r=d(100),x=pick(D.childhood.table,r);addStats(s,x.fx);return {age:st.age,r,x}});
   }
-  function newChar(){
-    const r={o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)};
-    const o=pick(D.origins,r.o),t=pick(D.talents,r.t),f=pick(D.flaws,r.f),w=pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
+  /* job: 히든 직업으로 태어나면 출신 칸이 그 직업으로 바뀐다 (발톱 1, 조율자 100). 나머지 굴림은 같은 시드 그대로 */
+  function newChar(job){
+    const r={o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=job&&D.hiddenJobs[job];
+    if(J)r.o=J.roll;
+    const o=J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:pick(D.origins,r.o),t=pick(D.talents,r.t),f=pick(D.flaws,r.f),w=pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
     const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,defUp:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6};
     for(const x of [o,t,f])addStats(s,x.fx);
     const kid=childhood(s);
@@ -90,6 +92,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:CFG.mind.max,stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||0,
       deck:['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;
+    if(J){ch.job=job;ch.aff={type:'head',name:'머리'};for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
     /* 출생 때 굴린 무기는 무기 칸의 첫 장비 */
     equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
     return ch;
@@ -100,13 +103,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     (ch.relics=ch.relics||[]).push(R.n);ch.relicPick=false;
     if(R.odin)ch.odin=true;
     if(R.gear){equip(ch,Object.assign({id:R.gear.id||id,grade:5},R.gear));ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth')}
-  }
-  /* 히든 직업으로 시작: 머리 소속 고정(승급·해결사 등록 없음), 능력치·전용 카드·시작 자금 */
-  function giveJob(ch,job){
-    const J=D.hiddenJobs[job];if(!J)return false;
-    ch.job=job;ch.aff={type:'head',name:'머리'};addStats(ch.stats,J.fx);if(J.fx.maxHp)ch.hp+=J.fx.maxHp;
-    for(const c of J.cards)ch.deck.push(c);ch.money+=J.money||0;(ch.relics=ch.relics||[]).push(J.n);
-    return true;
   }
   /* ===== 장비·돈·공방 ===== */
   /* 장비 칸마다 하나. 바꾸면 이전 장비 효과를 빼고 새 장비 효과를 더한다. 피해 최소값은 장비 중 가장 큰 값 */
@@ -780,6 +776,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,giveJob,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
