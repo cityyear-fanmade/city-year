@@ -393,7 +393,7 @@ export function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const UPDATES={v:'v5.8',items:['난이도 상향: 해가 갈수록 적이 훨씬 빠르게 강해진다 (모든 적 체급도 상승)','카드 등급: 16·31·46년차에 내 공격 카드가 한 단계씩 강해진다','히든 보스는 13년차부터 나타나고, 오래 성장한 뒤에야 겨우 상대할 수 있다','약지 소속에게 새로운 이야기가 열린다','이어서 하기 · 오늘의 시드 · 기록실 · 기록 공유 링크']};
+  const UPDATES={v:'v5.8',items:['난이도 상향: 해가 갈수록 적이 훨씬 빠르게 강해진다 (모든 적 체급도 상승)','카드 등급: 16·31·46년차에 내 공격 카드가 한 단계씩 강해진다','히든 보스는 13년차부터 나타나고, 오래 성장한 뒤에야 겨우 상대할 수 있다','약지 소속에게 새로운 이야기가 열린다','15년차, 골목 끝에서 무언가가 당신을 기다린다','이어서 하기 · 오늘의 시드 · 기록실 · 기록 공유 링크']};
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -479,10 +479,15 @@ export function startUI(E,app){
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d100 · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~3글자)를 직접 적는다 */
   const TW_OK=/^[가-힣A-Za-z0-9]{2,3}$/;
+  function vLateRelic(){
+    const ks=E.relicChoices(G.ch);
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">잊힌 유물 · 하나를 고른다</span><p class="small dim">이미 가진 유물은 고를 수 없다.</p>
+      ${ks.map(k=>{const r=D.relics[k];return `<button class="btn" data-a="lrelic" data-i="${k}"><b>${esc(r.n)}</b><span class="mono small" style="color:var(--gold)">${esc(r.e)}</span></button>`}).join('')}</div>`;
+  }
   function vEgoPick(){
     const X=CFG.mind.ego,ty=UI.egoType||'atk';
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">E.G.O 개화</span>
@@ -808,6 +813,7 @@ export function startUI(E,app){
   function startCombat(id){recAdd('seen',id);C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.screen='combat';render()}
 
   const ACT={
+    lrelic(k){if(!E.relicChoices(G.ch).includes(k))return;E.giveRelic(G.ch,k,true);UI.res.chips=[...UI.res.chips,'유물 · '+D.relics[k].n];render()},
     egotype(k){UI.egoName=(($('egoname')||{}).value||UI.egoName||'');UI.egoType=k;render()},
     egoset(){
       const n=(($('egoname')||{}).value||'').trim(),err=E.egoNameErr(n);

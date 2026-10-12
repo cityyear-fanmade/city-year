@@ -103,12 +103,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return ch;
   }
   /* 유물 적성자: 출생 때 고른 유물 지급 */
-  function giveRelic(ch,id){
+  function giveRelic(ch,id,late){
     const R=D.relics[id];if(!R)return;
-    (ch.relics=ch.relics||[]).push(R.n);ch.relicPick=false;
+    (ch.relics=ch.relics||[]).push(R.n);(ch.relicIds=ch.relicIds||[]).push(id);ch.relicPick=false;ch.relicPickLate=false;
     if(R.odin)ch.odin=true;
-    if(R.gear){equip(ch,Object.assign({id:R.gear.id||id,grade:5},R.gear));ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth')}
+    if(R.gear){equip(ch,Object.assign({id:R.gear.id||id,grade:5},R.gear));if(!late)ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth')}
   }
+  /* 이미 가진 유물은 다시 고를 수 없다 */
+  const relicChoices=ch=>Object.keys(D.relics).filter(k=>!(ch.relicIds||[]).includes(k)&&!(ch.relics||[]).includes(D.relics[k].n)&&!(k==='laev'&&(ch.relics||[]).includes(D.relics.laev.open.n)));
   /* ===== 장비·돈·공방 ===== */
   /* 장비 칸마다 하나. 바꾸면 이전 장비 효과를 빼고 새 장비 효과를 더한다. 피해 최소값은 장비 중 가장 큰 값 */
   function equip(ch,item){
@@ -428,6 +430,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
     if(mc.innate==='mark'&&!mc.markOn&&G.year>=CFG.innate.markYear-1)return {type:'event',ev:D.innateEvents.mark};
+    if(D.relicEvent&&!mc.relicEvt&&G.year===CFG.relicEvent.year-1){mc.relicEvt=true;return {type:'event',ev:D.relicEvent}}
     if(mc.affRetry&&!mc.aff){mc.affRetry=false;return {type:'event',ev:D.affiliation}}
     if(mc.voicePend&&!mc.voiceUsed&&!mc.ego){mc.voicePend=false;mc.voiceUsed=true;return {type:'event',ev:D.mindEvents.voice}}
     G.year++;
@@ -505,6 +508,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       chips.push('표지 발현 · 능력치 ×'+M_);chips.push(Object.entries(b).map(([k,v])=>`${k}+${v}`).concat(`HP+${hp}`,'적중마다 +2d3').join(' · '))}
     /* 선택지의 정신력: mind -1이면 2d3 감소, +1이면 2d3 회복 */
     if(c.mind){const x=d(3)+d(3);if(c.mind<0)loseMind(ch,x,t=>chips.push(t+' · 2d3'));else{const g=gainMind(ch,x);if(g)chips.push(`정신력 +${g} (${ch.mind}/${M.max})`)}}
+    if(fx.relicRoll){const r=d(100),ok=r<=CFG.relicEvent.chance&&relicChoices(ch).length;chips.push(`1d100 · ${r} (${CFG.relicEvent.chance} 이하)`);
+      if(ok){ch.relicPickLate=true;chips.push('유물이 손에 감긴다 · 하나를 고른다')}else chips.push('손끝에 먼지만 묻었다')}
     if(fx.wsRoll){
       const r=d(WF.die);chips.push(`1d${WF.die} · ${r} (${WF.minRoll} 이상)`);
       if(r>=WF.minRoll){const was=ch.licensed;if(!was)license(ch);ch.aff={type:'workshop',name:'공방 해결사'};
@@ -888,6 +893,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
