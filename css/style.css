@@ -324,3 +324,7 @@ html[data-skin="ruina"] .chip{border-radius:2px;border-color:var(--g2)}
 html[data-skin="ruina"] .die,html[data-skin="ruina"] .d6{border-radius:50%;border-color:var(--g);background:#0c0a07;box-shadow:0 0 10px var(--glow)}
 html[data-skin="ruina"] .seg{border-color:var(--g2);border-radius:2px}
 html[data-skin="ruina"] .seg button.on{background:linear-gradient(180deg,#f0d38f,#c99a4a);color:var(--gold-ink)}
+
+/* 결과 칩이 많으면 칸 안에서 스크롤 (휴대폰에서 화면이 길게 밀리지 않게) */
+.chipscroll{max-height:38vh;overflow-y:auto;overscroll-behavior:contain;padding:2px 4px 2px 0;align-content:flex-start}
+.chipscroll::-webkit-scrollbar{width:6px}.chipscroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
