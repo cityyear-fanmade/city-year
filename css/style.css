@@ -35,7 +35,7 @@ h2{font:600 22px/1.35 var(--serif);text-wrap:balance}
 .bar{height:8px;background:#222836;border-radius:2px;overflow:hidden}
 .bar>i{display:block;height:100%;background:var(--gold);transition:width .3s}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font:500 12px/1 var(--mono);padding:5px 7px;border:1px solid var(--line2);border-radius:3px;color:var(--fg);white-space:nowrap}
+.chip{font:500 12px/1.35 var(--mono);padding:5px 7px;border:1px solid var(--line2);border-radius:3px;color:var(--fg);white-space:normal;max-width:100%;overflow-wrap:anywhere;word-break:keep-all}
 .swatch{width:12px;height:12px;border-radius:2px;flex:none}
 .lead{color:var(--dim);text-wrap:pretty}
 .roll{display:grid;grid-template-columns:64px 44px minmax(0,1fr);gap:10px;align-items:baseline;padding-block:10px;border-top:1px solid var(--line)}
