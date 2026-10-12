@@ -527,12 +527,24 @@
     "maxHp": 20
    },
    "cards": [
-    "j_claw",
-    "x_blink"
+    "j_serumW",
+    "j_serumR",
+    "j_serumK"
    ],
    "money": 1200,
-   "e": "공격+3 · 속도+3 · HP+20 · 전용 카드 2장 · 공방 3등급",
-   "roll": 1
+   "e": "공격+3 · 속도+3 · HP+20 · 전용 무기 발톱 · 혈청 카드 3장 · 공방 3등급",
+   "roll": 1,
+   "weapon": {
+    "id": "job_claw",
+    "slot": "weapon",
+    "n": "발톱",
+    "e": "공격+2 · 속도+1 · 적중마다 1d2 추가",
+    "fx": {
+     "atk": 2,
+     "spd": 1,
+     "extraD2": 1
+    }
+   }
   },
   "arbiter": {
    "n": "조율자",
@@ -544,12 +556,25 @@
     "check": 10
    },
    "cards": [
+    "j_fairy",
     "j_lock",
+    "j_unlock",
     "x_pillar"
    ],
    "money": 1500,
-   "e": "공격+3 · 회피+3 · HP+30 · 판정+10 · 전용 카드 2장 · 공방 3등급",
-   "roll": 100
+   "e": "공격+3 · 회피+3 · HP+30 · 판정+10 · 전용 무기 요정 · 전용 카드 4장 · 공방 3등급",
+   "roll": 100,
+   "weapon": {
+    "id": "job_fairy",
+    "slot": "weapon",
+    "n": "요정",
+    "e": "공격+2 · 회피+2 · 피해+1",
+    "fx": {
+     "atk": 2,
+     "eva": 2,
+     "dmgB": 1
+    }
+   }
   }
  }
 }

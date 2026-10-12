@@ -95,6 +95,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(J){ch.job=job;ch.aff={type:'head',name:'머리'};for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
     /* 출생 때 굴린 무기는 무기 칸의 첫 장비 */
     equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
+    /* 히든 직업 전용 무기: 출생 무기는 보관함으로 */
+    if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     return ch;
   }
   /* 유물 적성자: 출생 때 고른 유물 지급 */
@@ -361,6 +363,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const n=new Set(),add=x=>{if(x)n.add(String(x).replace(/\s/g,''))};
     for(const o of [D.items,D.special,D.cards])for(const v of Object.values(o||{}))add(v.n);
     for(const v of Object.values(D.relics||{})){add(v.n);if(v.open)add(v.open.n)}
+    for(const v of Object.values(D.hiddenJobs||{})){add(v.n);if(v.weapon)add(v.weapon.n)}
     for(const e of Object.values(D.enemies)){if(e.drop){add(e.drop.n);if(e.drop.gear)add(e.drop.gear.n)}}
     return n;
   }
