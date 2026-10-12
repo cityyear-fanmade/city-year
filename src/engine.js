@@ -121,7 +121,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     s.dmin=Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1));
     /* 무기 피해 주사위 면 수 (궁니르 d10). 장비 중 가장 큰 값, 기본 d6 */
     s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
-    if(item.card&&!ch.deck.includes(item.card))ch.deck.push(item.card);
+    if(item.card&&!ch.deck.includes(item.card)&&!ch.deckLocked)ch.deck.push(item.card);
   }
   /* 보관함의 장비를 꺼내 장착 (지금 장비는 보관함으로) */
   function equipStash(ch,i){const st=ch.stash||[];if(!st[i])return false;equip(ch,st.splice(i,1)[0]);return true}
@@ -270,6 +270,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 날개·손가락 진로면 해결사 급수 대신 그 진로의 직급을 보여 준다 (해결사 급수는 그 진로에서 오르지 않는다) */
   const rankLabel=ch=>{if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr)return ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n;return rankLabel0(ch)};
   const rankLabel0=ch=>!ch.licensed?T.unranked:ch.title?`${ch.title} · ${ch.rank}${T.rankUnit}`:`${ch.rank}${T.rankUnit} ${T.licensed}`;
+  /* 카드 얻기: 덱이 고정(엄지 검술)이면 카드 대신 돈 */
+  function addCard(ch,cid,chips,label){
+    if(!cid)return;
+    if(ch.deckLocked){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;chips&&chips.push(`엄지 검술 · ${D.cards[cid].n} 대신 +${money(m)}`);return}
+    ch.deck.push(cid);chips&&chips.push((label||'카드')+' · '+D.cards[cid].n);
+  }
   function rewardCard(ch){const pool=D.rewards.filter(id=>!ch.deck.includes(id));return pool.length?one(pool):null}
   /* 사건·성장·보상 효과를 적용하고 화면용 칩을 돌려준다 */
   function applyFx(ch,fx){
@@ -281,7 +287,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.check){s.check+=fx.check;chips.push('사건 판정 '+sg(fx.check))}
     if(fx.startBreath){s.startBreath+=fx.startBreath;chips.push('시작 '+D.keywords.breath.n+' +'+fx.startBreath)}
     const cid=fx.card||(fx.reward?rewardCard(ch):null);
-    if(cid){ch.deck.push(cid);chips.push('카드 · '+D.cards[cid].n)}
+    addCard(ch,cid,chips);
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
     for(const f of [].concat(fx.flag||[]))ch.flags[f]=(ch.flags[f]||0)+1;
     if(fx.join){
@@ -401,6 +407,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const lastYear=G=>CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0);
   const gradeAt=y=>y>CFG.years?Math.min(CFG.endless.grades.length-1,Math.floor((y-CFG.years-1)/CFG.endless.span)):-1;
   function delCard(ch,i){
+    if(ch.deckLocked)return false;
     if(ch.money<CFG.shop.delCost||ch.deck.length<=CFG.shop.minDeck||!ch.deck[i])return false;
     ch.money-=CFG.shop.delCost;return ch.deck.splice(i,1)[0];
   }
@@ -524,23 +531,26 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function winRewards(G,C){
     const ch=G.ch,chips=[];
     ch.hp=clamp(C.P.hp+CFG.winHeal,1,ch.stats.maxHp);chips.push('HP +'+CFG.winHeal);
-    const cid=rewardCard(ch);if(cid){ch.deck.push(cid);chips.push('카드 · '+D.cards[cid].n)}
+    addCard(ch,rewardCard(ch),chips);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     let title=null,tlabel=null,newly=false,colorRoll=null,unlock=null;
     const foe=D.enemies[C.id];
     if(foe.hidden){
       ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
-      /* 히든 보스 전리품: 전용 카드 + 영구 능력치 */
-      if(foe.drop){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
+      /* 엄지 소속으로 뇌횡: 동부십검 + 엄지 검술 (덱 고정) */
+      const td=foe.thumbDrop&&meets(ch,foe.thumbDrop.req)?foe.thumbDrop:null;
+      if(td){addStats(ch.stats,td.fx);ch.hp+=td.fx.maxHp||0;(ch.relics=ch.relics||[]).push(td.n,'엄지 검술');equip(ch,Object.assign({grade:5},td.gear));
+        ch.deck=td.deck.slice();ch.deckLocked=true;chips.push(`전리품 · ${td.n} 장착 (${td.gear.e})`);chips.push('엄지 검술 · 덱이 검술 10장으로 바뀐다. 이제 카드를 더 받지 않고, 대신 돈을 받는다')}
+      if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
         if(dr.gear){equip(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 장착 · ${dr.gear.n} (${dr.gear.e})`)}
-        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card){ch.deck.push(dr.card);chips.push('전용 카드 · '+D.cards[dr.card].n)}}
+        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');}
       if(foe.unlock&&!ch.unlocks.includes(foe.unlock)){ch.unlocks.push(foe.unlock);unlock=foe.unlock;chips.push('해금 · '+(T.jobs[foe.unlock]||foe.unlock))}
     }
     /* 미니보스 전리품(once): 처음 이겼을 때만 */
     if(!foe.hidden&&foe.drop&&!(ch.minis||[]).includes(C.id)){
       (ch.minis=ch.minis||[]).push(C.id);const dr=foe.drop;if(dr.ego)ch.egoGear=(ch.egoGear||0)+1;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
-      chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card){ch.deck.push(dr.card);chips.push('전용 카드 · '+D.cards[dr.card].n)}
+      chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');
     }
     /* 전투 승리 후 등록: 소속이 없거나 사무소 소속일 때만, 소문 판정(1d100 + 해결사 진로 보정 ≥ winLicenseDc) */
     if(!ch.licensed){
@@ -556,11 +566,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      라운드마다 1d100 + 속도로 순서를 정하고, 카드는 순서대로 한 장씩 번갈아 발동한다. */
   function mkEnt(o){return Object.assign({bleed:0,rupture:0,breath:0,evaB:0,fs:false,fsOn:false,catchup:false,cu:false,
     dmin:1,defUp:0,adv:0,advUsed:false,hand:[],light:0,guarding:false,passHit:0,passHitNext:0,lightUp:0,lightNext:0},o)}
-  const snap=C=>{const f=X=>({hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,burn:X.burn||0,echo:X.echo||0,ledger:X.ledger||0});return {P:f(C.P),E:f(C.E)}};
+  const snap=C=>{const f=X=>({hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,burn:X.burn||0,echo:X.echo||0,ledger:X.ledger||0,prescript:X.prescript||0,warp:X.warp||0,shock:X.shock||0,mk:X.mk||0,grudge:X.grudge||0,wecho:X.wecho||0});return {P:f(C.P),E:f(C.E)}};
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',name:ch.name||T.you,color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
     const S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy;
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from):0,g=gradeAt(ch.year||0)+1,X_=CFG.endless;
     const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul:S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*g));
@@ -590,6 +600,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       X.passHit=X.passHitNext;X.passHitNext=0;X.lightNext=0;
     }
     P.hand=sample(P.deck,CFG.hand);
+    if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
     /* 히든 보스 전용 패시브: 라운드 단위 */
     const pv=E.passive&&E.passive.id;
     E.maskOn=pv==='mask'&&C.round%E.passive.every===0;
@@ -655,7 +666,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
     if(c.t==='buff'){L('sys',`${A.name} · ${c.n} (버프)`);applyKw(A,B,c,L);push({k:'buff',side:A.uid,card:c});return}
-    for(let h=0;h<c.hits;h++){
+    const hits=c.hits+(c.t==='atk'&&A.wx&&A.wx.extraHit?A.wx.extraHit:0);
+    for(let h=0;h<hits;h++){
       if(A.hp<=0||B.hp<=0)return;
       /* 출혈: 공격할 때마다(명중 여부 무관) 스택만큼 피해, 그 뒤 1 감소 */
       if(A.bleed>0){
@@ -675,8 +687,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 회피 주사위: 적은 단계별 크기(CFG.enemyEvadeDie), 플레이어는 1d100 */
       const rdMax=B.isP?100:(D.enemies[C.id].evadeDie||CFG.enemyEvadeDie[D.enemies[C.id].tier]||100),rd=d(rdMax);
       const fsb=A.fs?CFG.firstHit:0;A.fs=false;
-      const am=A.atk+c.hit+fsb+A.passHit,dm=B.eva+B.evaB+(B.maskOn?B.passive.eva:0)+(B.odin?(C.round===1?30:15):0);
-      const sa=ra+am,sd=rd+dm,G_=CFG.guard;
+      /* 검은 침묵의 장갑: 공격마다 1d9로 무기가 바뀐다 */
+      let sub=null;
+      if(A.wx&&A.wx.arsenal){const i=d(A.wx.arsenal.length);sub=A.wx.arsenal[i-1];(C.ars=C.ars||[]);if(!C.ars.includes(i))C.ars.push(i);pnote+=` 장갑 1d9 ${i}·${sub.n}`}
+      const am=A.atk+c.hit+fsb+A.passHit+(sub?sub.atk:0)-3*(A.prescript||0),dm=B.eva+B.evaB-3*(B.shock||0)+(B.maskOn?B.passive.eva:0)+(B.odin?(C.round===1?30:15):0);
+      const sa=sub&&sub.sure?Math.max(ra+am,rd+dm+1):ra+am,sd=rd+dm,G_=CFG.guard;
       const base={k:'atk',att:A.uid,def:B.uid,card:c,ra,ra2,rd,rdMax,am,dm,sa,sd,b:c.b,guard:B.guarding};
       /* 방어 자세: 막아도 피해 guardHit는 받는다 (키워드는 붙지 않음) */
       if(B.guarding&&sa<=sd){
@@ -695,7 +710,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const lo=Math.max(A.dmin,c.min||1),rolls=[];
       /* 피해 주사위 면 수: 기본 d6, 카드에 die가 있으면 그 값 (예: Furioso 1d2 × 9). 최소값 보정은 면 수를 넘지 않는다 */
       const die=c.die||(A.isP?A.pdie:6)||6,lo2=Math.min(lo,die);
-      for(let i=0;i<c.dice;i++)rolls.push(Math.max(lo2,d(die)));
+      /* 전용 무기 피해 주사위: 카드 주사위 대신 무기 주사위 (Furioso처럼 주사위가 정해진 카드는 그대로) */
+      const wd=!c.die&&A.wx?(sub?sub.dice:A.wx.dice):null;
+      if(sub&&sub.range&&!c.die)rolls.push(sub.range[0]-1+d(sub.range[1]-sub.range[0]+1));
+      else if(wd){for(let i=0;i<wd[0];i++)rolls.push(Math.max(Math.min(lo,wd[1]),d(wd[1])))}
+      else for(let i=0;i<c.dice;i++)rolls.push(Math.max(lo2,d(die)));
       let note=fsb?' 선제':'';
       if(c.rr&&rolls.length){
         let mi=0;rolls.forEach((v,i)=>{if(v<rolls[mi])mi=i});
@@ -719,10 +738,26 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.burn>=5){dmg=dmg*2;note+=' 푸른 화염×2'}else if(B.burn>0){dmg=Math.floor(dmg*1.5);note+=' 화상×1.5'}
       if(A.mark){const x=d(3)+d(3);dmg+=x;note+=` 표지+${x}`}
       if(B.guarding){dmg=Math.floor(dmg*G_.guardFailMul);note+=` 방어 감소×${G_.guardFailMul}`}
+      /* 무기 디버프: 왜곡(내가 주는 피해 감소), 표적(3스택이면 2배), 원한(쌓인 만큼 추가) */
+      if(A.warp){dmg=Math.max(1,dmg-A.warp);note+=` 왜곡−${A.warp}`}
+      if(A.wx&&A.wx.mark){B.mk=(B.mk||0)+1;if(B.mk>=A.wx.mark.need){dmg*=2;B.mk=0;note+=' 표적×2'}}
+      if(A.wx&&A.wx.grudge&&A.grudge>0){const x=A.grudge*A.wx.grudge;dmg+=x;note+=` 원한+${x}`;A.grudge=0}
+      if(B.wx&&B.wx.ward){dmg=Math.max(1,dmg-B.wx.ward);note+=` 책장−${B.wx.ward}`}
       if(A.psycho||B.psycho){const m=(A.psycho?CFG.innate.psycho:1)*(B.psycho?CFG.innate.psycho:1);dmg*=m;note+=` 사이코패스×${m}`}
       B.hp=Math.max(0,B.hp-dmg);
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       applyKw(A,B,c,L);
+      /* 전용 무기 효과: 적중 시 키워드·잔향·호흡·조율, 피격 시 반격 */
+      if(A.wx&&B.hp>0){const X=A.wx;
+        if(X.debuff){const {k,n}=X.debuff,nm={prescript:'지령',warp:'왜곡',shock:'감전'}[k];B[k]=Math.min(5,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${nm} ${B[k]}`)}
+        if(X.hitKw)for(const [k,n] of X.hitKw){B[k]=Math.min(CFG.stackCap,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}
+        if(X.echo){B.wecho=(B.wecho||0)+1;L('kw',`  ${B.name}에게 잔향 ${B.wecho}/${X.echo.need}`);if(B.wecho>=X.echo.need){B.hp=Math.max(0,B.hp-X.echo.dmg);B.wecho=0;L('dmg',`  잔향이 울린다 · ${B.name} 고정 피해 ${X.echo.dmg}`)}}
+        if(X.breathHit){A.breath=Math.min(CFG.stackCap,A.breath+X.breathHit)}
+        if(X.execute&&B.hp>0&&B.hp<=B.maxHp*X.execute.below){B.hp=Math.max(0,B.hp-X.execute.dmg);L('dmg',`  조율 · ${B.name} 고정 피해 ${X.execute.dmg}`)}}
+      if(B.wx&&B.wx.grudge&&B.hp>0){B.grudge=Math.min(5,(B.grudge||0)+1)}
+      if(B.wx&&B.wx.thorns&&A.hp>0){A.hp=Math.max(0,A.hp-B.wx.thorns);L('dmg',`  ${B.name}의 무기 반격 · ${A.name} 피해 ${B.wx.thorns}`)}
+      /* 검은 침묵의 장갑: 서로 다른 무기 3종을 쓰면 이번 전투에 한 번, 다음 손패에 Furioso */
+      if(A.wx&&A.wx.arsenal&&!C.furiosoGiven&&(C.ars||[]).length>=3){C.furiosoGiven=true;A.furiosoNext=true;L('sys',`  ${A.name} · 서로 다른 무기 3종 · 다음 손패에 Furioso`)}
       /* 회피 실패: 1d5에서 1이면 정신력 1 감소 (E.G.O 장비 1개당 +1) */
       if(B.isP&&d(M.evadeDie)===1)loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
       /* 레바테인 계열: 적중 시 화상 */
@@ -781,7 +816,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else L('kw',`${E.name} · ${R.n} ${E.recital}/${R.every}${E.recital===R.every-1?' · 다음 라운드 끝에 절정 (방어 자세면 절반)':''}`);
       push({k:'buff',side:'E',card:{n:R.n}});
     }
-    for(const X of [P,E])if(X.burn>0)X.burn--;
+    for(const X of [P,E]){if(X.burn>0)X.burn--;for(const k of ['prescript','warp','shock'])if(X[k]>0)X[k]--}
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';
   }
   /* 자동 전투 (시뮬): 카드 고르는 순서도 행동 순서를 따른다 */

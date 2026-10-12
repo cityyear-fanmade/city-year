@@ -194,6 +194,9 @@ export function startUI(E,app){
     const pv=C&&C.E&&C.E.passive;
     if(pv&&X.echo>0)out.push(`<span class="chip stk" style="--kc:var(--rupture)"><b>${pv.n} ${X.echo}/${pv.need}</b><small>${pv.need}에서 고정 피해 ${pv.dmg}</small></span>`);
     if(pv&&X.ledger>0)out.push(`<span class="chip stk" style="--kc:var(--bleed)"><b>${pv.n} ${X.ledger}/${pv.need}</b><small>${X.ledger>=pv.need?'다음 명중 1d110':'다 차면 명중 1d110'}</small></span>`);
+    /* 전용 무기 디버프 */
+    const W=[['prescript','지령',v=>`명중 −${3*v}`],['warp','왜곡',v=>`주는 피해 −${v}`],['shock','감전',v=>`회피 −${3*v}`],['mk','표적',v=>`${v}/3 · 3이면 피해 2배`],['grudge','원한',v=>`다음 적중 +${v*4}`],['wecho','잔향',v=>`${v}/5 · 5면 고정 피해 12`]];
+    for(const [k,n,h] of W)if(X[k]>0)out.push(`<span class="chip stk" style="--kc:var(--gold)"><b>${n} ${X[k]}</b><small>${h(X[k])}</small></span>`);
     return out.length?out.join(''):'<span class="chip dim">상태 없음</span>';
   }
   function kwChips(c){
@@ -308,6 +311,7 @@ export function startUI(E,app){
   }
   /* 공방: 카드 지우기 (방문 한 번에 1장, 덱 최소 장수 유지) */
   function vDelCard(){
+    if(G.ch.deckLocked)return `<div class="panel stack" style="gap:6px"><b class="serif">카드 지우기</b><p class="small dim">엄지 검술을 익혀 덱이 고정되었다. 카드를 지울 수 없다.</p></div>`;
     const ch=G.ch,S=CFG.shop,del=UI.deleted||[],left=S.delMax-del.length,can=left>0&&ch.money>=S.delCost&&ch.deck.length>S.minDeck;
     return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 지우기</b><span class="mono" style="color:var(--gold)">${E.money(S.delCost)} · 이번 방문 ${del.length}/${S.delMax}</span></div>
       <p class="small dim">덱에서 카드를 지운다. 공방에 들를 때마다 ${S.delMax}장까지, 덱은 ${S.minDeck}장 아래로 줄일 수 없다.</p>
@@ -349,7 +353,7 @@ export function startUI(E,app){
     return `<div class="check">플레이테스트 · ${new Date(EXP).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}까지 (약 ${left}분 남음)</div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.5</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.6</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vUpdates()}
@@ -388,7 +392,7 @@ export function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const UPDATES={v:'v5.5',items:['이어서 하기: 자동 저장 (사건·선택 결과까지), 새로 시작하기는 한 번 더 확인','오늘의 시드: 날짜마다 모두 같은 출생','기록실: 만난 적·엔딩·해금·타고난 것·최고 기록','전투 전 환상체 표시','히든 직업 전용 패시브 (발톱 질주 · 조율자 봉인)','기록 공유가 링크로: 받은 사람은 기록을 보고 같은 시드로 바로 도전']};
+  const UPDATES={v:'v5.6',items:['히든 보스를 쓰러뜨리면 보스마다 전용 무기를 얻는다 (자세한 내용은 공지)','일부 전용 무기에 새 디버프: 지령 · 왜곡 · 표적 · 원한 · 감전','엄지 소속으로만 얻을 수 있는 특별한 보상이 있다','이어서 하기 · 오늘의 시드 · 기록실 · 기록 공유 링크 (v5.5)','엔딩 화면을 그대로 이미지로 저장']};
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
