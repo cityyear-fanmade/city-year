@@ -1622,7 +1622,7 @@ function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const UPDATES={v:'v5.5',items:['이어서 하기: 해가 바뀔 때마다 자동 저장','오늘의 시드: 날짜마다 모두 같은 출생','기록실: 만난 적·엔딩·해금·타고난 것·최고 기록','전투 전 환상체 표시','히든 직업 전용 패시브 (발톱 질주 · 조율자 봉인)']};
+  const UPDATES={v:'v5.5',items:['이어서 하기: 자동 저장 (사건·선택 결과까지), 새로 시작하기는 한 번 더 확인','오늘의 시드: 날짜마다 모두 같은 출생','기록실: 만난 적·엔딩·해금·타고난 것·최고 기록','전투 전 환상체 표시','히든 직업 전용 패시브 (발톱 질주 · 조율자 봉인)']};
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -1946,20 +1946,25 @@ function startUI(E,app){
   }
 
   /* ===== 진행: 성장 굴림 → 대기 중인 전투 → 다음 해 ===== */
+  /* 저장: 사건까지 함께 저장해서, 다시 열어도 같은 사건·같은 전투 상대가 나온다 */
+  const saveGame=x=>store.set(SAVE,JSON.stringify(Object.assign({v:UPDATES.v,t:Date.now(),G},x||{})));
   function nextYear(){
-    store.set(SAVE,JSON.stringify({v:UPDATES.v,t:Date.now(),G}));
     const st=E.advanceYear(G);
-    UI.fight=null;UI.pending=null;
+    showYear(st,null);
+  }
+  /* 한 해의 시작 화면. stock이 있으면(불러오기) 공방 진열을 그대로 쓴다 */
+  function showYear(st,stock,shopDone){
+    UI.fight=null;UI.pending=null;UI.curSt=st;
     if(st.type==='end'){UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.death=st.cause?{year:G.year,foe:st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;recordEnd();UI.screen='end';render();return}
     UI.omen=null;UI.showIncome=G.year>1;
     if(st.type==='omen')UI.omen=st;
     else if(st.type==='fight'){UI.fight=st.enemy;UI.enc=st.enc}else UI.ev=st.ev;
     /* 공방 거리: 1년차부터 3년마다 들를지 묻는다. 들러도 해는 넘어가지 않는다 */
-    if((G.year-1)%CFG.shop.every===0){
-      UI.stock=G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[];
-      UI.bought=null;UI.deleted=null;UI.sold=null;UI.screen='shopask';render();return;
+    if((G.year-1)%CFG.shop.every===0&&!shopDone){
+      UI.stock=stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
+      UI.bought=null;UI.deleted=null;UI.sold=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
     }
-    UI.stock=[];UI.screen='event';render();
+    UI.stock=[];saveGame({st});UI.screen='event';render();
   }
   function vShopAsk(){
     const nb=(G.year-1)+CFG.shop.every+1;
@@ -2029,7 +2034,8 @@ function startUI(E,app){
       render();const b=$('shareBox');if(b)b.select();
     },
     start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='title')store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
-    cont(){const o=loadSave();if(!o)return;G=o.G;C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;nextYear()},
+    cont(){const o=loadSave();if(!o)return;G=o.G;C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
+      if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
     records(){UI.screen='records';render()},
     daily(){if(loadSave()&&UI.confirmNew!=='daily'){UI.confirmNew='daily';render();return}store.del(SAVE);UI.confirmNew=null;if(expired()){UI.screen='title';render();return}UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=todayKey();born(dailySeed(UI.daily),'');UI.endText=null;UI.screen='birth';render()},
     reroll(){UI.relic=null;UI.daily=null;if(UI.jobAuto){UI.job=null;UI.jobAuto=false}born(newSeed(),BC&&BC.name);render()},
@@ -2046,14 +2052,14 @@ function startUI(E,app){
     invtab(k){UI.invTab=k;render()},
     eqs(i){if(UI.screen!=='combat'&&E.equipStash(G.ch,+i))render()},
     bspecial(id){if(E.buySpecial(G.ch,id)){UI.bought=D.special[id].n;render()}},
-    unshop(){UI.screen='event';render()},
+    unshop(){saveGame({st:UI.curSt,stock:[],shopDone:true});UI.screen='event';render()},
     omen(i){
-      const st=E.answerOmen(G,UI.omen,i==='1');
+      const st=E.answerOmen(G,UI.omen,i==='1');saveGame({st,stock:[],shopDone:true});
       const m=UI.omen.omen;UI.omen=null;UI.fight=st.enemy;UI.enc=st.enc;UI.avoidText=st.avoided?m.awayT:null;render();
     },
     choose(i){
       const r=E.choose(G,UI.ev,+i);
-      UI.pending=r.combat;
+      UI.pending=r.combat;saveGame({after:true,pending:UI.pending});
       UI.res=Object.assign(r,{anim:!!r.roll&&MODE!=='off'});
       UI.screen='result';render();
     },
@@ -2070,7 +2076,7 @@ function startUI(E,app){
     tap(){if(tapWake)tapWake()},
     fin(){
       if(C.over==='lose'){UI.endWin=false;UI.trueEnd=false;UI.death=G.ch.mindDead?{year:G.year,foe:'정신 붕괴',cause:'mind'}:{year:G.year,foe:D.enemies[C.id].n,hidden:!!D.enemies[C.id].hidden};recordEnd();UI.screen='end';render();return}
-      const r=E.winRewards(G,C);recAdd('beaten',C.id);
+      const r=E.winRewards(G,C);recAdd('beaten',C.id);saveGame({after:true,pending:null});
       if(r.unlock)addUnlock(r.unlock);
       if(r.endText)UI.endText=r.endText;
       UI.res={t:`${r.hidden?r.endText:C.E.name+'의 잔해 속에서 쓸 만한 것을 주웠다.'}${r.newly?' 소문이 돌아 이름이 '+T.licensed+' 명부에 올랐다.':''}${r.colorRoll?(r.colorRoll.ok?' 도시가 당신의 색을 기억하기 시작했다.':' 아직 도시는 당신의 색을 부르지 않는다.'):''}`,chips:r.chips,roll:r.colorRoll,anim:!!r.colorRoll&&MODE!=='off',title:r.title,tlabel:r.tlabel};
