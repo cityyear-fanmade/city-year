@@ -926,7 +926,8 @@
    "id": "arbiter",
    "req": [
     "flag:taboo>=2",
-    "beat:blue|black|library|proxy|godfather|bigsis"
+    "beat:blue|black|library|proxy|godfather|bigsis",
+    "nojob"
    ],
    "omen": {
     "x": "거리의 소리가 한꺼번에 멎었다. 도망칠 곳이 없다는 것을 몸이 먼저 안다.",
@@ -939,7 +940,8 @@
    "id": "claw",
    "req": [
     "flag:taboo",
-    "beat:blue|black|library|proxy|godfather|bigsis"
+    "beat:blue|black|library|proxy|godfather|bigsis",
+    "nojob"
    ],
    "omen": {
     "x": "문 앞에 하얀 종이가 붙어 있다. 오늘 밤 누군가 온다는 예감이 든다. 집 안의 공기가 이상하게 차갑다.",

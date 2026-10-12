@@ -101,6 +101,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(R.odin)ch.odin=true;
     if(R.gear){equip(ch,Object.assign({id:R.gear.id||id,grade:5},R.gear));ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth')}
   }
+  /* 히든 직업으로 시작: 머리 소속 고정(승급·해결사 등록 없음), 능력치·전용 카드·시작 자금 */
+  function giveJob(ch,job){
+    const J=D.hiddenJobs[job];if(!J)return false;
+    ch.job=job;ch.aff={type:'head',name:'머리'};addStats(ch.stats,J.fx);if(J.fx.maxHp)ch.hp+=J.fx.maxHp;
+    for(const c of J.cards)ch.deck.push(c);ch.money+=J.money||0;(ch.relics=ch.relics||[]).push(J.n);
+    return true;
+  }
   /* ===== 장비·돈·공방 ===== */
   /* 장비 칸마다 하나. 바꾸면 이전 장비 효과를 빼고 새 장비 효과를 더한다. 피해 최소값은 장비 중 가장 큰 값 */
   function equip(ch,item){
@@ -160,7 +167,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const money=n=>n.toLocaleString('ko-KR')+D.money.unit;
   function setColor(ch,ci){ch.ci=ci;ch.color=D.colors[ci].hex}
   /* 자격 등록: 가장 낮은 급수에서 시작한다. 특색은 여기서 주지 않는다 */
-  const noFixer=ch=>isFinger(ch)||(!!ch.aff&&ch.aff.type==='wing');
+  const noFixer=ch=>isFinger(ch)||(!!ch.aff&&(ch.aff.type==='wing'||ch.aff.type==='head'));
   function license(ch){
     /* 손가락 조직원·날개 직원은 해결사로 등록될 수 없다 */
     if(ch.licensed||noFixer(ch))return false;
@@ -244,7 +251,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return null;
   }
   /* 날개·손가락 진로면 해결사 급수 대신 그 진로의 직급을 보여 준다 (해결사 급수는 그 진로에서 오르지 않는다) */
-  const rankLabel=ch=>{const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr)return ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n;return rankLabel0(ch)};
+  const rankLabel=ch=>{if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr)return ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n;return rankLabel0(ch)};
   const rankLabel0=ch=>!ch.licensed?T.unranked:ch.title?`${ch.title} · ${ch.rank}${T.rankUnit}`:`${ch.rank}${T.rankUnit} ${T.licensed}`;
   function rewardCard(ch){const pool=D.rewards.filter(id=>!ch.deck.includes(id));return pool.length?one(pool):null}
   /* 사건·성장·보상 효과를 적용하고 화면용 칩을 돌려준다 */
@@ -333,6 +340,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
     if(req==='nofinger')return !isFinger(ch);
+    if(req==='nojob')return !ch.job;
     if(req==='canfix')return !noFixer(ch);
     if(req==='aff')return !!ch.aff;
     if(req==='noaff')return !ch.aff;
@@ -772,6 +780,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,giveJob,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

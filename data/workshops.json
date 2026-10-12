@@ -18,7 +18,8 @@
    "office": 160,
    "assoc": 260,
    "wing": 300,
-   "finger": 220
+   "finger": 220,
+   "head": 400
   },
   "rankSalary": 25,
   "bounty": {
@@ -52,7 +53,8 @@
    "office": 2,
    "wing": 2,
    "finger": 2,
-   "assoc": 3
+   "assoc": 3,
+   "head": 3
   },
   "rankBonus": {
    "rank": 5,

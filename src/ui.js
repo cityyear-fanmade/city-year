@@ -332,7 +332,7 @@ export function startUI(E,app){
     return `<div class="check">플레이테스트 · ${new Date(EXP).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}까지 (약 ${left}분 남음)</div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.1</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.2</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vPlaytest()}
@@ -370,8 +370,18 @@ export function startUI(E,app){
         <div class="stat"><div><b>${s.maxHp}</b><span>HP</span></div><div><b>${sg(s.atk)}</b><span>공격</span></div><div><b>${sg(s.eva)}</b><span>회피</span></div><div><b>${sg(s.spd)}</b><span>속도</span></div></div>
         <div class="chips">${b.deck.map(id=>`<span class="chip">${D.cards[id].n}</span>`).join('')}</div></div>
       ${b.relicPick?`<div class="panel stack" style="gap:8px"><span class="eyebrow">유물 적성 · 하나를 고른다</span><p class="small dim">적성은 가지고 있으나 온전히 다루기 어렵다.</p>${Object.entries(D.relics).map(([k,r])=>`<button class="btn${UI.relic===k?' primary':''}" data-a="relic" data-i="${k}"><b>${esc(r.n)}</b><span class="mono small" style="color:var(--gold)">${esc(r.e)}</span></button>`).join('')}</div>`:''}
+      ${vJobPick()}
       <div class="stack"><button class="btn primary" data-a="live" ${b.relicPick&&!UI.relic?'disabled':''}>${b.relicPick&&!UI.relic?'유물을 먼저 고른다':'이 삶을 산다'}</button>
       <button class="btn quiet" data-a="reroll">다시 태어난다</button></div>${vSettings()}`;
+  }
+  /* 히든 직업: 이 브라우저에서 해금한 직업만 고를 수 있다 */
+  function vJobPick(){
+    const u=loadUnlocks().filter(k=>D.hiddenJobs[k]);if(!u.length)return '';
+    const cur=UI.job&&u.includes(UI.job)?UI.job:null;
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">히든 직업 · 해금됨</span>
+      <p class="small dim">머리 소속으로 시작한다. 승급과 해결사 등록은 없고, 전용 의뢰가 찾아온다.</p>
+      <button class="btn${!cur?' primary':''}" data-a="job" data-i="">평범하게 태어난다</button>
+      ${u.map(k=>{const J=D.hiddenJobs[k];return `<button class="btn${cur===k?' primary':''}" data-a="job" data-i="${k}"><b>${esc(J.n)}</b><span class="small">${esc(J.t)}</span><span class="mono small" style="color:var(--gold)">${esc(J.e)}</span></button>`}).join('')}</div>`;
   }
   function vEvent(){
     if(UI.omen)return vOmen();
@@ -514,11 +524,13 @@ export function startUI(E,app){
   }
   /* 엔딩: 진로별 최종 자리와 칭호, 사망이면 원인 */
   function careerLine(c){
+    if(c.job)return T.jobs[c.job]+(c.title?' · '+esc(c.title):'');
     if(c.aff&&c.fr)return `${esc(c.aff.name)} · ${esc(c.fr.n)}${c.title?' · '+esc(c.title):''}`;
     if(c.licensed)return E.rankLabel(c)+(c.aff?' · '+esc(c.aff.name):'');
     return c.aff?esc(c.aff.name):T.unnamed;
   }
   function endLead(c,w){
+    if(c.job)return w?'머리의 명령은 끝까지 집행되었다. 당신이 지나간 자리마다 도시는 조금 더 조용해졌다.':'집행자 하나가 돌아오지 않았다. 머리는 다음 이름을 부른다.';
     const k=E.career(c);
     if(!w)return c.title?'칭호는 남았지만, 그 이름을 부를 사람은 이제 없다.'
       :{fixer:'의뢰서 한 장이 주인 없이 사무소 책상에 남았다.',assoc:'협회 명부에서 이름 하나에 줄이 그어졌다.',wing:'담장 안의 자리는 다음 날 다른 사람으로 채워졌다.',finger:'조직은 빈자리를 오래 두지 않는다.'}[k]
@@ -714,7 +726,8 @@ export function startUI(E,app){
     seed(){UI.relic=null;const v=parseInt(($('seedIn')||{}).value,10);if(!(v>=0)){const i=$('seedIn');if(i){i.value='';i.placeholder='숫자만 넣을 수 있다'}return}born(v,BC&&BC.name);render()},
     color(i){E.setColor(BC,+i);BC.fresh=false;render()},
     relic(k){UI.relic=k;render()},
-    live(){if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}G=E.newGame(BC);nextYear()},
+    job(k){UI.job=k||null;render()},
+    live(){if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(UI.job&&loadUnlocks().includes(UI.job))E.giveJob(BC,UI.job);G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.showIncome=false;UI.screen='shop';render()},
