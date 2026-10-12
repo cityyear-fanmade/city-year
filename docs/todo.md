@@ -10,3 +10,9 @@
 
 - 기믹 보스 후보: 피아니스트(뒤틀림), 샤덴프로이데(환상체로 추정, 분류 확인 후 결정)
 - 혈귀·유물 적성자 밸런스 시뮬 점검, 전체 난이도 상향 검토 (시뮬 완주율 약 90%)
+
+## 업데이트 흐름 (2026-10-12 결정)
+1. 이 저장소에서 수정 → `npm run -s check`
+2. 테스트판: `npm run -s build -- --expires <ISO>` → Claude Artifact로 플레이테스트 링크 선공개
+3. 테스트 피드백 반영·수정
+4. 완성본: `npm run -s pages`로 루트 index.html 갱신, 처음 화면 버전 올림(src/ui.js vTitle) → main에 푸시 → 1~2분 뒤 https://cityyear-fanmade.github.io/city-year/ 반영
