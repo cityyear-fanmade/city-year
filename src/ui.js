@@ -518,7 +518,8 @@ export function startUI(E,app){
       <div class="chips">${c.deck.map(id=>`<span class="chip">${D.cards[id].n}</span>`).join('')}</div>
       <div class="mono small dim">${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(c.aff.name):c.licensed?' · '+T.licensed:''}</div></div>
       ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">무한런</span><p class="small">여기서 끝내도 된다. 계속 살아가면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 진짜 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">계속 살아간다</button></div>`:''}
-      <button class="btn quiet" data-a="share">기록 공유</button>
+      <div class="row" style="gap:8px"><button class="btn quiet" style="flex:1" data-a="share">기록 공유</button><button class="btn quiet" style="flex:1" data-a="saveimg">이미지로 저장</button></div>
+      ${UI.imgUrl?`<p class="small dim">저장이 막힌 환경이다. 아래 이미지를 길게 눌러 저장한다.</p><img src="${UI.imgUrl}" alt="엔딩 기록 이미지" style="width:100%;border-radius:8px">`:''}
       ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<textarea id="shareBox" readonly rows="9" style="width:100%;font:inherit;font-size:13px">${esc(UI.shareText)}</textarea>`:''}
       <button class="btn ${w&&!G.endless?'quiet':'primary'}" data-a="start">다시 태어난다</button><button class="btn quiet" data-a="title">처음 화면</button>`;
   }
@@ -532,6 +533,46 @@ export function startUI(E,app){
       `${lived}년 · ${E.age(G)}세`+(G.endless&&gi>=0?` · 위협 등급 ${X.grades[gi]}`:''),
       !w&&dt?`${dt.year}년차 · ${dt.foe}에게 쓰러짐`:null,foes.length?`쓰러뜨린 상대 · ${foes.join(', ')}`:null,
       `${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`시드 ${c.seed}`,url].filter(Boolean).join('\n');
+  }
+  /* 엔딩 카드 이미지 (1080×1350): 캔버스에 직접 그린다. 외부 라이브러리 없음 */
+  async function endCard(){
+    try{await Promise.all(['900 96px "Noto Serif KR"','600 36px "Noto Serif KR"','500 34px "Noto Sans KR"','400 30px "IBM Plex Mono"'].map(f=>document.fonts.load(f,'도시가나')));await document.fonts.ready}catch(e){}
+    const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
+    const W=1080;const paint=(g,H)=>{
+    const serif='"Noto Serif KR",serif',sans='"Noto Sans KR",sans-serif',mono='"IBM Plex Mono",monospace';
+    const col=c.color||'#c9a961',gold='#c9a961',ink='#e8e4da',dim='#8b8778';
+    g.fillStyle='#0d0d0f';g.fillRect(0,0,W,H);
+    g.strokeStyle=gold;g.lineWidth=2;g.strokeRect(40,40,W-80,H-80);g.lineWidth=1;g.strokeRect(52,52,W-104,H-104);
+    g.fillStyle=col;g.fillRect(52,52,W-104,10);
+    const T_=(t,x,y,f,cl,al)=>{g.font=f;g.fillStyle=cl;g.textAlign=al||'left';g.fillText(t,x,y)};
+    const fit=(t,max,size,fam,weight)=>{let z=size;do{g.font=`${weight||''} ${z}px ${fam}`;z-=2}while(g.measureText(t).width>max&&z>20);return g.font};
+    const head=w&&UI.trueEnd?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':'도시는 당신을 기억하지 않는다';
+    T_('도시의 한 해',W/2,140,`500 34px ${mono}`,gold,'center');
+    T_(head,W/2,200,`400 30px ${sans}`,w?gold:'#c46a5a','center');
+    const nm=c.name||careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&');
+    g.font=fit(nm,W-200,96,serif,'900');g.fillStyle=col;g.textAlign='center';g.fillText(nm,W/2,330);
+    let y=400;
+    if(c.name){g.font=fit(careerLine(c).replace(/<[^>]*>/g,''),W-200,34,sans,'500');g.fillStyle=col;g.fillText(careerLine(c).replace(/<[^>]*>/g,''),W/2,y);y+=56}
+    if(c.title){T_('『'+c.title+'』',W/2,y,`700 40px ${serif}`,gold,'center');y+=60}
+    g.strokeStyle='#2c2b30';g.beginPath();g.moveTo(140,y);g.lineTo(W-140,y);g.stroke();y+=70;
+    const rows=[['산 햇수',`${lived}년 · ${E.age(G)}세`]];
+    if(G.endless)rows.push(['위협 등급',gi>=0?X.grades[gi]:'—']);
+    if(!w&&dt)rows.push(['마지막',`${dt.year}년차 · ${dt.foe}`]);
+    rows.push(['레벨',`Lv ${c.lv} · 공격 ${sg(c.stats.atk)} · 회피 ${sg(c.stats.eva)} · 속도 ${sg(c.stats.spd)}`]);
+    rows.push(['출신',`${c.o.n} · ${c.t.n}`]);
+    for(const [k,v] of rows){T_(k,140,y,`400 32px ${sans}`,dim);g.font=fit(v,W-480,36,sans,'500');g.fillStyle=ink;g.textAlign='right';g.fillText(v,W-140,y);y+=72}
+    const foes=[...c.beaten,...(c.minis||[])].map(id=>D.enemies[id].n);
+    if(foes.length){y+=10;T_('쓰러뜨린 이름난 상대',W/2,y,`400 30px ${sans}`,gold,'center');y+=58;
+      let line='';const lines=[];for(const f of foes){const t=line?line+' · '+f:f;g.font=`500 36px ${serif}`;if(g.measureText(t).width>W-240){lines.push(line);line=f}else line=t}lines.push(line);
+      for(const l of lines.slice(0,3)){T_(l,W/2,y,`600 36px ${serif}`,ink,'center');y+=54}}
+    if(!H)return y;
+    T_(`시드 ${c.seed}`,W/2,H-170,`400 30px ${mono}`,dim,'center');
+    T_('cityyear-fanmade.github.io/city-year',W/2,H-120,`400 28px ${mono}`,gold,'center');
+    T_('Project Moon 팬메이드 · 비공식 · 비영리',W/2,H-78,`400 24px ${sans}`,dim,'center');
+    };
+    const m=document.createElement('canvas').getContext('2d'),H=Math.max(1080,paint(m,0)+300);
+    const cv=document.createElement('canvas');cv.width=W;cv.height=H;paint(cv.getContext('2d'),H);
+    return cv;
   }
   /* 엔딩 기록: 산 햇수, 도달 등급, 쓰러뜨린 상대 */
   function vRecord(c,w,gi){
@@ -617,7 +658,16 @@ export function startUI(E,app){
     mode(i){MODE=i;store.set('cityYearMode',i);render()},
     fightmode(i){FIGHT=i;store.set('cityYearFight',i);render()},
     skin(i){SKIN=i;store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
-    endless(){G.endless=true;UI.shareText=UI.shareMsg=null;nextYear()},
+    endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;nextYear()},
+    async saveimg(){
+      UI.imgUrl=null;const cv=await endCard(),name=`도시의한해_${G.ch.seed}.png`;
+      const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+      try{const f=new File([blob],name,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
+      try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(e){}
+      /* 다운로드가 막히는 환경(미리보기 창 등)을 위해 이미지도 화면에 보여 준다 */
+      if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');render()}
+    },
+    testCard:async()=>(await endCard()).toDataURL('image/png'),
     async share(){
       const t=shareText();UI.shareText=null;
       try{if(navigator.share){await navigator.share({text:t});UI.shareMsg='공유 창을 열었다.';render();return}}catch(e){if(e&&e.name==='AbortError')return}
@@ -625,7 +675,7 @@ export function startUI(E,app){
       catch(e){UI.shareMsg='복사가 막혀 있다. 아래 글을 길게 눌러 복사한다.';UI.shareText=t}
       render();const b=$('shareBox');if(b)b.select();
     },
-    start(){UI.shareText=UI.shareMsg=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
+    start(){UI.shareText=UI.shareMsg=UI.imgUrl=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     reroll(){UI.relic=null;born(newSeed(),BC&&BC.name);render()},
     seed(){UI.relic=null;const v=parseInt(($('seedIn')||{}).value,10);if(!(v>=0)){const i=$('seedIn');if(i){i.value='';i.placeholder='숫자만 넣을 수 있다'}return}born(v,BC&&BC.name);render()},
     color(i){E.setColor(BC,+i);BC.fresh=false;render()},
@@ -691,6 +741,8 @@ export function startUI(E,app){
   /* 자동 테스트용 상태 조회 */
   return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff}),
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
+    testCard:()=>ACT.testCard(),
+    testDeath(y,foe){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false};UI.screen='end';render()},
     testEnd(y){if(!G)return;G.year=G.ch.year=y||CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testFight(id,hp){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;render()},
     /* 자동 테스트용: 특색 심사 통과 직후 화면 */
