@@ -28,10 +28,10 @@ export const CFG = {
   /* 연차가 쌓일수록 일반 적이 강해진다: from년차 뒤 해마다 HP +hpPerYear 배, atkEvery년마다 공격·회피 +1 */
   enemyScale: {hpMul: 0.78, from: 8, hpPerYear: 0.035, atkEvery: 2},
   /* 히든 보스(발톱·조율자·도서관 등): 데이터 수치에 체력 배수와 공격·회피 가산 */
-  hidden: {hpMul: 2.25, atk: 2, minHp: 30, winHeal: 15},
+  hidden: {hpMul: 2.7, atk: 2, minHp: 30, winHeal: 15},
   /* minHp: 히든 보스 전투를 시작할 때 체력이 이보다 낮으면 여기까지 채운다. winHeal: 히든 보스를 이기면 평소 승리 회복에 더해 회복 */
   /* 히든 보스 후반 보정: from년차부터 해마다 체력 +hpPerYear, atkEvery년마다 공격 +1 (40년차 +30 · +5) */
-  hiddenLate: {from: 25, hpPerYear: 3, atkEvery: 3},
+  hiddenLate: {from: 25, hpPerYear: 3.6, atkEvery: 3},
   /* 무한런: years년 엔딩 뒤 이어서 산다. span년마다 위협 등급이 하나 오르고 그 끝에 등급 전투.
      등급 g(0부터)의 적: 체력 ×(1 + hpMul×(g+1)), 공격 +atk×(g+1). 마지막 등급 전투를 이기면 진엔딩 */
   endless: {span: 3, grades: ['도시 괴담', '도시 전설', '도시 질병', '도시 악몽', '도시의 별', '불순물'], hpMul: 0.08, atk: 1, star: 'pianist', final: 'impurity'},
