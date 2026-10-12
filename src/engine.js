@@ -92,6 +92,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:CFG.mind.max,stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||0,
       deck:['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;
+    /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
+    const IN=CFG.innate,h=(r.o*7919+r.t*104729+r.f*1299709+r.w*15485863+r.n*32452843+ch.kid.reduce((a,k)=>a*31+k.r,7))%1000003;
+    if(h%IN.chanceDiv===0){const ks=Object.keys(D.innate||{});if(ks.length)ch.innate=ks[Math.floor(h/IN.chanceDiv)%ks.length]}
     if(J){ch.job=job;ch.aff={type:'head',name:'머리'};for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
     /* 출생 때 굴린 무기는 무기 칸의 첫 장비 */
     equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
@@ -164,6 +167,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function buy(ch,id){
     if(canBuy(ch,id)!=='ok')return false;
     const it=D.items[id];ch.money-=priceOf(ch,id);equip(ch,Object.assign({id},it));return true;
+  }
+  /* 금전운: 버는 돈 +20% */
+  const earn=(ch,n)=>n>0&&ch.innate==='fortune'?Math.round(n*CFG.innate.money):n;
+  /* 성장력: 레벨 업 성장 능력치 1.2배 (소수점은 쌓아 두었다가 1이 되면 오른다) */
+  function applyGrowth(ch,fx){
+    const r=applyFx(ch,fx);
+    if(ch.innate==='growth'){const acc=ch.growAcc=ch.growAcc||{},ex={};
+      for(const [k,v] of Object.entries(fx))if(typeof v==='number'&&v>0&&k in ch.stats){acc[k]=(acc[k]||0)+v*(CFG.innate.growMul-1);const n=Math.floor(acc[k]+1e-9);if(n>0){acc[k]-=n;ex[k]=n}}
+      if(Object.keys(ex).length){addStats(ch.stats,ex);if(ex.maxHp)ch.hp+=ex.maxHp;r.chips.push('성장력 · '+Object.entries(ex).map(([k,v])=>k+'+'+v).join(' '))}}
+    return r;
   }
   /* 해마다 들어오는 돈: 소속 봉급 + 해결사 급수 수당 */
   const income=ch=>(D.money.salary[ch.aff?ch.aff.type:'none']||0)+(ch.licensed?(T.rankStart-ch.rank)*D.money.rankSalary:0)
@@ -264,7 +277,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.maxHp){s.maxHp+=fx.maxHp;ch.hp+=fx.maxHp;chips.push('최대 HP '+sg(fx.maxHp))}
     if(fx.hp){ch.hp=clamp(ch.hp+fx.hp,1,s.maxHp);chips.push('HP '+sg(fx.hp))}
     for(const k of ['atk','eva','spd'])if(fx[k]){s[k]+=fx[k];chips.push(STAT[k]+' '+sg(fx[k]))}
-    if(fx.money){ch.money=Math.max(0,ch.money+fx.money);chips.push((fx.money>0?'+':'−')+money(Math.abs(fx.money)))}
+    if(fx.money){const m=earn(ch,fx.money);ch.money=Math.max(0,ch.money+m);chips.push((m>0?'+':'−')+money(Math.abs(m))+(m!==fx.money?' (금전운)':''))}
     if(fx.check){s.check+=fx.check;chips.push('사건 판정 '+sg(fx.check))}
     if(fx.startBreath){s.startBreath+=fx.startBreath;chips.push('시작 '+D.keywords.breath.n+' +'+fx.startBreath)}
     const cid=fx.card||(fx.reward?rewardCard(ch):null);
@@ -407,12 +420,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
+    if(mc.innate==='mark'&&!mc.markOn&&G.year>=CFG.innate.markYear-1)return {type:'event',ev:D.innateEvents.mark};
     if(mc.affRetry&&!mc.aff){mc.affRetry=false;return {type:'event',ev:D.affiliation}}
     if(mc.voicePend&&!mc.voiceUsed&&!mc.ego){mc.voicePend=false;mc.voiceUsed=true;return {type:'event',ev:D.mindEvents.voice}}
     G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
-    if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);G.lastIncome=income(G.ch);G.ch.money+=G.lastIncome}
+    if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
     if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year;
     let f=fixedSpec(G.year);
@@ -468,13 +482,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function checkMod(ch,check){return (check.s?ch.stats[check.s]:0)+ch.stats.check+pathMod(ch,check)}
   /* 선택: 판정이 있으면 1d100 + 능력치 + 판정 보정 ≥ 난이도 */
   function choose(G,ev,i){
-    const ch=G.ch,c=ev.c[i];let res=c.ok,roll=null,xp=CFG.xp.plain;
+    const ch=G.ch,c=ev.c[i];let res=c.ok,roll=null,xp=CFG.xp.plain,xpNote=null;
     if(c.check){
-      const dc=checkDc(ch,c.check),mod=checkMod(ch,c.check),r=d(100),tot=r+mod,ok=tot>=dc;
+      const ib=ch.innate==='intuition'?d(CFG.innate.intuitionDie):0;
+      const dc=checkDc(ch,c.check),mod=checkMod(ch,c.check)+ib,r=d(100),tot=r+mod,ok=tot>=dc;
+      if(ib)xpNote=`타고난 직감 +${ib}`;
       roll={r,mod,tot,dc,ok};res=ok?c.ok:c.fail;xp=ok?CFG.xp.ok:CFG.xp.fail;
     }
     const fx=res.fx||{};
     const {chips,licensed}=applyFx(ch,fx);
+    if(xpNote)chips.unshift(xpNote);
+    if(fx.markAwake){const M_=CFG.innate.markMul,s0=ch.stats,b={};
+      for(const k of ['atk','eva','spd','check'])if(s0[k]>0){const n=Math.floor(s0[k]*M_)-s0[k];if(n>0){s0[k]+=n;b[k]=n}}
+      const hp=Math.floor(s0.maxHp*M_)-s0.maxHp;s0.maxHp+=hp;ch.hp+=hp;ch.markOn=true;
+      chips.push('표지 발현 · 능력치 ×'+M_);chips.push(Object.entries(b).map(([k,v])=>`${k}+${v}`).concat(`HP+${hp}`,'적중마다 +2d3').join(' · '))}
     /* 선택지의 정신력: mind -1이면 2d3 감소, +1이면 2d3 회복 */
     if(c.mind){const x=d(3)+d(3);if(c.mind<0)loseMind(ch,x,t=>chips.push(t+' · 2d3'));else{const g=gainMind(ch,x);if(g)chips.push(`정신력 +${g} (${ch.mind}/${M.max})`)}}
     if(fx.wsRoll){
@@ -504,7 +525,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch,chips=[];
     ch.hp=clamp(C.P.hp+CFG.winHeal,1,ch.stats.maxHp);chips.push('HP +'+CFG.winHeal);
     const cid=rewardCard(ch);if(cid){ch.deck.push(cid);chips.push('카드 · '+D.cards[cid].n)}
-    const bounty=D.money.bounty[D.enemies[C.id].tier]||0;if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
+    const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     let title=null,tlabel=null,newly=false,colorRoll=null,unlock=null;
     const foe=D.enemies[C.id];
@@ -539,7 +560,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',name:ch.name||T.you,color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',odin:!!ch.odin,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',mark:!!ch.markOn,odin:!!ch.odin,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
     const S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy;
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from):0,g=gradeAt(ch.year||0)+1,X_=CFG.endless;
     const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul:S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*g));
@@ -692,7 +713,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
       /* 화상: 받는 피해 ×1.5, 5스택 이상이면 푸른 화염 ×2 */
       if(B.burn>=5){dmg=dmg*2;note+=' 푸른 화염×2'}else if(B.burn>0){dmg=Math.floor(dmg*1.5);note+=' 화상×1.5'}
+      if(A.mark){const x=d(3)+d(3);dmg+=x;note+=` 표지+${x}`}
       if(B.guarding){dmg=Math.floor(dmg*G_.guardFailMul);note+=` 방어 감소×${G_.guardFailMul}`}
+      if(A.psycho||B.psycho){const m=(A.psycho?CFG.innate.psycho:1)*(B.psycho?CFG.innate.psycho:1);dmg*=m;note+=` 사이코패스×${m}`}
       B.hp=Math.max(0,B.hp-dmg);
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       applyKw(A,B,c,L);
@@ -796,6 +819,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

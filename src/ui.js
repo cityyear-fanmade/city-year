@@ -212,9 +212,10 @@ export function startUI(E,app){
   }
   const affLabel=ch=>(ch.aff?`<span class="chip">${esc(ch.aff.name)}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+ch.fr.n:''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
     +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
+  const innateName=c=>c.innate?(c.innate==='mark'&&c.markOn?D.innate.mark.awake:D.innate[c.innate].n):null;
   function vMind(ch){
     const m=ch.mind,mx=CFG.mind.max,t=E.mindTier(ch),low=m<=CFG.mind.voiceAt;
-    return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor}`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}</span></div>
+    return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor}`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}${ch.innate?` · <span style="color:var(--gold)">${esc(innateName(ch))}</span>`:''}</span></div>
       <div class="bar" style="height:4px"><span style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></span></div>`;
   }
   function vHud(){
@@ -341,7 +342,7 @@ export function startUI(E,app){
     return `<div class="check">플레이테스트 · ${new Date(EXP).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}까지 (약 ${left}분 남음)</div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.3</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v5.4</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vPlaytest()}
@@ -370,6 +371,7 @@ export function startUI(E,app){
           <button class="chip" data-a="seed">이 시드로</button></div>
       </div>
       <div class="panel">${row('출신',b.r.o,b.o)}${row('재능',b.r.t,b.t)}${row('결점',b.r.f,b.f)}${row('무기',b.r.w,b.w)}</div>
+      ${b.innate?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">타고난 것 · 1%</span><b class="serif">${esc(D.innate[b.innate].n)}</b><span class="mono small" style="color:var(--gold)">${esc(D.innate[b.innate].e)}</span></div>`:''}
       ${kid}
       <div class="panel stack">
         <div class="row between"><span class="mono small dim">색 · 1d100 → ${b.r.n}</span><b style="color:${b.color}">${D.colors[b.ci].adj} 빛</b></div>
@@ -584,7 +586,7 @@ export function startUI(E,app){
     const url=/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.href.split('#')[0]:'https://cityyear-fanmade.github.io/city-year/';
     return [`[도시의 한 해] ${head}`,(c.name?`${c.name} · `:'')+careerLine(c).replace(/<[^>]*>/g,'')+(c.title?` · ${c.title}`:''),
       `${lived}년 · ${E.age(G)}세`+(G.endless&&gi>=0?` · 위협 등급 ${X.grades[gi]}`:''),
-      !w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:null,c.ego?`E.G.O · ${c.ego.n}`:null,foes.length?`쓰러뜨린 상대 · ${foes.join(', ')}`:null,
+      !w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:null,c.ego?`E.G.O · ${c.ego.n}`:null,c.innate?`타고난 것 · ${innateName(c)}`:null,foes.length?`쓰러뜨린 상대 · ${foes.join(', ')}`:null,
       `${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`시드 ${c.seed}`,url].filter(Boolean).join('\n');
   }
   /* 엔딩 카드 이미지 (1080×1350): 캔버스에 직접 그린다. 외부 라이브러리 없음 */
@@ -611,6 +613,7 @@ export function startUI(E,app){
     const rows=[['산 햇수',`${lived}년 · ${E.age(G)}세`]];
     if(G.endless)rows.push(['위협 등급',gi>=0?X.grades[gi]:'—']);
     if(!w&&dt)rows.push(['마지막',`${dt.year}년차 · ${dt.foe}`]);
+    if(c.innate)rows.push(['타고난 것',innateName(c)]);
     if(c.ego)rows.push(['E.G.O',`${c.ego.n} · ${CFG.mind.ego[c.ego.type].n}`]);
     rows.push(['정신력',`${c.mind}/${CFG.mind.max}`]);
     rows.push(['레벨',`Lv ${c.lv} · 공격 ${sg(c.stats.atk)} · 회피 ${sg(c.stats.eva)} · 속도 ${sg(c.stats.spd)}`]);
@@ -765,7 +768,7 @@ export function startUI(E,app){
       UI.res=Object.assign(r,{anim:!!r.roll&&MODE!=='off'});
       UI.screen='result';render();
     },
-    grow(i){const ch=G.ch;E.applyFx(ch,ch.lvOpts[+i].g.fx);ch.lvPend--;ch.lvOpts=null;flow()},
+    grow(i){const ch=G.ch;E.applyGrowth(ch,ch.lvOpts[+i].g.fx);ch.lvPend--;ch.lvOpts=null;flow()},
     pick(i){i=+i;const at=UI.sel.indexOf(i);if(at>=0)UI.sel.splice(at,1);else UI.sel.push(i);render()},
     go(){
       const pp=UI.sel.map(i=>D.cards[C.P.hand[i]]);
