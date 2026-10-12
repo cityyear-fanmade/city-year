@@ -560,7 +560,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',name:ch.name||T.you,color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
     const S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy;
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from):0,g=gradeAt(ch.year||0)+1,X_=CFG.endless;
     const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul:S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*g));
@@ -590,7 +590,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       X.passHit=X.passHitNext;X.passHitNext=0;X.lightNext=0;
     }
     P.hand=sample(P.deck,CFG.hand);
-    if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
     /* 히든 보스 전용 패시브: 라운드 단위 */
     const pv=E.passive&&E.passive.id;
     E.maskOn=pv==='mask'&&C.round%E.passive.every===0;
@@ -656,8 +655,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
     if(c.t==='buff'){L('sys',`${A.name} · ${c.n} (버프)`);applyKw(A,B,c,L);push({k:'buff',side:A.uid,card:c});return}
-    const hits=c.hits+(c.t==='atk'&&A.wx&&A.wx.extraHit?A.wx.extraHit:0);
-    for(let h=0;h<hits;h++){
+    for(let h=0;h<c.hits;h++){
       if(A.hp<=0||B.hp<=0)return;
       /* 출혈: 공격할 때마다(명중 여부 무관) 스택만큼 피해, 그 뒤 1 감소 */
       if(A.bleed>0){
@@ -677,11 +675,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 회피 주사위: 적은 단계별 크기(CFG.enemyEvadeDie), 플레이어는 1d100 */
       const rdMax=B.isP?100:(D.enemies[C.id].evadeDie||CFG.enemyEvadeDie[D.enemies[C.id].tier]||100),rd=d(rdMax);
       const fsb=A.fs?CFG.firstHit:0;A.fs=false;
-      /* 검은 침묵의 장갑: 공격마다 1d9로 무기가 바뀐다 */
-      let sub=null;
-      if(A.wx&&A.wx.arsenal){const i=d(A.wx.arsenal.length);sub=A.wx.arsenal[i-1];(C.ars=C.ars||[]);if(!C.ars.includes(i))C.ars.push(i);pnote+=` 장갑 1d9 ${i}·${sub.n}`}
-      const am=A.atk+c.hit+fsb+A.passHit+(sub?sub.atk:0),dm=B.eva+B.evaB+(B.maskOn?B.passive.eva:0)+(B.odin?(C.round===1?30:15):0);
-      const sa=sub&&sub.sure?Math.max(ra+am,rd+dm+1):ra+am,sd=rd+dm,G_=CFG.guard;
+      const am=A.atk+c.hit+fsb+A.passHit,dm=B.eva+B.evaB+(B.maskOn?B.passive.eva:0)+(B.odin?(C.round===1?30:15):0);
+      const sa=ra+am,sd=rd+dm,G_=CFG.guard;
       const base={k:'atk',att:A.uid,def:B.uid,card:c,ra,ra2,rd,rdMax,am,dm,sa,sd,b:c.b,guard:B.guarding};
       /* 방어 자세: 막아도 피해 guardHit는 받는다 (키워드는 붙지 않음) */
       if(B.guarding&&sa<=sd){
@@ -700,11 +695,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const lo=Math.max(A.dmin,c.min||1),rolls=[];
       /* 피해 주사위 면 수: 기본 d6, 카드에 die가 있으면 그 값 (예: Furioso 1d2 × 9). 최소값 보정은 면 수를 넘지 않는다 */
       const die=c.die||(A.isP?A.pdie:6)||6,lo2=Math.min(lo,die);
-      /* 전용 무기 피해 주사위: 카드 주사위 대신 무기 주사위 (Furioso처럼 주사위가 정해진 카드는 그대로) */
-      const wd=!c.die&&A.wx?(sub?sub.dice:A.wx.dice):null;
-      if(sub&&sub.range&&!c.die)rolls.push(sub.range[0]-1+d(sub.range[1]-sub.range[0]+1));
-      else if(wd){for(let i=0;i<wd[0];i++)rolls.push(Math.max(Math.min(lo,wd[1]),d(wd[1])))}
-      else for(let i=0;i<c.dice;i++)rolls.push(Math.max(lo2,d(die)));
+      for(let i=0;i<c.dice;i++)rolls.push(Math.max(lo2,d(die)));
       let note=fsb?' 선제':'';
       if(c.rr&&rolls.length){
         let mi=0;rolls.forEach((v,i)=>{if(v<rolls[mi])mi=i});
@@ -728,20 +719,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.burn>=5){dmg=dmg*2;note+=' 푸른 화염×2'}else if(B.burn>0){dmg=Math.floor(dmg*1.5);note+=' 화상×1.5'}
       if(A.mark){const x=d(3)+d(3);dmg+=x;note+=` 표지+${x}`}
       if(B.guarding){dmg=Math.floor(dmg*G_.guardFailMul);note+=` 방어 감소×${G_.guardFailMul}`}
-      if(B.wx&&B.wx.ward){dmg=Math.max(1,dmg-B.wx.ward);note+=` 책장−${B.wx.ward}`}
       if(A.psycho||B.psycho){const m=(A.psycho?CFG.innate.psycho:1)*(B.psycho?CFG.innate.psycho:1);dmg*=m;note+=` 사이코패스×${m}`}
       B.hp=Math.max(0,B.hp-dmg);
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       applyKw(A,B,c,L);
-      /* 전용 무기 효과: 적중 시 키워드·잔향·호흡·조율, 피격 시 반격 */
-      if(A.wx&&B.hp>0){const X=A.wx;
-        if(X.hitKw)for(const [k,n] of X.hitKw){B[k]=Math.min(CFG.stackCap,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}
-        if(X.echo){B.wecho=(B.wecho||0)+1;L('kw',`  ${B.name}에게 잔향 ${B.wecho}/${X.echo.need}`);if(B.wecho>=X.echo.need){B.hp=Math.max(0,B.hp-X.echo.dmg);B.wecho=0;L('dmg',`  잔향이 울린다 · ${B.name} 고정 피해 ${X.echo.dmg}`)}}
-        if(X.breathHit){A.breath=Math.min(CFG.stackCap,A.breath+X.breathHit)}
-        if(X.execute&&B.hp>0&&B.hp<=B.maxHp*X.execute.below){B.hp=Math.max(0,B.hp-X.execute.dmg);L('dmg',`  조율 · ${B.name} 고정 피해 ${X.execute.dmg}`)}}
-      if(B.wx&&B.wx.thorns&&A.hp>0){A.hp=Math.max(0,A.hp-B.wx.thorns);L('dmg',`  ${B.name}의 무기 반격 · ${A.name} 피해 ${B.wx.thorns}`)}
-      /* 검은 침묵의 장갑: 서로 다른 무기 3종을 쓰면 이번 전투에 한 번, 다음 손패에 Furioso */
-      if(A.wx&&A.wx.arsenal&&!C.furiosoGiven&&(C.ars||[]).length>=3){C.furiosoGiven=true;A.furiosoNext=true;L('sys',`  ${A.name} · 서로 다른 무기 3종 · 다음 손패에 Furioso`)}
       /* 회피 실패: 1d5에서 1이면 정신력 1 감소 (E.G.O 장비 1개당 +1) */
       if(B.isP&&d(M.evadeDie)===1)loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
       /* 레바테인 계열: 적중 시 화상 */
