@@ -189,7 +189,7 @@ export function startUI(E,app){
   /* 걸려 있는 키워드: 수치와 다음에 일어날 일을 같이 보여 준다 */
   const KWHINT={burn:n=>n>=5?'받는 피해 ×2':'받는 피해 ×1.5',bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>`치명 ${Math.min(100,n*CFG.breathCritPer)}%`};
   function stacks(X){
-    const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='burn'&&X[k]>=5?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
+    const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='burn'&&(X.blue||X[k]>=5)?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${k==='burn'&&(X.blue||X[k]>=5)?`<small>받는 피해 ×2 · 라운드마다 ${X[k]*2}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
     /* 히든 보스 패시브 스택: 잔향(내게 쌓임), 장부(보스에게 쌓임) */
     const pv=C&&C.E&&C.E.passive;
     if(pv&&X.echo>0)out.push(`<span class="chip stk" style="--kc:var(--rupture)"><b>${pv.n} ${X.echo}/${pv.need}</b><small>${pv.need}에서 고정 피해 ${pv.dmg}</small></span>`);
