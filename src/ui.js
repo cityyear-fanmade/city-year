@@ -190,7 +190,7 @@ export function startUI(E,app){
   /* ===== 화면 ===== */
   let UI={screen:'title'},G=null,C=null,BC=null,SIM=null,lastScreen='';
 
-  /* 이름 일부에 밑줄 (마티아스) */
+  /* 이름 일부에 밑줄 (중지의 큰형님) */
   const ulName=(n,u)=>u?esc(n).replace(esc(u),`<u>${esc(u)}</u>`):esc(n);
   function bar(v,max){return `<div class="bar"><i style="width:${clamp(v/max*100,0,100)}%"></i></div>`}
   /* 걸려 있는 키워드: 수치와 다음에 일어날 일을 같이 보여 준다 */
