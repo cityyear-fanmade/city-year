@@ -29,6 +29,8 @@ h2{font:600 22px/1.35 var(--serif);text-wrap:balance}
 .btn:hover:not(:disabled){border-color:var(--gold)}
 .btn:disabled{opacity:.4;cursor:default}
 .btn.primary{background:var(--gold);border-color:var(--gold);color:var(--gold-ink);font-weight:700;align-items:center;justify-content:center;text-align:center}
+/* 선택된(밝은 금색) 버튼 안의 보조 글씨는 금색이라 묻힌다 → 어두운 글씨로 */
+html:not([data-skin="ruina"]) .btn.primary .mono,html:not([data-skin="ruina"]) .btn.primary .small,html:not([data-skin="ruina"]) .btn.primary .dim{color:var(--gold-ink)!important}
 .btn.quiet{background:transparent}
 .btn b{font-weight:700}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
