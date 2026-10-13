@@ -23,6 +23,10 @@ export function startUI(E,app){
   let SKIN=store.get('cityYearSkin')||'base';
   /* 전투 진행: 직접 고르기(pick) / 자동 전투(auto). 자동이면 카드 선택과 라운드 진행을 알아서 한다 */
   let FIGHT=store.get('cityYearFight')||'pick';
+  /* 자동 전투 라운드 간격: slow(느림) / normal(보통, 연출 속도에 맞춤) / fast(빠름) */
+  let AUTOGAP=store.get('cityYearAutoGap')||'normal';
+  /* 인생 주사위: free(태어난 뒤엔 매번 다르게) / fixed(시드 하나로 인생 전체가 같게, 재현용) */
+  let DICE=store.get('cityYearDice')||'free';
   /* 히든 직업 해금 기록: 이 브라우저에만 남는다 */
   const loadUnlocks=()=>{try{return JSON.parse(store.get('cityYearUnlocks')||'[]')}catch(e){return []}};
   const addUnlock=k=>{const u=loadUnlocks();if(!u.includes(k)){u.push(k);store.set('cityYearUnlocks',JSON.stringify(u))}};
@@ -235,6 +239,10 @@ export function startUI(E,app){
     return `<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">주사위 · 전투 연출</span><div class="seg">${b('mode','manual','수동',MODE)}${b('mode','slow','천천히',MODE)}${b('mode','fast','빠르게',MODE)}${b('mode','off','끔',MODE)}</div>
         <span class="small dim">${{manual:'행동마다 버튼을 눌러 직접 주사위를 굴린다',slow:'자동으로 천천히 굴린다',fast:'자동으로 빠르게 굴린다',off:'연출 없이 결과만 본다'}[MODE]}</span></div>
+      <div class="stack" style="gap:6px"><span class="eyebrow">자동 전투 간격</span><div class="seg">${b('autogap','slow','느림',AUTOGAP)}${b('autogap','normal','보통',AUTOGAP)}${b('autogap','fast','빠름',AUTOGAP)}</div>
+        <span class="small dim">자동 전투에서 라운드와 라운드 사이를 얼마나 쉬는지 · 전투 중 일시정지도 할 수 있다</span></div>
+      <div class="stack" style="gap:6px"><span class="eyebrow">인생 주사위</span><div class="seg">${b('dice','free','매번 다르게',DICE)}${b('dice','fixed','시드 고정(재현)',DICE)}</div>
+        <span class="small dim">${DICE==='fixed'?'시드가 같고 선택이 같으면 인생 전체의 주사위가 똑같이 나온다 (공유·재현용)':'출생만 시드로 정해지고, 태어난 뒤의 사건 주사위는 판마다 달라진다'}</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
   }
@@ -502,7 +510,7 @@ export function startUI(E,app){
     return `<div class="check" style="border-color:var(--bleed)"><b>v6 테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v6.1.0</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v6.1.1</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vUpdates()}
@@ -515,7 +523,7 @@ export function startUI(E,app){
       <a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a>
       <div class="panel stack" style="gap:4px"><span class="eyebrow">지금 고민 중인 방향</span>
         <ul class="small dim" style="margin:0;padding-left:18px;display:grid;gap:3px">${DIRECTION.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></div>
-      ${vSettings()}${vRules()}${vPast()}`;
+      ${vSettings()}${vRules()}${vPast()}${vTransfer()}`;
   }
   function vContinue(){
     const o=loadSave();if(!o)return '';const c=o.G.ch,y=o.G.year;
@@ -547,8 +555,8 @@ export function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const DIRECTION=['특이점(날개 기업 길)이 너무 강하다는 의견이 있어 너프를 검토하고 있습니다. 느낀 점을 제보로 알려 주세요.','호흡·치명 개편(v6.1.0)의 반응을 보고 수치를 다시 조정합니다.','하드 난이도와 후반 난이도는 제보를 보며 계속 손봅니다.'];
-  const UPDATES={v:'v6.1.0',items:[]};
+  const DIRECTION=['특이점(날개 기업 길)이 너무 강하다는 의견이 있어 너프를 검토하고 있습니다. 느낀 점을 제보로 알려 주세요.','호흡·치명 개편(v6.1.1)의 반응을 보고 수치를 다시 조정합니다.','하드 난이도와 후반 난이도는 제보를 보며 계속 손봅니다.'];
+  const UPDATES={v:'v6.1.1',items:[]};
   /* 공지: id가 바뀔 때만 한 번 뜬다 (버전·소폭 조정과 무관). 새 공지를 띄울 때만 id를 바꾼다 */
   /* v6.0 공지 본문 (v6.0.2부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V6SEC=[['🎒 화면과 편의',['가방: 화면 오른쪽 네모 칸(능력치·장비·카드·전리품)을 누르면 가방이 열립니다.','카드 정리: 카드마다 종류(공격·디버프·버프·회피·방어)가 색으로 표시되고, 종류·키워드·이름으로 찾을 수 있습니다.','출생 화면: 주사위와 함께 결과 이름이 굴러가고, "출생 규칙"에서 표 전체를 볼 수 있습니다.']],
@@ -561,15 +569,18 @@ export function startUI(E,app){
   const V602SEC=[['🛠 버그 수정',['사무소에 들어간 해결사가 1급에 올라도 승급 심사만 반복되고 특색 심사가 열리지 않던 문제를 고쳤습니다. 승급에 필요한 실적 계산도 바로잡았고, 전체를 소폭 낮췄습니다.','카드를 받을 때 "덱의 카드와 바꾼다"로 뺄 수 없는 고정 카드를 카드함으로 빼낼 수 있던 문제를 고쳤습니다. 이미 빠진 고정 카드는 다음 해에 덱으로 돌아옵니다.','단테의 노트·검지 단말기 배경에서 PC 화면 오른쪽의 가방 네모 칸(능력치·장비·카드·전리품)이 보이지 않던 문제를 고쳤습니다.','PC 창이 좁을 때(약 900~1020px) 가방 칸이 본문을 가리던 문제도 함께 고쳤습니다. 이 폭에서는 가방 칸이 상단 정보 안에 들어갑니다.']]];
   /* v6.0.3 공지 본문 (v6.0.4부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V603SEC=[['🛠 버그 수정 · 성장 효과',['재능 "타고난 완력"과 성장기 "어깨너머 손질"의 "피해 주사위 최소 2" 효과가 캐릭터를 만들 때 출생 무기를 끼면서 지워지던 문제를 고쳤습니다. 두 효과를 얻고도 적용되지 않던 판이 모두 해당합니다.','두 효과는 이제 각각 "피해 주사위 최소 +1"입니다. 둘이 겹치면 +2로 더해지고, 장비의 피해 최소값(예: 명장의 대검 3)과도 더해집니다. 합계는 최대 4까지입니다.','이미 진행 중인 판은 다음 해로 넘어갈 때 재능·성장기를 확인해 자동으로 반영됩니다.']]];
-  /* v6.0.4 공지 본문 (v6.1.0부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
+  /* v6.0.4 공지 본문 (v6.1.1부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V604SEC=[['🔒 지난 새 소식 (날개·소지)',['날개에서 무언가 일어나는 것 같습니다. 오래 살아남은 날개의 사람에게 낯선 제안이 올지도 모릅니다.','소지의 얼굴을 한 사람들 사이에서도 이상한 소문이 돕니다. 한참 뒤에야 닿는 곳에서 누군가 기다리고 있다고 합니다.','어떤 길인지, 어디로 이어지는지는 직접 확인해 보세요.']]];
-  const NOTICE={id:'v6.1.0-1',t:'도시의 한 해 v6.1.0 · 새 소식',
+  const NOTICE={id:'v6.1.1-1',t:'도시의 한 해 v6.1.1 · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['💨 호흡·치명 개편',['이전: 호흡 1당 치명 5%, 타격마다 호흡 1 소모, 최대 10.','이후: 호흡은 최대 12, 타격해도 줄지 않고 라운드가 바뀔 때마다 2씩 줄어듭니다.','치명 확률: 호흡 4에서 20%, 1마다 +14%(9에서 90%), 10 이상은 확정 치명. 호흡 1~3은 치명 대신 회피 +5.','치명 피해는 그대로 ×1.5입니다. 환도의 호흡당 치명 피해 +10%는 호흡 10까지만 반영됩니다.']],
+    sec:[['🙌 제보에서 채택한 의견 3가지',['시드 분리: 시드는 이제 출생(출신·재능·결점·무기·성장기, 숨은 출생 포함)만 정합니다. 태어난 뒤의 사건 주사위는 판마다 달라져서, 새로 고침 뒤 같은 선택을 해도 같은 숫자가 나오지 않습니다. 이전처럼 인생 전체를 같게 하고 싶다면 설정의 "인생 주사위"를 "시드 고정(재현)"으로 바꾸세요.','세이브 옮기기: 첫 화면 아래 "세이브 옮기기"에서 세이브·기록실·해금을 코드(또는 파일)로 내보내고 다른 기기에서 불러올 수 있습니다. 모바일에서 하던 판을 PC에서 이어갈 수 있습니다.','자동 전투: 전투 중 "일시정지" 버튼이 생겼고, 설정에 "자동 전투 간격(느림·보통·빠름)"이 생겼습니다.']],
+      ['🔧 수정',['표지가 발현한 뒤 장비를 바꾸면 장비 수치의 불어난 부분이 몸에 남아 공격력이 부풀던 문제를 고쳤습니다. 이제 표지 발현 배수는 몸의 수치에만 적용됩니다. (이미 발현한 판의 수치는 그대로입니다.)']],
+      ['💬 제보해 주셔서 감사합니다',['여러분의 제보에서 채택한 의견을 이렇게 반영합니다. 앞으로도 첫 화면 아래 "의견·버그 제보"로 알려 주세요.']]]};
+  const V610SEC=[['💨 호흡·치명 개편',['이전: 호흡 1당 치명 5%, 타격마다 호흡 1 소모, 최대 10.','이후: 호흡은 최대 12, 타격해도 줄지 않고 라운드가 바뀔 때마다 2씩 줄어듭니다.','치명 확률: 호흡 4에서 20%, 1마다 +14%(9에서 90%), 10 이상은 확정 치명. 호흡 1~3은 치명 대신 회피 +5.','치명 피해는 그대로 ×1.5입니다. 환도의 호흡당 치명 피해 +10%는 호흡 10까지만 반영됩니다.']],
       ['🛡 출혈·파열',['방어 카드를 내면 자신의 출혈·파열이 1/4 줄어듭니다(파열 8이면 6). 적도 똑같이 적용됩니다.']],
       ['🔧 공방',['카드 지우기가 카드 교환으로 바뀌었습니다. 덱의 카드를 일반 전투에서 얻는 카드 중 무작위 한 장으로 바꿉니다(방문마다 3장, 500안).','장비 정비가 생겼습니다. 장착한 장비마다 최대 5번, 50% 확률로 공격 또는 회피 +1을 시도합니다(실패해도 횟수는 소모, 시도할수록 비용이 늘어납니다). 모든 장비에 적용됩니다.']],
       ['🃏 암시장',['공방 암시장에 가끔(방문마다 10%) 응급 거래가 열립니다. 응급처치(HP 4 회복, 출혈·파열·화상 중 하나를 2 줄임)와 거리 재기(이번 라운드 회피 +5, 명중 +5)를 살 수 있고, 같은 카드는 최대 3장까지 지닐 수 있습니다.']],
-      ['⚠ 검토 중',['특이점(날개 기업 길)이 너무 강하다는 의견이 있어 너프를 검토하고 있습니다. 첫 화면 아래 "의견·버그 제보"에서 느낀 점을 알려 주세요.']]]};
+      ['⚠ 검토 중',['특이점(날개 기업 길)이 너무 강하다는 의견이 있어 너프를 검토하고 있습니다. 첫 화면 아래 "의견·버그 제보"에서 느낀 점을 알려 주세요.']]];
   const V609SEC=[['🔒 새로 열린 길',['더 어려운 난이도가 생겼습니다. 첫 화면에서 고를 수 있습니다.','도서관 안쪽에서 무언가 열렸습니다.']],
       ['🔧 수정',['일부 배경에서 선택한 버튼의 글씨가 보이지 않던 문제를 수정했습니다.']]];
   const V608SEC=[['🔧 수정',['불순물이 다른 강적들이 받던 후반 강화를 받지 못하던 오류를 확인했습니다. 보상으로 불순물을 대폭 강화했습니다.']]];
@@ -578,8 +589,38 @@ export function startUI(E,app){
   const V605SEC=[['🔒 지난 새 소식 (전투·새)',['전투 도중 마음이 한계에 닿으면 특별한 일이 일어납니다.','검은 숲의 새 세 마리에 얽힌 이야기가 생겼습니다. 끝까지 따라가 본 사람은 아직 없습니다.','일부 히든 상대의 난이도를 조정했습니다.']]];
   const noticeBody=(sec=NOTICE.sec)=>sec.map(([h,items])=>`<div class="stack" style="gap:4px"><b>${h}</b><ul class="small" style="margin:0;padding-left:18px;display:grid;gap:3px">${items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join('');
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><div class="stack" style="gap:10px;margin-top:10px">${noticeBody(NOTICE.sec)}</div><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
+  /* 세이브 옮기기: 이 브라우저의 세이브·기록실·해금을 코드(또는 파일)로 내보내고, 다른 기기에서 불러온다 */
+  const XKEYS=[SAVE,REC,'cityYearUnlocks'];
+  const xEncode=()=>{const d={};for(const k of XKEYS){const v=store.get(k);if(v)d[k]=v}return 'CY1:'+btoa(unescape(encodeURIComponent(JSON.stringify({cy:1,v:UPDATES.v,t:Date.now(),d}))))};
+  function xDecode(txt){
+    let t=String(txt||'').trim();if(!t)throw new Error('코드가 비어 있다');
+    if(t.startsWith('CY1:'))t=decodeURIComponent(escape(atob(t.slice(4).replace(/\s+/g,''))));
+    let o;try{o=JSON.parse(t)}catch(e){throw new Error('이 게임의 세이브 코드가 아니다 · 코드를 끝까지 복사했는지 확인해 주세요')}
+    if(!o||o.cy!==1||!o.d||typeof o.d!=='object')throw new Error('이 게임의 세이브 코드가 아니다');
+    const out={};for(const k of XKEYS)if(typeof o.d[k]==='string'){JSON.parse(o.d[k]);out[k]=o.d[k]}
+    if(!Object.keys(out).length)throw new Error('들어 있는 세이브가 없다');
+    if(out[SAVE]&&!JSON.parse(out[SAVE]).G)throw new Error('세이브가 깨져 있다');
+    return {out,v:o.v,t:o.t};
+  }
+  function vTransfer(){
+    const has=!!loadSave();
+    return `<details${UI.xopen?' open':''}><summary>세이브 옮기기 (다른 기기에서 이어하기)</summary><div class="stack" style="gap:10px;margin-top:8px">
+      <p class="small dim">이 기기의 세이브·기록실·해금을 코드로 만들어 다른 기기에서 불러온다. 불러오면 그 기기에 있던 세이브와 기록은 덮어쓴다. 설정(테마·연출)은 옮겨지지 않는다.</p>
+      <button class="btn" data-a="xport"><b>내보내기</b><span class="dim small">${has?'지금 이어하기 세이브까지 포함한다':'이어하기 세이브는 없다 · 기록실과 해금만 담긴다'}</span></button>
+      ${UI.xcode?`<textarea id="xcode" readonly rows="4" style="width:100%;font:12px/1.4 var(--mono);background:var(--panel2,#11151d);color:var(--fg);border:1px solid var(--line,#2a2f3a);border-radius:8px;padding:8px">${UI.xcode}</textarea>
+        <div class="row" style="gap:8px"><button class="chip" data-a="xcopy">코드 복사</button><button class="chip" data-a="xfile">파일로 저장</button></div>`:''}
+      <textarea id="xin" rows="3" placeholder="여기에 코드를 붙여 넣는다" style="width:100%;font:12px/1.4 var(--mono);background:var(--panel2,#11151d);color:var(--fg);border:1px solid var(--line,#2a2f3a);border-radius:8px;padding:8px"></textarea>
+      <div class="row" style="gap:8px"><button class="btn" style="flex:1" data-a="ximport"><b>${UI.xask?'정말 덮어쓰기':'불러오기'}</b></button><label class="btn quiet" style="flex:1;text-align:center;cursor:pointer"><b>파일에서 불러오기</b><input id="xfileIn" type="file" accept=".json,.txt,text/plain,application/json" hidden></label></div>
+      ${UI.xmsg?`<p class="small ${UI.xmsg[0]?'good':'bad'}">${esc(UI.xmsg[1])}</p>`:''}</div></details>`;
+  }
+  function xApply(txt){
+    let r;try{r=xDecode(txt)}catch(e){UI.xmsg=[false,'불러오지 못했다 · '+(e&&e.message||'코드를 확인해 주세요')];UI.xask=null;UI.xopen=true;render();return}
+    if(loadSave()&&UI.xask!==txt){UI.xask=txt;UI.xmsg=[false,'이 기기에 이어하기 세이브가 있다. 한 번 더 누르면 덮어쓴다.'];UI.xopen=true;render();return}
+    for(const k of XKEYS){if(r.out[k])store.set(k,r.out[k])}
+    UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
+  }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -859,7 +900,7 @@ export function startUI(E,app){
       ${P.index&&P.starId?`<div class="prescBar"><b>📜 이번 라운드 지령</b> · <b>${esc(D.cards[P.starId].n)}</b>을(를) 내라 <span class="small">→ 지령 수행 +1 (지금 ${P.presc||0}/5) · 호흡 +4 · 받는 피해 −5%씩</span>${UI.sel.some(j=>j===P.starSlot)?' <b class="good">✔ 지령 카드를 골랐다</b>':''}</div>`:''}
       <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">${P.distorted?'빛 없음':`빛 ${left}/${P.light}`}</span></div>
       <div class="hand">${cards}</div>
-      ${FIGHT==='auto'?`<div class="check">자동 전투 중 · 카드를 알아서 고르고 진행한다</div><button class="btn quiet" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button>`
+      ${FIGHT==='auto'?`<div class="check">${UI.paused?'일시정지 · 다음 라운드를 기다린다':'자동 전투 중 · 카드를 알아서 고르고 진행한다'}</div><div class="row" style="gap:8px"><button class="btn${UI.paused?' primary':''}" style="flex:1" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button><button class="btn quiet" style="flex:1" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button></div>`
         :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button><button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`}
       ${M?`${log}<details class="logbox"><summary>설정 (테마 · 연출 · 전투 진행)</summary><div class="stack" style="margin-top:10px">${vSettings()}</div></details>`:vSettings()}`;
   }
@@ -1050,8 +1091,8 @@ export function startUI(E,app){
     if(s==='birth'&&BC.fresh&&MODE!=='off'){BC.fresh=false;rollAnim()}
     if(s==='level'&&UI.lvFresh&&MODE!=='off'){UI.lvFresh=false;rollAnim()}
     if(s==='result'&&UI.res.anim&&UI.res.roll){UI.res.anim=false;UI.animing=true;resultAnim().then(()=>{UI.animing=false;if(G&&((G.ch.offers||[]).length||(G.ch.gearOffers||[]).length||G.ch.packOffer))render()})}
-    if(s==='combat'&&FIGHT==='auto'&&!PLAYING&&C&&!C.over&&!UI.autoTimer)
-      UI.autoTimer=setTimeout(()=>{UI.autoTimer=null;if(FIGHT==='auto'&&UI.screen==='combat'&&!PLAYING&&!C.over){UI.sel=E.autoPick(C);render();setTimeout(()=>{if(FIGHT==='auto'&&!PLAYING&&!C.over)ACT.go()},MODE==='off'?150:500)}},MODE==='off'?150:600);
+    if(s==='combat'&&FIGHT==='auto'&&!PLAYING&&C&&!C.over&&!UI.autoTimer&&!UI.paused){const g=autoGap();
+      UI.autoTimer=setTimeout(()=>{UI.autoTimer=null;if(FIGHT==='auto'&&UI.screen==='combat'&&!PLAYING&&!C.over&&!UI.paused){UI.sel=E.autoPick(C);render();setTimeout(()=>{if(FIGHT==='auto'&&!PLAYING&&!C.over&&!UI.paused)ACT.go()},g[1])}},g[0])}
   }
 
   /* ===== 진행: 성장 굴림 → 대기 중인 전투 → 다음 해 ===== */
@@ -1112,7 +1153,7 @@ export function startUI(E,app){
     r.best.years=Math.max(r.best.years,lived);r.best.lv=Math.max(r.best.lv,c.lv);if(G.endless)r.best.grade=Math.max(r.best.grade,E.gradeAt(G.year));
     store.set(REC,JSON.stringify(r));if(!w)store.del(SAVE);
   }
-  function startCombat(id){recAdd('seen',id);C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.screen='combat';render()}
+  function startCombat(id){recAdd('seen',id);C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.paused=false;UI.screen='combat';render()}
 
   const ACT={
     lrelic(k){if(!E.relicChoices(G.ch).includes(k))return;E.giveRelic(G.ch,k,true);UI.res.chips=[...UI.res.chips,'유물 · '+D.relics[k].n];render()},
@@ -1169,7 +1210,10 @@ export function startUI(E,app){
     },
     title(){UI.confirmNew=null;if(UI.shared){UI.shared=null;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}UI.screen='title';render()},
     mode(i){MODE=i;store.set('cityYearMode',i);render()},
-    fightmode(i){FIGHT=i;store.set('cityYearFight',i);render()},
+    fightmode(i){FIGHT=i;store.set('cityYearFight',i);UI.paused=false;render()},
+    pause(){UI.paused=!UI.paused;if(UI.paused&&UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
+    autogap(i){AUTOGAP=i;store.set('cityYearAutoGap',i);if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
+    dice(i){DICE=i;store.set('cityYearDice',i);render()},
     skin(i){SKIN=i;store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;nextYear()},
     async saveimg(){
@@ -1190,6 +1234,11 @@ export function startUI(E,app){
       UI.shareMsg='이 화면에서는 자동 복사가 막혀 있다. 아래 링크를 눌러 복사한다.';render();const b2=$('shareBox');if(b2)b2.select();
     },
     sharedSeed(){const r=UI.shared;history.replaceState&&history.replaceState(null,'',location.pathname+location.search);UI.shared=null;UI.job=null;born(+r.s,'');UI.screen='birth';render()},
+    xport(){UI.xcode=xEncode();UI.xmsg=null;UI.xopen=true;render()},
+    xcopy(){const t=UI.xcode;if(!t)return;const ok=()=>{UI.xmsg=[true,'코드를 복사했다. 다른 기기의 "불러오기"에 붙여 넣는다.'];UI.xopen=true;render()};
+      try{navigator.clipboard.writeText(t).then(ok,()=>{const a=$('xcode');if(a){a.select();document.execCommand('copy')}ok()})}catch(e){const a=$('xcode');if(a){a.select();try{document.execCommand('copy')}catch(_){}}ok()}},
+    xfile(){const t=UI.xcode;if(!t)return;try{const b=new Blob([t],{type:'text/plain'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='도시의한해_세이브.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}catch(e){}},
+    ximport(){const a=$('xin');xApply((a&&a.value.trim())||UI.xask||'')},
     hard(){store.set(HARDK,isHard()?'0':'1');render()},
     start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='title')store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     cont(){const o=loadSave();if(!o)return;G=o.G;C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
@@ -1202,7 +1251,7 @@ export function startUI(E,app){
     relic(k){UI.relic=k;render()},
     job(k){UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(UI.daily&&BC.seed===dailySeed(UI.daily))BC.daily=UI.daily;if(BC.innate)recAdd('innate',BC.innate);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;G=E.newGame(BC);nextYear()},
+    live(){if(UI.daily&&BC.seed===dailySeed(UI.daily))BC.daily=UI.daily;if(BC.innate)recAdd('innate',BC.innate);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.showIncome=false;UI.screen='shop';render()},
@@ -1266,6 +1315,8 @@ export function startUI(E,app){
     sim(){SIM=E.simulate(200);UI.screen='sim';render()}
   };
   /* 시드: 브라우저 암호 난수로 새로 뽑는다. 같은 시드면 같은 출생과 같은 굴림 */
+  /* 자동 전투 간격: [카드 고르기 전, 행동 개시 전] ms */
+  const autoGap=()=>AUTOGAP==='slow'?[1600,1100]:AUTOGAP==='fast'?[150,150]:MODE==='off'?[150,150]:[600,500];
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
   function born(seed,name){E.reseed(seed);BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null);BC.seed=seed;BC.name=name||'';BC.fresh=true}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
@@ -1276,6 +1327,7 @@ export function startUI(E,app){
     if(t.classList.contains('inv'))UI.invOpen=t.open;
     if(t.classList.contains('bhelp'))UI.helpOpen=t.open},true);
   /* 휴대폰 키보드의 이동·완료(Enter)로도 시드 적용 */
+  app.addEventListener('change',e=>{if(e.target.id!=='xfileIn')return;const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{UI.xask=null;xApply(String(r.result||''))};r.readAsText(f)});
   app.addEventListener('keydown',e=>{if(e.target.id==='seedIn'&&e.key==='Enter'){e.preventDefault();e.target.blur();ACT.seed()}});
   app.addEventListener('input',e=>{if(e.target.id==='nm'&&BC)BC.name=e.target.value.trim().slice(0,12);
     if(e.target.id==='cardq'){(UI.cf=UI.cf||{}).q=e.target.value.trim();const l=$('cardlist');if(l)l.innerHTML=cardListHtml()}});

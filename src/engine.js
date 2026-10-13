@@ -819,8 +819,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const {chips,licensed}=applyFx(ch,fx);
     if(xpNote)chips.unshift(xpNote);
     if(fx.markAwake){const M_=CFG.innate.markMul,s0=ch.stats,b={};
-      for(const k of ['atk','eva','spd','check'])if(s0[k]>0){const n=Math.floor(s0[k]*M_)-s0[k];if(n>0){s0[k]+=n;b[k]=n}}
-      const hp=Math.floor(s0.maxHp*M_)-s0.maxHp;s0.maxHp+=hp;ch.hp+=hp;ch.markOn=true;
+      /* 장비 수치는 빼고 몸의 수치에만 배수를 곱한다 (장비를 바꿀 때 불어난 분이 남지 않게) */
+      const gs=k=>Object.values(ch.gear).reduce((a,g)=>a+(g&&g.fx&&g.fx[k]||0),0);
+      for(const k of ['atk','eva','spd','check']){const base=s0[k]-gs(k);if(base>0){const n=Math.floor(base*M_)-base;if(n>0){s0[k]+=n;b[k]=n}}}
+      const hb=s0.maxHp-gs('maxHp'),hp=Math.floor(hb*M_)-hb;s0.maxHp+=hp;ch.hp+=hp;ch.markOn=true;
       chips.push('표지 발현 · 능력치 ×'+M_);chips.push(Object.entries(b).map(([k,v])=>`${k}+${v}`).concat(`HP+${hp}`,'적중마다 +2d3').join(' · '))}
     /* 선택지의 정신력: mind -1이면 2d3 감소, +1이면 2d3 회복 */
     if(c.mind){const x=d(3)+d(3);if(c.mind<0)loseMind(ch,x,t=>chips.push(t+' · 2d3'));else{const g=gainMind(ch,x);if(g)chips.push(`정신력 +${g} (${ch.mind}/${M.max})`)}}
