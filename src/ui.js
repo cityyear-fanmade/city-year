@@ -214,9 +214,10 @@ export function startUI(E,app){
   const cardFx=c=>[c.serum?'혈청 +'+c.serum+' (3이 쌓이면 적중 피해 ×1.5 후 비움)':'',c.serumBurst?'혈청을 모두 써서 1당 주사위 +1':'',c.seal?'적중 시 봉인 각인 +'+c.seal:'',c.unseal?'봉인 각인 1당 피해 +'+c.unseal+' (각인 소모)':'',c.dmark?'적중 시 처분 표식 +'+c.dmark:'',c.exec?'처분 표식이 있으면 주사위 +'+c.exec:'',c.execHit?'처분 표식이 있으면 명중 +'+c.execHit:'',c.grant?'처분 표식이 있으면 다음 라운드 '+D.cards[c.grant].n+' 카드':'',c.once?'이번 라운드만 쓰는 카드':'',c.gungnir?'이 카드를 낸 라운드는 받는 피해 60% 감소 (공명)':''].filter(Boolean).map(x=>' · '+x).join('');
   function cardLine(c,g,wx){
     if(c.t!=='atk')return (c.d||'')+cardFx(c);
-    return cardLine0(c,g,wx)+cardFx(c)+((c.mat||c.harvest||c.reuse)&&c.d?' · '+c.d:'');
+    return cardLine0(c,g,wx)+cardFx(c)+((c.mat||c.harvest||c.reuse)&&c.d?' · '+c.d:'')+(c.mindCost?` · 정신력 −${c.mindCost}`:'');
   }
   function cardLine0(c,g,wx){
+    if(c.gamble)return `${c.d} · 명중 ${sg(c.hit+(g?g.hit:0))}`;
     /* 전용 무기 주사위가 있으면 실제로 굴리는 주사위로 표시 */
     if(wx&&wx.dice&&!c.die){const n=Math.max(wx.dice[0],c.dice)+(g?g.dice:0),b=(c.b||0)+(g?g.b:0);return `${c.hits>1?c.hits+'타 · ':''}${n}d${wx.dice[1]}${b?sg(b):''} · 명중 ${sg(c.hit+(g?g.hit:0))} · 무기 주사위${g&&g.n?' · 등급 '+g.n:''}`}
     if(g&&g.n){const dc=c.dice+(c.die?0:g.dice),b=(c.b||0)+g.b;return `${c.hits>1?c.hits+'타 · ':''}${dc}d${c.die||6}${b?sg(b):''} · 명중 ${sg(c.hit+g.hit)} · 등급 ${g.n}`}
@@ -395,7 +396,7 @@ export function startUI(E,app){
     if(!(UI.stock||[]).length)return '';
     const ch=G.ch;
     const items=UI.stock.map(id=>{const it=D.special[id],st=E.canBuySpecial(ch,id);
-      const note=st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${D.slots[it.slot]} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
+      const note=st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${D.slots[it.slot]} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
       return `<button class="btn" data-a="bspecial" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(it.price)}</span></span>
         <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${note}</span></button>`}).join('');
     const B=CFG.blackCard,box=UI.cardBox?`<div class="panel stack" style="gap:8px;border-color:${KIND.debuff[1]}"><div class="row between"><b class="serif">수상한 카드 상자</b><span class="mono" style="color:var(--gold)">${E.money(B.price)}</span></div>
@@ -418,7 +419,7 @@ export function startUI(E,app){
       const open=w.grade<=acc;
       const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
-        const note=st==='owned'?'장착 중':st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
+        const note=st==='owned'?'장착 중':st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
         return `<button class="btn" data-a="buy" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.isWs(ch)?`<s class="dim">${E.money(it.price)}</s> `:''}${E.money(E.priceOf(ch,id))}</span></span>
           <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${D.slots[it.slot]} · ${note}</span></button>`;
       }).join('');
@@ -639,7 +640,7 @@ export function startUI(E,app){
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.officePick?vOfficePick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~3글자)를 직접 적는다 */
   const TW_OK=/^[가-힣A-Za-z0-9]{2,3}$/;
@@ -659,6 +660,14 @@ export function startUI(E,app){
       <p class="small dim">3년마다(공방 거리를 지날 때) 사무소가 이 분야의 카드나 의수를 알선해 준다. 급수가 오르면 더 좋은 의수가 들어온다.</p>
       <span class="small bad">${UI.offErr||''}</span>
       <button class="btn primary" data-a="offset">이 이름으로 간판을 건다</button></div>`;
+  }
+  function vDistPick(){
+    return `<div class="panel stack" style="gap:8px;border-color:#8a2a2a"><span class="eyebrow" style="color:#c25050">육신 뒤틀림</span>
+      <p class="small">몸이 마음의 모양을 따라 비틀렸다. 이제 장비를 쥘 수 없고, 상대에게 디버프를 걸 수 없다. 대신 몸 자체가 무기가 된다.</p>
+      <p class="small mono" style="color:#c25050">최대 HP +${CFG.distort.fx.maxHp} · 공격 +${CFG.distort.fx.atk} · 장비 전부 보관함으로 · 덱이 뒤틀린 책장 ${CFG.distort.deck.length}장으로 고정 (빛 없음) · 정신력이 더 깎이지 않는다</p>
+      <div class="row"><span class="small">뒤틀림의 이름</span><input id="distname" maxlength="5" value="${esc(UI.distName||'')}" autocomplete="off" placeholder="1~5글자" style="width:9em"></div>
+      <span class="small bad">${UI.distErr||''}</span>
+      <button class="btn primary" data-a="distset">이 이름으로 뒤틀린다</button></div>`;
   }
   function vEgoPick(){
     const X=CFG.mind.ego,ty=UI.egoType||'atk';
@@ -764,7 +773,7 @@ export function startUI(E,app){
     }).join('');
     return `${M?duo({E:X,P})+vOrder(true):entHtml('E',X,X)+arenaHtml(false)+entHtml('P',P,P)+vOrder()+log}
       ${P.index&&P.starId?`<div class="prescBar"><b>📜 이번 라운드 지령</b> · <b>${esc(D.cards[P.starId].n)}</b>을(를) 내라 <span class="small">→ 지령 수행 +1 (지금 ${P.presc||0}/5) · 호흡 +4 · 받는 피해 −5%씩</span>${UI.sel.some(j=>j===P.starSlot)?' <b class="good">✔ 지령 카드를 골랐다</b>':''}</div>`:''}
-      <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">빛 ${left}/${P.light}</span></div>
+      <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">${P.distorted?'빛 없음':`빛 ${left}/${P.light}`}</span></div>
       <div class="hand">${cards}</div>
       ${FIGHT==='auto'?`<div class="check">자동 전투 중 · 카드를 알아서 고르고 진행한다</div><button class="btn quiet" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button>`
         :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button><button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`}
@@ -1022,6 +1031,11 @@ export function startUI(E,app){
       UI.res.chips=[...UI.res.chips,`내 사무소 · ${G.ch.office.name} (${E.OKW[kw]})`];render();
     },
     egotype(k){UI.egoName=(($('egoname')||{}).value||UI.egoName||'');UI.egoType=k;render()},
+    distset(){
+      const n=(($('distname')||{}).value||'').trim(),err=E.egoNameErr(n);
+      if(err){UI.distErr=err;UI.distName=n;render();return}
+      E.setDistort(G.ch,n);UI.distErr='';UI.distName='';UI.res.chips=[...UI.res.chips,`육신 뒤틀림 · ${n}`];render();
+    },
     egoset(){
       const n=(($('egoname')||{}).value||'').trim(),err=E.egoNameErr(n);
       if(err){UI.egoErr=err;UI.egoName=n;render();return}
@@ -1160,6 +1174,7 @@ export function startUI(E,app){
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
     testCard:()=>ACT.testCard(),
     testShareLink:()=>shareLink(),
+    testDistort(){if(!G)return;UI.ev=D.mindEvents.distort;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
     testDeath(y,foe){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false};UI.screen='end';render()},

@@ -42,6 +42,8 @@ export const CFG = {
     tiers: [{at: 45, breath: 5, eva: 5}, {at: 30, breath: 3, eva: 3}, {at: 20, breath: 1, eva: 0}],
     ego: {atk: {n: '공격용', hit: 10, floor: 20}, def: {n: '방어용', hp: 30, floor: 11}}},
   /* 공방 거리: 1년차부터 every년마다 들를지 묻는다(해는 넘어가지 않음). blackFrom년차부터 암시장 물건 blackStock개 진열 */
+  /* 육신 뒤틀림: 장비를 쓸 수 없고(전부 보관함), 상대에게 디버프를 걸 수 없다. 깡 능력치가 크게 오르고 덱은 뒤틀린 책장(도박 카드 12장, 빛 없음)으로 고정 */
+  distort: {fx: {maxHp: 40, atk: 6, eva: 0, spd: 0}, deck: ['d_jackpot', 'd_jackpot', 'd_jackpot', 'd_rend', 'd_rend', 'd_rend', 'd_maw', 'd_maw', 'd_thrash', 'd_thrash', 'd_coin', 'd_curl']},
   shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4, restMind: 5},
   /* 타고난 것: 출생 굴림과 별개로 1/chanceDiv 확률. 시드 재현을 위해 출생 굴림 값에서 파생 (새 주사위를 쓰지 않는다) */
   innate: {chanceDiv: 100, growMul: 1.2, money: 1.2, intuitionDie: 20, psycho: 2, markYear: 30, markMul: 1.6},
