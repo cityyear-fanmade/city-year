@@ -52,8 +52,11 @@ export function startUI(E,app){
   function holdTap(label='화면 클릭 후 계속'){
     if(MODE!=='manual'||SKIP||FIGHT==='auto')return Promise.resolve();
     const h=document.createElement('div');h.id='holdHint';h.textContent=label;
-    h.style.cssText='position:fixed;left:0;right:0;bottom:14px;text-align:center;font:500 13px/1.2 var(--mono);color:var(--dim,#9aa3b2);letter-spacing:.04em;pointer-events:none;z-index:5;text-shadow:0 1px 3px rgba(0,0,0,.7)';
-    document.body.appendChild(h);
+    /* 주사위 굴림 영역 바로 아래, 가운데에 둔다 (전투: 판정 문구 아래 / 사건 판정: 주사위 줄 아래). 못 찾으면 화면 가운데 아래쪽에 띄운다 */
+    h.style.cssText='text-align:center;font:500 13px/1.2 var(--mono);color:var(--dim,#9aa3b2);letter-spacing:.04em;pointer-events:none;padding:10px 0';
+    const anchor=$('verdict')||($('rd')&&$('rd').closest('.row'));
+    if(anchor)anchor.insertAdjacentElement('afterend',h);
+    else{h.style.cssText+=';position:fixed;left:0;right:0;bottom:40%;z-index:5';document.body.appendChild(h)}
     return new Promise(r=>{
       const onClick=()=>{if(tapWake)tapWake()};
       const off=()=>{document.removeEventListener('click',onClick,true);h.remove()};
@@ -129,6 +132,9 @@ export function startUI(E,app){
     const X=C[e.att],Y=C[e.def];
     const dA=$('dA'),dD=$('dD');
     if(!dA||!dD)return;
+    /* 주사위 자리 고정: 적은 왼쪽, 플레이어는 오른쪽 (누가 공격하든 바뀌지 않는다) */
+    {const wA=dA.closest('.dwrap'),wD=dD.closest('.dwrap'),vs=document.querySelector('.dice .vs'),dm=$('dmgw'),pAtt=e.att==='P';
+     if(wA)wA.style.order=pAtt?3:1;if(wD)wD.style.order=pAtt?1:3;if(vs)vs.style.order=2;if(dm)dm.style.order=4}
     if(MODE==='manual'){const a=$('alabel');if(a)a.innerHTML=`${who(e.att)}의 <b>${esc(e.card.n)}</b> → ${who(e.def)}`;
       $('capA').innerHTML=`${who(e.att)} · 명중 1d100`;$('capD').innerHTML=`${who(e.def)} · ${e.guard?'방어':'회피'} 1d${e.rdMax||100}`;
       dA.className='die';dD.className='die';dA.firstElementChild.textContent='?';dD.firstElementChild.textContent='?';$('dmgw').hidden=true;$('sA').textContent='';$('sD').textContent='';$('fA').innerHTML='&nbsp;';$('fD').innerHTML='&nbsp;';$('fM').innerHTML='&nbsp;';
