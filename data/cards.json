@@ -2283,6 +2283,26 @@
    "die": 22,
    "b": 0,
    "hit": 10
+  },
+  "ab_open_p": {
+   "n": "책을 편다",
+   "c": 2,
+   "t": "atk",
+   "hits": 2,
+   "dice": 2,
+   "b": 1,
+   "hit": 8,
+   "next": "ab_close_p"
+  },
+  "ab_close_p": {
+   "n": "책을 덮는다",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 20,
+   "b": 0,
+   "hit": 10
   }
  },
  "rewards": [

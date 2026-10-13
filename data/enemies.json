@@ -3325,12 +3325,12 @@
    },
    "drop": {
     "n": "관장의 열쇠",
-    "card": "ab_chapter",
+    "card": "ab_open_p",
     "fx": {
      "maxHp": 20,
      "atk": 2
     },
-    "e": "HP+20 · 공격+2 · 무기 금서 · 전용 카드 장의 끝",
+    "e": "HP+20 · 공격+2 · 무기 금서 · 전용 카드 책을 편다 → 책을 덮는다 (연속기)",
     "gear": {
      "id": "w_forbidden_book",
      "slot": "weapon",

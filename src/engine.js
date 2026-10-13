@@ -985,7 +985,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function autoPick(C){
     const P=C.P,low=P.hp/P.maxHp<0.35;
     const score=c=>c.t==='def'?(low?8:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)
-      :c.hits*(c.dice*3.5+c.b)+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05;
+      :c.hits*(c.dice*((c.die||6)+1)/2+c.b)+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05;
     let best=[],bs=-1;
     for(let m=1;m<1<<P.hand.length;m++){
       const idx=P.hand.map((_,i)=>i).filter(i=>m>>i&1);
@@ -1225,7 +1225,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     queue(C,pp,ep).forEach((st,i)=>{
       C.step=i;const A=C[st.side],c=st.card;
-      if(c.next&&!A.isP){A.forceNext=c.next;L('sys',`${A.name} · ${c.n} · 다음 라운드 ${D.cards[c.next].n} 준비`)}
+      if(c.next){if(A.isP)A.grantNext=c.next;else A.forceNext=c.next;L('sys',`${A.name} · ${c.n} · 다음 라운드 ${D.cards[c.next].n} 준비`)}
       if(A.isP&&c.egoGrow){C.ch.egoUses=(C.ch.egoUses||0)+1;const up=egoGrow(C.ch);
         /* 특수 강화는 그 자리에서: 장착 중이면 이번 전투 수치도 바로 바꾼다 */
         if(up&&up.worn){for(const k of ['atk','eva'])A[k]+=(up.nw.fx[k]||0)-(up.old.fx[k]||0);A.wx=up.nw.wx}
