@@ -741,8 +741,8 @@ export function startUI(E,app){
   function vOfficePick(){
     const kw=UI.offKw||'bleed',nm=UI.offName||'';
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">내 사무소 차리기</span>
-      <p class="small">간판에 들어갈 이름을 적는다(한글 1~4글자, 영문·일본어 1~14글자). 뒤에 '사무소'가 붙는다.</p>
-      <div class="row"><input id="offname" maxlength="14" value="${esc(nm)}" autocomplete="off" placeholder="한글 1~4 · 영문/일본어 1~14" style="width:min(12em,50vw)"><b class="serif">사무소</b></div>
+      <p class="small">간판에 들어갈 이름을 1~10글자로 적는다. 뒤에 '사무소'가 붙는다. 뒤에 '사무소'가 붙는다.</p>
+      <div class="row"><input id="offname" maxlength="10" value="${esc(nm)}" autocomplete="off" placeholder="1~10글자" style="width:min(12em,50vw)"><b class="serif">사무소</b></div>
       <span class="eyebrow" style="margin-top:4px">전문 분야</span>
       <div class="seg">${Object.entries(E.OKW).map(([k,n])=>`<button class="${kw===k?'on':''}" data-a="offkw" data-i="${k}">${n}</button>`).join('')}</div>
       <p class="small dim">3년마다(공방 거리를 지날 때) 사무소가 이 분야의 카드나 의수를 알선해 준다. 급수가 오르면 더 좋은 의수가 들어온다.</p>
@@ -753,7 +753,7 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px;border-color:#8a2a2a"><span class="eyebrow" style="color:#c25050">육신 뒤틀림</span>
       <p class="small">몸이 마음의 모양을 따라 비틀렸다. 이제 장비를 쥘 수 없고, 상대에게 디버프를 걸 수 없다. 대신 몸 자체가 무기가 된다.</p>
       <p class="small mono" style="color:#c25050">최대 HP +${CFG.distort.fx.maxHp} · 공격 +${CFG.distort.fx.atk} · 장비 전부 보관함으로 · 덱이 뒤틀린 책장 ${CFG.distort.deck.length}장으로 고정 (빛 없음) · 정신력이 더 깎이지 않는다</p>
-      <div class="row"><span class="small">뒤틀림의 이름</span><input id="distname" maxlength="14" value="${esc(UI.distName||'')}" autocomplete="off" placeholder="한글 1~5 · 영문/일본어 1~14" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">뒤틀림의 이름</span><input id="distname" maxlength="10" value="${esc(UI.distName||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
       <span class="small bad">${UI.distErr||''}</span>
       <button class="btn primary" data-a="distset">이 이름으로 뒤틀린다</button></div>`;
   }
@@ -764,7 +764,7 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">E.G.O 개화</span>
       <p class="small">마음이 무너지기 직전, 그것을 붙잡은 모양이 힘이 되었다. 종류와 이름을 정한다. 덱 최대 ${CFG.deck.max+CFG.mind.deckPlus}장(전용 카드 1장은 고정) · 전투 처음 ${CFG.mind.lightRounds}라운드 빛 +${CFG.mind.light}.</p>
       <div class="row" style="gap:8px">${['atk','def'].map(k=>`<button class="btn ${ty===k?'primary':'quiet'}" style="flex:1" data-a="egotype" data-i="${k}">${X[k].n}<br><span class="small">${k==='atk'?`공격 +${X.atk.hit} · 정신력 ${X.atk.floor} 밑으로 안 떨어짐 · 전용 카드 ${D.cards[X.atk.card].n}`:`체력 +${X.def.hp} · 회피 +${X.def.eva} · 정신력 ${X.def.floor} 밑으로 안 떨어짐 · 전용 카드 ${D.cards[X.def.card].n}`}</span></button>`).join('')}</div>
-      <div class="row"><span class="small">이름</span><input id="egoname" maxlength="14" value="${esc(UI.egoName||'')}" autocomplete="off" placeholder="한글 1~5 · 영문/일본어 1~14" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">이름</span><input id="egoname" maxlength="10" value="${esc(UI.egoName||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
       <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
       <span class="small bad">${UI.egoErr||''}</span>
       <button class="btn primary" data-a="egoset">이 E.G.O로 정한다</button></div>`;
@@ -775,7 +775,7 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">특이점 개발</span>
       <p class="small">전용 연구 구역에서 특이점의 모양이 잡혀 간다. 어떤 효과로 개발할지, 무엇이라 부를지 정한다. 이후 강화 실험으로 효과가 자란다.</p>
       <div class="stack" style="gap:8px">${Object.entries(T_).map(([k,v])=>`<button class="btn ${ty===k?'primary':'quiet'}" data-a="singtype" data-i="${k}"><b>${v.n}</b><span class="small">${v.e}</span></button>`).join('')}</div>
-      <div class="row"><span class="small">이름</span><input id="singname" maxlength="14" value="${esc(UI.singName||'')}" autocomplete="off" placeholder="한글 1~5 · 영문/일본어 1~14" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">이름</span><input id="singname" maxlength="10" value="${esc(UI.singName||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
       <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
       <span class="small bad">${UI.singErr||''}</span>
       <button class="btn primary" data-a="singset">이 특이점으로 정한다</button></div>`;
@@ -792,7 +792,7 @@ export function startUI(E,app){
     const ego=G.ch.namePend==='ego';
     return `<div class="panel stack" style="gap:8px;border-color:${ego?'var(--gold)':'#c25050'}"><span class="eyebrow">${ego?'E.G.O 개화':'육신 뒤틀림'}</span>
       <p class="small">${ego?'싸우는 도중 마음이 무너지는 순간, 붙잡은 모양이 힘이 되었다. 그 이름을 정한다.':'싸우는 도중 마음이 버티지 못하고 몸이 뒤틀렸다. 그 이름을 정한다.'}</p>
-      <div class="row"><span class="small">이름</span><input id="nameval" maxlength="14" value="${esc(UI.nameVal||'')}" autocomplete="off" placeholder="한글 1~5 · 영문/일본어 1~14" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">이름</span><input id="nameval" maxlength="10" value="${esc(UI.nameVal||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
       <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
       <span class="small bad">${UI.nameErr||''}</span>
       <button class="btn primary" data-a="nameset">이 이름으로 정한다</button></div>`;
@@ -800,15 +800,15 @@ export function startUI(E,app){
   function vWingPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">날개 설립</span>
       <p class="small">새 법인의 이름을 정한다. 뒤에 '날개'가 붙는다.</p>
-      <div class="row"><span class="small">이름</span><input id="wingname" maxlength="14" value="${esc(UI.wingName||'')}" autocomplete="off" placeholder="한글 1~4 · 영문/일본어 1~14" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">이름</span><input id="wingname" maxlength="10" value="${esc(UI.wingName||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
       <span class="small bad">${UI.wingErr||''}</span>
       <button class="btn primary" data-a="wingset">이 이름으로 세운다</button></div>`;
   }
   function vTitlePick(){
     const ch=G.ch,adj=D.colors[ch.ci].adj,cur=ch.title.slice(adj.length+1);
     return `<div class="panel stack" style="gap:8px;border-color:${ch.color}"><span class="eyebrow">${T.titleLabel} 이름 정하기</span>
-      <p class="small">도시가 당신을 부를 이름이다. 색 뒤에 붙을 말을 적는다(한글 2~3글자, 영문·일본어 2~14글자).</p>
-      <div class="row"><b class="serif" style="color:${ch.color}">${esc(adj)}</b><input id="tw" maxlength="14" value="${esc(cur)}" autocomplete="off" placeholder="한글 2~3 · 영문/일본어 2~14" style="width:min(12em,50vw)"></div>
+      <p class="small">도시가 당신을 부를 이름이다. 색 뒤에 붙을 말을 2~10글자로 적는다.</p>
+      <div class="row"><b class="serif" style="color:${ch.color}">${esc(adj)}</b><input id="tw" maxlength="10" value="${esc(cur)}" autocomplete="off" placeholder="2~10글자" style="width:min(12em,50vw)"></div>
       <span class="small bad" id="twerr">${UI.twErr||''}</span>
       <button class="btn primary" data-a="tname">이 이름으로 정한다</button></div>`;
   }
@@ -1204,7 +1204,7 @@ export function startUI(E,app){
     delcard(i){if((UI.deleted||[]).length>=CFG.shop.delMax)return;const c=E.delCard(G.ch,+i);if(c){(UI.deleted=UI.deleted||[]).push(D.cards[c].n);render()}},
     tname(){
       const ch=G.ch,adj=D.colors[ch.ci].adj,w=(($('tw')||{}).value||'').trim();
-      {const e=E.nameErr(w,{ko:3,other:14,min:2});if(e){UI.twErr=e;render();return}}
+      {const e=E.nameErr(w,{min:2});if(e){UI.twErr=e;render();return}}
       const old=ch.title;ch.title=adj+' '+w;ch.titlePick=false;UI.twErr='';
       UI.res.chips=UI.res.chips.map(x=>x===T.titleLabel+' · '+old?T.titleLabel+' · '+ch.title:x);render();
     },

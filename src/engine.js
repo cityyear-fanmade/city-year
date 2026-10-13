@@ -234,17 +234,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 6시즌: 내 사무소 =====
      5급 이상 해결사가 운 판정(1d100 ≥ 55)에 성공하면 이름(1~4글자) + '사무소'로 차린다.
      전문 분야(키워드)를 고르면 3년마다(공방 거리) 그 키워드의 카드나 의수를 알선해 준다 */
-  /* 이름 입력 규칙(공용): 한글이 들어 있으면 ko글자까지, 영문·숫자·일본어(히라가나·가타카나·한자)만이면 other글자까지. 띄어쓰기는 space일 때만 */
+  /* 이름 입력 규칙(공용): 한글·영문·숫자·일본어(히라가나·가타카나·한자) 1~10글자 (특색은 2~10). 띄어쓰기는 space일 때만 */
   const NAME_CH=/^[가-힣A-Za-z0-9\u3040-\u30ff\u4e00-\u9fff\uff66-\uff9f\u3005 ]+$/,HANGUL=/[가-힣]/;
   function nameErr(raw,o={}){
-    const ko=o.ko||5,other=o.other||14,min=o.min||1,w=(raw||'').trim(),lim=HANGUL.test(w)?ko:other;
+    const max=CFG.nameMax,min=o.min||1,w=(raw||'').trim(),lim=max;
     const bad=!w||(!o.space&&/\s/.test(w))||!NAME_CH.test(w)||!w.replace(/\s/g,'')||[...w].length<min||[...w].length>lim;
-    return bad?`한글은 ${min}~${ko}글자, 영문·일본어는 ${min}~${other}글자로 적어 주세요 (한글·영문·숫자·일본어${o.space?'':', 띄어쓰기 없이'})`:null;
+    return bad?`${min}~${max}글자로 적어 주세요 (한글·영문·숫자·일본어${o.space?'':', 띄어쓰기 없이'})`:null;
   }
   const OKW={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상'};
   const canFound=ch=>ch.licensed&&ch.rank<=CFG.office.rank&&!ch.job&&!noFixer(ch)&&!ch.officePick&&(!ch.aff||(ch.aff.type==='office'&&!ch.aff.own));
   function officeNameErr(n){
-    {const e=nameErr(n,{ko:4,other:14});if(e)return e}
+    {const e=nameErr(n);if(e)return e}
     if((D.offices||[]).some(o=>o.n===n+' 사무소'))return '이미 있는 사무소 이름이다';
     return null;
   }
@@ -604,7 +604,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function egoNameErr(name){
     const w=(name||'').trim();
-    {const e=nameErr(w,{ko:5,other:14,space:true});if(e)return e}
+    {const e=nameErr(w,{space:true});if(e)return e}
     if(egoTaken().has(w.replace(/\s/g,'')))return '이미 게임에 있는 물건·전리품·유물·카드 이름이다';
     return null;
   }
@@ -627,7 +627,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const corpType=ch=>corpYes(ch)&&ch.corp.type?CP.types[ch.corp.type]:null;
   const singNameErr=egoNameErr;
   function wingNameErr(n){
-    {const e=nameErr(n,{ko:4,other:14});if(e)return e}
+    {const e=nameErr(n);if(e)return e}
     if((D.orgs.wing||[]).includes(n+' 날개'))return '이미 있는 날개 이름이다';
     return null;
   }
