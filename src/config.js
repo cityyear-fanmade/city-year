@@ -54,6 +54,8 @@ export const CFG = {
   deck: {max: 12},
   blackCard: {chance: 50, price: 250},
   /* 6시즌 사무소: 개설 가능 급수(이상), 개설 사건을 다시 묻는 간격, 소속 없는 해결사가 사무소 문을 두드리는 간격 */
+  /* 6시즌 E.G.O 발현자: 전용 카드 '발현'을 낸 횟수(need)가 차면 E.G.O 무기 등급이 오른다. 등급별 수치는 birth.json egoWeapons[].grow */
+  egoGrow: {need: [0, 5, 12, 20], tier: ['TETH', 'HE', 'WAW', 'ALEPH']},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */
   bon: {max: 5, need: [0, 1, 2, 4, 5], atk: [0, 5, 9, 13, 17, 21], eva: [0, 2, 4, 6, 8, 9], dmgB: [0, 0, 0, 1, 1, 2], accel: {max: 3, hit: 5, eva: 5}},
   /* 혈귀 특수 루트: 라만차랜드 초대장이 오는 해 */

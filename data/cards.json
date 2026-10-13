@@ -1799,7 +1799,8 @@
    "hit": 12,
    "mindCost": 5,
    "fixed": true,
-   "d": "정신력 5 소모 · E.G.O의 힘을 개방한다"
+   "egoGrow": true,
+   "d": "정신력 5 소모 · E.G.O의 힘을 개방한다 · 쓸수록 E.G.O가 자란다"
   },
   "e_focus": {
    "n": "정신 집중",
