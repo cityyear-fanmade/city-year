@@ -190,8 +190,8 @@ export function startUI(E,app){
   /* ===== 화면 ===== */
   let UI={screen:'title'},G=null,C=null,BC=null,SIM=null,lastScreen='';
 
-  /* 이름 일부에 밑줄 (중지의 큰형님) */
-  const ulName=(n,u)=>u?esc(n).replace(esc(u),`<u>${esc(u)}</u>`):esc(n);
+  /* 이름 일부에 취소선 (중지의 큰형님) */
+  const ulName=(n,u)=>u?esc(n).replace(esc(u),`<s>${esc(u)}</s>`):esc(n);
   function bar(v,max){return `<div class="bar"><i style="width:${clamp(v/max*100,0,100)}%"></i></div>`}
   /* 걸려 있는 키워드: 수치와 다음에 일어날 일을 같이 보여 준다 */
   const KWHINT={burn:n=>n>=5?'받는 피해 ×2':'받는 피해 ×1.5',bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>`치명 ${Math.min(100,n*CFG.breathCritPer)}%`};
