@@ -9,6 +9,13 @@ export const CFG = {
   /* 전투: 빛(코스트), 손패, 키워드 */
   light: 3, lightMax: 5, hand: 4, stackCap: 10,
   breathCritPer: 5, critMult: 1.5,
+  /* 호흡(v6.1): 최대 cap. 타격마다 소모되지 않고 라운드가 바뀔 때 decay씩 줄어든다.
+     치명 확률: 호흡 sure 이상 100%, from~sure-1은 base%에서 step%씩 올라 90%, 1~evaMax는 치명 없이 회피 +eva. 환도 배수는 호흡 hwandoCap까지만 반영 */
+  breath: {cap: 12, decay: 2, sure: 10, from: 4, base: 20, step: 14, evaMax: 3, eva: 5, hwandoCap: 10},
+  /* 방어 카드를 내면 자기 출혈·파열이 이 비율로 남는다 (내림, 적도 같음) */
+  defCut: {bleed: 0.75, rupture: 0.75},
+  /* 암시장 응급 카드: 방문마다 chance% 확률로 진열, 덱·카드함·제안 합쳐 최대 max장 */
+  blackAid: {chance: 10, max: 3, price: {bm_firstaid: 150, bm_measure: 100}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
   orderBonusLight: 1, catchupBonus: 10, gapFirst: 30, firstHit: 10,
   /* 방어 카드 기본 회피 보너스 */

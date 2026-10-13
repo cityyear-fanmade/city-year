@@ -259,6 +259,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const all=boxPool(theme),fresh=all.filter(id=>!ownsCard(ch,id)),cid=one(fresh.length?fresh:all);if(!cid)return null;
     ch.money-=B.price;(ch.offers=ch.offers||[]).push(cid);return cid;
   }
+  /* 암시장 응급 카드: 같은 카드를 덱·카드함·제안 합쳐 max장까지 살 수 있다 */
+  const aidCount=(ch,id)=>[...ch.deck,...(ch.side||[]),...(ch.offers||[])].filter(x=>x===id).length;
+  function buyAid(ch,id){const B=CFG.blackAid,p=B.price[id];if(!p||ch.deckLocked||ch.cardMoney||ch.money<p||aidCount(ch,id)>=B.max)return false;ch.money-=p;(ch.offers=ch.offers||[]).push(id);return true}
   /* 공방 등급: 기본 → 소속 → 해결사 급수 보너스 */
   function shopAccess(ch){
     const A=D.access;let g=A.base;
@@ -939,6 +942,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       X.light=Math.min(CFG.lightMax+X.lightUp+X.lightNext+el,CFG.light+X.lightUp+X.lightNext+el+(X.lead?CFG.orderBonusLight:0));
       X.passHit=X.passHitNext;X.passHitNext=0;X.lightNext=0;X.matBonus=X.matNext||0;X.matNext=0;
     }
+    if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-CFG.breath.decay);
     P.hand=sample(P.deck,CFG.hand);
     if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
     if(P.grantNext){P.hand.push(P.grantNext);P.grantNext=null}
@@ -961,7 +965,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 적 특성: 무리(공격 카드 한 장 더), 재생(HP 3 회복) */
     if(E.trait==='swarm'){const a=E.deck.map(id=>D.cards[id]).find(c=>c.t==='atk');if(a)C.ePlan.push(a)}
     if(E.trait==='bulwark'&&E.hp>0){E.shield=Math.max(E.shield||0,3)}
-    if(E.trait==='focus'&&E.hp>0){E.breath=Math.min(CFG.stackCap,E.breath+2)}
+    if(E.trait==='focus'&&E.hp>0){E.breath=Math.min(CFG.breath.cap,E.breath+2)}
     if(E.trait==='regen'&&E.hp>0&&E.hp<E.maxHp){const h=Math.min(3,E.maxHp-E.hp);E.hp+=h;C.traitNote=`${E.name} · 재생 · HP +${h}`}else C.traitNote=null;
     if(jp&&jp.id==='seal'&&C.round%Math.max(2,jp.every-((C.ch&&C.ch.auth)||[]).filter(a=>a==='seal').length)===0){const i=C.ePlan.findIndex(c=>c.t==='atk');if(i>=0){const c=C.ePlan.splice(i,1)[0];C.jobNote=`${P.name} · ${jp.n} · ${E.name}의 ${c.n}을(를) 봉인했다`}}
   }
@@ -984,7 +988,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      반환: 손패 번호 배열 (방어 → 점수 높은 순) */
   function autoPick(C){
     const P=C.P,low=P.hp/P.maxHp<0.35;
-    const score=c=>c.t==='def'?(low?8:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)
+    const bad=P.bleed+P.rupture+(P.burn||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
       :c.hits*(c.dice*((c.die||6)+1)/2+c.b)+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05;
     let best=[],bs=-1;
     for(let m=1;m<1<<P.hand.length;m++){
@@ -1012,11 +1016,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(plan.some(c=>c.t==='def'))E.lastGuard=C.round;
     return plan;
   }
+  /* 호흡 → 치명 확률(%) */
+  const critPct=b=>{const H=CFG.breath;return b>=H.sure?100:b>=H.from?Math.min(90,H.base+(b-H.from)*H.step):0};
+  const cutStacks=A=>{const F=CFG.defCut;if(A.bleed>0)A.bleed=Math.floor(A.bleed*F.bleed);if(A.rupture>0)A.rupture=Math.floor(A.rupture*F.rupture)};
   function applyKw(A,D_,c,L){
     for(const [k,n,to] of (c.kw||[])){
       if(A.distorted&&to!=='s')continue;
       const X=to==='s'?A:D_;
-      X[k]=Math.min(CFG.stackCap,X[k]+n);
+      X[k]=Math.min(k==='breath'?CFG.breath.cap:CFG.stackCap,X[k]+n);
       L('kw',`  ${X.name}에게 ${D.keywords[k].n} +${n} (지금 ${X[k]})`);
     }
   }
@@ -1024,7 +1031,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function addSerum(A,c,L){A.serum=Math.min(3,(A.serum||0)+c.serum);L('kw',`  ${A.name} · 혈청 ${A.serum}/3${A.serum>=3?' · 과부하 준비':''}`)}
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
-    if(c.t==='buff'&&(c.heal||c.passNext||c.debuffHit)){
+    if(c.t==='buff'&&(c.heal||c.passNext||c.debuffHit||c.cleanseRand)){
+      if(c.cleanseRand){const ks=['bleed','rupture','burn'].filter(k=>(A[k]||0)>0);if(ks.length){const k=ks[d(ks.length)-1],n0=A[k];A[k]=Math.max(0,n0-c.cleanseRand);L('kw',`  ${A.name} · ${c.n} · ${D.keywords[k].n} ${n0} → ${A[k]}`)}}
       if(c.heal){const h=Math.min(c.heal,A.maxHp-A.hp);A.hp+=h;L('kw',`${A.name} · ${c.n} · HP +${h}`)}
       if(c.passNext){A.passHitNext=(A.passHitNext||0)+c.passNext;L('kw',`  ${A.name} · 다음 라운드 명중 ${sg(c.passNext)}`)}
       if(c.debuffHit){B.passHitNext=(B.passHitNext||0)+c.debuffHit;L('kw',`  ${B.name} · 다음 라운드 명중 ${sg(c.debuffHit)} (1라운드)`)}
@@ -1064,7 +1072,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const acA=A.wx&&A.wx.accel?(A.accel||0)*A.wx.accel.hit:0,acB=B.wx&&B.wx.accel?(B.accel||0)*B.wx.accel.eva:0;
       const trH=(A.trait==='bloodscent'&&B.bleed>0?15:0)+(A.trait==='enrage'&&A.hp<=A.maxHp/2?15:0),trE=B.trait==='coward'&&B.hp<=B.maxHp/2?20:0;
       const exH=(c.execHit&&(B.disp||0)>0?c.execHit:0)+trH;if(exH)pnote+=` 처분 표식 명중+${exH}`;
-      const am=A.atk+c.hit+exH-(A.manner||0)+(gr?gr.hit:0)+fsb+A.passHit+acA+(sub?sub.atk:0)-3*(A.prescript||0)-(A.isP&&A.laev==='open'&&isBlue(A)?CFG.laev.selfBlueHit:0),dm=B.eva+B.evaB+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?(C.round===1?30:15):0);
+      const am=A.atk+c.hit+exH-(A.manner||0)+(gr?gr.hit:0)+fsb+A.passHit+acA+(sub?sub.atk:0)-3*(A.prescript||0)-(A.isP&&A.laev==='open'&&isBlue(A)?CFG.laev.selfBlueHit:0),dm=B.eva+B.evaB+(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0)+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?(C.round===1?30:15):0);
       const sa=sub&&sub.sure?Math.max(ra+am,rd+dm+1):ra+am,sd=rd+dm,G_=CFG.guard;
       const base={k:'atk',att:A.uid,def:B.uid,card:c,ra,ra2,rd,rdMax,am,dm,sa,sd,b:c.b,guard:B.guarding};
       /* 방어 자세: 막아도 피해 guardHit는 받는다 (키워드는 붙지 않음) */
@@ -1110,8 +1118,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(A.passive.id==='claw'){const x=d(4);dmg+=x;note+=` ${A.passive.n}+${x}`}
       }
       if(A.breath>0){
-        if(d(100)<=A.breath*CFG.breathCritPer){const cm=CFG.critMult+(A.hwando?0.1*A.breath:0);dmg=Math.floor(dmg*cm);note+=A.hwando?` 치명(환도 ×${cm.toFixed(1)})`:' 치명'}
-        A.breath--;
+        if(d(100)<=critPct(A.breath)){const cm=CFG.critMult+(A.hwando?0.1*Math.min(A.breath,CFG.breath.hwandoCap):0);dmg=Math.floor(dmg*cm);note+=A.hwando?` 치명(환도 ×${cm.toFixed(1)})`:' 치명'}
       }
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
@@ -1161,7 +1168,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.mindHit&&A.isP){const g=gainMind(C.ch,X.mindHit);if(g)L('kw',`  ${A.name} · 참회 · 정신력 +${g}`)}
         if(X.hitKw)for(const [k,n] of X.hitKw){B[k]=Math.min(CFG.stackCap,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}
         if(X.echo){B.wecho=(B.wecho||0)+1;L('kw',`  ${B.name}에게 ${X.echo.n||'잔향'} ${B.wecho}/${X.echo.need}`);if(B.wecho>=X.echo.need){B.hp=Math.max(0,B.hp-X.echo.dmg);B.wecho=0;L('dmg',`  ${X.echo.n||'잔향'}이 울린다 · ${B.name} 고정 피해 ${X.echo.dmg}`)}}
-        if(X.breathHit){A.breath=Math.min(CFG.stackCap,A.breath+X.breathHit)}
+        if(X.breathHit){A.breath=Math.min(CFG.breath.cap,A.breath+X.breathHit)}
         /* ALEPH E.G.O: 미미크리 흡수, 다 카포 악장 */
         if(X.drain&&A.hp>0){const h=Math.min(X.drain,A.maxHp-A.hp);if(h>0){A.hp+=h;L('kw',`  ${A.name} · 흡수 · HP +${h}`)}}
         if(X.movement&&C.round%X.movement.every===0&&A.mvRound!==C.round&&B.hp>0){A.mvRound=C.round;B.hp=Math.max(0,B.hp-X.movement.dmg);L('dmg',`  다 카포 · 악장 · ${B.name} 고정 피해 ${X.movement.dmg}`)}
@@ -1208,7 +1215,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(C.jobNote)L('kw',C.jobNote);
     if(C.traitNote)L('kw',C.traitNote);
     /* 검지 지령 수행: ☆ 칸의 카드를 내면 스택 +1 (최대 5) · 호흡 +4 · 받는 피해 스택당 −5% */
-    if(P.index&&P.starId&&pp.includes(D.cards[P.starId])){P.presc=Math.min(5,(P.presc||0)+1);P.breath=Math.min(CFG.stackCap,P.breath+4);L('kw',`${P.name} · 지령 수행 ${P.presc}/5 · 호흡 +4 · 받는 피해 −${P.presc*5}%`)}
+    if(P.index&&P.starId&&pp.includes(D.cards[P.starId])){P.presc=Math.min(5,(P.presc||0)+1);P.breath=Math.min(CFG.breath.cap,P.breath+4);L('kw',`${P.name} · 지령 수행 ${P.presc}/5 · 호흡 +4 · 받는 피해 −${P.presc*5}%`)}
     C.step=-1;push({k:'head'});
     P.evaB=E.evaB=0;
     if(P.laev==='open'&&C.round>1&&C.round%CFG.laev.selfEvery===0){P.burn=Math.min(CFG.stackCap,(P.burn||0)+1);L('kw',`${P.name} · 레바테인 · 자신에게 화상 1 (지금 ${P.burn})`)}
@@ -1232,7 +1239,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(up)L('kw',`${A.name} · ${c.n} ${C.ch.egoUses}회 · E.G.O ${CFG.egoGrow.tier[up.nw.egoLv]} · ${up.nw.n}`)}
       if(A.isP&&c.mindCost)loseMind(C.ch,c.mindCost,t=>L('kw',`${A.name} · ${c.n} · ${t}`));
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
-      if(c.t==='def'){const ev=(c.eva||CFG.defBonus)+A.defUp;A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
+      if(c.t==='def'){cutStacks(A);if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp;A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
       if(P.hp<=0||E.hp<=0)return;
       act(C,A,c,L,push);
     });
@@ -1292,5 +1299,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    aidCount,buyAid,critPct,lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

@@ -195,7 +195,7 @@ export function startUI(E,app){
   const ulName=(n,u)=>u?esc(n).replace(esc(u),`<s>${esc(u)}</s>`):esc(n);
   function bar(v,max){return `<div class="bar"><i style="width:${clamp(v/max*100,0,100)}%"></i></div>`}
   /* 걸려 있는 키워드: 수치와 다음에 일어날 일을 같이 보여 준다 */
-  const KWHINT={burn:n=>n>=5?'받는 피해 ×2':'받는 피해 ×1.5',bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>`치명 ${Math.min(100,n*CFG.breathCritPer)}%`};
+  const KWHINT={burn:n=>n>=5?'받는 피해 ×2':'받는 피해 ×1.5',bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>n>=1&&n<=CFG.breath.evaMax?`회피 +${CFG.breath.eva}`:`치명 ${E.critPct(n)}%`};
   function stacks(X){
     const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='burn'&&(X.blue||X[k]>=5)?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${k==='burn'&&(X.blue||X[k]>=5)?`<small>받는 피해 ×2 · 라운드마다 ${X[k]*2}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
     /* 히든 보스 패시브 스택: 잔향(내게 쌓임), 장부(보스에게 쌓임) */
@@ -258,7 +258,7 @@ export function startUI(E,app){
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 쓰러뜨리면 '+CFG.artSense.chance+'% 확률로 +1 (영구)':''}`);
     if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];
       P.push(`특이점 ${c.n} (${t.n}) · ${t.e.split(' (')[0]} · ${c.st==='dev'?`개발 ${c.stack}/${CFG.corp.devMax}`:`강화 ${c.up}/${CFG.corp.upMax} · 금기 실험 ${c.forb}/${CFG.corp.forbMax}`}`)}
-    if(ch.hwando)P.push('섬봉광 검술 · 호흡 1당 치명 피해 +10%');
+    if(ch.hwando)P.push(`섬봉광 검술 · 호흡 1당 치명 피해 +10% (최대 ${CFG.breath.hwandoCap})`);
     if(ch.resonance)P.push('궁니르 공명 · 궁니르 카드를 낸 라운드 받는 피해 −60%');
     return P.length?`<div class="passives">${P.map(t=>`<div class="mono small"><span style="color:var(--gold)">◆</span> ${esc(t)}</div>`).join('')}</div>`:'';
   }
@@ -408,8 +408,10 @@ export function startUI(E,app){
     const B=CFG.blackCard,box=UI.cardBox?`<div class="panel stack" style="gap:8px;border-color:${KIND.debuff[1]}"><div class="row between"><b class="serif">수상한 카드 상자</b><span class="mono" style="color:var(--gold)">${E.money(B.price)}</span></div>
       <p class="small dim">원하는 쪽을 말하면 그런 카드 한 장을 꺼내 준다. 무엇이 나올지는 모른다. 이번 방문에 한 번.</p>
       ${UI.boxDone?`<p class="good small">${UI.boxDone}</p>`:ch.deckLocked||ch.cardMoney?'<p class="small dim">덱이 고정되어 카드를 받을 수 없다.</p>':`<div class="row" style="gap:8px">${[['debuff','디버프 카드'],['buff','버프 · 회피 카드']].map(([k,n])=>`<button class="btn" style="flex:1" data-a="box" data-i="${k}" ${ch.money<B.price?'disabled':''}><b>${n}</b><span class="small dim">${k==='debuff'?'상대에게 출혈·파열·화상':'호흡·회피 등 나를 돕는 카드'}</span></button>`).join('')}</div>${ch.money<B.price?'<p class="small dim">돈이 모자란다.</p>':''}`}</div>`:'';
+    const AID=CFG.blackAid,aid=UI.aid?`<div class="panel stack" style="gap:8px;border-color:${KIND.buff[1]}"><b class="serif">응급 거래</b><p class="small dim">구석 상인이 낡은 카드 두 장을 슬쩍 내민다. 같은 카드는 최대 ${AID.max}장까지 지닐 수 있다.</p>
+      ${ch.deckLocked||ch.cardMoney?'<p class="small dim">덱이 고정되어 카드를 받을 수 없다.</p>':Object.keys(AID.price).map(id=>{const c=D.cards[id],n=E.aidCount(ch,id),ok=n<AID.max&&ch.money>=AID.price[id];return `<button class="btn" data-a="aid" data-i="${id}" ${ok?'':'disabled'}><span class="row between"><b>${c.n}</b><span class="mono" style="color:var(--gold)">${E.money(AID.price[id])}</span></span><span class="small dim">${c.d.replace(' (암시장 전용)','')}</span><span class="mono small dim">${n>=AID.max?'더는 지닐 수 없다':`지닌 수 ${n}/${AID.max}`}</span></button>`}).join('')}</div>`:'';
     return `<div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">암시장</b><span class="chip">이번 방문만</span></div>
-      <p class="small dim">출처를 묻지 않는 물건들. 이번에 지나가면 다음엔 다른 물건이 나온다.</p><div class="stack">${items}</div>${box}</div>`;
+      <p class="small dim">출처를 묻지 않는 물건들. 이번에 지나가면 다음엔 다른 물건이 나온다.</p><div class="stack">${items}</div>${box}${aid}</div>`;
   }
   function vShop(){
     const ch=G.ch,acc=E.shopAccess(ch),A=D.access;
@@ -467,7 +469,7 @@ export function startUI(E,app){
       <li><b>순서</b> 라운드마다 1d100 + 속도. 1등은 빛 +${CFG.orderBonusLight}, 격차 ${CFG.gapFirst} 이상이면 첫 공격 명중 +${CFG.firstHit}. 뒤처지면 다음 라운드 순서 +${CFG.catchupBonus}.</li>
       <li><b>방어 자세</b> 카드를 하나도 내지 않으면 그 라운드는 회피 대신 방어로 받는다. 막으면 피해 ${CFG.guard.guardHit}, 못 막으면 피해 ×${CFG.guard.guardFailMul}. 다음 라운드 명중 +${CFG.guard.nextHit}${CFG.guard.lightUp?`, 그 전투 동안 빛과 빛 최대치 +${CFG.guard.lightUp}(최대 +${CFG.guard.lightUpMax})`:''}${CFG.guard.lightNext?`, 다음 라운드 빛 +${CFG.guard.lightNext}`:''}.</li>
       <li><b>빛</b> 라운드마다 ${CFG.light}. 남은 빛으로 손패 카드를 원하는 순서로 낸다. 남긴 빛은 사라진다.</li>
-      <li><b>${D.keywords.bleed.n}</b> 공격할 때마다(빗나가도) 스택만큼 피해, 그 뒤 1 감소. 내가 방어 자세면 절반으로 지혈. <b>${D.keywords.rupture.n}</b> 피격 시 스택만큼 추가 피해, 피격마다 1 감소. <b>화상</b>(레바테인 전용) 받는 피해 ×1.5, 5스택 이상이면 <b>푸른 화염</b> ×2, 라운드 끝에 1 감소. <b>${D.keywords.breath.n}</b> 스택당 치명 ${CFG.breathCritPer}%(×${CFG.critMult}), 명중마다 1 소모.</li>
+      <li><b>${D.keywords.bleed.n}</b> 공격할 때마다(빗나가도) 스택만큼 피해, 그 뒤 1 감소. 내가 방어 자세면 절반으로 지혈. <b>${D.keywords.rupture.n}</b> 피격 시 스택만큼 추가 피해, 피격마다 1 감소. <b>화상</b>(레바테인 전용) 받는 피해 ×1.5, 5스택 이상이면 <b>푸른 화염</b> ×2, 라운드 끝에 1 감소. <b>${D.keywords.breath.n}</b> 최대 ${CFG.breath.cap}, 라운드마다 ${CFG.breath.decay} 줄어든다. 4~9는 치명 ${CFG.breath.base}%에서 90%까지(×${CFG.critMult}), ${CFG.breath.sure} 이상은 확정 치명, 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}. 방어 카드를 내면 내 출혈·파열이 1/4 줄어든다(적도 같다).</li>
       <li><b>성장</b> 판정 성공 ${CFG.xp.ok}, 실패 ${CFG.xp.fail}, 판정 없는 선택 ${CFG.xp.plain}, 전투 승리 ${CFG.xp.win} 경험치. 레벨이 오르면 성장표를 1d100으로 세 번 굴려 하나를 고른다.</li>
       <li><b>${T.licensed}</b> 자격 시험, 계약, 견습으로 ${T.rankStart}${T.rankUnit}에 등록된다. 소속이 없거나 ${T.affTypes.office} 소속이면 전투에서 이긴 뒤 소문 판정(1d100 + ${T.paths.fixer} 진로 보정 ≥ ${CFG.winLicenseDc})으로도 등록된다. 고정 전투(${Object.keys(D.fixedFights).join('·')}년차)에서 이기면 2${T.rankUnit}씩 ${T.promote}한다.</li>
       <li><b>손가락 서열</b> ${Object.entries(D.fingers).map(([n,F])=>`${n}: ${F.ranks.map(r=>r.branch?r.branch.map(b=>b.n).join('/'):r.n).join(' → ')}`).join(' · ')}. 고정 전투 승리나 승급 사건으로 오르고, 오를 때마다 보정을 받는다. 서열 ${D.fingerRules.shopTier}단계 이상이면 공방 등급 +1.</li>
@@ -489,7 +491,7 @@ export function startUI(E,app){
     return `<div class="check" style="border-color:var(--bleed)"><b>v6 테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v6.0.9</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v6.1.0</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vUpdates()}
@@ -499,7 +501,9 @@ export function startUI(E,app){
       <button class="btn" data-a="daily" ${expired()?'disabled':''}><b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다</span></button>
       <button class="btn quiet" data-a="records"><b>기록실</b><span class="dim small">만난 적 · 본 엔딩 · 해금 · 최고 기록</span></button>
       <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다</span></button>
-      <a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a></div>
+      <a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a>
+      <div class="panel stack" style="gap:4px"><span class="eyebrow">지금 고민 중인 방향</span>
+        <ul class="small dim" style="margin:0;padding-left:18px;display:grid;gap:3px">${DIRECTION.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></div>
       ${vSettings()}${vRules()}${vPast()}`;
   }
   function vContinue(){
@@ -532,7 +536,8 @@ export function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const UPDATES={v:'v6.0.9',items:[]};
+  const DIRECTION=['특이점(날개 기업 길)이 너무 강하다는 의견이 있어 너프를 검토하고 있습니다. 느낀 점을 제보로 알려 주세요.','호흡·치명 개편(v6.1.0)의 반응을 보고 수치를 다시 조정합니다.','하드 난이도와 후반 난이도는 제보를 보며 계속 손봅니다.'];
+  const UPDATES={v:'v6.1.0',items:[]};
   /* 공지: id가 바뀔 때만 한 번 뜬다 (버전·소폭 조정과 무관). 새 공지를 띄울 때만 id를 바꾼다 */
   /* v6.0 공지 본문 (v6.0.2부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V6SEC=[['🎒 화면과 편의',['가방: 화면 오른쪽 네모 칸(능력치·장비·카드·전리품)을 누르면 가방이 열립니다.','카드 정리: 카드마다 종류(공격·디버프·버프·회피·방어)가 색으로 표시되고, 종류·키워드·이름으로 찾을 수 있습니다.','출생 화면: 주사위와 함께 결과 이름이 굴러가고, "출생 규칙"에서 표 전체를 볼 수 있습니다.']],
@@ -545,12 +550,16 @@ export function startUI(E,app){
   const V602SEC=[['🛠 버그 수정',['사무소에 들어간 해결사가 1급에 올라도 승급 심사만 반복되고 특색 심사가 열리지 않던 문제를 고쳤습니다. 승급에 필요한 실적 계산도 바로잡았고, 전체를 소폭 낮췄습니다.','카드를 받을 때 "덱의 카드와 바꾼다"로 뺄 수 없는 고정 카드를 카드함으로 빼낼 수 있던 문제를 고쳤습니다. 이미 빠진 고정 카드는 다음 해에 덱으로 돌아옵니다.','단테의 노트·검지 단말기 배경에서 PC 화면 오른쪽의 가방 네모 칸(능력치·장비·카드·전리품)이 보이지 않던 문제를 고쳤습니다.','PC 창이 좁을 때(약 900~1020px) 가방 칸이 본문을 가리던 문제도 함께 고쳤습니다. 이 폭에서는 가방 칸이 상단 정보 안에 들어갑니다.']]];
   /* v6.0.3 공지 본문 (v6.0.4부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V603SEC=[['🛠 버그 수정 · 성장 효과',['재능 "타고난 완력"과 성장기 "어깨너머 손질"의 "피해 주사위 최소 2" 효과가 캐릭터를 만들 때 출생 무기를 끼면서 지워지던 문제를 고쳤습니다. 두 효과를 얻고도 적용되지 않던 판이 모두 해당합니다.','두 효과는 이제 각각 "피해 주사위 최소 +1"입니다. 둘이 겹치면 +2로 더해지고, 장비의 피해 최소값(예: 명장의 대검 3)과도 더해집니다. 합계는 최대 4까지입니다.','이미 진행 중인 판은 다음 해로 넘어갈 때 재능·성장기를 확인해 자동으로 반영됩니다.']]];
-  /* v6.0.4 공지 본문 (v6.0.9부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
+  /* v6.0.4 공지 본문 (v6.1.0부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V604SEC=[['🔒 지난 새 소식 (날개·소지)',['날개에서 무언가 일어나는 것 같습니다. 오래 살아남은 날개의 사람에게 낯선 제안이 올지도 모릅니다.','소지의 얼굴을 한 사람들 사이에서도 이상한 소문이 돕니다. 한참 뒤에야 닿는 곳에서 누군가 기다리고 있다고 합니다.','어떤 길인지, 어디로 이어지는지는 직접 확인해 보세요.']]];
-  const NOTICE={id:'v6.0.9-1',t:'도시의 한 해 v6.0.9 · 새 소식',
+  const NOTICE={id:'v6.1.0-1',t:'도시의 한 해 v6.1.0 · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🔒 새로 열린 길',['더 어려운 난이도가 생겼습니다. 첫 화면에서 고를 수 있습니다.','도서관 안쪽에서 무언가 열렸습니다.']],
-      ['🔧 수정',['일부 배경에서 선택한 버튼의 글씨가 보이지 않던 문제를 수정했습니다.']]]};
+    sec:[['💨 호흡·치명 개편',['이전: 호흡 1당 치명 5%, 타격마다 호흡 1 소모, 최대 10.','이후: 호흡은 최대 12, 타격해도 줄지 않고 라운드가 바뀔 때마다 2씩 줄어듭니다.','치명 확률: 호흡 4에서 20%, 1마다 +14%(9에서 90%), 10 이상은 확정 치명. 호흡 1~3은 치명 대신 회피 +5.','치명 피해는 그대로 ×1.5입니다. 환도의 호흡당 치명 피해 +10%는 호흡 10까지만 반영됩니다.']],
+      ['🛡 출혈·파열',['방어 카드를 내면 자신의 출혈·파열이 1/4 줄어듭니다(파열 8이면 6). 적도 똑같이 적용됩니다.']],
+      ['🃏 암시장',['공방 암시장에 가끔(방문마다 10%) 응급 거래가 열립니다. 응급처치(HP 4 회복, 출혈·파열·화상 중 하나를 2 줄임)와 거리 재기(이번 라운드 회피 +5, 명중 +5)를 살 수 있고, 같은 카드는 최대 3장까지 지닐 수 있습니다.']],
+      ['⚠ 검토 중',['특이점(날개 기업 길)이 너무 강하다는 의견이 있어 너프를 검토하고 있습니다. 첫 화면 아래 "의견·버그 제보"에서 느낀 점을 알려 주세요.']]]};
+  const V609SEC=[['🔒 새로 열린 길',['더 어려운 난이도가 생겼습니다. 첫 화면에서 고를 수 있습니다.','도서관 안쪽에서 무언가 열렸습니다.']],
+      ['🔧 수정',['일부 배경에서 선택한 버튼의 글씨가 보이지 않던 문제를 수정했습니다.']]];
   const V608SEC=[['🔧 수정',['불순물이 다른 강적들이 받던 후반 강화를 받지 못하던 오류를 확인했습니다. 보상으로 불순물을 대폭 강화했습니다.']]];
   const V607SEC=[['🔧 수정',['날개의 길 끝에서 맞닥뜨리는 상대가 본래의 체급보다 약하게 나오던 문제를 수정했습니다.']]];
   const V606SEC=[['🔧 수정',['엔딩 하나가 발동하지 않던 문제를 수정했습니다. 어떤 엔딩인지는 직접 확인해 보세요.']]];
@@ -558,7 +567,7 @@ export function startUI(E,app){
   const noticeBody=(sec=NOTICE.sec)=>sec.map(([h,items])=>`<div class="stack" style="gap:4px"><b>${h}</b><ul class="small" style="margin:0;padding-left:18px;display:grid;gap:3px">${items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join('');
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><div class="stack" style="gap:10px;margin-top:10px">${noticeBody(NOTICE.sec)}</div><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -1053,7 +1062,7 @@ export function startUI(E,app){
     /* 공방 거리: 1년차부터 3년마다 들를지 묻는다. 들러도 해는 넘어가지 않는다 */
     if((G.year-1)%CFG.shop.every===0&&!shopDone){
       UI.stock=stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
-      UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.boxDone=null;
+      UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
       UI.bought=null;UI.deleted=null;UI.sold=null;UI.rested=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
     }
@@ -1205,6 +1214,7 @@ export function startUI(E,app){
     sdrop(i){i=+i;if(UI.dropAsk!==i){UI.dropAsk=i;render();return}UI.dropAsk=null;if(E.sideDrop(G.ch,i)){resave();render()}},
     cfk(k){(UI.cf=UI.cf||{}).k=k;render()},
     cfw(k){const f=UI.cf=UI.cf||{};f.kw=f.kw===k?null:k;render()},
+    aid(id){if(E.buyAid(G.ch,id))render()},
     box(t){if(UI.boxDone)return;const c=E.cardBox(G.ch,t);if(c){UI.boxDone=`상자에서 ${D.cards[c].n}이(가) 나왔다.`;render()}},
     unshop(){saveGame({st:UI.curSt,stock:[],shopDone:true});UI.screen='event';render()},
     omen(i){

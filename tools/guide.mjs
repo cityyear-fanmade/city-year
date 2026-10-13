@@ -69,7 +69,7 @@ out.push(table(['판정','식','비고'],[
  ['라운드 순서',`1d100 + 속도 (+${CFG.catchupBonus} 추격 보정)`,`높은 쪽이 선공·빛 +${CFG.orderBonusLight}. ${CFG.gapFirst} 이상 앞서면 선제: 첫 공격 명중 +${CFG.firstHit}. 진 쪽은 다음 라운드 추격 +${CFG.catchupBonus}. 동점이면 둘 다 보너스 없음`],
  ['명중',`1d100 + 공격 + 카드 명중 보정 > 상대 1d100 + 회피 (+ 방어 카드)`,'동점은 방어 쪽 승리'],
  ['피해',`카드의 d6 개수만큼 굴려 합 + 카드 고정값`,'코스트가 높을수록 주사위가 많다'],
- ['치명',`호흡 스택 × ${CFG.breathCritPer}% 확률로 피해 ×${CFG.critMult} (소수점 버림)`,'명중할 때마다 호흡 1 소모'],
+ ['치명',`호흡 ${CFG.breath.from}~${CFG.breath.sure-1}는 ${CFG.breath.base}%에서 시작해 1마다 +${CFG.breath.step}%(최대 90%), ${CFG.breath.sure} 이상은 확정. 피해 ×${CFG.critMult} (소수점 버림)`,`호흡은 최대 ${CFG.breath.cap}, 라운드마다 ${CFG.breath.decay} 감소. 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}`],
  ['방어 자세',`카드를 하나도 내지 않은 라운드: 회피 대신 방어로 같은 굴림`,`${CFG.guard.bleedCut?`출혈 스택 ×${CFG.guard.bleedCut}(내림, 플레이어만). `:''}막으면 피해 ${CFG.guard.guardHit}, 못 막으면 피해 ×${CFG.guard.guardFailMul}(소수점 버림). 다음 라운드 명중 +${CFG.guard.nextHit}${CFG.guard.lightUp?`, 그 전투 동안 빛 +${CFG.guard.lightUp}(최대 +${CFG.guard.lightUpMax})`:''}${CFG.guard.lightNext?`, 다음 라운드 빛 +${CFG.guard.lightNext}`:''}`]]));
 out.push('',`**빛(코스트)**: 라운드마다 ${CFG.light}, 선공이면 +${CFG.orderBonusLight}, 최대 ${CFG.lightMax}. 남은 빛은 사라진다. 손패는 덱에서 ${CFG.hand}장. 고른 순서대로 발동한다.`,
 '',`**발동 순서**: 방어 카드가 먼저(순서대로) 적용되고, 그다음 공격·버프 카드를 선공부터 한 장씩 번갈아 낸다. 적은 라운드 시작 때 낼 카드를 정하고 화면에 공개한다.`,
@@ -77,7 +77,7 @@ out.push('',`**빛(코스트)**: 라운드마다 ${CFG.light}, 선공이면 +${C
 
 h('## 4. 키워드');
 out.push(table(['키워드','효과','최대 스택','주는 카드'],Object.entries(K).map(([k,v])=>[v.n,
- {bleed:'공격할 때마다(빗나가도) 스택만큼 피해, 그 뒤 스택 1 감소. 플레이어가 방어 자세를 취하면 스택 절반(내림)',rupture:'맞을 때마다 스택만큼 추가 피해, 그 뒤 스택 1 감소',burn:'레바테인 전용. 스택이 있으면 받는 피해 ×1.5(소수점 버림), 5스택 이상이면 푸른 화염 ×2. 라운드 끝에 1 감소',breath:`스택당 치명 ${CFG.breathCritPer}%(피해 ×${CFG.critMult}), 명중할 때마다 1 소모`}[k]||'',
+ {bleed:'공격할 때마다(빗나가도) 스택만큼 피해, 그 뒤 스택 1 감소. 플레이어가 방어 자세를 취하면 스택 절반(내림). 방어 카드를 내면 스택이 1/4 줄어든다(적도 같다)',rupture:'맞을 때마다 스택만큼 추가 피해, 그 뒤 스택 1 감소. 방어 카드를 내면 스택이 1/4 줄어든다(적도 같다)',burn:'레바테인 전용. 스택이 있으면 받는 피해 ×1.5(소수점 버림), 5스택 이상이면 푸른 화염 ×2. 라운드 끝에 1 감소',breath:`최대 ${CFG.breath.cap}, 라운드마다 ${CFG.breath.decay} 감소. ${CFG.breath.from}~${CFG.breath.sure-1}는 치명 ${CFG.breath.base}%~90%, ${CFG.breath.sure} 이상 확정 치명(피해 ×${CFG.critMult}), 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}`}[k]||'',
  CFG.stackCap,Object.entries(D.cards).filter(([id,c])=>(c.kw||[]).some(x=>x[0]===k)&&!id.startsWith('x_')).map(([,c])=>c.n).join(', ')])));
 
 h('## 5. 카드');
