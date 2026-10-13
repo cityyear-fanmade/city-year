@@ -198,18 +198,24 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function takeOffer(ch,i,to,swap){
     const o=ch.offers||[],cid=o[i];if(!cid)return false;
     if(to==='deck'){if(!deckRoom(ch))return false;ch.deck.push(cid)}
-    else if(to==='swap'){const j=+swap;if(ch.deckLocked||!ch.deck[j])return false;(ch.side=ch.side||[]).push(ch.deck[j]);ch.deck[j]=cid}
+    else if(to==='swap'){const j=+swap;if(ch.deckLocked||!ch.deck[j]||D.cards[ch.deck[j]].fixed)return false;(ch.side=ch.side||[]).push(ch.deck[j]);ch.deck[j]=cid}
     else (ch.side=ch.side||[]).push(cid);
     o.splice(i,1);return true;
   }
   function dropOffer(ch,i){const o=ch.offers||[];if(!o[i])return false;o.splice(i,1);return true}
   function deckOut(ch,i){if(ch.deckLocked||ch.cardMoney||!ch.deck[i]||D.cards[ch.deck[i]].fixed||ch.deck.length<=CFG.shop.minDeck)return false;(ch.side=ch.side||[]).push(ch.deck.splice(i,1)[0]);return true}
   function deckIn(ch,i){const sd=ch.side||[];if(ch.deckLocked||ch.cardMoney||!sd[i]||!deckRoom(ch))return false;ch.deck.push(sd.splice(i,1)[0]);return true}
-  function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney)return false;sd.splice(i,1);return true}
+  function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
   /* 히든 보스 전용 책장: 받으면 덱이 통째로 바뀌고 영구 고정, 거절하면 지금 덱 유지 */
   function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;ch.offers=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);ch.packOffer=null;return true}
   function declinePack(ch){if(!ch.packOffer)return false;ch.packOffer=null;return true}
+  /* 고정 카드(E.G.O 전용)는 덱에서 뺄 수 없다. 예전 판에서 카드함으로 빠진 고정 카드는 덱으로 돌려놓고, 덱이 넘치면 일반 카드가 카드함으로 간다 */
+  function repairFixed(ch){
+    const sd=ch.side||[];
+    for(let i=sd.length-1;i>=0;i--)if(D.cards[sd[i]]&&D.cards[sd[i]].fixed){ch.deck.push(sd[i]);sd.splice(i,1)}
+    while(ch.deck.length>deckMax(ch)){const k=ch.deck.map(id=>D.cards[id].fixed).lastIndexOf(false);if(k<0)break;(ch.side=ch.side||[]).push(ch.deck.splice(k,1)[0])}
+  }
   function autoOffers(ch){
     if(ch.packOffer)acceptPack(ch);
     while((ch.offers||[]).length){if(deckRoom(ch))takeOffer(ch,0,'deck');else dropOffer(ch,0)}
@@ -635,7 +641,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function advanceYear(G){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
-    G.free=true;const mc=G.ch;autoOffers(mc);
+    G.free=true;const mc=G.ch;repairFixed(mc);autoOffers(mc);
     if(mc.distPick)setDistort(mc,'');
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
