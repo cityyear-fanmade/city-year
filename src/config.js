@@ -1,5 +1,7 @@
 /* 임시 수치: 밸런스는 여기만 바꾼다. `npm run sim`으로 확인한다. */
 export const CFG = {
+  /* 의견·버그 제보 구글 폼 (시작 화면 링크) */
+  feedbackUrl: 'https://forms.gle/FYsYb2itq3LyUXrs9',
   /* 캐릭터 */
   baseHp: 60,
   /* 전투: 빛(코스트), 손패, 키워드 */

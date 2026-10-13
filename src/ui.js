@@ -497,7 +497,8 @@ export function startUI(E,app){
       ${UI.confirmNew?`<p class="small bad">저장된 판이 지워진다. 정말 새로 시작하려면 ${UI.confirmNew==='daily'?'오늘의 시드':'새로 시작하기'}를 한 번 더 누른다.</p>`:''}
       <button class="btn" data-a="daily" ${expired()?'disabled':''}><b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다</span></button>
       <button class="btn quiet" data-a="records"><b>기록실</b><span class="dim small">만난 적 · 본 엔딩 · 해금 · 최고 기록</span></button>
-      <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다</span></button></div>
+      <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다</span></button>
+      <a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a></div>
       ${vSettings()}${vRules()}`;
   }
   function vContinue(){
