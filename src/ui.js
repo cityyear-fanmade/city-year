@@ -279,7 +279,7 @@ export function startUI(E,app){
     return ` · <span style="color:var(--gold)">${G.tier[L]}</span>${nx!=null?` · 발현 ${ch.egoUses}/${nx}`:''}`};
   function vMind(ch){
     const m=ch.mind,mx=E.mindMax(ch),t=E.mindTier(ch),low=m<=CFG.mind.voiceAt;
-    return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor} · 빛 +${CFG.mind.light}(처음 ${CFG.mind.lightRounds}라운드)`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}${egoGrowTag(ch)}${ch.innate?` · <span style="color:var(--gold)">${esc(innateName(ch))}</span>`:''}${E.cardGrade(ch.year).n?` · 카드 등급 <b style="color:var(--gold)">${E.cardGrade(ch.year).n}</b>`:''}</span></div>
+    return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor} · 빛 +${CFG.mind.light}(처음 ${CFG.mind.lightRounds}라운드)`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}${egoGrowTag(ch)}${ch.innate?` · <span style="color:var(--gold)">${esc(innateName(ch))}</span>`:''}${E.cardGrade(ch.year,ch).n?` · 카드 등급 <b style="color:var(--gold)">${E.cardGrade(ch.year,ch).n}</b>`:''}</span></div>
       <div class="bar" style="height:4px"><span style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></span></div>`;
   }
   /* 지속형 패시브: 손가락·히든 출생 등 늘 켜져 있는 효과를 HUD에 한 줄로 */
@@ -326,7 +326,7 @@ export function startUI(E,app){
   const isDebuff=c=>(c.kw||[]).some(k=>k[2]!=='s');
   const kindBadge=c=>{const k=cardKind(c);return `<span class="kb" style="--kc:${KIND[k][1]}">${KIND[k][0]}</span>${isDebuff(c)?`<span class="kb" style="--kc:${KIND.debuff[1]}">디버프</span>`:''}`};
   function cardRow(id,acts){
-    const ch=G.ch,c=D.cards[id],g_=E.cardGrade(ch.year),wx_=ch.gear.weapon&&ch.gear.weapon.wx||null,ga=c.t==='atk'&&g_.n;
+    const ch=G.ch,c=D.cards[id],g_=E.cardGrade(ch.year,ch),wx_=ch.gear.weapon&&ch.gear.weapon.wx||null,ga=c.t==='atk'&&g_.n;
     return `<div class="invc" style="--kc:${KIND[cardKind(c)][1]}"><span class="cost">${c.c}</span><div class="stack" style="gap:3px;min-width:0"><div class="row" style="gap:6px">${kindBadge(c)}<b>${esc(c.n)}${ga?` <span style="color:var(--gold)">${g_.n}</span>`:''}</b></div>
       <div class="small dim">${cardLine(c,c.t==='atk'?g_:null,wx_)||''}${c.shield&&CFG.cardGrade.indexOf(g_)>0?` (지금 보호막 ${c.shield+5*CFG.cardGrade.indexOf(g_)})`:''}</div>${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</div>${acts?`<div class="acts">${acts}</div>`:''}</div>`;
   }
@@ -385,7 +385,7 @@ export function startUI(E,app){
     return `<div>${[row('최대 HP',s.maxHp,'maxHp'),row('공격 (명중 보정)',sg(s.atk),'atk'),row('회피',sg(s.eva),'eva'),row('속도 (순서 보정)',sg(s.spd),'spd'),
       row('사건 판정',sg(s.check),'check'),row('피해 주사위 최소',s.dmin,null),...(s.dr?[row('피해 감소',s.dr+'%',null)]:[]),...(s.regen?[row('라운드마다 HP 회복',s.regen,null)]:[]),row('전투 시작 출혈',s.startBleed,null),row('전투 시작 호흡',s.startBreath,null),
       ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림',s.adv>=1?'있음':Math.round(s.adv*100)+'% 확률',null)]:[]),
-      row('카드 등급',E.cardGrade(ch.year).n||'기본',null),...(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)?[row('특이점 · '+esc(ch.corp.n),`${CFG.corp.types[ch.corp.type].e}${ch.corp.wing?' · '+esc(ch.corp.wing):''}`,null)]:[]),...(E.isN(ch)?[row('N사 · 의체 심판',`의수를 쓰지 않는다 · 신체 강화 공격 +${CFG.nWing.atk} · 회피 +${CFG.nWing.eva} · 속도 +${CFG.nWing.spd} · 의체 상대 적중마다 피해 +${CFG.nWing.augDmg}`,null)]:[]),...(ch.aff&&ch.aff.name==='중지'?[row('중지 · 되갚음','맞을 때마다 1 (최대 5) · 다음 적중 +2×스택',null)]:[]),...(ch.aff&&ch.aff.name==='검지'?[row('검지 · 지령 수행','☆ 칸 카드를 내면 1 (최대 5) · 호흡 +4 · 받는 피해 −5%×스택',null)]:[]),...(ch.office?[row('내 사무소',esc(ch.office.name)+' · '+E.OKW[ch.office.kw],null)]:[]),...((ch.auth||[]).length?[row('조율자 권한',ch.auth.length+'단계 ('+ch.auth.map(a=>a==='seal'?'봉인':'집행').join('·')+')',null)]:[])].join('')}</div><div class="small dim">${esc(ch.o.n)} · ${esc(ch.t.n)} · ${esc(ch.f.n)} · ${esc(ch.w.n)}</div>`;
+      row('카드 등급',E.cardGrade(ch.year,ch).n||'기본',null),...(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)?[row('특이점 · '+esc(ch.corp.n),`${CFG.corp.types[ch.corp.type].e}${ch.corp.wing?' · '+esc(ch.corp.wing):''}`,null)]:[]),...(E.isN(ch)?[row('N사 · 의체 심판',`의수를 쓰지 않는다 · 신체 강화 공격 +${CFG.nWing.atk} · 회피 +${CFG.nWing.eva} · 속도 +${CFG.nWing.spd} · 의체 상대 적중마다 피해 +${CFG.nWing.augDmg}`,null)]:[]),...(ch.aff&&ch.aff.name==='중지'?[row('중지 · 되갚음','맞을 때마다 1 (최대 5) · 다음 적중 +2×스택',null)]:[]),...(ch.aff&&ch.aff.name==='검지'?[row('검지 · 지령 수행','☆ 칸 카드를 내면 1 (최대 5) · 호흡 +4 · 받는 피해 −5%×스택',null)]:[]),...(ch.office?[row('내 사무소',esc(ch.office.name)+' · '+E.OKW[ch.office.kw],null)]:[]),...((ch.auth||[]).length?[row('조율자 권한',ch.auth.length+'단계 ('+ch.auth.map(a=>a==='seal'?'봉인':'집행').join('·')+')',null)]:[])].join('')}</div><div class="small dim">${esc(ch.o.n)} · ${esc(ch.t.n)} · ${esc(ch.f.n)} · ${esc(ch.w.n)}</div>`;
   }
   function vRelic(){
     const ch=G.ch;
@@ -960,7 +960,7 @@ export function startUI(E,app){
   }
   /* 엔딩 덱: 종류별로 묶어 접을 수 있게, 카드 등급·장수를 함께 */
   function endDeck(c){
-    const g=E.cardGrade(c.year),cnt={};c.deck.forEach(id=>cnt[id]=(cnt[id]||0)+1);
+    const g=E.cardGrade(c.year,c),cnt={};c.deck.forEach(id=>cnt[id]=(cnt[id]||0)+1);
     const groups={};for(const id of Object.keys(cnt)){const k=cardKind(D.cards[id]);(groups[k]=groups[k]||[]).push(id)}
     return Object.keys(KIND).filter(k=>groups[k]).map(k=>`<details class="endgrp" open style="--kc:${KIND[k][1]}"><summary><span class="kb" style="--kc:${KIND[k][1]}">${KIND[k][0]}</span> <span class="mono small dim">${groups[k].reduce((a,id)=>a+cnt[id],0)}장</span></summary>
       <div class="chips">${groups[k].map(id=>{const x=D.cards[id];return `<span class="chip" style="border-color:color-mix(in srgb,${KIND[k][1]} 55%,var(--line2))">${esc(x.n)}${x.t==='atk'&&g.n?` <b style="color:var(--gold)">${g.n}</b>`:''}${cnt[id]>1?` <span class="dim">×${cnt[id]}</span>`:''}${isDebuff(x)?` <span style="color:${KIND.debuff[1]}">디버프</span>`:''}</span>`}).join('')}</div></details>`).join('')
