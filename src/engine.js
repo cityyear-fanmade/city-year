@@ -143,7 +143,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
     if(item.card&&!ownsCard(ch,item.card)&&!ch.deckLocked)putCard(ch,item.card);
   }
-  /* ===== 6시즌: N사 날개는 의체를 혐오한다 ===== */
+  /* ===== 6시즌: N사 날개 · 의체 심판: 의수를 쓰지 않고, 의체 상대(enemies aug)를 심판한다 ===== */
   const isN=ch=>!!ch.aff&&ch.aff.name===CFG.nWing.name;
   function unequip(ch,slot){
     const s=ch.stats,it=ch.gear[slot];if(!it)return;
@@ -958,7 +958,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
-      if(A.augHunt&&B.aug){dmg+=A.augHunt;note+=` 의체 혐오+${A.augHunt}`}
+      if(A.augHunt&&B.aug){dmg+=A.augHunt;note+=` 의체 심판+${A.augHunt}`}
       /* 조율자 전용 키워드 · 봉인 각인: 해제가 각인 1당 피해 +4로 터뜨린다 */
       if(c.unseal&&(B.sealMark||0)>0){const x=B.sealMark*c.unseal;dmg+=x;note+=` 봉인 해제 ${B.sealMark}×${c.unseal}+${x}`;B.sealMark=0}
       if((A.serum||0)>=3&&!c.serumBurst){dmg=Math.floor(dmg*1.5);A.serum=0;note+=' 혈청 과부하×1.5'}
