@@ -48,6 +48,19 @@ export function startUI(E,app){
     return new Promise(r=>{tapWake=()=>{tapWake=null;b.hidden=true;r()}});
   }
   function wait(ms){return SKIP?Promise.resolve():new Promise(r=>{wake=r;setTimeout(()=>{wake=null;r()},ms*tm())})}
+  /* 수동: 주사위 눈이 나오면 화면을 누를 때까지 멈춘다 (스크롤은 클릭이 아니라서 넘어가지 않는다). 건너뛰기·버튼을 눌러도 풀린다 */
+  function holdTap(label='결과를 확인했다 · 화면을 눌러 계속'){
+    if(MODE!=='manual'||SKIP||FIGHT==='auto')return Promise.resolve();
+    const b=$('tapBtn');if(!b)return Promise.resolve();
+    b.hidden=false;b.textContent=label;
+    return new Promise(r=>{
+      const onClick=()=>{if(tapWake)tapWake()};
+      const off=()=>document.removeEventListener('click',onClick,true);
+      tapWake=()=>{off();tapWake=null;b.hidden=true;r()};
+      /* 방금 굴림 버튼을 누른 손가락의 클릭이 바로 이어 넘기지 않도록 잠깐 뒤에 건다 */
+      setTimeout(()=>{if(tapWake)document.addEventListener('click',onClick,true)},300);
+    });
+  }
   async function rollNum(el,final,ms,max){
     if(!el)return;
     if(MODE==='off'||SKIP){el.textContent=final;return}
@@ -133,6 +146,7 @@ export function startUI(E,app){
     $('sA').textContent=`눈 ${e.ra}${e.am?' '+sg(e.am):''}${e.ra2?` (2회 굴림, ${e.ra2} 버림)`:''}`;
     $('sD').textContent=`눈 ${e.rd}${e.dm?' '+sg(e.dm):''}`;
     dA.classList.add(e.hit?'win':'lose');dD.classList.add(e.hit?'lose':'win');
+    await holdTap();
     await wait(350);
     anim($('ent-'+e.att),e.att==='P'?'lunge-up':'lunge-down',500);
     await wait(200);
@@ -146,16 +160,19 @@ export function startUI(E,app){
       $('sM').textContent=`${e.rolls.join('+')}${e.b?sg(e.b):''}${e.note}`;
       floatTxt(e.def,'−'+e.dmg,'var(--bleed)');
       applySnap(e.snap);appendLog(e.lines);
+      await holdTap();
       await wait(600);
     }else if(e.blocked){
       setVerdict(`막았다 · ${C[e.def].name} 피해 ${e.dmg}`,'miss');
       anim($('ent-'+e.def),'guard',600);floatTxt(e.def,'−'+e.dmg,'var(--rupture)');
       appendLog(e.lines);applySnap(e.snap);
+      await holdTap();
       await wait(500);
     }else{
       setVerdict(`빗나감 · ${C[e.def].name}이(가) 피했다`,'miss');
       anim($('ent-'+e.def),'dodge',600);floatTxt(e.def,'회피','var(--rupture)');
       appendLog(e.lines);applySnap(e.snap);
+      await holdTap();
       await wait(500);
     }
   }
@@ -176,6 +193,7 @@ export function startUI(E,app){
       die.classList.add('rolling');
       await rollNum(b,r.r,900,r.die||100);
       die.classList.remove('rolling');anim(die,'settle',320);
+      await holdTap();
       await wait(350);
     }
     const a=$('after');if(a)a.style.visibility='visible';
