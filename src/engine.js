@@ -187,9 +187,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 6시즌: 장비를 얻으면 바로 끼지 않고, 장착할지 보관함에 넣을지 고른다 ===== */
   function offerGear(ch,item){(ch.gearOffers=ch.gearOffers||[]).push(item)}
   function resolveGear(ch,i,wear){const o=ch.gearOffers||[];if(!o[i])return false;const it=o.splice(i,1)[0];if(wear)equip(ch,it);else (ch.stash=ch.stash||[]).push(it);return true}
-  /* ===== 6시즌: 덱은 최대 CFG.deck.max장. 넘치는 카드는 카드함에 두고, 공방 밖에서도 자유롭게 넣고 뺀다 ===== */
+  /* ===== 6시즌: 덱은 최대 CFG.deck.max장 (E.G.O가 개화하면 CFG.mind.deckPlus장 더). 넘치는 카드는 카드함에 두고, 공방 밖에서도 자유롭게 넣고 뺀다 ===== */
   const ownsCard=(ch,cid)=>ch.deck.includes(cid)||(ch.side||[]).includes(cid)||(ch.offers||[]).includes(cid);
-  const deckRoom=ch=>ch.deck.length<CFG.deck.max;
+  const deckMax=ch=>CFG.deck.max+(ch.ego?CFG.mind.deckPlus:0);
+  const deckRoom=ch=>ch.deck.length<deckMax(ch);
   function putCard(ch,cid,chips,label){
     if(deckRoom(ch)){ch.deck.push(cid);chips&&chips.push((label||'카드')+' · '+D.cards[cid].n);return}
     (ch.side=ch.side||[]).push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} (덱이 가득 차서 카드함으로)`);
@@ -546,6 +547,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function setEgo(ch,type,name){
     const e=M.ego[type];ch.ego={type,n:name.trim()};ch.egoPick=false;ch.voiceUsed=true;ch.voicePend=false;ch.distortPend=false;
     if(e.hit)ch.stats.atk+=e.hit;if(e.hp){ch.stats.maxHp+=e.hp;ch.hp+=e.hp}
+    if(e.eva)ch.stats.eva+=e.eva;
+    /* 고정 전용 카드: 덱 최대 장수 +1 자리에 들어간다 (발현자는 이미 전용 카드가 있다). 덱이 고정이어도 넣는다 */
+    if(e.card&&!ch.deck.includes('e_manifest')&&!ch.deck.includes(e.card))ch.deck.push(e.card);
     ch.mind=Math.max(ch.mind,e.floor);(ch.relics=ch.relics||[]).push(`E.G.O · ${ch.ego.n}`);
   }
   /* 육신 뒤틀림: 장비를 모두 벗고(보관함), 깡 능력치 상승, 덱은 뒤틀린 책장으로 고정, 정신력은 더 깎이지 않는다 */
@@ -760,7 +764,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',name:ch.name||T.you,color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,middle:!!(ch.aff&&ch.aff.name==='중지'),index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,middle:!!(ch.aff&&ch.aff.name==='중지'),index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
     const S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy;
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from):0,g=gradeAt(ch.year||0)+1,X_=CFG.endless;
     const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul:S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*g));
@@ -794,7 +798,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const X of [P,E]){X.r=d(100);X.cu=X.catchup;X.tot=X.r+X.spd+(X.catchup?CFG.catchupBonus:0)}
     for(const [X,Y] of [[P,E],[E,P]]){
       X.lead=X.tot>Y.tot;X.fsOn=X.fs=X.tot-Y.tot>=CFG.gapFirst;X.catchup=X.tot<Y.tot;X.advUsed=false;
-      X.light=Math.min(CFG.lightMax+X.lightUp+X.lightNext,CFG.light+X.lightUp+X.lightNext+(X.lead?CFG.orderBonusLight:0));
+      const el=X.egoLight&&C.round<=X.egoRounds?X.egoLight:0;
+      X.light=Math.min(CFG.lightMax+X.lightUp+X.lightNext+el,CFG.light+X.lightUp+X.lightNext+el+(X.lead?CFG.orderBonusLight:0));
       X.passHit=X.passHitNext;X.passHitNext=0;X.lightNext=0;X.matBonus=X.matNext||0;X.matNext=0;
     }
     P.hand=sample(P.deck,CFG.hand);
@@ -1131,6 +1136,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

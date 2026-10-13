@@ -40,7 +40,9 @@ export const CFG = {
      0이면 사망, 1이면 뒤틀림 판정 1d2 (1이면 개화하고 가득 회복, 2면 뒤틀림 엔딩). tiers: 전투 시작 때 호흡·회피 보정 */
   mind: {max: 45, yearHeal: 1, healEvery: 2, voiceAt: 10, voiceDie: 50, voiceDc: 25, voiceRolls: 3, failLoss: 9, evadeDie: 5,
     tiers: [{at: 45, breath: 5, eva: 5}, {at: 30, breath: 3, eva: 3}, {at: 20, breath: 1, eva: 0}],
-    ego: {atk: {n: '공격용', hit: 10, floor: 20}, def: {n: '방어용', hp: 30, floor: 11}}},
+    ego: {atk: {n: '공격용', hit: 14, floor: 20, card: 'e_bloom_atk'}, def: {n: '방어용', hp: 45, eva: 3, floor: 11, card: 'e_bloom_def'}},
+    /* 개화한 E.G.O를 가지면: 덱 최대 장수 +deckPlus (고정 전용 카드가 그 자리), 전투 처음 lightRounds라운드 동안 빛 +light */
+    deckPlus: 1, light: 1, lightRounds: 3},
   /* 공방 거리: 1년차부터 every년마다 들를지 묻는다(해는 넘어가지 않음). blackFrom년차부터 암시장 물건 blackStock개 진열 */
   /* 육신 뒤틀림: 장비를 쓸 수 없고(전부 보관함), 상대에게 디버프를 걸 수 없다. 깡 능력치가 크게 오르고 덱은 뒤틀린 책장(도박 카드 12장, 빛 없음)으로 고정 */
   distort: {fx: {maxHp: 40, atk: 6, eva: 0, spd: 0}, deck: ['d_jackpot', 'd_jackpot', 'd_jackpot', 'd_rend', 'd_rend', 'd_rend', 'd_maw', 'd_maw', 'd_thrash', 'd_thrash', 'd_coin', 'd_curl']},

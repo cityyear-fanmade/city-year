@@ -245,7 +245,7 @@ export function startUI(E,app){
     return ` · <span style="color:var(--gold)">${G.tier[L]}</span>${nx!=null?` · 발현 ${ch.egoUses}/${nx}`:''}`};
   function vMind(ch){
     const m=ch.mind,mx=E.mindMax(ch),t=E.mindTier(ch),low=m<=CFG.mind.voiceAt;
-    return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor}`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}${egoGrowTag(ch)}${ch.innate?` · <span style="color:var(--gold)">${esc(innateName(ch))}</span>`:''}${E.cardGrade(ch.year).n?` · 카드 등급 <b style="color:var(--gold)">${E.cardGrade(ch.year).n}</b>`:''}</span></div>
+    return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor} · 빛 +${CFG.mind.light}(처음 ${CFG.mind.lightRounds}라운드)`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}${egoGrowTag(ch)}${ch.innate?` · <span style="color:var(--gold)">${esc(innateName(ch))}</span>`:''}${E.cardGrade(ch.year).n?` · 카드 등급 <b style="color:var(--gold)">${E.cardGrade(ch.year).n}</b>`:''}</span></div>
       <div class="bar" style="height:4px"><span style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></span></div>`;
   }
   /* 지속형 패시브: 손가락·히든 출생 등 늘 켜져 있는 효과를 HUD에 한 줄로 */
@@ -279,7 +279,7 @@ export function startUI(E,app){
   const ICON={stat:'<path d="M4 20V11M10 20V4M16 20v-8M21 20H3"/>',gear:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
     card:'<rect x="3" y="7" width="12" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/>',relic:'<path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6"/>'};
   const icon=k=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${ICON[k]}</svg>`;
-  function bagTabs(ch){return [['stat','능력치',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+CFG.deck.max],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']]}
+  function bagTabs(ch){return [['stat','능력치',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']]}
   function vDock(){
     const ch=G.ch;
     return `<div class="dock">${bagTabs(ch).map(([k,n,b])=>`<button class="tile" data-a="bag" data-i="${k}" aria-label="가방 · ${n}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>`;
@@ -308,14 +308,14 @@ export function startUI(E,app){
     const out=can&&ch.deck.length>S.minDeck,inn=can&&E.deckRoom(ch);
     const dl=deck.map(({id,i})=>cardRow(id,out&&!D.cards[id].fixed?`<button class="chip" data-a="dout" data-i="${i}">카드함으로</button>`:D.cards[id].fixed?'<span class="small dim">전용 · 뺄 수 없다</span>':'')).join('')||'<p class="small dim">조건에 맞는 카드가 없다.</p>';
     const sl=sd.map(({id,i})=>cardRow(id,can?`${inn?`<button class="chip" data-a="din" data-i="${i}">덱에 넣기</button>`:''}${ch.cardMoney?'':`<button class="chip${UI.dropAsk===i?' warn':''}" data-a="sdrop" data-i="${i}">${UI.dropAsk===i?'정말 버린다':'버리기'}</button>`}`:'')).join('');
-    return `<div class="row between"><span class="eyebrow">덱 ${ch.deck.length}/${CFG.deck.max}</span>${ch.deckLocked||ch.cardMoney?`<span class="small dim">${ch.deckLocked?'덱 고정':'전용 카드팩'} · 넣고 뺄 수 없다</span>`:''}</div><div class="invcards">${dl}</div>
+    return `<div class="row between"><span class="eyebrow">덱 ${ch.deck.length}/${E.deckMax(ch)}</span>${ch.deckLocked||ch.cardMoney?`<span class="small dim">${ch.deckLocked?'덱 고정':'전용 카드팩'} · 넣고 뺄 수 없다</span>`:''}</div><div class="invcards">${dl}</div>
       <div class="row between" style="margin-top:6px"><span class="eyebrow">카드함 ${side.length}</span>${side.length&&!inn&&can?'<span class="small dim">덱이 가득 찼다. 먼저 덱에서 빼야 넣을 수 있다</span>':''}</div>
       <div class="invcards">${sl||`<p class="small dim">${side.length?'조건에 맞는 카드가 없다.':'비어 있다. 덱에서 뺀 카드와 덱이 가득 찼을 때 얻은 카드가 여기에 모인다.'}</p>`}</div>`;
   }
   function vCards(){
     const f=UI.cf=UI.cf||{k:'all'};
     const kinds=[['all','전체'],['atk','공격'],['debuff','디버프'],['buff','버프'],['eva','회피'],['def','방어']];
-    return `<p class="small dim">덱에는 최대 ${CFG.deck.max}장을 넣는다. 전투 밖이면 언제든 덱과 카드함 사이에서 카드를 옮길 수 있고, 덱은 ${CFG.shop.minDeck}장보다 줄일 수 없다.</p>
+    return `<p class="small dim">덱에는 최대 ${E.deckMax(G.ch)}장을 넣는다. 전투 밖이면 언제든 덱과 카드함 사이에서 카드를 옮길 수 있고, 덱은 ${CFG.shop.minDeck}장보다 줄일 수 없다.</p>
       <div class="seg kinds">${kinds.map(([k,n])=>`<button class="${(f.k||'all')===k?'on':''}" data-a="cfk" data-i="${k}"${KIND[k]?` style="--kc:${KIND[k][1]}"`:''}>${n}</button>`).join('')}</div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(D.keywords).map(k=>`<button class="chip${f.kw===k?' on':''}" data-a="cfw" data-i="${k}" style="color:${kwc(k)};border-color:${kwc(k)}">${D.keywords[k].n}</button>`).join('')}
         <input id="cardq" value="${esc(f.q||'')}" placeholder="카드 이름 찾기" autocomplete="off" style="flex:1;min-width:8em"></div>
@@ -389,8 +389,8 @@ export function startUI(E,app){
     if(UI.swap)return sheet(`<span class="eyebrow">덱의 카드와 바꾸기 · 빠진 카드는 카드함으로</span>${cardRow(cid)}
       <div class="invcards">${ch.deck.map((id,j)=>cardRow(id,`<button class="chip" data-a="oswap" data-i="${j}">이 카드와 바꾼다</button>`)).join('')}</div>
       <button class="btn" data-a="oswapmode">돌아가기</button>`,'offer',false);
-    return sheet(`<span class="eyebrow">카드 발견 · 덱 ${ch.deck.length}/${CFG.deck.max}${many}</span><h2>받을까, 버릴까</h2>${cardRow(cid)}
-      ${room?'<button class="btn primary" data-a="otake" data-i="deck">덱에 넣는다</button>':`<button class="btn primary" data-a="oswapmode">덱의 카드와 바꾼다</button><p class="small dim">덱이 가득 찼다 (최대 ${CFG.deck.max}장).</p>`}
+    return sheet(`<span class="eyebrow">카드 발견 · 덱 ${ch.deck.length}/${E.deckMax(ch)}${many}</span><h2>받을까, 버릴까</h2>${cardRow(cid)}
+      ${room?'<button class="btn primary" data-a="otake" data-i="deck">덱에 넣는다</button>':`<button class="btn primary" data-a="oswapmode">덱의 카드와 바꾼다</button><p class="small dim">덱이 가득 찼다 (최대 ${E.deckMax(ch)}장).</p>`}
       <button class="btn" data-a="otake" data-i="side">카드함에 넣어 둔다</button>
       <button class="btn quiet" data-a="odrop">버린다</button>`,'offer',false);
   }
@@ -677,8 +677,8 @@ export function startUI(E,app){
   function vEgoPick(){
     const X=CFG.mind.ego,ty=UI.egoType||'atk';
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">E.G.O 개화</span>
-      <p class="small">마음이 무너지기 직전, 그것을 붙잡은 모양이 힘이 되었다. 종류와 이름을 정한다.</p>
-      <div class="row" style="gap:8px">${['atk','def'].map(k=>`<button class="btn ${ty===k?'primary':'quiet'}" style="flex:1" data-a="egotype" data-i="${k}">${X[k].n}<br><span class="small">${k==='atk'?`명중 +${X.atk.hit} · 정신력 ${X.atk.floor} 밑으로 안 떨어짐`:`체력 +${X.def.hp} · 정신력 ${X.def.floor} 밑으로 안 떨어짐`}</span></button>`).join('')}</div>
+      <p class="small">마음이 무너지기 직전, 그것을 붙잡은 모양이 힘이 되었다. 종류와 이름을 정한다. 덱 최대 ${CFG.deck.max+CFG.mind.deckPlus}장(전용 카드 1장은 고정) · 전투 처음 ${CFG.mind.lightRounds}라운드 빛 +${CFG.mind.light}.</p>
+      <div class="row" style="gap:8px">${['atk','def'].map(k=>`<button class="btn ${ty===k?'primary':'quiet'}" style="flex:1" data-a="egotype" data-i="${k}">${X[k].n}<br><span class="small">${k==='atk'?`공격 +${X.atk.hit} · 정신력 ${X.atk.floor} 밑으로 안 떨어짐 · 전용 카드 ${D.cards[X.atk.card].n}`:`체력 +${X.def.hp} · 회피 +${X.def.eva} · 정신력 ${X.def.floor} 밑으로 안 떨어짐 · 전용 카드 ${D.cards[X.def.card].n}`}</span></button>`).join('')}</div>
       <div class="row"><span class="small">이름</span><input id="egoname" maxlength="5" value="${esc(UI.egoName||'')}" autocomplete="off" placeholder="1~5글자" style="width:9em"></div>
       <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
       <span class="small bad">${UI.egoErr||''}</span>

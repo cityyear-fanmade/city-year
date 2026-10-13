@@ -1898,6 +1898,28 @@
    "t": "def",
    "eva": 20,
    "d": "이번 라운드 회피 +20"
+  },
+  "e_bloom_atk": {
+   "n": "개화 · 공세",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 6,
+   "b": 0,
+   "hit": 5,
+   "mindCost": 3,
+   "fixed": true,
+   "d": "정신력 3 소모 · 개화한 E.G.O의 힘을 휘두른다"
+  },
+  "e_bloom_def": {
+   "n": "개화 · 수호",
+   "c": 1,
+   "t": "def",
+   "eva": 10,
+   "mindGain": 2,
+   "fixed": true,
+   "d": "이번 라운드 회피 +10 · 정신력 2 회복 · 개화한 E.G.O가 몸을 감싼다"
   }
  },
  "rewards": [
