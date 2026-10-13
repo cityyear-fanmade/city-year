@@ -342,17 +342,19 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return k?CR[k].ranks.length-1:0;
   }
   const multAt=i=>CFG.promo.mult[Math.min(i,CFG.promo.mult.length-1)];
+  /* 지금까지 오른 단계 수. 해결사는 실제 급수로 센다 (사무소에 들어가면 promos가 0으로 돌아가도 급수는 남으므로) */
+  const promoDone=ch=>career(ch)==='fixer'?Math.max(0,T.rankStart-(ch.rank||T.rankStart)):(ch.promos||0);
   function promoNeed(ch){
     const k=career(ch),n=Math.max(1,steps(k,ch));let sum=0,m=1;
     for(let i=0;i<n;i++){sum+=m;m*=multAt(i)}
     let need=CFG.promo.total*(k==='fixer'?CFG.promo.fixerMul:(CR[k].totalMul||1))/sum;
-    for(let i=0;i<(ch.promos||0);i++)need*=multAt(i);
+    for(let i=0;i<promoDone(ch);i++)need*=multAt(i);
     return Math.round(need);
   }
-  const canPromote=ch=>{const k=career(ch);return !!k&&(ch.promos||0)<steps(k,ch)};
+  const canPromote=ch=>{const k=career(ch);return !!k&&promoDone(ch)<steps(k,ch)};
   const ptsName=ch=>{const k=career(ch);return k&&CR[k]?CR[k].pts:T.promoPoints};
   const examReady=ch=>canPromote(ch)&&(ch.pp||0)>=promoNeed(ch);
-  const examDc=ch=>{const k=career(ch),n=Math.max(1,steps(k,ch));return Math.round(CFG.promo.examDc+CFG.promo.examDcSpan*(ch.promos||0)/n)};
+  const examDc=ch=>{const k=career(ch),n=Math.max(1,steps(k,ch));return Math.round(CFG.promo.examDc+CFG.promo.examDcSpan*promoDone(ch)/n)};
   function addPts(ch,n,chips){
     const k=career(ch);if(!n||!k)return;
     n=Math.round(n*((CR[k]&&CR[k].gainMul)||1));ch.pp=(ch.pp||0)+n;
@@ -368,7 +370,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 최고 단계의 특수 사건: 해결사는 특색 심사, 다른 진로는 careers.*.top */
   const topEvent=ch=>{const k=career(ch);return k==='fixer'?D.colorExam:CR[k]&&CR[k].top};
-  const topReady=ch=>{const k=career(ch);return !!k&&!canPromote(ch)&&!ch.title&&!ch.colorFailed&&(ch.promos||0)>0&&(ch.year||0)>=(ch.topNext||0)}
+  const topReady=ch=>{const k=career(ch);return !!k&&!canPromote(ch)&&!ch.title&&!ch.colorFailed&&promoDone(ch)>0&&(ch.year||0)>=(ch.topNext||0)}
   /* 특색·상석 심사 실패: 최대 CFG.top.tries번까지, 실패하면 CFG.top.wait년 뒤 다시 */
   function topFailed(ch,chips,label){ch.topTries=(ch.topTries||0)+1;const left=CFG.top.tries-ch.topTries;
     if(left<=0){ch.colorFailed=true;chips.push(label+' 실패 · 다시 기회 없음')}else{ch.topNext=(ch.year||0)+CFG.top.wait;chips.push(`${label} 실패 · 남은 기회 ${left}번 · ${CFG.top.wait}년 뒤 다시`)}}
