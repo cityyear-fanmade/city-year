@@ -545,7 +545,7 @@ export function startUI(E,app){
   const V604SEC=[['🔒 지난 새 소식 (날개·소지)',['날개에서 무언가 일어나는 것 같습니다. 오래 살아남은 날개의 사람에게 낯선 제안이 올지도 모릅니다.','소지의 얼굴을 한 사람들 사이에서도 이상한 소문이 돕니다. 한참 뒤에야 닿는 곳에서 누군가 기다리고 있다고 합니다.','어떤 길인지, 어디로 이어지는지는 직접 확인해 보세요.']]];
   const NOTICE={id:'v6.0.6-1',t:'도시의 한 해 v6.0.6 · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🔧 수정',['기록되지 않던 엔딩 하나를 바로잡았습니다. 어떤 엔딩인지는 직접 확인해 보세요.']]]};
+    sec:[['🔧 수정',['엔딩 하나가 발동하지 않던 문제를 수정했습니다. 어떤 엔딩인지는 직접 확인해 보세요.']]]};
   const V605SEC=[['🔒 지난 새 소식 (전투·새)',['전투 도중 마음이 한계에 닿으면 특별한 일이 일어납니다.','검은 숲의 새 세 마리에 얽힌 이야기가 생겼습니다. 끝까지 따라가 본 사람은 아직 없습니다.','일부 히든 상대의 난이도를 조정했습니다.']]];
   const noticeBody=(sec=NOTICE.sec)=>sec.map(([h,items])=>`<div class="stack" style="gap:4px"><b>${h}</b><ul class="small" style="margin:0;padding-left:18px;display:grid;gap:3px">${items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join('');
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><div class="stack" style="gap:10px;margin-top:10px">${noticeBody([...NOTICE.sec,...V605SEC,...V604SEC,...V603SEC,...V602SEC,...V6SEC])}</div><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
