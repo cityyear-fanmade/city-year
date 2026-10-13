@@ -62,6 +62,9 @@ export const CFG = {
   /* 6시즌 사무소: 개설 가능 급수(이상), 개설 사건을 다시 묻는 간격, 소속 없는 해결사가 사무소 문을 두드리는 간격 */
   /* 6시즌 E.G.O 발현자: 전용 카드 '발현'을 낸 누적 횟수(need)가 차는 순간 E.G.O 무기 등급이 오른다. 등급별 수치는 birth.json egoWeapons[].grow */
   egoGrow: {need: [0, 5, 15, 30], tier: ['TETH', 'HE', 'WAW', 'ALEPH']},
+  /* 6시즌 새 시리즈: 격리 실패로 birds를 모두 이기면 '종말의 예언'(flag)을 얻고 종말새와 싸우러 갈 수 있다.
+     birds 중 하나라도 이긴 뒤에는 격리 실패가 남은 새를 pref% 확률로 먼저 고른다 */
+  apoc: {birds: ['bigbird', 'punishbird', 'judgebird'], flag: 'prophecy', pref: 60},
   /* 6시즌 기업 루트(날개 직원): from년차부터 해마다 chance% 확률로 '특이점 개발' 제안이 한 번 온다.
      개발(devMax번 진척) → 날개 설립(이름) → 특이점 실험(강화 upMax번)·금기 실험. 금기 실험을 forbMax번 하면 머리의 시험(chain: 발톱 → 조율자 연속 전투).
      types: 특이점 효과. base는 고를 때, per는 강화 한 번마다 (warp.lead: 전투 처음 N라운드 항상 선공, serum.heal: 라운드마다 회복, moon.tier: 정신력 구간 보정 배수)

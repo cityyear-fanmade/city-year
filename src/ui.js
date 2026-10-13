@@ -323,7 +323,7 @@ export function startUI(E,app){
         <input id="cardq" value="${esc(f.q||'')}" placeholder="카드 이름 찾기" autocomplete="off" style="flex:1;min-width:8em"></div>
       <div class="stack" style="gap:8px" id="cardlist">${cardListHtml()}</div>`;
   }
-  const FXN={maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'판정',dmin:'피해 최소',die:'피해 주사위',dmgB:'피해',burnHit:'화상',startBleed:'시작 출혈',startBreath:'시작 호흡',defUp:'방어 회피',extraD2:'추가 피해'};
+  const FXN={maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'판정',dmin:'피해 최소',dr:'피해 감소(%)',regen:'라운드마다 HP 회복',die:'피해 주사위',dmgB:'피해',burnHit:'화상',startBleed:'시작 출혈',startBreath:'시작 호흡',defUp:'방어 회피',extraD2:'추가 피해'};
   function fxDiff(nw,old){
     const a=nw.fx||{},b=(old&&old.fx)||{};
     return [...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>FXN[k]&&(a[k]||0)!==(b[k]||0))
@@ -349,7 +349,7 @@ export function startUI(E,app){
     const gsum=k=>gear.reduce((a,g)=>a+((g.fx||{})[k]||0),0);
     const row=(l,v,k)=>{const g=k?gsum(k):0;return `<div class="invr"><span>${l}</span><b class="mono">${v}</b><span class="mono small dim">${g?'장비 '+sg(g):''}</span></div>`};
     return `<div>${[row('최대 HP',s.maxHp,'maxHp'),row('공격 (명중 보정)',sg(s.atk),'atk'),row('회피',sg(s.eva),'eva'),row('속도 (순서 보정)',sg(s.spd),'spd'),
-      row('사건 판정',sg(s.check),'check'),row('피해 주사위 최소',s.dmin,null),row('전투 시작 출혈',s.startBleed,null),row('전투 시작 호흡',s.startBreath,null),
+      row('사건 판정',sg(s.check),'check'),row('피해 주사위 최소',s.dmin,null),...(s.dr?[row('피해 감소',s.dr+'%',null)]:[]),...(s.regen?[row('라운드마다 HP 회복',s.regen,null)]:[]),row('전투 시작 출혈',s.startBleed,null),row('전투 시작 호흡',s.startBreath,null),
       ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림',s.adv>=1?'있음':Math.round(s.adv*100)+'% 확률',null)]:[]),
       row('카드 등급',E.cardGrade(ch.year).n||'기본',null),...(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)?[row('특이점 · '+esc(ch.corp.n),`${CFG.corp.types[ch.corp.type].e}${ch.corp.wing?' · '+esc(ch.corp.wing):''}`,null)]:[]),...(E.isN(ch)?[row('N사 · 의체 심판',`의수를 쓰지 않는다 · 신체 강화 공격 +${CFG.nWing.atk} · 회피 +${CFG.nWing.eva} · 속도 +${CFG.nWing.spd} · 의체 상대 적중마다 피해 +${CFG.nWing.augDmg}`,null)]:[]),...(ch.aff&&ch.aff.name==='중지'?[row('중지 · 되갚음','맞을 때마다 1 (최대 5) · 다음 적중 +2×스택',null)]:[]),...(ch.aff&&ch.aff.name==='검지'?[row('검지 · 지령 수행','☆ 칸 카드를 내면 1 (최대 5) · 호흡 +4 · 받는 피해 −5%×스택',null)]:[]),...(ch.office?[row('내 사무소',esc(ch.office.name)+' · '+E.OKW[ch.office.kw],null)]:[]),...((ch.auth||[]).length?[row('조율자 권한',ch.auth.length+'단계 ('+ch.auth.map(a=>a==='seal'?'봉인':'집행').join('·')+')',null)]:[])].join('')}</div><div class="small dim">${esc(ch.o.n)} · ${esc(ch.t.n)} · ${esc(ch.f.n)} · ${esc(ch.w.n)}</div>`;
   }
@@ -374,7 +374,7 @@ export function startUI(E,app){
       const it=ch.gearOffers[0],cur=ch.gear[it.slot],df=fxDiff(it,cur);
       return sheet(`<span class="eyebrow">새 장비 · ${D.slots[it.slot]}${ch.gearOffers.length>1?` · 남은 ${ch.gearOffers.length}개`:''}</span><h2>${esc(it.n)}</h2>
         <div class="cmp"><div class="panel stack" style="gap:4px"><span class="eyebrow">지금 장착 중</span><b>${cur?esc(cur.n):'없음'}</b><span class="mono small dim">${cur?esc(cur.e||''):''}</span></div>
-          <div class="panel stack" style="gap:4px;border-color:var(--gold)"><span class="eyebrow">새 장비</span><b>${esc(it.n)}</b><span class="mono small" style="color:var(--gold)">${esc(it.e||'')}</span></div></div>
+          <div class="panel stack" style="gap:4px;border-color:var(--gold)"><span class="eyebrow">새 장비</span><b>${esc(it.n)}</b><span class="mono small" style="color:var(--gold)">${esc(it.e||'')}</span>${it.t?`<span class="small dim" style="line-height:1.55">${esc(it.t)}</span>`:''}</div></div>
         <div class="mono small">바꾸면 · ${df||'능력치 변화 없음'}</div>
         <button class="btn primary" data-a="gwear">장착한다${cur?` · ${esc(cur.n)}은(는) 보관함으로`:''}</button>
         <button class="btn" data-a="gkeep">보관함에 넣어 둔다</button>
@@ -1257,6 +1257,7 @@ export function startUI(E,app){
     testStash(){if(!G)return;for(const id of ['club','sword','greatsword'])G.ch.stash.push(Object.assign({id},D.items[id]));G.ch.stash.push(Object.assign({id:'x',grade:5,slot:'aug',n:'시험용 유물',e:'',fx:{}}));render()},
     testOffice(){if(!G)return;G.ch.licensed=true;G.ch.rank=5;G.ch.officePick=true;UI.res={t:'사무소 개설',chips:[]};UI.screen='result';render()},
     testPill(){if(!G)return;G.ch.pillPick=true;UI.res={t:'붕대 사이에서 작은 환이 나왔다.',chips:['특수환 · 능력치 하나를 골라 +10 (영구)','전리품 · 붉은 붕대 (HP+20, 영구)']};UI.screen='result';render()},
+    testApoc(){if(!G)return;const g=Object.assign({grade:5},structuredClone(D.enemies.apocalypse.drop.gear));G.ch.gearOffers=[g];UI.res={t:'종말이 쓰러졌다.',chips:['종말의 예언 · 검은 숲 깊은 곳에서 무언가 눈을 뜬다']};UI.screen='result';render()},
     testChain(){if(!G)return;G.ch.aff={type:'wing',name:'K사 날개'};G.ch.year=G.year=45;G.ch.corp={st:'wing',type:'serum',n:'시험',stack:2,up:3,forb:2,wing:'새벽 날개',chain:['claw','arbiter'],next:99};UI.ev=D.corp.head;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testCorp(k){if(!G)return;G.ch.aff={type:'wing',name:'K사 날개'};G.ch.year=G.year=22;if(!G.ch.corp)G.ch.corp={st:'offer'};UI.ev=D.corp[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvent(k){if(!G)return;G.ch.licensed=true;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
