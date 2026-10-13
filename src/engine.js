@@ -581,6 +581,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.corp=Object.assign(ch.corp,{st:'dev',type,n:name.trim(),stack:0,up:0,forb:0,next:(ch.year||0)+CP.devGap});
     corpBump(ch,T_.base||{});ch.singPick=false;(ch.relics=ch.relics||[]).push(`특이점 · ${ch.corp.n} (${T_.n})`);return true;
   }
+  /* 특수환: 고른 능력치가 영구히 오른다. 자동 진행(고르지 않고 넘어옴)이면 첫 번째 능력치 */
+  const pillStats={atk:'공격',eva:'회피',spd:'속도',check:'사건 판정'};
+  function setPill(ch,k,v){
+    if(!ch.pillPick||!pillStats[k])return false;
+    ch.stats[k]+=v||10;ch.pillPick=false;(ch.relics=ch.relics||[]).push(`특수환 · ${pillStats[k]} +${v||10}`);return true;
+  }
   const singChips=ch=>{const t=corpType(ch);return t?[t.e.split(' (')[0]]:[]};
   function setWing(ch,name,force){
     if(!ch.corp||(!force&&wingNameErr(name)))return false;
@@ -646,6 +652,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
     if(mc.wingPick)setWing(mc,'새벽',true);
+    if(mc.pillPick)setPill(mc,'atk');
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
@@ -807,6 +814,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       for(const b of foe.bonusCards||[])if(d(100)<=b.chance)addCard(ch,b.card,chips,'책장 카드');
       if(td){addStats(ch.stats,td.fx);ch.hp+=td.fx.maxHp||0;(ch.relics=ch.relics||[]).push(td.n);offerGear(ch,Object.assign({grade:5},td.gear));
         ch.packOffer={n:'엄지 검술',cards:td.deck.slice(),relic:'엄지 검술'};chips.push(`전리품 · ${td.n} (${td.gear.e}) · 장착할지 고른다`);chips.push('엄지 검술 · 덱을 바꿀지 고른다')}
+      /* 특수환: 승리하면 능력치 하나를 골라 영구 증가 (전리품보다 먼저, 전리품이 맨 끝) */
+      if(foe.pill){ch.pillPick=true;chips.push(`${foe.pill.n} · 능력치 하나를 골라 +${foe.pill.v} (영구)`)}
       if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
         if(dr.gear){offerGear(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 · ${dr.gear.n} (${dr.gear.e}) · 장착할지 고른다`)}
         chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice()};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
@@ -1216,6 +1225,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
