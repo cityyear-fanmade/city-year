@@ -690,7 +690,7 @@ export function startUI(E,app){
   function vSingPick(){
     const T_=CFG.corp.types,ty=UI.singType||'warp';
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">특이점 개발</span>
-      <p class="small">연구동 맨 안쪽에서 특이점의 모양이 잡혀 간다. 어떤 효과로 개발할지, 무엇이라 부를지 정한다. 이후 강화 실험으로 효과가 자란다.</p>
+      <p class="small">전용 연구 구역에서 특이점의 모양이 잡혀 간다. 어떤 효과로 개발할지, 무엇이라 부를지 정한다. 이후 강화 실험으로 효과가 자란다.</p>
       <div class="stack" style="gap:8px">${Object.entries(T_).map(([k,v])=>`<button class="btn ${ty===k?'primary':'quiet'}" data-a="singtype" data-i="${k}"><b>${v.n}</b><span class="small">${v.e}</span></button>`).join('')}</div>
       <div class="row"><span class="small">이름</span><input id="singname" maxlength="5" value="${esc(UI.singName||'')}" autocomplete="off" placeholder="1~5글자" style="width:9em"></div>
       <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
@@ -699,7 +699,7 @@ export function startUI(E,app){
   }
   function vWingPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">날개 설립</span>
-      <p class="small">간판에 올릴 이름을 정한다. 뒤에 '날개'가 붙는다.</p>
+      <p class="small">새 법인의 이름을 정한다. 뒤에 '날개'가 붙는다.</p>
       <div class="row"><span class="small">이름</span><input id="wingname" maxlength="4" value="${esc(UI.wingName||'')}" autocomplete="off" placeholder="1~4글자" style="width:9em"></div>
       <span class="small bad">${UI.wingErr||''}</span>
       <button class="btn primary" data-a="wingset">이 이름으로 세운다</button></div>`;
