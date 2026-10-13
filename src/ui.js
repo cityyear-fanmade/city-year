@@ -48,15 +48,16 @@ export function startUI(E,app){
     return new Promise(r=>{tapWake=()=>{tapWake=null;b.hidden=true;r()}});
   }
   function wait(ms){return SKIP?Promise.resolve():new Promise(r=>{wake=r;setTimeout(()=>{wake=null;r()},ms*tm())})}
-  /* 수동: 주사위 눈이 나오면 화면을 누를 때까지 멈춘다 (스크롤은 클릭이 아니라서 넘어가지 않는다). 건너뛰기·버튼을 눌러도 풀린다 */
-  function holdTap(label='결과를 확인했다 · 화면을 눌러 계속'){
+  /* 수동: 주사위 눈이 나오면 화면을 누를 때까지 멈춘다. 버튼이나 배경 변화 없이 아래쪽에 작은 글자만 띄운다 (스크롤은 클릭이 아니라서 넘어가지 않고, 건너뛰기를 눌러도 풀린다) */
+  function holdTap(label='화면 클릭 후 계속'){
     if(MODE!=='manual'||SKIP||FIGHT==='auto')return Promise.resolve();
-    const b=$('tapBtn');if(!b)return Promise.resolve();
-    b.hidden=false;b.textContent=label;
+    const h=document.createElement('div');h.id='holdHint';h.textContent=label;
+    h.style.cssText='position:fixed;left:0;right:0;bottom:14px;text-align:center;font:500 13px/1.2 var(--mono);color:var(--dim,#9aa3b2);letter-spacing:.04em;pointer-events:none;z-index:5;text-shadow:0 1px 3px rgba(0,0,0,.7)';
+    document.body.appendChild(h);
     return new Promise(r=>{
       const onClick=()=>{if(tapWake)tapWake()};
-      const off=()=>document.removeEventListener('click',onClick,true);
-      tapWake=()=>{off();tapWake=null;b.hidden=true;r()};
+      const off=()=>{document.removeEventListener('click',onClick,true);h.remove()};
+      tapWake=()=>{off();tapWake=null;r()};
       /* 방금 굴림 버튼을 누른 손가락의 클릭이 바로 이어 넘기지 않도록 잠깐 뒤에 건다 */
       setTimeout(()=>{if(tapWake)document.addEventListener('click',onClick,true)},300);
     });
