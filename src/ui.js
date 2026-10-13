@@ -273,7 +273,7 @@ export function startUI(E,app){
       <div class="mono small dim">Lv ${ch.lv} · 경험치 ${ch.xp}${nx!=null?'/'+nx:' (최고)'}${E.canPromote(ch)?` · ${E.ptsName(ch)} ${ch.pp||0}/${E.promoNeed(ch)}`:''} · ${Object.values(ch.gear).map(g=>esc(g.n)).join(' · ')}</div>
       <div class="row between"><span class="mono small" style="color:var(--gold)">자산 ${E.money(ch.money)}${G.lastIncome&&UI.showIncome?` <span class="dim">(올해 수입 +${E.money(G.lastIncome)})</span>`:''}</span>
         </div>
-      ${vDock()}
+      ${vDock('dock-in')}
     </div>`;
   }
   /* ===== 6시즌: 가방 =====
@@ -282,9 +282,9 @@ export function startUI(E,app){
     card:'<rect x="3" y="7" width="12" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/>',relic:'<path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6"/>'};
   const icon=k=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${ICON[k]}</svg>`;
   function bagTabs(ch){return [['stat','능력치',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']]}
-  function vDock(){
+  function vDock(cls){
     const ch=G.ch;
-    return `<div class="dock">${bagTabs(ch).map(([k,n,b])=>`<button class="tile" data-a="bag" data-i="${k}" aria-label="가방 · ${n}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>`;
+    return `<div class="dock ${cls}">${bagTabs(ch).map(([k,n,b])=>`<button class="tile" data-a="bag" data-i="${k}" aria-label="가방 · ${n}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>`;
   }
   /* 카드 종류: 공격 · 회피 · 방어(보호막) · 버프, 그리고 상대에게 키워드를 거는 카드는 디버프 표시 */
   const KIND={atk:['공격','#c9715e'],eva:['회피','#5f95c9'],def:['방어','#55b39c'],buff:['버프','#c8a35a'],debuff:['디버프','#a77bd0']};
@@ -529,16 +529,18 @@ export function startUI(E,app){
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
   const UPDATES={v:'v6.0.2',items:[]};
   /* 공지: id가 바뀔 때만 한 번 뜬다 (버전·소폭 조정과 무관). 새 공지를 띄울 때만 id를 바꾼다 */
-  const NOTICE={id:'v6.0-1',t:'도시의 한 해 v6.0 · 5버전에서 뭐가 달라졌나요?',
-    note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🎒 화면과 편의',['가방: 화면 오른쪽 네모 칸(능력치·장비·카드·전리품)을 누르면 가방이 열립니다.','카드 정리: 카드마다 종류(공격·디버프·버프·회피·방어)가 색으로 표시되고, 종류·키워드·이름으로 찾을 수 있습니다.','출생 화면: 주사위와 함께 결과 이름이 굴러가고, "출생 규칙"에서 표 전체를 볼 수 있습니다.']],
+  /* v6.0 공지 본문 (v6.0.2부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
+  const V6SEC=[['🎒 화면과 편의',['가방: 화면 오른쪽 네모 칸(능력치·장비·카드·전리품)을 누르면 가방이 열립니다.','카드 정리: 카드마다 종류(공격·디버프·버프·회피·방어)가 색으로 표시되고, 종류·키워드·이름으로 찾을 수 있습니다.','출생 화면: 주사위와 함께 결과 이름이 굴러가고, "출생 규칙"에서 표 전체를 볼 수 있습니다.']],
       ['🃏 덱과 장비',['덱 최대 12장: 남는 카드는 카드함에 두고 전투 밖에서 넣고 뺄 수 있습니다.','받을지 고르기: 보상 카드와 새 장비는 받을지 고르고, 장비는 지금 것과 비교한 뒤 장착하거나 보관합니다. 장비가 몰래 바뀌지 않습니다.','전용 책장: 정해진 카드팩으로만 싸우는 덱입니다. 덱이 고정되어 지우기·옮기기가 막히고, 새 카드는 돈으로 받습니다.','암시장 카드 상자: 가끔 열리고, 원하는 테마의 카드를 한 장 얻을 수 있습니다.']],
       ['🏢 진로',['세계관 사무소: 지금 급수에 맞는 사무소가 문을 엽니다.','내 사무소: 5급 이상 해결사는 직접 사무소를 차려 이름을 짓고, 3년마다 전문 분야의 카드·장비를 알선받습니다.','손가락: 엄지·검지·중지·약지마다 사건·심사·패시브가 따로 생겼습니다.','특색·상석 심사: 최대 3번까지 도전할 수 있습니다.','공방 거리: 공방을 이용하지 않고 쉬어 가며 정신력을 회복할 수 있습니다.']],
       ['⚔ 적',['중반·후반 적: 세력별 일반 적과 보스가 크게 늘었습니다(약 3배). 후반에는 이름이 붙은 네임드 적이 나옵니다.','적 특성: 적마다 무리·겁쟁이·굳은살·재생 같은 특성이 생겼습니다.','격리 실패: 환상체는 이제 특수 사건으로만 나타납니다. 종류가 늘고 더 강해졌으며, 맞설지 숨을지 고를 수 있습니다.']],
       ['🔒 숨겨진 것',['히든 루트와 숨은 출생 2개가 추가되었습니다.','아주 드물게, 감당할 수 없는 것이 나타난다는 소문도 있습니다.','어디에 있는지는 직접 찾아보세요.']],
-      ['⚠ 알아 두세요',['밸런스는 아직 조정 중이라 앞으로 수치가 조금씩 바뀔 수 있습니다.','5버전에서 하던 "이어서 하기" 저장은 새 규칙과 맞지 않을 수 있어서, 새로 시작하는 것을 권장합니다.']]]};
-  const noticeBody=()=>NOTICE.sec.map(([h,items])=>`<div class="stack" style="gap:4px"><b>${h}</b><ul class="small" style="margin:0;padding-left:18px;display:grid;gap:3px">${items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join('');
-  function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><div class="stack" style="gap:10px;margin-top:10px">${noticeBody()}</div><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
+      ['⚠ 알아 두세요',['밸런스는 아직 조정 중이라 앞으로 수치가 조금씩 바뀔 수 있습니다.','5버전에서 하던 "이어서 하기" 저장은 새 규칙과 맞지 않을 수 있어서, 새로 시작하는 것을 권장합니다.']]];
+  const NOTICE={id:'v6.0.2-1',t:'도시의 한 해 v6.0.2 · 버그 수정 안내',
+    note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
+    sec:[['🛠 버그 수정',['사무소에 들어간 해결사가 1급에 올라도 승급 심사만 반복되고 특색 심사가 열리지 않던 문제를 고쳤습니다. 승급에 필요한 실적 계산도 바로잡았고, 전체를 소폭 낮췄습니다.','카드를 받을 때 "덱의 카드와 바꾼다"로 뺄 수 없는 고정 카드를 카드함으로 빼낼 수 있던 문제를 고쳤습니다. 이미 빠진 고정 카드는 다음 해에 덱으로 돌아옵니다.','단테의 노트·검지 단말기 배경에서 PC 화면 오른쪽의 가방 네모 칸(능력치·장비·카드·전리품)이 보이지 않던 문제를 고쳤습니다.','PC 창이 좁을 때(약 900~1020px) 가방 칸이 본문을 가리던 문제도 함께 고쳤습니다. 이 폭에서는 가방 칸이 상단 정보 안에 들어갑니다.']]]};
+  const noticeBody=(sec=NOTICE.sec)=>sec.map(([h,items])=>`<div class="stack" style="gap:4px"><b>${h}</b><ul class="small" style="margin:0;padding-left:18px;display:grid;gap:3px">${items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join('');
+  function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><div class="stack" style="gap:10px;margin-top:10px">${noticeBody([...NOTICE.sec,...V6SEC])}</div><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
   const dailySeed=k=>{let h=2166136261;for(const c of 'city-year:'+k)h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;return h%1000000000};
@@ -983,7 +985,7 @@ export function startUI(E,app){
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
     const ov=pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const ovKey=showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+((G.ch.gearOffers||[]).length?'g':G.ch.packOffer?'p':'c')+(UI.swap?'s':''):ov?'bag':'';
-    app.innerHTML=`<div class="wrap">${tab}${h}</div>${ov}`;
+    app.innerHTML=`<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out'):''}${ov}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     UI.lastOv=ovKey;document.documentElement.classList.toggle('ovopen',!!ov);
     const lg=$('log');if(lg)lg.scrollTop=lg.scrollHeight;

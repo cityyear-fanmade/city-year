@@ -340,7 +340,12 @@ html[data-skin="ruina"] .seg button.on{background:linear-gradient(180deg,#f0d38f
 .tile.on{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 16%,var(--panel2))}
 .tile.sm{width:auto;flex:1;min-width:0;height:58px}
 .bagtabs{display:flex;gap:8px;margin-top:4px}
-@media (min-width:900px){
+/* 가방 타일: 좁은 화면은 HUD 안(dock-in), 넓은 화면(본문 양옆에 자리가 있을 때)은 창 오른쪽에 뜨는 별도 칸(dock-out).
+   dock-out은 .wrap 밖에 그린다 — 단테·단말기 스킨은 .wrap에 clip-path가 있어 안에 두면 잘려 나간다 */
+.dock-out{display:none}
+@media (min-width:1020px){
+  .dock-in{display:none}
+  .dock-out{display:flex}
   .dock{position:fixed;right:20px;top:50%;transform:translateY(-50%);flex-direction:column;z-index:20;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:16px;padding:10px}
 }
 html.ovopen,html.ovopen body{overflow:hidden}
