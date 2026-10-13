@@ -488,7 +488,7 @@ export function startUI(E,app){
     return `<div class="check" style="border-color:var(--bleed)"><b>v6 테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v6.0.2</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v6.0.3</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vUpdates()}
@@ -528,7 +528,7 @@ export function startUI(E,app){
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
-  const UPDATES={v:'v6.0.2',items:[]};
+  const UPDATES={v:'v6.0.3',items:[]};
   /* 공지: id가 바뀔 때만 한 번 뜬다 (버전·소폭 조정과 무관). 새 공지를 띄울 때만 id를 바꾼다 */
   /* v6.0 공지 본문 (v6.0.2부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V6SEC=[['🎒 화면과 편의',['가방: 화면 오른쪽 네모 칸(능력치·장비·카드·전리품)을 누르면 가방이 열립니다.','카드 정리: 카드마다 종류(공격·디버프·버프·회피·방어)가 색으로 표시되고, 종류·키워드·이름으로 찾을 수 있습니다.','출생 화면: 주사위와 함께 결과 이름이 굴러가고, "출생 규칙"에서 표 전체를 볼 수 있습니다.']],
@@ -537,11 +537,13 @@ export function startUI(E,app){
       ['⚔ 적',['중반·후반 적: 세력별 일반 적과 보스가 크게 늘었습니다(약 3배). 후반에는 이름이 붙은 네임드 적이 나옵니다.','적 특성: 적마다 무리·겁쟁이·굳은살·재생 같은 특성이 생겼습니다.','격리 실패: 환상체는 이제 특수 사건으로만 나타납니다. 종류가 늘고 더 강해졌으며, 맞설지 숨을지 고를 수 있습니다.']],
       ['🔒 숨겨진 것',['히든 루트와 숨은 출생 2개가 추가되었습니다.','아주 드물게, 감당할 수 없는 것이 나타난다는 소문도 있습니다.','어디에 있는지는 직접 찾아보세요.']],
       ['⚠ 알아 두세요',['밸런스는 아직 조정 중이라 앞으로 수치가 조금씩 바뀔 수 있습니다.','5버전에서 하던 "이어서 하기" 저장은 새 규칙과 맞지 않을 수 있어서, 새로 시작하는 것을 권장합니다.']]];
-  const NOTICE={id:'v6.0.2-1',t:'도시의 한 해 v6.0.2 · 버그 수정 안내',
+  /* v6.0.2 공지 본문 (v6.0.3부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
+  const V602SEC=[['🛠 버그 수정',['사무소에 들어간 해결사가 1급에 올라도 승급 심사만 반복되고 특색 심사가 열리지 않던 문제를 고쳤습니다. 승급에 필요한 실적 계산도 바로잡았고, 전체를 소폭 낮췄습니다.','카드를 받을 때 "덱의 카드와 바꾼다"로 뺄 수 없는 고정 카드를 카드함으로 빼낼 수 있던 문제를 고쳤습니다. 이미 빠진 고정 카드는 다음 해에 덱으로 돌아옵니다.','단테의 노트·검지 단말기 배경에서 PC 화면 오른쪽의 가방 네모 칸(능력치·장비·카드·전리품)이 보이지 않던 문제를 고쳤습니다.','PC 창이 좁을 때(약 900~1020px) 가방 칸이 본문을 가리던 문제도 함께 고쳤습니다. 이 폭에서는 가방 칸이 상단 정보 안에 들어갑니다.']]];
+  const NOTICE={id:'v6.0.3-1',t:'도시의 한 해 v6.0.3 · 성장 효과 수정 안내',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🛠 버그 수정',['사무소에 들어간 해결사가 1급에 올라도 승급 심사만 반복되고 특색 심사가 열리지 않던 문제를 고쳤습니다. 승급에 필요한 실적 계산도 바로잡았고, 전체를 소폭 낮췄습니다.','카드를 받을 때 "덱의 카드와 바꾼다"로 뺄 수 없는 고정 카드를 카드함으로 빼낼 수 있던 문제를 고쳤습니다. 이미 빠진 고정 카드는 다음 해에 덱으로 돌아옵니다.','단테의 노트·검지 단말기 배경에서 PC 화면 오른쪽의 가방 네모 칸(능력치·장비·카드·전리품)이 보이지 않던 문제를 고쳤습니다.','PC 창이 좁을 때(약 900~1020px) 가방 칸이 본문을 가리던 문제도 함께 고쳤습니다. 이 폭에서는 가방 칸이 상단 정보 안에 들어갑니다.']]]};
+    sec:[['🛠 버그 수정 · 성장 효과',['재능 "타고난 완력"과 성장기 "어깨너머 손질"의 "피해 주사위 최소 2" 효과가 캐릭터를 만들 때 출생 무기를 끼면서 지워지던 문제를 고쳤습니다. 두 효과를 얻고도 적용되지 않던 판이 모두 해당합니다.','두 효과는 이제 각각 "피해 주사위 최소 +1"입니다. 둘이 겹치면 +2로 더해지고, 장비의 피해 최소값(예: 명장의 대검 3)과도 더해집니다. 합계는 최대 4까지입니다.','이미 진행 중인 판은 다음 해로 넘어갈 때 재능·성장기를 확인해 자동으로 반영됩니다.']]]};
   const noticeBody=(sec=NOTICE.sec)=>sec.map(([h,items])=>`<div class="stack" style="gap:4px"><b>${h}</b><ul class="small" style="margin:0;padding-left:18px;display:grid;gap:3px">${items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join('');
-  function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><div class="stack" style="gap:10px;margin-top:10px">${noticeBody([...NOTICE.sec,...V6SEC])}</div><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
+  function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><div class="stack" style="gap:10px;margin-top:10px">${noticeBody([...NOTICE.sec,...V602SEC,...V6SEC])}</div><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
   const dailySeed=k=>{let h=2166136261;for(const c of 'city-year:'+k)h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;return h%1000000000};
