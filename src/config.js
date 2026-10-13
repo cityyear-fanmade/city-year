@@ -75,7 +75,7 @@ export const CFG = {
       serum: {n: '혈청', e: '전투 중 매 라운드 시작에 HP 5 회복', heal: 5, per: 0},
       moon: {n: '월광석', e: '최대 정신력 +8 · 해마다 정신력 +2 · 회피 실패로 정신력이 깎이지 않는다 · 정신력 구간 보정 ×1.6 (강화마다 최대 정신력 +2 · 해마다 +1 · 보정 +0.2배)', base: {mindMax: 8}, per: {mindMax: 2}, year: 2, yearPer: 1, tier: 1.6, tierPer: 0.2}
     },
-    trial: {claw: {hp: 0.45, atk: -4}, arbiter: {hp: 0.3, atk: -5}}, grow: {maxHp: 3}, up: {maxHp: 8, atk: 2}, forb: {maxHp: 12, atk: 4, eva: 2}, clear: {maxHp: 15, atk: 3, eva: 2}},
+    trial: {claw: {hp: 1, atk: 0}, arbiter: {hp: 1, atk: 0}}, grow: {maxHp: 3}, up: {maxHp: 8, atk: 2}, forb: {maxHp: 12, atk: 4, eva: 2}, clear: {maxHp: 15, atk: 3, eva: 2}},
   /* 6시즌 N사 날개: 의체를 쓰지 않는다(의수 칸 사용 불가). 대신 전투마다 신체 강화(공격·회피·속도), 의체 심판: 의체 상대(enemies aug, 소개 문구에 의체가 분명한 적만) 적중마다 피해 +augDmg */
   nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */
