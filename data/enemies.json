@@ -459,15 +459,15 @@
      "id": "w_perfectpitch",
      "slot": "weapon",
      "n": "절대음감",
-     "e": "공+24 · 회피+8 · 피해 3d10 · 적중 시 잔향 (5스택마다 고정 피해 10)",
+     "e": "공+24 · 회피+8 · 피해 2d7 · 적중 시 잔향 (5스택마다 고정 피해 10)",
      "fx": {
       "atk": 24,
       "eva": 8
      },
      "wx": {
       "dice": [
-       3,
-       10
+       2,
+       7
       ],
       "echo": {
        "need": 5,
@@ -1159,7 +1159,13 @@
     },
     "e": "공격+5 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
    },
-   "endText": "총성이 멎었다. 탄환 하나가 손 안에서 식어 간다."
+   "endText": "총성이 멎었다. 탄환 하나가 손 안에서 식어 간다.",
+   "hard": {
+    "hp": 2.2,
+    "atk": 6,
+    "eva": 3
+   },
+   "breach": true
   },
   "wolf": {
    "n": "크고 나쁜 늑대",
@@ -1186,7 +1192,13 @@
     },
     "e": "공격+5 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
    },
-   "endText": "늑대가 쓰러졌다. 푸른 털 몇 가닥이 손에 남았다."
+   "endText": "늑대가 쓰러졌다. 푸른 털 몇 가닥이 손에 남았다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "breach": true
   },
   "bigbird": {
    "n": "큰 새",
@@ -1219,7 +1231,13 @@
     "every": 3,
     "d": "3라운드마다 내 손패 1장을 그 라운드 동안 잠근다"
    },
-   "endText": "등불이 꺼졌다. 숲은 다시 조용해졌다."
+   "endText": "등불이 꺼졌다. 숲은 다시 조용해졌다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "breach": true
   },
   "knight": {
    "n": "절망의 기사",
@@ -1253,7 +1271,13 @@
     "eva": 8,
     "d": "3라운드마다 그 라운드 동안 회피 +8"
    },
-   "endText": "기사가 무릎을 꿇었다. 젖은 칼 한 자루가 남았다."
+   "endText": "기사가 무릎을 꿇었다. 젖은 칼 한 자루가 남았다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "breach": true
   },
   "araya": {
    "n": "신체파 도슨트 아라야",
@@ -1338,12 +1362,1724 @@
      "m_doll",
      "m_melody",
      "m_melody",
+     "m_melody",
      "m_artsense",
      "m_artsense",
      "m_theater",
-     "m_closing"
+     "m_closing",
+     "m_bonesaw",
+     "m_bonesaw",
+     "m_curtain"
     ],
-    "lockDeck": true
+    "lockDeck": true,
+    "packName": "마에스트로 책장"
+   }
+  },
+  "bloodbag": {
+   "n": "피주머니",
+   "color": "#9e2b2b",
+   "hp": 34,
+   "atk": 2,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "bloodlet",
+    "rustnote",
+    "slash",
+    "guard"
+   ],
+   "intro": "부풀어 오른 살덩이가 비틀거리며 다가온다. 터질 때마다 피 냄새가 골목을 채운다. 라만차랜드의 '손님'이었던 것이다.",
+   "tier": "mid"
+  },
+  "bloodbag2": {
+   "n": "부푼 피주머니",
+   "color": "#8a1f2a",
+   "hp": 50,
+   "atk": 4,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "noon",
+    "bloodlet",
+    "supper",
+    "guard"
+   ],
+   "intro": "피를 너무 많이 받아 마신 피주머니. 걸음마다 바닥에 붉은 자국이 남는다.",
+   "tier": "late"
+  },
+  "barber": {
+   "n": "이발사",
+   "color": "#c0392b",
+   "hp": 72,
+   "atk": 5,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "noon",
+    "bloodlet",
+    "noon",
+    "guard"
+   ],
+   "hyeolchan": true,
+   "once": true,
+   "tier": "boss",
+   "intro": "라만차랜드의 이발소. 의자에 앉으라고 손짓하는 이발사의 면도칼에서 피가 떨어진다. 손님의 피가 마를 날이 없다.",
+   "drop": {
+    "n": "이발사의 면도칼",
+    "fx": {
+     "atk": 2,
+     "maxHp": 6
+    },
+    "e": "공+2 · HP+6"
+   }
+  },
+  "priest": {
+   "n": "라만차랜드의 신부",
+   "color": "#7d1f3a",
+   "hp": 120,
+   "atk": 9,
+   "eva": 7,
+   "spd": 7,
+   "deck": [
+    "noon",
+    "bloodlet",
+    "supper",
+    "guard"
+   ],
+   "hidden": true,
+   "hyeolchan": true,
+   "tier": "hidden",
+   "intro": "성가 대신 피 끓는 소리가 들리는 예배당. 신부는 당신의 혈관을 축복하겠다고 한다. 축복은 언제나 피로 치러진다.",
+   "endText": "신부가 무너졌다. 예배당 깊은 곳에서 누군가의 웃음소리가 들린다. 이 땅의 주인이 당신을 알아보았다.",
+   "passive": {
+    "id": "echo",
+    "n": "성혈",
+    "need": 5,
+    "dmg": 12,
+    "d": "적중할 때마다 성혈 1. 5가 되면 고정 피해 12를 주고 비운다"
+   },
+   "hard": {
+    "hp": 1.4,
+    "atk": 2,
+    "eva": 1
+   },
+   "drop": {
+    "n": "신부의 성배",
+    "fx": {
+     "maxHp": 10,
+     "atk": 2
+    },
+    "e": "HP+10 · 공+2 · 방어구 피의 제의",
+    "gear": {
+     "id": "a_bloodvest",
+     "slot": "armor",
+     "n": "피의 제의",
+     "e": "HP+20 · 회피+5",
+     "fx": {
+      "maxHp": 20,
+      "eva": 5
+     }
+    }
+   }
+  },
+  "dulcinea": {
+   "n": "돌네시아",
+   "color": "#e0405a",
+   "hp": 160,
+   "atk": 12,
+   "eva": 9,
+   "spd": 9,
+   "deck": [
+    "noon",
+    "bloodlet",
+    "noon",
+    "supper"
+   ],
+   "hidden": true,
+   "hyeolchan": true,
+   "tier": "hidden",
+   "intro": "라만차랜드의 주인이 의자에서 일어난다. 모두가 그녀를 위해 피를 바쳤다. 이제 당신 차례라고, 그녀는 다정하게 말한다.",
+   "endText": "돌네시아가 쓰러졌다. 라만차랜드의 불빛이 하나씩 꺼진다. 피로 쌓은 꿈은 생각보다 쉽게 무너졌다.",
+   "passive": {
+    "id": "echo",
+    "n": "꿈의 피",
+    "need": 4,
+    "dmg": 18,
+    "d": "적중할 때마다 꿈의 피 1. 4가 되면 고정 피해 18을 주고 비운다"
+   },
+   "hard": {
+    "hp": 1.3,
+    "atk": 1,
+    "eva": 0
+   },
+   "drop": {
+    "n": "돌네시아의 꿈",
+    "fx": {
+     "maxHp": 10,
+     "atk": 2,
+     "dmgB": 1
+    },
+    "e": "HP+10 · 공+2 · 피해+1 · 무기 붉은 창",
+    "gear": {
+     "id": "w_redlance",
+     "slot": "weapon",
+     "n": "돌네시아의 붉은 창",
+     "e": "공+16 · 회피+8 · 피해 2d8 · 적중 시 출혈 2",
+     "fx": {
+      "atk": 16,
+      "eva": 8
+     },
+     "wx": {
+      "dice": [
+       2,
+       8
+      ],
+      "hitKw": [
+       [
+        "bleed",
+        2
+       ]
+      ]
+     }
+    }
+   }
+  },
+  "rat_knife": {
+   "n": "쥐구멍 칼잡이",
+   "color": "#8c7a5b",
+   "hp": 32,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "rustblade",
+    "rustblade",
+    "slash",
+    "guard"
+   ],
+   "trait": "swarm",
+   "tier": "mid",
+   "intro": "쥐구멍 일가의 막내들이 우르르 몰려나온다. 하나하나는 약해도 수가 많다."
+  },
+  "rat_watch": {
+   "n": "쥐구멍 망보기",
+   "color": "#7d7464",
+   "hp": 28,
+   "atk": 2,
+   "eva": 4,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "rustnote",
+    "guard",
+    "guard"
+   ],
+   "trait": "coward",
+   "tier": "mid",
+   "intro": "골목 위에서 망을 보던 놈이 들켰다. 도망칠 구멍부터 찾는 눈치다."
+  },
+  "rat_butcher": {
+   "n": "쥐구멍 도살꾼",
+   "color": "#9a4b3c",
+   "hp": 40,
+   "atk": 3,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "bloodlet",
+    "smash",
+    "rustblade",
+    "guard"
+   ],
+   "trait": "bloodscent",
+   "tier": "mid",
+   "intro": "앞치마에 피가 말라붙은 도살꾼. 피 냄새를 맡으면 눈빛이 달라진다."
+  },
+  "rat_collector": {
+   "n": "쥐구멍 수금원",
+   "color": "#a08a4a",
+   "hp": 34,
+   "atk": 2,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "rustnote",
+    "thrust",
+    "slash",
+    "guard"
+   ],
+   "trait": "thief",
+   "tier": "mid",
+   "intro": "쥐구멍 일가에 내야 할 통행료가 있다고 한다. 주지 않으면 알아서 가져간다."
+  },
+  "rat_father": {
+   "n": "쥐구멍 큰아비",
+   "color": "#6b3a2a",
+   "hp": 54,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "bloodlet",
+    "noon",
+    "rustblade",
+    "guard"
+   ],
+   "trait": "enrage",
+   "once": true,
+   "tier": "boss",
+   "intro": "쥐구멍 일가의 우두머리가 직접 나왔다. 새끼들을 건드린 값을 받으러 왔다고 한다.",
+   "drop": {
+    "n": "큰아비의 이빨",
+    "fx": {
+     "atk": 1,
+     "maxHp": 5
+    },
+    "e": "공+1 · HP+5"
+   }
+  },
+  "sc_apprentice": {
+   "n": "그을린 견습공",
+   "color": "#c9662e",
+   "hp": 44,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "o_ember",
+    "o_ember",
+    "thrust",
+    "guard"
+   ],
+   "trait": "swarm",
+   "tier": "late",
+   "intro": "그을린 공방에서 쫓겨난 견습공들. 불씨 다루는 법만 배우고 나왔다."
+  },
+  "sc_welder": {
+   "n": "그을린 용접공",
+   "color": "#b0562a",
+   "hp": 56,
+   "atk": 4,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "o_blaze",
+    "smash",
+    "heavy",
+    "guard"
+   ],
+   "trait": "callus",
+   "tier": "late",
+   "intro": "두꺼운 앞치마와 굳은살. 웬만한 칼날은 그냥 튕겨 낸다."
+  },
+  "sc_kindling": {
+   "n": "그을린 불쏘시개",
+   "color": "#e0733a",
+   "hp": 42,
+   "atk": 5,
+   "eva": 2,
+   "spd": 5,
+   "deck": [
+    "o_ember",
+    "lunge",
+    "o_blaze",
+    "guard"
+   ],
+   "trait": "enrage",
+   "tier": "late",
+   "intro": "몸에 기름을 두른 행동대. 다칠수록 불길이 거세진다."
+  },
+  "sc_smoke": {
+   "n": "연기 속 사수",
+   "color": "#8a5a3a",
+   "hp": 44,
+   "atk": 5,
+   "eva": 4,
+   "spd": 4,
+   "deck": [
+    "aim",
+    "o_ember",
+    "precise",
+    "guard"
+   ],
+   "trait": "coward",
+   "tier": "late",
+   "intro": "연기 너머에서 총구가 번쩍인다. 가까이 가면 연기 속으로 숨어 버린다."
+  },
+  "sc_master": {
+   "n": "공방장 '화로'",
+   "color": "#d9481f",
+   "hp": 78,
+   "atk": 5,
+   "eva": 4,
+   "spd": 4,
+   "deck": [
+    "o_blaze",
+    "o_blaze",
+    "heavy",
+    "guard"
+   ],
+   "trait": "regen",
+   "once": true,
+   "tier": "boss",
+   "intro": "그을린 공방의 주인. 몸 안에 화로를 박아 넣었다는 소문이 사실이었다. 상처가 불길에 지져져 아문다.",
+   "drop": {
+    "n": "화로의 불씨",
+    "fx": {
+     "atk": 2,
+     "maxHp": 6
+    },
+    "e": "공+2 · HP+6"
+   }
+  },
+  "iron_a": {
+   "n": "강철의 형제단 신입",
+   "color": "#7f8c99",
+   "hp": 36,
+   "atk": 3,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "f_ironfist",
+    "smash",
+    "thrust",
+    "guard"
+   ],
+   "trait": "callus",
+   "tier": "mid",
+   "intro": "몸의 절반을 쇠로 바꾼 사내가 다가온다. 형제단에 들어간 지 얼마 안 됐다고 자랑한다."
+  },
+  "iron_b": {
+   "n": "강철의 형제단 정비공",
+   "color": "#6f7d8a",
+   "hp": 34,
+   "atk": 2,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_ironfist",
+    "thrust",
+    "guard",
+    "guard"
+   ],
+   "trait": "regen",
+   "tier": "mid",
+   "intro": "공구를 허리에 찬 형제. 다친 곳을 그 자리에서 고쳐 낸다."
+  },
+  "iron_c": {
+   "n": "강철의 형제단 돌격수",
+   "color": "#8a96a3",
+   "hp": 40,
+   "atk": 4,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "f_ironfist",
+    "heavy",
+    "smash",
+    "guard"
+   ],
+   "trait": "counter",
+   "tier": "mid",
+   "intro": "강철 팔이 덜컹거린다. 맞으면 맞은 만큼 되돌려 준다."
+  },
+  "iron_d": {
+   "n": "강철의 형제단 무리",
+   "color": "#768390",
+   "hp": 32,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_ironfist",
+    "slash",
+    "guard"
+   ],
+   "trait": "swarm",
+   "tier": "mid",
+   "intro": "쇠 냄새를 풍기는 형제 여럿이 골목을 막는다."
+  },
+  "iron_boss": {
+   "n": "강철의 형제단 맏형",
+   "color": "#5d6b78",
+   "hp": 56,
+   "atk": 4,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "f_ironfist",
+    "f_ironfist",
+    "heavy",
+    "guard"
+   ],
+   "trait": "callus",
+   "tier": "boss",
+   "intro": "형제들이 길을 연다. 온몸이 쇠인 맏형이 천천히 걸어 나온다.",
+   "names": [
+    "볼트",
+    "리벳",
+    "피스톤",
+    "앤빌"
+   ],
+   "once": true,
+   "drop": {
+    "n": "맏형의 강철 손가락",
+    "fx": {
+     "atk": 1,
+     "maxHp": 6
+    },
+    "e": "공+1 · HP+6"
+   }
+  },
+  "pb_a": {
+   "n": "비스트로 견습 요리사",
+   "color": "#b5654a",
+   "hp": 32,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_cleaver",
+    "slash",
+    "guard",
+    "guard"
+   ],
+   "trait": "bloodscent",
+   "tier": "mid",
+   "intro": "앞치마를 두른 견습생이 식칼을 든다. 오늘의 재료를 찾고 있다고 한다."
+  },
+  "pb_b": {
+   "n": "비스트로 웨이터",
+   "color": "#a0584a",
+   "hp": 30,
+   "atk": 2,
+   "eva": 4,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "f_cleaver",
+    "guard"
+   ],
+   "trait": "coward",
+   "tier": "mid",
+   "intro": "웨이터가 정중하게 고개를 숙인다. 고개를 드는 순간 칼이 나온다."
+  },
+  "pb_c": {
+   "n": "비스트로 정육 담당",
+   "color": "#8f3f33",
+   "hp": 42,
+   "atk": 4,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "f_cleaver",
+    "bloodlet",
+    "smash",
+    "guard"
+   ],
+   "trait": "enrage",
+   "tier": "mid",
+   "intro": "고기를 다루는 손이 크다. 무엇의 고기인지는 묻지 않는 게 좋다."
+  },
+  "pb_d": {
+   "n": "비스트로 손님",
+   "color": "#b07a5a",
+   "hp": 34,
+   "atk": 2,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "rustnote",
+    "f_cleaver",
+    "guard"
+   ],
+   "trait": "thief",
+   "tier": "mid",
+   "intro": "배가 고프다는 손님이 당신 지갑부터 본다."
+  },
+  "pb_boss": {
+   "n": "비스트로 주방장",
+   "color": "#7a2e24",
+   "hp": 50,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "f_cleaver",
+    "bloodlet",
+    "f_cleaver",
+    "guard"
+   ],
+   "trait": "regen",
+   "tier": "boss",
+   "intro": "주방 문이 열린다. 주방장이 칼을 닦으며 오늘의 특선 요리를 소개한다. 재료는 당신이다.",
+   "names": [
+    "앙리",
+    "마르셀",
+    "지젤",
+    "루이"
+   ],
+   "once": true,
+   "drop": {
+    "n": "주방장의 식칼",
+    "fx": {
+     "atk": 2,
+     "maxHp": 3
+    },
+    "e": "공+2 · HP+3"
+   }
+  },
+  "ch_a": {
+   "n": "녹슨 사슬단 졸개",
+   "color": "#7a5c3c",
+   "hp": 30,
+   "atk": 2,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_chain",
+    "slash",
+    "guard"
+   ],
+   "trait": "swarm",
+   "tier": "mid",
+   "intro": "녹슨 사슬을 감은 졸개들이 몰려온다."
+  },
+  "ch_b": {
+   "n": "녹슨 사슬단 사슬꾼",
+   "color": "#8a6a44",
+   "hp": 36,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_chain",
+    "f_chain",
+    "thrust",
+    "guard"
+   ],
+   "trait": "bloodscent",
+   "tier": "mid",
+   "intro": "사슬이 바닥을 긁는다. 휘감기면 쉽게 풀리지 않는다."
+  },
+  "ch_c": {
+   "n": "녹슨 사슬단 망꾼",
+   "color": "#6e5a40",
+   "hp": 30,
+   "atk": 2,
+   "eva": 4,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "f_chain",
+    "guard",
+    "guard"
+   ],
+   "trait": "coward",
+   "tier": "mid",
+   "intro": "멀리서 사슬을 던지는 망꾼. 가까이 가면 도망친다."
+  },
+  "ch_d": {
+   "n": "녹슨 사슬단 행동대",
+   "color": "#94704a",
+   "hp": 40,
+   "atk": 4,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "f_chain",
+    "smash",
+    "heavy",
+    "guard"
+   ],
+   "trait": "enrage",
+   "tier": "mid",
+   "intro": "팔뚝만 한 사슬을 휘두르는 행동대. 다칠수록 거칠어진다."
+  },
+  "ch_boss": {
+   "n": "녹슨 사슬단 두목",
+   "color": "#5c4024",
+   "hp": 56,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "f_chain",
+    "tremor",
+    "f_chain",
+    "guard"
+   ],
+   "trait": "counter",
+   "tier": "boss",
+   "intro": "사슬을 갑옷처럼 두른 두목이 나타난다. 그를 때리면 사슬이 되돌려 친다.",
+   "names": [
+    "철구",
+    "쇠망치 박",
+    "녹니",
+    "사슬 김"
+   ],
+   "once": true,
+   "drop": {
+    "n": "두목의 녹슨 사슬",
+    "fx": {
+     "eva": 2,
+     "maxHp": 5
+    },
+    "e": "회피+2 · HP+5"
+   }
+  },
+  "ob_a": {
+   "n": "올드보이 공방 견습",
+   "color": "#9c8a6a",
+   "hp": 34,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_hammer",
+    "thrust",
+    "guard"
+   ],
+   "trait": "swarm",
+   "tier": "mid",
+   "intro": "공방의 막내들이 망치를 들고 우르르 나온다."
+  },
+  "ob_b": {
+   "n": "올드보이 공방 해결사",
+   "color": "#8a7a5c",
+   "hp": 40,
+   "atk": 3,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "f_hammer",
+    "smash",
+    "guard",
+    "guard"
+   ],
+   "trait": "callus",
+   "tier": "mid",
+   "intro": "공방 무기를 시험해 보러 나온 해결사. 갑옷이 두껍다."
+  },
+  "ob_c": {
+   "n": "올드보이 공방 시험수",
+   "color": "#a8946e",
+   "hp": 36,
+   "atk": 4,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_hammer",
+    "heavy",
+    "slash",
+    "guard"
+   ],
+   "trait": "enrage",
+   "tier": "mid",
+   "intro": "새 해머의 성능을 시험해야 한다며 다가온다."
+  },
+  "ob_d": {
+   "n": "올드보이 공방 수금원",
+   "color": "#7a6c52",
+   "hp": 32,
+   "atk": 2,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "f_hammer",
+    "guard"
+   ],
+   "trait": "thief",
+   "tier": "mid",
+   "intro": "공방 외상값을 받으러 왔다고 한다. 당신은 외상을 진 적이 없다."
+  },
+  "ob_boss": {
+   "n": "올드보이 공방장",
+   "color": "#6a5a3e",
+   "hp": 58,
+   "atk": 5,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_hammer",
+    "f_hammer",
+    "heavy",
+    "guard"
+   ],
+   "trait": "callus",
+   "tier": "boss",
+   "intro": "늙은 공방장이 직접 만든 해머를 어깨에 걸친다. 무기를 만드는 손은 무기를 쓰는 법도 안다.",
+   "names": [
+    "덕배",
+    "만수",
+    "늙은 박",
+    "쇠돌"
+   ],
+   "once": true,
+   "drop": {
+    "n": "공방장의 해머 손잡이",
+    "fx": {
+     "atk": 1,
+     "maxHp": 4,
+     "spd": 1
+    },
+    "e": "공+1 · HP+4 · 속도+1"
+   }
+  },
+  "zw_a": {
+   "n": "츠바이 협회 해결사",
+   "color": "#3f6fb0",
+   "hp": 48,
+   "atk": 4,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_zweishield",
+    "thrust",
+    "smash",
+    "guard"
+   ],
+   "trait": "bulwark",
+   "tier": "late",
+   "intro": "츠바이 협회 남부 지부의 해결사. 방패를 세우고 길을 막는다.",
+   "names": [
+    "한스",
+    "루카스",
+    "엘제",
+    "카를",
+    "미아",
+    "오토",
+    "프리다",
+    "레온"
+   ]
+  },
+  "zw_b": {
+   "n": "츠바이 협회 호위",
+   "color": "#355f9a",
+   "hp": 46,
+   "atk": 4,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "f_zweishield",
+    "heavy",
+    "smash",
+    "guard"
+   ],
+   "trait": "counter",
+   "tier": "late",
+   "intro": "의뢰인을 지키는 호위 해결사. 뚫기 전까지 물러서지 않는다.",
+   "names": [
+    "한스",
+    "루카스",
+    "엘제",
+    "카를",
+    "미아",
+    "오토",
+    "프리다",
+    "레온"
+   ]
+  },
+  "zw_c": {
+   "n": "츠바이 협회 돌격조",
+   "color": "#4a7ac0",
+   "hp": 46,
+   "atk": 5,
+   "eva": 2,
+   "spd": 4,
+   "deck": [
+    "lunge",
+    "smash",
+    "f_zweishield",
+    "guard"
+   ],
+   "trait": "enrage",
+   "tier": "late",
+   "intro": "방패를 앞세우고 돌진하는 돌격조.",
+   "names": [
+    "한스",
+    "루카스",
+    "엘제",
+    "카를",
+    "미아",
+    "오토",
+    "프리다",
+    "레온"
+   ]
+  },
+  "zw_d": {
+   "n": "츠바이 협회 신참",
+   "color": "#5a86c8",
+   "hp": 42,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "f_zweishield",
+    "guard",
+    "guard"
+   ],
+   "trait": "swarm",
+   "tier": "late",
+   "intro": "지부의 신참들이 둘씩 짝을 지어 움직인다.",
+   "names": [
+    "한스",
+    "루카스",
+    "엘제",
+    "카를",
+    "미아",
+    "오토",
+    "프리다",
+    "레온"
+   ]
+  },
+  "zw_boss": {
+   "n": "츠바이 협회 지부장",
+   "color": "#2a4f86",
+   "hp": 66,
+   "atk": 5,
+   "eva": 4,
+   "spd": 4,
+   "deck": [
+    "f_zweishield",
+    "heavy",
+    "smash",
+    "guard"
+   ],
+   "trait": "bulwark",
+   "tier": "boss",
+   "intro": "지부장이 직접 나섰다. 방패 뒤의 눈빛이 흔들리지 않는다.",
+   "names": [
+    "한스",
+    "루카스",
+    "엘제",
+    "카를",
+    "미아",
+    "오토",
+    "프리다",
+    "레온"
+   ],
+   "once": true,
+   "drop": {
+    "n": "지부장의 방패 조각",
+    "fx": {
+     "maxHp": 10,
+     "eva": 1
+    },
+    "e": "HP+10 · 회피+1"
+   }
+  },
+  "sv_a": {
+   "n": "세븐 협회 분석가",
+   "color": "#5a9a7a",
+   "hp": 44,
+   "atk": 5,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "f_sevenread",
+    "precise",
+    "guard"
+   ],
+   "trait": "focus",
+   "tier": "late",
+   "intro": "세븐 협회의 분석가가 당신의 움직임을 적어 내려간다.",
+   "names": [
+    "에이든",
+    "노아",
+    "에밀리",
+    "클레어",
+    "오웬",
+    "루시",
+    "헨리",
+    "엘라"
+   ]
+  },
+  "sv_b": {
+   "n": "세븐 협회 추적자",
+   "color": "#4c8a6c",
+   "hp": 46,
+   "atk": 5,
+   "eva": 3,
+   "spd": 5,
+   "deck": [
+    "f_sevenread",
+    "lunge",
+    "aim",
+    "guard"
+   ],
+   "trait": "bloodscent",
+   "tier": "late",
+   "intro": "한번 정한 표적은 놓치지 않는 추적자.",
+   "names": [
+    "에이든",
+    "노아",
+    "에밀리",
+    "클레어",
+    "오웬",
+    "루시",
+    "헨리",
+    "엘라"
+   ]
+  },
+  "sv_c": {
+   "n": "세븐 협회 정보원",
+   "color": "#6aa88a",
+   "hp": 40,
+   "atk": 4,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "thrust",
+    "f_sevenread",
+    "guard",
+    "guard"
+   ],
+   "trait": "coward",
+   "tier": "late",
+   "intro": "정보원은 싸움보다 도망치는 길을 먼저 봐 둔다.",
+   "names": [
+    "에이든",
+    "노아",
+    "에밀리",
+    "클레어",
+    "오웬",
+    "루시",
+    "헨리",
+    "엘라"
+   ]
+  },
+  "sv_d": {
+   "n": "세븐 협회 현장 요원",
+   "color": "#3f7a5e",
+   "hp": 50,
+   "atk": 5,
+   "eva": 2,
+   "spd": 4,
+   "deck": [
+    "f_sevenread",
+    "smash",
+    "tremor",
+    "guard"
+   ],
+   "trait": "counter",
+   "tier": "late",
+   "intro": "현장 요원이 약점을 분석한 대로 정확히 찌른다.",
+   "names": [
+    "에이든",
+    "노아",
+    "에밀리",
+    "클레어",
+    "오웬",
+    "루시",
+    "헨리",
+    "엘라"
+   ]
+  },
+  "sv_boss": {
+   "n": "세븐 협회 지부장",
+   "color": "#2e6048",
+   "hp": 74,
+   "atk": 5,
+   "eva": 5,
+   "spd": 5,
+   "deck": [
+    "f_sevenread",
+    "f_sevenread",
+    "precise",
+    "guard"
+   ],
+   "trait": "focus",
+   "tier": "boss",
+   "intro": "지부장은 이미 당신에 대한 보고서를 다 읽었다. 남은 건 확인뿐이다.",
+   "names": [
+    "에이든",
+    "노아",
+    "에밀리",
+    "클레어",
+    "오웬",
+    "루시",
+    "헨리",
+    "엘라"
+   ],
+   "once": true,
+   "drop": {
+    "n": "지부장의 분석 노트",
+    "fx": {
+     "atk": 2,
+     "check": 3
+    },
+    "e": "공+2 · 판정+3"
+   }
+  },
+  "liu_a": {
+   "n": "리우 협회 해결사",
+   "color": "#d0563a",
+   "hp": 46,
+   "atk": 5,
+   "eva": 2,
+   "spd": 4,
+   "deck": [
+    "f_liuflame",
+    "thrust",
+    "guard"
+   ],
+   "trait": "focus",
+   "tier": "late",
+   "intro": "리우 협회의 해결사. 주먹에서 불꽃이 인다.",
+   "names": [
+    "리리",
+    "웨이",
+    "샤오",
+    "린",
+    "메이",
+    "첸",
+    "하오",
+    "유안"
+   ]
+  },
+  "liu_b": {
+   "n": "리우 협회 수련생",
+   "color": "#e0704a",
+   "hp": 42,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "f_liuflame",
+    "slash",
+    "guard"
+   ],
+   "trait": "swarm",
+   "tier": "late",
+   "intro": "같은 권법을 익힌 수련생들이 줄지어 선다.",
+   "names": [
+    "리리",
+    "웨이",
+    "샤오",
+    "린",
+    "메이",
+    "첸",
+    "하오",
+    "유안"
+   ]
+  },
+  "liu_c": {
+   "n": "리우 협회 무투가",
+   "color": "#c04a30",
+   "hp": 52,
+   "atk": 5,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_liuflame",
+    "f_liuflame",
+    "smash",
+    "guard"
+   ],
+   "trait": "enrage",
+   "tier": "late",
+   "intro": "불꽃이 거세질수록 주먹이 무거워진다.",
+   "names": [
+    "리리",
+    "웨이",
+    "샤오",
+    "린",
+    "메이",
+    "첸",
+    "하오",
+    "유안"
+   ]
+  },
+  "liu_d": {
+   "n": "리우 협회 사범",
+   "color": "#b0442c",
+   "hp": 50,
+   "atk": 5,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "f_liuflame",
+    "o_blaze",
+    "guard"
+   ],
+   "trait": "regen",
+   "tier": "late",
+   "intro": "사범은 숨을 고르며 상처를 불로 지진다.",
+   "names": [
+    "리리",
+    "웨이",
+    "샤오",
+    "린",
+    "메이",
+    "첸",
+    "하오",
+    "유안"
+   ]
+  },
+  "liu_boss": {
+   "n": "리우 협회 지부장",
+   "color": "#8e2e1c",
+   "hp": 76,
+   "atk": 6,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "f_liuflame",
+    "o_blaze",
+    "f_liuflame",
+    "guard"
+   ],
+   "trait": "focus",
+   "tier": "boss",
+   "intro": "지부장의 권법은 불꽃 그 자체다. 다가가기만 해도 살갗이 탄다.",
+   "names": [
+    "리리",
+    "웨이",
+    "샤오",
+    "린",
+    "메이",
+    "첸",
+    "하오",
+    "유안"
+   ],
+   "once": true,
+   "drop": {
+    "n": "지부장의 불씨 권갑",
+    "fx": {
+     "atk": 2,
+     "maxHp": 6
+    },
+    "e": "공+2 · HP+6"
+   }
+  },
+  "shi_a": {
+   "n": "시 협회 해결사",
+   "color": "#6a4c8a",
+   "hp": 44,
+   "atk": 5,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "f_shiblade",
+    "thrust",
+    "guard"
+   ],
+   "trait": "focus",
+   "tier": "late",
+   "intro": "시 협회의 해결사가 칼자루에 손을 얹는다. 발도는 한순간이다.",
+   "names": [
+    "하야토",
+    "아키라",
+    "렌",
+    "유키",
+    "사쿠라",
+    "카즈마",
+    "미오",
+    "소라"
+   ]
+  },
+  "shi_b": {
+   "n": "시 협회 암살조",
+   "color": "#5a3e7a",
+   "hp": 42,
+   "atk": 6,
+   "eva": 4,
+   "spd": 6,
+   "deck": [
+    "f_shiblade",
+    "lunge",
+    "guard"
+   ],
+   "trait": "coward",
+   "tier": "late",
+   "intro": "그림자 속에서 암살조가 칼을 뽑는다. 들키면 바로 물러난다.",
+   "names": [
+    "하야토",
+    "아키라",
+    "렌",
+    "유키",
+    "사쿠라",
+    "카즈마",
+    "미오",
+    "소라"
+   ]
+  },
+  "shi_c": {
+   "n": "시 협회 검객",
+   "color": "#7a5a9a",
+   "hp": 48,
+   "atk": 5,
+   "eva": 3,
+   "spd": 5,
+   "deck": [
+    "f_shiblade",
+    "f_shiblade",
+    "precise",
+    "guard"
+   ],
+   "trait": "bloodscent",
+   "tier": "late",
+   "intro": "검객의 칼끝이 피 냄새를 따라간다.",
+   "names": [
+    "하야토",
+    "아키라",
+    "렌",
+    "유키",
+    "사쿠라",
+    "카즈마",
+    "미오",
+    "소라"
+   ]
+  },
+  "shi_d": {
+   "n": "시 협회 수습",
+   "color": "#8a6aaa",
+   "hp": 40,
+   "atk": 4,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "slash",
+    "f_shiblade",
+    "guard"
+   ],
+   "trait": "swarm",
+   "tier": "late",
+   "intro": "수습생들이 스승을 흉내 내며 칼을 겨눈다.",
+   "names": [
+    "하야토",
+    "아키라",
+    "렌",
+    "유키",
+    "사쿠라",
+    "카즈마",
+    "미오",
+    "소라"
+   ]
+  },
+  "shi_boss": {
+   "n": "시 협회 지부장",
+   "color": "#432c60",
+   "hp": 72,
+   "atk": 6,
+   "eva": 6,
+   "spd": 6,
+   "deck": [
+    "f_shiblade",
+    "f_shiblade",
+    "precise",
+    "guard"
+   ],
+   "trait": "focus",
+   "tier": "boss",
+   "intro": "지부장은 칼을 뽑지 않는다. 당신이 쓰러질 때까지는.",
+   "names": [
+    "하야토",
+    "아키라",
+    "렌",
+    "유키",
+    "사쿠라",
+    "카즈마",
+    "미오",
+    "소라"
+   ],
+   "once": true,
+   "drop": {
+    "n": "지부장의 칼집",
+    "fx": {
+     "eva": 3,
+     "spd": 2
+    },
+    "e": "회피+3 · 속도+2"
+   }
+  },
+  "kuro_boss": {
+   "n": "쿠로쿠모 회 와카가시라",
+   "color": "#1f1f2e",
+   "hp": 62,
+   "atk": 5,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "f_wakashu",
+    "slash",
+    "noon",
+    "guard"
+   ],
+   "trait": "enrage",
+   "tier": "boss",
+   "intro": "검은 구름 문양의 정장. 쿠로쿠모 회의 간부가 부하들을 물리고 직접 칼을 뽑는다.",
+   "names": [
+    "류지",
+    "겐",
+    "타케시",
+    "신"
+   ],
+   "once": true,
+   "drop": {
+    "n": "와카가시라의 단도",
+    "fx": {
+     "atk": 2,
+     "dmgB": 1
+    },
+    "e": "공+2 · 피해+1"
+   }
+  },
+  "judgebird": {
+   "n": "심판새",
+   "color": "#c9b458",
+   "hp": 60,
+   "atk": 4,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "ab_scale",
+    "ab_scale",
+    "thrust",
+    "guard"
+   ],
+   "passive": {
+    "id": "echo",
+    "n": "심판",
+    "need": 4,
+    "dmg": 14,
+    "d": "적중할 때마다 심판 1. 4가 되면 고정 피해 14를 주고 비운다"
+   },
+   "abno": true,
+   "breach": true,
+   "once": true,
+   "tier": "boss",
+   "intro": "저울을 단 새가 내려앉는다. 저울이 기울 때마다 누군가의 목이 떨어진다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "drop": {
+    "n": "정의",
+    "ego": true,
+    "fx": {
+     "atk": 3,
+     "check": 3
+    },
+    "e": "공격+3 · 판정+3 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   }
+  },
+  "redhood": {
+   "n": "빨간 두건의 용병",
+   "color": "#c0392b",
+   "hp": 54,
+   "atk": 4,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "ab_crimson",
+    "ab_crimson",
+    "lunge",
+    "guard"
+   ],
+   "trait": "bloodscent",
+   "abno": true,
+   "breach": true,
+   "once": true,
+   "tier": "boss",
+   "intro": "붉은 두건을 쓴 용병이 도끼를 고쳐 쥔다. 늑대를 쫓던 사냥꾼은 이제 아무나 사냥한다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "drop": {
+    "n": "진홍빛 흉터",
+    "ego": true,
+    "fx": {
+     "atk": 3,
+     "spd": 2
+    },
+    "e": "공격+3 · 속도+2 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   }
+  },
+  "queenhate": {
+   "n": "사랑과 증오의 이름으로",
+   "color": "#e86fa8",
+   "hp": 66,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "ab_arcana",
+    "thrust",
+    "ab_arcana",
+    "guard"
+   ],
+   "trait": "enrage",
+   "passive": {
+    "id": "mask",
+    "n": "변신",
+    "every": 3,
+    "eva": 8,
+    "d": "3라운드마다 그 라운드 동안 회피 +8"
+   },
+   "abno": true,
+   "breach": true,
+   "once": true,
+   "tier": "boss",
+   "intro": "반짝이는 지팡이를 든 마법소녀가 정의를 외친다. 그 정의의 대상이 당신이라는 게 문제다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "drop": {
+    "n": "사랑과 증오",
+    "ego": true,
+    "fx": {
+     "maxHp": 12,
+     "eva": 2
+    },
+    "e": "HP+12 · 회피+2 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   }
+  },
+  "kinggreed": {
+   "n": "탐욕의 왕",
+   "color": "#d4a017",
+   "hp": 92,
+   "atk": 5,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "ab_greed",
+    "ab_greed",
+    "smash",
+    "guard"
+   ],
+   "trait": "thief",
+   "abno": true,
+   "breach": true,
+   "once": true,
+   "tier": "boss",
+   "intro": "보석으로 된 거대한 입이 골목을 메운다. 무엇이든 삼키고, 아무것도 내놓지 않는다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "drop": {
+    "n": "황금광",
+    "ego": true,
+    "fx": {
+     "maxHp": 10,
+     "atk": 2
+    },
+    "e": "HP+10 · 공격+2 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   }
+  },
+  "servantwrath": {
+   "n": "분노의 시종",
+   "color": "#2e8b57",
+   "hp": 52,
+   "atk": 4,
+   "eva": 3,
+   "spd": 5,
+   "deck": [
+    "ab_rage",
+    "ab_rage",
+    "smash",
+    "guard"
+   ],
+   "trait": "enrage",
+   "passive": {
+    "id": "claw",
+    "n": "폭주",
+    "d": "적중마다 1d4 추가 피해"
+   },
+   "abno": true,
+   "breach": true,
+   "once": true,
+   "tier": "boss",
+   "intro": "초록 옷의 시종이 울부짖으며 달려든다. 분노는 상대를 가리지 않는다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "drop": {
+    "n": "맹목적인 분노",
+    "ego": true,
+    "fx": {
+     "atk": 4
+    },
+    "e": "공격+4 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   }
+  },
+  "queenbee": {
+   "n": "여왕벌",
+   "color": "#d9a400",
+   "hp": 54,
+   "atk": 4,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "ab_spore",
+    "ab_spore",
+    "thrust",
+    "guard"
+   ],
+   "trait": "swarm",
+   "passive": {
+    "id": "echo",
+    "n": "포자",
+    "need": 5,
+    "dmg": 8,
+    "d": "적중할 때마다 포자 1. 5가 되면 고정 피해 8을 주고 비운다"
+   },
+   "abno": true,
+   "breach": true,
+   "once": true,
+   "tier": "boss",
+   "intro": "벌 떼가 하늘을 덮는다. 여왕벌의 포자를 마신 사람들은 벌집이 되었다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "drop": {
+    "n": "말벌",
+    "ego": true,
+    "fx": {
+     "atk": 2,
+     "eva": 2
+    },
+    "e": "공격+2 · 회피+2 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   }
+  },
+  "nothing": {
+   "n": "아무것도 없는",
+   "color": "#7a2a2a",
+   "hp": 110,
+   "atk": 11,
+   "eva": 8,
+   "spd": 7,
+   "deck": [
+    "ab_mimic",
+    "ab_mimic",
+    "a_maw",
+    "guard"
+   ],
+   "abno": true,
+   "hidden": true,
+   "tier": "hidden",
+   "intro": "익숙한 목소리가 당신 이름을 부른다. 돌아보면 사람 가죽을 뒤집어쓴 무언가가 웃고 있다. 아무것도 없는 것이 거기 있다.",
+   "endText": "그것이 쓰러졌다. 남은 가죽 속에는 정말로 아무것도 없었다.",
+   "passive": {
+    "id": "echo",
+    "n": "의태",
+    "need": 3,
+    "dmg": 22,
+    "d": "적중할 때마다 의태 1. 3이 되면 고정 피해 22를 주고 비운다"
+   },
+   "hard": {
+    "hp": 1.85,
+    "atk": 3,
+    "eva": 2
+   },
+   "drop": {
+    "n": "아무것도 없는 것의 껍질",
+    "fx": {
+     "maxHp": 15,
+     "atk": 3
+    },
+    "e": "HP+15 · 공+3 · E.G.O 무기 미미크리",
+    "gear": {
+     "id": "w_mimicry",
+     "slot": "weapon",
+     "n": "미미크리",
+     "e": "공+28 · 회피+12 · 피해 3d9 · 적중마다 HP 3 흡수 · 상대 HP 30% 이하일 때 적중하면 고정 피해 25",
+     "fx": {
+      "atk": 28,
+      "eva": 12,
+      "maxHp": 10
+     },
+     "wx": {
+      "dice": [
+       3,
+       9
+      ],
+      "drain": 3,
+      "execute": {
+       "below": 0.3,
+       "dmg": 25
+      }
+     }
+    }
+   }
+  },
+  "orchestra": {
+   "n": "침묵의 오케스트라",
+   "color": "#3a3a5c",
+   "hp": 104,
+   "atk": 10,
+   "eva": 9,
+   "spd": 7,
+   "deck": [
+    "ab_note",
+    "ab_note",
+    "x_pillar",
+    "guard"
+   ],
+   "abno": true,
+   "hidden": true,
+   "tier": "hidden",
+   "intro": "지휘봉이 들린다. 연주가 시작되면 소리는 들리지 않는데, 귀에서 피가 흐른다.",
+   "endText": "마지막 악장이 끝나기 전에 지휘자가 쓰러졌다. 도시에 다시 소리가 돌아왔다.",
+   "passive": {
+    "id": "recital",
+    "n": "악장",
+    "every": 3,
+    "dmg": 18,
+    "d": "라운드마다 악장 1. 3악장마다 절정: 고정 피해 18 (그 라운드 방어 자세면 절반)"
+   },
+   "hard": {
+    "hp": 1.8,
+    "atk": 3,
+    "eva": 3
+   },
+   "drop": {
+    "n": "침묵의 지휘봉",
+    "fx": {
+     "maxHp": 15,
+     "eva": 3
+    },
+    "e": "HP+15 · 회피+3 · E.G.O 무기 다 카포",
+    "gear": {
+     "id": "w_dacapo",
+     "slot": "weapon",
+     "n": "다 카포",
+     "e": "공+26 · 회피+16 · 피해 3d8 · 적중 시 파열 2 · 3라운드마다 그 라운드 첫 적중에 고정 피해 18 (악장)",
+     "fx": {
+      "atk": 26,
+      "eva": 16
+     },
+     "wx": {
+      "dice": [
+       3,
+       8
+      ],
+      "hitKw": [
+       [
+        "rupture",
+        2
+       ]
+      ],
+      "movement": {
+       "every": 3,
+       "dmg": 18
+      }
+     }
+    }
    }
   }
  },
@@ -1353,6 +3089,35 @@
   "7": "guest"
  },
  "hiddenBosses": [
+  {
+   "id": "dulcinea",
+   "req": [
+    "flag:lamancha",
+    "beat:priest"
+   ],
+   "chance": 40,
+   "from": 18,
+   "omen": {
+    "x": "회전목마의 음악이 멈추지 않는다. 불 켜진 성 꼭대기에서 누군가 당신의 이름을 부른다.",
+    "go": "성으로 올라간다",
+    "away": "음악을 등진다",
+    "awayT": "귀를 막고 돌아섰다. 음악은 꿈속까지 따라왔다."
+   }
+  },
+  {
+   "id": "priest",
+   "req": [
+    "flag:lamancha"
+   ],
+   "chance": 30,
+   "from": 17,
+   "omen": {
+    "x": "종소리가 울린다. 라만차랜드의 예배당 문이 열려 있고, 붉은 성수가 문턱까지 흘러나와 있다.",
+    "go": "예배당으로 들어간다",
+    "away": "종소리를 흘려보낸다",
+    "awayT": "문은 닫히지 않았다. 다음 종소리를 기다리는 것 같다."
+   }
+  },
   {
    "id": "arbiter",
    "req": [
@@ -1525,6 +3290,30 @@
     "away": "흘려보낸다",
     "awayT": "고개를 숙이고 지나갔다. 뇌횡은 아무 말도 하지 않았다. 쇠 끌리는 소리만 오래 귀에 남았다."
    }
+  },
+  {
+   "id": "nothing",
+   "req": "beat:any",
+   "chance": 10,
+   "from": 20,
+   "omen": {
+    "x": "누군가 당신 이름을 부른다. 아는 목소리다. 하지만 그 사람은 오래전에 죽었다.",
+    "go": "목소리를 따라간다",
+    "away": "귀를 막고 돌아선다",
+    "awayT": "목소리는 한참 동안 당신 이름을 불렀다."
+   }
+  },
+  {
+   "id": "orchestra",
+   "req": "beat:any",
+   "chance": 10,
+   "from": 20,
+   "omen": {
+    "x": "도시의 소음이 한순간에 사라졌다. 어디선가 지휘봉이 보면대를 두드리는 소리만 들린다.",
+    "go": "소리가 나는 곳으로 간다",
+    "away": "소리가 들리지 않는 쪽으로 간다",
+    "awayT": "한참을 걸어서야 도시의 소음이 돌아왔다."
+   }
   }
  ],
  "fixedRule": {
@@ -1542,5 +3331,149 @@
   "final": {
    "55": "guest"
   }
- }
+ },
+ "traits": {
+  "swarm": {
+   "n": "무리",
+   "d": "라운드마다 공격 카드 한 장을 더 낸다"
+  },
+  "coward": {
+   "n": "겁쟁이",
+   "d": "HP가 절반 아래면 회피 +20"
+  },
+  "bloodscent": {
+   "n": "피 냄새",
+   "d": "상대가 출혈 중이면 명중 +15"
+  },
+  "thief": {
+   "n": "손버릇",
+   "d": "적중할 때마다 돈 30을 빼앗는다"
+  },
+  "enrage": {
+   "n": "분노",
+   "d": "HP가 절반 아래면 명중 +15 · 피해 +2"
+  },
+  "callus": {
+   "n": "굳은살",
+   "d": "받는 피해 −2 (최소 1)"
+  },
+  "regen": {
+   "n": "재생",
+   "d": "라운드마다 HP 3 회복"
+  },
+  "counter": {
+   "n": "반격",
+   "d": "맞을 때마다 상대에게 고정 피해 3"
+  },
+  "bulwark": {
+   "n": "철벽",
+   "d": "라운드마다 보호막을 3까지 채운다"
+  },
+  "focus": {
+   "n": "집중",
+   "d": "라운드마다 호흡 +2"
+  }
+ },
+ "namePool": [
+  "다니엘",
+  "마리아",
+  "이안",
+  "니콜라이",
+  "소피아",
+  "알렉스",
+  "에밀",
+  "줄리아",
+  "빅토르",
+  "나탈리아",
+  "오스카",
+  "클라라",
+  "펠릭스",
+  "이리나",
+  "마테오",
+  "레아",
+  "세르게이",
+  "안나",
+  "토마스",
+  "엘레나",
+  "도윤",
+  "서연",
+  "민준",
+  "하은",
+  "지호",
+  "수아",
+  "현우",
+  "지민",
+  "예준",
+  "채원",
+  "건우",
+  "다인",
+  "시우",
+  "유나",
+  "태오",
+  "은서",
+  "준혁",
+  "소율",
+  "하람",
+  "가온",
+  "아오이",
+  "히로",
+  "나츠키",
+  "카이토",
+  "미나미",
+  "레이",
+  "츠바사",
+  "코하루",
+  "슌",
+  "아야카",
+  "웨이밍",
+  "슈린",
+  "지안",
+  "위에",
+  "롱",
+  "메이린",
+  "하오란",
+  "샤오위",
+  "첸",
+  "리우",
+  "카탈리나",
+  "디에고",
+  "루치아",
+  "산티아고",
+  "마르코",
+  "키아라",
+  "파비오",
+  "아델",
+  "야스민",
+  "오마르",
+  "라일라",
+  "사미르",
+  "누르",
+  "하산",
+  "아미라",
+  "칼릴",
+  "레일라",
+  "다리우스",
+  "시린",
+  "파르하드",
+  "잉그리드",
+  "비요른",
+  "아스트리드",
+  "라르스",
+  "시그리드",
+  "에릭",
+  "프레야",
+  "올라프",
+  "하랄드",
+  "솔베이그",
+  "고든",
+  "베로니카",
+  "아서",
+  "마틸다",
+  "휴고",
+  "로잘린",
+  "테오도르",
+  "이사벨",
+  "윈스턴",
+  "오필리아"
+ ]
 }

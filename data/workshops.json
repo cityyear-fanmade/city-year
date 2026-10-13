@@ -250,5 +250,138 @@
     "eva": 2
    }
   }
+ },
+ "officeGear": {
+  "bleed": [
+   {
+    "n": "톱날 의수",
+    "slot": "aug",
+    "fx": {
+     "atk": 1,
+     "spd": 1
+    },
+    "card": "rustblade",
+    "e": "공격+1 · 속도+1 · 카드 녹슨 칼날"
+   },
+   {
+    "n": "핏빛 톱날 의수",
+    "slot": "aug",
+    "fx": {
+     "atk": 3,
+     "spd": 2
+    },
+    "card": "bloodlet",
+    "e": "공격+3 · 속도+2 · 카드 피 가르기"
+   },
+   {
+    "n": "붉은 정오 의수",
+    "slot": "aug",
+    "fx": {
+     "atk": 4,
+     "spd": 3,
+     "dmgB": 1
+    },
+    "card": "noon",
+    "e": "공격+4 · 속도+3 · 피해+1 · 카드 붉은 정오"
+   }
+  ],
+  "rupture": [
+   {
+    "n": "균열 장갑",
+    "slot": "aug",
+    "fx": {
+     "atk": 1,
+     "eva": 1
+    },
+    "card": "fissure",
+    "e": "공격+1 · 회피+1 · 카드 균열 보행"
+   },
+   {
+    "n": "유리 파편 장갑",
+    "slot": "aug",
+    "fx": {
+     "atk": 3,
+     "eva": 2
+    },
+    "card": "shard",
+    "e": "공격+3 · 회피+2 · 카드 유리 파편"
+   },
+   {
+    "n": "균열 확장 장갑",
+    "slot": "aug",
+    "fx": {
+     "atk": 4,
+     "eva": 3,
+     "dmgB": 1
+    },
+    "card": "tremor",
+    "e": "공격+4 · 회피+3 · 피해+1 · 카드 균열 확장"
+   }
+  ],
+  "breath": [
+   {
+    "n": "호흡 보조기",
+    "slot": "aug",
+    "fx": {
+     "startBreath": 2,
+     "eva": 1
+    },
+    "card": "breathe",
+    "e": "시작 호흡+2 · 회피+1 · 카드 호흡 고르기"
+   },
+   {
+    "n": "정제 호흡기",
+    "slot": "aug",
+    "fx": {
+     "startBreath": 4,
+     "eva": 2,
+     "maxHp": 6
+    },
+    "card": "o_stance",
+    "e": "시작 호흡+4 · 회피+2 · HP+6 · 카드 숨 고르는 자세"
+   },
+   {
+    "n": "등불 호흡기",
+    "slot": "aug",
+    "fx": {
+     "startBreath": 6,
+     "eva": 3,
+     "maxHp": 10
+    },
+    "card": "lantern",
+    "e": "시작 호흡+6 · 회피+3 · HP+10 · 카드 등불 켜기"
+   }
+  ],
+  "burn": [
+   {
+    "n": "점화 의수",
+    "slot": "aug",
+    "fx": {
+     "burnHit": 1
+    },
+    "card": "o_ember",
+    "e": "적중마다 화상+1 · 카드 불씨 던지기"
+   },
+   {
+    "n": "화염 분사 의수",
+    "slot": "aug",
+    "fx": {
+     "burnHit": 1,
+     "atk": 2
+    },
+    "card": "o_blaze",
+    "e": "적중마다 화상+1 · 공격+2 · 카드 번지는 불길"
+   },
+   {
+    "n": "불주먹 의수",
+    "slot": "aug",
+    "fx": {
+     "burnHit": 2,
+     "atk": 3
+    },
+    "card": "o_blaze",
+    "e": "적중마다 화상+2 · 공격+3"
+   }
+  ]
  }
 }
