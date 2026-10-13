@@ -11,6 +11,7 @@ const D=loadData(),T=D.text,K=D.keywords,N=+(process.argv[2]||3000);
 const E=createEngine(D,{rng:mulberry32(1)});
 const sg=n=>n>=0?'+'+n:'−'+Math.abs(n);
 const pc=x=>(x*100).toFixed(1)+'%';
+const one=(tbl,i)=>(i?tbl[i-1].max+1:1)===tbl[i].max;
 const range=(tbl,i)=>`${i?tbl[i-1].max+1:1}–${tbl[i].max}`;
 const table=(head,rows)=>[`| ${head.join(' | ')} |`,`|${head.map(()=>'---').join('|')}|`,...rows.map(r=>`| ${r.join(' | ')} |`)].join('\n');
 const kwText=c=>(c.kw||[]).map(([k,n,to])=>`${K[k].n} +${n}${to==='s'?'(자신)':''}`).join(', ');
@@ -87,10 +88,10 @@ out.push('','### 적 전용 카드','',table(['카드','코스트','종류','피
  Object.entries(D.cards).filter(([id])=>enemyCards.has(id)&&!D.rewards.includes(id)&&!base.includes(id)).map(cardRow)));
 
 h('## 6. 출생표 (각 1d100)');
-out.push('### 출신','',table(['1d100','출신','효과','진로 보정','시작 자산'],D.origins.map((o,i)=>[range(D.origins,i),o.n,o.e.replace(/ · [^·]*진로 \+\d+/g,''),Object.entries(o.paths||{}).map(([k,v])=>`${T.paths[k]} +${v}`).join(', ')||'–',(D.money.start[o.n]||0)+D.money.unit])));
+out.push('### 출신','',table(['1d100','출신','효과','진로 보정','시작 자산'],D.origins.map((o,i)=>one(D.origins,i)?[range(D.origins,i),'???','???','???','???']:[range(D.origins,i),o.n,o.e.replace(/ · [^·]*진로 \+\d+/g,''),Object.entries(o.paths||{}).map(([k,v])=>`${T.paths[k]} +${v}`).join(', ')||'–',(D.money.start[o.n]||0)+D.money.unit])));
 out.push('','진로 보정은 그 진로로 들어가는 판정에 더해지고, 그 진로의 권유 사건이 (보정 × '+CFG.pathEventMul+')% 확률로 먼저 나온다.');
 for(const [title,tbl] of [['재능',D.talents],['결점',D.flaws],['무기 (무기 칸의 첫 장비)',D.weapons],['성장기 (단계마다)',D.childhood.table],['레벨 업 성장표 (세 번 굴려 하나 고름)',D.growth]])
-  out.push('',`### ${title}`,'',table(['1d100','이름','효과'],tbl.map((x,i)=>[range(tbl,i),x.n,fx(x)])));
+  out.push('',`### ${title}`,'',table(['1d100','이름','효과'],tbl.map((x,i)=>one(tbl,i)?[range(tbl,i),'???','???']:[range(tbl,i),x.n,fx(x)])));
 out.push('','### 색','',`1d100을 10씩 나눠 ${D.colors.map(c=>c.adj).join(' · ')} 중 하나. 직접 바꿀 수 있다. 특색 칭호는 색 + 가장 높은 능력치의 단어(공격 ${D.titleWords.atk.join('/')}, 회피 ${D.titleWords.eva.join('/')}, 속도 ${D.titleWords.spd.join('/')}, 체력 ${D.titleWords.hp.join('/')}).`);
 
 h('## 7. 성장');
