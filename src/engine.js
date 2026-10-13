@@ -160,7 +160,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       e:`공+${fx.atk} · 회피+${fx.eva}${fx.dmgB?' · 피해+'+fx.dmgB:''} · 가속(공격한 라운드마다 명중·회피 +5, 최대 3)`,fx,wx:{accel:B.accel}};
   }
   /* ===== 6시즌: E.G.O 발현자의 무기 성장 =====
-     전용 카드 '발현'을 낸 횟수가 CFG.egoGrow.need에 닿는 순간 특수 강화. 수치는 egoWeapons[].grow[등급-1] */
+     전용 카드 '발현'을 낸 누적 횟수가 CFG.egoGrow.need에 닿는 순간 TETH → HE → WAW → ALEPH. 수치는 egoWeapons[].grow[등급-1] */
   const egoBase=id=>{for(const o of D.hiddenOrigins||[])for(const g of o.egoWeapons||[])if(g.id===id)return g;return null};
   function egoItem(id,L){
     const b=egoBase(id),g=L?b.grow[L-1]:b,it=structuredClone({id:b.id,slot:b.slot,n:b.n,e:g.e,fx:g.fx,wx:g.wx});
