@@ -1,5 +1,7 @@
 /* 임시 수치: 밸런스는 여기만 바꾼다. `npm run sim`으로 확인한다. */
 export const CFG = {
+  /* 피해 주사위 최소값: 장비(최댓값) + 재능·성장기의 '+1'(겹치면 더해짐), 합계는 dminCap까지 */
+  dminCap: 4,
   /* 의견·버그 제보 구글 폼 (시작 화면 링크) */
   feedbackUrl: 'https://forms.gle/FYsYb2itq3LyUXrs9',
   /* 캐릭터 */

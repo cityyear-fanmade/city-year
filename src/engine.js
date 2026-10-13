@@ -92,7 +92,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문) */
     const HO=!J&&(D.hiddenOrigins||[]).find(x=>x.roll===r.o);
     const o=J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=pick(D.talents,r.t),f=pick(D.flaws,r.f),w=pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
-    const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,defUp:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,egoSight:0,relicApt:0};
+    const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,defUp:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,egoSight:0,relicApt:0};
     for(const x of [o,t,f])addStats(s,x.fx);
     const kid=childhood(s);
     const ch={r,o,t,f,w,kid,ci,color:D.colors[ci].hex,licensed:false,title:null,aff:null,paths:Object.assign({},o.paths),
@@ -129,6 +129,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const relicChoices=ch=>Object.keys(D.relics).filter(k=>!(ch.relicIds||[]).includes(k)&&!(ch.relics||[]).includes(D.relics[k].n)&&!(k==='laev'&&(ch.relics||[]).includes(D.relics.laev.open.n)));
   /* ===== 장비·돈·공방 ===== */
   /* 장비 칸마다 하나. 바꾸면 이전 장비 효과를 빼고 새 장비 효과를 더한다. 피해 최소값은 장비 중 가장 큰 값 */
+  /* 피해 주사위 최소값 = 장비 중 가장 큰 값 + 재능·성장기에서 온 +1들 (겹치면 더해진다), dminCap 이하 */
+  const calcDmin=ch=>Math.min(CFG.dminCap,Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1))+(ch.stats.dminUp||0));
   function equip(ch,item){
     /* 육신 뒤틀림: 장비를 낄 수 없다 (보관함으로) · N사 날개: 의수를 끼지 않는다 (보관함으로) */
     if(ch.distForm||(item.slot==='aug'&&isN(ch))){(ch.stash=ch.stash||[]).push(item);return}
@@ -138,7 +140,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.gear[item.slot]=item;
     /* 빼낸 장비는 버리지 않고 보관함으로 */
     if(old)(ch.stash=ch.stash||[]).push(old);
-    s.dmin=Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1));
+    s.dmin=calcDmin(ch);
     /* 무기 피해 주사위 면 수 (궁니르 d10). 장비 중 가장 큰 값, 기본 d6 */
     s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
     if(item.card&&!ownsCard(ch,item.card)&&!ch.deckLocked)putCard(ch,item.card);
@@ -149,7 +151,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const s=ch.stats,it=ch.gear[slot];if(!it)return;
     for(const [k,v] of Object.entries(it.fx))if(k!=='dmin'&&k in s){s[k]-=v;if(k==='maxHp')ch.hp=Math.min(ch.hp,s.maxHp)}
     delete ch.gear[slot];(ch.stash=ch.stash||[]).push(it);
-    s.dmin=Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1));s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
+    s.dmin=calcDmin(ch);s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
   }
   /* ===== 6시즌: 보냐텔리의 검 (레이피어 + 외날검) =====
      가속: 공격한 라운드마다 1스택(전투당 최대 3), 스택당 명중 +5 · 회피 +5.
@@ -215,6 +217,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const sd=ch.side||[];
     for(let i=sd.length-1;i>=0;i--)if(D.cards[sd[i]]&&D.cards[sd[i]].fixed){ch.deck.push(sd[i]);sd.splice(i,1)}
     while(ch.deck.length>deckMax(ch)){const k=ch.deck.map(id=>D.cards[id].fixed).lastIndexOf(false);if(k<0)break;(ch.side=ch.side||[]).push(ch.deck.splice(k,1)[0])}
+  }
+  /* 예전 판: 재능·성장기의 피해 최소 효과가 장비를 낄 때 지워져 있었다. 처음 한 번만 그 출처(재능·성장기)를 세어 되돌린다 */
+  function repairDmin(ch){
+    const s=ch.stats;if(s.dminUp!==undefined)return;
+    s.dminUp=[ch.t,...(ch.kid||[]).map(k=>k.x)].filter(x=>x&&x.fx&&(x.fx.dminUp||x.n==='타고난 완력'||x.n==='어깨너머 손질')).length;
+    s.dmin=calcDmin(ch);
   }
   function autoOffers(ch){
     if(ch.packOffer)acceptPack(ch);
@@ -619,7 +627,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function setDistort(ch,name){
     const X=CFG.distort,s=ch.stats;
     for(const it of Object.values(ch.gear)){if(!it)continue;for(const [k,v] of Object.entries(it.fx||{}))if(k!=='dmin'&&k in s)s[k]-=v;(ch.stash=ch.stash||[]).push(it)}
-    ch.gear={};s.dmin=1;addStats(s,X.fx);ch.hp=clamp(ch.hp+(X.fx.maxHp||0),1,s.maxHp);
+    ch.gear={};s.dmin=calcDmin(ch);addStats(s,X.fx);ch.hp=clamp(ch.hp+(X.fx.maxHp||0),1,s.maxHp);
     ch.distForm={n:(name||'').trim()||'이름 없는 뒤틀림'};ch.distPick=false;ch.distortPend=false;ch.distortDone=true;ch.voiceUsed=true;ch.mind=mindMax(ch);
     ch.deck=X.deck.slice();ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.offers=[];ch.packOffer=null;
     for(const g of ch.gearOffers||[])(ch.stash=ch.stash||[]).push(g);ch.gearOffers=[];
@@ -647,7 +655,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function advanceYear(G){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
-    G.free=true;const mc=G.ch;repairFixed(mc);autoOffers(mc);
+    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);autoOffers(mc);
     if(mc.distPick)setDistort(mc,'');
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
