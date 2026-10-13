@@ -548,7 +548,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const t=R.tiers.find(t=>year<=t.until);return t?t.spec:null;
   }
   function advanceYear(G){
-    const mc=G.ch;autoOffers(mc);
+    /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
+    G.free=true;const mc=G.ch;autoOffers(mc);
     if(mc.distPick)setDistort(mc,'');
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
@@ -562,7 +563,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.job==='arbiter'&&D.arbiterAuth&&G.year%10===9&&mc.authAt!==G.year){mc.authAt=G.year;return {type:'event',ev:D.arbiterAuth}}
     if(mc.affRetry&&!mc.aff){mc.affRetry=false;return {type:'event',ev:D.affiliation}}
     if(mc.voicePend&&!mc.voiceUsed&&!mc.ego){mc.voicePend=false;mc.voiceUsed=true;return {type:'event',ev:D.mindEvents.voice}}
-    G.year++;
+    G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}

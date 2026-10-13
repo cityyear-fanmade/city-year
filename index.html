@@ -252,7 +252,7 @@ button.chip:hover{background:color-mix(in srgb,var(--gold) 14%,transparent)}
 /* 주사위 무대: 명중·회피 주사위를 항상 한 줄에 나란히, 피해는 아래 줄 (이름이 길어도 세로로 접히지 않게) */
 .dice{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;justify-items:center;gap:8px 6px}
 .dice .dwrap{min-width:0;width:100%}
-.dice .dcap{white-space:normal;text-align:center;line-height:1.35;font-size:11px;letter-spacing:.04em}
+.dice .dcap{white-space:normal;text-align:center;line-height:1.35;font-size:11px;letter-spacing:.04em;min-height:4.1em;display:flex;align-items:center;justify-content:center}
 #dmgw{grid-column:1/-1}
 @media (max-width:600px){.die{width:56px;height:56px}.die b{font-size:22px}.arena{padding:10px 8px}}
 .roundbox summary{cursor:pointer;font-size:13.5px;line-height:1.6}
@@ -1046,7 +1046,8 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     const t=R.tiers.find(t=>year<=t.until);return t?t.spec:null;
   }
   function advanceYear(G){
-    const mc=G.ch;autoOffers(mc);
+    /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
+    G.free=true;const mc=G.ch;autoOffers(mc);
     if(mc.distPick)setDistort(mc,'');
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
@@ -1060,7 +1061,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.job==='arbiter'&&D.arbiterAuth&&G.year%10===9&&mc.authAt!==G.year){mc.authAt=G.year;return {type:'event',ev:D.arbiterAuth}}
     if(mc.affRetry&&!mc.aff){mc.affRetry=false;return {type:'event',ev:D.affiliation}}
     if(mc.voicePend&&!mc.voiceUsed&&!mc.ego){mc.voicePend=false;mc.voiceUsed=true;return {type:'event',ev:D.mindEvents.voice}}
-    G.year++;
+    G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
@@ -2213,7 +2214,7 @@ function startUI(E,app){
       const rule=(D.hiddenBosses||[]).find(h=>h.id===UI.fight),pen=rule&&rule.penalty&&!(G.ch.licensed&&G.ch.rank<=rule.penalty.fullRank)?rule.penalty:null;
       const enc=UI.enc&&UI.enc.hidden?`<div class="check"><b>${T.hiddenBoss}</b>${pen?` · <span class="bad">${pen.label} · 명중 ${sg(pen.atk)} · 회피 ${sg(pen.eva)} (${pen.fullRank}${T.rankUnit}이면 보정 없음)</span>`:''}</div>`:UI.enc&&UI.enc.roll?`<div class="check">${UI.enc.label} · 1d100 ${UI.enc.roll} → <b>${e.n}</b></div>`:'';
       const avoid=UI.avoidText?`<p class="small dim">${UI.avoidText}</p>`:'';UI.avoidText=null;
-      return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · 전투</div>${avoid}${enc}<h2 style="color:${e.color}">${ulName(e.n,e.ul)}</h2>${e.trait&&D.traits&&D.traits[e.trait]?`<div class="check"><b>특성 · ${esc(D.traits[e.trait].n)}</b> · ${esc(D.traits[e.trait].d)}</div>`:''}${e.abno?`<div class="check" style="border-color:#8a7fb8"><b style="color:#8a7fb8">환상체</b> · 마주치면 정신력이 2d3 깎인다${G.ch.ego?` (E.G.O 하한 ${CFG.mind.ego[G.ch.ego.type].floor})`:''}</div>`:''}<p class="lead">${e.intro}</p></div>
+      return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 전투</div>${avoid}${enc}<h2 style="color:${e.color}">${ulName(e.n,e.ul)}</h2>${e.trait&&D.traits&&D.traits[e.trait]?`<div class="check"><b>특성 · ${esc(D.traits[e.trait].n)}</b> · ${esc(D.traits[e.trait].d)}</div>`:''}${e.abno?`<div class="check" style="border-color:#8a7fb8"><b style="color:#8a7fb8">환상체</b> · 마주치면 정신력이 2d3 깎인다${G.ch.ego?` (E.G.O 하한 ${CFG.mind.ego[G.ch.ego.type].floor})`:''}</div>`:''}<p class="lead">${e.intro}</p></div>
         <button class="btn primary" data-a="fight">맞선다</button>`;
     }
     const ev=UI.ev,ch=G.ch;
@@ -2223,7 +2224,7 @@ function startUI(E,app){
       if(c.check){const pm=E.pathMod(ch,c.check);hint=`${c.check.s?STAT[c.check.s]+' 판정':'운 판정'} · 1d${c.check.pure?100:E.checkDie(ch)} ${sg(E.checkMod(ch,c.check))} ≥ ${E.checkDc(ch,c.check)}${pm?` (출신 ${T.paths[c.check.path]} 보정 +${pm})`:''}${c.h?' · '+c.h:''}`}
       return `<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`;
     }).join('');
-    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead">${ev.x}</p></div><div class="stack">${btns}</div>`;
+    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead">${ev.x}</p></div><div class="stack">${btns}</div>`;
   }
   function nextLabel(){
     if(G.ch.lvPend>0)return '성장 굴림';
@@ -2265,6 +2266,8 @@ function startUI(E,app){
       <span class="small bad">${UI.distErr||''}</span>
       <button class="btn primary" data-a="distset">이 이름으로 뒤틀린다</button></div>`;
   }
+  /* 연차 표시: 해를 넘기지 않는 사건에서는 숨긴다 */
+  const yearTag=()=>G.free||G.year<1?'':`${G.year}/${E.lastYear(G)} · `;
   function vEgoPick(){
     const X=CFG.mind.ego,ty=UI.egoType||'atk';
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">E.G.O 개화</span>
@@ -2607,7 +2610,7 @@ function startUI(E,app){
     const o=UI.omen,m=o.omen;
     const go=`<button class="btn" data-a="omen" data-i="1"><b>${m.go||'이 길로 간다'}</b><span class="mono small dim">${T.hiddenBoss} · 매우 위험</span></button>`;
     const away=o.escape?`<button class="btn" data-a="omen" data-i="0"><b>${m.away||'돌아선다'}</b><span class="mono small dim">평소처럼 조우한다</span></button>`:'';
-    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · 불길한 예감</div><h2>무언가 다가온다</h2><p class="lead">${m.x||'무언가 안 좋은 예감이 든다.'}</p></div>
+    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 불길한 예감</div><h2>무언가 다가온다</h2><p class="lead">${m.x||'무언가 안 좋은 예감이 든다.'}</p></div>
       <div class="stack">${go}${away}</div>`;
   }
   function flow(){

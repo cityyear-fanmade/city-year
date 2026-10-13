@@ -242,7 +242,7 @@ button.chip:hover{background:color-mix(in srgb,var(--gold) 14%,transparent)}
 /* 주사위 무대: 명중·회피 주사위를 항상 한 줄에 나란히, 피해는 아래 줄 (이름이 길어도 세로로 접히지 않게) */
 .dice{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;justify-items:center;gap:8px 6px}
 .dice .dwrap{min-width:0;width:100%}
-.dice .dcap{white-space:normal;text-align:center;line-height:1.35;font-size:11px;letter-spacing:.04em}
+.dice .dcap{white-space:normal;text-align:center;line-height:1.35;font-size:11px;letter-spacing:.04em;min-height:4.1em;display:flex;align-items:center;justify-content:center}
 #dmgw{grid-column:1/-1}
 @media (max-width:600px){.die{width:56px;height:56px}.die b{font-size:22px}.arena{padding:10px 8px}}
 .roundbox summary{cursor:pointer;font-size:13.5px;line-height:1.6}
