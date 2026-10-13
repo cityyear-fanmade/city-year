@@ -232,10 +232,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     while((ch.gearOffers||[]).length)resolveGear(ch,0,true);
   }
   /* ===== 6시즌: 내 사무소 =====
-     5급 이상 해결사가 운 판정(1d100 ≥ 55)에 성공하면 이름(1~4글자) + '사무소'로 차린다.
+     5급 이상 해결사가 운 판정(1d100 ≥ 55)에 성공하면 이름(1~12글자) + '사무소'로 차린다.
      전문 분야(키워드)를 고르면 3년마다(공방 거리) 그 키워드의 카드나 의수를 알선해 준다 */
-  /* 이름 입력 규칙(공용): 한글·영문·숫자·일본어(히라가나·가타카나·한자) 1~10글자 (특색은 2~10). 띄어쓰기는 space일 때만 */
-  const NAME_CH=/^[가-힣A-Za-z0-9\u3040-\u30ff\u4e00-\u9fff\uff66-\uff9f\u3005 ]+$/,HANGUL=/[가-힣]/;
+  /* 이름 입력 규칙(공용): 한글·영문·숫자·일본어(히라가나·가타카나·한자) 1~CFG.nameMax글자 (특색은 2~). 띄어쓰기는 space일 때만 */
+  const NAME_CH=/^[가-힣A-Za-z0-9\u3040-\u30ff\u4e00-\u9fff\uff66-\uff9f\u3005\uff10-\uff19\uff21-\uff3a\uff41-\uff5a\u3000 ]+$/,HANGUL=/[가-힣]/;
   function nameErr(raw,o={}){
     const max=CFG.nameMax,min=o.min||1,w=(raw||'').trim(),lim=max;
     const bad=!w||(!o.space&&/\s/.test(w))||!NAME_CH.test(w)||!w.replace(/\s/g,'')||[...w].length<min||[...w].length>lim;
@@ -593,7 +593,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   const gainMind=(ch,n)=>{const m0=ch.mind;ch.mind=Math.min(mindMax(ch),ch.mind+n);return ch.mind-m0};
   const mindTier=ch=>M.tiers.find(t=>ch.mind>=t.at)||null;
-  /* E.G.O 이름: 1~5글자, 게임에 있는 물건·전리품·유물·카드 이름과 같으면 안 된다 (띄어쓰기 무시) */
+  /* E.G.O 이름: 1~12글자, 게임에 있는 물건·전리품·유물·카드 이름과 같으면 안 된다 (띄어쓰기 무시) */
   function egoTaken(){
     const n=new Set(),add=x=>{if(x)n.add(String(x).replace(/\s/g,''))};
     for(const o of [D.items,D.special,D.cards])for(const v of Object.values(o||{}))add(v.n);

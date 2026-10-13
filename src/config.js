@@ -8,8 +8,8 @@ export const CFG = {
   baseHp: 60,
   /* 전투: 빛(코스트), 손패, 키워드 */
   light: 3, lightMax: 5, hand: 4, stackCap: 10,
-  /* 이름 입력 칸(특이점·E.G.O·뒤틀림·사무소·날개·특색)의 최대 글자 수 */
-  nameMax: 10,
+  /* 이름 입력 칸(특이점·E.G.O·뒤틀림·사무소·날개·특색)의 최대 글자 수 (특색은 2글자부터) */
+  nameMax: 12,
   breathCritPer: 5, critMult: 1.5,
   /* 호흡(v6.1): 최대 cap. 타격마다 소모되지 않고 라운드가 바뀔 때 decay씩 줄어든다.
      치명 확률: 호흡 sure 이상 100%, from~sure-1은 base%에서 step%씩 올라 90%, 1~evaMax는 치명 없이 회피 +eva. 환도 배수는 호흡 hwandoCap까지만 반영 */

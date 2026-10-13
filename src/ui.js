@@ -510,7 +510,7 @@ export function startUI(E,app){
     return `<div class="check" style="border-color:var(--bleed)"><b>v6 테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v7.0.0</div>
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · v7.0.1</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vUpdates()}
@@ -556,7 +556,7 @@ export function startUI(E,app){
   }
   /* 이번 업데이트: 처음 화면에서 접어 둔다 */
   const DIRECTION=['특이점(날개 기업 길)이 너무 강하다는 의견이 있어 너프를 검토하고 있습니다. 느낀 점을 제보로 알려 주세요.','호흡·치명 개편(v6.1.0)의 반응을 보고 수치를 다시 조정합니다.','하드 난이도와 후반 난이도는 제보를 보며 계속 손봅니다.'];
-  const UPDATES={v:'v7.0.0',items:[]};
+  const UPDATES={v:'v7.0.1',items:[]};
   /* 공지: id가 바뀔 때만 한 번 뜬다 (버전·소폭 조정과 무관). 새 공지를 띄울 때만 id를 바꾼다 */
   /* v6.0 공지 본문 (v6.0.2부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V6SEC=[['🎒 화면과 편의',['가방: 화면 오른쪽 네모 칸(능력치·장비·카드·전리품)을 누르면 가방이 열립니다.','카드 정리: 카드마다 종류(공격·디버프·버프·회피·방어)가 색으로 표시되고, 종류·키워드·이름으로 찾을 수 있습니다.','출생 화면: 주사위와 함께 결과 이름이 굴러가고, "출생 규칙"에서 표 전체를 볼 수 있습니다.']],
@@ -569,14 +569,15 @@ export function startUI(E,app){
   const V602SEC=[['🛠 버그 수정',['사무소에 들어간 해결사가 1급에 올라도 승급 심사만 반복되고 특색 심사가 열리지 않던 문제를 고쳤습니다. 승급에 필요한 실적 계산도 바로잡았고, 전체를 소폭 낮췄습니다.','카드를 받을 때 "덱의 카드와 바꾼다"로 뺄 수 없는 고정 카드를 카드함으로 빼낼 수 있던 문제를 고쳤습니다. 이미 빠진 고정 카드는 다음 해에 덱으로 돌아옵니다.','단테의 노트·검지 단말기 배경에서 PC 화면 오른쪽의 가방 네모 칸(능력치·장비·카드·전리품)이 보이지 않던 문제를 고쳤습니다.','PC 창이 좁을 때(약 900~1020px) 가방 칸이 본문을 가리던 문제도 함께 고쳤습니다. 이 폭에서는 가방 칸이 상단 정보 안에 들어갑니다.']]];
   /* v6.0.3 공지 본문 (v6.0.4부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V603SEC=[['🛠 버그 수정 · 성장 효과',['재능 "타고난 완력"과 성장기 "어깨너머 손질"의 "피해 주사위 최소 2" 효과가 캐릭터를 만들 때 출생 무기를 끼면서 지워지던 문제를 고쳤습니다. 두 효과를 얻고도 적용되지 않던 판이 모두 해당합니다.','두 효과는 이제 각각 "피해 주사위 최소 +1"입니다. 둘이 겹치면 +2로 더해지고, 장비의 피해 최소값(예: 명장의 대검 3)과도 더해집니다. 합계는 최대 4까지입니다.','이미 진행 중인 판은 다음 해로 넘어갈 때 재능·성장기를 확인해 자동으로 반영됩니다.']]];
-  /* v6.0.4 공지 본문 (v7.0.0부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
+  /* v6.0.4 공지 본문 (v7.0.1부터는 첫 화면 '이번 업데이트'에서만 함께 보여 준다) */
   const V604SEC=[['🔒 지난 새 소식 (날개·소지)',['날개에서 무언가 일어나는 것 같습니다. 오래 살아남은 날개의 사람에게 낯선 제안이 올지도 모릅니다.','소지의 얼굴을 한 사람들 사이에서도 이상한 소문이 돕니다. 한참 뒤에야 닿는 곳에서 누군가 기다리고 있다고 합니다.','어떤 길인지, 어디로 이어지는지는 직접 확인해 보세요.']]];
-  const NOTICE={id:'v7.0.0-1',t:'의견반영 시스템 전면개편 업데이트 · v7.0.0',
+  const NOTICE={id:'v7.0.1-1',t:'도시의 한 해 v7.0.1 · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['1. 시드 분리',['시드는 출생만 정합니다. 출신·재능·결점·무기, 성장기와 숨은 출생 굴림까지 같은 시드면 똑같이 나옵니다.','태어난 뒤 사건 주사위는 매번 달라집니다. 같은 시드, 같은 선택으로 다시 해도 다른 사건이 나오는 것을 확인했습니다.','설정에 "인생 주사위: 매번 다르게 / 시드 고정(재현)"을 넣어서, 재현이 필요하면 예전처럼 쓸 수 있습니다.','"출생 + 히든 스탯 1%까지 보장"은 숨은 출생(1% 굴림)과 성장기까지 시드로 고정']],
+    sec:[['✍ 이름 글자 수 확대',['이제 글자 입력 최대수가 늘어납니다. 1 ~ 12','여러분의 창작 욕구를 충족시키세요']]]};
+  const V700SEC=[['1. 시드 분리',['시드는 출생만 정합니다. 출신·재능·결점·무기, 성장기와 숨은 출생 굴림까지 같은 시드면 똑같이 나옵니다.','태어난 뒤 사건 주사위는 매번 달라집니다. 같은 시드, 같은 선택으로 다시 해도 다른 사건이 나오는 것을 확인했습니다.','설정에 "인생 주사위: 매번 다르게 / 시드 고정(재현)"을 넣어서, 재현이 필요하면 예전처럼 쓸 수 있습니다.','"출생 + 히든 스탯 1%까지 보장"은 숨은 출생(1% 굴림)과 성장기까지 시드로 고정']],
       ['2. 세이브 옮기기',['첫 화면 아래 "세이브 옮기기"에서 코드로 내보내고, 다른 기기에서 붙여 넣거나 파일로 불러옵니다.','세이브·기록실·해금이 같이 옮겨집니다. 설정(테마·연출)은 안 옮겨집니다.','한 기기에서 만든 코드를 다른 기기 환경에서 불러와 이어하기가 뜨는 것까지 확인했고, 잘못된 코드는 안내 문구가 나옵니다.','이어하기 세이브가 있는 기기에서는 한 번 더 눌러야 덮어씁니다.']],
       ['3. 자동 전투',['전투 중 "일시정지" 버튼을 넣었습니다. 멈춘 동안 HP가 그대로 유지되고, 이어서 진행하면 다시 진행됩니다.','설정에 "자동 전투 간격"(느림 / 보통 / 빠름)을 넣었습니다. 보통은 기존과 같습니다.']],
-      ['4. 표지 발현 버그 수정',['원인: 표지 발현이 장비 수치까지 ×1.6으로 불린 뒤, 장비를 바꾸면 원래 수치만 빼서 불어난 부분이 몸에 남았습니다.','재현: 무기를 낀 채 발현해 공격이 20에서 32가 됐고, 맨손 무기로 바꿔도 12가 남았습니다.','수정: 이제 장비 수치는 빼고 몸의 수치에만 ×1.6을 곱합니다. 같은 테스트에서 맨손으로 바꾸면 0이 됩니다.','이미 발현한 판은 이미 부푼 수치가 그대로 남습니다.','표지 발현 효과 자체가 장비를 낀 사람에게는 조금 약해집니다.']]]};
+      ['4. 표지 발현 버그 수정',['원인: 표지 발현이 장비 수치까지 ×1.6으로 불린 뒤, 장비를 바꾸면 원래 수치만 빼서 불어난 부분이 몸에 남았습니다.','재현: 무기를 낀 채 발현해 공격이 20에서 32가 됐고, 맨손 무기로 바꿔도 12가 남았습니다.','수정: 이제 장비 수치는 빼고 몸의 수치에만 ×1.6을 곱합니다. 같은 테스트에서 맨손으로 바꾸면 0이 됩니다.','이미 발현한 판은 이미 부푼 수치가 그대로 남습니다.','표지 발현 효과 자체가 장비를 낀 사람에게는 조금 약해집니다.']]];
   const V610SEC=[['💨 호흡·치명 개편',['이전: 호흡 1당 치명 5%, 타격마다 호흡 1 소모, 최대 10.','이후: 호흡은 최대 12, 타격해도 줄지 않고 라운드가 바뀔 때마다 2씩 줄어듭니다.','치명 확률: 호흡 4에서 20%, 1마다 +14%(9에서 90%), 10 이상은 확정 치명. 호흡 1~3은 치명 대신 회피 +5.','치명 피해는 그대로 ×1.5입니다. 환도의 호흡당 치명 피해 +10%는 호흡 10까지만 반영됩니다.']],
       ['🛡 출혈·파열',['방어 카드를 내면 자신의 출혈·파열이 1/4 줄어듭니다(파열 8이면 6). 적도 똑같이 적용됩니다.']],
       ['🔧 공방',['카드 지우기가 카드 교환으로 바뀌었습니다. 덱의 카드를 일반 전투에서 얻는 카드 중 무작위 한 장으로 바꿉니다(방문마다 3장, 500안).','장비 정비가 생겼습니다. 장착한 장비마다 최대 5번, 50% 확률로 공격 또는 회피 +1을 시도합니다(실패해도 횟수는 소모, 시도할수록 비용이 늘어납니다). 모든 장비에 적용됩니다.']],
@@ -621,7 +622,7 @@ export function startUI(E,app){
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -644,7 +645,7 @@ export function startUI(E,app){
       <div class="panel stack" style="gap:10px">
         <label class="field" for="nm"><span class="eyebrow">이름</span><input id="nm" maxlength="12" value="${esc(b.name||'')}" placeholder="${T.you}" autocomplete="off"></label>
         <div class="row between"><span class="mono small dim">시드 <b style="color:var(--fg)">${b.seed}</b> · ${UI.daily&&b.seed===dailySeed(UI.daily)?`<b style="color:var(--gold)">오늘의 시드 ${UI.daily}</b>`:'태어날 때마다 새로 뽑힌다'}</span></div>
-        <div class="row" style="flex-wrap:nowrap"><input id="seedIn" inputmode="numeric" enterkeyhint="go" maxlength="10" placeholder="시드 번호로 다시 태어나기" autocomplete="off" style="flex:1;min-width:0">
+        <div class="row" style="flex-wrap:nowrap"><input id="seedIn" inputmode="numeric" enterkeyhint="go" maxlength="12" placeholder="시드 번호로 다시 태어나기" autocomplete="off" style="flex:1;min-width:0">
           <button class="chip" data-a="seed">이 시드로</button></div>
       </div>
       ${b.o.hidden?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">숨은 출생 · 출신 ${b.r.o}</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">${esc(b.o.e)}</span></div>`:''}
@@ -731,18 +732,18 @@ export function startUI(E,app){
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
       ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.wingPick?vWingPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
-  /* 특색 이름: 색은 고정, 뒤 단어(2~3글자)를 직접 적는다 */
+  /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
     const ks=E.relicChoices(G.ch);
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">잊힌 유물 · 하나를 고른다</span><p class="small dim">이미 가진 유물은 고를 수 없다.</p>
       ${ks.map(k=>{const r=D.relics[k];return `<button class="btn" data-a="lrelic" data-i="${k}"><b>${esc(r.n)}</b><span class="mono small" style="color:var(--gold)">${esc(r.e)}</span></button>`}).join('')}</div>`;
   }
-  /* 6시즌: 내 사무소 이름(1~4글자 + 사무소)과 전문 분야 */
+  /* 6시즌: 내 사무소 이름(1~12글자 + 사무소)과 전문 분야 */
   function vOfficePick(){
     const kw=UI.offKw||'bleed',nm=UI.offName||'';
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">내 사무소 차리기</span>
-      <p class="small">간판에 들어갈 이름을 1~10글자로 적는다. 뒤에 '사무소'가 붙는다. 뒤에 '사무소'가 붙는다.</p>
-      <div class="row"><input id="offname" maxlength="10" value="${esc(nm)}" autocomplete="off" placeholder="1~10글자" style="width:min(12em,50vw)"><b class="serif">사무소</b></div>
+      <p class="small">간판에 들어갈 이름을 1~12글자로 적는다. 뒤에 '사무소'가 붙는다.</p>
+      <div class="row"><input id="offname" maxlength="12" value="${esc(nm)}" autocomplete="off" placeholder="1~12글자" style="width:min(12em,50vw)"><b class="serif">사무소</b></div>
       <span class="eyebrow" style="margin-top:4px">전문 분야</span>
       <div class="seg">${Object.entries(E.OKW).map(([k,n])=>`<button class="${kw===k?'on':''}" data-a="offkw" data-i="${k}">${n}</button>`).join('')}</div>
       <p class="small dim">3년마다(공방 거리를 지날 때) 사무소가 이 분야의 카드나 의수를 알선해 준다. 급수가 오르면 더 좋은 의수가 들어온다.</p>
@@ -753,7 +754,7 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px;border-color:#8a2a2a"><span class="eyebrow" style="color:#c25050">육신 뒤틀림</span>
       <p class="small">몸이 마음의 모양을 따라 비틀렸다. 이제 장비를 쥘 수 없고, 상대에게 디버프를 걸 수 없다. 대신 몸 자체가 무기가 된다.</p>
       <p class="small mono" style="color:#c25050">최대 HP +${CFG.distort.fx.maxHp} · 공격 +${CFG.distort.fx.atk} · 장비 전부 보관함으로 · 덱이 뒤틀린 책장 ${CFG.distort.deck.length}장으로 고정 (빛 없음) · 정신력이 더 깎이지 않는다</p>
-      <div class="row"><span class="small">뒤틀림의 이름</span><input id="distname" maxlength="10" value="${esc(UI.distName||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">뒤틀림의 이름</span><input id="distname" maxlength="12" value="${esc(UI.distName||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
       <span class="small bad">${UI.distErr||''}</span>
       <button class="btn primary" data-a="distset">이 이름으로 뒤틀린다</button></div>`;
   }
@@ -764,7 +765,7 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">E.G.O 개화</span>
       <p class="small">마음이 무너지기 직전, 그것을 붙잡은 모양이 힘이 되었다. 종류와 이름을 정한다. 덱 최대 ${CFG.deck.max+CFG.mind.deckPlus}장(전용 카드 1장은 고정) · 전투 처음 ${CFG.mind.lightRounds}라운드 빛 +${CFG.mind.light}.</p>
       <div class="row" style="gap:8px">${['atk','def'].map(k=>`<button class="btn ${ty===k?'primary':'quiet'}" style="flex:1" data-a="egotype" data-i="${k}">${X[k].n}<br><span class="small">${k==='atk'?`공격 +${X.atk.hit} · 정신력 ${X.atk.floor} 밑으로 안 떨어짐 · 전용 카드 ${D.cards[X.atk.card].n}`:`체력 +${X.def.hp} · 회피 +${X.def.eva} · 정신력 ${X.def.floor} 밑으로 안 떨어짐 · 전용 카드 ${D.cards[X.def.card].n}`}</span></button>`).join('')}</div>
-      <div class="row"><span class="small">이름</span><input id="egoname" maxlength="10" value="${esc(UI.egoName||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">이름</span><input id="egoname" maxlength="12" value="${esc(UI.egoName||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
       <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
       <span class="small bad">${UI.egoErr||''}</span>
       <button class="btn primary" data-a="egoset">이 E.G.O로 정한다</button></div>`;
@@ -775,7 +776,7 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">특이점 개발</span>
       <p class="small">전용 연구 구역에서 특이점의 모양이 잡혀 간다. 어떤 효과로 개발할지, 무엇이라 부를지 정한다. 이후 강화 실험으로 효과가 자란다.</p>
       <div class="stack" style="gap:8px">${Object.entries(T_).map(([k,v])=>`<button class="btn ${ty===k?'primary':'quiet'}" data-a="singtype" data-i="${k}"><b>${v.n}</b><span class="small">${v.e}</span></button>`).join('')}</div>
-      <div class="row"><span class="small">이름</span><input id="singname" maxlength="10" value="${esc(UI.singName||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">이름</span><input id="singname" maxlength="12" value="${esc(UI.singName||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
       <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
       <span class="small bad">${UI.singErr||''}</span>
       <button class="btn primary" data-a="singset">이 특이점으로 정한다</button></div>`;
@@ -792,7 +793,7 @@ export function startUI(E,app){
     const ego=G.ch.namePend==='ego';
     return `<div class="panel stack" style="gap:8px;border-color:${ego?'var(--gold)':'#c25050'}"><span class="eyebrow">${ego?'E.G.O 개화':'육신 뒤틀림'}</span>
       <p class="small">${ego?'싸우는 도중 마음이 무너지는 순간, 붙잡은 모양이 힘이 되었다. 그 이름을 정한다.':'싸우는 도중 마음이 버티지 못하고 몸이 뒤틀렸다. 그 이름을 정한다.'}</p>
-      <div class="row"><span class="small">이름</span><input id="nameval" maxlength="10" value="${esc(UI.nameVal||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">이름</span><input id="nameval" maxlength="12" value="${esc(UI.nameVal||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
       <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
       <span class="small bad">${UI.nameErr||''}</span>
       <button class="btn primary" data-a="nameset">이 이름으로 정한다</button></div>`;
@@ -800,15 +801,15 @@ export function startUI(E,app){
   function vWingPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">날개 설립</span>
       <p class="small">새 법인의 이름을 정한다. 뒤에 '날개'가 붙는다.</p>
-      <div class="row"><span class="small">이름</span><input id="wingname" maxlength="10" value="${esc(UI.wingName||'')}" autocomplete="off" placeholder="1~10글자" style="width:min(14em,60vw)"></div>
+      <div class="row"><span class="small">이름</span><input id="wingname" maxlength="12" value="${esc(UI.wingName||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
       <span class="small bad">${UI.wingErr||''}</span>
       <button class="btn primary" data-a="wingset">이 이름으로 세운다</button></div>`;
   }
   function vTitlePick(){
     const ch=G.ch,adj=D.colors[ch.ci].adj,cur=ch.title.slice(adj.length+1);
     return `<div class="panel stack" style="gap:8px;border-color:${ch.color}"><span class="eyebrow">${T.titleLabel} 이름 정하기</span>
-      <p class="small">도시가 당신을 부를 이름이다. 색 뒤에 붙을 말을 2~10글자로 적는다.</p>
-      <div class="row"><b class="serif" style="color:${ch.color}">${esc(adj)}</b><input id="tw" maxlength="10" value="${esc(cur)}" autocomplete="off" placeholder="2~10글자" style="width:min(12em,50vw)"></div>
+      <p class="small">도시가 당신을 부를 이름이다. 색 뒤에 붙을 말을 2~12글자로 적는다.</p>
+      <div class="row"><b class="serif" style="color:${ch.color}">${esc(adj)}</b><input id="tw" maxlength="12" value="${esc(cur)}" autocomplete="off" placeholder="2~12글자" style="width:min(12em,50vw)"></div>
       <span class="small bad" id="twerr">${UI.twErr||''}</span>
       <button class="btn primary" data-a="tname">이 이름으로 정한다</button></div>`;
   }
@@ -1354,6 +1355,7 @@ export function startUI(E,app){
     testFight(id,hp){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;render()},
     /* 자동 테스트용: 특색 심사 통과 직후 화면 */
     testColor(){if(!G)return;G.ch.licensed=true;G.ch.rank=1;const r=E.applyFx(G.ch,{colorPass:true});UI.res={t:'심사 통과',chips:r.chips,roll:null};UI.screen='result';render()},
+    testPick(k){if(!G)return;G.ch[k]=true;if(k==='singPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0}}if(k==='wingPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0,n:'ゼロ'}}if(k==='titlePick'){G.ch.licensed=true;G.ch.rank=5;G.ch.title=D.colors[G.ch.ci].adj+' 임시'}if(k==='officePick'){G.ch.licensed=true;G.ch.rank=5}UI.res={t:'이름 시험',chips:[]};UI.screen='result';render()},
     testMoney(n){if(G){G.ch.money=n;render()}},
     testShop(){if(!G)return;G.ch.money=5000;UI.stock=Object.keys(D.special).slice(0,2);UI.cardBox=true;UI.aid=true;UI.swapped=null;UI.tuneMsg=null;UI.bought=null;UI.deleted=null;UI.sold=null;UI.rested=null;UI.broker=null;UI.screen='shop';render()},
     /* 6시즌 자동 테스트: 사무소 개설 화면, 사건 바로 보기, 사무소 알선 */
