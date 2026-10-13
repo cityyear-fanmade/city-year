@@ -1787,6 +1787,28 @@
      "t"
     ]
    ]
+  },
+  "e_manifest": {
+   "n": "발현",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 5,
+   "b": 0,
+   "hit": 12,
+   "mindCost": 5,
+   "fixed": true,
+   "d": "정신력 5 소모 · E.G.O의 힘을 개방한다"
+  },
+  "e_focus": {
+   "n": "정신 집중",
+   "c": 1,
+   "t": "def",
+   "eva": 7,
+   "mindGain": 3,
+   "fixed": true,
+   "d": "이번 라운드 회피 +7 · 정신력 3 회복"
   }
  },
  "rewards": [

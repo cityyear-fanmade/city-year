@@ -302,7 +302,7 @@ export function startUI(E,app){
     const deck=ch.deck.map((id,i)=>({id,i})).filter(x=>cardMatch(D.cards[x.id]));
     const sd=side.map((id,i)=>({id,i})).filter(x=>cardMatch(D.cards[x.id]));
     const out=can&&ch.deck.length>S.minDeck,inn=can&&E.deckRoom(ch);
-    const dl=deck.map(({id,i})=>cardRow(id,out?`<button class="chip" data-a="dout" data-i="${i}">카드함으로</button>`:'')).join('')||'<p class="small dim">조건에 맞는 카드가 없다.</p>';
+    const dl=deck.map(({id,i})=>cardRow(id,out&&!D.cards[id].fixed?`<button class="chip" data-a="dout" data-i="${i}">카드함으로</button>`:D.cards[id].fixed?'<span class="small dim">전용 · 뺄 수 없다</span>':'')).join('')||'<p class="small dim">조건에 맞는 카드가 없다.</p>';
     const sl=sd.map(({id,i})=>cardRow(id,can?`${inn?`<button class="chip" data-a="din" data-i="${i}">덱에 넣기</button>`:''}${ch.cardMoney?'':`<button class="chip${UI.dropAsk===i?' warn':''}" data-a="sdrop" data-i="${i}">${UI.dropAsk===i?'정말 버린다':'버리기'}</button>`}`:'')).join('');
     return `<div class="row between"><span class="eyebrow">덱 ${ch.deck.length}/${CFG.deck.max}</span>${ch.deckLocked||ch.cardMoney?`<span class="small dim">${ch.deckLocked?'덱 고정':'전용 카드팩'} · 넣고 뺄 수 없다</span>`:''}</div><div class="invcards">${dl}</div>
       <div class="row between" style="margin-top:6px"><span class="eyebrow">카드함 ${side.length}</span>${side.length&&!inn&&can?'<span class="small dim">덱이 가득 찼다. 먼저 덱에서 빼야 넣을 수 있다</span>':''}</div>
@@ -445,7 +445,7 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 지우기</b><span class="mono" style="color:var(--gold)">${E.money(S.delCost)} · 이번 방문 ${del.length}/${S.delMax}</span></div>
       <p class="small dim">덱에서 카드를 지운다. 공방에 들를 때마다 ${S.delMax}장까지, 덱은 ${S.minDeck}장 아래로 줄일 수 없다.</p>
       ${del.length?`<p class="good small">지운 카드 · ${del.map(esc).join(', ')}</p>`:''}
-      ${left>0?`<div class="chips">${ch.deck.map((id,i)=>`<button class="chip" data-a="delcard" data-i="${i}" ${can?'':'disabled'}>${D.cards[id].n} ×</button>`).join('')}</div>`:''}
+      ${left>0?`<div class="chips">${ch.deck.map((id,i)=>D.cards[id].fixed?'':`<button class="chip" data-a="delcard" data-i="${i}" ${can?'':'disabled'}>${D.cards[id].n} ×</button>`).join('')}</div>`:''}
       ${left>0&&!can?`<p class="small dim">${ch.deck.length<=S.minDeck?'덱이 더 줄어들 수 없다.':'돈이 모자란다.'}</p>`:''}${left<=0?'<p class="small dim">이번 방문에는 더 지울 수 없다.</p>':''}</div>`;
   }
   function vRules(){

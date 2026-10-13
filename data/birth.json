@@ -940,6 +940,115 @@
     "guard"
    ],
    "relicBase": 25
+  },
+  {
+   "roll": 20,
+   "n": "E.G.O 발현자",
+   "hidden": true,
+   "t": "뒷골목에서 마음이 한 번 부서졌다. 그 조각을 붙잡은 채 살아남았고, 손에는 마음의 모양을 한 무기가 남았다.",
+   "e": "해결사 9급으로 시작 · E.G.O 개화 상태 · 무작위 E.G.O 무기 · 전용 카드 발현·정신 집중 (뺄 수 없음) · 특색 심사 +20 · 특색이 되면 모든 능력치 +5 · 해결사 진로 +20",
+   "fx": {},
+   "paths": {
+    "fixer": 20
+   },
+   "flags": {},
+   "money": 150,
+   "licensed": true,
+   "colorBonus": 20,
+   "colorFx": {
+    "maxHp": 5,
+    "atk": 5,
+    "eva": 5,
+    "spd": 5,
+    "check": 5
+   },
+   "deck": [
+    "slash",
+    "thrust",
+    "smash",
+    "guard",
+    "e_manifest",
+    "e_focus"
+   ],
+   "egoWeapons": [
+    {
+     "id": "ego_penitence",
+     "slot": "weapon",
+     "n": "참회",
+     "e": "E.G.O · 공+6 · 피해 2d3 · 적중 시 정신력 1 회복",
+     "fx": {
+      "atk": 6
+     },
+     "wx": {
+      "dice": [
+       2,
+       3
+      ],
+      "mindHit": 1
+     }
+    },
+    {
+     "id": "ego_redeyes",
+     "slot": "weapon",
+     "n": "붉은 눈",
+     "e": "E.G.O · 공+5 · 회피+3 · 피해 2d3 · 적중 시 출혈 1",
+     "fx": {
+      "atk": 5,
+      "eva": 3
+     },
+     "wx": {
+      "dice": [
+       2,
+       3
+      ],
+      "hitKw": [
+       [
+        "bleed",
+        1
+       ]
+      ]
+     }
+    },
+    {
+     "id": "ego_universe",
+     "slot": "weapon",
+     "n": "우주의 조각",
+     "e": "E.G.O · 공+5 · 피해 2d3 · 적중 시 파열 1",
+     "fx": {
+      "atk": 5
+     },
+     "wx": {
+      "dice": [
+       2,
+       3
+      ],
+      "hitKw": [
+       [
+        "rupture",
+        1
+       ]
+      ]
+     }
+    },
+    {
+     "id": "ego_beak",
+     "slot": "weapon",
+     "n": "부리",
+     "e": "E.G.O · 공+7 · 피해 1d4 · 적중 시 표적 1, 3이 되면 그 적중 피해 2배",
+     "fx": {
+      "atk": 7
+     },
+     "wx": {
+      "dice": [
+       1,
+       4
+      ],
+      "mark": {
+       "need": 3
+      }
+     }
+    }
+   ]
   }
  ],
  "relicNotes": {
