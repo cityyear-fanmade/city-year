@@ -652,7 +652,7 @@ export function startUI(E,app){
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.wingPick?vWingPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.wingPick?vWingPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~3글자)를 직접 적는다 */
   const TW_OK=/^[가-힣A-Za-z0-9]{2,3}$/;
@@ -710,6 +710,16 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">${P.n}</span>
       <p class="small">붉은 붕대 사이에서 작은 환이 나왔다. 삼키면 능력치 하나가 영구히 +${P.v} 오른다. 하나만 고를 수 있다.</p>
       <div class="row" style="gap:8px;flex-wrap:wrap">${P.stats.map(k=>`<button class="btn" style="flex:1 1 40%" data-a="pill" data-i="${k}"><b>${E.pillStats[k]} +${P.v}</b><span class="small dim">지금 ${G.ch.stats[k]}</span></button>`).join('')}</div></div>`;
+  }
+  /* 전투 중 정신력 0으로 개화·뒤틀림이 된 뒤: 이름 정하기 */
+  function vNamePend(){
+    const ego=G.ch.namePend==='ego';
+    return `<div class="panel stack" style="gap:8px;border-color:${ego?'var(--gold)':'#c25050'}"><span class="eyebrow">${ego?'E.G.O 개화':'육신 뒤틀림'}</span>
+      <p class="small">${ego?'싸우는 도중 마음이 무너지는 순간, 붙잡은 모양이 힘이 되었다. 그 이름을 정한다.':'싸우는 도중 마음이 버티지 못하고 몸이 뒤틀렸다. 그 이름을 정한다.'}</p>
+      <div class="row"><span class="small">이름</span><input id="nameval" maxlength="5" value="${esc(UI.nameVal||'')}" autocomplete="off" placeholder="1~5글자" style="width:9em"></div>
+      <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
+      <span class="small bad">${UI.nameErr||''}</span>
+      <button class="btn primary" data-a="nameset">이 이름으로 정한다</button></div>`;
   }
   function vWingPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">날개 설립</span>
@@ -1082,6 +1092,11 @@ export function startUI(E,app){
       const P=Object.values(D.enemies).find(e=>e.pill).pill;
       if(E.setPill(G.ch,k,P.v)){resave();UI.res.chips=[...UI.res.chips,`${P.n} · ${E.pillStats[k]} +${P.v}`];render()}
     },
+    nameset(){
+      const n=(($('nameval')||{}).value||'').trim(),err=E.renameForm(G.ch,n);
+      if(err){UI.nameErr=err;UI.nameVal=n;render();return}
+      UI.nameErr='';UI.nameVal='';resave();UI.res.chips=[...UI.res.chips,`이름 · ${n}`];render();
+    },
     singtype(k){UI.singName=(($('singname')||{}).value||UI.singName||'');UI.singType=k;render()},
     singset(){
       const n=(($('singname')||{}).value||'').trim(),err=E.singNameErr(n),ty=UI.singType||'warp';
@@ -1257,6 +1272,8 @@ export function startUI(E,app){
     testStash(){if(!G)return;for(const id of ['club','sword','greatsword'])G.ch.stash.push(Object.assign({id},D.items[id]));G.ch.stash.push(Object.assign({id:'x',grade:5,slot:'aug',n:'시험용 유물',e:'',fx:{}}));render()},
     testOffice(){if(!G)return;G.ch.licensed=true;G.ch.rank=5;G.ch.officePick=true;UI.res={t:'사무소 개설',chips:[]};UI.screen='result';render()},
     testPill(){if(!G)return;G.ch.pillPick=true;UI.res={t:'붕대 사이에서 작은 환이 나왔다.',chips:['특수환 · 능력치 하나를 골라 +10 (영구)','전리품 · 붉은 붕대 (HP+20, 영구)']};UI.screen='result';render()},
+    testBreak(){if(!G)return;G.ch.mind=1;startCombat('thug');E.loseMind(G.ch,99,()=>{});render()},
+    testName(k){if(!G)return;G.ch.namePend=k;if(k==='ego'){G.ch.ego={type:'atk',n:''};G.ch.relics=[...(G.ch.relics||[]),'E.G.O · ']}else{G.ch.distForm={n:'이름 없는 뒤틀림'}}UI.res={t:'적의 잔해 속에서 쓸 만한 것을 주웠다.',chips:['전투 중 정신력 0 · '+(k==='ego'?'E.G.O 개화':'육신이 뒤틀렸다')+' · 이름을 정한다']};UI.screen='result';render()},
     testApoc(){if(!G)return;const g=Object.assign({grade:5},structuredClone(D.enemies.apocalypse.drop.gear));G.ch.gearOffers=[g];UI.res={t:'종말이 쓰러졌다.',chips:['종말의 예언 · 검은 숲 깊은 곳에서 무언가 눈을 뜬다']};UI.screen='result';render()},
     testChain(){if(!G)return;G.ch.aff={type:'wing',name:'K사 날개'};G.ch.year=G.year=45;G.ch.corp={st:'wing',type:'serum',n:'시험',stack:2,up:3,forb:2,wing:'새벽 날개',chain:['claw','arbiter'],next:99};UI.ev=D.corp.head;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testCorp(k){if(!G)return;G.ch.aff={type:'wing',name:'K사 날개'};G.ch.year=G.year=22;if(!G.ch.corp)G.ch.corp={st:'offer'};UI.ev=D.corp[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},

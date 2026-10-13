@@ -537,11 +537,45 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const mindFloor=ch=>ch.ego?M.ego[ch.ego.type].floor:0;
   /* 성장기 '목소리가 들림': 정신력 최대치 +5 */
   const mindMax=ch=>M.max+((ch.stats&&ch.stats.mindMax)||0);
+  /* ===== 전투 중 정신력이 0이 되면: 50% E.G.O 개화, 아니면 육신 뒤틀림 (둘 다 그 자리에서 전투에 반영) =====
+     이름은 전투가 끝난 뒤 정한다 (ch.namePend) */
+  let activeC=null;
+  const clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function mindBreak(C){
+    const ch=C.ch,P=C.P,s=ch.stats;
+    if(ch.ego||ch.distForm||C.mindHandled)return;
+    C.mindHandled=true;
+    const L=(t,x)=>{if(C.quiet)return;C.log.push({t,s:x});C.cur.push({t,s:x})};
+    const r=d(100),ok=r<=50;L('sys',`${P.name} · 정신력 0 · 마음이 한계에 닿았다 · 1d100 ${r} (50 이하면 E.G.O 개화, 아니면 뒤틀림)`);
+    const b={atk:s.atk,eva:s.eva,spd:s.spd,maxHp:s.maxHp};
+    ch.mindDead=false;
+    if(ok){
+      const type=d(2)===1?'atk':'def';setEgo(ch,type,'');ch.namePend='ego';
+      P.egoLight=M.light;P.egoRounds=M.lightRounds;
+      ch.bloomNote=`전투 중 정신력 0 · E.G.O 개화 (${M.ego[type].n}) · 이름을 정한다`;
+      L('kw',`  E.G.O 개화 · ${M.ego[type].n} · 정신력 ${ch.mind}로 회복${M.ego[type].hit?` · 공격 +${M.ego[type].hit}`:''}${M.ego[type].hp?` · 최대 HP +${M.ego[type].hp}`:''}`);
+    }else{
+      setDistort(ch,'');ch.namePend='dist';
+      P.distorted=true;P.wx=null;P.laev=null;P.hwando=false;P.resonance=false;P.thumb=false;P.deck=ch.deck;P.dmin=s.dmin;P.pdie=s.pdie;P.dmgB=s.dmgB||0;P.burnHit=s.burnHit||0;
+      ch.bloomNote='전투 중 정신력 0 · 육신이 뒤틀렸다 · 이름을 정한다';
+      L('kw',`  육신이 뒤틀린다 · 장비는 보관함으로 · 능력치가 크게 오른다 · 손패는 다음 라운드부터 뒤틀린 책장`);
+    }
+    for(const k of ['atk','eva','spd'])P[k]+=s[k]-b[k];
+    P.maxHp+=s.maxHp-b.maxHp;P.hp=clampN(P.hp+(s.maxHp-b.maxHp),1,P.maxHp);
+  }
+  /* 전투 뒤 이름 정하기: E.G.O 개화·뒤틀림 이름 */
+  function renameForm(ch,name){
+    const err=egoNameErr(name);if(err)return err;
+    const n=name.trim();
+    if(ch.namePend==='ego'){const i=(ch.relics||[]).indexOf('E.G.O · ');ch.ego.n=n;if(i>=0)ch.relics[i]=`E.G.O · ${n}`}
+    else if(ch.namePend==='dist'){const i=(ch.relics||[]).indexOf('뒤틀림 · '+ch.distForm.n);ch.distForm.n=n;if(i>=0)ch.relics[i]='뒤틀림 · '+n}
+    ch.namePend=null;return null;
+  }
   function loseMind(ch,n,out){
     if(n<=0||ch.distForm)return;const m0=ch.mind;ch.mind=Math.max(mindFloor(ch),ch.mind-n);
     if(ch.mind<m0&&out)out(`정신력 −${m0-ch.mind} (${ch.mind}/${mindMax(ch)})`);
     if(ch.ego)return;
-    if(ch.mind<=0)ch.mindDead=true;
+    if(ch.mind<=0){if(activeC&&activeC.ch===ch&&!activeC.over)mindBreak(activeC);else ch.mindDead=true}
     else if(ch.mind===1&&!ch.distortDone)ch.distortPend=true;
     else if(ch.mind<=M.voiceAt&&!ch.voiceUsed)ch.voicePend=true;
   }
@@ -663,6 +697,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
     if(mc.wingPick)setWing(mc,'새벽',true);
     if(mc.pillPick)setPill(mc,'atk');
+    if(mc.namePend)mc.namePend=null;
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
@@ -810,6 +845,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     if(ch.egoNote){chips.push(ch.egoNote);ch.egoNote=null}
+    if(ch.bloomNote){chips.push(ch.bloomNote);ch.bloomNote=null}
     let title=null,tlabel=null,newly=false,colorRoll=null,unlock=null;
     const foe=D.enemies[C.id];
     if(foe.hidden){
@@ -886,6 +922,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const mt=mindTier(ch),ct=corpType(ch),tm=ct&&ct.tier?ct.tier+ch.corp.up*(ct.tierPer||0):1;
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     const C={ch,P,E,id,penalty,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
+    activeC=C;
+    if(ch.mindDead&&!ch.ego&&!ch.distForm)mindBreak(C);
     newRound(C);
     return C;
   }
@@ -1253,6 +1291,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
