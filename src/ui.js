@@ -11,7 +11,7 @@ export function startUI(E,app){
   const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
   /* 이어하기: 해가 바뀔 때마다 판 전체를 저장한다 */
   const SAVE='cityYearSave';
-  const HARDK='cityYearHard';
+  const HARDK='cityYearHard',DIFFK='cityYearDiff';
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords';
@@ -298,7 +298,7 @@ export function startUI(E,app){
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `<div class="panel stack">
-      <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${esc(ch.name||T.you)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':''}</div>
+      <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${esc(ch.name||T.you)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
       <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
       ${bar(ch.hp,s.maxHp)}
       ${vMind(ch)}
@@ -556,8 +556,16 @@ export function startUI(E,app){
     return `<button class="btn primary" data-a="cont"><b>이어서 하기</b><span class="small">${esc(c.name||'이름 없는 사람')} · ${E.rankLabel(c)} · ${y}년차 · ${CFG.startAge+y-1}세</span><span class="dim small">${when} 저장${o.v!==UPDATES.v?` · ${o.v} 저장본`:''}</span></button>`;
   }
   /* 기록실 */
-  const isHard=()=>store.get(HARDK)==='1';
-  function vHardToggle(){const h=isHard(),X=CFG.hard;return `<button class="btn${h?' primary':' quiet'}" data-a="hard"><b>난이도 · ${h?'하드':'보통'}</b><span class="dim small">${h?`모든 적 체력 ×${X.hp} · 공격 +${X.atk} · 회피 +${X.eva} · 눌러서 보통으로`:'눌러서 하드로 바꾼다 · 새로 태어날 때부터 적용'}</span></button>`}
+  /* 난이도: easy(쉬움) / normal(보통) / hard(하드). 예전 하드 켜기 설정(cityYearHard)도 이어 받는다 */
+  const diff=()=>{const v=store.get(DIFFK);return v==='easy'||v==='normal'||v==='hard'?v:(store.get(HARDK)==='1'?'hard':'normal')};
+  const isHard=()=>diff()==='hard',isEasy=()=>diff()==='easy';
+  function vHardToggle(){
+    const d=diff(),X=CFG.hard,Z=CFG.easy,b=(k,l)=>`<button class="${d===k?'on':''}" data-a="diff" data-i="${k}">${l}</button>`;
+    const info={easy:`<b class="serif">쉬움 · 보정 최소</b><span class="small dim">해마다 늘어나는 적 강화와 히든 보스 후반 성장을 거의 없앤, 처음 설정한 약한 적으로 맞춘다. 이야기를 편하게 따라가고 싶을 때.</span>`,
+      normal:`<b class="serif">보통 · 수동 플레이 권장</b><span class="small dim">보정 없이 직접 카드와 선택을 고르는 플레이를 기준으로 맞춘 기본 난이도.</span>`,
+      hard:`<b class="serif">하드 · 도전</b><span class="small dim">모든 적 체력 ×${X.hp} · 공격 +${X.atk} · 회피 +${X.eva}. 쓰러지기 쉽다.</span>`}[d];
+    return `<div class="stack" style="gap:6px"><span class="eyebrow">난이도 · 새로 태어날 때부터 적용</span><div class="seg">${b('easy','쉬움')}${b('normal','보통')}${b('hard','하드')}</div>
+      <div class="panel stack" style="gap:3px;padding:10px 12px">${info}</div></div>`}
   function vRecords(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
     const ends=[['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','불순물 너머'],['distwin','뒤틀린 채 완주']];
@@ -567,7 +575,7 @@ export function startUI(E,app){
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저의 기록</div><h2>기록실</h2></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">최고 기록</span>
         <div class="row between"><span>가장 오래 산 햇수</span><b class="mono">${r.best.years}년</b></div>
-        ${r.hardClear?`<div class="row between"><span>하드 완주</span><b class="mono">${r.hardClear}회</b></div>`:''}
+        ${r.hardClear?`<div class="row between"><span>하드 완주</span><b class="mono">${r.hardClear}회</b></div>`:''}${r.easyClear?`<div class="row between"><span>쉬움 완주</span><b class="mono">${r.easyClear}회</b></div>`:''}
         <div class="row between"><span>최고 레벨</span><b class="mono">${r.best.lv||'—'}</b></div>
         <div class="row between"><span>도달한 위협 등급</span><b class="mono">${r.best.grade>=0?X.grades[r.best.grade]:'—'}</b></div>
         <div class="row between"><span>끝낸 판</span><b class="mono">${r.runs}</b></div></div>
@@ -1178,7 +1186,7 @@ export function startUI(E,app){
   function recordEnd(){
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
     const k=w&&c.distForm?'distwin':w&&UI.trueEnd?'true':w?'win':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':'death';
-    if(!r.endings.includes(k))r.endings.push(k);r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;
+    if(!r.endings.includes(k))r.endings.push(k);r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;if(w&&c.easy)r.easyClear=(r.easyClear||0)+1;
     r.best.years=Math.max(r.best.years,lived);r.best.lv=Math.max(r.best.lv,c.lv);if(G.endless)r.best.grade=Math.max(r.best.grade,E.gradeAt(G.year));
     store.set(REC,JSON.stringify(r));if(!w)store.del(SAVE);
   }
@@ -1268,7 +1276,7 @@ export function startUI(E,app){
       try{navigator.clipboard.writeText(t).then(ok,()=>{const a=$('xcode');if(a){a.select();document.execCommand('copy')}ok()})}catch(e){const a=$('xcode');if(a){a.select();try{document.execCommand('copy')}catch(_){}}ok()}},
     xfile(){const t=UI.xcode;if(!t)return;try{const b=new Blob([t],{type:'text/plain'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='도시의한해_세이브.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}catch(e){}},
     ximport(){const a=$('xin');xApply((a&&a.value.trim())||UI.xask||'')},
-    hard(){store.set(HARDK,isHard()?'0':'1');render()},
+    diff(i){if(['easy','normal','hard'].includes(i)){store.set(DIFFK,i);render()}},
     start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='title')store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     cont(){const o=loadSave();if(!o)return;G=o.G;C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
@@ -1280,7 +1288,7 @@ export function startUI(E,app){
     relic(k){UI.relic=k;render()},
     job(k){UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(UI.daily&&BC.seed===dailySeed(UI.daily))BC.daily=UI.daily;if(BC.innate)recAdd('innate',BC.innate);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
+    live(){if(UI.daily&&BC.seed===dailySeed(UI.daily))BC.daily=UI.daily;if(BC.innate)recAdd('innate',BC.innate);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.showIncome=false;UI.screen='shop';render()},
