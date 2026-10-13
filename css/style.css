@@ -395,3 +395,8 @@ button.chip{cursor:pointer;background:transparent}
 .prescBar{padding:8px 10px;border:1px solid var(--gold);border-radius:5px;background:color-mix(in srgb,var(--gold) 10%,transparent);font-size:13px;line-height:1.5}
 .card.presc .ord{top:36px}
 .ent.compact .entname b{white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all;font-size:13px}
+
+/* 공방 거리: 스크롤해도 자산이 위에 붙어 보인다 */
+.moneybar{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;margin:0 0 4px;background:var(--bg,#0b0e14);border:1px solid var(--gold);border-radius:8px;font:500 13px/1 var(--mono);color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.45)}
+.moneybar b{font-size:15px;letter-spacing:.02em}
+html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data-skin="ruina"] .moneybar{border-radius:0}
