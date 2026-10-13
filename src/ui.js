@@ -237,7 +237,7 @@ export function startUI(E,app){
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
   }
-  const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+ch.fr.n:''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
+  const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+ch.fr.n:''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
     +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
   const innateName=c=>c.innate?(c.innate==='mark'&&c.markOn?D.innate.mark.awake:D.innate[c.innate].n):null;
   /* E.G.O 발현자: 무기 등급과 다음 등급까지 남은 발현 횟수 */
@@ -255,6 +255,8 @@ export function startUI(E,app){
     if(af==='중지')P.push('되갚음 · 맞을 때마다 1(최대 5) · 다음 적중 +2×스택');
     if(af==='검지')P.push('지령 수행 · ☆ 칸 카드를 내면 1(최대 5) · 호흡 +4 · 받는 피해 −5%×스택');
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 쓰러뜨리면 '+CFG.artSense.chance+'% 확률로 +1 (영구)':''}`);
+    if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];
+      P.push(`특이점 ${c.n} (${t.n}) · ${t.e.split(' (')[0]} · ${c.st==='dev'?`개발 ${c.stack}/${CFG.corp.devMax}`:`강화 ${c.up}/${CFG.corp.upMax} · 금기 실험 ${c.forb}/${CFG.corp.forbMax}`}`)}
     if(ch.hwando)P.push('섬봉광 검술 · 호흡 1당 치명 피해 +10%');
     if(ch.resonance)P.push('궁니르 공명 · 궁니르 카드를 낸 라운드 받는 피해 −60%');
     return P.length?`<div class="passives">${P.map(t=>`<div class="mono small"><span style="color:var(--gold)">◆</span> ${esc(t)}</div>`).join('')}</div>`:'';
@@ -349,7 +351,7 @@ export function startUI(E,app){
     return `<div>${[row('최대 HP',s.maxHp,'maxHp'),row('공격 (명중 보정)',sg(s.atk),'atk'),row('회피',sg(s.eva),'eva'),row('속도 (순서 보정)',sg(s.spd),'spd'),
       row('사건 판정',sg(s.check),'check'),row('피해 주사위 최소',s.dmin,null),row('전투 시작 출혈',s.startBleed,null),row('전투 시작 호흡',s.startBreath,null),
       ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림',s.adv>=1?'있음':Math.round(s.adv*100)+'% 확률',null)]:[]),
-      row('카드 등급',E.cardGrade(ch.year).n||'기본',null),...(E.isN(ch)?[row('N사 · 의체 심판',`의수를 쓰지 않는다 · 신체 강화 공격 +${CFG.nWing.atk} · 회피 +${CFG.nWing.eva} · 속도 +${CFG.nWing.spd} · 의체 상대 적중마다 피해 +${CFG.nWing.augDmg}`,null)]:[]),...(ch.aff&&ch.aff.name==='중지'?[row('중지 · 되갚음','맞을 때마다 1 (최대 5) · 다음 적중 +2×스택',null)]:[]),...(ch.aff&&ch.aff.name==='검지'?[row('검지 · 지령 수행','☆ 칸 카드를 내면 1 (최대 5) · 호흡 +4 · 받는 피해 −5%×스택',null)]:[]),...(ch.office?[row('내 사무소',esc(ch.office.name)+' · '+E.OKW[ch.office.kw],null)]:[]),...((ch.auth||[]).length?[row('조율자 권한',ch.auth.length+'단계 ('+ch.auth.map(a=>a==='seal'?'봉인':'집행').join('·')+')',null)]:[])].join('')}</div><div class="small dim">${esc(ch.o.n)} · ${esc(ch.t.n)} · ${esc(ch.f.n)} · ${esc(ch.w.n)}</div>`;
+      row('카드 등급',E.cardGrade(ch.year).n||'기본',null),...(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)?[row('특이점 · '+esc(ch.corp.n),`${CFG.corp.types[ch.corp.type].e}${ch.corp.wing?' · '+esc(ch.corp.wing):''}`,null)]:[]),...(E.isN(ch)?[row('N사 · 의체 심판',`의수를 쓰지 않는다 · 신체 강화 공격 +${CFG.nWing.atk} · 회피 +${CFG.nWing.eva} · 속도 +${CFG.nWing.spd} · 의체 상대 적중마다 피해 +${CFG.nWing.augDmg}`,null)]:[]),...(ch.aff&&ch.aff.name==='중지'?[row('중지 · 되갚음','맞을 때마다 1 (최대 5) · 다음 적중 +2×스택',null)]:[]),...(ch.aff&&ch.aff.name==='검지'?[row('검지 · 지령 수행','☆ 칸 카드를 내면 1 (최대 5) · 호흡 +4 · 받는 피해 −5%×스택',null)]:[]),...(ch.office?[row('내 사무소',esc(ch.office.name)+' · '+E.OKW[ch.office.kw],null)]:[]),...((ch.auth||[]).length?[row('조율자 권한',ch.auth.length+'단계 ('+ch.auth.map(a=>a==='seal'?'봉인':'집행').join('·')+')',null)]:[])].join('')}</div><div class="small dim">${esc(ch.o.n)} · ${esc(ch.t.n)} · ${esc(ch.f.n)} · ${esc(ch.w.n)}</div>`;
   }
   function vRelic(){
     const ch=G.ch;
@@ -643,7 +645,7 @@ export function startUI(E,app){
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.singPick?vSingPick():G.ch.wingPick?vWingPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~3글자)를 직접 적는다 */
   const TW_OK=/^[가-힣A-Za-z0-9]{2,3}$/;
@@ -683,6 +685,24 @@ export function startUI(E,app){
       <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
       <span class="small bad">${UI.egoErr||''}</span>
       <button class="btn primary" data-a="egoset">이 E.G.O로 정한다</button></div>`;
+  }
+  /* 기업 루트: 특이점 개발(효과 + 이름), 날개 설립(이름) */
+  function vSingPick(){
+    const T_=CFG.corp.types,ty=UI.singType||'warp';
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">특이점 개발</span>
+      <p class="small">연구동 맨 안쪽에서 특이점의 모양이 잡혀 간다. 어떤 효과로 개발할지, 무엇이라 부를지 정한다. 이후 강화 실험으로 효과가 자란다.</p>
+      <div class="stack" style="gap:8px">${Object.entries(T_).map(([k,v])=>`<button class="btn ${ty===k?'primary':'quiet'}" data-a="singtype" data-i="${k}"><b>${v.n}</b><span class="small">${v.e}</span></button>`).join('')}</div>
+      <div class="row"><span class="small">이름</span><input id="singname" maxlength="5" value="${esc(UI.singName||'')}" autocomplete="off" placeholder="1~5글자" style="width:9em"></div>
+      <span class="small dim">게임에 있는 물건·전리품·유물·카드 이름은 쓸 수 없다.</span>
+      <span class="small bad">${UI.singErr||''}</span>
+      <button class="btn primary" data-a="singset">이 특이점으로 정한다</button></div>`;
+  }
+  function vWingPick(){
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">날개 설립</span>
+      <p class="small">간판에 올릴 이름을 정한다. 뒤에 '날개'가 붙는다.</p>
+      <div class="row"><span class="small">이름</span><input id="wingname" maxlength="4" value="${esc(UI.wingName||'')}" autocomplete="off" placeholder="1~4글자" style="width:9em"></div>
+      <span class="small bad">${UI.wingErr||''}</span>
+      <button class="btn primary" data-a="wingset">이 이름으로 세운다</button></div>`;
   }
   function vTitlePick(){
     const ch=G.ch,adj=D.colors[ch.ci].adj,cur=ch.title.slice(adj.length+1);
@@ -1044,6 +1064,19 @@ export function startUI(E,app){
       const kw=UI.offKw||'bleed';E.setOffice(G.ch,n,kw);UI.offErr='';UI.offName='';UI.offKw=null;resave();
       UI.res.chips=[...UI.res.chips,`내 사무소 · ${G.ch.office.name} (${E.OKW[kw]})`];render();
     },
+    singtype(k){UI.singName=(($('singname')||{}).value||UI.singName||'');UI.singType=k;render()},
+    singset(){
+      const n=(($('singname')||{}).value||'').trim(),err=E.singNameErr(n),ty=UI.singType||'warp';
+      if(err){UI.singErr=err;UI.singName=n;render();return}
+      E.setSing(G.ch,ty,n);UI.singErr='';UI.singName='';UI.singType=null;resave();
+      UI.res.chips=[...UI.res.chips,`특이점 · ${n} (${CFG.corp.types[ty].n})`,...E.singChips(G.ch)];render();
+    },
+    wingset(){
+      const n=(($('wingname')||{}).value||'').trim(),err=E.wingNameErr(n);
+      if(err){UI.wingErr=err;UI.wingName=n;render();return}
+      E.setWing(G.ch,n);UI.wingErr='';UI.wingName='';resave();
+      UI.res.chips=[...UI.res.chips,`날개 설립 · ${G.ch.corp.wing}`];render();
+    },
     egotype(k){UI.egoName=(($('egoname')||{}).value||UI.egoName||'');UI.egoType=k;render()},
     distset(){
       const n=(($('distname')||{}).value||'').trim(),err=E.egoNameErr(n);
@@ -1205,6 +1238,8 @@ export function startUI(E,app){
     testAff(type,name){if(!G)return;G.ch.aff={type,name};render()},
     testStash(){if(!G)return;for(const id of ['club','sword','greatsword'])G.ch.stash.push(Object.assign({id},D.items[id]));G.ch.stash.push(Object.assign({id:'x',grade:5,slot:'aug',n:'시험용 유물',e:'',fx:{}}));render()},
     testOffice(){if(!G)return;G.ch.licensed=true;G.ch.rank=5;G.ch.officePick=true;UI.res={t:'사무소 개설',chips:[]};UI.screen='result';render()},
+    testChain(){if(!G)return;G.ch.aff={type:'wing',name:'K사 날개'};G.ch.year=G.year=45;G.ch.corp={st:'wing',type:'serum',n:'시험',stack:2,up:3,forb:2,wing:'새벽 날개',chain:['claw','arbiter'],next:99};UI.ev=D.corp.head;UI.fight=null;UI.omen=null;UI.screen='event';render()},
+    testCorp(k){if(!G)return;G.ch.aff={type:'wing',name:'K사 날개'};G.ch.year=G.year=22;if(!G.ch.corp)G.ch.corp={st:'offer'};UI.ev=D.corp[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvent(k){if(!G)return;G.ch.licensed=true;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testBroker(){if(!G)return;UI.stock=[];UI.broker=E.officeBroker(G.ch);UI.screen='shopask';render()},
     testOrigin(n){if(!BC)return;const o=D.origins.find(x=>x.n===n);if(!o)return;E.reseed(BC.seed);let c;for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;render()},

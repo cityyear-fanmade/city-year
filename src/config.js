@@ -58,6 +58,17 @@ export const CFG = {
   /* 6시즌 사무소: 개설 가능 급수(이상), 개설 사건을 다시 묻는 간격, 소속 없는 해결사가 사무소 문을 두드리는 간격 */
   /* 6시즌 E.G.O 발현자: 전용 카드 '발현'을 낸 누적 횟수(need)가 차는 순간 E.G.O 무기 등급이 오른다. 등급별 수치는 birth.json egoWeapons[].grow */
   egoGrow: {need: [0, 5, 15, 30], tier: ['TETH', 'HE', 'WAW', 'ALEPH']},
+  /* 6시즌 기업 루트(날개 직원): from년차부터 해마다 chance% 확률로 '특이점 개발' 제안이 한 번 온다.
+     개발(devMax번 진척) → 날개 설립(이름) → 특이점 실험(강화 upMax번)·금기 실험. 금기 실험을 forbMax번 하면 머리의 시험(chain: 발톱 → 조율자 연속 전투).
+     types: 특이점 효과. base는 고를 때, per는 강화 한 번마다 (warp.lead: 전투 처음 N라운드 항상 선공, serum.heal: 라운드마다 회복, moon.tier: 정신력 구간 보정 배수)
+     trial: 머리의 시험 전투(상대별)에서 체력 배수·공격 가산. grow/up/forb/clear: 개발 진척·강화·금기 실험·시험 통과 때 얻는 능력치 */
+  corp: {from: 20, chance: 20, devMax: 2, devGap: 2, devChance: 60, labGap: 1, labChance: 80, upMax: 3, forbMax: 2, chain: ['claw', 'arbiter'],
+    types: {
+      warp: {n: '워프', e: '속도 +4 · 사건 판정 +3 · 전투 처음 3라운드 항상 선공 (강화마다 속도 +2 · 판정 +2 · 선공 1라운드 더)', base: {spd: 4, check: 3}, per: {spd: 2, check: 2}, lead: 3, leadPer: 1},
+      serum: {n: '혈청', e: '전투 중 매 라운드 시작에 HP 5 회복', heal: 5, per: 0},
+      moon: {n: '월광석', e: '최대 정신력 +8 · 해마다 정신력 +2 · 회피 실패로 정신력이 깎이지 않는다 · 정신력 구간 보정 ×1.6 (강화마다 최대 정신력 +2 · 해마다 +1 · 보정 +0.2배)', base: {mindMax: 8}, per: {mindMax: 2}, year: 2, yearPer: 1, tier: 1.6, tierPer: 0.2}
+    },
+    trial: {claw: {hp: 0.45, atk: -4}, arbiter: {hp: 0.3, atk: -5}}, grow: {maxHp: 3}, up: {maxHp: 8, atk: 2}, forb: {maxHp: 12, atk: 4, eva: 2}, clear: {maxHp: 15, atk: 3, eva: 2}},
   /* 6시즌 N사 날개: 의체를 쓰지 않는다(의수 칸 사용 불가). 대신 전투마다 신체 강화(공격·회피·속도), 의체 심판: 의체 상대(enemies aug, 소개 문구에 의체가 분명한 적만) 적중마다 피해 +augDmg */
   nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */

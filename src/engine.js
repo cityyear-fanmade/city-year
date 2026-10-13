@@ -49,7 +49,7 @@ export function validateData(D){
   for(const [id,e] of Object.entries(D.enemies))if(!e.tier||D.money.bounty[e.tier]==null)err.push(`적 ${id}: tier 없음 또는 현상금 없음`);
   D.origins.forEach(o=>{card(o.card,`출신 ${o.n}`);for(const k in o.paths||{})if(!D.text.paths[k])err.push(`출신 ${o.n}: 없는 진로 "${k}"`)});
   for(const ev of D.events)if(ev.tag&&!D.text.paths[ev.tag])err.push(`사건 "${ev.t}": 없는 진로 태그 "${ev.tag}"`);
-  const evs=[...D.events,D.affiliation,D.promotionExam,D.colorExam].filter(Boolean);
+  const evs=[...D.events,D.affiliation,D.promotionExam,D.colorExam,...Object.values(D.corp||{})].filter(Boolean);
   for(const ev of evs)for(const c of ev.c)for(const r of [c.ok,c.fail].filter(Boolean)){
     if(!r.fx)continue;
     if(r.fx.card)card(r.fx.card,`사건 "${ev.t}"`);
@@ -491,6 +491,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(Array.isArray(req))return req.every(r=>meets(ch,r));
     if(req.any)return req.any.some(r=>meets(ch,r));
     if(req.startsWith('flag:')){const [k,n]=req.slice(5).split('>=');return (ch.flags[k]||0)>=(+n||1)}
+    if(req.startsWith('corpup<'))return ((ch.corp&&ch.corp.up)||0)<+req.slice(7);
+    if(req.startsWith('corpup>='))return ((ch.corp&&ch.corp.up)||0)>=+req.slice(8);
     if(req==='pinky')return !!ch.pinky;
     if(req==='nopinky')return !ch.pinky;
     /* beat:any = 히든 보스를 하나라도 이김, beat:a|b = 그중 하나를 이김 */
@@ -552,6 +554,55 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(e.card&&!ch.deck.includes('e_manifest')&&!ch.deck.includes(e.card))ch.deck.push(e.card);
     ch.mind=Math.max(ch.mind,e.floor);(ch.relics=ch.relics||[]).push(`E.G.O · ${ch.ego.n}`);
   }
+  /* ===== 6시즌: 기업 루트 (날개 직원 → 특이점 개발 → 날개 설립 → 강화·금기 실험 → 머리의 시험) =====
+     ch.corp = {st: 'offer'|'dev'|'wing'|'declined', type, n, stack(개발 진척), up(강화), forb(금기 실험), wing, next(다음 사건 해), chain[], headSeen} */
+  const CP=CFG.corp,CSTAT={maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'사건 판정',mindMax:'최대 정신력'};
+  function corpBump(ch,fx,chips){
+    const s=ch.stats;
+    for(const [k,v] of Object.entries(fx)){if(!v)continue;s[k]=(s[k]||0)+v;if(k==='maxHp')ch.hp+=v;chips&&chips.push(`${CSTAT[k]} ${sg(v)}`)}
+  }
+  const corpYes=ch=>!!ch.corp&&['dev','wing'].includes(ch.corp.st);
+  const corpType=ch=>corpYes(ch)&&ch.corp.type?CP.types[ch.corp.type]:null;
+  const singNameErr=egoNameErr;
+  function wingNameErr(n){
+    if(!/^[가-힣A-Za-z0-9]{1,4}$/.test(n||''))return '1~4글자로 적어 주세요 (한글·영문·숫자, 띄어쓰기 없이)';
+    if((D.orgs.wing||[]).includes(n+' 날개'))return '이미 있는 날개 이름이다';
+    return null;
+  }
+  /* 특이점 개발 참여: 효과 하나와 이름. force는 이름 검사를 건너뛴다 (자동 진행) */
+  function setSing(ch,type,name,force){
+    const T_=CP.types[type];if(!T_||!ch.corp||(!force&&singNameErr(name)))return false;
+    ch.corp=Object.assign(ch.corp,{st:'dev',type,n:name.trim(),stack:0,up:0,forb:0,next:(ch.year||0)+CP.devGap});
+    corpBump(ch,T_.base||{});ch.singPick=false;(ch.relics=ch.relics||[]).push(`특이점 · ${ch.corp.n} (${T_.n})`);return true;
+  }
+  const singChips=ch=>{const t=corpType(ch);return t?[t.e.split(' (')[0]]:[]};
+  function setWing(ch,name,force){
+    if(!ch.corp||(!force&&wingNameErr(name)))return false;
+    ch.corp.wing=name.trim()+' 날개';ch.corp.st='wing';ch.corp.next=(ch.year||0)+CP.labGap;ch.wingPick=false;
+    (ch.relics=ch.relics||[]).push(`설립 · ${ch.corp.wing}`);return true;
+  }
+  function corpGrow(ch,chips){const c=ch.corp;if(!corpYes(ch)||c.st!=='dev')return;c.stack++;corpBump(ch,CP.grow,chips);chips.push(`특이점 개발 ${c.stack}/${CP.devMax}`)}
+  function corpUp(ch,chips){
+    const c=ch.corp;if(!corpYes(ch)||c.up>=CP.upMax)return;c.up++;const T_=CP.types[c.type];
+    corpBump(ch,CP.up,chips);corpBump(ch,T_.per||{},chips);chips.push(`특이점 ${c.n} 강화 ${c.up}/${CP.upMax}`);
+  }
+  function corpForb(ch,chips){
+    const c=ch.corp;if(!corpYes(ch))return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
+    if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다')}
+  }
+  /* 해마다 순서: 제안(from년차부터 chance%) → 개발 진척 → 날개 설립 → 실험. 사건을 보이면 그 사건을 돌려준다 */
+  function corpEvent(G){
+    const ch=G.ch,c=ch.corp,y=G.year;
+    if(ch.distForm||ch.job)return null;
+    if(!c){if(!(ch.aff&&ch.aff.type==='wing')||y<CP.from||d(100)>CP.chance)return null;ch.corp={st:'offer'};return D.corp.start}
+    if(c.st==='dev'){
+      if(c.stack>=CP.devMax)return D.corp.found;
+      if(y>=c.next&&d(100)<=CP.devChance){c.next=y+CP.devGap;return D.corp.grow}
+      return null;
+    }
+    if(c.st==='wing'&&!(c.chain&&c.chain.length)&&y>=c.next&&d(100)<=CP.labChance){c.next=y+CP.labGap;return D.corp.lab}
+    return null;
+  }
   /* 육신 뒤틀림: 장비를 모두 벗고(보관함), 깡 능력치 상승, 덱은 뒤틀린 책장으로 고정, 정신력은 더 깎이지 않는다 */
   function setDistort(ch,name){
     const X=CFG.distort,s=ch.stats;
@@ -586,6 +637,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
     G.free=true;const mc=G.ch;autoOffers(mc);
     if(mc.distPick)setDistort(mc,'');
+    /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
+    if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
+    if(mc.wingPick)setWing(mc,'새벽',true);
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
@@ -598,10 +652,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.job==='arbiter'&&D.arbiterAuth&&G.year%10===9&&mc.authAt!==G.year){mc.authAt=G.year;return {type:'event',ev:D.arbiterAuth}}
     if(mc.affRetry&&!mc.aff){mc.affRetry=false;return {type:'event',ev:D.affiliation}}
     if(mc.voicePend&&!mc.voiceUsed&&!mc.ego){mc.voicePend=false;mc.voiceUsed=true;return {type:'event',ev:D.mindEvents.voice}}
+    /* 기업 루트 끝: 금기 실험을 forbMax번 하면 머리가 부른다. 발톱 → 조율자가 해를 넘기지 않고 연속으로 온다 */
+    if(mc.corp&&mc.corp.chain&&mc.corp.chain.length){
+      if(!mc.corp.headSeen){mc.corp.headSeen=true;return {type:'event',ev:D.corp.head}}
+      const id=mc.corp.chain.shift();mc.corp.trial=id;(G.met=G.met||[]).push(id);
+      return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
+    }
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
-    if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
+    if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
+      {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+G.ch.corp.up*(mt.yearPer||0))}G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
     if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year;
     let f=fixedSpec(G.year);
@@ -630,6 +691,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch;
     if(topReady(ch))return {type:'event',ev:topEvent(ch)};
     if(examReady(ch)&&ch.examSkipYear!==G.year-1){const k=career(ch);return {type:'event',ev:(isFinger(ch)&&D.fingers[ch.aff.name].exam)||(CR[k]&&CR[k].exam)||D.promotionExam}}
+    if(D.corp){const ce=corpEvent(G);if(ce)return {type:'event',ev:ce}}
     /* 6시즌: 격리 실패 (환상체 보스는 조우 표가 아니라 이 사건으로만 나온다) */
     if(D.abnoBreach&&G.year>=CFG.abnoBreach.from&&abnoLeft(ch).length&&d(100)<=CFG.abnoBreach.chance)return {type:'event',ev:D.abnoBreach};
     /* 6시즌: 내 사무소 개설(5급 이상, 5년마다 다시 묻는다) · 소속 없는 해결사는 4년마다 급수에 맞는 사무소 문을 두드린다 */
@@ -704,6 +766,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     if(fx.distortAccept){ch.distPick=true;chips.push('뒤틀림을 받아들였다 · 뒤틀림의 이름을 정한다')
     }
+    if(fx.singPick){ch.singPick=true;chips.push('특이점 개발 · 효과와 이름을 정한다')}
+    if(fx.corpDecline&&ch.corp)ch.corp.st='declined';
+    if(fx.wingPick){ch.wingPick=true;chips.push('날개 설립 · 이름을 정한다')}
+    if(fx.singGrow)corpGrow(ch,chips);
+    if(fx.singUp)corpUp(ch,chips);
+    if(fx.corpForb)corpForb(ch,chips);
     if(roll&&roll.ok&&!fx.examPass&&!fx.colorPass&&!fx.topPass)addPts(ch,CFG.promo.gain.check,chips);
     const up=gainXp(ch,xp);chips.push('경험치 +'+xp);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     let enc=fx.combat?encounter(ch,fx.combat):null;
@@ -723,6 +791,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const foe=D.enemies[C.id];
     if(foe.hidden){
       ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
+      if(ch.corp&&ch.corp.trial===C.id)ch.corp.trial=null;
+      /* 기업 루트: 머리의 시험(발톱 → 조율자)을 끝까지 넘으면 영구 강화 */
+      if(ch.corp&&ch.corp.headSeen&&!ch.corp.cleared&&!(ch.corp.chain||[]).length&&CP.chain.every(id=>ch.beaten.includes(id))){ch.corp.cleared=true;chips.push('머리의 시험을 넘었다');corpBump(ch,CP.clear,chips)}
       {const h=Math.min(CFG.hidden.winHeal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('숨을 돌린다 · HP +'+h)}}
       /* 엄지 소속으로 뇌횡: 동부십검 + 엄지 검술 (덱 고정) */
       const td=foe.thumbDrop&&meets(ch,foe.thumbDrop.req)?foe.thumbDrop:null;
@@ -764,15 +835,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',name:ch.name||T.you,color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,middle:!!(ch.aff&&ch.aff.name==='중지'),index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,middle:!!(ch.aff&&ch.aff.name==='중지'),index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,singHeal:corpType(ch)&&corpType(ch).heal?corpType(ch).heal+ch.corp.up*corpType(ch).per:0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+ch.corp.up*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
     const S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy;
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from):0,g=gradeAt(ch.year||0)+1,X_=CFG.endless;
     const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul:S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*g));
     const up=Math.floor(grow/S_.atkEvery)+(e.hidden?H_.atk+Math.floor(hy/HL.atkEvery):0),xa=X_.atk*g;
     /* 보스별 난이도 보정(hard): 체력 배수, 공격·회피 가산 */
-    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,ehh=Math.round((hd?eh*(hd.hp||1):eh)*(nm?nm.hp:1));
+    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:null,ehh=Math.round((hd?eh*(hd.hp||1):eh)*(nm?nm.hp:1)*(tr?tr.hp:1));
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
-    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:e.atk+up+xa+(hd&&hd.atk||0)+(nm?nm.atk:0),eva:e.eva+up+(hd&&hd.eva||0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
+    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:e.atk+up+xa+(hd&&hd.atk||0)+(nm?nm.atk:0)+(tr?tr.atk:0),eva:e.eva+up+(hd&&hd.eva||0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;
@@ -785,7 +856,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 정신력: 환상체와 마주치면 2d3 감소, 그다음 정신력 구간 보정(호흡·회피) */
     let mindNote=hpNote?[hpNote]:[];
     if(e.abno)loseMind(ch,d(3)+d(3),t=>mindNote.push(`환상체와 마주쳤다 · ${t} · 2d3`));
-    const mt=mindTier(ch);if(mt){P.breath+=mt.breath;P.eva+=mt.eva;mindNote.push(`정신력 ${ch.mind} · 호흡 +${mt.breath}${mt.eva?` · 회피 +${mt.eva}`:''}`)}
+    const mt=mindTier(ch),ct=corpType(ch),tm=ct&&ct.tier?ct.tier+ch.corp.up*(ct.tierPer||0):1;
+    if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     const C={ch,P,E,id,penalty,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
     newRound(C);
     return C;
@@ -795,7 +867,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function newRound(C){
     C.round++;
     const {P,E}=C;
-    for(const X of [P,E]){X.r=d(100);X.cu=X.catchup;X.tot=X.r+X.spd+(X.catchup?CFG.catchupBonus:0)}
+    for(const X of [P,E]){X.r=d(100);X.cu=X.catchup;X.tot=X.r+X.spd+(X.catchup?CFG.catchupBonus:0)+(X.warpLead>=C.round?200:0)}
     for(const [X,Y] of [[P,E],[E,P]]){
       X.lead=X.tot>Y.tot;X.fsOn=X.fs=X.tot-Y.tot>=CFG.gapFirst;X.catchup=X.tot<Y.tot;X.advUsed=false;
       const el=X.egoLight&&C.round<=X.egoRounds?X.egoLight:0;
@@ -816,6 +888,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const jp=P.jobPassive;C.jobNote=null;
     if(jp&&jp.id==='rush'&&C.round%jp.every===0){P.light+=jp.light;C.jobNote=`${P.name} · ${jp.n} · 이번 라운드 빛 +${jp.light}`}
     /* 적은 라운드 시작 때 낼 카드를 정한다 (화면에 의도로 공개) */
+    /* 기업 루트 혈청: 라운드가 시작될 때마다 HP 회복 */
+    if(P.singHeal&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(P.singHeal,P.maxHp-P.hp);P.hp+=h;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 혈청 · HP +${h}`}
     C.ePlan=aiPlan(C);
     /* 적 특성: 무리(공격 카드 한 장 더), 재생(HP 3 회복) */
     if(E.trait==='swarm'){const a=E.deck.map(id=>D.cards[id]).find(c=>c.t==='atk');if(a)C.ePlan.push(a)}
@@ -1019,7 +1093,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 검은 침묵의 장갑: 서로 다른 무기 3종을 쓰면 이번 전투에 한 번, 다음 손패에 Furioso */
       if(A.wx&&A.wx.arsenal&&!C.furiosoGiven&&(C.ars||[]).length>=3){C.furiosoGiven=true;A.furiosoNext=true;L('sys',`  ${A.name} · 서로 다른 무기 3종 · 다음 손패에 Furioso`)}
       /* 회피 실패: 1d5에서 1이면 정신력 1 감소 (E.G.O 장비 1개당 +1) */
-      if(B.isP&&d(M.evadeDie)===1)loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
+      if(B.isP&&d(M.evadeDie)===1&&!(corpType(C.ch)&&corpType(C.ch).year))loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
       /* 레바테인 계열: 적중 시 화상 */
       if(A.burnHit&&B.hp>0){B.burn=Math.min(CFG.stackCap,(B.burn||0)+A.burnHit);if(A.laev==='open')B.blue=true;
         L('kw',`  ${B.name}에게 ${A.laev==='open'?'푸른 화염':'화상'} +${A.burnHit} (지금 ${B.burn})`);
@@ -1136,6 +1210,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
