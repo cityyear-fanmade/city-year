@@ -11,7 +11,7 @@ const D=loadData(),T=D.text,K=D.keywords,N=+(process.argv[2]||3000);
 const E=createEngine(D,{rng:mulberry32(1)});
 const sg=n=>n>=0?'+'+n:'−'+Math.abs(n);
 const pc=x=>(x*100).toFixed(1)+'%';
-const one=(tbl,i)=>(i?tbl[i-1].max+1:1)===tbl[i].max;
+const one=(tbl,i)=>(i?tbl[i-1].max+1:1)===tbl[i].max&&(tbl[i].max===1||tbl[i].max===100);
 const range=(tbl,i)=>`${i?tbl[i-1].max+1:1}–${tbl[i].max}`;
 const table=(head,rows)=>[`| ${head.join(' | ')} |`,`|${head.map(()=>'---').join('|')}|`,...rows.map(r=>`| ${r.join(' | ')} |`)].join('\n');
 const kwText=c=>(c.kw||[]).map(([k,n,to])=>`${K[k].n} +${n}${to==='s'?'(자신)':''}`).join(', ');

@@ -574,7 +574,7 @@ export function startUI(E,app){
   /* 6시즌: 출생 규칙 설명 + 표 전체 (이번에 나온 칸 표시) */
   function vBirthHelp(b){
     const tbl=(name,list,r,sel)=>{let lo=1;return `<div class="stack" style="gap:2px"><span class="eyebrow">${name} 표 · 1d100${Array.isArray(r)?' · '+r.length+'번':''}</span>${list.map(x=>{const a=lo;lo=x.max+1;const hit=Array.isArray(r)?r.some(v=>v>=a&&v<=x.max):r>=a&&r<=x.max;
-      const sec=a===x.max&&!hit;
+      const sec=a===x.max&&(a===1||a===100)&&!hit;
       return `<div class="trow${hit?' hit':''}"><span class="mono">${a===x.max?a:a+'~'+x.max}</span><b>${sec?'???':esc(x.n)}</b><span class="mono small">${sec?'':esc(x.e||'')}</span></div>`}).join('')}</div>`};
     const kidR=b.kid.map(k=>k.r);
     return `<details class="panel bhelp"${UI.helpOpen?' open':''}><summary><b>출생 규칙 · 어떻게 정해지나</b></summary>
