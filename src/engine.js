@@ -170,11 +170,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   const egoLvFor=u=>CFG.egoGrow.need.reduce((a,n,i)=>u>=n?i:a,0);
   /* 발현을 낸 직후 확인: 장착 중이든 보관함이든 E.G.O 무기 하나를 올린다. 올렸으면 {old,nw} */
+  /* 정비한 장비가 다른 등급 장비로 바뀔 때(E.G.O 성장·보냐텔리 강화) 정비 횟수와 강화분을 넘겨 준다 */
+  function carryTune(old,nw){if(!old||!(old.tries||old.tune))return nw;nw.tries=old.tries||0;if(old.tune){nw.tune=Object.assign({},old.tune);for(const [k,v] of Object.entries(old.tune))nw.fx[k]=(nw.fx[k]||0)+v}return nw}
   function egoGrow(ch){
     if(ch.egoUses==null)return null;
     const st=ch.stash||[],w=ch.gear.weapon,L=egoLvFor(ch.egoUses),own=w&&egoBase(w.id)?w:st.find(x=>egoBase(x.id));
     if(!own||(own.egoLv||0)>=L)return null;
-    const nw=egoItem(own.id,L);
+    const nw=carryTune(own,egoItem(own.id,L));
     if(own===w){equip(ch,nw);ch.stash=ch.stash.filter(x=>x!==own)}else st[st.indexOf(own)]=nw;
     ch.egoNote=`E.G.O ${CFG.egoGrow.tier[L]} · ${nw.n} (${nw.e})`;
     return {old:own,nw,worn:own===w};
@@ -182,7 +184,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const bonNeed=ch=>{const w=ch.gear.weapon;return w&&w.id==='bonatelli'&&w.lvl<CFG.bon.max?CFG.bon.need[w.lvl]:null};
   function bonUpgrade(ch,i){
     const need=bonNeed(ch),st=ch.stash||[],m=st[i];if(need==null||!m||(m.grade||0)<need)return false;
-    st.splice(i,1);const old=ch.gear.weapon;equip(ch,bonItem(old.lvl+1));ch.stash=ch.stash.filter(x=>x!==old);return true;
+    st.splice(i,1);const old=ch.gear.weapon;equip(ch,carryTune(old,bonItem(old.lvl+1)));ch.stash=ch.stash.filter(x=>x!==old);return true;
   }
   function equipStash(ch,i){const st=ch.stash||[];if(!st[i]||(st[i].slot==='aug'&&isN(ch)))return false;equip(ch,st.splice(i,1)[0]);return true}
   const inStash=(ch,id)=>(ch.stash||[]).some(x=>x.id===id)||(ch.gearOffers||[]).some(x=>x.id===id);
@@ -675,6 +677,24 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 무한런: 마지막 해, 지금 위협 등급(-1이면 아직 기본 연차) */
   const lastYear=G=>CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0);
   const gradeAt=y=>y>CFG.years?Math.min(CFG.endless.grades.length-1,Math.floor((y-CFG.years-1)/CFG.endless.span)):-1;
+  /* 공방 카드 교환: 덱 카드 1장을 일반 전투 보상 카드(아직 없는 것) 중 무작위 1장으로 바꾼다 */
+  function swapCard(ch,i){
+    const S=CFG.shop;if(ch.deckLocked||ch.cardMoney||ch.money<S.swapCost||!ch.deck[i]||D.cards[ch.deck[i]].fixed)return null;
+    const pool=D.rewards.filter(id=>!ownsCard(ch,id));if(!pool.length)return null;
+    const nid=one(pool),old=ch.deck[i];ch.money-=S.swapCost;ch.deck[i]=nid;return {old,nid};
+  }
+  /* 공방 장비 정비: 장착 중인 장비 1개에 공격 또는 회피 +1을 시도한다 (성공 chance%, 시도는 성패와 상관없이 소모) */
+  const tuneCost=g=>CFG.shop.tune.base+CFG.shop.tune.step*(g.tries||0);
+  function tuneGear(ch,slot,stat){
+    const T=CFG.shop.tune,g=ch.gear[slot];
+    if(!g||ch.distForm||!['atk','eva'].includes(stat)||(g.tries||0)>=T.max||ch.money<tuneCost(g))return null;
+    const cost=tuneCost(g);ch.money-=cost;
+    const ng=structuredClone(g);ng.tries=(g.tries||0)+1;
+    const ok=d(100)<=T.chance;
+    if(ok){ng.fx[stat]=(ng.fx[stat]||0)+1;ch.stats[stat]+=1;ng.tune=Object.assign({},ng.tune);ng.tune[stat]=(ng.tune[stat]||0)+1}
+    ch.gear[slot]=ng;
+    return {ok,cost,tries:ng.tries,stat,n:ng.n};
+  }
   function delCard(ch,i){
     /* 덱 고정·전용 카드팩(숨은 출생)은 카드를 지울 수 없다 */
     if(ch.deckLocked||ch.cardMoney)return false;
@@ -1299,5 +1319,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    aidCount,buyAid,critPct,lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

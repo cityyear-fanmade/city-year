@@ -436,7 +436,7 @@ export function startUI(E,app){
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
     return `${vHud()}<div class="stack" style="gap:6px"><div class="eyebrow">공방 · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
-      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vBlack()}${vSell()}${vDelCard()}
+      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vBlack()}${vSell()}${vSwapCard()}${vTune()}
       <button class="btn primary" data-a="unshop">공방을 나간다</button>`;
   }
   /* 공방 해결사: 보관함 장비 판매 */
@@ -447,15 +447,26 @@ export function startUI(E,app){
       ${UI.sold?`<p class="good small">${esc(UI.sold)}</p>`:''}
       ${st.length?st.map((g,i)=>`<button class="btn" data-a="sell" data-i="${i}"><span class="row between"><b>${esc(g.n)}</b><span class="mono" style="color:var(--gold)">+${E.money(E.sellValue(g))}</span></span><span class="mono small dim">${D.slots[g.slot]} · ${esc(g.e||'')}</span></button>`).join(''):'<p class="small dim">보관함이 비어 있다.</p>'}</div>`;
   }
-  /* 공방: 카드 지우기 (방문 한 번에 1장, 덱 최소 장수 유지) */
-  function vDelCard(){
-    if(G.ch.deckLocked||G.ch.cardMoney)return `<div class="panel stack" style="gap:6px"><b class="serif">카드 지우기</b><p class="small dim">${G.ch.deckLocked?'덱이 고정되었다':'전용 검술을 익힌 몸이다'}. 카드를 지울 수 없다.</p></div>`;
-    const ch=G.ch,S=CFG.shop,del=UI.deleted||[],left=S.delMax-del.length,can=left>0&&ch.money>=S.delCost&&ch.deck.length>S.minDeck;
-    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 지우기</b><span class="mono" style="color:var(--gold)">${E.money(S.delCost)} · 이번 방문 ${del.length}/${S.delMax}</span></div>
-      <p class="small dim">덱에서 카드를 지운다. 공방에 들를 때마다 ${S.delMax}장까지, 덱은 ${S.minDeck}장 아래로 줄일 수 없다.</p>
-      ${del.length?`<p class="good small">지운 카드 · ${del.map(esc).join(', ')}</p>`:''}
-      ${left>0?`<div class="chips">${ch.deck.map((id,i)=>D.cards[id].fixed?'':`<button class="chip" data-a="delcard" data-i="${i}" ${can?'':'disabled'}>${D.cards[id].n} ×</button>`).join('')}</div>`:''}
-      ${left>0&&!can?`<p class="small dim">${ch.deck.length<=S.minDeck?'덱이 더 줄어들 수 없다.':'돈이 모자란다.'}</p>`:''}${left<=0?'<p class="small dim">이번 방문에는 더 지울 수 없다.</p>':''}</div>`;
+  /* 공방: 카드 교환 (방문마다 swapMax장까지, 일반 보상 카드 무작위로) */
+  function vSwapCard(){
+    if(G.ch.deckLocked||G.ch.cardMoney)return `<div class="panel stack" style="gap:6px"><b class="serif">카드 교환</b><p class="small dim">${G.ch.deckLocked?'덱이 고정되었다':'전용 검술을 익힌 몸이다'}. 카드를 바꿀 수 없다.</p></div>`;
+    const ch=G.ch,S=CFG.shop,sw=UI.swapped||[],left=S.swapMax-sw.length,can=left>0&&ch.money>=S.swapCost;
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 교환</b><span class="mono" style="color:var(--gold)">${E.money(S.swapCost)} · 이번 방문 ${sw.length}/${S.swapMax}</span></div>
+      <p class="small dim">덱의 카드 한 장을 일반 전투에서 얻을 수 있는 카드 중 무작위 한 장으로 바꾼다. 무엇이 나올지는 모른다. 공방에 들를 때마다 ${S.swapMax}장까지.</p>
+      ${sw.length?`<p class="good small">${sw.map(([a,b])=>`${esc(a)} → ${esc(b)}`).join(' · ')}</p>`:''}
+      ${left>0?`<div class="chips">${ch.deck.map((id,i)=>D.cards[id].fixed?'':`<button class="chip" data-a="swapcard" data-i="${i}" ${can?'':'disabled'}>${D.cards[id].n} ⇄</button>`).join('')}</div>`:''}
+      ${left>0&&!can?'<p class="small dim">돈이 모자란다.</p>':''}${left<=0?'<p class="small dim">이번 방문에는 더 바꿀 수 없다.</p>':''}</div>`;
+  }
+  /* 공방: 장비 정비 (장착 장비마다 최대 tune.max번, chance% 확률로 공격 또는 회피 +1) */
+  function vTune(){
+    const ch=G.ch,T=CFG.shop.tune,slots=Object.keys(ch.gear).filter(k=>ch.gear[k]);
+    const rows=slots.map(k=>{const g=ch.gear[k],n=g.tries||0,full=n>=T.max,cost=E.tuneCost(g),tn=g.tune||{},ok=!full&&ch.money>=cost&&!ch.distForm;
+      return `<div class="stack" style="gap:4px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>${esc(g.n)}</b><span class="mono small dim">정비 ${n}/${T.max}${tn.atk||tn.eva?` · 공격+${tn.atk||0} 회피+${tn.eva||0}`:''}</span></div>
+        ${full?'<p class="small dim">더는 정비할 수 없다.</p>':`<div class="row" style="gap:8px"><button class="btn" style="flex:1" data-a="tune" data-i="${k}" data-s="atk" ${ok?'':'disabled'}><b>공격 +1 시도</b><span class="mono small" style="color:var(--gold)">${E.money(cost)}</span></button><button class="btn" style="flex:1" data-a="tune" data-i="${k}" data-s="eva" ${ok?'':'disabled'}><b>회피 +1 시도</b><span class="mono small" style="color:var(--gold)">${E.money(cost)}</span></button></div>`}</div>`}).join('');
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">장비 정비</b><span class="chip">${T.chance}% 성공</span></div>
+      <p class="small dim">장착한 장비 하나에 공격 또는 회피 +1을 시도한다. 성공하면 고른 쪽만 오르고, 실패해도 시도 횟수는 소모된다. 장비마다 ${T.max}번까지.</p>
+      ${UI.tuneMsg?`<p class="${UI.tuneMsg.ok?'good':'bad'} small">${esc(UI.tuneMsg.t)}</p>`:''}
+      ${ch.distForm?'<p class="small dim">뒤틀린 몸은 장비를 쥘 수 없다.</p>':rows||'<p class="small dim">장착한 장비가 없다.</p>'}</div>`;
   }
   function vRules(){
     return `<details><summary>규칙 요약</summary><ul>
@@ -556,6 +567,7 @@ export function startUI(E,app){
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
     sec:[['💨 호흡·치명 개편',['이전: 호흡 1당 치명 5%, 타격마다 호흡 1 소모, 최대 10.','이후: 호흡은 최대 12, 타격해도 줄지 않고 라운드가 바뀔 때마다 2씩 줄어듭니다.','치명 확률: 호흡 4에서 20%, 1마다 +14%(9에서 90%), 10 이상은 확정 치명. 호흡 1~3은 치명 대신 회피 +5.','치명 피해는 그대로 ×1.5입니다. 환도의 호흡당 치명 피해 +10%는 호흡 10까지만 반영됩니다.']],
       ['🛡 출혈·파열',['방어 카드를 내면 자신의 출혈·파열이 1/4 줄어듭니다(파열 8이면 6). 적도 똑같이 적용됩니다.']],
+      ['🔧 공방',['카드 지우기가 카드 교환으로 바뀌었습니다. 덱의 카드를 일반 전투에서 얻는 카드 중 무작위 한 장으로 바꿉니다(방문마다 3장, 500안).','장비 정비가 생겼습니다. 장착한 장비마다 최대 5번, 50% 확률로 공격 또는 회피 +1을 시도합니다(실패해도 횟수는 소모, 시도할수록 비용이 늘어납니다). 모든 장비에 적용됩니다.']],
       ['🃏 암시장',['공방 암시장에 가끔(방문마다 10%) 응급 거래가 열립니다. 응급처치(HP 4 회복, 출혈·파열·화상 중 하나를 2 줄임)와 거리 재기(이번 라운드 회피 +5, 명중 +5)를 살 수 있고, 같은 카드는 최대 3장까지 지닐 수 있습니다.']],
       ['⚠ 검토 중',['특이점(날개 기업 길)이 너무 강하다는 의견이 있어 너프를 검토하고 있습니다. 첫 화면 아래 "의견·버그 제보"에서 느낀 점을 알려 주세요.']]]};
   const V609SEC=[['🔒 새로 열린 길',['더 어려운 난이도가 생겼습니다. 첫 화면에서 고를 수 있습니다.','도서관 안쪽에서 무언가 열렸습니다.']],
@@ -1064,7 +1076,7 @@ export function startUI(E,app){
       UI.stock=stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
-      UI.bought=null;UI.deleted=null;UI.sold=null;UI.rested=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
+      UI.bought=null;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.rested=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
     }
     UI.stock=[];saveGame({st});UI.screen='event';render();
   }
@@ -1146,6 +1158,8 @@ export function startUI(E,app){
       UI.res.chips=[...UI.res.chips,`E.G.O · ${n} (${CFG.mind.ego[ty].n})`];render();
     },
     sell(i){const g=(G.ch.stash||[])[+i];if(!g)return;const v=E.sellStash(G.ch,+i);if(v){UI.sold=`${g.n}을(를) ${E.money(v)}에 팔았다.`;render()}},
+    swapcard(i){if((UI.swapped||[]).length>=CFG.shop.swapMax)return;const r=E.swapCard(G.ch,+i);if(r){(UI.swapped=UI.swapped||[]).push([D.cards[r.old].n,D.cards[r.nid].n]);render()}},
+    tune(k,el){const r=E.tuneGear(G.ch,k,el&&el.dataset?el.dataset.s:null);if(r){UI.tuneMsg={ok:r.ok,t:`${r.n} · ${r.stat==='atk'?'공격':'회피'} +1 ${r.ok?'성공':'실패'} (${r.tries}/${CFG.shop.tune.max})`};render()}},
     delcard(i){if((UI.deleted||[]).length>=CFG.shop.delMax)return;const c=E.delCard(G.ch,+i);if(c){(UI.deleted=UI.deleted||[]).push(D.cards[c].n);render()}},
     tname(){
       const ch=G.ch,adj=D.colors[ch.ci].adj,w=(($('tw')||{}).value||'').trim();
@@ -1269,7 +1283,7 @@ export function startUI(E,app){
   app.addEventListener('click',e=>{
     const b=e.target.closest('[data-a]');
     if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode'].includes(b.dataset.a))return;
-    ACT[b.dataset.a](b.dataset.i);
+    ACT[b.dataset.a](b.dataset.i,b);
   });
   /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */
   try{const m=/#r=([\w-]+)/.exec(location.hash||'');if(m){const r=b64d(m[1]);if(r&&r.s!=null){UI.shared=r;UI.screen='shared'}}}catch(e){}
@@ -1289,6 +1303,7 @@ export function startUI(E,app){
     /* 자동 테스트용: 특색 심사 통과 직후 화면 */
     testColor(){if(!G)return;G.ch.licensed=true;G.ch.rank=1;const r=E.applyFx(G.ch,{colorPass:true});UI.res={t:'심사 통과',chips:r.chips,roll:null};UI.screen='result';render()},
     testMoney(n){if(G){G.ch.money=n;render()}},
+    testShop(){if(!G)return;G.ch.money=5000;UI.stock=Object.keys(D.special).slice(0,2);UI.cardBox=true;UI.aid=true;UI.swapped=null;UI.tuneMsg=null;UI.bought=null;UI.deleted=null;UI.sold=null;UI.rested=null;UI.broker=null;UI.screen='shop';render()},
     /* 6시즌 자동 테스트: 사무소 개설 화면, 사건 바로 보기, 사무소 알선 */
     testBirthRoll(n){if(!BC)return;E.reseed(BC.seed);let c;for(let i=0;i<20000;i++){c=E.newChar();if(c.r.o===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;BC.fresh=false;render()},
     testRelic(k){if(!G)return;E.giveRelic(G.ch,k,true);UI.res={t:'유물',chips:[]};UI.screen='result';render()},
