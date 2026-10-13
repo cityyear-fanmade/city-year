@@ -130,8 +130,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 장비·돈·공방 ===== */
   /* 장비 칸마다 하나. 바꾸면 이전 장비 효과를 빼고 새 장비 효과를 더한다. 피해 최소값은 장비 중 가장 큰 값 */
   function equip(ch,item){
-    /* 육신 뒤틀림: 장비를 낄 수 없다 (보관함으로) */
-    if(ch.distForm){(ch.stash=ch.stash||[]).push(item);return}
+    /* 육신 뒤틀림: 장비를 낄 수 없다 (보관함으로) · N사 날개: 의수를 끼지 않는다 (보관함으로) */
+    if(ch.distForm||(item.slot==='aug'&&isN(ch))){(ch.stash=ch.stash||[]).push(item);return}
     const s=ch.stats,old=ch.gear[item.slot];
     if(old)for(const [k,v] of Object.entries(old.fx))if(k!=='dmin'&&k in s){s[k]-=v;if(k==='maxHp')ch.hp=Math.min(ch.hp,s.maxHp)}
     for(const [k,v] of Object.entries(item.fx))if(k!=='dmin'&&k in s){s[k]+=v;if(k==='maxHp')ch.hp+=v}
@@ -143,6 +143,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
     if(item.card&&!ownsCard(ch,item.card)&&!ch.deckLocked)putCard(ch,item.card);
   }
+  /* ===== 6시즌: N사 날개는 의체를 혐오한다 ===== */
+  const isN=ch=>!!ch.aff&&ch.aff.name===CFG.nWing.name;
+  function unequip(ch,slot){
+    const s=ch.stats,it=ch.gear[slot];if(!it)return;
+    for(const [k,v] of Object.entries(it.fx))if(k!=='dmin'&&k in s){s[k]-=v;if(k==='maxHp')ch.hp=Math.min(ch.hp,s.maxHp)}
+    delete ch.gear[slot];(ch.stash=ch.stash||[]).push(it);
+    s.dmin=Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1));s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
+  }
   /* ===== 6시즌: 보냐텔리의 검 (레이피어 + 외날검) =====
      가속: 공격한 라운드마다 1스택(전투당 최대 3), 스택당 명중 +5 · 회피 +5.
      강화: 보관함의 다른 장비를 재료로 써서 최대 +5. 단계마다 필요한 재료 등급이 오른다 (+5는 유물·히든 장비) */
@@ -152,28 +160,29 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       e:`공+${fx.atk} · 회피+${fx.eva}${fx.dmgB?' · 피해+'+fx.dmgB:''} · 가속(공격한 라운드마다 명중·회피 +5, 최대 3)`,fx,wx:{accel:B.accel}};
   }
   /* ===== 6시즌: E.G.O 발현자의 무기 성장 =====
-     전용 카드 '발현'을 낸 횟수가 CFG.egoGrow.need에 닿으면 TETH → HE → WAW → ALEPH. 수치는 egoWeapons[].grow[등급-1] */
+     전용 카드 '발현'을 낸 횟수가 CFG.egoGrow.need에 닿는 순간 특수 강화. 수치는 egoWeapons[].grow[등급-1] */
   const egoBase=id=>{for(const o of D.hiddenOrigins||[])for(const g of o.egoWeapons||[])if(g.id===id)return g;return null};
   function egoItem(id,L){
     const b=egoBase(id),g=L?b.grow[L-1]:b,it=structuredClone({id:b.id,slot:b.slot,n:b.n,e:g.e,fx:g.fx,wx:g.wx});
     return Object.assign(it,{grade:L>=2?5:4,egoLv:L});
   }
   const egoLvFor=u=>CFG.egoGrow.need.reduce((a,n,i)=>u>=n?i:a,0);
-  /* 전투가 끝난 뒤 확인: 장착 중이든 보관함이든 E.G.O 무기 하나를 올린다 */
-  function egoGrow(ch,chips){
-    if(ch.egoUses==null)return;
+  /* 발현을 낸 직후 확인: 장착 중이든 보관함이든 E.G.O 무기 하나를 올린다. 올렸으면 {old,nw} */
+  function egoGrow(ch){
+    if(ch.egoUses==null)return null;
     const st=ch.stash||[],w=ch.gear.weapon,L=egoLvFor(ch.egoUses),own=w&&egoBase(w.id)?w:st.find(x=>egoBase(x.id));
-    if(!own||(own.egoLv||0)>=L)return;
+    if(!own||(own.egoLv||0)>=L)return null;
     const nw=egoItem(own.id,L);
     if(own===w){equip(ch,nw);ch.stash=ch.stash.filter(x=>x!==own)}else st[st.indexOf(own)]=nw;
-    chips.push(`E.G.O가 자란다 · ${nw.n} (${CFG.egoGrow.tier[L]})`);
+    ch.egoNote=`E.G.O ${CFG.egoGrow.tier[L]} · ${nw.n} (${nw.e})`;
+    return {old:own,nw,worn:own===w};
   }
   const bonNeed=ch=>{const w=ch.gear.weapon;return w&&w.id==='bonatelli'&&w.lvl<CFG.bon.max?CFG.bon.need[w.lvl]:null};
   function bonUpgrade(ch,i){
     const need=bonNeed(ch),st=ch.stash||[],m=st[i];if(need==null||!m||(m.grade||0)<need)return false;
     st.splice(i,1);const old=ch.gear.weapon;equip(ch,bonItem(old.lvl+1));ch.stash=ch.stash.filter(x=>x!==old);return true;
   }
-  function equipStash(ch,i){const st=ch.stash||[];if(!st[i])return false;equip(ch,st.splice(i,1)[0]);return true}
+  function equipStash(ch,i){const st=ch.stash||[];if(!st[i]||(st[i].slot==='aug'&&isN(ch)))return false;equip(ch,st.splice(i,1)[0]);return true}
   const inStash=(ch,id)=>(ch.stash||[]).some(x=>x.id===id)||(ch.gearOffers||[]).some(x=>x.id===id);
   /* ===== 6시즌: 장비를 얻으면 바로 끼지 않고, 장착할지 보관함에 넣을지 고른다 ===== */
   function offerGear(ch,item){(ch.gearOffers=ch.gearOffers||[]).push(item)}
@@ -248,6 +257,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const it=D.items[id];
     if(ch.gear[it.slot]&&ch.gear[it.slot].id===id)return 'owned';
     if(ch.distForm)return 'distort';
+    if(it.slot==='aug'&&isN(ch))return 'nwing';
     if(inStash(ch,id))return 'stash';
     if(it.grade>shopAccess(ch))return 'locked';
     if(ch.money<priceOf(ch,id))return 'money';
@@ -264,6 +274,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const it=D.special[id];
     if(it.perm?(ch.perms||[]).includes(id):(ch.gear[it.slot]&&ch.gear[it.slot].id===id))return 'owned';
     if(!it.perm&&ch.distForm)return 'distort';
+    if(it.slot==='aug'&&isN(ch))return 'nwing';
     if(!it.perm&&inStash(ch,id))return 'stash';
     if(ch.money<it.price)return 'money';
     return 'ok';
@@ -412,6 +423,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.join){
       const name=fx.join.name||(fx.join.from==='finger'&&ch.thumbBias&&d(100)<=ch.thumbBias?'엄지':one(D.orgs[fx.join.from]));
       ch.aff={type:fx.join.type,name};chips.push((T.affTypes[fx.join.type]||'소속')+' · '+name);
+      if(isN(ch)&&ch.gear.aug){chips.push(`의체를 버린다 · ${ch.gear.aug.n} → 보관함`);unequip(ch,'aug')}
       ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0;
       if(noFixer(ch)&&ch.licensed){ch.licensed=false;ch.title=null;chips.push(`해결사 자격 반납 · ${T.affTypes[ch.aff.type]}은(는) 해결사를 겸할 수 없다`)}
       if(isFinger(ch))chips.push(...fingerStep(ch));
@@ -700,7 +712,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
-    egoGrow(ch,chips);
+    if(ch.egoNote){chips.push(ch.egoNote);ch.egoNote=null}
     let title=null,tlabel=null,newly=false,colorRoll=null,unlock=null;
     const foe=D.enemies[C.id];
     if(foe.hidden){
@@ -746,7 +758,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',name:ch.name||T.you,color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,middle:!!(ch.aff&&ch.aff.name==='중지'),index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,distorted:!!ch.distForm,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,middle:!!(ch.aff&&ch.aff.name==='중지'),index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
     const S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy;
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from):0,g=gradeAt(ch.year||0)+1,X_=CFG.endless;
     const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul:S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*g));
@@ -754,10 +766,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 보스별 난이도 보정(hard): 체력 배수, 공격·회피 가산 */
     const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,ehh=Math.round((hd?eh*(hd.hp||1):eh)*(nm?nm.hp:1));
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
-    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:e.atk+up+xa+(hd&&hd.atk||0)+(nm?nm.atk:0),eva:e.eva+up+(hd&&hd.eva||0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive||null,hyeolchan:!!e.hyeolchan,trait:e.trait||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
+    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:e.atk+up+xa+(hd&&hd.atk||0)+(nm?nm.atk:0),eva:e.eva+up+(hd&&hd.eva||0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;
+    if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd}
     if(pen&&!(ch.licensed&&ch.rank<=pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
     let hpNote=null;
@@ -945,6 +958,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
+      if(A.augHunt&&B.aug){dmg+=A.augHunt;note+=` 의체 혐오+${A.augHunt}`}
       /* 조율자 전용 키워드 · 봉인 각인: 해제가 각인 1당 피해 +4로 터뜨린다 */
       if(c.unseal&&(B.sealMark||0)>0){const x=B.sealMark*c.unseal;dmg+=x;note+=` 봉인 해제 ${B.sealMark}×${c.unseal}+${x}`;B.sealMark=0}
       if((A.serum||0)>=3&&!c.serumBurst){dmg=Math.floor(dmg*1.5);A.serum=0;note+=' 혈청 과부하×1.5'}
@@ -1050,7 +1064,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     queue(C,pp,ep).forEach((st,i)=>{
       C.step=i;const A=C[st.side],c=st.card;
       if(c.next&&!A.isP){A.forceNext=c.next;L('sys',`${A.name} · ${c.n} · 다음 라운드 ${D.cards[c.next].n} 준비`)}
-      if(A.isP&&c.egoGrow)C.ch.egoUses=(C.ch.egoUses||0)+1;
+      if(A.isP&&c.egoGrow){C.ch.egoUses=(C.ch.egoUses||0)+1;const up=egoGrow(C.ch);
+        /* 특수 강화는 그 자리에서: 장착 중이면 이번 전투 수치도 바로 바꾼다 */
+        if(up&&up.worn){for(const k of ['atk','eva'])A[k]+=(up.nw.fx[k]||0)-(up.old.fx[k]||0);A.wx=up.nw.wx}
+        if(up)L('kw',`${A.name} · ${c.n} ${C.ch.egoUses}회 · E.G.O ${CFG.egoGrow.tier[up.nw.egoLv]} · ${up.nw.n}`)}
       if(A.isP&&c.mindCost)loseMind(C.ch,c.mindCost,t=>L('kw',`${A.name} · ${c.n} · ${t}`));
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
       if(c.t==='def'){const ev=(c.eva||CFG.defBonus)+A.defUp;A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
@@ -1112,6 +1129,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
