@@ -683,7 +683,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다')}
   }
   /* ===== 인연(동반자) =====
-     ch.bond = {st: 'pick'(이름 정하는 중)|'met'|'married'|'lost'|'declined', route, name, step, tries, love, since, next, saved} */
+     ch.bond = {st: 'pick'(이름 정하는 중)|'met'|'married'|'lost'(배우자의 죽음)|'left'(결혼 전에 떠남)|'declined', kids[{n,born,job,told}], route, name, step, tries, love, since, next, saved} */
   const BD=CFG.bond;
   const bondGap=()=>BD.gap[0]+d(BD.gap[1]-BD.gap[0]+1)-1;
   /* 이름은 마음대로 짓는 것이라 성별을 정하지 않는 표현만 쓰고, 이름 뒤 조사(은/는·이/가·과/와)는 받침에 맞춘다 */
@@ -701,11 +701,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     chips.push(`결혼 · ${b.name}`);chips.push(bondFill(R.married,b));
     chips.push(`최대 HP +${BD.marry.maxHp} · 최대 정신력 +${BD.marry.mindMax} · 사건 판정 +${BD.marry.check}`);
   }
-  function bondLost(ch,chips){
-    const b=ch.bond,R=bondData(ch);b.st='lost';
-    ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));
-    chips.push(`배우자의 죽음 · ${b.name}`);chips.push(bondFill(R.lost,b));chips.push(`최대 정신력 −${BD.lossMind} (영구)`);
+  /* 결혼 전에 기회를 모두 쓰면 상대가 떠난다 (작은 대가) */
+  function bondLeft(ch,chips){
+    const b=ch.bond,R=bondData(ch);b.st='left';
+    ch.stats.mindMax=(ch.stats.mindMax||0)-BD.leaveMind;ch.mind=Math.min(ch.mind,mindMax(ch));
+    chips.push(`떠났다 · ${b.name}`);chips.push(bondFill(R.left,b));chips.push(`최대 정신력 −${BD.leaveMind} (영구)`);
   }
+  /* 결혼한 뒤의 배우자의 죽음 (큰 대가). 아이는 남는다 */
+  function bondDeath(ch,chips){
+    const b=ch.bond;b.st='lost';
+    ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));
+    chips.push(`배우자의 죽음 · ${b.name}`);chips.push(`최대 정신력 −${BD.lossMind} (영구)`);
+  }
+  const kidWord=b=>(b.kids||[]).length>1?'자식들':'자식';
+  const kidAge=(k,y)=>Math.max(0,(y||0)-k.born);
   /* 청혼: roll이면 1dN을 굴려 성공 범위면 결혼, 아니면 기회 1회 소모 (기회를 다 쓰면 인연이 끝난다) */
   function bondPropose(ch,chips,roll){
     const b=ch.bond;if(!b||b.st!=='met')return;
@@ -713,7 +722,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(roll){const r=d(BD.die);ok=r>=BD.ok[0]&&r<=BD.ok[1];chips.push(`1d${BD.die} · ${r} (${BD.ok[0]}~${BD.ok[1]} 성공)`)}
     if(ok){bondMarry(ch,chips);return}
     b.tries=(b.tries||0)+1;chips.push(bondFill(roll?D.bond.proposeNo:D.bond.proposeWaitFail,b)+` · 남은 기회 ${Math.max(0,BD.tries-b.tries)}/${BD.tries}`);
-    if(b.tries>=BD.tries)bondLost(ch,chips);else b.next=(ch.year||0)+bondGap();
+    if(b.tries>=BD.tries)bondLeft(ch,chips);else b.next=(ch.year||0)+bondGap();
   }
   /* 인연 루트: 혈귀는 혈귀 전용, 동부 외곽 출신은 외곽 전용, 그 밖에는 소속(사무소·협회·날개·손가락) */
   const bondRouteOf=ch=>ch.race==='hyeolgwi'?'hyeolgwi':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null);
@@ -730,8 +739,25 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 인연이 맺어진 뒤의 사건(3~4년마다)과 청혼. 만남은 일상 사건 안에서 일어난다 */
   function bondEvent(G){
     const ch=G.ch,b=ch.bond,y=G.year,B=D.bond;
-    if(!B||ch.distForm||ch.job||!b||b.st!=='met')return null;
+    if(!B||ch.distForm||ch.job||!b)return null;
     const R=bondData(ch);if(!R)return null;
+    if(b.st==='married'||b.st==='lost'){
+      const KD=BD.kid,kids=b.kids||(b.kids=[]);
+      /* 성인이 된 아이: 사무소·해결사·협회 중 태어날 때 정해진 곳에 들어간다 */
+      const grown=kids.find(k=>!k.told&&kidAge(k,y)>=KD.adult);
+      if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
+        return {t:J.t,x:J.x.replace(/\{k\}/g,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:B.kidAT.replace(/\{k\}/g,grown.n),fx:{}}}]}}
+      if(b.st!=='married')return null;
+      if(y-b.since>=BD.dieFrom&&d(100)<=BD.dieChance)
+        return {t:B.deathT,x:bondFill(R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`,ok:{t:bondFill(B.deathAT,b),fx:{bondDeath:true}}}]};
+      const last=kids.length?kids[kids.length-1].born:-99;
+      if(y-b.since>=KD.from&&kids.length<KD.max&&y-last>=KD.gap&&d(100)<=KD.chance){
+        const used=kids.map(k=>k.n),pool=B.kidNames.filter(n=>!used.includes(n)),nm=one(pool.length?pool:B.kidNames);
+        return {t:B.kidBirth.t,x:B.kidBirth.x,c:[{l:B.kidBirth.a,h:`최대 정신력 +${KD.mind} · 아이는 당신과 함께 나이를 먹는다`,ok:{t:B.kidBirth.at.replace(/\{k\}/g,nm),fx:{bondKid:nm}}}]};
+      }
+      return null;
+    }
+    if(b.st!=='met')return null;
     if(y<b.next)return null;
     b.next=y+bondGap();
     if(b.step<BD.steps){
@@ -984,6 +1010,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.corpForb)corpForb(ch,chips);
     if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
     if(fx.bondDecline)ch.bond={st:'declined'};
+    if(fx.bondDeath&&ch.bond&&ch.bond.st==='married')bondDeath(ch,chips);
+    if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);chips.push(`아이 · ${k_.n}`);chips.push(`최대 정신력 +${BD.kid.mind}`)}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
     if(fx.bondPropose)bondPropose(ch,chips,true);
     if(fx.bondSlip)bondPropose(ch,chips,false);
