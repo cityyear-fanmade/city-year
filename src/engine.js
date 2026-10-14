@@ -1177,7 +1177,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 무기 주사위: 면 수는 무기, 개수는 카드와 무기 중 많은 쪽 (+ 카드 등급) */
       else if(wd){const n=Math.max(wd[0],c.dice)+(gr?gr.dice:0);for(let i=0;i<n;i++)rolls.push(Math.max(Math.min(lo,wd[1]),d(wd[1])))}
       else{let ex=c.exec&&(B.disp||0)>0?c.exec:0;if(ex)pnote+=` 처분 표식 주사위+${ex}`;
-        if(c.serumBurst&&(A.serum||0)>0){ex+=A.serum;pnote+=` 혈청 ${A.serum} 소모 · 주사위+${A.serum}`;A.serum=0}for(let i=0;i<c.dice+ex+(gr&&!c.die?gr.dice:0);i++)rolls.push(Math.max(lo2,d(die)))}
+        if(c.serumBurst&&(A.serum||0)>0){ex+=A.serum;pnote+=` 혈청 ${A.serum} 소모 · 주사위+${A.serum}`;A.serum=0}for(let i=0;i<c.dice+ex+(gr&&!c.die?gr.dice:0);i++)rolls.push(c.range?c.range[0]-1+d(c.range[1]-c.range[0]+1):Math.max(lo2,d(die)))}
       let note=fsb?' 선제':'';
       if(c.rr&&rolls.length){
         let mi=0;rolls.forEach((v,i)=>{if(v<rolls[mi])mi=i});
@@ -1323,7 +1323,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(up)L('kw',`${A.name} · ${c.n} ${C.ch.egoUses}회 · E.G.O ${CFG.egoGrow.tier[up.nw.egoLv]} · ${up.nw.n}`)}
       if(A.isP&&c.mindCost)loseMind(C.ch,c.mindCost,t=>L('kw',`${A.name} · ${c.n} · ${t}`));
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
-      if(c.t==='def'){cutStacks(A);if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp;A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
+      if(c.t==='def'){cutStacks(A);if(c.shield){A.shield=(A.shield||0)+c.shield;L('kw',`${A.name} · ${c.n} · 보호막 +${c.shield} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp;A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
       if(P.hp<=0||E.hp<=0)return;
       act(C,A,c,L,push);
     });

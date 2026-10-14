@@ -247,6 +247,7 @@ export function startUI(E,app){
     return cardLine0(c,g,wx)+cardFx(c)+((c.mat||c.harvest||c.reuse)&&c.d?' · '+c.d:'')+(c.mindCost?` · 정신력 −${c.mindCost}`:'');
   }
   function cardLine0(c,g,wx){
+    if(c.range)return `${c.hits>1?c.hits+'타 · ':''}${c.dice>1?c.dice+'개 · ':''}1d${c.range[0]}~${c.range[1]}${c.b?sg(c.b):''} · 명중 ${sg(c.hit+(g?g.hit:0))}`;
     if(c.gamble)return `${c.d} · 명중 ${sg(c.hit+(g?g.hit:0))}`;
     /* 전용 무기 주사위가 있으면 실제로 굴리는 주사위로 표시 */
     if(wx&&wx.dice&&!c.die){const n=Math.max(wx.dice[0],c.dice)+(g?g.dice:0),b=(c.b||0)+(g?g.b:0);return `${c.hits>1?c.hits+'타 · ':''}${n}d${wx.dice[1]}${b?sg(b):''} · 명중 ${sg(c.hit+(g?g.hit:0))} · 무기 주사위${g&&g.n?' · 등급 '+g.n:''}`}

@@ -3415,14 +3415,14 @@
      }
     },
     "cards": [
-     "rp_line",
-     "rp_line",
-     "rp_line",
-     "rp_level",
-     "rp_level",
-     "rp_level",
-     "rp_split",
-     "rp_split",
+     "rp_garo",
+     "rp_garo",
+     "rp_sero",
+     "rp_sero",
+     "rp_dash",
+     "rp_dash",
+     "rp_cut",
+     "rp_cut",
      "rp_guard",
      "rp_guard"
     ],
