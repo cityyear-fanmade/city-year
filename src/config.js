@@ -147,7 +147,7 @@ export const CFG = {
   /* 생크 협회 전용 패시브 '결투 선언': 이 소속이 치르는 모든 전투에서 서로(나와 상대) 명중마다 주는 피해 +dmg */
   duel: {org: '생크 협회', n: '결투 선언', dmg: 3},
   /* 6시즌 N사 날개: 의체를 쓰지 않는다(의수 칸 사용 불가). 대신 전투마다 신체 강화(공격·회피·속도), 의체 심판: 의체 상대(enemies aug, 소개 문구에 의체가 분명한 적만) 적중마다 피해 +augDmg */
-  nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3},
+  nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastTitle: '금기사냥꾼'},
   /* N사 날개 · 못(상대에게 쌓임, 최대 cap): 적중마다 hit(의체 적은 augHit). 3·4코스트 망치 카드가 못을 모두 흐트러짐으로 바꾼다 (nailBurst.mul배).
      흐트러짐: 단계(stages)마다 상대의 명중 −hit · 주는 피해 −dmg · 받는 피해 +take, 라운드 끝에 decay씩 줄고, stun(적 등급별) 이상이면 다음 라운드 기절 */
   nail: {cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},

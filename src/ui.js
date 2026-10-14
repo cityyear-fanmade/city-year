@@ -300,6 +300,7 @@ export function startUI(E,app){
   function vPassive(ch){
     const P=[];const af=ch.aff&&ch.aff.name;
     {const t=fingerPassive(af,ch.fi||0);if(t)P.push(t)}
+    if(ch.fate)P.push(`운명 · 모든 판정 +${CFG.nWing.fate} (사건 판정 · 전투 명중·회피) · 못 패시브 대신`);
     if(ch.oracle)P.push(`신탁대행자 · 지령 독촉 · 지령 스택 최대 ${CFG.oracle.presc} · 지령을 수행하지 못하면 다음 라운드 명중 −${CFG.oracle.missHit} · 회피 −${CFG.oracle.missEva}`);
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 '+CFG.artSense.every+'번 쓰러뜨릴 때마다 +1 (영구)':''}`);
     if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];

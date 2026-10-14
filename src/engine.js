@@ -153,6 +153,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* ===== 6시즌: N사 날개 · 의체 심판: 의수를 쓰지 않고, 의체 상대(enemies aug)를 심판한다 ===== */
   const isN=ch=>!!ch.aff&&ch.aff.name===CFG.nWing.name;
+  const isEastOuter=ch=>!!(ch.o&&ch.o.n==='동부 출신 외곽 생존자');
   function unequip(ch,slot){
     const s=ch.stats,it=ch.gear[slot];if(!it)return;
     for(const [k,v] of Object.entries(it.fx))if(k!=='dmin'&&k in s){s[k]-=v;if(k==='maxHp')ch.hp=Math.min(ch.hp,s.maxHp)}
@@ -474,6 +475,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.aff={type:J.type,name};chips.push((T.affTypes[J.type]||'소속')+' · '+name);
     if(isN(ch)&&ch.gear.aug){chips.push(`의체를 버린다 · ${ch.gear.aug.n} → 보관함`);unequip(ch,'aug')}
     ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0;
+    /* 동부 출신 외곽 생존자가 N사 날개에 들어가면 못 대신 전용 키워드 '운명': 모든 판정(사건 판정 · 전투 명중·회피 굴림) +fate */
+    if(isN(ch)&&isEastOuter(ch)&&!ch.fate){ch.fate=true;addStats(ch.stats,{check:CFG.nWing.fate});(ch.relics=ch.relics||[]).push('운명');chips.push(`운명 · 모든 판정 +${CFG.nWing.fate} (사건 판정 · 전투 명중·회피)`)}
     if(noFixer(ch)&&ch.licensed){ch.licensed=false;ch.title=null;chips.push(`해결사 자격 반납 · ${T.affTypes[ch.aff.type]}은(는) 해결사를 겸할 수 없다`)}
     if(isFinger(ch))chips.push(...fingerStep(ch));
     else if(CR[ch.aff.type]&&CR[ch.aff.type].ranks)chips.push(...careerStep(ch));
@@ -521,7 +524,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(C_.strike==='purge'){ch.purge=C_.purgeFoe;chips.push('숙청 대상이 되었다')}
       }
     }
-    if(fx.topPass){const C_=CR[career(ch)];ch.title=C_.topTitle;ch.titleKind='top';addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
+    if(fx.topPass){const C_=CR[career(ch)];ch.title=isN(ch)&&isEastOuter(ch)?CFG.nWing.eastTitle:C_.topTitle;ch.titleKind='top';addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
     if(fx.colorPass){ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 발현자 · 특색 · 모든 능력치 +5')}}
@@ -1192,7 +1195,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;
-    if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit}
+    if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit;if(ch.fate){P.nailHit=0;P.atk+=CFG.nWing.fate;P.eva+=CFG.nWing.fate}}
     if(pen&&!(ch.licensed&&ch.rank<=pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
     let hpNote=null;
