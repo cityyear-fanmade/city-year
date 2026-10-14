@@ -434,7 +434,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const topEvent=ch=>{const k=career(ch);return k==='fixer'?D.colorExam:CR[k]&&CR[k].top};
   const topReady=ch=>{const k=career(ch);return !!k&&!canPromote(ch)&&!ch.title&&!ch.colorFailed&&promoDone(ch)>0&&(ch.year||0)>=(ch.topNext||0)}
   /* 특색·상석 심사 실패: 최대 CFG.top.tries번까지, 실패하면 CFG.top.wait년 뒤 다시 */
-  function topFailed(ch,chips,label){ch.topTries=(ch.topTries||0)+1;const left=CFG.top.tries-ch.topTries;
+  function topFailed(ch,chips,label){ch.topTries=(ch.topTries||0)+1;const sb=ch.bond;if(sb&&sb.st==='married'){sb.promo=(sb.promo||0)+1;chips.push(`배우자 승급 · ${sb.name} (+1급)`)}const left=CFG.top.tries-ch.topTries;
     if(left<=0){ch.colorFailed=true;chips.push(label+' 실패 · 다시 기회 없음')}else{ch.topNext=(ch.year||0)+CFG.top.wait;chips.push(`${label} 실패 · 남은 기회 ${left}번 · ${CFG.top.wait}년 뒤 다시`)}}
   /* ===== 손가락 서열 =====
      손가락마다 서열표가 있고, 오를 때마다 그 서열의 보정을 더한다. branch면 1d100으로 갈래를 고른다 */
@@ -748,7 +748,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const kidAge=(k,y)=>Math.max(0,(y||0)-k.born);
   /* 토벌 의뢰: 결혼 중인 배우자와 성인이 된 아이 중 가장 강한 가족 (level 0~8, 급수 = 9 − level). 배우자는 결혼한 햇수가 지날수록 급수가 오른다 */
   const kidLevel=(k,y)=>Math.min(8,Math.floor((kidAge(k,y)-BD.kid.adult)/BD.hunt.years)+(BD.hunt.job[k.job]||0));
-  const spouseLevel=(b,y)=>Math.min(8,(BD.hunt.spouse[b.route]??1)+Math.floor(Math.max(0,(y||0)-(b.since||0))/BD.hunt.spouseYears));
+  const spouseLevel=(b,y)=>Math.min(8,(BD.hunt.spouse[b.route]??1)+(b.promo||0)+Math.floor(Math.max(0,(y||0)-(b.since||0))/BD.hunt.spouseYears));
   function familyHunter(ch,y){
     const b=ch.bond;if(!b)return null;
     const cs=(b.kids||[]).filter(k=>!k.dead&&kidAge(k,y)>=BD.kid.adult).map(k=>({n:k.n,job:k.job,lv:kidLevel(k,y),kid:k}));
