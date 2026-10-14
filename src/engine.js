@@ -218,7 +218,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
   /* 히든 보스 전용 책장: 받으면 덱이 통째로 바뀌고 영구 고정, 거절하면 지금 덱 유지 */
-  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;ch.offers=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);ch.packOffer=null;return true}
+  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;ch.offers=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
   function declinePack(ch){if(!ch.packOffer)return false;ch.packOffer=null;return true}
   /* 고정 카드(E.G.O 전용)는 덱에서 뺄 수 없다. 예전 판에서 카드함으로 빠진 고정 카드는 덱으로 돌려놓고, 덱이 넘치면 일반 카드가 카드함으로 간다 */
   function repairFixed(ch){
@@ -894,6 +894,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function winRewards(G,C){
     const ch=G.ch,chips=[];
     ch.hp=clamp(C.P.hp+CFG.winHeal,1,ch.stats.maxHp);chips.push('HP +'+CFG.winHeal);
+    if(ch.flags&&ch.flags.redMist){const h=Math.min(CFG.redMist.heal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('붉은 안개 · 적을 쓰러뜨려 HP +'+h)}}
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
@@ -923,7 +924,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(foe.pill){ch.pillPick=true;chips.push(`${foe.pill.n} · 능력치 하나를 골라 +${foe.pill.v} (영구)`)}
       if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
         if(dr.gear){offerGear(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 · ${dr.gear.n} (${dr.gear.e}) · 장착할지 고른다`)}
-        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice()};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
+        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
         else for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
       if(foe.quest){ch.flags[foe.quest.flag]=1;ch.bookNext=G.year+CFG.redBook.every;(ch.relics=ch.relics||[]).push(foe.quest.relic);chips.push(foe.quest.text)}
       if(foe.unlock&&!ch.unlocks.includes(foe.unlock)){ch.unlocks.push(foe.unlock);unlock=foe.unlock;chips.push('해금 · '+(T.jobs[foe.unlock]||foe.unlock))}

@@ -292,6 +292,7 @@ export function startUI(E,app){
     if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];
       P.push(`특이점 ${c.n} (${t.n}) · ${t.e.split(' (')[0]} · ${c.st==='dev'?`개발 ${c.stack}/${CFG.corp.devMax}`:`강화 ${c.up}/${CFG.corp.upMax} · 금기 실험 ${c.forb}/${CFG.corp.forbMax}`}`)}
     if(ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea'))P.push(`피의 각인된 갈망 · 자식 ${ch.kids||0}/${CFG.kids.max} · 라운드마다 혈찬 +${CFG.kids.per}×자식 · 전투가 끝나면 자식마다 ${CFG.kids.lose}% 흩어짐`);
+    if(ch.flags&&ch.flags.redMist)P.push('붉은 안개 · 적을 쓰러뜨리면 HP '+CFG.redMist.heal+' 회복');
     if(ch.hwando)P.push(`섬봉광 검술 · 호흡 1당 치명 피해 +10% (최대 ${CFG.breath.hwandoCap})`);
     if(ch.resonance)P.push('궁니르 공명 · 궁니르 카드를 낸 라운드 받는 피해 −60%');
     return P.length?`<div class="passives">${P.map(t=>`<div class="mono small"><span style="color:var(--gold)">◆</span> ${esc(t)}</div>`).join('')}</div>`:'';
@@ -418,6 +419,7 @@ export function startUI(E,app){
     if(ch.packOffer){const P=ch.packOffer,cnt={};P.cards.forEach(id=>cnt[id]=(cnt[id]||0)+1);
       return sheet(`<span class="eyebrow">전용 책장 · ${P.cards.length}장</span><h2>${esc(P.n)}으로 덱을 바꿀까</h2>
         <div class="check" style="border-color:var(--bleed)"><b class="bad">주의 · 영구 적용</b><br>바꾸면 지금 덱 ${ch.deck.length}장과 카드함 ${(ch.side||[]).length}장이 모두 사라지고 덱이 고정된다. 이후 카드를 지우거나 옮기거나 다시 바꿀 수 없고, 새 카드는 돈으로 받는다.</div>
+        ${P.e?`<div class="check"><b>패시브</b> · ${esc(P.e)}</div>`:''}
         <div class="invcards">${Object.keys(cnt).map(id=>cardRow(id,cnt[id]>1?`<span class="mono small dim">×${cnt[id]}</span>`:'')).join('')}</div>
         <button class="btn${UI.packAsk?' primary':''}" data-a="packyes">${UI.packAsk?'정말 바꾼다 (되돌릴 수 없다)':'이 책장으로 바꾼다'}</button>
         <button class="btn primary" data-a="packno">지금 덱을 지킨다</button>

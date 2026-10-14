@@ -3392,14 +3392,44 @@
     "eva": 0
    },
    "drop": {
-    "n": "붉은 안개의 각인",
-    "card": "rm_split",
+    "n": "붉은 안개의 코트",
     "fx": {
-     "maxHp": 25,
-     "atk": 3,
-     "dmgB": 1
+     "maxHp": 30
     },
-    "e": "HP+25 · 공+3 · 피해+1 · 전용 카드 큰 가르기 · 수직"
+    "e": "HP+30 (영구) · 무기 미미크리 (프로토타입) · 전용 카드팩 붉은 안개 (적을 쓰러뜨리면 HP 40 회복)",
+    "gear": {
+     "id": "w_mimicry_p",
+     "slot": "weapon",
+     "n": "미미크리 (프로토타입)",
+     "e": "공+9 · 회피+5 · 피해 2d4 · 적중마다 HP 1 흡수",
+     "fx": {
+      "atk": 9,
+      "eva": 5
+     },
+     "wx": {
+      "dice": [
+       2,
+       4
+      ],
+      "drain": 1
+     }
+    },
+    "cards": [
+     "rp_line",
+     "rp_line",
+     "rp_line",
+     "rp_level",
+     "rp_level",
+     "rp_level",
+     "rp_split",
+     "rp_split",
+     "rp_guard",
+     "rp_guard"
+    ],
+    "lockDeck": true,
+    "packName": "붉은 안개",
+    "packPassive": "redMist",
+    "packE": "적을 쓰러뜨리면 HP 40 회복"
    }
   }
  },

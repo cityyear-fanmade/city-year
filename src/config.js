@@ -94,6 +94,8 @@ export const CFG = {
     trial: {claw: {hp: 1, atk: 0}, arbiter: {hp: 1, atk: 0}}, grow: {maxHp: 3}, up: {maxHp: 8, atk: 2}, forb: {maxHp: 5, atk: 2, eva: 1}, clear: {maxHp: 15, atk: 3, eva: 2}},
   /* 도서관 관장을 쓰러뜨리면 붉은 안개의 책 연계 퀘스트: 얻은 뒤 every년마다 책이 요동치고, 펼쳐서 붉은 안개를 쓰러뜨리면 끝난다 */
   redBook: {every: 3},
+  /* 붉은 안개 전용 카드팩 패시브: 적을 쓰러뜨리면 HP heal 회복 */
+  redMist: {heal: 40},
   /* 오늘의 시드로 시작하면 출신 굴림을 이 숫자로 고정한다 (null이면 시드 그대로). 1 = 혈귀 */
   dailyOrigin: 1,
   /* 하나 협회 전용 패시브: 라운드마다 카드를 고르기 전에 한 가지를 고른다. gun: 이번 라운드 공격 피해 +n, gon: 받는 피해 n% 감소, gam: 이번 라운드 빛 +n, ri: 체력 회복과 호흡 */
