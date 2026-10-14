@@ -655,7 +655,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     corpBump(ch,CP.up,chips);corpBump(ch,T_.per||{},chips);chips.push(`특이점 ${c.n} 강화 ${c.up}/${CP.upMax}`);
   }
   function corpForb(ch,chips){
-    const c=ch.corp;if(!corpYes(ch))return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
+    const c=ch.corp;if(!corpYes(ch)||c.forb>=CP.forbMax)return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
     if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다')}
   }
   /* 해마다 순서: 제안(from년차부터 chance%) → 개발 진척 → 날개 설립 → 실험. 사건을 보이면 그 사건을 돌려준다 */
@@ -668,7 +668,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(y>=c.next&&d(100)<=CP.devChance){c.next=y+CP.devGap;return D.corp.grow}
       return null;
     }
-    if(c.st==='wing'&&!(c.chain&&c.chain.length)&&y>=c.next&&d(100)<=CP.labChance){c.next=y+CP.labGap;return D.corp.lab}
+    if(c.st==='wing'&&!(c.chain&&c.chain.length)&&!(c.up>=CP.upMax&&c.forb>=CP.forbMax)&&y>=c.next&&d(100)<=CP.labChance){c.next=y+CP.labGap;return D.corp.lab}
     return null;
   }
   /* 육신 뒤틀림: 장비를 모두 벗고(보관함), 깡 능력치 상승, 덱은 뒤틀린 책장으로 고정, 정신력은 더 깎이지 않는다 */
