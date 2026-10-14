@@ -273,7 +273,7 @@ export function startUI(E,app){
     return `<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">주사위 · 전투 연출</span><div class="seg">${b('mode','manual','수동',MODE)}${b('mode','slow','천천히',MODE)}${b('mode','fast','빠르게',MODE)}${b('mode','off','끔',MODE)}</div>
         <span class="small dim">${{manual:'행동마다 버튼을 눌러 직접 주사위를 굴린다',slow:'자동으로 천천히 굴린다',fast:'자동으로 빠르게 굴린다',off:'연출 없이 결과만 본다'}[MODE]}</span></div>
-      <div class="stack" style="gap:6px"><span class="eyebrow">자동 전투 간격</span><div class="seg">${b('autogap','slow','느림',AUTOGAP)}${b('autogap','normal','보통',AUTOGAP)}${b('autogap','fast','빠름',AUTOGAP)}</div>
+      <div class="stack" style="gap:6px"><span class="eyebrow">자동 전투 간격</span><div class="seg">${b('autogap','slow','느림',AUTOGAP)}${b('autogap','normal','보통',AUTOGAP)}${b('autogap','mid','조금 빠름',AUTOGAP)}${b('autogap','fast','빠름',AUTOGAP)}</div>
         <span class="small dim">자동 전투에서 라운드와 라운드 사이를 얼마나 쉬는지 · 전투 중 일시정지도 할 수 있다</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">인생 주사위</span><div class="seg">${b('dice','free','매번 다르게',DICE)}${b('dice','fixed','시드 고정(재현)',DICE)}</div>
         <span class="small dim">${DICE==='fixed'?'시드가 같고 선택이 같으면 인생 전체의 주사위가 똑같이 나온다 (공유·재현용)':'출생만 시드로 정해지고, 태어난 뒤의 사건 주사위는 판마다 달라진다'}</span></div>
@@ -1182,9 +1182,9 @@ export function startUI(E,app){
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length);
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
-    const ov=pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
-    const ovKey=showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':'c')+(UI.swap?'s':''):ov?'bag':'';
-    app.innerHTML=`<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out'):''}${ov}`;
+    const ov=UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
+    const ovKey=UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':'c')+(UI.swap?'s':''):ov?'bag':'';
+    app.innerHTML=`<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out'):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     UI.lastOv=ovKey;document.documentElement.classList.toggle('ovopen',!!ov);
     const lg=$('log');if(lg)lg.scrollTop=lg.scrollHeight;
@@ -1192,8 +1192,8 @@ export function startUI(E,app){
     if(s==='birth'&&BC.fresh&&MODE!=='off'){BC.fresh=false;rollAnim()}
     if(s==='level'&&UI.lvFresh&&MODE!=='off'){UI.lvFresh=false;rollAnim()}
     if(s==='result'&&UI.res.anim&&UI.res.roll){UI.res.anim=false;UI.animing=true;resultAnim().then(()=>{UI.animing=false;if(G&&((G.ch.offers||[]).length||(G.ch.gearOffers||[]).length||G.ch.packOffer))render()})}
-    if(s==='combat'&&FIGHT==='auto'&&!PLAYING&&C&&!C.over&&!UI.autoTimer&&!UI.paused){const g=autoGap();
-      UI.autoTimer=setTimeout(()=>{UI.autoTimer=null;if(FIGHT==='auto'&&UI.screen==='combat'&&!PLAYING&&!C.over&&!UI.paused){UI.sel=E.autoPick(C);render();setTimeout(()=>{if(FIGHT==='auto'&&!PLAYING&&!C.over&&!UI.paused)ACT.go()},g[1])}},g[0])}
+    if(s==='combat'&&FIGHT==='auto'&&!PLAYING&&C&&!C.over&&!UI.autoTimer&&!UI.paused&&!UI.cfg){const g=autoGap();
+      UI.autoTimer=setTimeout(()=>{UI.autoTimer=null;if(FIGHT==='auto'&&UI.screen==='combat'&&!PLAYING&&!C.over&&!UI.paused&&!UI.cfg){UI.sel=E.autoPick(C);render();setTimeout(()=>{if(FIGHT==='auto'&&!PLAYING&&!C.over&&!UI.paused)ACT.go()},g[1])}},g[0])}
   }
 
   /* ===== 진행: 성장 굴림 → 대기 중인 전투 → 다음 해 ===== */
@@ -1378,7 +1378,9 @@ export function startUI(E,app){
     noticeok(){store.set('cityYearNotice',NOTICE.id);render()},
     bag(k){UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;render()},
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
-    bagclose(){UI.bag=null;UI.dropAsk=null;render()},
+    bagclose(){if(UI.cfg){UI.cfg=false;render();return}UI.bag=null;UI.dropAsk=null;render()},
+    cfg(){UI.cfg=true;if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
+    cfgclose(){UI.cfg=false;render()},
     packyes(){if(!UI.packAsk){UI.packAsk=true;render();return}UI.packAsk=false;const n=G.ch.packOffer.n;if(E.acceptPack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 덱이 바뀌고 고정되었다`];resave();render()}},
     packno(){UI.packAsk=false;const n=G.ch.packOffer.n;if(E.declinePack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 지금 덱을 지켰다`];resave();render()}},
     gwear(){E.resolveGear(G.ch,0,true);resave();render()},
@@ -1433,7 +1435,7 @@ export function startUI(E,app){
   };
   /* 시드: 브라우저 암호 난수로 새로 뽑는다. 같은 시드면 같은 출생과 같은 굴림 */
   /* 자동 전투 간격: [카드 고르기 전, 행동 개시 전] ms */
-  const autoGap=()=>AUTOGAP==='slow'?[1600,1100]:AUTOGAP==='fast'?[150,150]:MODE==='off'?[150,150]:[600,500];
+  const autoGap=()=>AUTOGAP==='slow'?[1600,1100]:AUTOGAP==='fast'?[150,150]:AUTOGAP==='mid'?[350,300]:MODE==='off'?[150,150]:[600,500];
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
   function born(seed,name,daily){const dly=daily||(UI.daily&&seed===dailySeed(UI.daily));E.reseed(seed);BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,dly?CFG.dailyOrigin:null);BC.seed=seed;BC.name=name||'';BC.fresh=true}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
