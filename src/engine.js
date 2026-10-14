@@ -970,13 +970,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   /* ===== 전투 (1:1) =====
      라운드마다 1d100 + 속도로 순서를 정하고, 카드는 순서대로 한 장씩 번갈아 발동한다. */
-  function mkEnt(o){return Object.assign({bleed:0,rupture:0,breath:0,evaB:0,fs:false,fsOn:false,catchup:false,cu:false,
+  function mkEnt(o){return Object.assign({bleed:0,rupture:0,breath:0,burn:0,flame:0,evaB:0,fs:false,fsOn:false,catchup:false,cu:false,
     dmin:1,defUp:0,adv:0,advUsed:false,hand:[],light:0,guarding:false,passHit:0,passHitNext:0,lightUp:0,lightNext:0},o)}
   /* 푸른 화염: 해방 레바테인에게 화상을 받은 쪽(blue), 또는 화상 blueAt 이상 */
   /* 카드 등급: 연차가 쌓이면 공격 카드가 강해지는 주인공 보정. 쉬움에서는 받지 않는다 */
   const cardGrade=(y,ch)=>ch&&ch.easy?CFG.cardGrade[0]:[...CFG.cardGrade].reverse().find(g=>(y||1)>=g.from)||CFG.cardGrade[0];
-  const isBlue=X=>X.burn>0&&(X.blue||X.burn>=CFG.laev.blueAt);
-  const snap=C=>{const f=X=>({hunger:X.hunger||0,hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,burn:X.burn||0,blue:isBlue(X),echo:X.echo||0,ledger:X.ledger||0,prescript:X.prescript||0,warp:X.warp||0,shock:X.shock||0,chain:X.chain||0,web:X.web||0,mk:X.mk||0,grudge:X.grudge||0,shield:X.shield||0,matc:X.matc||0,mat:X.mat||0,wecho:X.wecho||0,revenge:X.revenge||0,revMul:X.revMul||0,presc:X.presc||0,serum:X.serum||0,ammo:X.ammo||0,manner:X.manner||0,disp:X.disp||0,sealMark:X.sealMark||0,accel:X.accel||0});return {P:f(C.P),E:f(C.E)}};
+  const isBlue=X=>X.flame>0&&(X.blue||X.flame>=CFG.laev.blueAt);
+  const snap=C=>{const f=X=>({hunger:X.hunger||0,hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,burn:X.burn||0,flame:X.flame||0,blue:isBlue(X),echo:X.echo||0,ledger:X.ledger||0,prescript:X.prescript||0,warp:X.warp||0,shock:X.shock||0,chain:X.chain||0,web:X.web||0,mk:X.mk||0,grudge:X.grudge||0,shield:X.shield||0,matc:X.matc||0,mat:X.mat||0,wecho:X.wecho||0,revenge:X.revenge||0,revMul:X.revMul||0,presc:X.presc||0,serum:X.serum||0,ammo:X.ammo||0,manner:X.manner||0,disp:X.disp||0,sealMark:X.sealMark||0,accel:X.accel||0});return {P:f(C.P),E:f(C.E)}};
   /* 오랜 굶주림: HP를 회복할 때마다 스택 */
   const HG=(X,h)=>{if(h>0&&X&&X.hunger!=null)X.hunger=Math.min(CFG.hunger.max,X.hunger+h)};
   const kidsOn=ch=>ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea');
@@ -1004,7 +1004,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(pen&&!(ch.licensed&&ch.rank<=pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
     let hpNote=null;
-    if(P.laev==='open'){P.burn=1}
+    if(P.laev==='open'){P.flame=1}
     if(e.hidden&&P.hp<Math.min(CFG.hidden.minHp,P.maxHp)){const t=Math.min(CFG.hidden.minHp,P.maxHp);hpNote=`불길한 예감에 숨을 고른다 · HP ${P.hp} → ${t}`;P.hp=t;ch.hp=t}
     /* 정신력: 환상체와 마주치면 2d3 감소, 그다음 정신력 구간 보정(호흡·회피) */
     let mindNote=hpNote?[hpNote]:[];
@@ -1093,7 +1093,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function autoTri(C){if(!triOk(C)||C.triRound===C.round)return;const want=C.P.hp<=C.P.maxHp*0.6?['ri','gon','gun']:['gun','gon','ri'];setTri(C,want.find(k=>k!==C.triPrev))}
   function autoPick(C){autoTri(C);
     const P=C.P,low=P.hp/P.maxHp<0.35;
-    const bad=P.bleed+P.rupture+(P.burn||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
+    const bad=P.bleed+P.rupture+(P.burn||0)+(P.flame||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
       :c.hits*(c.dice*((c.die||6)+1)/2+c.b)+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05;
     let best=[],bs=-1;
     for(let m=1;m<1<<P.hand.length;m++){
@@ -1124,11 +1124,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 호흡 → 치명 확률(%) */
   const critPct=b=>{const H=CFG.breath;return b>=H.sure?100:b>=H.from?Math.min(90,H.base+(b-H.from)*H.step):0};
   const cutStacks=A=>{const F=CFG.defCut;if(A.bleed>0)A.bleed=Math.floor(A.bleed*F.bleed);if(A.rupture>0)A.rupture=Math.floor(A.rupture*F.rupture)};
+  /* 레바테인 봉인: 붉은 화염을 건 횟수가 쌓이면 해방 (전투가 끝나도 유지) */
+  function laevCount(A,n,L){
+    const C=activeC;if(!C||A.laev!=='sealed'||!A.isP)return;
+    const ch=C.ch;ch.laevN=(ch.laevN||0)+n;
+    if(ch.laevN>=CFG.laev.unlock){const L_=D.relics.laev.open;A.laev='open';A.atk+=L_.fx.atk-(ch.gear.weapon.fx.atk||0);A.wx=L_.wx;
+      equip(ch,Object.assign({id:'laev',grade:5},L_));ch.stash=(ch.stash||[]).filter(x=>x.id!=='laev_sealed');
+      L('sys',`  봉인이 풀렸다 · 레바테인 (공+${L_.fx.atk}, 피해 1d15, 상대의 붉은 화염은 푸른 화염으로)`)}
+    else L('kw',`  레바테인 봉인 ${ch.laevN}/${CFG.laev.unlock}`)
+  }
   function applyKw(A,D_,c,L){
-    for(const [k,n,to] of (c.kw||[])){
+    for(let [k,n,to] of (c.kw||[])){
       if(A.distorted&&to!=='s')continue;
       const X=to==='s'?A:D_;
-      X[k]=Math.min(k==='breath'?CFG.breath.cap:CFG.stackCap,X[k]+n);
+      if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
+      X[k]=Math.min(k==='breath'?CFG.breath.cap:k==='burn'?CFG.burn.max:CFG.stackCap,X[k]+n);
       L('kw',`  ${X.name}에게 ${D.keywords[k].n} +${n} (지금 ${X[k]})`);
     }
   }
@@ -1137,7 +1147,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
     if(c.t==='buff'&&(c.heal||c.passNext||c.debuffHit||c.cleanseRand)){
-      if(c.cleanseRand){const ks=['bleed','rupture','burn'].filter(k=>(A[k]||0)>0);if(ks.length){const k=ks[d(ks.length)-1],n0=A[k];A[k]=Math.max(0,n0-c.cleanseRand);L('kw',`  ${A.name} · ${c.n} · ${D.keywords[k].n} ${n0} → ${A[k]}`)}}
+      if(c.cleanseRand){const ks=['bleed','rupture','burn','flame'].filter(k=>(A[k]||0)>0);if(ks.length){const k=ks[d(ks.length)-1],n0=A[k];A[k]=Math.max(0,n0-c.cleanseRand);L('kw',`  ${A.name} · ${c.n} · ${D.keywords[k].n} ${n0} → ${A[k]}`)}}
       if(c.heal){const h=Math.min(c.heal,A.maxHp-A.hp);A.hp+=h;HG(A,h);L('kw',`${A.name} · ${c.n} · HP +${h}`)}
       if(c.passNext){A.passHitNext=(A.passHitNext||0)+c.passNext;L('kw',`  ${A.name} · 다음 라운드 명중 ${sg(c.passNext)}`)}
       if(c.debuffHit){B.passHitNext=(B.passHitNext||0)+c.debuffHit;L('kw',`  ${B.name} · 다음 라운드 명중 ${sg(c.debuffHit)} (1라운드)`)}
@@ -1236,7 +1246,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.unseal&&(B.sealMark||0)>0){const x=B.sealMark*c.unseal;dmg+=x;note+=` 봉인 해제 ${B.sealMark}×${c.unseal}+${x}`;B.sealMark=0}
       if((A.serum||0)>=3&&!c.serumBurst){dmg=Math.floor(dmg*1.5);A.serum=0;note+=' 혈청 과부하×1.5'}
       /* 화상: 받는 피해 ×1.5, 5스택 이상이면 푸른 화염 ×2 */
-      if(isBlue(B)){dmg=dmg*2;note+=' 푸른 화염×2'}else if(B.burn>0){dmg=Math.floor(dmg*1.5);note+=' 화상×1.5'}
+      if(isBlue(B)){dmg=dmg*2;note+=' 푸른 화염×2'}else if(B.flame>0){dmg=Math.floor(dmg*1.5);note+=' 붉은 화염×1.5'}
       if(A.mark){const x=d(3)+d(3);dmg+=x;note+=` 표지+${x}`}
       if(B.guarding){dmg=Math.floor(dmg*G_.guardFailMul);note+=` 방어 감소×${G_.guardFailMul}`}
       /* 무기 디버프: 왜곡(내가 주는 피해 감소), 표적(3스택이면 2배), 원한(쌓인 만큼 추가) */
@@ -1270,7 +1280,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.dmark&&B.hp>0){B.disp=Math.min(5,(B.disp||0)+c.dmark);L('kw',`  ${B.name}에게 처분 표식 ${B.disp}`)}
       /* 마에스트로 책장: 재료 수집 부여 / 신체관극(상대 디버프 수만큼 재료) */
       if(c.mat&&B.hp>0){B.matc=(B.matc||0)+c.mat;L('kw',`  ${B.name}에게 재료 수집 ${B.matc}`)}
-      if(c.harvest&&B.matc>0){const n=['bleed','rupture','burn','prescript','warp','shock','chain','web','mk','matc'].reduce((a,k)=>a+(B[k]>0?B[k]:0),0);
+      if(c.harvest&&B.matc>0){const n=['bleed','rupture','burn','flame','prescript','warp','shock','chain','web','mk','matc'].reduce((a,k)=>a+(B[k]>0?B[k]:0),0);
         A.mat=(A.mat||0)+n;A.matNext=(A.matNext||0)+n;L('kw',`  ${A.name} · 신체관극 · 재료 +${n} (지금 ${A.mat}) · 다음 라운드 적중마다 피해 +${A.matNext}`)}
       /* 전용 무기 효과: 적중 시 키워드·잔향·호흡·조율, 피격 시 반격 */
       if(A.wx&&B.hp>0){const X=A.wx;
@@ -1293,14 +1303,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 회피 실패: 1d5에서 1이면 정신력 1 감소 (E.G.O 장비 1개당 +1) */
       if(B.isP&&d(M.evadeDie)===1&&!(corpType(C.ch)&&corpType(C.ch).year))loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
       /* 레바테인 계열: 적중 시 화상 */
-      if(A.burnHit&&B.hp>0){B.burn=Math.min(CFG.stackCap,(B.burn||0)+A.burnHit);if(A.laev==='open')B.blue=true;
-        L('kw',`  ${B.name}에게 ${A.laev==='open'?'푸른 화염':'화상'} +${A.burnHit} (지금 ${B.burn})`);
-        /* 봉인: 화상을 건 횟수가 쌓이면 해방 (전투가 끝나도 유지) */
-        if(A.laev==='sealed'){const ch=C.ch;ch.laevN=(ch.laevN||0)+A.burnHit;
-          if(ch.laevN>=CFG.laev.unlock){const L_=D.relics.laev.open;A.laev='open';A.atk+=L_.fx.atk-(ch.gear.weapon.fx.atk||0);A.wx=L_.wx;
-            equip(ch,Object.assign({id:'laev',grade:5},L_));ch.stash=(ch.stash||[]).filter(x=>x.id!=='laev_sealed');
-            L('sys',`  봉인이 풀렸다 · 레바테인 (공+${L_.fx.atk}, 피해 1d15, 상대의 화상은 푸른 화염으로)`)}
-          else L('kw',`  레바테인 봉인 ${ch.laevN}/${CFG.laev.unlock}`)}}
+      if(A.burnHit&&B.hp>0){
+        if(A.laev){B.flame=Math.min(CFG.stackCap,(B.flame||0)+A.burnHit);if(A.laev==='open')B.blue=true;
+          L('kw',`  ${B.name}에게 ${A.laev==='open'||isBlue(B)?'푸른 화염':'붉은 화염'} +${A.burnHit} (지금 ${B.flame})`);laevCount(A,A.burnHit,L)}
+        else{B.burn=Math.min(CFG.burn.max,(B.burn||0)+A.burnHit);L('kw',`  ${B.name}에게 화상 +${A.burnHit} (지금 ${B.burn})`)}}
       /* 주사위마다 무작위 디버프 1 (Furioso): 출혈 또는 파열 */
       if(c.rngDebuff&&B.hp>0){const got={};for(let i=0;i<c.dice;i++){const k=one(c.rngDebuff);B[k]=Math.min(CFG.stackCap,B[k]+1);got[k]=(got[k]||0)+1}
         L('kw',`  ${B.name}에게 ${Object.entries(got).map(([k,n])=>D.keywords[k].n+' +'+n).join(' · ')} (무작위)`)}
@@ -1331,7 +1337,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.index&&P.starId&&pp.includes(D.cards[P.starId])){P.presc=Math.min(5,(P.presc||0)+1);P.breath=Math.min(CFG.breath.cap,P.breath+4);L('kw',`${P.name} · 지령 수행 ${P.presc}/5 · 호흡 +4 · 받는 피해 −${P.presc*5}%`)}
     C.step=-1;push({k:'head'});
     P.evaB=E.evaB=0;
-    if(P.laev==='open'&&C.round>1&&C.round%CFG.laev.selfEvery===0){P.burn=Math.min(CFG.stackCap,(P.burn||0)+1);L('kw',`${P.name} · 레바테인 · 자신에게 화상 1 (지금 ${P.burn})`)}
+    if(P.laev==='open'&&C.round>1&&C.round%CFG.laev.selfEvery===0){P.flame=Math.min(CFG.stackCap,(P.flame||0)+1);L('kw',`${P.name} · 레바테인 · 자신에게 붉은 화염 1 (지금 ${P.flame})`)}
     /* 아무 카드도 내지 않으면 방어 자세 */
     for(const [X,plays] of [[P,pp],[E,ep]]){
       X.guarding=plays.length===0;
@@ -1369,8 +1375,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     /* 푸른 화염: 라운드 끝에 스택 × blueDot 피해, 그 뒤 1 감소. 해방 레바테인 소지자의 일반 화상은 줄지 않는다 */
     for(const X of [P,E]){
-      if(isBlue(X)&&X.hp>0){const x=X.burn*CFG.laev.blueDot;X.hp=Math.max(0,X.hp-x);X.burn--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.burn})`)}
-      else if(X.burn>0&&!(X.isP&&X.laev==='open'))X.burn--;
+      if(isBlue(X)&&X.hp>0){const x=X.flame*CFG.laev.blueDot;X.hp=Math.max(0,X.hp-x);X.flame--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.flame})`)}
+      else if(X.flame>0&&!(X.isP&&X.laev==='open'))X.flame--;
+      /* 화상: 라운드 끝에 스택당 피해(내가 받으면 dmgMe), 그 뒤 스택은 keep 비율만 남는다 (내림) */
+      if(X.burn>0&&X.hp>0){const x=X.burn*(X.isP?CFG.burn.dmgMe:CFG.burn.dmg);X.hp=Math.max(0,X.hp-x);X.burn=Math.floor(X.burn*CFG.burn.keep);L('dmg',`${X.name} · 화상 ${x} 피해 (남은 ${X.burn})`)}
       for(const k of ['prescript','warp','shock','chain','web'])if(X[k]>0)X[k]--}
     /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
     if(C.ch.infinite&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.floor(e_*IN.erodePer);

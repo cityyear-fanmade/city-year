@@ -110,6 +110,8 @@ export const CFG = {
   dailyOrigin: 1,
   /* 혈귀 1권속 카드팩 패시브 '오랜 굶주림': HP를 회복할 때마다 HP 1당 스택 +1(최대 max). 공격 카드를 내면 스택을 모두 써서 그 카드의 첫 적중 피해가 스택만큼 늘고, 스택은 비운다 */
   hunger: {max: 15},
+  /* 화상: 라운드 끝에 스택×dmg 피해(내가 받으면 ×dmgMe), 그 뒤 스택은 keep 비율만 남는다 (내림). 최대 max스택, 적이 거는 화상 스택은 foe 배. 붉은 화염(레바테인 전용)과는 별개 */
+  burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
   /* 하나 협회 전용 패시브: 라운드마다 카드를 고르기 전에 한 가지를 고른다. gun: 이번 라운드 공격 피해 +n, gon: 받는 피해 n% 감소, gam: 이번 라운드 빛 +n, ri: 체력 회복과 호흡 */
@@ -138,7 +140,7 @@ export const CFG = {
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
-  laev: {unlock: 30, selfEvery: 1, blueAt: 5, blueDot: 2, selfBlueHit: 30},
+  laev: {unlock: 20, selfEvery: 1, blueAt: 5, blueDot: 2, selfBlueHit: 30},
   /* 엄지 검술(덱 고정): 카드를 얻는 자리마다 대신 받는 돈 */
   lockedCardMoney: 150,
   /* 공방 해결사: 4년차 갈림길에 chance% 확률로 제안. 1d die에서 minRoll 이상이면 성공. 공방 물건 할인율, 보관함 판매 비율 */

@@ -4,7 +4,7 @@ import {clamp,sg,STAT} from './engine.js';
 
 export function startUI(E,app){
   const D=E.D,T=D.text;
-  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c'};
+  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c'};
   const kwc=k=>KWC[k]||'var(--gold)';
 
   /* ===== 설정 저장 (연출 속도, 배경 테마) ===== */
@@ -226,9 +226,9 @@ export function startUI(E,app){
   const ulName=(n,u)=>u?esc(n).replace(esc(u),`<s>${esc(u)}</s>`):esc(n);
   function bar(v,max){return `<div class="bar"><i style="width:${clamp(v/max*100,0,100)}%"></i></div>`}
   /* 걸려 있는 키워드: 수치와 다음에 일어날 일을 같이 보여 준다 */
-  const KWHINT={burn:n=>n>=5?'받는 피해 ×2':'받는 피해 ×1.5',bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>n>=1&&n<=CFG.breath.evaMax?`회피 +${CFG.breath.eva}`:`치명 ${E.critPct(n)}%`};
+  const KWHINT={burn:n=>`라운드 끝에 스택×${CFG.burn.dmg} 피해(내가 받으면 ×${CFG.burn.dmgMe}) · 스택 절반 · 최대 ${CFG.burn.max}`,flame:n=>n>=CFG.laev.blueAt?'받는 피해 ×2':`받는 피해 ×1.5 · ${CFG.laev.blueAt}스택이면 푸른 화염`,bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>n>=1&&n<=CFG.breath.evaMax?`회피 +${CFG.breath.eva}`:`치명 ${E.critPct(n)}%`};
   function stacks(X){
-    const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='burn'&&(X.blue||X[k]>=5)?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${k==='burn'&&(X.blue||X[k]>=5)?`<small>받는 피해 ×2 · 라운드마다 ${X[k]*2}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
+    const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?`<small>받는 피해 ×2 · 라운드마다 ${X[k]*2}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
     /* 히든 보스 패시브 스택: 잔향(내게 쌓임), 장부(보스에게 쌓임) */
     const pv=C&&C.E&&C.E.passive;
     if(pv&&X.echo>0)out.push(`<span class="chip stk" style="--kc:var(--rupture)"><b>${pv.n} ${X.echo}/${pv.need}</b><small>${pv.need}에서 고정 피해 ${pv.dmg}</small></span>`);
