@@ -158,8 +158,8 @@ export const CFG = {
   thumbAmmo: {base: 4, per: 2},
   /* 약지 패시브 예술적 감각: 적을 쓰러뜨릴 때 확률, 최대 스택, 스택당 피해 주사위 최대치 */
   artSense: {every: 3, max: 4, die: 5},
-  /* 중지 되갚음: 스택 1당 받는 피해 −def, 쓰면 스택의 keep 비율만 남는다 (내림) */
-  middle: {def: 1, keep: 0},
+  /* 중지 되갚음: 스택 1당 받는 피해 −def, 다음 적중에서 스택을 쓰면 소모한 스택 1당 HP heal 회복, 스택은 keep 비율만 남는다 (내림) */
+  middle: {def: 2, keep: 0, heal: 1, dmg: 1},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 1, dmg: 1, finish: 1.0, after: 0},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
