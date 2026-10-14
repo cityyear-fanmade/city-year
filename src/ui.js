@@ -17,7 +17,10 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords';
-  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
+  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],titles:{},runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
+  /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
+  const syncTitles=()=>{const c=G&&G.ch;if(!c||!(c.titleLog||[]).length)return;const done=c.titleSeen||0;if(c.titleLog.length<=done)return;
+    const r=loadRec();r.titles=r.titles||{};for(const n of c.titleLog.slice(done))r.titles[n]=(r.titles[n]||0)+1;c.titleSeen=c.titleLog.length;store.set(REC,JSON.stringify(r))};
   const recAdd=(k,v)=>{const r=loadRec();if(!r[k].includes(v)){r[k].push(v);store.set(REC,JSON.stringify(r))}};
   let MODE=store.get('cityYearMode')||((window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?'off':'slow');
   const SKINS=[{k:'base',n:'기본'},{k:'dante',n:'단테의 노트'},{k:'terminal',n:'검지 단말기'},{k:'ruina',n:'도서관 초대장'}];
@@ -596,6 +599,7 @@ export function startUI(E,app){
       hard:`<b class="serif">하드 · 도전</b><span class="small dim">모든 적 체력 ×${X.hp} · 공격 +${X.atk} · 회피 +${X.eva}. 쓰러지기 쉽다.</span>`}[d];
     return `<div class="stack" style="gap:6px"><span class="eyebrow">난이도 · 새로 태어날 때부터 적용</span><div class="seg">${b('easy','쉬움')}${b('normal','보통')}${b('hard','하드')}</div>
       <div class="panel stack" style="gap:3px;padding:10px 12px">${info}</div></div>`}
+  const TITLE_REC=['본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'특색'];
   function vRecords(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
     const ends=[['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','불순물 너머'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은']];
@@ -609,6 +613,7 @@ export function startUI(E,app){
         <div class="row between"><span>최고 레벨</span><b class="mono">${r.best.lv||'—'}</b></div>
         <div class="row between"><span>도달한 위협 등급</span><b class="mono">${r.best.grade>=0?X.grades[r.best.grade]:'—'}</b></div>
         <div class="row between"><span>끝낸 판</span><b class="mono">${r.runs}</b></div></div>
+      <div class="panel stack" style="gap:6px"><span class="eyebrow">칭호 · 최고 등급에 오른 횟수</span><div class="chips">${TITLE_REC.map(n=>{const c=(r.titles||{})[n]||0;return `<span class="chip${c?'':' dim'}">${c?`${n} ×${c}`:'???'}</span>`}).join('')}</div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span><div class="chips">${ends.map(([k,n])=>`<span class="chip${r.endings.includes(k)?'':' dim'}">${r.endings.includes(k)?n:'???'}</span>`).join('')}</div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">타고난 것 ${r.innate.length}/${Object.keys(D.innate).length}</span><div class="chips">${Object.entries(D.innate).map(([k,v])=>`<span class="chip${r.innate.includes(k)?'':' dim'}">${r.innate.includes(k)?esc(v.n):'???'}</span>`).join('')}</div></div>
       ${vJobs()}
@@ -1481,7 +1486,7 @@ export function startUI(E,app){
       const m=UI.omen.omen;UI.omen=null;UI.fight=st.enemy;UI.enc=st.enc;UI.avoidText=st.avoided?m.awayT:null;render();
     },
     choose(i){
-      const r=E.choose(G,UI.ev,+i);
+      const r=E.choose(G,UI.ev,+i);syncTitles();
       UI.pending=r.combat;saveGame({after:true,pending:UI.pending});
       UI.res=Object.assign(r,{anim:!!r.roll&&MODE!=='off'});
       UI.screen='result';render();
