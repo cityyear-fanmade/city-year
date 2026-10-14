@@ -2328,7 +2328,8 @@
    "dice": 1,
    "b": 1,
    "hit": 5,
-   "rr": 1
+   "rr": 1,
+   "fixed": true
   },
   "as_hana_1": {
    "n": "괘각",
@@ -2338,7 +2339,8 @@
    "dice": 2,
    "b": 1,
    "hit": 5,
-   "rr": 1
+   "rr": 1,
+   "fixed": true
   },
   "as_hana_2": {
    "n": "하늘의 창",
@@ -2348,7 +2350,8 @@
    "dice": 2,
    "b": 2,
    "hit": 20,
-   "rr": 1
+   "rr": 1,
+   "fixed": true
   },
   "as_hana_3": {
    "n": "강격",
@@ -2358,7 +2361,8 @@
    "dice": 3,
    "b": 2,
    "hit": 10,
-   "rr": 1
+   "rr": 1,
+   "fixed": true
   },
   "as_hana_4": {
    "n": "진각",
@@ -2369,7 +2373,8 @@
    "b": 3,
    "hit": 10,
    "die": 8,
-   "rr": 1
+   "rr": 1,
+   "fixed": true
   },
   "as_hana_5": {
    "n": "본부 규정 집행",
@@ -2381,14 +2386,16 @@
    "hit": 15,
    "die": 8,
    "rr": 1,
-   "adv": true
+   "adv": true,
+   "fixed": true
   },
   "as_zwei_0": {
    "n": "방패 밀치기",
    "c": 1,
    "t": "buff",
    "shield": 3,
-   "d": "방패를 세운다 · 보호막 3"
+   "d": "방패를 세운다 · 보호막 3",
+   "fixed": true
   },
   "as_zwei_1": {
    "n": "방패 정렬",
@@ -2398,14 +2405,16 @@
    "dice": 2,
    "b": 1,
    "hit": 5,
-   "hitShield": 2
+   "hitShield": 2,
+   "fixed": true
   },
   "as_zwei_2": {
    "n": "방패 벽",
    "c": 2,
    "t": "buff",
    "shield": 7,
-   "d": "방패를 세운다 · 보호막 7"
+   "d": "방패를 세운다 · 보호막 7",
+   "fixed": true
   },
   "as_zwei_3": {
    "n": "방진 돌파",
@@ -2415,7 +2424,8 @@
    "dice": 3,
    "b": 2,
    "hit": 10,
-   "hitShield": 4
+   "hitShield": 4,
+   "fixed": true
   },
   "as_zwei_4": {
    "n": "지부 방진 전개",
@@ -2426,7 +2436,8 @@
    "b": 3,
    "hit": 10,
    "die": 8,
-   "hitShield": 5
+   "hitShield": 5,
+   "fixed": true
   },
   "as_zwei_5": {
    "n": "본부 방패 의장",
@@ -2438,7 +2449,8 @@
    "hit": 15,
    "die": 8,
    "hitShield": 8,
-   "adv": true
+   "adv": true,
+   "fixed": true
   },
   "as_tres_0": {
    "n": "삼연 찌르기",
@@ -2447,7 +2459,8 @@
    "hits": 2,
    "dice": 1,
    "b": 0,
-   "hit": 0
+   "hit": 0,
+   "fixed": true
   },
   "as_tres_1": {
    "n": "세 번 긋기",
@@ -2456,7 +2469,8 @@
    "hits": 2,
    "dice": 1,
    "b": 1,
-   "hit": 0
+   "hit": 0,
+   "fixed": true
   },
   "as_tres_2": {
    "n": "삼연 타격",
@@ -2465,7 +2479,8 @@
    "hits": 3,
    "dice": 1,
    "b": 0,
-   "hit": -5
+   "hit": -5,
+   "fixed": true
   },
   "as_tres_3": {
    "n": "지부 삼중 대응",
@@ -2474,7 +2489,8 @@
    "hits": 3,
    "dice": 2,
    "b": 1,
-   "hit": 0
+   "hit": 0,
+   "fixed": true
   },
   "as_tres_4": {
    "n": "지부장 삼연 집행",
@@ -2484,7 +2500,8 @@
    "dice": 2,
    "b": 2,
    "hit": 0,
-   "die": 8
+   "die": 8,
+   "fixed": true
   },
   "as_tres_5": {
    "n": "본부 삼연 절기",
@@ -2494,7 +2511,8 @@
    "dice": 2,
    "b": 2,
    "hit": 10,
-   "die": 8
+   "die": 8,
+   "fixed": true
   },
   "as_shi_0": {
    "n": "발도 자세",
@@ -2507,7 +2525,8 @@
      3,
      "s"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_shi_1": {
    "n": "짧은 발도",
@@ -2523,7 +2542,8 @@
      3,
      "s"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_shi_2": {
    "n": "연속 발도",
@@ -2539,7 +2559,8 @@
      3,
      "s"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_shi_3": {
    "n": "호흡 발도",
@@ -2555,7 +2576,8 @@
      4,
      "s"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_shi_4": {
    "n": "지부장 일섬",
@@ -2572,7 +2594,8 @@
      5,
      "s"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_shi_5": {
    "n": "본부 발도 절기",
@@ -2590,7 +2613,8 @@
      "s"
     ]
    ],
-   "adv": true
+   "adv": true,
+   "fixed": true
   },
   "as_cinq_0": {
    "n": "얕은 베기",
@@ -2606,7 +2630,8 @@
      2,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_cinq_1": {
    "n": "상처 벌리기",
@@ -2622,7 +2647,8 @@
      3,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_cinq_2": {
    "n": "피 맺히는 일격",
@@ -2638,7 +2664,8 @@
      3,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_cinq_3": {
    "n": "지부 출혈 절차",
@@ -2654,7 +2681,8 @@
      4,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_cinq_4": {
    "n": "지부장 출혈 집행",
@@ -2671,7 +2699,8 @@
      5,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_cinq_5": {
    "n": "본부 출혈 절기",
@@ -2688,7 +2717,8 @@
      6,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_liu_0": {
    "n": "불씨 주먹",
@@ -2704,7 +2734,8 @@
      1,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_liu_1": {
    "n": "불꽃 정권",
@@ -2720,7 +2751,8 @@
      2,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_liu_2": {
    "n": "불길 연타",
@@ -2736,7 +2768,8 @@
      2,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_liu_3": {
    "n": "화염 연권",
@@ -2752,7 +2785,8 @@
      3,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_liu_4": {
    "n": "지부장 불꽃 권",
@@ -2769,7 +2803,8 @@
      4,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_liu_5": {
    "n": "본부 화염 극권",
@@ -2786,7 +2821,8 @@
      5,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_seven_0": {
    "n": "약점 메모",
@@ -2802,7 +2838,8 @@
      1,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_seven_1": {
    "n": "약점 분석 보고",
@@ -2818,7 +2855,8 @@
      2,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_seven_2": {
    "n": "급소 지정",
@@ -2834,7 +2872,8 @@
      2,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_seven_3": {
    "n": "지부 분석 보고서",
@@ -2850,7 +2889,8 @@
      3,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_seven_4": {
    "n": "지부장 분석 집행",
@@ -2867,7 +2907,8 @@
      4,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_seven_5": {
    "n": "본부 약점 확정",
@@ -2884,7 +2925,8 @@
      5,
      "t"
     ]
-   ]
+   ],
+   "fixed": true
   },
   "as_dieci_0": {
    "n": "집행 준비",
@@ -2893,7 +2935,8 @@
    "hits": 1,
    "dice": 1,
    "b": 1,
-   "hit": 5
+   "hit": 5,
+   "fixed": true
   },
   "as_dieci_1": {
    "n": "기록 대조",
@@ -2903,7 +2946,8 @@
    "dice": 2,
    "b": 1,
    "hit": 5,
-   "adv": true
+   "adv": true,
+   "fixed": true
   },
   "as_dieci_2": {
    "n": "정리 집행",
@@ -2914,7 +2958,8 @@
    "b": 2,
    "hit": 10,
    "min": 2,
-   "adv": true
+   "adv": true,
+   "fixed": true
   },
   "as_dieci_3": {
    "n": "지부 처분 절차",
@@ -2925,7 +2970,8 @@
    "b": 2,
    "hit": 10,
    "min": 2,
-   "adv": true
+   "adv": true,
+   "fixed": true
   },
   "as_dieci_4": {
    "n": "지부장 처분",
@@ -2937,7 +2983,8 @@
    "hit": 10,
    "die": 8,
    "min": 3,
-   "adv": true
+   "adv": true,
+   "fixed": true
   },
   "as_dieci_5": {
    "n": "본부 집행",
@@ -2949,7 +2996,385 @@
    "hit": 15,
    "die": 8,
    "min": 3,
-   "adv": true
+   "adv": true,
+   "fixed": true
+  },
+  "as_hana_6": {
+   "n": "곤의 방패",
+   "c": 1,
+   "t": "def",
+   "eva": 20,
+   "d": "이번 라운드 회피 +20",
+   "fixed": true
+  },
+  "as_hana_7": {
+   "n": "이어치기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 1,
+   "hit": 15,
+   "rr": 1,
+   "fixed": true
+  },
+  "as_hana_8": {
+   "n": "호흡 정리",
+   "c": 1,
+   "t": "buff",
+   "gain": 2,
+   "d": "이번 라운드 빛 2 회복 (최대 빛 +2) · 내면 빛이 1 늘어난다",
+   "fixed": true
+  },
+  "as_hana_9": {
+   "n": "건의 일격",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 2,
+   "hit": 5,
+   "rr": 1,
+   "die": 8,
+   "fixed": true
+  },
+  "as_zwei_6": {
+   "n": "방패 자세",
+   "c": 1,
+   "t": "def",
+   "eva": 20,
+   "d": "이번 라운드 회피 +20",
+   "fixed": true
+  },
+  "as_zwei_7": {
+   "n": "방패 되치기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 1,
+   "hit": 15,
+   "hitShield": 2,
+   "fixed": true
+  },
+  "as_zwei_8": {
+   "n": "방패 정비",
+   "c": 1,
+   "t": "buff",
+   "shield": 4,
+   "d": "보호막 4",
+   "fixed": true
+  },
+  "as_zwei_9": {
+   "n": "방패 격돌",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 2,
+   "hit": 5,
+   "hitShield": 4,
+   "die": 8,
+   "fixed": true
+  },
+  "as_tres_6": {
+   "n": "삼중 방어",
+   "c": 1,
+   "t": "def",
+   "eva": 20,
+   "d": "이번 라운드 회피 +20",
+   "fixed": true
+  },
+  "as_tres_7": {
+   "n": "삼연 베기",
+   "c": 2,
+   "t": "atk",
+   "hits": 2,
+   "dice": 1,
+   "b": 1,
+   "hit": 10,
+   "fixed": true
+  },
+  "as_tres_8": {
+   "n": "삼연 호흡",
+   "c": 1,
+   "t": "buff",
+   "d": "호흡을 가다듬는다",
+   "kw": [
+    [
+     "breath",
+     3,
+     "s"
+    ]
+   ],
+   "fixed": true
+  },
+  "as_tres_9": {
+   "n": "삼연 돌파",
+   "c": 3,
+   "t": "atk",
+   "hits": 3,
+   "dice": 2,
+   "b": 1,
+   "hit": 0,
+   "die": 8,
+   "fixed": true
+  },
+  "as_shi_6": {
+   "n": "납도 자세",
+   "c": 1,
+   "t": "def",
+   "eva": 20,
+   "d": "이번 라운드 회피 +20",
+   "fixed": true
+  },
+  "as_shi_7": {
+   "n": "반달 베기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 1,
+   "hit": 15,
+   "kw": [
+    [
+     "breath",
+     3,
+     "s"
+    ]
+   ],
+   "fixed": true
+  },
+  "as_shi_8": {
+   "n": "호흡 정리",
+   "c": 1,
+   "t": "buff",
+   "d": "호흡을 가다듬는다",
+   "kw": [
+    [
+     "breath",
+     3,
+     "s"
+    ]
+   ],
+   "fixed": true
+  },
+  "as_shi_9": {
+   "n": "일섬 연격",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 2,
+   "hit": 5,
+   "kw": [
+    [
+     "breath",
+     4,
+     "s"
+    ]
+   ],
+   "die": 8,
+   "fixed": true
+  },
+  "as_cinq_6": {
+   "n": "결투 경례",
+   "c": 1,
+   "t": "def",
+   "eva": 20,
+   "d": "이번 라운드 회피 +20",
+   "fixed": true
+  },
+  "as_cinq_7": {
+   "n": "정면 찌르기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 1,
+   "hit": 15,
+   "kw": [
+    [
+     "bleed",
+     3,
+     "t"
+    ]
+   ],
+   "fixed": true
+  },
+  "as_cinq_8": {
+   "n": "자세 정비",
+   "c": 1,
+   "t": "buff",
+   "shield": 4,
+   "d": "보호막 4",
+   "fixed": true
+  },
+  "as_cinq_9": {
+   "n": "결투 연격",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 2,
+   "hit": 5,
+   "kw": [
+    [
+     "bleed",
+     4,
+     "t"
+    ]
+   ],
+   "die": 8,
+   "fixed": true
+  },
+  "as_liu_6": {
+   "n": "권법 방어",
+   "c": 1,
+   "t": "def",
+   "eva": 20,
+   "d": "이번 라운드 회피 +20",
+   "fixed": true
+  },
+  "as_liu_7": {
+   "n": "불꽃 후려치기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 1,
+   "hit": 15,
+   "kw": [
+    [
+     "burn",
+     2,
+     "t"
+    ]
+   ],
+   "fixed": true
+  },
+  "as_liu_8": {
+   "n": "기 모으기",
+   "c": 1,
+   "t": "buff",
+   "d": "호흡을 가다듬는다",
+   "kw": [
+    [
+     "breath",
+     3,
+     "s"
+    ]
+   ],
+   "fixed": true
+  },
+  "as_liu_9": {
+   "n": "화염 돌권",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 2,
+   "hit": 5,
+   "kw": [
+    [
+     "burn",
+     3,
+     "t"
+    ]
+   ],
+   "die": 8,
+   "fixed": true
+  },
+  "as_seven_6": {
+   "n": "관찰 자세",
+   "c": 1,
+   "t": "def",
+   "eva": 20,
+   "d": "이번 라운드 회피 +20",
+   "fixed": true
+  },
+  "as_seven_7": {
+   "n": "약점 찌르기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 1,
+   "hit": 25,
+   "kw": [
+    [
+     "rupture",
+     2,
+     "t"
+    ]
+   ],
+   "fixed": true
+  },
+  "as_seven_8": {
+   "n": "정보 정리",
+   "c": 1,
+   "t": "buff",
+   "gain": 2,
+   "d": "이번 라운드 빛 2 회복 (최대 빛 +2) · 내면 빛이 1 늘어난다",
+   "fixed": true
+  },
+  "as_seven_9": {
+   "n": "급소 연타",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 2,
+   "hit": 15,
+   "kw": [
+    [
+     "rupture",
+     3,
+     "t"
+    ]
+   ],
+   "die": 8,
+   "fixed": true
+  },
+  "as_dieci_6": {
+   "n": "방어 서류",
+   "c": 1,
+   "t": "def",
+   "eva": 20,
+   "d": "이번 라운드 회피 +20",
+   "fixed": true
+  },
+  "as_dieci_7": {
+   "n": "대조 타격",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "b": 1,
+   "hit": 15,
+   "adv": true,
+   "fixed": true
+  },
+  "as_dieci_8": {
+   "n": "서류 정리",
+   "c": 1,
+   "t": "buff",
+   "shield": 4,
+   "d": "보호막 4",
+   "fixed": true
+  },
+  "as_dieci_9": {
+   "n": "처분 일격",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 2,
+   "hit": 5,
+   "min": 2,
+   "adv": true,
+   "die": 8,
+   "fixed": true
   }
  },
  "rewards": [

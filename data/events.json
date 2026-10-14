@@ -2327,7 +2327,8 @@
       "check": 3,
       "maxHp": 4
      },
-     "minRank": 7
+     "minRank": 7,
+     "money": 200
     },
     {
      "n": "부장",
@@ -2336,7 +2337,8 @@
       "atk": 1,
       "check": 3
      },
-     "minRank": 5
+     "minRank": 5,
+     "money": 400
     },
     {
      "n": "지부장",
@@ -2346,7 +2348,8 @@
       "eva": 1,
       "maxHp": 6
      },
-     "minRank": 4
+     "minRank": 4,
+     "money": 700
     }
    ],
    "exam": {
@@ -2441,16 +2444,20 @@
     "하나 협회": [
      [
       "as_hana_0",
-      "as_hana_1"
+      "as_hana_1",
+      "as_hana_6"
      ],
      [
-      "as_hana_2"
+      "as_hana_2",
+      "as_hana_7"
      ],
      [
-      "as_hana_3"
+      "as_hana_3",
+      "as_hana_8"
      ],
      [
-      "as_hana_4"
+      "as_hana_4",
+      "as_hana_9"
      ],
      [
       "as_hana_5"
@@ -2459,16 +2466,20 @@
     "츠바이 협회": [
      [
       "as_zwei_0",
-      "as_zwei_1"
+      "as_zwei_1",
+      "as_zwei_6"
      ],
      [
-      "as_zwei_2"
+      "as_zwei_2",
+      "as_zwei_7"
      ],
      [
-      "as_zwei_3"
+      "as_zwei_3",
+      "as_zwei_8"
      ],
      [
-      "as_zwei_4"
+      "as_zwei_4",
+      "as_zwei_9"
      ],
      [
       "as_zwei_5"
@@ -2477,16 +2488,20 @@
     "트레스 협회": [
      [
       "as_tres_0",
-      "as_tres_1"
+      "as_tres_1",
+      "as_tres_6"
      ],
      [
-      "as_tres_2"
+      "as_tres_2",
+      "as_tres_7"
      ],
      [
-      "as_tres_3"
+      "as_tres_3",
+      "as_tres_8"
      ],
      [
-      "as_tres_4"
+      "as_tres_4",
+      "as_tres_9"
      ],
      [
       "as_tres_5"
@@ -2495,16 +2510,20 @@
     "시 협회": [
      [
       "as_shi_0",
-      "as_shi_1"
+      "as_shi_1",
+      "as_shi_6"
      ],
      [
-      "as_shi_2"
+      "as_shi_2",
+      "as_shi_7"
      ],
      [
-      "as_shi_3"
+      "as_shi_3",
+      "as_shi_8"
      ],
      [
-      "as_shi_4"
+      "as_shi_4",
+      "as_shi_9"
      ],
      [
       "as_shi_5"
@@ -2513,16 +2532,20 @@
     "생크 협회": [
      [
       "as_cinq_0",
-      "as_cinq_1"
+      "as_cinq_1",
+      "as_cinq_6"
      ],
      [
-      "as_cinq_2"
+      "as_cinq_2",
+      "as_cinq_7"
      ],
      [
-      "as_cinq_3"
+      "as_cinq_3",
+      "as_cinq_8"
      ],
      [
-      "as_cinq_4"
+      "as_cinq_4",
+      "as_cinq_9"
      ],
      [
       "as_cinq_5"
@@ -2531,16 +2554,20 @@
     "리우 협회": [
      [
       "as_liu_0",
-      "as_liu_1"
+      "as_liu_1",
+      "as_liu_6"
      ],
      [
-      "as_liu_2"
+      "as_liu_2",
+      "as_liu_7"
      ],
      [
-      "as_liu_3"
+      "as_liu_3",
+      "as_liu_8"
      ],
      [
-      "as_liu_4"
+      "as_liu_4",
+      "as_liu_9"
      ],
      [
       "as_liu_5"
@@ -2549,16 +2576,20 @@
     "세븐 협회": [
      [
       "as_seven_0",
-      "as_seven_1"
+      "as_seven_1",
+      "as_seven_6"
      ],
      [
-      "as_seven_2"
+      "as_seven_2",
+      "as_seven_7"
      ],
      [
-      "as_seven_3"
+      "as_seven_3",
+      "as_seven_8"
      ],
      [
-      "as_seven_4"
+      "as_seven_4",
+      "as_seven_9"
      ],
      [
       "as_seven_5"
@@ -2567,23 +2598,36 @@
     "디에치 협회": [
      [
       "as_dieci_0",
-      "as_dieci_1"
+      "as_dieci_1",
+      "as_dieci_6"
      ],
      [
-      "as_dieci_2"
+      "as_dieci_2",
+      "as_dieci_7"
      ],
      [
-      "as_dieci_3"
+      "as_dieci_3",
+      "as_dieci_8"
      ],
      [
-      "as_dieci_4"
+      "as_dieci_4",
+      "as_dieci_9"
      ],
      [
       "as_dieci_5"
      ]
     ]
    },
-   "topMinRank": 2
+   "topMinRank": 2,
+   "topLoot": {
+    "n": "협회 최고의 휘장",
+    "e": "HP +20 · 공격 +3 · 회피 +2 (영구)",
+    "fx": {
+     "maxHp": 20,
+     "atk": 3,
+     "eva": 2
+    }
+   }
   },
   "wing": {
    "n": "날개 직원",
