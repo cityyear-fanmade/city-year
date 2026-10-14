@@ -302,7 +302,7 @@ export function startUI(E,app){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `<div class="panel stack">
       <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${esc(ch.name||T.you)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
-      <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
+      <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${G.infinite&&G.year>CFG.years+CFG.endless.span*CFG.endless.grades.length?'제 2막 무한 모드 · '+(E.gradeRaw(G.year)-CFG.endless.grades.length+1)+'단계':'제 2막 · '+CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
       ${bar(ch.hp,s.maxHp)}
       ${vMind(ch)}
       ${vPassive(ch)}
@@ -807,7 +807,7 @@ export function startUI(E,app){
       <button class="btn primary" data-a="distset">이 이름으로 뒤틀린다</button></div>`;
   }
   /* 연차 표시: 해를 넘기지 않는 사건에서는 숨긴다 */
-  const yearTag=()=>G.free||G.year<1?'':`${G.year}/${E.lastYear(G)} · `;
+  const yearTag=()=>G.free||G.year<1?'':G.infinite?`${G.year}년차 · `:`${G.year}/${E.lastYear(G)} · `;
   function vEgoPick(){
     const X=CFG.mind.ego,ty=UI.egoType||'atk';
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">E.G.O 개화</span>
@@ -1011,7 +1011,8 @@ export function startUI(E,app){
       ${endDeck(c)}
       <div class="mono small dim">${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(c.aff.name):c.licensed?' · '+T.licensed:''}</div></div>
       <div class="mono small dim" style="text-align:center">도시의 한 해 · cityyear-fanmade.github.io/city-year · Project Moon 팬메이드</div></div>
-      ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">무한런</span><p class="small">여기서 끝내도 된다. 계속 살아가면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 진짜 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">계속 살아간다</button></div>`:''}
+      ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 1막 종료</span><p class="small">여기서 끝내도 된다. 제 2막이 시작되면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 제 2막의 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">제 2막 시작</button></div>`:''}
+      ${w&&UI.trueEnd&&!G.infinite?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 2막 · 무한 모드</span><p class="small">여기서 끝내도 된다. 계속 살아가면 위협 보정이 끝없이 오르고, ${CFG.infinite.every}년마다 더 강해진 불순물이 나타나며, 루트 전용 히든 보스를 만날 확률이 오른다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="infinite">무한 모드로 계속한다</button></div>`:''}
       <div class="row" style="gap:8px"><button class="btn quiet" style="flex:1" data-a="share">기록 공유</button><button class="btn quiet" style="flex:1" data-a="saveimg">이미지로 저장</button></div>
       ${UI.imgUrl?`<p class="small dim">저장이 막힌 환경이다. 아래 이미지를 길게 눌러 저장한다.</p><img src="${UI.imgUrl}" alt="엔딩 기록 이미지" style="width:100%;border-radius:8px">`:''}
       ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<input id="shareBox" readonly value="${esc(UI.shareText)}" onclick="this.select()" style="width:100%;font:inherit;font-size:13px">`:''}
@@ -1274,6 +1275,7 @@ export function startUI(E,app){
     dice(i){DICE=i;store.set('cityYearDice',i);render()},
     skin(i){SKIN=i;store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;nextYear()},
+    infinite(){G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infImp=1;UI.shareText=UI.shareMsg=UI.imgUrl=null;nextYear()},
     async saveimg(){
       UI.imgUrl=null;const cv=await shotEnd()||await endCard(),name=`도시의한해_${G.ch.seed}.png`;
       const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
@@ -1314,7 +1316,7 @@ export function startUI(E,app){
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.showIncome=false;UI.screen='shop';render()},
     /* 6시즌: 공방 거리에서 쉬어 가기 (공방 거래 없이 정신력 회복) */
-    rest(){if(UI.rested)return;const g=E.gainMind(G.ch,CFG.shop.restMind);UI.rested=g?`잠시 쉬었다 · 정신력 +${g} (${G.ch.mind}/${E.mindMax(G.ch)})`:'잠시 쉬었다 · 정신력이 이미 가득하다';UI.showIncome=false;resave();render()},
+    rest(){if(UI.rested)return;if(G.ch.restYear===G.year){UI.rested='이번 해에는 이미 쉬었다 · 정신력은 해마다 한 번만 회복한다';render();return}G.ch.restYear=G.year;const g=E.gainMind(G.ch,CFG.shop.restMind);UI.rested=g?`잠시 쉬었다 · 정신력 +${g} (${G.ch.mind}/${E.mindMax(G.ch)})`:'잠시 쉬었다 · 정신력이 이미 가득하다';UI.showIncome=false;resave();render()},
     buy(id){if(E.buy(G.ch,id,true)){UI.bought=D.items[id].n;render()}},
     eqs(i){if(UI.screen!=='combat'&&E.equipStash(G.ch,+i)){resave();render()}},
     bspecial(id){if(E.buySpecial(G.ch,id,true)){UI.bought=D.special[id].n;render()}},
@@ -1357,6 +1359,7 @@ export function startUI(E,app){
       const pp=UI.sel.map(i=>D.cards[C.P.hand[i]]);
       const lb=C.log.length;PRE=E.snap(C);UI.lastPP=pp;
       E.resolveRound(C,pp,C.ePlan);UI.sel=[];
+      if(C.over==='lose')store.del(SAVE);
       if(MODE==='off'){if(!C.over)E.newRound(C);render();return}
       C.logBefore=lb;PLAYING=true;render();if(isMobile())window.scrollTo(0,0);runPlayback(C.evs);
     },
@@ -1409,7 +1412,7 @@ export function startUI(E,app){
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testDeath(y,foe){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false};UI.screen='end';render()},
-    testEnd(y){if(!G)return;G.year=G.ch.year=y||CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
+    testEnd(y,t){if(!G)return;G.year=G.ch.year=y||CFG.years;UI.endWin=true;UI.trueEnd=!!t;UI.death=null;UI.screen='end';render()},
     testFight(id,hp){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;render()},
     /* 자동 테스트용: 특색 심사 통과 직후 화면 */
     testColor(){if(!G)return;G.ch.licensed=true;G.ch.rank=1;const r=E.applyFx(G.ch,{colorPass:true});UI.res={t:'심사 통과',chips:r.chips,roll:null};UI.screen='result';render()},

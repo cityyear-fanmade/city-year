@@ -702,8 +702,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     (ch.relics=ch.relics||[]).push('뒤틀림 · '+ch.distForm.n);
   }
   /* 무한런: 마지막 해, 지금 위협 등급(-1이면 아직 기본 연차) */
-  const lastYear=G=>CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0);
+  const lastYear=G=>G.infinite?Infinity:CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0);
   const gradeAt=y=>y>CFG.years?Math.min(CFG.endless.grades.length-1,Math.floor((y-CFG.years-1)/CFG.endless.span)):-1;
+  /* 무한 모드의 위협 등급 번호(상한 없음) */
+  const gradeRaw=y=>y>CFG.years?Math.floor((y-CFG.years-1)/CFG.endless.span):-1;
   /* 공방 카드 교환: 덱 카드 1장을 일반 전투 보상 카드(아직 없는 것) 중 무작위 1장으로 바꾼다 */
   function swapCard(ch,i){
     const S=CFG.shop;if(ch.deckLocked||ch.cardMoney||ch.money<S.swapCost||!ch.deck[i]||D.cards[ch.deck[i]].fixed)return null;
@@ -776,15 +778,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     let f=fixedSpec(G.year);
     /* 무한런 등급 전투: 등급 마지막 해. 도시의 별 등급은 피아니스트(이미 이겼으면 후반 조우), 마지막 등급은 최종 상대 */
     const X_=CFG.endless,k_=G.year-CFG.years;
+    const baseEnd=CFG.years+X_.span*X_.grades.length,INF=CFG.infinite;
+    if(G.infinite&&G.year>baseEnd){
+      /* 제 2막 무한 모드: 위협 등급 전투는 후반 조우, every년마다 강화 불순물 */
+      if((G.year-baseEnd)%INF.every===0)return {type:'fight',enemy:X_.final,enc:{hidden:true,label:`강화 불순물 · ${(G.ch.infImp||1)}번째`}};
+      f=k_%X_.span?null:'table:late';
+    }else
     if(k_>0)f=k_%X_.span?null:gradeAt(G.year)===X_.grades.length-1?X_.final:gradeAt(G.year)===X_.grades.indexOf('도시의 별')&&!(G.ch.minis||[]).includes(X_.star)?X_.star:'table:late';
-    if(f&&k_>0&&gradeAt(G.year)===X_.grades.length-1)return {type:'fight',enemy:f,enc:{label:X_.grades[gradeAt(G.year)]+' · 마지막 등급 전투'}};
+    if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1)return {type:'fight',enemy:f,enc:{label:X_.grades[gradeAt(G.year)]+' · 마지막 등급 전투'}};
     if(f){
       /* 히든 보스: 목록 위에서부터 조건(과 확률)이 맞는 첫 보스가 불길한 예감(omen)으로 먼저 나타난다.
          맞서면 그 보스와 싸우고(다시 나오지 않음), 돌아서면 평소 조우로 넘어간다(조건이 맞으면 다음에 또 나올 수 있다) */
       for(const h of D.hiddenBosses||[]){
         if(G.year<(h.from||1)||G.ch.beaten.includes(h.id)||(G.met||[]).includes(h.id)||!meets(G.ch,h.req))continue;
         /* chanceBonus: 조건이 맞으면 확률 가산 (예: 검지 소속은 대행자 +30%) */
-        const ch_=h.chance?h.chance+(h.chanceBonus&&meets(G.ch,h.chanceBonus.req)?h.chanceBonus.add:0):0;
+        const ch_=h.chance?Math.min(95,h.chance+(h.chanceBonus&&meets(G.ch,h.chanceBonus.req)?h.chanceBonus.add:0)+(G.infinite?INF.hiddenAdd:0)):0;
         if(ch_&&d(100)>ch_)continue;
         return {type:'omen',boss:h.id,omen:h.omen||{},escape:!h.noEscape,spec:f};
       }
@@ -894,6 +902,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function winRewards(G,C){
     const ch=G.ch,chips=[];
     ch.hp=clamp(C.P.hp+CFG.winHeal,1,ch.stats.maxHp);chips.push('HP +'+CFG.winHeal);
+    if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
     if(ch.flags&&ch.flags.redMist){const h=Math.min(CFG.redMist.heal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('붉은 안개 · 적을 쓰러뜨려 HP +'+h)}}
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
@@ -963,14 +972,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const P=mkEnt({uid:'P',name:ch.name||T.you,color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
       bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,middle:!!(ch.aff&&ch.aff.name==='중지'),index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?corpType(ch).heal+ch.corp.up*corpType(ch).per:0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+ch.corp.up*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:ch.gear.weapon&&ch.gear.weapon.id==='laev_sealed'?'sealed':ch.gear.weapon&&ch.gear.weapon.id==='laev'?'open':null,isP:true});
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
-    const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=(gradeAt(ch.year||0)+1)*(EZ?EZ.endless:1),X_=CFG.endless;
+    const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;
     const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul*(EZ?EZ.hidden:1):S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*g));
     const up=Math.floor(grow/S_.atkEvery)+(e.hidden?H_.atk+Math.floor(hy/HL.atkEvery):0),xa=X_.atk*g;
     /* 보스별 난이도 보정(hard): 체력 배수, 공격·회피 가산 */
-    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:null,ehh0=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1));
+    const IM_=ch.infinite&&id===X_.final?(ch.infImp||0):0;
+    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:null,ehh0=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_));
     const ehh=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0;
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
-    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:Math.max(1,e.atk+up+xa+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
+    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:Math.max(1,e.atk+up+xa+CFG.infinite.impAtk*IM_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;
@@ -1384,5 +1394,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    setTri,triOk,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    setTri,triOk,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
