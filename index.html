@@ -2948,6 +2948,7 @@ function startUI(E,app){
     if(w)return `도시는 그것을 '${n}'${bat?'이라고':'라고'} 불렀다. 처음에는 괴담이었고, 나중에는 골목의 일부가 되었다. 해결사들이 몇 번 찾아왔지만 돌아간 사람보다 돌아가지 못한 사람이 더 많았다. 원래 이름을 기억하는 사람은 남지 않았다. 그래도 가끔, 그것은 사람이던 시절의 버릇대로 어느 집 문 앞에서 한참을 멈춰 선다.`;
     return `'${n}'${bat?'은':'는'} ${dt&&dt.foe?esc(dt.foe)+'의 손에':'골목 끝에서'} 쓰러졌다. 의뢰서에는 '뒤틀림 제거 완료'라고만 적혔다. 그 아래, 원래 이름을 적는 칸은 비어 있었다.`;
   }
+  const diffOf=c=>c.easy?'쉬움':c.hard?'하드':'보통';
   function vEnd(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),tr=w&&UI.trueEnd,df=c.distForm;
     return `<div id="endShot" class="stack" style="gap:12px"><div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow"${df?' style="color:#c25050"':''}>${df?distEyebrow(w,tr):tr?'불순물을 넘어섰다':w?CFG.years+'년을 살아냈다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':'도시는 당신을 기억하지 않는다'} · ${E.age(G)}세</div>
@@ -2956,7 +2957,7 @@ function startUI(E,app){
       ${df?`<div><span class="chip" style="color:#c25050;border-color:#c25050">뒤틀림 · ${esc(df.n)}</span></div>`:''}
       ${c.title?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${c.titleKind==='top'?'칭호':T.titleLabel} · ${esc(c.title)}</span></div>`:''}
       ${!w&&dt?`<div class="mono small bad">${dt.year}년차 · ${dt.cause==='distort'?'뒤틀림':dt.cause==='mind'?'정신 붕괴로 쓰러졌다':esc(dt.foe)+'에게 쓰러졌다'}${dt.hidden?' (히든 보스)':''}</div>`:''}
-      <div class="mono small dim">시드 ${c.seed}</div>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><span class="chip" style="color:${c.hard?'#c25050':c.easy?'#6aa0c4':'var(--fg)'};border-color:currentColor">난이도 · ${diffOf(c)}</span><span class="mono small dim" style="align-self:center">시드 ${c.seed}</span></div>
       <p class="lead">${df?distLead(c,w,tr,dt):dt&&dt.cause==='distort'?'당신의 모양을 한 무언가가 골목에 남았다. 사람들은 그것을 더 이상 당신의 이름으로 부르지 않는다.':dt&&dt.cause==='mind'?'몸은 멀쩡했지만, 마음이 먼저 꺼졌다.':tr?'도시가 붙일 수 있는 가장 높은 이름 너머까지 걸어갔다. 그 뒤로 당신을 부르는 이름은 도시의 어느 장부에도 맞지 않았다.':endLead(c,w)}</p>
       ${vRecord(c,w,gi)}
       ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${c.beaten.map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
@@ -2979,7 +2980,7 @@ function startUI(E,app){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
     const o={v:1,h:shareHead(),w:w?1:0,n:c.name||'',k:careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&'),t:c.title||'',col:c.color,y:lived,a:E.age(G),
       g:G.endless&&gi>=0?X.grades[gi]:'',d:!w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:'',f:[...c.beaten,...(c.minis||[])].map(id=>D.enemies[id].n),
-      e:c.ego?c.ego.n:'',i:innateName(c)||'',o:`${c.o.n} · ${c.t.n} · ${c.f.n}`,lv:c.lv,st:[c.stats.atk,c.stats.eva,c.stats.spd],s:c.seed,dy:c.daily||'',ver:UPDATES.v};
+      e:c.ego?c.ego.n:'',i:innateName(c)||'',o:`${c.o.n} · ${c.t.n} · ${c.f.n}`,lv:c.lv,st:[c.stats.atk,c.stats.eva,c.stats.spd],s:c.seed,dy:c.daily||'',df:diffOf(c),ver:UPDATES.v};
     const base=/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.origin+location.pathname:PAGES;
     return base+'#r='+b64e(o);
   }
@@ -2991,7 +2992,7 @@ function startUI(E,app){
       <h1 style="color:${esc(r.col||'')}">${esc(r.n||r.k)}</h1>${r.n?`<div class="mono small" style="color:${esc(r.col||'')}">${esc(r.k)}</div>`:''}
       ${r.t?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${esc(r.t)}</span></div>`:''}</div>
       <div class="panel stack" style="gap:6px">${row('산 햇수',r.y+'년')}${row('위협 등급',r.g)}${row('마지막',r.d)}${row('타고난 것',r.i)}${row('E.G.O',r.e)}
-        ${row('레벨',`Lv ${r.lv} · 공격 ${sg(r.st[0])} · 회피 ${sg(r.st[1])} · 속도 ${sg(r.st[2])}`)}${row('출신',r.o)}${row('시드',r.s+(r.dy?' · 오늘의 시드 '+r.dy:''))}
+        ${row('레벨',`Lv ${r.lv} · 공격 ${sg(r.st[0])} · 회피 ${sg(r.st[1])} · 속도 ${sg(r.st[2])}`)}${row('출신',r.o)}${row('난이도',r.df)}${row('시드',r.s+(r.dy?' · 오늘의 시드 '+r.dy:''))}
         ${r.f&&r.f.length?`<div class="small"><span class="dim">쓰러뜨린 이름난 상대</span><br><b>${r.f.map(esc).join(' · ')}</b></div>`:''}</div>
       <button class="btn primary" data-a="sharedSeed"><b>같은 시드로 태어나기</b><span class="small">시드 ${r.s}</span></button>
       <button class="btn quiet" data-a="title">처음 화면</button>`;
@@ -3005,7 +3006,7 @@ function startUI(E,app){
     return [`[도시의 한 해] ${head}`,(c.name?`${c.name} · `:'')+careerLine(c).replace(/<[^>]*>/g,'')+(c.title?` · ${c.title}`:''),
       `${lived}년 · ${E.age(G)}세`+(G.endless&&gi>=0?` · 위협 등급 ${X.grades[gi]}`:''),
       !w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:null,c.ego?`E.G.O · ${c.ego.n}`:null,c.innate?`타고난 것 · ${innateName(c)}`:null,foes.length?`쓰러뜨린 상대 · ${foes.join(', ')}`:null,
-      `${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`시드 ${c.seed}`+(c.daily?` · 오늘의 시드 ${c.daily}`:''),url].filter(Boolean).join('\n');
+      `${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`난이도 · ${diffOf(c)}`,`시드 ${c.seed}`+(c.daily?` · 오늘의 시드 ${c.daily}`:''),url].filter(Boolean).join('\n');
   }
   /* 엔딩 화면 그대로 찍기: 저장 버튼을 누를 때만 html2canvas를 불러온다. 실패하면 null (카드 이미지로 대신) */
   function loadShot(){
