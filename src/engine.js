@@ -353,7 +353,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const money=n=>n.toLocaleString('ko-KR')+D.money.unit;
   function setColor(ch,ci){ch.ci=ci;ch.color=D.colors[ci].hex}
   /* 자격 등록: 가장 낮은 급수에서 시작한다. 특색은 여기서 주지 않는다 */
-  const noFixer=ch=>isFinger(ch)||(!!ch.aff&&(ch.aff.type==='wing'||ch.aff.type==='head'));
+  /* 동부 외곽 출신이 N사 날개에 들어가면 해결사 자격을 지키고, N사 승진마다 해결사 급수도 함께 오른다 */
+  const eastN=ch=>isN(ch)&&isEastOuter(ch);
+  const noFixer=ch=>isFinger(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
   function license(ch){
     /* 손가락 조직원·날개 직원은 해결사로 등록될 수 없다 */
     if(ch.licensed||noFixer(ch))return false;
@@ -463,12 +465,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 승급 사건·고정 전투 승리: 손가락이면 서열, 아니면 해결사 급수 */
   function promoteAny(ch){
     if(canFingerUp(ch))return {chips:fingerStep(ch),finger:true};
-    const k=career(ch);if(k&&k!=='fixer'){const c=careerStep(ch);return c?{chips:c}:null}
+    const k=career(ch);if(k&&k!=='fixer'){const c=careerStep(ch);if(c&&eastN(ch)&&ch.licensed&&ch.rank>T.rankTop){const p=promote(ch);if(p)c.push(...p.chips)}return c?{chips:c}:null}
     if(ch.licensed&&ch.rank>T.rankTop)return promote(ch);
     return null;
   }
   /* 날개·손가락 진로면 해결사 급수 대신 그 진로의 직급을 보여 준다 (해결사 급수는 그 진로에서 오르지 않는다) */
-  const rankLabel=ch=>{if(isFounder(ch)&&!ch.job)return ch.title?`${ch.title} · 날개 대표`:'날개 대표';if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr)return ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n;return rankLabel0(ch)};
+  const rankLabel=ch=>{if(isFounder(ch)&&!ch.job)return ch.title?`${ch.title} · 날개 대표`:'날개 대표';if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr){const fx_=eastN(ch)&&ch.licensed?` · ${ch.rank}${T.rankUnit} 해결사`:'';return (ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n)+fx_}return rankLabel0(ch)};
   const rankLabel0=ch=>!ch.licensed?T.unranked:ch.title?`${ch.title} · ${ch.rank}${T.rankUnit}`:`${ch.rank}${T.rankUnit} ${T.licensed}`;
   /* 카드 얻기: 덱이 고정(엄지 검술)이면 카드 대신 돈 */
   /* offer: 바로 넣지 않고 받을지 고르게 한다 (일반 전투 보상) */
@@ -528,6 +530,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.pts)addPts(ch,fx.pts*CFG.promo.gain.check,chips);
     if(fx.pinkyKey){const ks=ch.pinkyKeys=ch.pinkyKeys||[],K=D.pinky.keys[ks.length];if(K){ks.push(K.k);chips.push(`소지의 별 · ${K.k} (${ks.length}/${D.pinky.keys.length})`);if(ks.length>=D.pinky.keys.length){ch.seongPick=true;chips.push('성도 · 이름을 정한다')}}}
     if(fx.oracle&&!ch.oracle){ch.oracle=true;(ch.relics=ch.relics||[]).push('히든 직업 · 신탁대행자','전리품 · 신의 단말기');addStats(s,D.oracle.loot.fx);chips.push('히든 직업 · 신탁대행자 · 지령 독촉',`전리품 · 신의 단말기 · ${D.oracle.loot.e}`)}
+    if(fx.eastScout&&!isN(ch)){joinAff(ch,{type:'wing',from:'wing'},CFG.nWing.name,chips);ch.eastScoutDone=true;for(let i=ch.fi||0;i<CFG.eastN.startFi;i++){ch.promos=(ch.promos||0)+1;const c=careerStep(ch);if(c)chips.push(...c)}}
     if(fx.oracleFail){ch.oracleTries=(ch.oracleTries||0)+1;ch.oracleNext=(ch.year||0)+CFG.oracle.every}
     if(fx.oracleDecline)ch.oracleTries=CFG.oracle.tries;
     if(fx.pinky&&!ch.pinky){ch.pinkyYear=ch.year||0;ch.pinky=true;addStats(s,D.pinky.fx);chips.push(D.pinky.n+' 표식 · '+D.pinky.e)}
@@ -730,6 +733,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 검지의 히든 직업 · 신탁대행자: 검지 루트 최종 서열(대행자·전령)에 오른 뒤 가끔 울리는 단말기를 만난다. 줍으면 1d100이 dc 이상일 때 신탁대행자가 되고
      전리품 '신의 단말기'를 얻는다. 패시브 지령 독촉: 지령 스택 최대 oracle.presc, 지령을 수행하지 못한 라운드의 다음 라운드는 명중 −missHit · 회피 −missEva */
+  /* 동부 외곽 출신 해결사의 히든 제안: 해결사 CFG.eastN.rank급 이하가 되면 N사가 중간 직급으로 스카우트를 제안한다 (수락하면 해결사 자격을 지키고, N사 승진마다 급수도 함께 오른다) */
+  function eastScoutEvent(G){
+    const ch=G.ch,y=G.year,Z=CFG.eastN;
+    if(ch.distForm||ch.job||!isEastOuter(ch)||isN(ch)||!ch.licensed||ch.rank>Z.rank||ch.aff&&(ch.aff.type==='wing'||ch.aff.type==='finger'||ch.aff.type==='head')||(ch.eastScoutN||0)>=Z.tries||y<(ch.eastScoutNext||0))return null;
+    ch.eastScoutN=(ch.eastScoutN||0)+1;ch.eastScoutNext=y+Z.gap;
+    const T_=D.eastScout,R=D.careers.wing.ranks[Z.startFi];
+    return {t:T_.t,x:T_.x,c:[
+      {l:T_.yes,h:`${CFG.nWing.name} ${R.n}으로 입사 · 해결사 ${ch.rank}${T.rankUnit} 유지 · 승진마다 함께 오른다 · 운명(모든 판정 +${CFG.nWing.fate})`,ok:{t:T_.yesT,fx:{eastScout:true}}},
+      {l:T_.no,h:Z.tries-ch.eastScoutN>0?'나중에 한 번 더 제안이 올 수 있다':'다시 제안은 없다',ok:{t:T_.noT,fx:{}}}]};
+  }
   function oracleEvent(G){
     const ch=G.ch,y=G.year,O=CFG.oracle;
     if(ch.distForm||ch.job||ch.oracle||!ch.aff||ch.aff.name!=='검지'||(ch.fi||0)<1||(ch.oracleTries||0)>=O.tries||y<(ch.oracleNext||0)||d(100)>O.chance)return null;
@@ -896,6 +909,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(D.corp){const ce=corpEvent(G);if(ce)return {type:'event',ev:ce}}
     {const pe=pinkyEvent(G);if(pe)return {type:'event',ev:pe}}
     {const oe=oracleEvent(G);if(oe)return {type:'event',ev:oe}}
+    {const se=eastScoutEvent(G);if(se)return {type:'event',ev:se}}
     {const ch2=G.ch;if(D.redBook&&ch2.flags&&ch2.flags.redBook&&!ch2.beaten.includes('redmist')&&G.year>=(ch2.bookNext||0)){ch2.bookNext=G.year+CFG.redBook.every;return {type:'event',ev:D.redBook}}}
     /* 6시즌: 격리 실패 (환상체 보스는 조우 표가 아니라 이 사건으로만 나온다) */
     if(D.abnoBreach&&G.year>=CFG.abnoBreach.from&&abnoLeft(ch).length&&d(100)<=CFG.abnoBreach.chance)return {type:'event',ev:D.abnoBreach};
