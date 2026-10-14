@@ -478,8 +478,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 동부 출신 외곽 생존자가 N사 날개에 들어가면 못 대신 전용 키워드 '운명': 모든 판정(사건 판정 · 전투 명중·회피 굴림) +fate */
     if(isN(ch)&&isEastOuter(ch)&&!ch.fate){ch.fate=true;addStats(ch.stats,{check:CFG.nWing.fate});(ch.relics=ch.relics||[]).push('운명');chips.push(`운명 · 모든 판정 +${CFG.nWing.fate} (사건 판정 · 전투 명중·회피)`)}
     if(noFixer(ch)&&ch.licensed){ch.licensed=false;ch.title=null;chips.push(`해결사 자격 반납 · ${T.affTypes[ch.aff.type]}은(는) 해결사를 겸할 수 없다`)}
+    /* 전용 책장이 없는 날개(K·J·G사)는 카드팩 대신 보정치를 조금 더 받고, 덱은 스스로 꾸린다 */
+    {const FW=CFG.freeWing;if(J.type==='wing'&&FW.names.includes(name)){addStats(ch.stats,FW.fx);if(FW.fx.maxHp)ch.hp+=FW.fx.maxHp;chips.push(`${name} · 전용 책장 없음 · 보정 최대 HP +${FW.fx.maxHp} · 공격·회피·속도 +${FW.fx.atk} · 사건 판정 +${FW.fx.check}`)}}
     if(isFinger(ch))chips.push(...fingerStep(ch));
     else if(CR[ch.aff.type]&&CR[ch.aff.type].ranks)chips.push(...careerStep(ch));
+  }
+  /* 날개·협회 입사: 들어갈 곳을 직접 고른다 (고르지 않고 넘어오면 무작위) */
+  function chooseOrg(ch,name){
+    const t=ch.orgPick;if(!t||!(D.orgs[t]||[]).includes(name))return null;
+    const chips=[];ch.orgPick=null;joinAff(ch,{type:t,from:t},name,chips);return chips;
   }
   function chooseFinger(ch,name){
     if(!ch.fingerPick||!D.orgs.finger.includes(name))return null;
@@ -503,6 +510,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.join){
       /* 손가락 가입: 소지를 뺀 네 손가락 중 하나를 직접 고른다 (고르지 않고 넘어오면 무작위 · 엄지 특화 출신은 엄지 확률 보정) */
       if(fx.join.from==='finger'&&!fx.join.name){ch.fingerPick=true;chips.push('손가락 · 어느 손가락에 설지 고른다')}
+      else if((fx.join.from==='wing'||fx.join.from==='assoc')&&!fx.join.name){ch.orgPick=fx.join.from;chips.push(`${T.affTypes[fx.join.from]} · 어느 곳에 들어갈지 고른다`)}
       else joinAff(ch,fx.join,fx.join.name||one(D.orgs[fx.join.from]),chips);
     }
     /* 사건으로 승급 (해결사만, 최고 급수 미만일 때) */
@@ -933,6 +941,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.wingPick)setWing(mc,'새벽',true);
     if(mc.bondPick)setBondName(mc,'동반자',true);
     if(mc.seongPick)setSeongdo(mc,'무명',true);
+    if(mc.orgPick)chooseOrg(mc,one(D.orgs[mc.orgPick]));
     if(mc.fingerPick)chooseFinger(mc,mc.thumbBias&&d(100)<=mc.thumbBias?'엄지':one(D.orgs.finger));
     if(mc.pillPick)setPill(mc,'atk');
     if(mc.namePend)mc.namePend=null;
@@ -1672,5 +1681,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,chooseFinger,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,chooseFinger,chooseOrg,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
