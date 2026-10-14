@@ -866,7 +866,7 @@ export function startUI(E,app){
   function vFamily(){
     const ch=G.ch,b=ch.bond,BDc=CFG.bond;if(!b)return '<p class="small dim">가족 없음</p>';
     const R=E.bondData(ch)||{who:''},st=b.st;
-    const head=st==='married'?(ch.distForm?'당신을 알아보지 못한다':'배우자'):st==='lost'?'인연이 끝났다':`인연 · ${R.who}`;
+    const head=st==='married'?(ch.distForm?'당신을 알아보지 못한다':'배우자'):st==='lost'?'배우자의 죽음':`인연 · ${R.who}`;
     const rows=[];
     if(st==='married'){
       rows.push(['결혼한 해',b.since+'년차']);

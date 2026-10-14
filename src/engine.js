@@ -704,7 +704,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function bondLost(ch,chips){
     const b=ch.bond,R=bondData(ch);b.st='lost';
     ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));
-    chips.push(bondFill(R.lost,b));chips.push(`최대 정신력 −${BD.lossMind} (영구)`);
+    chips.push(`배우자의 죽음 · ${b.name}`);chips.push(bondFill(R.lost,b));chips.push(`최대 정신력 −${BD.lossMind} (영구)`);
   }
   /* 청혼: roll이면 1dN을 굴려 성공 범위면 결혼, 아니면 기회 1회 소모 (기회를 다 쓰면 인연이 끝난다) */
   function bondPropose(ch,chips,roll){
