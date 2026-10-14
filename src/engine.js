@@ -91,24 +91,27 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return D.childhood.stages.map(st=>{const r=d(100),x=pick(D.childhood.table,r);addStats(s,x.fx);return {age:st.age,r,x}});
   }
   /* job: 히든 직업으로 태어나면 출신 칸이 그 직업으로 바뀐다 (발톱 1, 조율자 100). 나머지 굴림은 같은 시드 그대로 */
-  function newChar(job,fixO){
-    const r={o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=job&&D.hiddenJobs[job];
+  /* 출생 보정 없이 시작: 출신·재능·결점·무기·타고난 것이 없고, 성장기 보정과 색만 남는다. keep = {r, kid} (이미 굴린 출생에서 가져온다) */
+  const BLANK={o:{n:'아무것도 없는 존재',t:'이름도 내력도 쥐여 주지 않은 채 태어났다.',e:'출생 보정 없음 · 성장기 보정만 가진다',fx:{},paths:{},flags:{},deck:['slash','thrust','smash','guard']},
+    t:{n:'재능 없음',t:'',e:'',fx:{}},f:{n:'결점 없음',t:'',e:'',fx:{}},w:{n:'맨손',e:'아무것도 쥐지 않았다',fx:{}}};
+  function newChar(job,fixO,keep){
+    const r=keep?Object.assign({},keep.r):{o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=!keep&&job&&D.hiddenJobs[job];
     if(J)r.o=J.roll;
     else if(fixO)r.o=fixO;
     /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문) */
-    const HO=!J&&(D.hiddenOrigins||[]).find(x=>x.roll===r.o);
-    const o=J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=pick(D.talents,r.t),f=pick(D.flaws,r.f),w=pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
+    const HO=!J&&!keep&&(D.hiddenOrigins||[]).find(x=>x.roll===r.o);
+    const o=keep?BLANK.o:J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(D.talents,r.t),f=keep?BLANK.f:pick(D.flaws,r.f),w=keep?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
     const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,dr:0,regen:0,defUp:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,egoSight:0,relicApt:0};
     for(const x of [o,t,f])addStats(s,x.fx);
-    const kid=childhood(s);
-    const ch={r,o,t,f,w,kid,ci,color:D.colors[ci].hex,licensed:false,title:null,aff:null,paths:Object.assign({},o.paths),
+    const kid=keep?keep.kid.map(k=>{addStats(s,k.x.fx);return k}):childhood(s);
+    const ch={r,o,t,f,w,kid,ci,blank:!!keep,color:D.colors[ci].hex,licensed:false,title:null,aff:null,paths:Object.assign({},o.paths),
       flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:CFG.mind.max+(s.mindMax||0),stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||o.money||0,
       deck:o.deck?o.deck.slice():['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
     const IN=CFG.innate,h=(r.o*7919+r.t*104729+r.f*1299709+r.w*15485863+r.n*32452843+ch.kid.reduce((a,k)=>a*31+k.r,7))%1000003;
-    if(h%IN.chanceDiv===0){const ks=Object.keys(D.innate||{});if(ks.length)ch.innate=ks[Math.floor(h/IN.chanceDiv)%ks.length]}
+    if(!keep&&h%IN.chanceDiv===0){const ks=Object.keys(D.innate||{});if(ks.length)ch.innate=ks[Math.floor(h/IN.chanceDiv)%ks.length]}
     if(J){ch.job=job;ch.aff={type:'head',name:'머리'};if(J.deck){ch.deck=J.deck.slice();ch.cardMoney=true}else for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
     /* 출생 때 굴린 무기는 무기 칸의 첫 장비 */
     equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
