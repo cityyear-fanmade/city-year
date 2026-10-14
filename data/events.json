@@ -2436,7 +2436,154 @@
     "atk": 2,
     "check": 5
    },
-   "totalMul": 1.0
+   "totalMul": 1.0,
+   "cards": {
+    "하나 협회": [
+     [
+      "as_hana_0",
+      "as_hana_1"
+     ],
+     [
+      "as_hana_2"
+     ],
+     [
+      "as_hana_3"
+     ],
+     [
+      "as_hana_4"
+     ],
+     [
+      "as_hana_5"
+     ]
+    ],
+    "츠바이 협회": [
+     [
+      "as_zwei_0",
+      "as_zwei_1"
+     ],
+     [
+      "as_zwei_2"
+     ],
+     [
+      "as_zwei_3"
+     ],
+     [
+      "as_zwei_4"
+     ],
+     [
+      "as_zwei_5"
+     ]
+    ],
+    "트레스 협회": [
+     [
+      "as_tres_0",
+      "as_tres_1"
+     ],
+     [
+      "as_tres_2"
+     ],
+     [
+      "as_tres_3"
+     ],
+     [
+      "as_tres_4"
+     ],
+     [
+      "as_tres_5"
+     ]
+    ],
+    "시 협회": [
+     [
+      "as_shi_0",
+      "as_shi_1"
+     ],
+     [
+      "as_shi_2"
+     ],
+     [
+      "as_shi_3"
+     ],
+     [
+      "as_shi_4"
+     ],
+     [
+      "as_shi_5"
+     ]
+    ],
+    "생크 협회": [
+     [
+      "as_cinq_0",
+      "as_cinq_1"
+     ],
+     [
+      "as_cinq_2"
+     ],
+     [
+      "as_cinq_3"
+     ],
+     [
+      "as_cinq_4"
+     ],
+     [
+      "as_cinq_5"
+     ]
+    ],
+    "리우 협회": [
+     [
+      "as_liu_0",
+      "as_liu_1"
+     ],
+     [
+      "as_liu_2"
+     ],
+     [
+      "as_liu_3"
+     ],
+     [
+      "as_liu_4"
+     ],
+     [
+      "as_liu_5"
+     ]
+    ],
+    "세븐 협회": [
+     [
+      "as_seven_0",
+      "as_seven_1"
+     ],
+     [
+      "as_seven_2"
+     ],
+     [
+      "as_seven_3"
+     ],
+     [
+      "as_seven_4"
+     ],
+     [
+      "as_seven_5"
+     ]
+    ],
+    "디에치 협회": [
+     [
+      "as_dieci_0",
+      "as_dieci_1"
+     ],
+     [
+      "as_dieci_2"
+     ],
+     [
+      "as_dieci_3"
+     ],
+     [
+      "as_dieci_4"
+     ],
+     [
+      "as_dieci_5"
+     ]
+    ]
+   },
+   "topMinRank": 2
   },
   "wing": {
    "n": "날개 직원",

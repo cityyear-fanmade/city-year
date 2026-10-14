@@ -45,6 +45,11 @@ export function validateData(D){
     const F=D.fingers[n];if(!F){err.push(`손가락 "${n}": fingers.json에 서열표 없음`);continue}
     for(const r of F.ranks)for(const x of r.branch||[r])if(x.card)card(x.card,`손가락 ${n} ${x.n}`);
   }
+  for(const [k,C_] of Object.entries(D.careers||{}))for(const [n,rows] of Object.entries(C_.cards||{})){
+    if(!(D.orgs[k]||[]).includes(n))err.push(`진로 ${k}: 전용 카드 소속 "${n}"이 orgs에 없음`);
+    if(rows.length!==C_.ranks.length+1)err.push(`진로 ${k} ${n}: 전용 카드 줄 수가 직급 수 + 본부(${C_.ranks.length+1})와 다름`);
+    for(const ids of rows)for(const id of ids)card(id,`진로 ${k} ${n}`);
+  }
   for(const o of D.origins)if(D.money.start[o.n]==null)err.push(`출신 ${o.n}: 시작 자산(money.start) 없음`);
   for(const [id,e] of Object.entries(D.enemies))if(!e.tier||D.money.bounty[e.tier]==null)err.push(`적 ${id}: tier 없음 또는 현상금 없음`);
   D.origins.forEach(o=>{card(o.card,`출신 ${o.n}`);for(const k in o.paths||{})if(!D.text.paths[k])err.push(`출신 ${o.n}: 없는 진로 "${k}"`)});
@@ -393,7 +398,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.fi=(ch.fi??-1)+1;ch.fr=r;addStats(ch.stats,r.fx);if(r.fx.maxHp)ch.hp+=r.fx.maxHp;
     /* 협회 직급에 맞는 해결사 급수 (예: 지부장은 최소 4급) */
     if(r.minRank&&ch.licensed&&ch.rank>r.minRank)ch.rank=r.minRank;
-    return [`${ch.aff.name} · ${r.n}`,...(r.e?[r.e]:[])];
+    const out=[`${ch.aff.name} · ${r.n}`,...(r.e?[r.e]:[])];
+    giveOrgCards(ch,C_,ch.fi,out);
+    return out;
+  }
+  /* 협회 전용 카드: careers.*.cards[소속 이름][직급 번호] (마지막 번호는 본부 직속) */
+  function giveOrgCards(ch,C_,at,out){
+    const ids=C_.cards&&C_.cards[ch.aff.name]&&C_.cards[ch.aff.name][at];
+    if(ids)for(const id of ids)addCard(ch,id,out,'협회 전용 카드');
   }
   /* 최고 단계의 특수 사건: 해결사는 특색 심사, 다른 진로는 careers.*.top */
   const topEvent=ch=>{const k=career(ch);return k==='fixer'?D.colorExam:CR[k]&&CR[k].top};
@@ -474,7 +486,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(C_.strike==='purge'){ch.purge=C_.purgeFoe;chips.push('숙청 대상이 되었다')}
       }
     }
-    if(fx.topPass){const C_=CR[career(ch)];ch.title=C_.topTitle;ch.titleKind='top';addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title)}
+    if(fx.topPass){const C_=CR[career(ch)];ch.title=C_.topTitle;ch.titleKind='top';addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}giveOrgCards(ch,C_,C_.ranks.length,chips)}
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
     if(fx.colorPass){ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 발현자 · 특색 · 모든 능력치 +5')}}
