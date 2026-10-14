@@ -880,6 +880,7 @@ export function startUI(E,app){
     const R=E.bondData(ch)||{who:''},st=b.st;
     const head=st==='married'?(ch.distForm?'당신을 알아보지 못한다':'배우자'):st==='lost'?'배우자의 죽음':st==='left'?'떠났다':`인연 · ${R.who}`;
     const rows=[];
+    if(R.look)rows.push(['특징',R.look]);
     if(st==='married'){
       rows.push(['결혼한 해',b.since+'년차']);
       rows.push(['배우자 등급',`${9-E.spouseLevel(b,G.year)}급 (결혼 ${BDc.hunt.spouseYears}년마다 한 단계)`]);
