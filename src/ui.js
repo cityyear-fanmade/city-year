@@ -565,8 +565,8 @@ export function startUI(E,app){
   const isHard=()=>diff()==='hard',isEasy=()=>diff()==='easy';
   function vHardToggle(){
     const d=diff(),X=CFG.hard,Z=CFG.easy,b=(k,l)=>`<button class="${d===k?'on':''}" data-a="diff" data-i="${k}">${l}</button>`;
-    const info={easy:`<b class="serif">쉬움 · 보정 최소</b><span class="small dim">해마다 늘어나는 적 강화와 히든 보스 후반 성장을 거의 없앤, 처음 설정한 약한 적으로 맞춘다. 이야기를 편하게 따라가고 싶을 때.</span>`,
-      normal:`<b class="serif">보통 · 수동 플레이 권장</b><span class="small dim">보정 없이 직접 카드와 선택을 고르는 플레이를 기준으로 맞춘 기본 난이도.</span>`,
+    const info={easy:`<b class="serif">쉬움 · 수동 플레이 권장</b><span class="small dim">해마다 늘어나는 적 강화와 히든 보스 후반 성장을 없앤, 처음 설정한 약한 적으로 맞춘다. 직접 카드와 선택을 고르며 완주를 노리는 플레이를 기준으로 맞췄고, 히든 보스의 최소한의 강함은 남아 있다.</span>`,
+      normal:`<b class="serif">보통 · 기본</b><span class="small dim">기존 그대로의 기본 난이도. 적이 해마다 강해진다.</span>`,
       hard:`<b class="serif">하드 · 도전</b><span class="small dim">모든 적 체력 ×${X.hp} · 공격 +${X.atk} · 회피 +${X.eva}. 쓰러지기 쉽다.</span>`}[d];
     return `<div class="stack" style="gap:6px"><span class="eyebrow">난이도 · 새로 태어날 때부터 적용</span><div class="seg">${b('easy','쉬움')}${b('normal','보통')}${b('hard','하드')}</div>
       <div class="panel stack" style="gap:3px;padding:10px 12px">${info}</div></div>`}
