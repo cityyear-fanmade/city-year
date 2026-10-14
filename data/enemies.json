@@ -1523,7 +1523,7 @@
      "atk": 2,
      "dmgB": 1
     },
-    "e": "HP+10 · 공+2 · 피해+1 · 무기 붉은 창",
+    "e": "HP+10 · 공+2 · 피해+1 · 무기 붉은 창 · 전용 카드팩 1권속",
     "gear": {
      "id": "w_redlance",
      "slot": "weapon",
@@ -1545,7 +1545,23 @@
        ]
       ]
      }
-    }
+    },
+    "cards": [
+     "k_hyeolgap",
+     "k_hyeolgap",
+     "k_hyeoljeom",
+     "k_hyeoljeom",
+     "k_moreblood",
+     "k_moreblood",
+     "k_finale",
+     "k_finale",
+     "k_sangre",
+     "k_sangre"
+    ],
+    "lockDeck": true,
+    "packName": "1권속",
+    "packPassive": "hunger",
+    "packE": "오랜 굶주림 · HP를 1 회복할 때마다 스택 +1(최대 15), 스택만큼 모든 적중의 피해가 늘어난다"
    }
   },
   "rat_knife": {
