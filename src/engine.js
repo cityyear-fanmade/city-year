@@ -736,6 +736,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     chips.push(`떠났다 · ${b.name}`);chips.push(bondFill(R.left,b));chips.push(`최대 정신력 −${BD.leaveMind} (영구)`);
   }
   /* 결혼한 뒤 금기(도시의 해가 되는 짓)를 저지르면 그때부터 해마다 dieChance%로 배우자가 세상을 떠난다 */
+  /* 배우자 사망 확률(%): 금기를 저지른 뒤엔 dieChance, 여기에 전투·위험한 루트로 쌓인 위험(0.1%씩)을 더한다. 루트 가산은 해마다 한 번만 */
+  function bondRisk(b,y){
+    if(BD.riskRoutes.includes(b.route)&&b.riskY!==y){b.riskY=y;b.risk=(b.risk||0)+BD.riskStep}
+    return (b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0);
+  }
   function bondTaboo(ch){const b=ch.bond;if(b&&b.st==='married'&&b.tabooAt==null)b.tabooAt=ch.year||0}
   /* 결혼한 뒤의 배우자의 죽음 (큰 대가). 아이는 남는다 */
   function bondDeath(ch,chips){
@@ -799,7 +804,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       if(b.st!=='married')return null;
-      if(b.tabooAt!=null&&y>b.tabooAt&&d(100)<=BD.dieChance)
+      if(d(1000)<=bondRisk(b,y)*10)
         return {t:B.deathT,x:bondFill(R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`,ok:{t:bondFill(B.deathAT,b),fx:{bondDeath:true}}}]};
       const last=kids.length?kids[kids.length-1].born:-99;
       if(y-b.since>=KD.from&&kids.length<KD.max&&y-last>=KD.gap&&d(100)<=KD.chance){
@@ -1120,6 +1125,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.bloomNote){chips.push(ch.bloomNote);ch.bloomNote=null}
     let title=null,tlabel=null,newly=false,colorRoll=null,unlock=null;
     const foe=D.enemies[C.id];
+    /* 인연: 결혼 중 싸울 때마다 배우자 사망 위험이 쌓인다 (히든 보스는 반드시 잡아야 하므로 제외) */
+    if(ch.bond&&ch.bond.st==='married'&&!foe.hidden)ch.bond.risk=(ch.bond.risk||0)+BD.riskStep;
     /* 피의 각인된 갈망: 전투가 끝나면 자식이 흩어지고(각자 확률), 이긴 일반·보스 적은 새 자식이 된다. 히든 보스·환상체는 안 된다 */
     if(kidsOn(ch)){
       const KD=CFG.kids,before=ch.kids||0;let keep=0;for(let i=0;i<before;i++)if(d(100)>KD.lose)keep++;
