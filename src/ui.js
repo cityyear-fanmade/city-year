@@ -4,7 +4,7 @@ import {clamp,sg,STAT} from './engine.js';
 
 export function startUI(E,app){
   const D=E.D,T=D.text;
-  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',charge:'#e8d44d',sink:'#4a8fb0'};
+  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0'};
   const kwc=k=>KWC[k]||'var(--gold)';
 
   /* ===== 설정 저장 (연출 속도, 배경 테마) ===== */
@@ -226,9 +226,10 @@ export function startUI(E,app){
   const ulName=(n,u)=>u?esc(n).replace(esc(u),`<s>${esc(u)}</s>`):esc(n);
   function bar(v,max){return `<div class="bar"><i style="width:${clamp(v/max*100,0,100)}%"></i></div>`}
   /* 걸려 있는 키워드: 수치와 다음에 일어날 일을 같이 보여 준다 */
-  const KWHINT={burn:n=>`라운드 끝에 스택×${CFG.burn.dmg} 피해(내가 받으면 ×${CFG.burn.dmgMe}) · 스택 절반 · 최대 ${CFG.burn.max}`,charge:n=>`쓰면 소모 · 맞으면 −${G&&G.ch&&C&&C.P?C.P.chargeLoss:1}`,sink:n=>`주는 피해 −${Math.floor(n/CFG.sink.per)*CFG.sink.dmg} · 명중 −${CFG.sink.hit*Math.floor(n/CFG.sink.per)} (${CFG.sink.per}당 1단계 · 라운드마다 −1)`,flame:n=>n>=CFG.laev.blueAt?'받는 피해 ×2':`받는 피해 ×1.5 · ${CFG.laev.blueAt}스택이면 푸른 화염`,bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>n>=1&&n<=CFG.breath.evaMax?`회피 +${CFG.breath.eva}`:`치명 ${E.critPct(n)}%`};
+  const KWHINT={nail:n=>'망치 카드가 쌓인 못을 흐트러짐으로 바꾼다',stagger:n=>{const st=CFG.nail.stages.filter(g=>n>=g.at).pop(),thr=C&&C.E?E.nailThr(C):CFG.nail.stun.mid;return `기절 ${n}/${thr}${st?` · 명중 −${st.hit}${st.dmg?` · 주는 피해 −${st.dmg}`:''}${st.take?` · 받는 피해 +${st.take}`:''}`:''}`},burn:n=>`라운드 끝에 스택×${CFG.burn.dmg} 피해(내가 받으면 ×${CFG.burn.dmgMe}) · 스택 절반 · 최대 ${CFG.burn.max}`,charge:n=>`쓰면 소모 · 맞으면 −${G&&G.ch&&C&&C.P?C.P.chargeLoss:1}`,sink:n=>`주는 피해 −${Math.floor(n/CFG.sink.per)*CFG.sink.dmg} · 명중 −${CFG.sink.hit*Math.floor(n/CFG.sink.per)} (${CFG.sink.per}당 1단계 · 라운드마다 −1)`,flame:n=>n>=CFG.laev.blueAt?'받는 피해 ×2':`받는 피해 ×1.5 · ${CFG.laev.blueAt}스택이면 푸른 화염`,bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>n>=1&&n<=CFG.breath.evaMax?`회피 +${CFG.breath.eva}`:`치명 ${E.critPct(n)}%`};
   function stacks(X){
     const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?`<small>받는 피해 ×2 · 라운드마다 ${X[k]*2}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
+    if(X.stunned)out.push('<span class="chip stk" style="--kc:#b07cc6"><b>기절</b><small>이번 라운드 행동 불가 · 회피 0</small></span>');
     /* 히든 보스 패시브 스택: 잔향(내게 쌓임), 장부(보스에게 쌓임) */
     const pv=C&&C.E&&C.E.passive;
     if(pv&&X.echo>0)out.push(`<span class="chip stk" style="--kc:var(--rupture)"><b>${pv.n} ${X.echo}/${pv.need}</b><small>${pv.need}에서 고정 피해 ${pv.dmg}</small></span>`);
@@ -258,6 +259,7 @@ export function startUI(E,app){
     if(c.adv)x.push('명중 2회 굴림');
     if(c.spend)x.push(`충전 ${c.spend>=99?'전부':c.spend} 소모 · 1당 고정 +${c.fixPer}${c.hits>1?' (적중마다)':''}`);
     if(c.once)x.push('전투당 1회');
+    if(c.nailBurst)x.push(`못을 모두 흐트러짐으로 ×${c.nailBurst.mul}${c.nailBurst.add?' +'+c.nailBurst.add:''}`);
     if(c.spdDice)x.push(`속도 ${c.spdDice[0]} 이상이면 주사위마다 +${c.spdDice[1]}`);
     if(c.sinkDmg)x.push(`침잠 ${CFG.sink.per}당 +${c.sinkDmg}`);
     if(c.rr)x.push('낮은 피해 재굴림');
