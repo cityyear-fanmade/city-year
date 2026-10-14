@@ -123,6 +123,8 @@ export const CFG = {
     hunt: {gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
       spouse: {office: 0, assoc: 1, wing: 1, finger: 2, hyeolgwi: 3, east: 1}, spouseYears: 3, spouseJob: {office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', hyeolgwi: 'fixer', east: 'fixer'}}},
+  /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
+  shieldCap: 150,
   /* 소지(표식)의 도: 표식이 생긴 뒤 every년차마다 인·의·예·지 사건이 차례로 온다. 1d100이 dc 이상이면 키워드를 얻고, 4개를 모으면 이름을 붙인 성도(전용 무기)를 얻는다.
      성도 수치: 각 항목을 [최소, 최대] 범위에서 굴린다 (atk 공격, eva 회피, dmgB 추가 피해, hit 명중) */
   pinky: {every: 5, dc: 40, seongdo: {atk: [1, 10], eva: [1, 5], dmgB: [0, 2], hit: [5, 15]}},
