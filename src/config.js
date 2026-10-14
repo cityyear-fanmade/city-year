@@ -146,14 +146,15 @@ export const CFG = {
   /* 약지 패시브 예술적 감각: 적을 쓰러뜨릴 때 확률, 최대 스택, 스택당 피해 주사위 최대치 */
   artSense: {every: 3, max: 4, die: 5},
   /* 중지 되갚음: 스택 1당 받는 피해 −def, 다음 적중에서 스택을 쓰면 소모한 스택 1당 HP heal 회복, 스택은 keep 비율만 남는다 (내림) */
+  /* 화상: 라운드 끝에 스택만큼 피해, 그 뒤 스택은 keep 비율만 남는다 (내림). 붉은 화염(레바테인 전용)과는 별개 */
+  burn: {keep: 0.5, me: 0.5},
   middle: {def: 2, keep: 0, heal: 1, dmg: 1},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 1, dmg: 1, finish: 1.0, after: 0},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
-  /* onMe: 적 카드에게 붉은/푸른 화염을 받을 때의 피해 배수와 라운드 끝 피해 계수 (해방 레바테인 소지자의 자기 화염은 그대로 ×1.5/×2) */
-  laev: {onMe: {red: 1.15, blue: 1.3, dot: 0}, unlock: 20, selfEvery: 1, blueAt: 5, blueDot: 2, selfBlueHit: 30},
+  laev: {unlock: 20, selfEvery: 1, blueAt: 5, blueDot: 2, selfBlueHit: 30},
   /* 엄지 검술(덱 고정): 카드를 얻는 자리마다 대신 받는 돈 */
   lockedCardMoney: 150,
   /* 공방 해결사: 4년차 갈림길에 chance% 확률로 제안. 1d die에서 minRoll 이상이면 성공. 공방 물건 할인율, 보관함 판매 비율 */

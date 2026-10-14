@@ -247,7 +247,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const bad=!w||(!o.space&&/\s/.test(w))||!NAME_CH.test(w)||!w.replace(/\s/g,'')||[...w].length<min||[...w].length>lim;
     return bad?`${min}~${max}글자로 적어 주세요 (한글·영문·숫자·일본어${o.space?'':', 띄어쓰기 없이'})`:null;
   }
-  const OKW={bleed:'출혈',rupture:'파열',breath:'호흡',flame:'붉은 화염'};
+  const OKW={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상'};
   const canFound=ch=>ch.licensed&&ch.rank<=CFG.office.rank&&!ch.job&&!noFixer(ch)&&!ch.officePick&&(!ch.aff||(ch.aff.type==='office'&&!ch.aff.own));
   function officeNameErr(n){
     {const e=nameErr(n);if(e)return e}
@@ -998,13 +998,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   /* ===== 전투 (1:1) =====
      라운드마다 1d100 + 속도로 순서를 정하고, 카드는 순서대로 한 장씩 번갈아 발동한다. */
-  function mkEnt(o){return Object.assign({bleed:0,rupture:0,breath:0,flame:0,charge:0,sink:0,spent:0,chargeCap:CFG.charge.cap,chargeLoss:CFG.charge.loss,chargeRound:0,chargeHit:0,evaB:0,fs:false,fsOn:false,catchup:false,cu:false,
+  function mkEnt(o){return Object.assign({bleed:0,rupture:0,breath:0,burn:0,flame:0,charge:0,sink:0,spent:0,chargeCap:CFG.charge.cap,chargeLoss:CFG.charge.loss,chargeRound:0,chargeHit:0,evaB:0,fs:false,fsOn:false,catchup:false,cu:false,
     dmin:1,defUp:0,adv:0,advUsed:false,hand:[],light:0,guarding:false,passHit:0,passHitNext:0,lightUp:0,lightNext:0},o)}
   /* 푸른 화염: 해방 레바테인에게 화상을 받은 쪽(blue), 또는 화상 blueAt 이상 */
   /* 카드 등급: 연차가 쌓이면 공격 카드가 강해지는 주인공 보정. 쉬움에서는 받지 않는다 */
   const cardGrade=(y,ch)=>ch&&ch.easy?CFG.cardGrade[0]:[...CFG.cardGrade].reverse().find(g=>(y||1)>=g.from)||CFG.cardGrade[0];
   const isBlue=X=>X.flame>0&&(X.blue||X.flame>=CFG.laev.blueAt);
-  const snap=C=>{const f=X=>({hunger:X.hunger||0,hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,flame:X.flame||0,work:X.work||0,blue:isBlue(X),echo:X.echo||0,ledger:X.ledger||0,prescript:X.prescript||0,warp:X.warp||0,shock:X.shock||0,chain:X.chain||0,web:X.web||0,mk:X.mk||0,grudge:X.grudge||0,shield:X.shield||0,matc:X.matc||0,mat:X.mat||0,wecho:X.wecho||0,revenge:X.revenge||0,revMul:X.revMul||0,presc:X.presc||0,serum:X.serum||0,ammo:X.ammo||0,manner:X.manner||0,disp:X.disp||0,sealMark:X.sealMark||0,accel:X.accel||0});return {P:f(C.P),E:f(C.E)}};
+  const snap=C=>{const f=X=>({hunger:X.hunger||0,hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,burn:X.burn||0,flame:X.flame||0,work:X.work||0,blue:isBlue(X),echo:X.echo||0,ledger:X.ledger||0,prescript:X.prescript||0,warp:X.warp||0,shock:X.shock||0,chain:X.chain||0,web:X.web||0,mk:X.mk||0,grudge:X.grudge||0,shield:X.shield||0,matc:X.matc||0,mat:X.mat||0,wecho:X.wecho||0,revenge:X.revenge||0,revMul:X.revMul||0,presc:X.presc||0,serum:X.serum||0,ammo:X.ammo||0,manner:X.manner||0,disp:X.disp||0,sealMark:X.sealMark||0,accel:X.accel||0});return {P:f(C.P),E:f(C.E)}};
   /* 오랜 굶주림: HP를 회복할 때마다 스택 */
   const HG=(X,h)=>{if(h>0&&X&&X.hunger!=null)X.hunger=Math.min(CFG.hunger.max,X.hunger+h)};
   const kidsOn=ch=>ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea');
@@ -1129,7 +1129,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function autoTri(C){if(!triOk(C)||C.triRound===C.round)return;const want=C.P.hp<=C.P.maxHp*0.6?['ri','gon','gun']:['gun','gon','ri'];setTri(C,want.find(k=>k!==C.triPrev))}
   function autoPick(C){autoTri(C);
     const P=C.P,low=P.hp/P.maxHp<0.35;
-    const bad=P.bleed+P.rupture+(P.flame||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
+    const bad=P.bleed+P.rupture+(P.burn||0)+(P.flame||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
       :c.hits*(c.dice*((c.die||6)+1)/2+c.b)+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05+(c.spend?Math.min(P.charge||0,c.spend)*(c.fixPer||0)*c.hits:0);
     let best=[],bs=-1;
     for(let m=1;m<1<<P.hand.length;m++){
@@ -1174,8 +1174,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.distorted&&to!=='s')continue;
       const X=to==='s'?A:D_;
       X[k]=Math.min(k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:CFG.stackCap,X[k]+n);
-      L('kw',`  ${X.name}에게 ${k==='flame'&&isBlue(X)?'푸른 화염':D.keywords[k].n} +${n} (지금 ${X[k]})`);
-      if(k==='flame'&&to!=='s'){if(A.laev==='open')X.blue=true;laevCount(A,n,L)}
+      L('kw',`  ${X.name}에게 ${D.keywords[k].n} +${n} (지금 ${X[k]})`);
     }
   }
   /* 발톱 전용 키워드 · 혈청: 혈청 카드를 낼 때마다 1 (최대 3). 3이면 다음 적중 피해 ×1.5 후 비움 */
@@ -1183,7 +1182,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
     if(c.t==='buff'&&(c.heal||c.passNext||c.debuffHit||c.cleanseRand)){
-      if(c.cleanseRand){const ks=['bleed','rupture','flame'].filter(k=>(A[k]||0)>0);if(ks.length){const k=ks[d(ks.length)-1],n0=A[k];A[k]=Math.max(0,n0-c.cleanseRand);L('kw',`  ${A.name} · ${c.n} · ${D.keywords[k].n} ${n0} → ${A[k]}`)}}
+      if(c.cleanseRand){const ks=['bleed','rupture','burn','flame'].filter(k=>(A[k]||0)>0);if(ks.length){const k=ks[d(ks.length)-1],n0=A[k];A[k]=Math.max(0,n0-c.cleanseRand);L('kw',`  ${A.name} · ${c.n} · ${D.keywords[k].n} ${n0} → ${A[k]}`)}}
       if(c.heal){const h=Math.min(c.heal,A.maxHp-A.hp);A.hp+=h;HG(A,h);L('kw',`${A.name} · ${c.n} · HP +${h}`)}
       if(c.passNext){A.passHitNext=(A.passHitNext||0)+c.passNext;L('kw',`  ${A.name} · 다음 라운드 명중 ${sg(c.passNext)}`)}
       if(c.debuffHit){B.passHitNext=(B.passHitNext||0)+c.debuffHit;L('kw',`  ${B.name} · 다음 라운드 명중 ${sg(c.debuffHit)} (1라운드)`)}
@@ -1284,7 +1283,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.unseal&&(B.sealMark||0)>0){const x=B.sealMark*c.unseal;dmg+=x;note+=` 봉인 해제 ${B.sealMark}×${c.unseal}+${x}`;B.sealMark=0}
       if((A.serum||0)>=3&&!c.serumBurst){dmg=Math.floor(dmg*1.5);A.serum=0;note+=' 혈청 과부하×1.5'}
       /* 화상: 받는 피해 ×1.5, 5스택 이상이면 푸른 화염 ×2 */
-      if(isBlue(B)){const m=B.isP&&B.laev!=='open'?CFG.laev.onMe.blue:2;dmg=Math.floor(dmg*m);note+=` 푸른 화염×${m}`}else if(B.flame>0){const m=B.isP&&B.laev!=='open'?CFG.laev.onMe.red:1.5;dmg=Math.floor(dmg*m);note+=` 붉은 화염×${m}`}
+      if(isBlue(B)){dmg=dmg*2;note+=' 푸른 화염×2'}else if(B.flame>0){dmg=Math.floor(dmg*1.5);note+=' 붉은 화염×1.5'}
       if(A.mark){const x=d(3)+d(3);dmg+=x;note+=` 표지+${x}`}
       if(B.guarding){dmg=Math.floor(dmg*G_.guardFailMul);note+=` 방어 감소×${G_.guardFailMul}`}
       /* 무기 디버프: 왜곡(내가 주는 피해 감소), 표적(3스택이면 2배), 원한(쌓인 만큼 추가) */
@@ -1325,7 +1324,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.dmark&&B.hp>0){B.disp=Math.min(5,(B.disp||0)+c.dmark);L('kw',`  ${B.name}에게 처분 표식 ${B.disp}`)}
       /* 마에스트로 책장: 재료 수집 부여 / 신체관극(상대 디버프 수만큼 재료) */
       if(c.mat&&B.hp>0){B.matc=(B.matc||0)+c.mat;L('kw',`  ${B.name}에게 재료 수집 ${B.matc}`)}
-      if(c.harvest&&B.matc>0){const n=['bleed','rupture','flame','prescript','warp','shock','chain','web','mk','matc'].reduce((a,k)=>a+(B[k]>0?B[k]:0),0);
+      if(c.harvest&&B.matc>0){const n=['bleed','rupture','burn','flame','prescript','warp','shock','chain','web','mk','matc'].reduce((a,k)=>a+(B[k]>0?B[k]:0),0);
         A.mat=(A.mat||0)+n;A.matNext=(A.matNext||0)+n;L('kw',`  ${A.name} · 신체관극 · 재료 +${n} (지금 ${A.mat}) · 다음 라운드 적중마다 피해 +${A.matNext}`)}
       /* 전용 무기 효과: 적중 시 키워드·잔향·호흡·조율, 피격 시 반격 */
       if(A.wx&&B.hp>0){const X=A.wx;
@@ -1348,9 +1347,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 회피 실패: 1d5에서 1이면 정신력 1 감소 (E.G.O 장비 1개당 +1) */
       if(B.isP&&d(M.evadeDie)===1&&!(corpType(C.ch)&&corpType(C.ch).year))loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
       /* 레바테인 계열: 적중 시 화상 */
-      if(A.burnHit&&B.hp>0){B.flame=Math.min(CFG.stackCap,(B.flame||0)+A.burnHit);if(A.laev==='open')B.blue=true;
-        L('kw',`  ${B.name}에게 ${A.laev==='open'?'푸른 화염':isBlue(B)?'푸른 화염':'붉은 화염'} +${A.burnHit} (지금 ${B.flame})`);
-        laevCount(A,A.burnHit,L)}
+      if(A.burnHit&&B.hp>0){
+        if(A.laev){B.flame=Math.min(CFG.stackCap,(B.flame||0)+A.burnHit);if(A.laev==='open')B.blue=true;
+          L('kw',`  ${B.name}에게 ${A.laev==='open'||isBlue(B)?'푸른 화염':'붉은 화염'} +${A.burnHit} (지금 ${B.flame})`);laevCount(A,A.burnHit,L)}
+        else{B.burn=Math.min(CFG.stackCap,(B.burn||0)+A.burnHit);L('kw',`  ${B.name}에게 화상 +${A.burnHit} (지금 ${B.burn})`)}}
       /* 주사위마다 무작위 디버프 1 (Furioso): 출혈 또는 파열 */
       if(c.rngDebuff&&B.hp>0){const got={};for(let i=0;i<c.dice;i++){const k=one(c.rngDebuff);B[k]=Math.min(CFG.stackCap,B[k]+1);got[k]=(got[k]||0)+1}
         L('kw',`  ${B.name}에게 ${Object.entries(got).map(([k,n])=>D.keywords[k].n+' +'+n).join(' · ')} (무작위)`)}
@@ -1422,8 +1422,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     /* 푸른 화염: 라운드 끝에 스택 × blueDot 피해, 그 뒤 1 감소. 해방 레바테인 소지자의 일반 화상은 줄지 않는다 */
     for(const X of [P,E]){
-      if(isBlue(X)&&X.hp>0){const x=X.flame*(X.isP&&X.laev!=='open'?CFG.laev.onMe.dot:CFG.laev.blueDot);X.hp=Math.max(0,X.hp-x);X.flame--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.flame})`)}
+      if(isBlue(X)&&X.hp>0){const x=X.flame*CFG.laev.blueDot;X.hp=Math.max(0,X.hp-x);X.flame--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.flame})`)}
       else if(X.flame>0&&!(X.isP&&X.laev==='open'))X.flame--;
+      /* 화상: 라운드 끝에 스택만큼 피해, 그 뒤 스택은 keep 비율만 남는다 (내림) */
+      if(X.burn>0&&X.hp>0){const x=X.isP?Math.max(1,Math.floor(X.burn*CFG.burn.me)):X.burn;X.hp=Math.max(0,X.hp-x);X.burn=Math.floor(X.burn*CFG.burn.keep);L('dmg',`${X.name} · 화상 ${x} 피해 (남은 ${X.burn})`)}
       for(const k of ['prescript','warp','shock','chain','web','sink'])if(X[k]>0)X[k]--}
     /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
     if(C.ch.infinite&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.floor(e_*IN.erodePer);
