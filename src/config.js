@@ -117,8 +117,8 @@ export const CFG = {
      기회를 모두 쓰면 인연이 끝나고 최대 정신력이 lossMind 줄어든다 (영구) */
   bond: {routes: ['office', 'assoc', 'wing', 'finger'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], tries: 2, waitDc: 40,
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
-    /* 결혼 뒤: dieFrom년이 지나면 해마다 dieChance% 배우자가 세상을 떠난다(최대 정신력 −lossMind). 아이: kid.from년 뒤부터 해마다 chance%, 최대 max명, 간격 gap년, 태어나면 최대 정신력 +mind. adult살이 되면 사무소·해결사·협회 중 한 곳에 들어간다 */
-    dieFrom: 15, dieChance: 2, kid: {from: 5, chance: 22, max: 2, gap: 3, mind: 2, adult: 20},
+    /* 결혼 뒤: 금기를 저지른 다음 해부터 해마다 dieChance% 배우자가 세상을 떠난다(최대 정신력 −lossMind). 아이: kid.from년 뒤부터 해마다 chance%, 최대 max명, 간격 gap년, 태어나면 최대 정신력 +mind. adult살이 되면 사무소·해결사·협회 중 한 곳에 들어간다 */
+    dieChance: 2, kid: {from: 5, chance: 22, max: 2, gap: 3, mind: 2, adult: 20},
     /* 뒤틀린 뒤: 성인이 된 아이가 있으면 gap년마다 chance%로 토벌 의뢰가 온다. 여럿이면 가장 강한 아이(등급)가 온다. 등급 = 20세 이후 2년마다 +1(최대 8) + 직업 가산 */
     hunt: {gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */

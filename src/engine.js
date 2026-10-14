@@ -499,6 +499,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){ch.deck.push('o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
     for(const f of [].concat(fx.flag||[]))ch.flags[f]=(ch.flags[f]||0)+1;
+    if([].concat(fx.flag||[]).includes('taboo'))bondTaboo(ch);
     if(fx.join){
       /* 손가락 가입: 소지를 뺀 네 손가락 중 하나를 직접 고른다 (고르지 않고 넘어오면 무작위 · 엄지 특화 출신은 엄지 확률 보정) */
       if(fx.join.from==='finger'&&!fx.join.name){ch.fingerPick=true;chips.push('손가락 · 어느 손가락에 설지 고른다')}
@@ -706,7 +707,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     corpBump(ch,CP.up,chips);corpBump(ch,T_.per||{},chips);chips.push(`특이점 ${c.n} 강화 ${c.up}/${CP.upMax}`);
   }
   function corpForb(ch,chips){
-    const c=ch.corp;if(!corpYes(ch)||c.forb>=CP.forbMax)return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
+    const c=ch.corp;if(!corpYes(ch)||c.forb>=CP.forbMax)return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;bondTaboo(ch);corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
     if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다')}
   }
   /* ===== 인연(동반자) =====
@@ -734,6 +735,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.stats.mindMax=(ch.stats.mindMax||0)-BD.leaveMind;ch.mind=Math.min(ch.mind,mindMax(ch));
     chips.push(`떠났다 · ${b.name}`);chips.push(bondFill(R.left,b));chips.push(`최대 정신력 −${BD.leaveMind} (영구)`);
   }
+  /* 결혼한 뒤 금기(도시의 해가 되는 짓)를 저지르면 그때부터 해마다 dieChance%로 배우자가 세상을 떠난다 */
+  function bondTaboo(ch){const b=ch.bond;if(b&&b.st==='married'&&b.tabooAt==null)b.tabooAt=ch.year||0}
   /* 결혼한 뒤의 배우자의 죽음 (큰 대가). 아이는 남는다 */
   function bondDeath(ch,chips){
     const b=ch.bond;b.st='lost';
@@ -796,7 +799,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       if(b.st!=='married')return null;
-      if(y-b.since>=BD.dieFrom&&d(100)<=BD.dieChance)
+      if(b.tabooAt!=null&&y>b.tabooAt&&d(100)<=BD.dieChance)
         return {t:B.deathT,x:bondFill(R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`,ok:{t:bondFill(B.deathAT,b),fx:{bondDeath:true}}}]};
       const last=kids.length?kids[kids.length-1].born:-99;
       if(y-b.since>=KD.from&&kids.length<KD.max&&y-last>=KD.gap&&d(100)<=KD.chance){
