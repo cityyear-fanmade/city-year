@@ -407,7 +407,8 @@ export function startUI(E,app){
   /* 새 장비·새 카드: 받기 전에 고른다 (장비가 몰래 바뀌지 않게) */
   function vOffer(){
     const ch=G.ch;
-    if((ch.gearOffers||[]).length){
+    /* 전용 카드팩 제안은 장비보다 먼저 보여 준다 (전리품을 얻자마자 바로 고른다) */
+    if((ch.gearOffers||[]).length&&!ch.packOffer){
       const it=ch.gearOffers[0],cur=ch.gear[it.slot],df=fxDiff(it,cur);
       return sheet(`<span class="eyebrow">새 장비 · ${D.slots[it.slot]}${ch.gearOffers.length>1?` · 남은 ${ch.gearOffers.length}개`:''}</span><h2>${esc(it.n)}</h2>
         <div class="cmp"><div class="panel stack" style="gap:4px"><span class="eyebrow">지금 장착 중</span><b>${cur?esc(cur.n):'없음'}</b><span class="mono small dim">${cur?esc(cur.e||''):''}</span></div>
@@ -1147,7 +1148,7 @@ export function startUI(E,app){
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length);
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
     const ov=pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
-    const ovKey=showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+((G.ch.gearOffers||[]).length?'g':G.ch.packOffer?'p':'c')+(UI.swap?'s':''):ov?'bag':'';
+    const ovKey=showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':'c')+(UI.swap?'s':''):ov?'bag':'';
     app.innerHTML=`<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out'):''}${ov}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     UI.lastOv=ovKey;document.documentElement.classList.toggle('ovopen',!!ov);
