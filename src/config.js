@@ -114,7 +114,7 @@ export const CFG = {
      소속별 규칙(orgs): cap 상한, round 라운드 시작마다 +n, hit 적중마다 +n, loss 피격 시 −n */
   /* 침잠(상대에게 쌓는 스택): per스택마다 한 단계, 단계마다 침잠 걸린 쪽의 명중 −hit · 주는 피해 −dmg. 라운드마다 1 감소 */
   sink: {per: 3, hit: 6, dmg: 1},
-  charge: {cap: 10, loss: 1, orgs: {'W사 날개': {cap: 10, round: 1, loss: 0}, 'R사 날개': {cap: 8, hit: 1, loss: 2, spd: 5}}},
+  charge: {cap: 10, loss: 1, orgs: {'W사 날개': {cap: 10, round: 1, loss: 0}, 'R사 날개': {cap: 8, hit: 1, loss: 2, spd: 5, boost: {low: [0.5, 3], charge: [5, 3]}}}},
   /* 하나 협회 전용 패시브: 라운드마다 카드를 고르기 전에 한 가지를 고른다. gun: 이번 라운드 공격 피해 +n, gon: 받는 피해 n% 감소, gam: 이번 라운드 빛 +n, ri: 체력 회복과 호흡 */
   tri: {org: '하나 협회', names: {gun: '건', gon: '곤', gam: '감', ri: '이'}, gun: 2, gon: 30, gam: 1, ri: {heal: 2, breath: 2}},
   /* 혈귀 루트 '피의 각인된 갈망'(돌네시아를 쓰러뜨린 뒤): 일반·보스 적을 이기면 자식 +1(최대 max, 히든·환상체 제외),
