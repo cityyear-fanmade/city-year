@@ -974,6 +974,7 @@ export function startUI(E,app){
   const affName=c=>c.aff?(c.corp&&c.corp.wing?c.corp.wing:c.aff.name):'';
   function careerLine(c){
     if(c.job)return T.jobs[c.job]+(c.title?' · '+esc(c.title):'');
+    if(c.aff&&c.corp&&c.corp.wing)return `${esc(c.corp.wing)} · 대표${c.title?' · '+esc(c.title):''}`;
     if(c.aff&&c.fr)return `${esc(affName(c))} · ${esc(c.fr.n)}${c.title?' · '+esc(c.title):''}`;
     if(c.licensed)return E.rankLabel(c)+(c.aff?' · '+esc(affName(c)):'');
     return c.aff?esc(affName(c)):T.unnamed;
@@ -1256,7 +1257,7 @@ export function startUI(E,app){
       const n=(($('wingname')||{}).value||'').trim(),err=E.wingNameErr(n);
       if(err){UI.wingErr=err;UI.wingName=n;render();return}
       E.setWing(G.ch,n);UI.wingErr='';UI.wingName='';resave();
-      UI.res.chips=[...UI.res.chips,`날개 설립 · ${G.ch.corp.wing}`];render();
+      UI.res.chips=[...UI.res.chips,`날개 설립 · ${G.ch.corp.wing} 대표가 되었다`];render();
     },
     egotype(k){UI.egoName=(($('egoname')||{}).value||UI.egoName||'');UI.egoType=k;render()},
     distset(){

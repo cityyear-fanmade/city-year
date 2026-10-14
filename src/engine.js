@@ -364,7 +364,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 진로: 손가락 > 협회 > 날개 > 해결사(등록) 순으로 판단. 진로마다 단계 수가 달라도
      최고 단계까지 필요한 포인트 총량(CFG.promo.total)은 같게 기본값을 나눈다 */
   const CR=D.careers||{};
+  /* 날개를 세운 사람은 그 날개의 대표다: 입사한 회사의 승진 체계에서 벗어난다 */
+  const isFounder=ch=>!!(ch.corp&&ch.corp.wing);
   function career(ch){
+    if(isFounder(ch))return null;
     if(isFinger(ch))return 'finger';
     if(ch.aff&&CR[ch.aff.type]&&CR[ch.aff.type].ranks)return ch.aff.type;
     return ch.licensed?'fixer':null;
@@ -442,7 +445,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return null;
   }
   /* 날개·손가락 진로면 해결사 급수 대신 그 진로의 직급을 보여 준다 (해결사 급수는 그 진로에서 오르지 않는다) */
-  const rankLabel=ch=>{if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr)return ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n;return rankLabel0(ch)};
+  const rankLabel=ch=>{if(isFounder(ch)&&!ch.job)return ch.title?`${ch.title} · 날개 대표`:'날개 대표';if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr)return ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n;return rankLabel0(ch)};
   const rankLabel0=ch=>!ch.licensed?T.unranked:ch.title?`${ch.title} · ${ch.rank}${T.rankUnit}`:`${ch.rank}${T.rankUnit} ${T.licensed}`;
   /* 카드 얻기: 덱이 고정(엄지 검술)이면 카드 대신 돈 */
   /* offer: 바로 넣지 않고 받을지 고르게 한다 (일반 전투 보상) */
@@ -1417,5 +1420,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    setTri,triOk,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,setTri,triOk,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
