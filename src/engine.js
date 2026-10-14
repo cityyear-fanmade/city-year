@@ -1170,7 +1170,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       let dmg=rolls.reduce((a,b)=>a+b,0)+c.b+(gr?gr.b:0);
       /* 뒤틀린 책장: 도박 카드 (주사위 한 번, 맞으면 큰 피해) */
-      if(c.gamble){const g=c.gamble,r=d(g.die),win=g.win.includes(r);dmg=win?g.dmg:g.lose;rolls.length=0;rolls.push(r);note+=` 1d${g.die} ${r}${win?' 대박':''}`;
+      if(c.gamble){const g=c.gamble,r=d(g.die),win=g.win.includes(r);if(g.keep){if(win)dmg=g.dmg;note+=` 1d${g.die} ${r}${win?` 사의 경계 · 피해 ${g.dmg}`:''}`}else{dmg=win?g.dmg:g.lose;rolls.length=0;rolls.push(r);note+=` 1d${g.die} ${r}${win?' 대박':''}`}
         if(win&&g.heal){const h=Math.min(g.heal,A.maxHp-A.hp);A.hp+=h;note+=` HP+${h}`}
         if(!win&&g.self){A.hp=Math.max(1,A.hp-g.self);note+=` 반동 −${g.self}`}}
       if(gr&&gr.n)note+=` 등급${gr.n}(피해+${gr.b})`;
