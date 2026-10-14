@@ -402,3 +402,6 @@ button.chip{cursor:pointer;background:transparent}
 html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data-skin="ruina"] .moneybar{border-radius:0}
 .triBar{display:grid;gap:6px;padding:8px 10px;border:1px solid var(--gold);border-radius:5px;background:color-mix(in srgb,var(--gold) 8%,transparent)}
 .triBar .btn{line-height:1.3}
+
+.cfgbtn{position:fixed;right:12px;top:10px;z-index:30;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--dim);font-size:18px;line-height:1;cursor:pointer}
+.cfgbtn:hover{color:var(--gold);border-color:var(--gold)}
