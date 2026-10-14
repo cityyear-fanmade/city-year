@@ -1361,6 +1361,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(isBlue(X)&&X.hp>0){const x=X.burn*CFG.laev.blueDot;X.hp=Math.max(0,X.hp-x);X.burn--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.burn})`)}
       else if(X.burn>0&&!(X.isP&&X.laev==='open'))X.burn--;
       for(const k of ['prescript','warp','shock','chain','web'])if(X[k]>0)X[k]--}
+    /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
+    if(C.ch.infinite&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.floor(e_*IN.erodePer);
+      if(e_>0&&x>0){P.hp=Math.max(0,P.hp-x);L('dmg',`${P.name} · 세계의 균열이 몸을 갉는다 · 고정 피해 ${x}`)}}
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';
   }
   /* 자동 전투 (시뮬): 카드 고르는 순서도 행동 순서를 따른다 */
