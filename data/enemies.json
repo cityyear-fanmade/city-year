@@ -3453,6 +3453,24 @@
     "packPassive": "redMist",
     "packE": "적을 쓰러뜨리면 HP 40 회복"
    }
+  },
+  "kid_hunt": {
+   "n": "토벌 대상",
+   "color": "#c25050",
+   "hp": 56,
+   "atk": 3,
+   "eva": 2,
+   "spd": 5,
+   "deck": [
+    "a_maw",
+    "lunge",
+    "a_maw",
+    "guard"
+   ],
+   "intro": "토벌 의뢰서가 도착했다.",
+   "tier": "boss",
+   "kidHunt": true,
+   "endText": "의뢰는 끝났다."
   }
  },
  "fixedFights": {
