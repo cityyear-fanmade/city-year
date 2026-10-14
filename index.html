@@ -2969,11 +2969,13 @@ function startUI(E,app){
     return `<div class="triBar"><div class="small dim">하나 협회 · 이번 라운드 한 가지를 고른다 (같은 괘는 연속으로 못 고른다)${used?' · <b class="good">'+esc(CFG.tri.names[C.tri])+' 선택</b>':''}</div><div class="row" style="gap:6px">${Object.keys(CFG.tri.names).map(k=>`<button class="btn quiet${C.tri===k?' primary':''}" style="flex:1;padding:8px 4px" data-a="tri" data-i="${k}" ${off||C.triRound===C.round||C.triPrev===k?'disabled':''}><b>${esc(CFG.tri.names[k])}</b><br><span class="small">${C.triPrev===k&&C.triRound!==C.round?'직전에 고른 괘':esc(TRI_E[k])}</span></button>`).join('')}</div></div>`;
   }
   /* 엔딩: 진로별 최종 자리와 칭호, 사망이면 원인 */
+  /* 내가 세운 날개가 있으면 소속 이름은 그 날개로 보인다 (승진해도 입사한 회사 이름으로 되돌아가지 않는다) */
+  const affName=c=>c.aff?(c.corp&&c.corp.wing?c.corp.wing:c.aff.name):'';
   function careerLine(c){
     if(c.job)return T.jobs[c.job]+(c.title?' · '+esc(c.title):'');
-    if(c.aff&&c.fr)return `${esc(c.aff.name)} · ${esc(c.fr.n)}${c.title?' · '+esc(c.title):''}`;
-    if(c.licensed)return E.rankLabel(c)+(c.aff?' · '+esc(c.aff.name):'');
-    return c.aff?esc(c.aff.name):T.unnamed;
+    if(c.aff&&c.fr)return `${esc(affName(c))} · ${esc(c.fr.n)}${c.title?' · '+esc(c.title):''}`;
+    if(c.licensed)return E.rankLabel(c)+(c.aff?' · '+esc(affName(c)):'');
+    return c.aff?esc(affName(c)):T.unnamed;
   }
   function endLead(c,w){
     if(c.job)return w?'머리의 명령은 끝까지 집행되었다. 당신이 지나간 자리마다 도시는 조금 더 조용해졌다.':'집행자 하나가 돌아오지 않았다. 머리는 다음 이름을 부른다.';
@@ -3016,7 +3018,7 @@ function startUI(E,app){
       ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${c.beaten.map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
       <div class="panel stack"><div class="stat"><div><b>${c.lv}</b><span>레벨</span></div><div><b>${sg(c.stats.atk)}</b><span>공격</span></div><div><b>${sg(c.stats.eva)}</b><span>회피</span></div><div><b>${sg(c.stats.spd)}</b><span>속도</span></div></div>
       ${endDeck(c)}
-      <div class="mono small dim">${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(c.aff.name):c.licensed?' · '+T.licensed:''}</div></div>
+      <div class="mono small dim">${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(affName(c)):c.licensed?' · '+T.licensed:''}</div></div>
       <div class="mono small dim" style="text-align:center">도시의 한 해 · cityyear-fanmade.github.io/city-year · Project Moon 팬메이드</div></div>
       ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 1막 종료</span><p class="small">여기서 끝내도 된다. 제 2막이 시작되면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 제 2막의 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">제 2막 시작</button></div>`:''}
       ${w&&UI.oldEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 엔딩</span><p class="small">여기서 끝내도 된다. 계속 살아가면 무한 모드가 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
