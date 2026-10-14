@@ -1017,7 +1017,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(e.abno)loseMind(ch,d(3)+d(3),t=>mindNote.push(`환상체와 마주쳤다 · ${t} · 2d3`));
     const mt=mindTier(ch),ct=corpType(ch),tm=ct&&ct.tier?ct.tier+ch.corp.up*(ct.tierPer||0):1;
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
-    {const o=assocOf(ch),CH=o&&CFG.charge.orgs[o];if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;P.chargeHit=CH.hit||0}}
+    {const o=assocOf(ch),CH=o&&CFG.charge.orgs[o];if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;P.chargeHit=CH.hit||0;P.spd+=CH.spd||0}}
     const C={ch,P,E,id,penalty,duel:assocOf(ch)===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
     activeC=C;
     if(ch.mindDead&&!ch.ego&&!ch.distForm)mindBreak(C);
@@ -1042,7 +1042,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(kn>0&&P.hp>0){P.hc=(P.hc||0)+CFG.kids.per*kn;let h=0;while(P.hc>=5){P.hc-=5;const x=Math.min(15,P.maxHp-P.hp);P.hp+=x;h+=x}HG(P,h);
         C.kidNote=`${P.name} · 피의 각인된 갈망 · 자식 ${kn}명 · 혈찬 +${CFG.kids.per*kn}${h?` · HP +${h}`:''}`}}
     if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-CFG.breath.decay);
-    P.hand=sample(P.deck,CFG.hand);
+    {const dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id)));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
     if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
     if(P.grantNext){P.hand.push(P.grantNext);P.grantNext=null}
     /* 검지 패시브 지령 수행: 손패 한 칸에 ☆ 지령이 박힌다 */
@@ -1268,6 +1268,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {let red=(B.dr||0)+(B.triCut||0),tw='';const T_=B.wx&&B.wx.twilight;
         if(T_){const r_=B.hp/B.maxHp;if(r_<=T_.from){const x=Math.min(T_.max,T_.base+(T_.from-Math.max(r_,T_.low))/(T_.from-T_.low)*(T_.max-T_.base));red+=x;tw=` 황혼`}}
         if(red>0){const x=Math.floor(dmg*red/100);if(x>0){dmg-=x;note+=`${tw} 피해감소${Math.round(red)}%−${x}`}}}
+      if(c.spdDice&&A.spd>=c.spdDice[0]){const x=rolls.length*c.spdDice[1];dmg+=x;note+=` 속도 ${A.spd} · 주사위 ${rolls.length}개 +${c.spdDice[1]}=+${x}`}
       if(A.spent>0&&c.fixPer){const x=A.spent*c.fixPer;dmg+=x;note+=` 충전 ${A.spent}×${c.fixPer}=고정 +${x}`}
       if(B.shield>0){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}
       B.hp=Math.max(0,B.hp-dmg);
@@ -1368,6 +1369,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       A.hungerUse=0;if(A.hunger>0&&c.t==='atk'){A.hungerUse=A.hunger;L('kw',`${A.name} · 오랜 굶주림 ${A.hunger} 소진 · 이 카드의 첫 적중 피해 +${A.hunger}`);A.hunger=0}
       if(c.hpCost&&A.hp>1){const x=Math.min(c.hpCost,A.hp-1);A.hp-=x;L('kw',`${A.name} · ${c.n} · HP −${x}`)}
       /* 충전: 카드를 낼 때 spend만큼(있는 만큼) 소모하고, 소모한 충전 1당 fixPer의 고정 피해를 적중마다 더한다 */
+      if(c.once&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.onceUsed=C.onceUsed||[]).push(id_)}
       A.spent=0;if(c.spend&&A.charge>0){A.spent=Math.min(A.charge,c.spend);A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · 충전 ${A.spent} 소모 (남은 ${A.charge})`)}
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
       if(c.t==='def'){cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){A.shield=(A.shield||0)+c.shield;L('kw',`${A.name} · ${c.n} · 보호막 +${c.shield} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp;A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}

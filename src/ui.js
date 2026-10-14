@@ -257,6 +257,8 @@ export function startUI(E,app){
     const x=[];
     if(c.adv)x.push('명중 2회 굴림');
     if(c.spend)x.push(`충전 ${c.spend>=99?'전부':c.spend} 소모 · 1당 고정 +${c.fixPer}${c.hits>1?' (적중마다)':''}`);
+    if(c.once)x.push('전투당 1회');
+    if(c.spdDice)x.push(`속도 ${c.spdDice[0]} 이상이면 주사위마다 +${c.spdDice[1]}`);
     if(c.sinkDmg)x.push(`침잠 ${CFG.sink.per}당 +${c.sinkDmg}`);
     if(c.rr)x.push('낮은 피해 재굴림');
     if(c.min)x.push('피해 최소 '+c.min);
