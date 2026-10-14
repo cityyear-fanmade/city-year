@@ -791,6 +791,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(f){
       /* 히든 보스: 목록 위에서부터 조건(과 확률)이 맞는 첫 보스가 불길한 예감(omen)으로 먼저 나타난다.
          맞서면 그 보스와 싸우고(다시 나오지 않음), 돌아서면 평소 조우로 넘어간다(조건이 맞으면 다음에 또 나올 수 있다) */
+      /* 제 2막 무한 모드의 세계의 균열: 조건과 상관없이 아직 이기지 못한 히든 보스 중 무엇이든 나타난다 */
+      if(G.infinite&&G.year>baseEnd&&d(100)<=INF.crack){
+        const pool=(D.hiddenBosses||[]).filter(h=>D.enemies[h.id]&&!G.ch.beaten.includes(h.id)&&!(G.met||[]).includes(h.id));
+        if(pool.length){const h=one(pool),nm=D.enemies[h.id].n;
+          return {type:'omen',boss:h.id,omen:{x:`세계에 균열이 갔다. 갈라진 틈 너머에서 ${nm}의 기척이 느껴진다. 무엇이든 나올 수 있는 시간이다.`,go:'균열 속으로 들어간다',away:'눈을 돌린다',awayT:'균열은 소리 없이 닫혔다. 틈 너머의 것은 다음 기회를 기다린다.'},escape:true,spec:f}}
+      }
       for(const h of D.hiddenBosses||[]){
         if(G.year<(h.from||1)||G.ch.beaten.includes(h.id)||(G.met||[]).includes(h.id)||!meets(G.ch,h.req))continue;
         /* chanceBonus: 조건이 맞으면 확률 가산 (예: 검지 소속은 대행자 +30%) */
