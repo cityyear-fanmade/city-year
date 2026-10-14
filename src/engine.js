@@ -46,7 +46,7 @@ export function validateData(D){
     for(const r of F.ranks)for(const x of r.branch||[r])if(x.card)card(x.card,`손가락 ${n} ${x.n}`);
   }
   for(const [k,C_] of Object.entries(D.careers||{}))for(const [n,rows] of Object.entries(C_.cards||{})){
-    if(!(D.orgs[k]||[]).includes(n))err.push(`진로 ${k}: 전용 카드 소속 "${n}"이 orgs에 없음`);
+    if(!(D.orgs[k]||[]).includes(n.split('/')[0]))err.push(`진로 ${k}: 전용 카드 소속 "${n}"이 orgs에 없음`);
     if(rows.length!==C_.ranks.length+1)err.push(`진로 ${k} ${n}: 전용 카드 줄 수가 직급 수 + 본부(${C_.ranks.length+1})와 다름`);
     for(const ids of rows)for(const id of ids)card(id,`진로 ${k} ${n}`);
   }
@@ -406,7 +406,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(r.money){const m=earn(ch,r.money);ch.money+=m;out.push('승진 보너스 +'+money(m))}
     giveOrgCards(ch,C_,ch.fi,out);
     /* 최고 직급(임원)에 오르면 전용 카드팩의 마지막 줄(4코스트 카드)을 덱에 더한다 */
-    {const rows=C_.finalRow&&C_.cards&&C_.cards[ch.aff.name];
+    {const rows=C_.finalRow&&orgRows(ch,C_);
       if(rows&&ch.fi===C_.ranks.length-1&&ch.cardMoney&&!ch.finalGiven){ch.finalGiven=true;
         const ids=rows[rows.length-1].filter(id=>ch.deck.length<deckMax(ch));
         if(ids.length){ch.deck=ch.deck.concat(ids);out.push(`전용 카드 · ${ids.map(id=>D.cards[id].n).join(', ')} (최고 직급)`)}}}
@@ -414,8 +414,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 협회 전용 카드팩: 입회 때 careers.*.cards[소속 이름]의 카드를 한 번에 받아 덱이 통째로 바뀐다.
      전용 카드팩(cardMoney)이라 이후 카드는 얻을 수 없고(대신 돈), 나중에 히든 책장으로 덱이 바뀌어도 협회 패시브는 소속 기록(assocName)으로 남는다 */
+  /* R사 날개처럼 팀이 있는 소속은 처음 들어갈 때 1dN으로 팀이 정해지고, 그 팀의 전용 책장과 패시브를 쓴다 */
+  const orgRows=(ch,C_)=>C_.cards&&(C_.cards[ch.aff.name+(ch.rteam?'/'+ch.rteam:'')]||C_.cards[ch.aff.name]);
   function giveOrgCards(ch,C_,at,out){
-    const rows=C_.cards&&C_.cards[ch.aff.name];
+    const T_=C_.teams&&C_.teams[ch.aff.name];
+    if(at===0&&T_&&!ch.rteam){const r=d(T_.length);ch.rteam=T_[r-1];out.push(`${ch.aff.name} · ${ch.rteam} 배정 (1d${T_.length} · ${r})`)}
+    const rows=orgRows(ch,C_);
     ch.assocName=ch.aff.name;
     if(at!==0||!rows||ch.deckLocked||ch.cardMoney)return;
     const ids=(C_.finalRow?rows.slice(0,-1):rows).flat();
@@ -1017,7 +1021,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(e.abno)loseMind(ch,d(3)+d(3),t=>mindNote.push(`환상체와 마주쳤다 · ${t} · 2d3`));
     const mt=mindTier(ch),ct=corpType(ch),tm=ct&&ct.tier?ct.tier+ch.corp.up*(ct.tierPer||0):1;
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
-    {const o=assocOf(ch),CH=o&&CFG.charge.orgs[o];if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;P.chargeHit=CH.hit||0;P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd}}
+    {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;P.chargeHit=CH.hit||0;P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}
     const C={ch,P,E,id,penalty,duel:assocOf(ch)===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
     activeC=C;
     if(ch.mindDead&&!ch.ego&&!ch.distForm)mindBreak(C);
@@ -1031,6 +1035,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const {P,E}=C;P.triDmg=0;P.triCut=0;C.tri=null;
     /* 토끼 강화·충전 자극 근력: 체력이 낮거나 충전이 충분하면 라운드 동안 속도가 오른다 */
     if(P.spdBoost){const B_=P.spdBoost;P.spd=P.spdBase+(P.hp<=P.maxHp*B_.low[0]?B_.low[1]:0)+(P.charge>=B_.charge[0]?B_.charge[1]:0)}
+    /* 순록팀·코뿔소팀: 체력을 잃을수록 공격 피해(순록) · 방어(코뿔소)가 오르고, 충전이 충분하면 코뿔소는 받는 피해가 줄어든다 */
+    if(P.pw||P.wl){const T_=P.pw||P.wl,n=Math.min(T_.max,Math.floor((P.maxHp-P.hp)/(P.maxHp*T_.step)));if(n>P.lostN)P.lostN=n;
+      if(P.pw)P.dmgB=P.dmgB0+T_.dmg*P.lostN;if(P.wl)P.defUp=P.defUp0+T_.def*P.lostN}
+    if(P.armor)P.dr=P.dr0+(P.charge>=P.armor.at?P.armor.dr:0);
     if(P.chargeRound){P.charge=Math.min(P.chargeCap,P.charge+P.chargeRound)}
     for(const X of [P,E]){X.r=d(100);X.cu=X.catchup;X.tot=X.r+X.spd+(X.catchup?CFG.catchupBonus:0)+(X.warpLead>=C.round?200:0)}
     for(const [X,Y] of [[P,E],[E,P]]){
@@ -1271,7 +1279,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(T_){const r_=B.hp/B.maxHp;if(r_<=T_.from){const x=Math.min(T_.max,T_.base+(T_.from-Math.max(r_,T_.low))/(T_.from-T_.low)*(T_.max-T_.base));red+=x;tw=` 황혼`}}
         if(red>0){const x=Math.floor(dmg*red/100);if(x>0){dmg-=x;note+=`${tw} 피해감소${Math.round(red)}%−${x}`}}}
       if(c.spdDice&&A.spd>=c.spdDice[0]){const x=rolls.length*c.spdDice[1];dmg+=x;note+=` 속도 ${A.spd} · 주사위 ${rolls.length}개 +${c.spdDice[1]}=+${x}`}
-      if(A.spent>0&&c.fixPer){const x=A.spent*c.fixPer;dmg+=x;note+=` 충전 ${A.spent}×${c.fixPer}=고정 +${x}`}
+      if(A.spent>0&&c.fixPer){const fp=c.fixPer+(A.focusOn?A.focus.fix:0),x=A.spent*fp;dmg+=x;note+=` 충전 ${A.spent}×${fp}=고정 +${x}`}
       if(B.shield>0){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}
       B.hp=Math.max(0,B.hp-dmg);
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
@@ -1372,7 +1380,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.hpCost&&A.hp>1){const x=Math.min(c.hpCost,A.hp-1);A.hp-=x;L('kw',`${A.name} · ${c.n} · HP −${x}`)}
       /* 충전: 카드를 낼 때 spend만큼(있는 만큼) 소모하고, 소모한 충전 1당 fixPer의 고정 피해를 적중마다 더한다 */
       if(c.once&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.onceUsed=C.onceUsed||[]).push(id_)}
-      A.spent=0;if(c.spend&&A.charge>0){A.spent=Math.min(A.charge,c.spend);A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · 충전 ${A.spent} 소모 (남은 ${A.charge})`)}
+      A.focusOn=!!(A.focus&&A.charge>=A.focus.at);A.spent=0;if(c.spend&&A.charge>0){A.spent=Math.min(A.charge,c.spend);A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · 충전 ${A.spent} 소모 (남은 ${A.charge})`)}
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
       if(c.t==='def'){cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){A.shield=(A.shield||0)+c.shield;L('kw',`${A.name} · ${c.n} · 보호막 +${c.shield} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp;A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
       if(P.hp<=0||E.hp<=0)return;
