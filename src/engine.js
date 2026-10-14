@@ -768,6 +768,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const id=mc.corp.chain.shift();mc.corp.trial=id;(G.met=G.met||[]).push(id);
       return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
     }
+    /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
+    if(G.infinite&&!G.ch.oldEnd&&age(G)>=CFG.oldAge){G.ch.oldEnd=true;return {type:'end',win:true,old:true}}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
@@ -840,7 +842,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const checkDc=(ch,check)=>check.dc==='exam'?examDc(ch):check.dc==='color'?CFG.colorDc:check.dc==='top'?CFG.topDc:check.dc;
   /* pure: 능력치·판정 보정 없이 주사위만 (사무소 개설) */
   /* 약지 예술적 감각: 선택지 판정 주사위 최대치 +5×스택 (1d100 → 1d105 …, 보정치가 아님) */
-  const checkDie=ch=>100+(ch.artSense||0)*CFG.artSense.die;
+  const checkDie=ch=>100+(ch.artSense||0)*CFG.artSense.die+(ch.innate==='miracle'?Math.floor((ch.year||0)/CFG.innate.miracleEvery)*CFG.innate.miracleDie:0);
   function checkMod(ch,check){if(check.pure)return 0;return (check.s?ch.stats[check.s]:0)+ch.stats.check+pathMod(ch,check)+(check.dc==='color'?ch.colorBonus||0:0)}
   /* 선택: 판정이 있으면 1d100 + 능력치 + 판정 보정 ≥ 난이도 */
   function choose(G,ev,i){
