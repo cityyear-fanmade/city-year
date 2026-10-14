@@ -1168,6 +1168,8 @@ export function startUI(E,app){
   /* 한 해의 시작 화면. stock이 있으면(불러오기) 공방 진열을 그대로 쓴다 */
   function showYear(st,stock,shopDone){
     UI.fight=null;UI.pending=null;UI.curSt=st;UI.oldEnd=false;
+    /* 100살 히든 엔딩은 한 번 본 뒤로는 다시 뜨지 않는다 (이미 본 기록이 있으면 그냥 이어서 간다) */
+    if(st.type==='end'&&st.old&&loadRec().endings.includes('old')){nextYear();return}
     if(st.type==='end'){UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.oldEnd=!!st.old;UI.death=st.cause?{year:G.year,foe:st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;recordEnd();UI.screen='end';render();return}
     UI.omen=null;UI.showIncome=G.year>1;
     if(st.type==='omen')UI.omen=st;
