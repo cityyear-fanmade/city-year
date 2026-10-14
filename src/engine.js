@@ -977,7 +977,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      상대보다 높으면 빛 +1, 격차 gapFirst 이상이면 첫 공격 명중 +firstHit. 동점이면 둘 다 보너스 없음 */
   function newRound(C){
     C.round++;
-    const {P,E}=C;
+    const {P,E}=C;P.triDmg=0;P.triCut=0;C.tri=null;
     for(const X of [P,E]){X.r=d(100);X.cu=X.catchup;X.tot=X.r+X.spd+(X.catchup?CFG.catchupBonus:0)+(X.warpLead>=C.round?200:0)}
     for(const [X,Y] of [[P,E],[E,P]]){
       X.lead=X.tot>Y.tot;X.fsOn=X.fs=X.tot-Y.tot>=CFG.gapFirst;X.catchup=X.tot<Y.tot;X.advUsed=false;
@@ -1029,7 +1029,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 자동 전투용 카드 선택: 빛 안에서 점수 합이 가장 큰 조합(손패 4장이라 모든 조합을 본다).
      점수 = 기대 피해(타수 × (주사위 × 3.5 + 고정값)) + 키워드 스택 × 2. 방어 카드는 HP가 35% 미만일 때만 높게 친다.
      반환: 손패 번호 배열 (방어 → 점수 높은 순) */
-  function autoPick(C){
+  /* 하나 협회 패시브: 라운드마다 한 번 고른다 (카드를 고르기 전에) */
+  const triOk=C=>!!(C&&C.ch&&C.ch.aff&&C.ch.aff.name===CFG.tri.org&&!C.over&&!C.P.distorted);
+  function setTri(C,k){
+    const T_=CFG.tri,P=C.P;
+    if(!triOk(C)||C.triRound===C.round||!T_.names[k])return false;
+    C.triRound=C.round;C.tri=k;let t;
+    if(k==='gun'){P.triDmg=T_.gun;t=`공격 피해 +${T_.gun}`}
+    else if(k==='gon'){P.triCut=T_.gon;t=`받는 피해 −${T_.gon}%`}
+    else if(k==='gam'){P.light+=T_.gam;t=`빛 +${T_.gam}`}
+    else{const h=Math.min(T_.ri.heal,P.maxHp-P.hp);P.hp+=h;C.ch.hp=P.hp;const b=Math.min(T_.ri.breath,CFG.breath.cap-P.breath);P.breath+=Math.max(0,b);t=`HP +${h} · ${D.keywords.breath.n} +${Math.max(0,b)}`}
+    C.triNote=`${P.name} · ${T_.names[k]} · ${t}`;return true;
+  }
+  /* 자동 전투: 다치면 이, 아니면 건 */
+  function autoTri(C){if(triOk(C)&&C.triRound!==C.round)setTri(C,C.P.hp<=C.P.maxHp*0.6?'ri':'gun')}
+  function autoPick(C){autoTri(C);
     const P=C.P,low=P.hp/P.maxHp<0.35;
     const bad=P.bleed+P.rupture+(P.burn||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
       :c.hits*(c.dice*((c.die||6)+1)/2+c.b)+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05;
@@ -1165,6 +1179,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
+      if(A.triDmg){dmg+=A.triDmg;note+=` 건+${A.triDmg}`}
       if(A.augHunt&&B.aug){dmg+=A.augHunt;note+=` 의체 심판+${A.augHunt}`}
       /* 조율자 전용 키워드 · 봉인 각인: 해제가 각인 1당 피해 +4로 터뜨린다 */
       if(c.unseal&&(B.sealMark||0)>0){const x=B.sealMark*c.unseal;dmg+=x;note+=` 봉인 해제 ${B.sealMark}×${c.unseal}+${x}`;B.sealMark=0}
@@ -1189,7 +1204,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.presc>0){const r=Math.floor(dmg*B.presc*0.05);if(r>0){dmg-=r;note+=` 지령 수행−${r}`}}
       if(B.drRound===C.round){const r=dmg-Math.floor(dmg*0.4);dmg-=r;note+=` 공명−${r}`}
       /* 피해 감소(%): 영구 효과 + 황혼 키워드 (체력 from 이하부터 base%, low 이하에서 max%까지 선형으로 오른다) */
-      {let red=B.dr||0,tw='';const T_=B.wx&&B.wx.twilight;
+      {let red=(B.dr||0)+(B.triCut||0),tw='';const T_=B.wx&&B.wx.twilight;
         if(T_){const r_=B.hp/B.maxHp;if(r_<=T_.from){const x=Math.min(T_.max,T_.base+(T_.from-Math.max(r_,T_.low))/(T_.from-T_.low)*(T_.max-T_.base));red+=x;tw=` 황혼`}}
         if(red>0){const x=Math.floor(dmg*red/100);if(x>0){dmg-=x;note+=`${tw} 피해감소${Math.round(red)}%−${x}`}}}
       if(B.shield>0){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}
@@ -1256,6 +1271,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     L('head',`— ${C.round}라운드 · ${C.order[0].name} 선공 —`);
     if(C.round===1&&C.mindNote&&C.mindNote.length)C.mindNote.forEach(t=>L('kw',t));
     if(C.jobNote)L('kw',C.jobNote);
+    if(C.triNote){L('kw',C.triNote);C.triNote=null}
     if(C.traitNote)L('kw',C.traitNote);
     /* 검지 지령 수행: ☆ 칸의 카드를 내면 스택 +1 (최대 5) · 호흡 +4 · 받는 피해 스택당 −5% */
     if(P.index&&P.starId&&pp.includes(D.cards[P.starId])){P.presc=Math.min(5,(P.presc||0)+1);P.breath=Math.min(CFG.breath.cap,P.breath+4);L('kw',`${P.name} · 지령 수행 ${P.presc}/5 · 호흡 +4 · 받는 피해 −${P.presc*5}%`)}
@@ -1306,6 +1322,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const C=mkCombat(ch,id,true);let g=0;
     while(!C.over&&g++<80){
       let pp,ep;
+      autoTri(C);
       pp=autoPlay(C.P.hand.filter((_,i)=>i!==C.P.locked),C.P.light);ep=C.ePlan;
       resolveRound(C,pp,ep);
       if(!C.over)newRound(C);
@@ -1342,5 +1359,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    setTri,triOk,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

@@ -400,3 +400,5 @@ button.chip{cursor:pointer;background:transparent}
 .moneybar{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;margin:0 0 4px;background:var(--bg,#0b0e14);border:1px solid var(--gold);border-radius:8px;font:500 13px/1 var(--mono);color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.45)}
 .moneybar b{font-size:15px;letter-spacing:.02em}
 html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data-skin="ruina"] .moneybar{border-radius:0}
+.triBar{display:grid;gap:6px;padding:8px 10px;border:1px solid var(--gold);border-radius:5px;background:color-mix(in srgb,var(--gold) 8%,transparent)}
+.triBar .btn{line-height:1.3}

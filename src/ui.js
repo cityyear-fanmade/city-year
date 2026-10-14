@@ -935,11 +935,19 @@ export function startUI(E,app){
     }).join('');
     return `${M?duo({E:X,P})+vOrder(true):entHtml('E',X,X)+arenaHtml(false)+entHtml('P',P,P)+vOrder()+log}
       ${P.index&&P.starId?`<div class="prescBar"><b>📜 이번 라운드 지령</b> · <b>${esc(D.cards[P.starId].n)}</b>을(를) 내라 <span class="small">→ 지령 수행 +1 (지금 ${P.presc||0}/5) · 호흡 +4 · 받는 피해 −5%씩</span>${UI.sel.some(j=>j===P.starSlot)?' <b class="good">✔ 지령 카드를 골랐다</b>':''}</div>`:''}
+      ${triBar(P)}
       <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">${P.distorted?'빛 없음':`빛 ${left}/${P.light}`}</span></div>
       <div class="hand">${cards}</div>
       ${FIGHT==='auto'?`<div class="check">${UI.paused?'일시정지 · 다음 라운드를 기다린다':'자동 전투 중 · 카드를 알아서 고르고 진행한다'}</div><div class="row" style="gap:8px"><button class="btn${UI.paused?' primary':''}" style="flex:1" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button><button class="btn quiet" style="flex:1" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button></div>`
         :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button><button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`}
       ${M?`${log}<details class="logbox"><summary>설정 (테마 · 연출 · 전투 진행)</summary><div class="stack" style="margin-top:10px">${vSettings()}</div></details>`:vSettings()}`;
+  }
+  /* 하나 협회 패시브: 카드 위에서 매 라운드 한 가지를 고른다 */
+  const TRI_E={gun:'공격 피해 +'+CFG.tri.gun,gon:'받는 피해 −'+CFG.tri.gon+'%',gam:'빛 +'+CFG.tri.gam,ri:'HP +'+CFG.tri.ri.heal+' · 호흡 +'+CFG.tri.ri.breath};
+  function triBar(P){
+    if(!E.triOk(C))return '';
+    const used=C.triRound===C.round&&!PLAYING,off=PLAYING||FIGHT==='auto';
+    return `<div class="triBar"><div class="small dim">하나 협회 · 이번 라운드 한 가지를 고른다${used?' · <b class="good">'+esc(CFG.tri.names[C.tri])+' 선택</b>':''}</div><div class="row" style="gap:6px">${Object.keys(CFG.tri.names).map(k=>`<button class="btn quiet${C.tri===k?' primary':''}" style="flex:1;padding:8px 4px" data-a="tri" data-i="${k}" ${off||C.triRound===C.round?'disabled':''}><b>${esc(CFG.tri.names[k])}</b><br><span class="small">${esc(TRI_E[k])}</span></button>`).join('')}</div></div>`;
   }
   /* 엔딩: 진로별 최종 자리와 칭호, 사망이면 원인 */
   function careerLine(c){
@@ -1339,6 +1347,7 @@ export function startUI(E,app){
       if(MODE==='off'){if(!C.over)E.newRound(C);render();return}
       C.logBefore=lb;PLAYING=true;render();if(isMobile())window.scrollTo(0,0);runPlayback(C.evs);
     },
+    tri(k){if(E.setTri(C,k))render()},
     skip(){SKIP=true;if(wake)wake();if(tapWake)tapWake()},
     tap(){if(tapWake)tapWake()},
     fin(){
