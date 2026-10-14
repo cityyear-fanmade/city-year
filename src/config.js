@@ -123,6 +123,9 @@ export const CFG = {
     hunt: {gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
       spouse: {office: 0, assoc: 1, wing: 1, finger: 2, hyeolgwi: 3, east: 1}, spouseYears: 3, spouseJob: {office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', hyeolgwi: 'fixer', east: 'fixer'}}},
+  /* 소지(표식)의 도: 표식이 생긴 뒤 every년차마다 인·의·예·지 사건이 차례로 온다. 1d100이 dc 이상이면 키워드를 얻고, 4개를 모으면 이름을 붙인 성도(전용 무기)를 얻는다.
+     성도 수치: 각 항목을 [최소, 최대] 범위에서 굴린다 (atk 공격, eva 회피, dmgB 추가 피해, hit 명중) */
+  pinky: {every: 5, dc: 40, seongdo: {atk: [1, 10], eva: [1, 5], dmgB: [0, 2], hit: [5, 15]}},
   /* 충전(자신에게 쌓는 스택): 카드의 spend만큼 소모해 소모한 1당 fixPer의 고정 피해(피해 감소 무시, 보호막은 깎임)를 적중마다 더한다. 라운드가 바뀌어도 줄지 않고, 맞으면 loss만큼 준다.
      소속별 규칙(orgs): cap 상한, round 라운드 시작마다 +n, hit 적중마다 +n, loss 피격 시 −n */
   /* 침잠(상대에게 쌓는 스택): per스택마다 한 단계, 단계마다 침잠 걸린 쪽의 명중 −hit · 주는 피해 −dmg. 라운드마다 1 감소 */
