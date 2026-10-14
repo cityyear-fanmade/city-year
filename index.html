@@ -2007,7 +2007,9 @@ function startUI(E,app){
   const kwc=k=>KWC[k]||'var(--gold)';
 
   /* ===== 설정 저장 (연출 속도, 배경 테마) ===== */
-  const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+  /* 저장소가 막힌 브라우저(인앱 브라우저·시크릿 모드 등)에서도 이번 접속 동안은 값이 유지되도록 메모리에 같이 둔다 */
+  const mem={};
+  const store={get(k){try{const v=localStorage.getItem(k);if(v!==null)return v}catch(e){}return k in mem?mem[k]:null},set(k,v){mem[k]=v;try{localStorage.setItem(k,v)}catch(e){}},del(k){delete mem[k];try{localStorage.removeItem(k)}catch(e){}}};
   /* 이어하기: 해가 바뀔 때마다 판 전체를 저장한다 */
   const SAVE='cityYearSave';
   const HARDK='cityYearHard',DIFFK='cityYearDiff';
