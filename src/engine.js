@@ -469,6 +469,19 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function rewardCard(ch){const pool=D.rewards.filter(id=>!ownsCard(ch,id));return pool.length?one(pool):null}
   /* 사건·성장·보상 효과를 적용하고 화면용 칩을 돌려준다 */
+  /* 소속에 들어간다: 소속·직급 기록을 새로 쓰고 첫 직급의 보정을 받는다 */
+  function joinAff(ch,J,name,chips){
+    ch.aff={type:J.type,name};chips.push((T.affTypes[J.type]||'소속')+' · '+name);
+    if(isN(ch)&&ch.gear.aug){chips.push(`의체를 버린다 · ${ch.gear.aug.n} → 보관함`);unequip(ch,'aug')}
+    ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0;
+    if(noFixer(ch)&&ch.licensed){ch.licensed=false;ch.title=null;chips.push(`해결사 자격 반납 · ${T.affTypes[ch.aff.type]}은(는) 해결사를 겸할 수 없다`)}
+    if(isFinger(ch))chips.push(...fingerStep(ch));
+    else if(CR[ch.aff.type]&&CR[ch.aff.type].ranks)chips.push(...careerStep(ch));
+  }
+  function chooseFinger(ch,name){
+    if(!ch.fingerPick||!D.orgs.finger.includes(name))return null;
+    const chips=[];ch.fingerPick=false;joinAff(ch,{type:'finger',from:'finger'},name,chips);return chips;
+  }
   function applyFx(ch,fx){
     const s=ch.stats,chips=[];
     if(fx.maxHp){s.maxHp+=fx.maxHp;ch.hp+=fx.maxHp;chips.push('최대 HP '+sg(fx.maxHp))}
@@ -484,13 +497,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
     for(const f of [].concat(fx.flag||[]))ch.flags[f]=(ch.flags[f]||0)+1;
     if(fx.join){
-      const name=fx.join.name||(fx.join.from==='finger'&&ch.thumbBias&&d(100)<=ch.thumbBias?'엄지':one(D.orgs[fx.join.from]));
-      ch.aff={type:fx.join.type,name};chips.push((T.affTypes[fx.join.type]||'소속')+' · '+name);
-      if(isN(ch)&&ch.gear.aug){chips.push(`의체를 버린다 · ${ch.gear.aug.n} → 보관함`);unequip(ch,'aug')}
-      ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0;
-      if(noFixer(ch)&&ch.licensed){ch.licensed=false;ch.title=null;chips.push(`해결사 자격 반납 · ${T.affTypes[ch.aff.type]}은(는) 해결사를 겸할 수 없다`)}
-      if(isFinger(ch))chips.push(...fingerStep(ch));
-      else if(CR[ch.aff.type]&&CR[ch.aff.type].ranks)chips.push(...careerStep(ch));
+      /* 손가락 가입: 소지를 뺀 네 손가락 중 하나를 직접 고른다 (고르지 않고 넘어오면 무작위 · 엄지 특화 출신은 엄지 확률 보정) */
+      if(fx.join.from==='finger'&&!fx.join.name){ch.fingerPick=true;chips.push('손가락 · 어느 손가락에 설지 고른다')}
+      else joinAff(ch,fx.join,fx.join.name||one(D.orgs[fx.join.from]),chips);
     }
     /* 사건으로 승급 (해결사만, 최고 급수 미만일 때) */
     if(fx.promote)addPts(ch,CFG.promo.gain.mid,chips);
@@ -903,6 +912,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.wingPick)setWing(mc,'새벽',true);
     if(mc.bondPick)setBondName(mc,'동반자',true);
     if(mc.seongPick)setSeongdo(mc,'무명',true);
+    if(mc.fingerPick)chooseFinger(mc,mc.thumbBias&&d(100)<=mc.thumbBias?'엄지':one(D.orgs.finger));
     if(mc.pillPick)setPill(mc,'atk');
     if(mc.namePend)mc.namePend=null;
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
@@ -1632,5 +1642,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,chooseFinger,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
