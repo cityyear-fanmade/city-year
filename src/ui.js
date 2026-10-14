@@ -803,7 +803,11 @@ export function startUI(E,app){
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
+<<<<<<< HEAD
       ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.wingPick?vWingPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+=======
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+>>>>>>> 7ccf14a (날개·협회 입사 때 직접 고르기, K·J·G사 날개는 책장 대신 보정치 추가)
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
@@ -871,6 +875,50 @@ export function startUI(E,app){
       <span class="small bad">${UI.nameErr||''}</span>
       <button class="btn primary" data-a="nameset">이 이름으로 정한다</button></div>`;
   }
+<<<<<<< HEAD
+=======
+  /* 인연(동반자): 이름 정하기와 가족 탭 */
+  function vBondPick(){
+    const b=G.ch.bond,R=E.bondData(G.ch);
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">인연 · ${esc(R.who)}</span>
+      <p class="small">그 사람의 이름을 정한다.</p>
+      <div class="row"><span class="small">이름</span><input id="bondname" maxlength="12" value="${esc(UI.bondName||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
+      <span class="small bad">${UI.bondErr||''}</span>
+      <button class="btn primary" data-a="bondset">이 이름으로 부른다</button></div>`;
+  }
+  function vFamily(){
+    const ch=G.ch,b=ch.bond,BDc=CFG.bond;if(!b)return '<p class="small dim">가족 없음</p>';
+    const R=E.bondData(ch)||{who:''},st=b.st;
+    const head=st==='married'?(ch.distForm?'당신을 알아보지 못한다':'배우자'):st==='lost'?'배우자의 죽음':st==='left'?'떠났다':`인연 · ${R.who}`;
+    const rows=[];
+    if(R.look)rows.push(['특징',R.look]);
+    if(st==='married'){
+      rows.push(['결혼한 해',b.since+'년차']);
+      rows.push(['배우자 등급',`${9-E.spouseLevel(b,G.year)}급 (결혼 ${BDc.hunt.spouseYears}년마다 한 단계)`]);
+      rows.push(['보정',`최대 HP +${BDc.marry.maxHp} · 최대 정신력 +${BDc.marry.mindMax} · 사건 판정 +${BDc.marry.check}`]);
+      rows.push(['해마다',`정신력 +${BDc.yearMind}`]);
+      rows.push(['가족의 목소리',b.saved?'이미 한 번 붙잡아 주었다':`정신력이 1이 되면 한 번 붙잡아 준다 (정신력 ${BDc.saveMind})`]);
+      if(ch.distForm)rows.push(['뒤틀린 뒤','이름을 불러도 대답하지 않는다']);
+    }else if(st==='met'){
+      rows.push(['단계',`${Math.min(b.step,BDc.steps)}/${BDc.steps}${b.step>=BDc.steps?' · 다음은 청혼':''}`]);
+      rows.push(['인연 점수',String(b.love||0)]);
+      rows.push(['청혼 기회',`${BDc.tries-(b.tries||0)}/${BDc.tries}`]);
+    }else rows.push(['대가',`최대 정신력 −${st==='left'?BDc.leaveMind:BDc.lossMind} (영구)`]);
+    for(const k of b.kids||[]){const a=Math.max(0,G.year-k.born),J=(D.bond.kidJobs.find(j=>j.k===k.job)||{}).l;rows.push([`아이 · ${k.n}`,k.dead?'토벌 의뢰에서 쓰러졌다':`${a}세${a>=BDc.kid.adult?' · '+J:' · 자라는 중'}`])}
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">가족 · 인연</span><div class="row between"><b class="serif" style="font-size:20px">${esc(b.name)}</b><span class="chip" style="${st==='married'?'color:var(--gold);border-color:var(--gold)':''}">${head}</span></div>
+      ${rows.map(([k,v])=>`<div class="row between small"><span class="dim">${k}</span><b class="mono" style="text-align:right">${esc(v)}</b></div>`).join('')}</div>`;
+  }
+  function orgBrief(t,n){
+    const R=((D.careers[t]||{}).cards||{});const keys=Object.keys(R).filter(k=>k.split('/')[0]===n);
+    return keys.length?'전용 책장 있음'+(t==='wing'&&n==='R사 날개'?' · 입사 때 팀 결정 (토끼·순록·코뿔소)':''):(CFG.freeWing.names.includes(n)?`전용 책장 없음 · 보정치 증가 (최대 HP +${CFG.freeWing.fx.maxHp}, 공격·회피·속도 +${CFG.freeWing.fx.atk}, 사건 판정 +${CFG.freeWing.fx.check})`:'')
+  }
+  function vOrgPick(){
+    const t=G.ch.orgPick;
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">${t==='wing'?'날개 입사':'협회 입회'}</span>
+      <p class="small">${t==='wing'?'어느 날개에 들어갈지 고른다.':'어느 협회에 들어갈지 고른다.'}</p>
+      ${D.orgs[t].map(n=>`<button class="btn" data-a="orgset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small dim">${esc(orgBrief(t,n))}</span></button>`).join('')}</div>`;
+  }
+>>>>>>> 7ccf14a (날개·협회 입사 때 직접 고르기, K·J·G사 날개는 책장 대신 보정치 추가)
   function vFingerPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">손가락 가입</span>
       <p class="small">어느 손가락에 설지 고른다. 정하면 그 손가락의 서열표를 따른다.</p>
@@ -1283,6 +1331,19 @@ export function startUI(E,app){
       E.setSing(G.ch,ty,n);UI.singErr='';UI.singName='';UI.singType=null;resave();
       UI.res.chips=[...UI.res.chips,`특이점 · ${n} (${CFG.corp.types[ty].n})`,...E.singChips(G.ch)];render();
     },
+<<<<<<< HEAD
+=======
+    bondset(){
+      const n=(($('bondname')||{}).value||'').trim(),err=E.bondNameErr(n);
+      if(err){UI.bondErr=err;UI.bondName=n;render();return}
+      E.setBondName(G.ch,n);UI.bondErr='';UI.bondName='';resave();
+      UI.res.chips=[...UI.res.chips,`인연 · ${n}`];render();
+    },
+    orgset(i){
+      const chips=E.chooseOrg(G.ch,i);if(!chips)return;
+      resave();UI.res.chips=[...UI.res.chips,...chips];render();
+    },
+>>>>>>> 7ccf14a (날개·협회 입사 때 직접 고르기, K·J·G사 날개는 책장 대신 보정치 추가)
     fingerset(i){
       const chips=E.chooseFinger(G.ch,i);if(!chips)return;
       resave();UI.res.chips=[...UI.res.chips,...chips];render();
@@ -1473,7 +1534,13 @@ export function startUI(E,app){
     testFight(id,hp){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;render()},
     /* 자동 테스트용: 특색 심사 통과 직후 화면 */
     testColor(){if(!G)return;G.ch.licensed=true;G.ch.rank=1;const r=E.applyFx(G.ch,{colorPass:true});UI.res={t:'심사 통과',chips:r.chips,roll:null};UI.screen='result';render()},
+<<<<<<< HEAD
     testPick(k){if(!G)return;G.ch[k]=true;if(k==='singPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0}}if(k==='wingPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0,n:'ゼロ'}}if(k==='titlePick'){G.ch.licensed=true;G.ch.rank=5;G.ch.title=D.colors[G.ch.ci].adj+' 임시'}if(k==='officePick'){G.ch.licensed=true;G.ch.rank=5}UI.res={t:'이름 시험',chips:[]};UI.screen='result';render()},
+=======
+    testBond(k,kids,dist){if(!G)return;const c=G.ch;c.aff=c.aff||{type:'office',name:'윤 사무소'};
+      c.bond={st:k,route:c.aff.type==='office'?'office':c.aff.type,name:k==='pick'?'':'하나',step:2,tries:1,love:2,since:G.year,saved:false};if(k==='pick')c.bondPick=true;if(kids)c.bond.kids=[{n:'하늘',born:G.year-23,job:'assoc',told:true},{n:'이슬',born:G.year-4,job:'fixer',told:false}];if(dist)c.distForm={n:'이름 없는 뒤틀림'};UI.res={t:'인연 시험',chips:[]};UI.screen='result';render()},
+    testPick(k){if(!G)return;G.ch[k]=k==='orgPick'?'wing':true;if(k==='singPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0}}if(k==='wingPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0,n:'ゼロ'}}if(k==='titlePick'){G.ch.licensed=true;G.ch.rank=5;G.ch.title=D.colors[G.ch.ci].adj+' 임시'}if(k==='officePick'){G.ch.licensed=true;G.ch.rank=5}UI.res={t:'이름 시험',chips:[]};UI.screen='result';render()},
+>>>>>>> 7ccf14a (날개·협회 입사 때 직접 고르기, K·J·G사 날개는 책장 대신 보정치 추가)
     testMoney(n){if(G){G.ch.money=n;render()}},
     testShop(){if(!G)return;G.ch.money=5000;UI.stock=Object.keys(D.special).slice(0,2);UI.cardBox=true;UI.aid=true;UI.swapped=null;UI.tuneMsg=null;UI.bought=null;UI.deleted=null;UI.sold=null;UI.rested=null;UI.broker=null;UI.screen='shop';render()},
     /* 6시즌 자동 테스트: 사무소 개설 화면, 사건 바로 보기, 사무소 알선 */
