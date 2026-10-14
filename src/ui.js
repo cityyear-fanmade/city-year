@@ -291,13 +291,15 @@ export function startUI(E,app){
     return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor} · 빛 +${CFG.mind.light}(처음 ${CFG.mind.lightRounds}라운드)`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}${egoGrowTag(ch)}${ch.innate?` · <span style="color:var(--gold)">${esc(innateName(ch))}</span>`:''}${E.cardGrade(ch.year,ch).n?` · 카드 등급 <b style="color:var(--gold)">${E.cardGrade(ch.year,ch).n}</b>`:''}</span></div>
       <div class="bar" style="height:4px"><span style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></span></div>`;
   }
+  /* 손가락별 지속 패시브 한 줄 (HUD와 가입 선택 화면이 같이 쓴다) */
+  const fingerPassive=(af,fi)=>af==='엄지'?`탄환 · 전투마다 ${CFG.thumbAmmo.base+CFG.thumbAmmo.per*fi}발 (서열마다 +${CFG.thumbAmmo.per}) · 공격마다 1발 소모 · 상대에게 예의를 지킬 것 1 (상대 명중 −1×스택)`
+    :af==='검지'?'지령 수행 · ☆ 칸 카드를 내면 1(최대 5) · 호흡 +4 · 받는 피해 −5%×스택'
+    :af==='중지'?'되갚음 · 맞을 때마다 1(최대 5) · 스택 1당 받는 피해 −2 · 다음 적중에서 스택을 모두 써 피해 +스택 · 소모한 스택 1당 HP 1 회복'
+    :af==='약지'?`작품 · 적중할 때마다 +1(전투 한정, 최대 ${CFG.ring.max}) · 스택당 명중 +${CFG.ring.hit} · 최대면 다음 적중 피해 ×${CFG.ring.finish} 후 ${CFG.ring.after}로`:null;
   /* 지속형 패시브: 손가락·히든 출생 등 늘 켜져 있는 효과를 HUD에 한 줄로 */
   function vPassive(ch){
     const P=[];const af=ch.aff&&ch.aff.name;
-    if(af==='엄지')P.push(`탄환 · 전투마다 ${CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0)}발 (서열마다 +${CFG.thumbAmmo.per}) · 공격마다 1발 소모 · 상대에게 예의를 지킬 것 1 (상대 명중 −1×스택)`);
-    if(af==='중지')P.push('되갚음 · 맞을 때마다 1(최대 5) · 스택 1당 받는 피해 −2 · 다음 적중에서 스택을 모두 써 피해 +스택 · 소모한 스택 1당 HP 1 회복');
-    if(af==='검지')P.push('지령 수행 · ☆ 칸 카드를 내면 1(최대 5) · 호흡 +4 · 받는 피해 −5%×스택');
-    if(af==='약지')P.push(`작품 · 적중할 때마다 +1(전투 한정, 최대 ${CFG.ring.max}) · 스택당 명중 +${CFG.ring.hit} · 최대면 다음 적중 피해 ×${CFG.ring.finish} 후 ${CFG.ring.after}로`);
+    {const t=fingerPassive(af,ch.fi||0);if(t)P.push(t)}
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 '+CFG.artSense.every+'번 쓰러뜨릴 때마다 +1 (영구)':''}`);
     if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];
       P.push(`특이점 ${c.n} (${t.n}) · ${t.e.split(' (')[0]} · ${c.st==='dev'?`개발 ${c.stack}/${CFG.corp.devMax}`:`강화 ${c.up}/${CFG.corp.upMax} · 금기 실험 ${c.forb}/${CFG.corp.forbMax}`}`)}
@@ -870,7 +872,7 @@ export function startUI(E,app){
   function vFingerPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">손가락 가입</span>
       <p class="small">어느 손가락에 설지 고른다. 정하면 그 손가락의 서열표를 따른다.</p>
-      ${D.orgs.finger.map(n=>{const F=D.fingers[n];return `<button class="btn" data-a="fingerset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small">${esc(F.trait)}</span><span class="mono small" style="color:var(--gold)">${F.ranks.map(r=>esc(r.n)).join(' → ')}</span>${F.passive?`<span class="small dim">${esc(F.passive.n)} · ${esc(F.passive.e)}</span>`:''}</button>`}).join('')}</div>`;
+      ${D.orgs.finger.map(n=>{const F=D.fingers[n];return `<button class="btn" data-a="fingerset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small">${esc(F.trait)}</span><span class="mono small" style="color:var(--gold)">${F.ranks.map(r=>esc(r.n||(r.branch||[]).map(b=>b.n).join(' / '))).join(' → ')}</span><span class="small dim">${esc(fingerPassive(n,0)||'')}</span></button>`}).join('')}</div>`;
   }
   function vSeongPick(){
     const N=D.pinky.named;
