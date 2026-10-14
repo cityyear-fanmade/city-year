@@ -947,7 +947,7 @@ export function startUI(E,app){
   function triBar(P){
     if(!E.triOk(C))return '';
     const used=C.triRound===C.round&&!PLAYING,off=PLAYING||FIGHT==='auto';
-    return `<div class="triBar"><div class="small dim">하나 협회 · 이번 라운드 한 가지를 고른다${used?' · <b class="good">'+esc(CFG.tri.names[C.tri])+' 선택</b>':''}</div><div class="row" style="gap:6px">${Object.keys(CFG.tri.names).map(k=>`<button class="btn quiet${C.tri===k?' primary':''}" style="flex:1;padding:8px 4px" data-a="tri" data-i="${k}" ${off||C.triRound===C.round?'disabled':''}><b>${esc(CFG.tri.names[k])}</b><br><span class="small">${esc(TRI_E[k])}</span></button>`).join('')}</div></div>`;
+    return `<div class="triBar"><div class="small dim">하나 협회 · 이번 라운드 한 가지를 고른다 (같은 괘는 연속으로 못 고른다)${used?' · <b class="good">'+esc(CFG.tri.names[C.tri])+' 선택</b>':''}</div><div class="row" style="gap:6px">${Object.keys(CFG.tri.names).map(k=>`<button class="btn quiet${C.tri===k?' primary':''}" style="flex:1;padding:8px 4px" data-a="tri" data-i="${k}" ${off||C.triRound===C.round||C.triPrev===k?'disabled':''}><b>${esc(CFG.tri.names[k])}</b><br><span class="small">${C.triPrev===k&&C.triRound!==C.round?'직전에 고른 괘':esc(TRI_E[k])}</span></button>`).join('')}</div></div>`;
   }
   /* 엔딩: 진로별 최종 자리와 칭호, 사망이면 원인 */
   function careerLine(c){

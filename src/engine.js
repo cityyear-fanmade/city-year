@@ -1033,8 +1033,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const triOk=C=>!!(C&&C.ch&&C.ch.aff&&C.ch.aff.name===CFG.tri.org&&!C.over&&!C.P.distorted);
   function setTri(C,k){
     const T_=CFG.tri,P=C.P;
-    if(!triOk(C)||C.triRound===C.round||!T_.names[k])return false;
-    C.triRound=C.round;C.tri=k;let t;
+    if(!triOk(C)||C.triRound===C.round||!T_.names[k]||C.triPrev===k)return false;
+    C.triRound=C.round;C.tri=k;C.triPrev=k;let t;
     if(k==='gun'){P.triDmg=T_.gun;t=`공격 피해 +${T_.gun}`}
     else if(k==='gon'){P.triCut=T_.gon;t=`받는 피해 −${T_.gon}%`}
     else if(k==='gam'){P.light+=T_.gam;t=`빛 +${T_.gam}`}
@@ -1042,7 +1042,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     C.triNote=`${P.name} · ${T_.names[k]} · ${t}`;return true;
   }
   /* 자동 전투: 다치면 이, 아니면 건 */
-  function autoTri(C){if(triOk(C)&&C.triRound!==C.round)setTri(C,C.P.hp<=C.P.maxHp*0.6?'ri':'gun')}
+  function autoTri(C){if(!triOk(C)||C.triRound===C.round)return;const want=C.P.hp<=C.P.maxHp*0.6?['ri','gon','gun']:['gun','gon','ri'];setTri(C,want.find(k=>k!==C.triPrev))}
   function autoPick(C){autoTri(C);
     const P=C.P,low=P.hp/P.maxHp<0.35;
     const bad=P.bleed+P.rupture+(P.burn||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
