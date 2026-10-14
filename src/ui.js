@@ -856,7 +856,7 @@ export function startUI(E,app){
   }
   /* 인연(동반자): 이름 정하기와 가족 탭 */
   function vBondPick(){
-    const b=G.ch.bond,R=D.bond.routes[b.route];
+    const b=G.ch.bond,R=E.bondData(G.ch);
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">인연 · ${esc(R.who)}</span>
       <p class="small">그 사람의 이름을 정한다.</p>
       <div class="row"><span class="small">이름</span><input id="bondname" maxlength="12" value="${esc(UI.bondName||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
@@ -865,7 +865,7 @@ export function startUI(E,app){
   }
   function vFamily(){
     const ch=G.ch,b=ch.bond,BDc=CFG.bond;if(!b)return '<p class="small dim">가족 없음</p>';
-    const R=D.bond.routes[b.route]||{who:''},st=b.st;
+    const R=E.bondData(ch)||{who:''},st=b.st;
     const head=st==='married'?(ch.distForm?'당신을 알아보지 못한다':'배우자'):st==='lost'?'인연이 끝났다':`인연 · ${R.who}`;
     const rows=[];
     if(st==='married'){

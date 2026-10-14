@@ -110,10 +110,12 @@ export const CFG = {
   dailyOrigin: 1,
   /* 혈귀 1권속 카드팩 패시브 '오랜 굶주림': HP를 회복할 때마다 HP 1당 스택 +1(최대 max). 공격 카드를 내면 스택을 모두 써서 그 카드의 첫 적중 피해가 스택만큼 늘고, 스택은 비운다 */
   hunger: {max: 15},
-  /* 인연(동반자) 시스템: 소속이 있는 캐릭터가 from년차부터 해마다 chance% 확률로 인연을 만난다. 이름을 붙이면 gap[0]~gap[1]년마다 사건이 steps번,
+  /* 일상 사건: from년차부터 사건이 있는 해에 chance% 확률로 일상이 온다 (선택지 3개 중 능력치 +1~3 하나, 판당 max번). 인연이 없는 소속 캐릭터는 일상 중 meetChance%가 인연(조우자)을 만나는 사건이 된다 */
+  daily: {from: 3, chance: 30, max: 10},
+  /* 인연(동반자) 시스템: 일상 중에 인연을 만난다(혈귀·동부 외곽 출신은 전용 인연). 이름을 붙이면 gap[0]~gap[1]년마다 사건이 steps번,
      그다음 청혼 사건. 청혼은 die면 굴려 ok 안에 들면 성공(결혼), 기회는 tries번. 결혼하면 marry 보정, 해마다 yearMind 정신력, 정신력이 1이 되면 한 번 saveMind로 붙잡아 준다.
      기회를 모두 쓰면 인연이 끝나고 최대 정신력이 lossMind 줄어든다 (영구) */
-  bond: {routes: ['office', 'assoc', 'wing', 'finger'], from: 8, chance: 25, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], tries: 2, waitDc: 40,
+  bond: {routes: ['office', 'assoc', 'wing', 'finger'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], tries: 2, waitDc: 40,
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, loveMind: 2},
   /* 하나 협회 전용 패시브: 라운드마다 카드를 고르기 전에 한 가지를 고른다. gun: 이번 라운드 공격 피해 +n, gon: 받는 피해 n% 감소, gam: 이번 라운드 빛 +n, ri: 체력 회복과 호흡 */
   tri: {org: '하나 협회', names: {gun: '건', gon: '곤', gam: '감', ri: '이'}, gun: 2, gon: 30, gam: 1, ri: {heal: 2, breath: 2}},
