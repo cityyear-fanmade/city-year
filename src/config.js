@@ -168,7 +168,7 @@ export const CFG = {
   burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5},
   middle: {def: 2, keep: 0, heal: 1, dmg: 1},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
-  ring: {max: 6, hit: 1, dmg: 1, finish: 1.0, after: 0},
+  ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
