@@ -3041,7 +3041,7 @@ function startUI(E,app){
     if(c.name){g.font=fit(careerLine(c).replace(/<[^>]*>/g,''),W-200,34,sans,'500');g.fillStyle=col;g.fillText(careerLine(c).replace(/<[^>]*>/g,''),W/2,y);y+=56}
     if(c.title){T_('『'+c.title+'』',W/2,y,`700 40px ${serif}`,gold,'center');y+=60}
     g.strokeStyle='#2c2b30';g.beginPath();g.moveTo(140,y);g.lineTo(W-140,y);g.stroke();y+=70;
-    const rows=[['산 햇수',`${lived}년 · ${E.age(G)}세`]];
+    const rows=[['난이도',diffOf(c)],['산 햇수',`${lived}년 · ${E.age(G)}세`]];
     if(G.endless)rows.push(['위협 등급',gi>=0?X.grades[gi]:'—']);
     if(!w&&dt)rows.push(['마지막',`${dt.year}년차 · ${dt.foe}`]);
     if(c.innate)rows.push(['타고난 것',innateName(c)]);
