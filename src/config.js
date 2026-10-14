@@ -146,8 +146,8 @@ export const CFG = {
   /* 약지 패시브 예술적 감각: 적을 쓰러뜨릴 때 확률, 최대 스택, 스택당 피해 주사위 최대치 */
   artSense: {every: 3, max: 4, die: 5},
   /* 중지 되갚음: 스택 1당 받는 피해 −def, 다음 적중에서 스택을 쓰면 소모한 스택 1당 HP heal 회복, 스택은 keep 비율만 남는다 (내림) */
-  /* 화상: 라운드 끝에 스택만큼 피해, 그 뒤 스택은 keep 비율만 남는다 (내림). 붉은 화염(레바테인 전용)과는 별개 */
-  burn: {keep: 0.5, me: 0.5},
+  /* 화상: 라운드 끝에 스택×dmg 피해, 그 뒤 스택은 keep 비율만 남는다 (내림). 최대 max스택, 적이 거는 화상 스택은 foe 배. 붉은 화염(레바테인 전용)과는 별개 */
+  burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5},
   middle: {def: 2, keep: 0, heal: 1, dmg: 1},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 1, dmg: 1, finish: 1.0, after: 0},
