@@ -3369,11 +3369,12 @@
    "eva": 16,
    "spd": 14,
    "deck": [
-    "rm_line",
-    "rm_split",
-    "rm_level",
-    "rm_guard",
-    "rm_line"
+    "rm_garo",
+    "rm_sero",
+    "rm_dash",
+    "rm_cut",
+    "rm_cut",
+    "rm_guard"
    ],
    "hidden": true,
    "tier": "hidden",
