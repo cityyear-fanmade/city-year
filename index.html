@@ -859,7 +859,9 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     const A=D.access;let g=A.base;
     if(ch.aff&&A.aff[ch.aff.type])g=Math.max(g,A.aff[ch.aff.type]);
     const fingerUp=isFinger(ch)&&ch.fr&&ch.fr.tier>=D.fingerRules.shopTier;
-    if((ch.licensed&&ch.rank<=A.rankBonus.rank)||fingerUp)g=Math.min(A.max,g+A.rankBonus.plus);
+    /* 협회·날개처럼 직급표가 있는 진로는 해결사 급수가 오르지 않으므로, 최고 직급(날개 임원 등)에 오르면 급수 보너스와 같은 +1 */
+    const CR_=D.careers&&ch.aff&&D.careers[ch.aff.type],topRank=!!(CR_&&CR_.ranks&&ch.fi!=null&&ch.fi>=CR_.ranks.length-1);
+    if((ch.licensed&&ch.rank<=A.rankBonus.rank)||fingerUp||topRank)g=Math.min(A.max,g+A.rankBonus.plus);
     return g;
   }
   /* 살 수 있는지: 'ok' / 'locked'(등급) / 'money' / 'owned' */
