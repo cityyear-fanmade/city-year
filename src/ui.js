@@ -1528,7 +1528,7 @@ export function startUI(E,app){
   /* 자동 전투 간격: [카드 고르기 전, 행동 개시 전] ms */
   const autoGap=()=>AUTOGAP==='slow'?[1600,1100]:AUTOGAP==='fast'?[150,150]:AUTOGAP==='mid'?[600,500]:[1000,800];
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
-  function born(seed,name,daily){const dly=daily||(UI.daily&&seed===dailySeed(UI.daily));E.reseed(seed);BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,dly?CFG.dailyOrigin:null);BC.seed=seed;BC.name=name||'';BC.fresh=true}
+  function born(seed,name,daily){const dly=daily||(UI.daily&&seed===dailySeed(UI.daily));E.reseed(seed);const pl=dly&&UI.daily&&CFG.dailyPlan[UI.daily];BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,dly?(pl&&pl.origin)||CFG.dailyOrigin:null);if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;BC.seed=seed;BC.name=name||'';BC.fresh=true}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
   window.addEventListener('resize',()=>{if(UI.screen==='combat'&&!PLAYING&&UI.wasMobile!==isMobile())render()});
   app.addEventListener('toggle',e=>{const t=e.target;if(!t.classList)return;
