@@ -300,6 +300,7 @@ export function startUI(E,app){
   function vPassive(ch){
     const P=[];const af=ch.aff&&ch.aff.name;
     {const t=fingerPassive(af,ch.fi||0);if(t)P.push(t)}
+    if(ch.oracle)P.push(`신탁대행자 · 지령 독촉 · 지령 스택 최대 ${CFG.oracle.presc} · 지령을 수행하지 못하면 다음 라운드 명중 −${CFG.oracle.missHit} · 회피 −${CFG.oracle.missEva}`);
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 '+CFG.artSense.every+'번 쓰러뜨릴 때마다 +1 (영구)':''}`);
     if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];
       P.push(`특이점 ${c.n} (${t.n}) · ${t.e.split(' (')[0]} · ${c.st==='dev'?`개발 ${c.stack}/${CFG.corp.devMax}`:`강화 ${c.up}/${CFG.corp.upMax} · 금기 실험 ${c.forb}/${CFG.corp.forbMax}`}`)}
@@ -1003,7 +1004,7 @@ export function startUI(E,app){
   function careerLine(c){
     if(c.job)return T.jobs[c.job]+(c.title?' · '+esc(c.title):'');
     if(c.aff&&c.corp&&c.corp.wing)return `${esc(c.corp.wing)} · 대표${c.title?' · '+esc(c.title):''}`;
-    if(c.aff&&c.fr)return `${esc(affName(c))} · ${esc(c.fr.n)}${c.title?' · '+esc(c.title):''}`;
+    if(c.aff&&c.fr)return `${esc(affName(c))} · ${esc(c.fr.n)}${c.oracle?' · 신탁대행자':''}${c.title?' · '+esc(c.title):''}`;
     if(c.licensed)return E.rankLabel(c)+(c.aff?' · '+esc(affName(c)):'');
     return c.aff?esc(affName(c)):T.unnamed;
   }
