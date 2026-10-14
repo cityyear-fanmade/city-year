@@ -157,7 +157,11 @@ export const CFG = {
   /* 엄지 패시브 탄환: 전투마다 기본 발수 + 서열 하나 오를 때마다 추가 */
   thumbAmmo: {base: 4, per: 2},
   /* 약지 패시브 예술적 감각: 적을 쓰러뜨릴 때 확률, 최대 스택, 스택당 피해 주사위 최대치 */
-  artSense: {chance: 10, max: 4, die: 5},
+  artSense: {every: 3, max: 4, die: 5},
+  /* 중지 되갚음: 스택 1당 받는 피해 −def, 쓰면 스택의 keep 비율만 남는다 (내림) */
+  middle: {def: 1, keep: 0},
+  /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
+  ring: {max: 6, hit: 1, dmg: 1, finish: 1.0, after: 0},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */

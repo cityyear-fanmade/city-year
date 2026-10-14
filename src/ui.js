@@ -235,7 +235,7 @@ export function startUI(E,app){
     if(pv&&X.ledger>0)out.push(`<span class="chip stk" style="--kc:var(--bleed)"><b>${pv.n} ${X.ledger}/${pv.need}</b><small>${X.ledger>=pv.need?'다음 명중 1d110':'다 차면 명중 1d110'}</small></span>`);
     /* 전용 무기 디버프 */
     const pw=G&&G.ch&&G.ch.gear.weapon&&G.ch.gear.weapon.wx||{};
-    const W=[['prescript','지령',v=>`명중 −${3*v}`],['warp','왜곡',v=>`주는 피해 −${v}`],['shock','감전',v=>`회피 −${3*v}`],['chain','사슬',v=>`회피 −${2*v}`],['web','거미줄',v=>`회피 −${2*v}`],['hunger','오랜 굶주림',v=>`${v}/${CFG.hunger.max} · 다음 공격 카드의 첫 적중 피해 +${v} (쓰면 전부 소진)`],['mk','표적',v=>`${v}/3 · 3이면 피해 2배`],['grudge',pw.grudgeN||'원한',v=>`다음 적중 +${v*(pw.grudge||4)}`],['wecho',pw.echo&&pw.echo.n||'잔향',v=>`${v}/${pw.echo?pw.echo.need:5} · ${pw.echo?pw.echo.need:5}이면 고정 피해 ${pw.echo?pw.echo.dmg:10}`],['shield','보호막',v=>`피해 ${v} 막음`],['matc','재료 수집',v=>'신체관극의 재료가 된다'],['mat','재료',v=>`폐장 주사위 +${v}`],['disp','처분 표식',v=>'처분 주사위 +1'],['serum','혈청',v=>`${v}/3${v>=3?' · 다음 적중 ×1.5':''}`],['ammo','탄환',v=>`${v}발 남음 · 공격마다 1발`],['manner','예의를 지킬 것',v=>`명중 −${v}`],['presc','지령 수행',v=>`${v}/5 · 받는 피해 −${v*5}%`],['revenge','되갚음',v=>`${v}/5 · 다음 적중 +${v*(X.revMul||2)}`],['sealMark','봉인 각인',v=>`${v}/5 · 해제 시 +${v*4}`],['accel','가속',v=>`명중·회피 +${v*5}`]];
+    const W=[['prescript','지령',v=>`명중 −${3*v}`],['warp','왜곡',v=>`주는 피해 −${v}`],['shock','감전',v=>`회피 −${3*v}`],['chain','사슬',v=>`회피 −${2*v}`],['web','거미줄',v=>`회피 −${2*v}`],['hunger','오랜 굶주림',v=>`${v}/${CFG.hunger.max} · 다음 공격 카드의 첫 적중 피해 +${v} (쓰면 전부 소진)`],['work','작품',v=>`명중 +${CFG.ring.hit*v} · ${CFG.ring.max}이면 다음 적중 피해 ×${CFG.ring.finish}`],['mk','표적',v=>`${v}/3 · 3이면 피해 2배`],['grudge',pw.grudgeN||'원한',v=>`다음 적중 +${v*(pw.grudge||4)}`],['wecho',pw.echo&&pw.echo.n||'잔향',v=>`${v}/${pw.echo?pw.echo.need:5} · ${pw.echo?pw.echo.need:5}이면 고정 피해 ${pw.echo?pw.echo.dmg:10}`],['shield','보호막',v=>`피해 ${v} 막음`],['matc','재료 수집',v=>'신체관극의 재료가 된다'],['mat','재료',v=>`폐장 주사위 +${v}`],['disp','처분 표식',v=>'처분 주사위 +1'],['serum','혈청',v=>`${v}/3${v>=3?' · 다음 적중 ×1.5':''}`],['ammo','탄환',v=>`${v}발 남음 · 공격마다 1발`],['manner','예의를 지킬 것',v=>`명중 −${v}`],['presc','지령 수행',v=>`${v}/5 · 받는 피해 −${v*5}%`],['revenge','되갚음',v=>`${v}/5 · 다음 적중 +${v*(X.revMul||2)}`],['sealMark','봉인 각인',v=>`${v}/5 · 해제 시 +${v*4}`],['accel','가속',v=>`명중·회피 +${v*5}`]];
     for(const [k,n,h] of W)if(X[k]>0)out.push(`<span class="chip stk" style="--kc:var(--gold)"><b>${n} ${X[k]}</b><small>${h(X[k])}</small></span>`);
     return out.length?out.join(''):'<span class="chip dim">상태 없음</span>';
   }
@@ -293,9 +293,10 @@ export function startUI(E,app){
   function vPassive(ch){
     const P=[];const af=ch.aff&&ch.aff.name;
     if(af==='엄지')P.push(`탄환 · 전투마다 ${CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0)}발 (서열마다 +${CFG.thumbAmmo.per}) · 공격마다 1발 소모 · 상대에게 예의를 지킬 것 1 (상대 명중 −1×스택)`);
-    if(af==='중지')P.push('되갚음 · 맞을 때마다 1(최대 5) · 다음 적중 +2×스택');
+    if(af==='중지')P.push('되갚음 · 맞을 때마다 1(최대 5) · 스택 1당 받는 피해 −1 · 다음 적중 +2×스택 후 비움');
     if(af==='검지')P.push('지령 수행 · ☆ 칸 카드를 내면 1(최대 5) · 호흡 +4 · 받는 피해 −5%×스택');
-    if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 쓰러뜨리면 '+CFG.artSense.chance+'% 확률로 +1 (영구)':''}`);
+    if(af==='약지')P.push(`작품 · 적중할 때마다 +1(전투 한정, 최대 ${CFG.ring.max}) · 스택당 명중 +${CFG.ring.hit} · 최대면 다음 적중 피해 ×${CFG.ring.finish} 후 ${CFG.ring.after}로`);
+    if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 '+CFG.artSense.every+'번 쓰러뜨릴 때마다 +1 (영구)':''}`);
     if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];
       P.push(`특이점 ${c.n} (${t.n}) · ${t.e.split(' (')[0]} · ${c.st==='dev'?`개발 ${c.stack}/${CFG.corp.devMax}`:`강화 ${c.up}/${CFG.corp.upMax} · 금기 실험 ${c.forb}/${CFG.corp.forbMax}`}`)}
     if(ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea'))P.push(`피의 각인된 갈망 · 자식 ${ch.kids||0}/${CFG.kids.max} · 라운드마다 혈찬 +${CFG.kids.per}×자식 · 전투가 끝나면 자식마다 ${CFG.kids.lose}% 흩어짐`);
@@ -621,7 +622,8 @@ export function startUI(E,app){
       ['🌤 일상 사건',['3년차부터 능력치가 오르는 안정적인 일상 사건이 열립니다. 한 판에 최대 10번입니다.']],
       ['⚡ 충전 · W사 날개 / R사 날개',['입사하면 충전 전용 책장 8장을 받고, 최고 직급에 오르면 4코스트 카드 2장을 얻어 10장이 됩니다.','충전은 쌓아 두었다가 카드로 소모하면 고정 피해가 붙는 자원입니다.','W사 날개는 라운드마다 충전이 쌓이는 저장형입니다. 맞아도 충전이 줄지 않습니다.','R사 날개는 입사 때 1d3으로 토끼팀, 순록팀, 코뿔소팀이 정해지고, 팀마다 전용 책장과 패시브가 다릅니다.']],
       ['🌊 침잠 · 일반 카드',['상대에게 쌓으면 3스택마다 상대의 명중과 주는 피해가 줄어듭니다. 라운드가 끝나면 1씩 줄어듭니다. 일반 보상 카드 8장이 추가되었습니다.']],
-      ['🔧 변경',['날개를 세우면 직급 표시가 "날개 대표"로 바뀝니다.']],
+      ['🖐 손가락 개편',['중지: 되갚음 스택 1당 받는 피해가 1 줄어듭니다. 맞아도 버티는 힘이 생겼습니다.','약지: 적중할 때마다 "작품"이 쌓여 명중이 오르고, 가득 차면 다음 적중이 강해집니다. 예술적 감각은 확률이 아니라 적을 3번 쓰러뜨릴 때마다 오릅니다.','소지: 표식을 가진 사람에게 5년마다 사건이 열립니다.']],
+      ['🔧 변경',['날개를 세우면 직급 표시가 "날개 대표"로 바뀝니다.','레바테인 계열의 화염 효과를 붉은 화염과 푸른 화염으로 정리하고, 해금 조건을 줄였습니다.']],
       ['🙏 감사합니다',['의견을 주신 모든 분들께 감사드립니다.']]]};
   const V720SEC=[['🌑 제 1막과 제 2막',['55년을 살아내면 제 1막 종료입니다. 여기서 끝내도 되고, 제 2막 시작을 눌러 계속 살아갈 수도 있습니다.','제 2막은 3년마다 위협 등급이 오르는 구간이고, 마지막 등급인 불순물을 넘기면 진짜 결말입니다.']],
       ['♾ 무한 모드 (74년 이후)',['불순물을 넘긴 뒤에도 "무한 모드로 계속한다"를 고르면, 쓰러질 때까지 이어집니다. 여기서 끝낼 수도 있습니다.','위협 보정이 끝없이 오르고, 8년마다 더 강해진 불순물이 나타납니다. 이길 때마다 다음은 더 단단해집니다.','세계에 균열이 갑니다. 루트와 상관없이 아직 이기지 못한 히든 보스 중 무엇이든 불쑥 나타날 수 있습니다.','90년차부터는 전투 라운드마다 침식이 시작됩니다. 회피와 보호막으로도 막을 수 없는 고정 피해이고, 연차가 오를수록 커집니다. 스탯만으로는 버틸 수 없습니다.','결국 누구도 끝까지 버틸 수 없습니다. 얼마나 오래 살았는지가 기록입니다.']],
