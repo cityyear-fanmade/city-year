@@ -403,18 +403,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     giveOrgCards(ch,C_,ch.fi,out);
     return out;
   }
-  /* 협회 전용 카드: careers.*.cards[소속 이름][직급 번호] (마지막 번호는 본부 직속) */
+  /* 협회 전용 카드팩: 입회 때 careers.*.cards[소속 이름]의 카드를 한 번에 받아 덱이 통째로 바뀐다.
+     전용 카드팩(cardMoney)이라 이후 카드는 얻을 수 없고(대신 돈), 나중에 히든 책장으로 덱이 바뀌어도 협회 패시브는 소속 기록(assocName)으로 남는다 */
   function giveOrgCards(ch,C_,at,out){
-    const ids=C_.cards&&C_.cards[ch.aff.name]&&C_.cards[ch.aff.name][at];
-    if(!ids)return;
-    for(const id of ids){
-      if(ch.deckLocked||ch.cardMoney){addCard(ch,id,out,'협회 전용 카드');continue}
-      if(ownsCard(ch,id))continue;
-      /* 고정 카드: 덱이 가득 차면 가장 약한(코스트 낮은) 일반 카드를 카드함으로 내보내고 들어온다 */
-      if(!deckRoom(ch)){let j=-1;ch.deck.forEach((x,i)=>{if(!D.cards[x].fixed&&(j<0||D.cards[x].c<D.cards[ch.deck[j]].c))j=i});if(j>=0){const o=ch.deck.splice(j,1)[0];(ch.side=ch.side||[]).push(o);out.push(`${D.cards[o].n} → 카드함 (자리를 비운다)`)}}
-      putCard(ch,id,out,'협회 전용 카드 (고정)');
-    }
+    const rows=C_.cards&&C_.cards[ch.aff.name];
+    ch.assocName=ch.aff.name;
+    if(at!==0||!rows||ch.deckLocked||ch.cardMoney)return;
+    const ids=rows.flat();
+    ch.deck=ids.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.packOffer=null;ch.cardMoney=true;
+    out.push(`전용 카드팩 · ${ch.aff.name} ${ids.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈)`);
   }
+  const assocOf=ch=>ch.assocName||(ch.aff&&ch.aff.type==='assoc'?ch.aff.name:null);
   /* 최고 단계의 특수 사건: 해결사는 특색 심사, 다른 진로는 careers.*.top */
   const topEvent=ch=>{const k=career(ch);return k==='fixer'?D.colorExam:CR[k]&&CR[k].top};
   const topReady=ch=>{const k=career(ch);return !!k&&!canPromote(ch)&&!ch.title&&!ch.colorFailed&&promoDone(ch)>0&&(ch.year||0)>=(ch.topNext||0)}
@@ -494,7 +493,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(C_.strike==='purge'){ch.purge=C_.purgeFoe;chips.push('숙청 대상이 되었다')}
       }
     }
-    if(fx.topPass){const C_=CR[career(ch)];ch.title=C_.topTitle;ch.titleKind='top';addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}giveOrgCards(ch,C_,(C_.ranks||[]).length,chips);const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
+    if(fx.topPass){const C_=CR[career(ch)];ch.title=C_.topTitle;ch.titleKind='top';addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
     if(fx.colorPass){ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 발현자 · 특색 · 모든 능력치 +5')}}
@@ -975,7 +974,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(e.abno)loseMind(ch,d(3)+d(3),t=>mindNote.push(`환상체와 마주쳤다 · ${t} · 2d3`));
     const mt=mindTier(ch),ct=corpType(ch),tm=ct&&ct.tier?ct.tier+ch.corp.up*(ct.tierPer||0):1;
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
-    const C={ch,P,E,id,penalty,duel:ch.aff&&ch.aff.name===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
+    const C={ch,P,E,id,penalty,duel:assocOf(ch)===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
     activeC=C;
     if(ch.mindDead&&!ch.ego&&!ch.distForm)mindBreak(C);
     newRound(C);
@@ -1038,7 +1037,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      점수 = 기대 피해(타수 × (주사위 × 3.5 + 고정값)) + 키워드 스택 × 2. 방어 카드는 HP가 35% 미만일 때만 높게 친다.
      반환: 손패 번호 배열 (방어 → 점수 높은 순) */
   /* 하나 협회 패시브: 라운드마다 한 번 고른다 (카드를 고르기 전에) */
-  const triOk=C=>!!(C&&C.ch&&C.ch.aff&&C.ch.aff.name===CFG.tri.org&&!C.over&&!C.P.distorted);
+  const triOk=C=>!!(C&&C.ch&&assocOf(C.ch)===CFG.tri.org&&!C.over&&!C.P.distorted);
   function setTri(C,k){
     const T_=CFG.tri,P=C.P;
     if(!triOk(C)||C.triRound===C.round||!T_.names[k]||C.triPrev===k)return false;
