@@ -405,6 +405,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const out=[`${ch.aff.name} · ${r.n}`,...(r.e?[r.e]:[])];
     if(r.money){const m=earn(ch,r.money);ch.money+=m;out.push('승진 보너스 +'+money(m))}
     giveOrgCards(ch,C_,ch.fi,out);
+    /* 최고 직급(임원)에 오르면 전용 카드팩의 마지막 줄(4코스트 카드)을 덱에 더한다 */
+    {const rows=C_.finalRow&&C_.cards&&C_.cards[ch.aff.name];
+      if(rows&&ch.fi===C_.ranks.length-1&&ch.cardMoney&&!ch.finalGiven){ch.finalGiven=true;
+        const ids=rows[rows.length-1].filter(id=>ch.deck.length<deckMax(ch));
+        if(ids.length){ch.deck=ch.deck.concat(ids);out.push(`전용 카드 · ${ids.map(id=>D.cards[id].n).join(', ')} (최고 직급)`)}}}
     return out;
   }
   /* 협회 전용 카드팩: 입회 때 careers.*.cards[소속 이름]의 카드를 한 번에 받아 덱이 통째로 바뀐다.
@@ -413,7 +418,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const rows=C_.cards&&C_.cards[ch.aff.name];
     ch.assocName=ch.aff.name;
     if(at!==0||!rows||ch.deckLocked||ch.cardMoney)return;
-    const ids=rows.flat();
+    const ids=(C_.finalRow?rows.slice(0,-1):rows).flat();
     ch.deck=ids.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.packOffer=null;ch.cardMoney=true;
     out.push(`전용 카드팩 · ${ch.aff.name} ${ids.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈)`);
   }
