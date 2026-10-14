@@ -725,21 +725,24 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const kf=(t,n)=>bondFill(String(t).replace(/\{k\}/g,'{n}'),{name:n});
   const kidWord=b=>(b.kids||[]).length>1?'자식들':'자식';
   const kidAge=(k,y)=>Math.max(0,(y||0)-k.born);
-  /* 토벌 의뢰: 성인이 된 아이 중 가장 강한 아이 (level 0~8, 급수 = 9 − level) */
+  /* 토벌 의뢰: 결혼 중인 배우자와 성인이 된 아이 중 가장 강한 가족 (level 0~8, 급수 = 9 − level). 배우자는 결혼한 햇수가 지날수록 급수가 오른다 */
   const kidLevel=(k,y)=>Math.min(8,Math.floor((kidAge(k,y)-BD.kid.adult)/BD.hunt.years)+(BD.hunt.job[k.job]||0));
-  function kidHunter(ch,y){
-    const ks=((ch.bond&&ch.bond.kids)||[]).filter(k=>!k.dead&&kidAge(k,y)>=BD.kid.adult);
-    return ks.reduce((a,k)=>!a||kidLevel(k,y)>kidLevel(a,y)?k:a,null);
+  const spouseLevel=(b,y)=>Math.min(8,(BD.hunt.spouse[b.route]??1)+Math.floor(Math.max(0,(y||0)-(b.since||0))/BD.hunt.spouseYears));
+  function familyHunter(ch,y){
+    const b=ch.bond;if(!b)return null;
+    const cs=(b.kids||[]).filter(k=>!k.dead&&kidAge(k,y)>=BD.kid.adult).map(k=>({n:k.n,job:k.job,lv:kidLevel(k,y),kid:k}));
+    if(b.st==='married')cs.push({n:b.name,job:BD.hunt.spouseJob[b.route]||'fixer',lv:spouseLevel(b,y),spouse:true});
+    return cs.reduce((a,c)=>!a||c.lv>a.lv?c:a,null);
   }
   function kidHuntEvent(G){
     const ch=G.ch,y=G.year;if(!ch.distForm||(y<(ch.huntNext||0)))return null;
-    const k=kidHunter(ch,y);if(!k)return null;
+    const k=familyHunter(ch,y);if(!k)return null;
     ch.huntNext=y+BD.hunt.gap;if(d(100)>BD.hunt.chance)return null;
-    const H=D.bond.hunt,Lv=Math.max(0,kidLevel(k,y)),e=D.enemies.kid_hunt,Z=BD.hunt;
-    const jb=H.jobs[k.job]||'';ch.kidFoe=k.n;
+    const H=D.bond.hunt,Lv=Math.max(0,k.lv),e=D.enemies.kid_hunt,Z=BD.hunt;
+    const jb=k.spouse?'배우자':(H.jobs[k.job]||'');ch.kidFoe=k.n;ch.kidFoeSpouse=!!k.spouse;
     e.n=`${k.n} · ${jb} ${9-Lv}급`;e.hp=56+Lv*Z.hp;e.atk=3+Lv*Z.atk;e.eva=2+Lv*Z.eva;e.spd=5+Lv*Z.spd;
     e.deck=k.job==='fixer'?['lunge','a_maw','guard','lunge']:k.job==='assoc'?['a_maw','lunge','a_maw','guard']:['lunge','guard','lunge','guard'];
-    e.intro=kf(H.intro,k.n).replace('{j}',`${jb} ${9-Lv}급`);
+    e.intro=kf(k.spouse?H.introSpouse:H.intro,k.n).replace('{j}',`${jb} ${9-Lv}급`);
     return {type:'fight',enemy:'kid_hunt',enc:{id:'kid_hunt',roll:null,table:null,label:'토벌 의뢰'}};
   }
   /* 청혼: roll이면 1dN을 굴려 성공 범위면 결혼, 아니면 기회 1회 소모 (기회를 다 쓰면 인연이 끝난다) */
@@ -1056,7 +1059,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch,chips=[];
     ch.hp=clamp(C.P.hp+CFG.winHeal,1,ch.stats.maxHp);chips.push('HP +'+CFG.winHeal);
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
-    if(C.id==='kid_hunt'&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===ch.kidFoe&&!k.dead);if(kk){kk.dead=true;chips.push(kf(D.bond.hunt.win,kk.n))}}
+    if(C.id==='kid_hunt'&&ch.bond){
+      if(ch.kidFoeSpouse){if(ch.bond.st==='married'){ch.bond.st='lost';chips.push(kf(D.bond.hunt.winSpouse,ch.bond.name))}}
+      else{const kk=(ch.bond.kids||[]).find(k=>k.n===ch.kidFoe&&!k.dead);if(kk){kk.dead=true;chips.push(kf(D.bond.hunt.win,kk.n))}}}
     if(ch.flags&&ch.flags.redMist){const h=Math.min(CFG.redMist.heal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('붉은 안개 · 적을 쓰러뜨려 HP +'+h)}}
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
@@ -1579,5 +1584,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,kidHunter,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

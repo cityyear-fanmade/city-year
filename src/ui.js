@@ -874,6 +874,7 @@ export function startUI(E,app){
     const rows=[];
     if(st==='married'){
       rows.push(['결혼한 해',b.since+'년차']);
+      rows.push(['배우자 등급',`${9-E.spouseLevel(b,G.year)}급 (결혼 ${BDc.hunt.spouseYears}년마다 한 단계)`]);
       rows.push(['보정',`최대 HP +${BDc.marry.maxHp} · 최대 정신력 +${BDc.marry.mindMax} · 사건 판정 +${BDc.marry.check}`]);
       rows.push(['해마다',`정신력 +${BDc.yearMind}`]);
       rows.push(['가족의 목소리',b.saved?'이미 한 번 붙잡아 주었다':`정신력이 1이 되면 한 번 붙잡아 준다 (정신력 ${BDc.saveMind})`]);
@@ -1040,9 +1041,10 @@ export function startUI(E,app){
   }
   /* 아이가 있으면 엔딩마다 한 문단이 붙는다: 뒤틀림사(도시가 기억하지 못함) · 쓰러짐 · 살아냄, 1막·2막·무한 모드별 */
   function kinLine(c,w,dt){
-    const b=c.bond,kids=(b&&b.kids||[]).filter(k=>!k.dead);if(!kids.length||!D.bond.ending)return '';
+    const b=c.bond,kids=(b&&b.kids||[]).filter(k=>!k.dead);if(!D.bond.ending)return '';
+    if(!w&&dt&&dt.hunt)return `<p class="small" style="border-left:2px solid var(--gold);padding-left:10px">${esc(E.bondFill(D.bond.hunt.ending[G.infinite?'inf':G.endless?'act2':'act1'].replace(/\{k\}/g,'{n}'),{name:dt.hunt}))}</p>`;
+    if(!kids.length)return '';
     const X=D.bond.ending,ph=G.infinite?'inf':G.endless?'act2':'act1',forgot=!w&&(c.distForm||(dt&&dt.cause==='distort'));
-    if(!w&&dt&&dt.hunt)return `<p class="small" style="border-left:2px solid var(--gold);padding-left:10px">${esc(E.bondFill(D.bond.hunt.ending[ph].replace(/\{k\}/g,'{n}'),{name:dt.hunt}))}</p>`;
     const t=forgot?X.forgotten[ph]:w?(UI.oldEnd?X.win.old:X.win[ph]):X.death[ph];
     return t?`<p class="small" style="border-left:2px solid var(--gold);padding-left:10px">${esc(t).replace(/\{k\}/g,kids.length>1?'자식들':'자식')}</p>`:'';
   }
