@@ -139,7 +139,7 @@ export const CFG = {
   artSense: {chance: 10, max: 4, die: 5},
   rupture: {max: 20},
   /* 전용 책장이 없는 날개: 카드팩 대신 입사 때 보정치를 더 받는다 */
-  freeWing: {names: ['K사 날개', 'J사 날개', 'G사 날개'], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
+  freeWing: {names: [], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
