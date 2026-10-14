@@ -10,7 +10,7 @@ const E=createEngine(D,{rng:mulberry32(42)}),N=+(process.argv[2]||4000),byOrigin
 for(let g=0;g<N;g++){
   const G=E.newGame(E.newChar());let pending=null;
   for(let guard=0;guard<300;guard++){
-    while(G.ch.lvPend>0){const o=E.rollGrowth();E.applyFx(G.ch,o[E.d(o.length)-1].g.fx);G.ch.lvPend--}
+    while(G.ch.lvPend>0){const o=E.rollGrowth(G.ch);E.applyFx(G.ch,o[E.d(o.length)-1].g.fx);G.ch.lvPend--}
     let fight=pending;pending=null;
     if(!fight){
       /* 공방: 지금 그 칸 장비보다 비싼 물건 중 살 수 있는 가장 비싼 것 하나를 산다 */

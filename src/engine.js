@@ -506,9 +506,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function lvOf(xp){let l=1;for(let i=1;i<CFG.levels.length;i++)if(xp>=CFG.levels[i])l=i+1;return l}
   const xpNext=ch=>CFG.levels[ch.lv];
   function gainXp(ch,n){const b=ch.lv;ch.xp+=n;ch.lv=lvOf(ch.xp);ch.lvPend+=ch.lv-b;return ch.lv-b}
-  function rollGrowth(){
-    const out=[];let g=0;
-    while(out.length<3&&g++<40){const r=d(100),x=pick(D.growth,r);if(!out.some(o=>o.g===x))out.push({r,g:x})}
+  /* 덱이 고정(책장·전용 카드팩)이면 카드를 받을 수 없으므로 '보상 카드' 성장은 선택지에서 뺀다 */
+  function rollGrowth(ch){
+    const out=[],locked=!!(ch&&(ch.deckLocked||ch.cardMoney));let g=0;
+    while(out.length<3&&g++<80){const r=d(100),x=pick(D.growth,r);if(locked&&x.fx&&x.fx.reward)continue;if(!out.some(o=>o.g===x))out.push({r,g:x})}
     return out;
   }
 

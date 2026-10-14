@@ -1208,7 +1208,7 @@ export function startUI(E,app){
   }
   function flow(){
     const ch=G.ch;
-    if(ch.lvPend>0){if(!ch.lvOpts){ch.lvOpts=E.rollGrowth();UI.lvFresh=true}UI.screen='level';render();return}
+    if(ch.lvPend>0){if(!ch.lvOpts){ch.lvOpts=E.rollGrowth(ch);UI.lvFresh=true}UI.screen='level';render();return}
     if(UI.pending){const id=UI.pending;UI.pending=null;startCombat(id);return}
     nextYear();
   }
