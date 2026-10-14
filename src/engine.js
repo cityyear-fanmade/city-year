@@ -686,7 +686,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      ch.bond = {st: 'pick'(이름 정하는 중)|'met'|'married'|'lost'|'declined', route, name, step, tries, love, since, next, saved} */
   const BD=CFG.bond;
   const bondGap=()=>BD.gap[0]+d(BD.gap[1]-BD.gap[0]+1)-1;
-  const bondFill=(t,b)=>String(t||'').replace(/\{n\}/g,(b&&b.name)||'그 사람');
+  /* 이름은 마음대로 짓는 것이라 성별을 정하지 않는 표현만 쓰고, 이름 뒤 조사(은/는·이/가·과/와)는 받침에 맞춘다 */
+  const bondFill=(t,b)=>{const name=(b&&b.name)||'그 사람',c=name.charCodeAt(name.length-1),fin=c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28!==0;
+    return String(t||'').replace(/\{n\}(은|이|과)?/g,(m,j)=>name+(j?(j==='은'?(fin?'은':'는'):j==='이'?(fin?'이':'가'):(fin?'과':'와')):''))};
   function bondNameErr(n){n=(n||'').trim();if(!n)return '이름을 적는다';if(n.length>12)return '12글자까지 쓸 수 있다';return ''}
   function setBondName(ch,name,force){
     const b=ch.bond;if(!b||b.st!=='pick'||(!force&&bondNameErr(name)))return false;
