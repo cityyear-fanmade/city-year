@@ -17,6 +17,10 @@ export const CFG = {
   /* 방어 카드를 내면 자기 출혈·파열이 이 비율로 남는다 (내림, 적도 같음) */
   defCut: {bleed: 0.75, rupture: 0.75},
   /* 암시장 응급 카드: 방문마다 chance% 확률로 진열, 덱·카드함·제안 합쳐 최대 max장 */
+  /* 공방 치유소: 한 번에 hp 회복, 방문마다 max번 */
+  clinic: {price: 500, hp: 30, max: 3},
+  /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 heal 회복(전투마다 1개). carry개까지, 무한 모드 뒤엔 priceInf */
+  ample: {name: 'K사 엠플', price: 3500, priceInf: 20000, carry: 3, below: 30, heal: 60},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
   orderBonusLight: 1, catchupBonus: 10, gapFirst: 30, firstHit: 10,
