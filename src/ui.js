@@ -602,7 +602,7 @@ export function startUI(E,app){
   const TITLE_REC=['본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'특색'];
   function vRecords(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
-    const ends=[['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','불순물 너머'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족']];
+    const ends=[['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','불순물 너머'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막']];
     const groups=[['초반','early'],['중반','mid'],['후반','late'],['보스·이름난 상대','boss'],['히든','hidden']];
     const foes=g=>Object.entries(D.enemies).filter(([,e])=>e.tier===g);
     const total=Object.keys(D.enemies).length;
@@ -1106,8 +1106,9 @@ export function startUI(E,app){
   }
   const diffOf=c=>c.easy?'쉬움':c.hard?'하드':'보통';
   /* 출생 보정 없이 시작한 존재가 제 1막을 넘겼을 때(제 2막에 이르렀을 때)의 전용 엔딩 */
-  const blankEnd=(c,w)=>w&&c&&c.blank&&!c.distForm&&!G.endless&&!UI.oldEnd&&!UI.trueEnd?((E.bondMarried&&E.bondMarried(c))?'blankwed':'blank'):'';
+  const blankEnd=(c,w)=>{if(!(w&&c&&!c.distForm&&!G.endless&&!UI.oldEnd&&!UI.trueEnd))return '';const m=!!(E.bondMarried&&E.bondMarried(c));return c.blank?(m?'blankwed':'blank'):m?'wed':''};
   const BLANK_END={blank:['아무것도 없는 존재',`이름도 내력도 쥐여 주지 않은 채 태어난 존재가 ${CFG.years}년을 걸어 첫 번째 막을 넘겼다. 아무것도 없던 손에는 이제 이 도시에서 살아낸 시간이 있다. 도시는 그것을 기억하지 않지만, 당신은 기억한다.`],
+    wed:['함께 넘은 첫 번째 막',`같은 이름을 오래 불렀다. 도시는 변했고 서류 속 이름은 닳았지만, 문을 열면 대답하는 사람이 있었다. ${CFG.years}년이 지나 첫 번째 막이 끝났다. 다음 막에도 그 목소리는 곁에 있을 것이다.`],
     blankwed:['아무것도 없는 존재 · 가족',`아무것도 없던 존재가 누군가의 이름을 불렀고, 누군가가 대답했다. ${CFG.years}년이 지나 첫 번째 막이 끝났을 때 곁에는 같은 지붕 아래의 사람이 있다. 아무것도 없던 곳에서 시작한 이야기가 둘이 되었다.`]};
   function vEnd(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),tr=w&&UI.trueEnd,df=c.distForm;
@@ -1327,8 +1328,8 @@ export function startUI(E,app){
   /* 엔딩 기록: 죽으면 저장을 지운다 (완주는 무한런을 위해 남긴다) */
   function recordEnd(){
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
-    const k=blankEnd(c,w)||(w&&c.distForm?'distwin':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':'death');
-    if(!r.endings.includes(k))r.endings.push(k);r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;if(w&&c.easy)r.easyClear=(r.easyClear||0)+1;
+    const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:(w&&c.distForm?'distwin':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':'death');
+    if(!r.endings.includes(k))r.endings.push(k);if(fe==='wed'&&!r.endings.includes('wed'))r.endings.push('wed');r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;if(w&&c.easy)r.easyClear=(r.easyClear||0)+1;
     r.best.years=Math.max(r.best.years,lived);r.best.lv=Math.max(r.best.lv,c.lv);if(G.endless)r.best.grade=Math.max(r.best.grade,E.gradeAt(G.year));
     store.set(REC,JSON.stringify(r));if(!w)store.del(SAVE);
   }
