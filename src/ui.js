@@ -165,11 +165,12 @@ export function startUI(E,app){
     if(e.hit){
       anim($('ent-'+e.def),'hurt',520);
       const box=$('dmgd'),fc=(e.card&&e.card.die)||6;$('dmgw').hidden=false;$('dmgw').querySelector('.dcap').textContent='피해 d'+fc;
-      box.innerHTML=e.rolls.map(()=>'<div class="d6"><b>–</b></div>').join('');
-      await Promise.all([...box.children].map((el,i)=>rollNum(el.firstElementChild,e.rolls[i],500+i*(fc<6?60:130),fc)));
+      const dm=()=>'<div class="d6"><b>–</b></div>',sp=e.rolls2||[];
+      box.innerHTML=e.rolls.map(dm).join('')+(sp.length?`<span class="small dim" style="align-self:center;padding:0 6px">${esc(e.ally2||'')}</span>`+sp.map(()=>'<div class="d6 sp" style="border-color:var(--bleed)"><b>–</b></div>').join(''):'');
+      {const vals=[...e.rolls,...sp];await Promise.all([...box.querySelectorAll('.d6')].map((el,i)=>rollNum(el.firstElementChild,vals[i],500+i*(fc<6?60:130),fc)))}
       $('fM').textContent=e.dmg;
       setVerdict(e.guard?`방어 실패 · ${C[e.def].name}에게 줄어든 피해 ${e.dmg}`:`명중 · ${C[e.def].name}에게 피해 ${e.dmg}`,'bad');
-      $('sM').textContent=`${e.rolls.join('+')}${e.b?sg(e.b):''}${e.note}`;
+      $('sM').textContent=`${e.rolls.join('+')}${e.rolls2?` | ${e.ally2} ${e.rolls2.join('+')}`:''}${e.b?sg(e.b):''}${e.note}`;
       floatTxt(e.def,'−'+e.dmg,'var(--bleed)');
       applySnap(e.snap);appendLog(e.lines);
       await holdTap();
