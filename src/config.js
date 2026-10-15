@@ -116,10 +116,35 @@ export const CFG = {
   dailyPlan: {'2026-10-15': {origin: 80, innate: 'mark'}},
   /* 혈귀 1권속 카드팩 패시브 '오랜 굶주림': HP를 회복할 때마다 HP 1당 스택 +1(최대 max). 공격 카드를 내면 스택을 모두 써서 그 카드의 첫 적중 피해가 스택만큼 늘고, 스택은 비운다 */
   hunger: {max: 15},
-  /* 화상: 라운드 끝에 스택×dmg 피해(내가 받으면 ×dmgMe), 그 뒤 스택은 keep 비율만 남는다 (내림). 최대 max스택, 적이 거는 화상 스택은 foe 배. 붉은 화염(레바테인 전용)과는 별개 */
-  burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5},
+  /* 일상 사건: from년차부터 사건이 있는 해에 chance% 확률로 일상이 온다 (선택지 3개 중 능력치 +1~3 하나, 판당 max번). 인연이 없는 소속 캐릭터는 일상 중 meetChance%가 인연(조우자)을 만나는 사건이 된다 */
+  daily: {from: 3, chance: 30, max: 10},
+  /* 인연(동반자) 시스템: 일상 중에 인연을 만난다(혈귀·동부 외곽 출신은 전용 인연). 이름을 붙이면 gap[0]~gap[1]년마다 사건이 steps번,
+     그다음 청혼 사건. 청혼은 die면 굴려 ok 안에 들면 성공(결혼), 기회는 tries번. 결혼하면 marry 보정, 해마다 yearMind 정신력, 정신력이 1이 되면 한 번 saveMind로 붙잡아 준다.
+     기회를 모두 쓰면 인연이 끝나고 최대 정신력이 lossMind 줄어든다 (영구) */
+  bond: {routes: ['office', 'assoc', 'wing', 'finger'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], tries: 2, waitDc: 40,
+    marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
+    /* 결혼 뒤: 금기를 저지른 다음 해부터 해마다 dieChance% 배우자가 세상을 떠난다(최대 정신력 −lossMind). 아이: kid.from년 뒤부터 해마다 chance%, 최대 max명, 간격 gap년, 태어나면 최대 정신력 +mind. adult살이 되면 사무소·해결사·협회 중 한 곳에 들어간다 */
+    dieChance: 2, riskStep: 0.1, kid: {from: 5, chance: 22, max: 2, gap: 3, mind: 2, adult: 20},
+    /* 뒤틀린 뒤: 성인이 된 아이가 있으면 gap년마다 chance%로 토벌 의뢰가 온다. 여럿이면 가장 강한 아이(등급)가 온다. 등급 = 20세 이후 2년마다 +1(최대 8) + 직업 가산 */
+    hunt: {gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1, mul: 1.1, mulTop: 1.5, topLv: 8,
+      /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
+      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, hyeolgwi: 3, east: 1}, spouseYears: 3, spouseJob: {office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', hyeolgwi: 'fixer', east: 'fixer'}}},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
+  /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */
+  oracle: {chance: 25, tries: 2, every: 5, dc: 40, presc: 10, missHit: 15, missEva: 5},
+  /* 소지(표식)의 도: 표식이 생긴 뒤 every년차마다 인·의·예·지 사건이 차례로 온다. 1d100이 dc 이상이면 키워드를 얻고, 4개를 모으면 이름을 붙인 성도(전용 무기)를 얻는다.
+     성도 수치: 각 항목을 [최소, 최대] 범위에서 굴린다 (atk 공격, eva 회피, dmgB 추가 피해, hit 명중) */
+  pinky: {every: 5, dc: 40, seongdo: {atk: [1, 10], eva: [1, 5], dmgB: [0, 2], hit: [5, 15]}},
+  /* 충전(자신에게 쌓는 스택): 카드의 spend만큼 소모해 소모한 1당 fixPer의 고정 피해(피해 감소 무시, 보호막은 깎임)를 적중마다 더한다. 라운드가 바뀌어도 줄지 않고, 맞으면 loss만큼 준다.
+     소속별 규칙(orgs): cap 상한, round 라운드 시작마다 +n, hit 적중마다 +n, loss 피격 시 −n */
+  /* 침잠(상대에게 쌓는 스택): per스택마다 한 단계, 단계마다 침잠 걸린 쪽의 명중 −hit · 주는 피해 −dmg. 라운드마다 1 감소 */
+  sink: {per: 3, hit: 6, dmg: 1},
+  charge: {cap: 10, loss: 1, orgs: {'W사 날개': {cap: 10, round: 1, loss: 0}, 'R사 날개/토끼팀': {cap: 8, hit: 1, loss: 2, spd: 5, boost: {low: [0.5, 3], charge: [5, 3]}},
+    /* 순록팀: 충전 20까지. 최대 체력 step만큼 잃을 때마다(최대 max번) 공격 피해 +dmg · 충전 at 이상이면 소모 카드의 충전 1당 고정 피해 +fix */
+    'R사 날개/순록팀': {cap: 20, loss: 1, power: {step: 0.3, max: 2, dmg: 3}, focus: {at: 10, fix: 2}},
+    /* 코뿔소팀: 충전 20까지. 최대 체력 step만큼 잃을 때마다(최대 max번) 방어 회피 +def · 충전 at 이상이면 받는 피해 −dr% */
+    'R사 날개/코뿔소팀': {cap: 20, loss: 0, wall: {step: 0.3, max: 2, def: 3}, armor: {at: 10, dr: 8}}}},
   /* 하나 협회 전용 패시브: 라운드마다 카드를 고르기 전에 한 가지를 고른다. gun: 이번 라운드 공격 피해 +n, gon: 받는 피해 n% 감소, gam: 이번 라운드 빛 +n, ri: 체력 회복과 호흡 */
   tri: {org: '하나 협회', names: {gun: '건', gon: '곤', gam: '감', ri: '이'}, gun: 2, gon: 30, gam: 1, ri: {heal: 2, breath: 2}},
   /* 혈귀 루트 '피의 각인된 갈망'(돌네시아를 쓰러뜨린 뒤): 일반·보스 적을 이기면 자식 +1(최대 max, 히든·환상체 제외),
@@ -128,7 +153,12 @@ export const CFG = {
   /* 생크 협회 전용 패시브 '결투 선언': 이 소속이 치르는 모든 전투에서 서로(나와 상대) 명중마다 주는 피해 +dmg */
   duel: {org: '생크 협회', n: '결투 선언', dmg: 3},
   /* 6시즌 N사 날개: 의체를 쓰지 않는다(의수 칸 사용 불가). 대신 전투마다 신체 강화(공격·회피·속도), 의체 심판: 의체 상대(enemies aug, 소개 문구에 의체가 분명한 적만) 적중마다 피해 +augDmg */
-  nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3},
+  /* 동부 외곽 해결사 히든 제안: rank급 이하에서 N사가 startFi번째 직급(0 사원 · 1 대리)으로 스카우트. tries번까지, 거절하면 gap년 뒤 */
+  eastN: {rank: 5, startFi: 1, tries: 2, gap: 4},
+  nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastTitle: '금기사냥꾼'},
+  /* N사 날개 · 못(상대에게 쌓임, 최대 cap): 적중마다 hit(의체 적은 augHit). 3·4코스트 망치 카드가 못을 모두 흐트러짐으로 바꾼다 (nailBurst.mul배).
+     흐트러짐: 단계(stages)마다 상대의 명중 −hit · 주는 피해 −dmg · 받는 피해 +take, 라운드 끝에 decay씩 줄고, stun(적 등급별) 이상이면 다음 라운드 기절 */
+  nail: {cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */
   bon: {max: 5, need: [0, 1, 2, 4, 5], atk: [0, 5, 9, 13, 17, 21], eva: [0, 2, 4, 6, 8, 9], dmgB: [0, 0, 0, 1, 1, 2], accel: {max: 3, hit: 5, eva: 5}},
   /* 혈귀 특수 루트: 라만차랜드 초대장이 오는 해 */
@@ -142,10 +172,16 @@ export const CFG = {
   /* 엄지 패시브 탄환: 전투마다 기본 발수 + 서열 하나 오를 때마다 추가 */
   thumbAmmo: {base: 4, per: 2},
   /* 약지 패시브 예술적 감각: 적을 쓰러뜨릴 때 확률, 최대 스택, 스택당 피해 주사위 최대치 */
-  artSense: {chance: 10, max: 4, die: 5},
+  artSense: {every: 3, max: 4, die: 5},
+  /* 중지 되갚음: 스택 1당 받는 피해 −def, 다음 적중에서 스택을 쓰면 소모한 스택 1당 HP heal 회복, 스택은 keep 비율만 남는다 (내림) */
+  /* 화상: 라운드 끝에 스택×dmg 피해, 그 뒤 스택은 keep 비율만 남는다 (내림). 최대 max스택, 적이 거는 화상 스택은 foe 배. 붉은 화염(레바테인 전용)과는 별개 */
   rupture: {max: 20},
   /* 전용 책장이 없는 날개: 카드팩 대신 입사 때 보정치를 더 받는다 */
-  freeWing: {names: [], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
+  freeWing: {names: ['K사 날개', 'J사 날개', 'G사 날개'], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
+  burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5},
+  middle: {def: 2, keep: 0, heal: 1, dmg: 1},
+  /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
+  ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
