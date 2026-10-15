@@ -56,7 +56,7 @@ export const CFG = {
   /* 쉬움: 적에게 붙는 보정을 거의 없애 처음 설정한 약한 수치에 가깝게 한다.
      grow 해마다 늘어나는 체력·공격·회피 ×, late 히든 보스 후반 성장 ×, endless 무한런 등급 보정 ×, hidden 히든 보스 체력 배수 ×, bossHard 보스별 난이도 보정(hard)의 세기 ×, hp 모든 적 체력 ×, atkMinus 모든 적 공격 − */
   easy: {grow: 0, late: 0, endless: 0.5, hidden: 0.2, bossHard: 0, hp: 0.6, atkMinus: 0, hiddenMin: 70, boss: {impurity: 2.5}},
-  endless: {span: 3, grades: ['도시 괴담', '도시 전설', '도시 질병', '도시 악몽', '도시의 별', '불순물'], hpMul: 0.08, atk: 1, star: 'pianist', final: 'impurity'},
+  endless: {span: 3, grades: ['도시 괴담', '도시 전설', '도시 질병', '도시 악몽', '도시의 별', '발톱과 조율자'], hpMul: 0.08, atk: 1, star: 'pianist', final: 'impurity', finalFirst: 'baral', finalNext: 'zena'},
   /* 제 2막 무한 모드: 마지막 등급(불순물)을 넘기면 열린다. 위협 보정이 끝없이 오르고, every년마다 강화된 불순물이 나타난다
      (강화 1회당 체력 ×(1+impPer), 공격 +impAtk). 확률이 있는 히든 보스는 hiddenAdd%만큼 더 자주 나오고,
      전투가 있는 해마다 crack% 확률로 '세계의 균열'이 열려 조건과 상관없이 아직 이기지 못한 히든 보스 중 무엇이든 나타난다.

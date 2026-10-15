@@ -1044,6 +1044,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const id=mc.corp.chain.shift();mc.corp.trial=id;(G.met=G.met||[]).push(id);
       return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
     }
+    /* 연전: 바랄을 쓰러뜨리면 쉬지 않고 제나가 나선다 */
+    if(G.ch.flags.zenaPend&&!G.ch.beaten.includes(CFG.endless.finalNext))return {type:'fight',enemy:CFG.endless.finalNext,enc:{hidden:true,label:'연전 · 마지막 상대'}};
     /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
     if(G.infinite&&!G.ch.oldEnd&&age(G)>=CFG.oldAge){G.ch.oldEnd=true;return {type:'end',win:true,old:true}}
     G.free=false;G.year++;
@@ -1063,7 +1065,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if((G.year-baseEnd)%INF.every===0)return {type:'fight',enemy:X_.final,enc:{hidden:true,label:`강화 불순물 · ${(G.ch.infImp||1)}번째`}};
       f=k_%X_.span?null:'table:late';
     }else
-    if(k_>0)f=k_%X_.span?null:gradeAt(G.year)===X_.grades.length-1?X_.final:gradeAt(G.year)===X_.grades.indexOf('도시의 별')&&!(G.ch.minis||[]).includes(X_.star)?X_.star:'table:late';
+    if(k_>0)f=k_%X_.span?null:gradeAt(G.year)===X_.grades.length-1?X_.finalFirst:gradeAt(G.year)===X_.grades.indexOf('도시의 별')&&!(G.ch.minis||[]).includes(X_.star)?X_.star:'table:late';
     if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1)return {type:'fight',enemy:f,enc:{label:X_.grades[gradeAt(G.year)]+' · 마지막 등급 전투'}};
     if(f){
       /* 히든 보스: 목록 위에서부터 조건(과 확률)이 맞는 첫 보스가 불길한 예감(omen)으로 먼저 나타난다.
@@ -1227,10 +1229,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     if(foe.hidden){
       ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
+      if(foe.chain){ch.flags.zenaPend=1;chips.push('연전 · 쉴 틈 없이 다음 상대가 나선다')}else if(C.id===CFG.endless.finalNext)ch.flags.zenaPend=0;
       if(ch.corp&&ch.corp.trial===C.id)ch.corp.trial=null;
       /* 기업 루트: 머리의 시험(발톱 → 조율자)을 끝까지 넘으면 영구 강화 */
       if(ch.corp&&ch.corp.headSeen&&!ch.corp.cleared&&!(ch.corp.chain||[]).length&&CP.chain.every(id=>ch.beaten.includes(id))){ch.corp.cleared=true;chips.push('머리의 시험을 넘었다');corpBump(ch,CP.clear,chips)}
-      {const h=Math.min(CFG.hidden.winHeal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('숨을 돌린다 · HP +'+h)}}
+      if(!foe.chain){const h=Math.min(CFG.hidden.winHeal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('숨을 돌린다 · HP +'+h)}}
       /* 엄지 소속으로 뇌횡: 동부십검 + 엄지 검술 (덱 고정) */
       const td=foe.thumbDrop&&meets(ch,foe.thumbDrop.req)?foe.thumbDrop:null;
       /* 도서관의 사서: 낮은 확률로 책장 카드 */
@@ -1589,7 +1592,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.passive&&B.passive.id==='stance'){const v=B.stance==='bear'?Math.max(0,5-B.sal):Math.max(0,B.sal-5);if(v>0){dmg+=v*2;note+=` 살 ${B.sal} · 취약+${v*2}`}}
       if(A.passive){
         if(A.passive.id==='godfather'&&A.gfBonus){const x=d(2);dmg+=x;A.gfBonus=false;note+=` ${A.passive.n}+${x}`}
-        if(A.passive.id==='claw'){const x=d(4);dmg+=x;note+=` ${A.passive.n}+${x}`}
+        if(A.passive.id==='claw'){const x=d(A.passive.dice||4);dmg+=x;note+=` ${A.passive.n}+${x}`}
       }
       if(A.breath>0||c.forceCrit){
         if(c.forceCrit||d(100)<=critPct(A.breath)){const cm=(A.blade?(A.bladeBoost?CFG.syn['검계'].boostCrit:CFG.syn['검계'].crit):CFG.critMult)+(A.hwando?0.1*Math.min(A.breath,CFG.breath.hwandoCap):0);dmg=Math.floor(dmg*cm);note+=A.hwando?` 치명(환도 ×${cm.toFixed(1)})`:' 치명'}
