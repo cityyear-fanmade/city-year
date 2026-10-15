@@ -864,6 +864,8 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     while(ch.deck.length>deckMax(ch)){const k=ch.deck.map(id=>D.cards[id].fixed).lastIndexOf(false);if(k<0)break;(ch.side=ch.side||[]).push(ch.deck.splice(k,1)[0])}
   }
   /* 예전 판: 재능·성장기의 피해 최소 효과가 장비를 낄 때 지워져 있었다. 처음 한 번만 그 출처(재능·성장기)를 세어 되돌린다 */
+  /* 날개 대표·날개 소속·손가락은 해결사를 겸할 수 없다: 예전 규칙이나 해고 뒤 등록으로 등록된 채 남아 있으면 반납한다 */
+  function repairFixer(ch){if(ch.licensed&&noFixer(ch)){ch.licensed=false;ch.title=ch.titleKind==='color'?null:ch.title}}
   function repairDmin(ch){
     const s=ch.stats;if(s.dminUp!==undefined)return;
     s.dminUp=[ch.t,...(ch.kid||[]).map(k=>k.x)].filter(x=>x&&x.fx&&(x.fx.dminUp||x.n==='타고난 완력'||x.n==='어깨너머 손질')).length;
@@ -929,9 +931,11 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   function shopAccess(ch){
     const A=D.access;let g=A.base;
     if(ch.aff&&A.aff[ch.aff.type])g=Math.max(g,A.aff[ch.aff.type]);
+    /* 직접 날개를 세운 대표는 소속(aff)이 없어도 날개 최고 직급과 같은 대접 */
+    if(isFounder(ch))g=Math.max(g,A.aff.wing);
     const fingerUp=isFinger(ch)&&ch.fr&&ch.fr.tier>=D.fingerRules.shopTier;
     /* 협회·날개처럼 직급표가 있는 진로는 해결사 급수가 오르지 않으므로, 최고 직급(날개 임원 등)에 오르면 급수 보너스와 같은 +1 */
-    const CR_=D.careers&&ch.aff&&D.careers[ch.aff.type],topRank=!!(CR_&&CR_.ranks&&ch.fi!=null&&ch.fi>=CR_.ranks.length-1);
+    const CR_=D.careers&&ch.aff&&D.careers[ch.aff.type],topRank=isFounder(ch)||!!(CR_&&CR_.ranks&&ch.fi!=null&&ch.fi>=CR_.ranks.length-1);
     if((ch.licensed&&ch.rank<=A.rankBonus.rank)||fingerUp||topRank)g=Math.min(A.max,g+A.rankBonus.plus);
     return g;
   }
@@ -991,7 +995,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   /* 자격 등록: 가장 낮은 급수에서 시작한다. 특색은 여기서 주지 않는다 */
   /* 동부 외곽 출신이 N사 날개에 들어가면 해결사 자격을 지키고, N사 승진마다 해결사 급수도 함께 오른다 */
   const eastN=ch=>isN(ch)&&isEastOuter(ch);
-  const noFixer=ch=>isFinger(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
+  const noFixer=ch=>isFinger(ch)||isFounder(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
   function license(ch){
     /* 손가락 조직원·날개 직원은 해결사로 등록될 수 없다 */
     if(ch.licensed||noFixer(ch))return false;
@@ -1603,7 +1607,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function advanceYear(G){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
-    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);autoOffers(mc);
+    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);autoOffers(mc);
     if(mc.distPick)setDistort(mc,'');
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
