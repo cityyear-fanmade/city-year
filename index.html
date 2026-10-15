@@ -447,7 +447,7 @@ const CFG = {
   ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, below: 30, heal: 50},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
-  orderBonusLight: 1, catchupBonus: 10, gapFirst: 30, firstHit: 10,
+  orderBonusLight: 1, catchupBonus: 5, spdMul: 2, gapFirst: 30, firstHit: 10,
   /* 방어 카드 기본 회피 보너스 */
   defBonus: 15,
   /* 방어 자세(아무 카드도 내지 않은 라운드): 적 공격을 방어로 받는다.
@@ -1934,7 +1934,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(P.pw)P.dmgB=P.dmgB0+T_.dmg*P.lostN;if(P.wl)P.defUp=P.defUp0+T_.def*P.lostN}
     if(P.armor)P.dr=P.dr0+(P.charge>=P.armor.at?P.armor.dr:0);
     if(P.chargeRound){P.charge=Math.min(P.chargeCap,P.charge+P.chargeRound)}
-    for(const X of [P,E]){X.r=d(100);X.cu=X.catchup;X.tot=X.r+X.spd+(X.catchup?CFG.catchupBonus:0)+(X.warpLead>=C.round?200:0)}
+    for(const X of [P,E]){X.r=d(100);X.cu=X.catchup;X.tot=X.r+X.spd*CFG.spdMul+(X.catchup?CFG.catchupBonus:0)+(X.warpLead>=C.round?200:0)}
     for(const [X,Y] of [[P,E],[E,P]]){
       X.lead=X.tot>Y.tot;X.fsOn=X.fs=X.tot-Y.tot>=CFG.gapFirst;X.catchup=X.tot<Y.tot;X.advUsed=false;
       const el=X.egoLight&&C.round<=X.egoRounds?X.egoLight:0;

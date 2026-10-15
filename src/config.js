@@ -23,7 +23,7 @@ export const CFG = {
   ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, below: 30, heal: 50},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
-  orderBonusLight: 1, catchupBonus: 10, gapFirst: 30, firstHit: 10,
+  orderBonusLight: 1, catchupBonus: 5, spdMul: 2, gapFirst: 30, firstHit: 10,
   /* 방어 카드 기본 회피 보너스 */
   defBonus: 15,
   /* 방어 자세(아무 카드도 내지 않은 라운드): 적 공격을 방어로 받는다.
