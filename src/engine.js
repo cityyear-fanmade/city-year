@@ -780,7 +780,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const kidAge=(k,y)=>Math.max(0,(y||0)-k.born);
   /* 토벌 의뢰: 결혼 중인 배우자와 성인이 된 아이 중 가장 강한 가족 (level 0~8, 급수 = 9 − level). 배우자는 결혼한 햇수가 지날수록 급수가 오른다 */
   const kidLevel=(k,y)=>Math.min(8,Math.floor((kidAge(k,y)-BD.kid.adult)/BD.hunt.years)+(BD.hunt.job[k.job]||0));
-  const spouseLevel=(b,y)=>Math.min(8,(BD.hunt.spouse[b.route]??1)+(b.promo||0)+Math.floor(Math.max(0,(y||0)-(b.since||0))/BD.hunt.spouseYears));
+  const spouseLevel=(b,y)=>{const R=D.bond&&D.bond.routes[b.route],V=R&&(R.variants?R.variants[b.variant||0]:R);return Math.min(8,((V&&V.lv!=null)?V.lv:(BD.hunt.spouse[b.route]??1))+(b.promo||0)+Math.floor(Math.max(0,(y||0)-(b.since||0))/BD.hunt.spouseYears))};
   function familyHunter(ch,y){
     const b=ch.bond;if(!b)return null;
     const cs=(b.kids||[]).filter(k=>!k.dead&&kidAge(k,y)>=BD.kid.adult).map(k=>({n:k.n,job:k.job,lv:kidLevel(k,y),kid:k}));
@@ -812,7 +812,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
   function bondMeetEvent(ch){
-    const B=D.bond,rt=bondRouteOf(ch),R0=rt&&B&&B.routes[rt];
+    const B=D.bond;let rt=bondRouteOf(ch);
+    /* 히든: 해결사 3급 이하라면 가끔 처음부터 2~1급 해결사인 상대를 만난다 */
+    if(rt&&rt!=='hyeolgwi'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
+    const R0=rt&&B&&B.routes[rt];
     if(!R0)return null;
     const vi=R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;
     return {t:R.meet.t,x:R.meet.x,c:[
