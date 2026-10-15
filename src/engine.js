@@ -1520,7 +1520,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       let spR=null;
       if(A.isP&&C.ally&&rolls.length){const dd=wd?wd[1]:die;spR=rolls.map(()=>c.range&&!wd?c.range[0]-1+d(c.range[1]-c.range[0]+1):Math.max(lo2,d(dd)));
         const S_=rolls.reduce((a,b)=>a+b,0),SP_=spR.reduce((a,b)=>a+b,0),w_=CFG.bond.allyDice,mix=Math.round(w_*(S_+SP_));dmg+=mix-S_;
-        pnote+=` ${C.ally.name} 주사위 ${spR.join('+')} · (본인 ${S_} + ${C.ally.name} ${SP_})×${w_}=${mix}`}
+        pnote+=` 합산 (본인 ${S_} + ${C.ally.name} ${SP_})×${w_}=${mix}`}
       /* 뒤틀린 책장: 도박 카드 (주사위 한 번, 맞으면 큰 피해) */
       if(c.gamble){const g=c.gamble,r=d(g.die),win=g.win.includes(r);if(g.keep){if(win)dmg=g.dmg;note+=` 1d${g.die} ${r}${win?` 사의 경계 · 피해 ${g.dmg}`:''}`}else{dmg=win?g.dmg:g.lose;rolls.length=0;rolls.push(r);note+=` 1d${g.die} ${r}${win?' 대박':''}`}
         if(win&&g.heal){const h=Math.min(g.heal,A.maxHp-A.hp);A.hp+=h;note+=` HP+${h}`}
