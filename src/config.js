@@ -56,7 +56,7 @@ export const CFG = {
   /* 쉬움: 적에게 붙는 보정을 거의 없애 처음 설정한 약한 수치에 가깝게 한다.
      grow 해마다 늘어나는 체력·공격·회피 ×, late 히든 보스 후반 성장 ×, endless 무한런 등급 보정 ×, hidden 히든 보스 체력 배수 ×, bossHard 보스별 난이도 보정(hard)의 세기 ×, hp 모든 적 체력 ×, atkMinus 모든 적 공격 − */
   easy: {grow: 0, late: 0, endless: 0.5, hidden: 0.2, bossHard: 0, hp: 0.6, atkMinus: 0, hiddenMin: 70, boss: {impurity: 2.5}},
-  endless: {span: 3, grades: ['도시 괴담', '도시 전설', '도시 질병', '도시 악몽', '도시의 별', '불순물'], hpMul: 0.08, atk: 1, star: 'pianist', final: 'impurity'},
+  endless: {span: 3, grades: ['도시 괴담', '도시 전설', '도시 질병', '도시 악몽', '도시의 별', '발톱과 조율자'], hpMul: 0.08, atk: 1, star: 'pianist', final: 'impurity', finalFirst: 'baral', finalNext: 'zena'},
   /* 제 2막 무한 모드: 마지막 등급(불순물)을 넘기면 열린다. 위협 보정이 끝없이 오르고, every년마다 강화된 불순물이 나타난다
      (강화 1회당 체력 ×(1+impPer), 공격 +impAtk). 확률이 있는 히든 보스는 hiddenAdd%만큼 더 자주 나오고,
      전투가 있는 해마다 crack% 확률로 '세계의 균열'이 열려 조건과 상관없이 아직 이기지 못한 히든 보스 중 무엇이든 나타난다.
@@ -123,21 +123,33 @@ export const CFG = {
   /* 인연(동반자) 시스템: 일상 중에 인연을 만난다(혈귀·동부 외곽 출신은 전용 인연). 이름을 붙이면 gap[0]~gap[1]년마다 사건이 steps번,
      그다음 청혼 사건. 청혼은 die면 굴려 ok 안에 들면 성공(결혼), 기회는 tries번. 결혼하면 marry 보정, 해마다 yearMind 정신력, 정신력이 1이 되면 한 번 saveMind로 붙잡아 준다.
      기회를 모두 쓰면 인연이 끝나고 최대 정신력이 lossMind 줄어든다 (영구) */
-  bond: {routes: ['office', 'assoc', 'wing', 'finger'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], tries: 2, waitDc: 40,
+  bond: {routes: ['office', 'assoc', 'wing', 'finger', 'kuro', 'blade', 'awl'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], tries: 2, waitDc: 40,
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
     /* 결혼 뒤: 금기를 저지른 다음 해부터 해마다 dieChance% 배우자가 세상을 떠난다(최대 정신력 −lossMind). 아이: kid.from년 뒤부터 해마다 chance%, 최대 max명, 간격 gap년, 태어나면 최대 정신력 +mind. adult살이 되면 사무소·해결사·협회 중 한 곳에 들어간다 */
     /* 히든 인연(상대가 처음부터 2~1급 해결사): 해결사 등록자가 rank급 이하일 때 만남이 열리면 chance% 확률로 이 길이 된다 */
     hidden: {rank: 3, chance: 12},
     /* 인연과 함께 싸우는 보스: 라운드마다 인연이 추가 공격 (고정 피해 base + per×배우자 급수 레벨, ±3) */
-    ally: {base: 8, per: 2},
+    ally: {base: 8, per: 2}, allyDice: 0.75, allyHit: 10,
     dieChance: 2, riskStep: 0.1, kid: {from: 5, chance: 22, max: 2, gap: 3, mind: 2, adult: 20},
     /* 뒤틀린 뒤: 성인이 된 아이가 있으면 gap년마다 chance%로 토벌 의뢰가 온다. 여럿이면 가장 강한 아이(등급)가 온다. 등급 = 20세 이후 2년마다 +1(최대 8) + 직업 가산 */
     hunt: {gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1, mul: 1.1, mulTop: 1.5, topLv: 8,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
-      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, hyeolgwi: 3, east: 1, highfixer: 7}, spouseYears: 3, spouseJob: {office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},
+      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7}, spouseYears: 3, spouseJob: {office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
   /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */
+  /* 조직: 덱이 at[0](8)장 이상일 때 패시브가 열리고(그 아래로 압축하면 닫힌다), at[1](10)장에서 최종 단계가 된다. 흑운회: 시작 구름 start[단계] · max에 닿으면 흑운(주사위마다 +die · 적중 출혈 +bleedPlus · 마지막 단계에서 받는 피해 ×half) · 라운드 끝에 구름 reset.
+     검계: 라운드 시작 호흡 +1(8장부터 +2) · 호흡 자연 감소 decay[단계] · 호흡 2당 모든 카드 +1. 밤의 송곳: 속도 굴림 +init[단계] · 출혈 걸린 적에게 명중 +bleedHit · 선공이면 상대 회피 절반 */
+  /* 조직 루트: 엄지 전향 제안(흑운회·밤의 송곳의 최고 서열) → 몇 해 뒤 숙청 소문 → 반역하면 엄지의 대모 · 검계 최고 서열 → 뒤틀린 준 → 역적 → S사 절도사 */
+  synRoute: {offerChance: 55, purgeGap: 3, fleeHp: 6},
+  /* 무한 모드 추가 엔딩(죽는 것 말고): 외곽 괴수 sealBeasts마리를 쓰러뜨리면 균열이 닫힌다 · 히든 보스 starHidden마리를 이기면 별 · 가족이 있고 무한 모드 settleYears년이 지나면 정착. 각각 한 번, 끝낸 뒤에도 이어서 살 수 있다 */
+  outEnds: {sealBeasts: 3, starHidden: 16, settleYears: 12},
+  syn: {at: [8, 10],
+    '흑운회': {key: 'kuro', start: [1, 2, 3, 4], max: 5, reset: 2, die: 2, bleedPlus: 1, half: 0.5},
+    '검계': {key: 'blade', decay: [2, 1, 1, 0], per: 4, crit: 1.25, boostPer: 3, boostCrit: 1.5},
+    '밤의 송곳': {key: 'awl', init: [0, 5, 10, 15], bleedHit: 10}},
+  /* 검지 지령 수행: 스택이 가득 찬 뒤 지령 카드를 every번 더 수행할 때마다 카드 수치(피해 · 회피 · 보호막) +1, 최대 max */
+  prescPlus: {every: 2, max: 5},
   oracle: {chance: 25, tries: 2, every: 5, dc: 40, presc: 10, missHit: 15, missEva: 5},
   /* 소지(표식)의 도: 표식이 생긴 뒤 every년차마다 인·의·예·지 사건이 차례로 온다. 1d100이 dc 이상이면 키워드를 얻고, 4개를 모으면 이름을 붙인 성도(전용 무기)를 얻는다.
      성도 수치: 각 항목을 [최소, 최대] 범위에서 굴린다 (atk 공격, eva 회피, dmgB 추가 피해, hit 명중) */
