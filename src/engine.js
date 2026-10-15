@@ -289,10 +289,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const h=Math.min(K.hp,ch.stats.maxHp-ch.hp);ch.money-=K.price;ch.hp+=h;return h;
   }
   /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 쓰여 HP를 heal 회복한다 (전투마다 1개). 최대 carry개, 무한 모드 뒤엔 값이 오른다 */
-  const ampPrice=ch=>ch.infinite?CFG.ample.priceInf:CFG.ample.price;
+  const ampPrice=ch=>CFG.ample.price;
   function buyAmple(ch){
-    const K=CFG.ample;if((ch.ample||0)>=K.carry||ch.money<ampPrice(ch))return false;
-    ch.money-=ampPrice(ch);ch.ample=(ch.ample||0)+1;return true;
+    const K=CFG.ample;if((ch.ample||0)>=K.carry||(ch.ampleBought||0)>=K.limit||ch.money<ampPrice(ch))return false;
+    ch.money-=ampPrice(ch);ch.ample=(ch.ample||0)+1;ch.ampleBought=(ch.ampleBought||0)+1;return true;
   }
   /* 공방 등급: 기본 → 소속 → 해결사 급수 보너스 */
   function shopAccess(ch){
