@@ -1371,6 +1371,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.blade){const g=P.synT>=2?2:1;P.breath=Math.min(CFG.breath.cap,P.breath+g);if(!C.quiet){const m={t:'kw',s:`${P.name} · 호흡결 · 호흡 +${g} (지금 ${P.breath})`};C.log.push(m);C.cur.push(m)}}
     {const dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id)));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
     if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
+    if(P.boneNext){P.hand.push('bl_bone');P.boneNext=false}
     if(P.grantNext){P.hand.push(P.grantNext);P.grantNext=null}
     /* 검지 패시브 지령 수행: 손패 한 칸에 ☆ 지령이 박힌다 */
     if(P.index){P.starSlot=d(Math.min(CFG.hand,P.hand.length))-1;P.starId=P.hand[P.starSlot]}
@@ -1502,6 +1503,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function addSerum(A,c,L){A.serum=Math.min(3,(A.serum||0)+c.serum);L('kw',`  ${A.name} · 혈청 ${A.serum}/3${A.serum>=3?' · 과부하 준비':''}`)}
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
+    if(c.flesh){A.evaB-=30;A.fleshRound=C.round;L('kw',`${A.name} · ${c.n} · 이번 라운드 회피 −30`)}
     if(c.cloudGain&&A.kuro)for(let i=0;i<c.cloudGain;i++)addCloud(A,L);
     if(c.needBlack&&!A.black){L('sys',`${A.name} · ${c.n} · 흑운이 아니면 쓸 수 없다 · 불발`);return}
     if(c.t==='buff'&&(c.heal||c.passNext||c.debuffHit||c.cleanseRand)){
@@ -1682,6 +1684,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.movement&&C.round%X.movement.every===0&&A.mvRound!==C.round&&B.hp>0){A.mvRound=C.round;B.hp=Math.max(0,B.hp-X.movement.dmg);L('dmg',`  다 카포 · 악장 · ${B.name} 고정 피해 ${X.movement.dmg}`)}
         if(X.execute&&B.hp>0&&B.hp<=B.maxHp*X.execute.below){B.hp=Math.max(0,B.hp-X.execute.dmg);L('dmg',`  조율 · ${B.name} 고정 피해 ${X.execute.dmg}`)}}
       if(B.wx&&B.wx.grudge&&B.hp>0){B.grudge=Math.min(5,(B.grudge||0)+1)}
+      if(B.fleshRound===C.round&&B.isP&&!B.boneNext){B.boneNext=true;L('kw',`  ${B.name} · 육참 · 맞았다 · 다음 손패에 골단`)}
       if(B.kuro&&B.hp>0&&dmg>0)addCloud(B,L);
       if(A.passive&&A.passive.id==='stance')A.sal=Math.min(A.passive.salMax,A.sal+1);
       if(B.passive&&B.passive.id==='stance')B.sal=Math.max(0,B.sal-1);
