@@ -76,7 +76,7 @@ export const CFG = {
     tiers: [{at: 40, breath: 5, eva: 5}, {at: 32, breath: 4, eva: 4}, {at: 26, breath: 3, eva: 3}, {at: 20, breath: 2, eva: 2}, {at: 15, breath: 1, eva: 1}, {at: 11, breath: 1, eva: 0}],
     ego: {atk: {n: '공격용', hit: 14, floor: 20, card: 'e_bloom_atk'}, def: {n: '방어용', hp: 45, eva: 3, floor: 11, card: 'e_bloom_def'}},
     /* 개화한 E.G.O를 가지면: 덱 최대 장수 +deckPlus (고정 전용 카드가 그 자리), 전투 처음 lightRounds라운드 동안 빛 +light */
-    deckPlus: 1, light: 1, lightRounds: 3},
+    deckPlus: 2, light: 1, lightRounds: 3},
   /* 공방 거리: 1년차부터 every년마다 들를지 묻는다(해는 넘어가지 않음). blackFrom년차부터 암시장 물건 blackStock개 진열 */
   /* 육신 뒤틀림: 장비를 쓸 수 없고(전부 보관함), 상대에게 디버프를 걸 수 없다. 깡 능력치가 크게 오르고 덱은 뒤틀린 책장(도박 카드 12장, 빛 없음)으로 고정 */
   distort: {fx: {maxHp: 40, atk: 6, eva: 0, spd: 0}, deck: ['d_jackpot', 'd_jackpot', 'd_jackpot', 'd_rend', 'd_rend', 'd_rend', 'd_maw', 'd_maw', 'd_thrash', 'd_thrash', 'd_coin', 'd_curl']},
