@@ -145,7 +145,7 @@ export const CFG = {
   /* 무한 모드 추가 엔딩(죽는 것 말고): 외곽 괴수 sealBeasts마리를 쓰러뜨리면 균열이 닫힌다 · 히든 보스 starHidden마리를 이기면 별 · 가족이 있고 무한 모드 settleYears년이 지나면 정착. 각각 한 번, 끝낸 뒤에도 이어서 살 수 있다 */
   outEnds: {sealBeasts: 3, starHidden: 16, settleYears: 12},
   syn: {at: [6, 8, 10],
-    '흑운회': {key: 'kuro', start: [1, 2, 3, 4], max: 5, reset: 2, die: 3, bleedPlus: 1, half: 0.5},
+    '흑운회': {key: 'kuro', start: [1, 2, 3, 4], max: 5, reset: 2, die: 2, bleedPlus: 1, half: 0.5},
     '검계': {key: 'blade', decay: [2, 1, 1, 0], per: 4, crit: 1.25, boostPer: 3, boostCrit: 1.5},
     '밤의 송곳': {key: 'awl', init: [0, 5, 10, 15], bleedHit: 10}},
   /* 검지 지령 수행: 스택이 가득 찬 뒤 지령 카드를 every번 더 수행할 때마다 카드 수치(피해 · 회피 · 보호막) +1, 최대 max */
