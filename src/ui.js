@@ -240,7 +240,7 @@ export function startUI(E,app){
     if(pv&&X.ledger>0)out.push(`<span class="chip stk" style="--kc:var(--bleed)"><b>${pv.n} ${X.ledger}/${pv.need}</b><small>${X.ledger>=pv.need?'다음 명중 1d110':'다 차면 명중 1d110'}</small></span>`);
     /* 전용 무기 디버프 */
     const pw=G&&G.ch&&G.ch.gear.weapon&&G.ch.gear.weapon.wx||{};
-    const W=[['prescript','지령',v=>`명중 −${3*v}`],['warp','왜곡',v=>`주는 피해 −${v}`],['shock','감전',v=>`회피 −${3*v}`],['chain','사슬',v=>`회피 −${2*v}`],['web','거미줄',v=>`회피 −${2*v}`],['hunger','오랜 굶주림',v=>`${v}/${CFG.hunger.max} · 다음 공격 카드의 첫 적중 피해 +${v} (쓰면 전부 소진)`],['work','작품',v=>`명중 +${CFG.ring.hit*v} · ${CFG.ring.max}이면 다음 적중 피해 ×${CFG.ring.finish}`],['mk','표적',v=>`${v}/3 · 3이면 피해 2배`],['grudge',pw.grudgeN||'원한',v=>`다음 적중 +${v*(pw.grudge||4)}`],['wecho',pw.echo&&pw.echo.n||'잔향',v=>`${v}/${pw.echo?pw.echo.need:5} · ${pw.echo?pw.echo.need:5}이면 고정 피해 ${pw.echo?pw.echo.dmg:10}`],['shield','보호막',v=>`피해 ${v} 막음`],['matc','재료 수집',v=>'신체관극의 재료가 된다'],['mat','재료',v=>`폐장 주사위 +${v}`],['disp','처분 표식',v=>'처분 주사위 +1'],['serum','혈청',v=>`${v}/3${v>=3?' · 다음 적중 ×1.5':''}`],['ammo','탄환',v=>`${v}발 남음 · 공격마다 1발`],['manner','예의를 지킬 것',v=>`명중 −${v}`],['presc','지령 수행',v=>`${v}/5 · 받는 피해 −${v*5}%`],['revenge','되갚음',v=>`${v}/5 · 받는 피해 −${v*CFG.middle.def} · 다음 적중 +${v*(X.revMul||CFG.middle.dmg)} · HP +${v*CFG.middle.heal}`],['sealMark','봉인 각인',v=>`${v}/5 · 해제 시 +${v*4}`],['accel','가속',v=>`명중·회피 +${v*5}`]];
+    const W=[['cloud','구름',v=>`${v}/${CFG.syn['흑운회'].max} · 가득 차면 흑운`],['black','흑운',v=>`주사위마다 +${CFG.syn['흑운회'].die} · 적중 시 출혈 +1`],['prescript','지령',v=>`명중 −${3*v}`],['warp','왜곡',v=>`주는 피해 −${v}`],['shock','감전',v=>`회피 −${3*v}`],['chain','사슬',v=>`회피 −${2*v}`],['web','거미줄',v=>`회피 −${2*v}`],['hunger','오랜 굶주림',v=>`${v}/${CFG.hunger.max} · 다음 공격 카드의 첫 적중 피해 +${v} (쓰면 전부 소진)`],['work','작품',v=>`명중 +${CFG.ring.hit*v} · ${CFG.ring.max}이면 다음 적중 피해 ×${CFG.ring.finish}`],['mk','표적',v=>`${v}/3 · 3이면 피해 2배`],['grudge',pw.grudgeN||'원한',v=>`다음 적중 +${v*(pw.grudge||4)}`],['wecho',pw.echo&&pw.echo.n||'잔향',v=>`${v}/${pw.echo?pw.echo.need:5} · ${pw.echo?pw.echo.need:5}이면 고정 피해 ${pw.echo?pw.echo.dmg:10}`],['shield','보호막',v=>`피해 ${v} 막음`],['matc','재료 수집',v=>'신체관극의 재료가 된다'],['mat','재료',v=>`폐장 주사위 +${v}`],['disp','처분 표식',v=>'처분 주사위 +1'],['serum','혈청',v=>`${v}/3${v>=3?' · 다음 적중 ×1.5':''}`],['ammo','탄환',v=>`${v}발 남음 · 공격마다 1발`],['manner','예의를 지킬 것',v=>`명중 −${v}`],['presc','지령 수행',v=>`${v}/5 · 받는 피해 −${v*5}%`],['revenge','되갚음',v=>`${v}/5 · 받는 피해 −${v*CFG.middle.def} · 다음 적중 +${v*(X.revMul||CFG.middle.dmg)} · HP +${v*CFG.middle.heal}`],['sealMark','봉인 각인',v=>`${v}/5 · 해제 시 +${v*4}`],['accel','가속',v=>`명중·회피 +${v*5}`]];
     for(const [k,n,h] of W)if(X[k]>0)out.push(`<span class="chip stk" style="--kc:var(--gold)"><b>${n} ${X[k]}</b><small>${h(X[k])}</small></span>`);
     return out.length?out.join(''):'<span class="chip dim">상태 없음</span>';
   }
@@ -299,7 +299,10 @@ export function startUI(E,app){
   const fingerPassive=(af,fi)=>af==='엄지'?`탄환 · 전투마다 ${CFG.thumbAmmo.base+CFG.thumbAmmo.per*fi}발 (서열마다 +${CFG.thumbAmmo.per}) · 공격마다 1발 소모 · 상대에게 예의를 지킬 것 1 (상대 명중 −1×스택)`
     :af==='검지'?'지령 수행 · ☆ 칸 카드를 내면 1(최대 5) · 호흡 +4 · 받는 피해 −5%×스택'
     :af==='중지'?'되갚음 · 맞을 때마다 1(최대 5) · 스택 1당 받는 피해 −2 · 다음 적중에서 스택을 모두 써 피해 +스택 · 소모한 스택 1당 HP 1 회복'
-    :af==='약지'?`작품 · 적중할 때마다 +1(전투 한정, 최대 ${CFG.ring.max}) · 스택당 명중 +${CFG.ring.hit} · 최대면 다음 적중 피해 ×${CFG.ring.finish} 후 ${CFG.ring.after}로`:null;
+    :af==='약지'?`작품 · 적중할 때마다 +1(전투 한정, 최대 ${CFG.ring.max}) · 스택당 명중 +${CFG.ring.hit} · 최대면 다음 적중 피해 ×${CFG.ring.finish} 후 ${CFG.ring.after}로`
+    :af==='흑운회'?`암운 · 전투 시작 구름 1 (덱 6장 +1 · 8장 +1 · 10장 +1) · 출혈을 걸거나 맞을 때마다 구름 +1 · 5가 되면 흑운: 피해 주사위마다 +${CFG.syn['흑운회'].die} · 적중 시 출혈 +1 · 라운드 끝에 구름 2로 · 덱 10장이면 흑운 중 받는 피해 ×${CFG.syn['흑운회'].half}`
+    :af==='검계'?'호흡결 · 매 라운드 호흡 +1 · 덱 6장 호흡 자연 감소 2→1 · 8장 호흡 +1 더 · 10장 호흡이 줄지 않음 · 호흡 '+CFG.syn['검계'].per+'당 모든 카드 피해 +1 · 호흡 10 이상 적중은 방어·보호막 무시'
+    :af==='밤의 송곳'?'뒷골목의 룰 · 출혈이 걸린 적에게 명중 +'+CFG.syn['밤의 송곳'].bleedHit+' · 선공이면 상대 회피 절반 · 덱 6장 속도 굴림 +5 · 8장 +10 · 10장 +15 (선공 첫 적중 출혈 +1)':null;
   /* 지속형 패시브: 손가락·히든 출생 등 늘 켜져 있는 효과를 HUD에 한 줄로 */
   function vPassive(ch){
     const P=[];const af=ch.aff&&ch.aff.name;
@@ -1069,7 +1072,7 @@ export function startUI(E,app){
     /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
     const cost=UI.sel.reduce((a,i)=>a+D.cards[P.hand[i]].c-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
     const cards=P.hand.map((id,i)=>{
-      const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&c.c>left);
+      const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&c.c>left)||(c.needBlack&&!P.black);
       return `<button class="card ${si>=0?'sel':''}${P.index&&i===P.starSlot?' presc':''}" data-a="pick" data-i="${i}" ${dis?'disabled':''}>
         <span class="cost">${c.c}</span>${si>=0?`<em class="ord">${si+1}</em>`:''}${P.index&&i===P.starSlot?'<span class="prescTag">📜 지령</span>':''}
         <span class="nm">${kindBadge(c)} ${c.n}${c.t==='atk'&&P.cg&&P.cg.n?` <b style="color:var(--gold)">${P.cg.n}</b>`:''}${lk?` <span class="bad small">잠김 · ${esc(C.E.passive.n)}</span>`:''}</span>${c.t==='atk'?`<span class="mono small" style="color:var(--gold)">최종 명중 ${sg(P.atk+c.hit+(P.passHit||0)+(P.cg?P.cg.hit:0))}${P.fsOn&&P.fs?' (+선제 '+CFG.firstHit+')':''}</span>`:''}<span class="cd">${cardLine(c,c.t==='atk'?P.cg:null,P.wx)}</span>
