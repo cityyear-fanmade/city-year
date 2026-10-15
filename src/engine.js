@@ -289,10 +289,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const h=Math.min(K.hp,ch.stats.maxHp-ch.hp);ch.money-=K.price;ch.hp+=h;return h;
   }
   /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 쓰여 HP를 heal 회복한다 (전투마다 1개). 최대 carry개, 무한 모드 뒤엔 값이 오른다 */
-  const ampPrice=ch=>ch.infinite?CFG.ample.priceInf:CFG.ample.price;
+  const ampPrice=ch=>CFG.ample.price;
   function buyAmple(ch){
-    const K=CFG.ample;if((ch.ample||0)>=K.carry||ch.money<ampPrice(ch))return false;
-    ch.money-=ampPrice(ch);ch.ample=(ch.ample||0)+1;return true;
+    const K=CFG.ample;if((ch.ample||0)>=K.carry||(ch.ampleBought||0)>=K.limit||ch.money<ampPrice(ch))return false;
+    ch.money-=ampPrice(ch);ch.ample=(ch.ample||0)+1;ch.ampleBought=(ch.ampleBought||0)+1;return true;
   }
   /* 공방 등급: 기본 → 소속 → 해결사 급수 보너스 */
   function shopAccess(ch){
@@ -362,6 +362,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 자격 등록: 가장 낮은 급수에서 시작한다. 특색은 여기서 주지 않는다 */
   /* 동부 외곽 출신이 N사 날개에 들어가면 해결사 자격을 지키고, N사 승진마다 해결사 급수도 함께 오른다 */
   const eastN=ch=>isN(ch)&&isEastOuter(ch);
+  /* 동부 외곽의 N사 직급과 해결사 급수를 맞춘다: 직급에 맞는 급수보다 낮으면(숫자가 크면) 그 급수까지 올린다 */
+  function alignEast(ch,chips){if(!eastN(ch)||!ch.licensed||ch.fi==null)return;const tgt=CFG.eastN.align[ch.fi]??9;while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);chips.push(...p.chips)}}
   const noFixer=ch=>isFinger(ch)||isFounder(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
   function license(ch){
     /* 손가락 조직원·날개 직원은 해결사로 등록될 수 없다 */
@@ -472,7 +474,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 승급 사건·고정 전투 승리: 손가락이면 서열, 아니면 해결사 급수 */
   function promoteAny(ch){
     if(canFingerUp(ch))return {chips:fingerStep(ch),finger:true};
-    const k=career(ch);if(k&&k!=='fixer'){const c=careerStep(ch);if(c&&eastN(ch)&&ch.licensed&&ch.rank>T.rankTop){const p=promote(ch);if(p)c.push(...p.chips)}return c?{chips:c}:null}
+    const k=career(ch);if(k&&k!=='fixer'){const c=careerStep(ch);if(c&&eastN(ch)&&ch.licensed){const tgt=Math.min(ch.rank-1,CFG.eastN.align[ch.fi]??9);while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);c.push(...p.chips)}}return c?{chips:c}:null}
     if(ch.licensed&&ch.rank>T.rankTop)return promote(ch);
     return null;
   }
@@ -567,7 +569,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.colorPass){ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';(ch.titleLog=ch.titleLog||[]).push('특색');ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 발현자 · 특색 · 모든 능력치 +5')}}
     if(fx.colorFail)topFailed(ch,chips,T.titleLabel+' 심사')
     let licensed=false;
-    if(fx.license){licensed=license(ch);if(licensed)chips.push(T.licenseGained+' · '+ch.rank+T.rankUnit)}
+    if(fx.license){licensed=license(ch);if(licensed){chips.push(T.licenseGained+' · '+ch.rank+T.rankUnit);alignEast(ch,chips)}}
     return {chips,licensed};
   }
   function lvOf(xp){let l=1;for(let i=1;i<CFG.levels.length;i++)if(xp>=CFG.levels[i])l=i+1;return l}
@@ -1218,8 +1220,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     /* 전투 승리 후 등록: 소속이 없거나 사무소 소속일 때만, 소문 판정(1d100 + 해결사 진로 보정 ≥ winLicenseDc) */
     if(!ch.licensed){
-      if((!ch.aff||ch.aff.type==='office')&&d(100)+(ch.paths.fixer||0)>=CFG.winLicenseDc&&license(ch)){
-        newly=true;chips.push(T.licenseGained+' · '+ch.rank+T.rankUnit);title=rankLabel(ch);tlabel=T.licenseGained;
+      if((!ch.aff||ch.aff.type==='office'||eastN(ch))&&d(100)+(ch.paths.fixer||0)>=CFG.winLicenseDc&&license(ch)){
+        newly=true;chips.push(T.licenseGained+' · '+ch.rank+T.rankUnit);alignEast(ch,chips);title=rankLabel(ch);tlabel=T.licenseGained;
       }
     }
     /* 약지 예술적 감각: 적을 쓰러뜨릴 때 10% 확률로 1 (최대 4, 영구) */

@@ -19,8 +19,8 @@ export const CFG = {
   /* 암시장 응급 카드: 방문마다 chance% 확률로 진열, 덱·카드함·제안 합쳐 최대 max장 */
   /* 공방 치유소: 한 번에 hp 회복, 방문마다 max번 */
   clinic: {price: 500, hp: 30, max: 3},
-  /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 heal 회복(전투마다 1개). carry개까지, 무한 모드 뒤엔 priceInf */
-  ample: {name: 'K사 엠플', price: 3500, priceInf: 20000, carry: 3, below: 30, heal: 60},
+  /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 heal 회복(전투마다 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
+  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, below: 30, heal: 50},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
   orderBonusLight: 1, catchupBonus: 10, gapFirst: 30, firstHit: 10,
@@ -157,8 +157,8 @@ export const CFG = {
   /* 생크 협회 전용 패시브 '결투 선언': 이 소속이 치르는 모든 전투에서 서로(나와 상대) 명중마다 주는 피해 +dmg */
   duel: {org: '생크 협회', n: '결투 선언', dmg: 3},
   /* 6시즌 N사 날개: 의체를 쓰지 않는다(의수 칸 사용 불가). 대신 전투마다 신체 강화(공격·회피·속도), 의체 심판: 의체 상대(enemies aug, 소개 문구에 의체가 분명한 적만) 적중마다 피해 +augDmg */
-  /* 동부 외곽 해결사 히든 제안: rank급 이하에서 N사가 startFi번째 직급(0 사원 · 1 대리)으로 스카우트. tries번까지, 거절하면 gap년 뒤 */
-  eastN: {rank: 5, startFi: 1, tries: 2, gap: 4},
+  /* 동부 외곽 해결사 히든 제안: rank급 이하에서 N사가 startFi번째 직급(0 사원 · 1 대리)으로 스카우트. tries번까지, 거절하면 gap년 뒤. align = N사 직급(사원~임원)별로 해결사 급수가 이만큼은 되도록 맞춘다 */
+  eastN: {rank: 5, startFi: 1, tries: 2, gap: 4, align: [9, 8, 6, 4, 2]},
   nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastTitle: '금기사냥꾼'},
   /* N사 날개 · 못(상대에게 쌓임, 최대 cap): 적중마다 hit(의체 적은 augHit). 3·4코스트 망치 카드가 못을 모두 흐트러짐으로 바꾼다 (nailBurst.mul배).
      흐트러짐: 단계(stages)마다 상대의 명중 −hit · 주는 피해 −dmg · 받는 피해 +take, 라운드 끝에 decay씩 줄고, stun(적 등급별) 이상이면 다음 라운드 기절 */
