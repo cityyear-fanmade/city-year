@@ -18,7 +18,8 @@ export const CFG = {
   defCut: {bleed: 0.75, rupture: 0.75},
   /* 암시장 응급 카드: 방문마다 chance% 확률로 진열, 덱·카드함·제안 합쳐 최대 max장 */
   /* 공방 치유소: 한 번에 hp 회복, 방문마다 max번 */
-  clinic: {price: 500, hp: 30, max: 3},
+  /* 치유소: 치료를 받을 때마다 값이 step씩 오른다 (한 판 전체 누적, 방문마다 최대 max번) */
+  clinic: {price: 500, step: 500, hp: 30, max: 3},
   /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 heal 회복(전투마다 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
   ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, below: 30, heal: 50},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
@@ -204,7 +205,8 @@ export const CFG = {
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
-  laev: {unlock: 20, selfEvery: 1, blueAt: 5, blueDot: 2, selfBlueHit: 30},
+  /* 레바테인 해방 단계: 붉은 화염을 건 횟수가 at에 닿을 때마다 한 단계씩 풀린다. f는 완료 성능에 대한 비율(공격 · 피해 주사위 · 푸른 화염 배율과 점화 · 자신 푸른 화염 명중 감소). f 0.5 이상부터 상대의 붉은 화염이 푸른 화염으로 바뀐다 */
+  laev: {stages: [{at: 20, id: 'laev_s1', f: 0.25, n: '1단계 해방'}, {at: 45, id: 'laev_s2', f: 0.5, n: '2단계 해방'}, {at: 80, id: 'laev', f: 1, n: '해방 완료'}], selfEvery: 1, blueAt: 5, blueDot: 2, blueMul: 2, selfBlueHit: 30},
   /* 엄지 검술(덱 고정): 카드를 얻는 자리마다 대신 받는 돈 */
   lockedCardMoney: 150,
   /* 공방 해결사: 4년차 갈림길에 chance% 확률로 제안. 1d die에서 minRoll 이상이면 성공. 공방 물건 할인율, 보관함 판매 비율 */
