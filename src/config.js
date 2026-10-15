@@ -206,7 +206,7 @@ export const CFG = {
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
   /* 레바테인 해방 단계: 붉은 화염을 건 횟수가 at에 닿을 때마다 한 단계씩 풀린다. f는 완료 성능에 대한 비율(공격 · 피해 주사위 · 푸른 화염 배율과 점화 · 자신 푸른 화염 명중 감소). f 0.5 이상부터 상대의 붉은 화염이 푸른 화염으로 바뀐다 */
-  laev: {stages: [{at: 11, id: 'laev_s1', f: 0.25, n: '1단계 해방'}, {at: 23, id: 'laev_s2', f: 0.5, n: '2단계 해방'}, {at: 34, id: 'laev', f: 1, n: '해방 완료'}], selfEvery: 1, blueAt: 5, blueDot: 2, blueMul: 2, selfBlueHit: 30},
+  laev: {stages: [{at: 20, id: 'laev_s1', f: 0.25, n: '1단계 해방'}, {at: 45, id: 'laev_s2', f: 0.5, n: '2단계 해방'}, {at: 80, id: 'laev', f: 1, n: '해방 완료'}], selfEvery: 1, blueAt: 5, blueDot: 2, blueMul: 2, selfBlueHit: 30},
   /* 엄지 검술(덱 고정): 카드를 얻는 자리마다 대신 받는 돈 */
   lockedCardMoney: 150,
   /* 공방 해결사: 4년차 갈림길에 chance% 확률로 제안. 1d die에서 minRoll 이상이면 성공. 공방 물건 할인율, 보관함 판매 비율 */
