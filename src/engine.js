@@ -1476,7 +1476,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const acA=A.wx&&A.wx.accel?(A.accel||0)*A.wx.accel.hit:0,acB=B.wx&&B.wx.accel?(B.accel||0)*B.wx.accel.eva:0;
       const trH=(A.trait==='bloodscent'&&B.bleed>0?15:0)+(A.trait==='enrage'&&A.hp<=A.maxHp/2?15:0),trE=B.trait==='coward'&&B.hp<=B.maxHp/2?20:0;
       const exH=(c.execHit&&(B.disp||0)>0?c.execHit:0)+trH;if(exH)pnote+=` 처분 표식 명중+${exH}`;
-      let am=A.atk+c.hit+exH-(A.manner||0)+(gr?gr.hit:0)+fsb+A.passHit+acA+(A.wx&&A.wx.hitB||0)+(A.ring?CFG.ring.hit*A.work:0)+(sub?sub.atk:0)-3*(A.prescript||0)-CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per)-((staggerStage(A)||{}).hit||0)-(A.isP&&A.laev==='open'&&isBlue(A)?CFG.laev.selfBlueHit:0),dm=B.eva+B.evaB-(B.evaPen||0)+(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0)+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?(C.round===1?30:15):0);
+      let am=A.atk+c.hit+exH-(A.manner||0)+(gr?gr.hit:0)+fsb+Math.min(CFG.spdHit.max,Math.max(0,Math.floor((A.spd-B.spd)/CFG.spdHit.per)))+A.passHit+acA+(A.wx&&A.wx.hitB||0)+(A.ring?CFG.ring.hit*A.work:0)+(sub?sub.atk:0)-3*(A.prescript||0)-CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per)-((staggerStage(A)||{}).hit||0)-(A.isP&&A.laev==='open'&&isBlue(A)?CFG.laev.selfBlueHit:0),dm=B.eva+B.evaB-(B.evaPen||0)+(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0)+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?(C.round===1?30:15):0);
       if(B.stunned)dm=0;
       const sa=sub&&sub.sure?Math.max(ra+am,rd+dm+1):ra+am,sd=rd+dm,G_=CFG.guard;
       const base={k:'atk',att:A.uid,def:B.uid,card:c,ra,ra2,rd,rdMax,am,dm,sa,sd,b:c.b,guard:B.guarding};
