@@ -450,7 +450,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const topEvent=ch=>{const k=career(ch);return k==='fixer'?D.colorExam:CR[k]&&CR[k].top};
   const topReady=ch=>{const k=career(ch);return !!k&&!canPromote(ch)&&!ch.title&&!ch.colorFailed&&promoDone(ch)>0&&(ch.year||0)>=(ch.topNext||0)}
   /* 특색·상석 심사 실패: 최대 CFG.top.tries번까지, 실패하면 CFG.top.wait년 뒤 다시 */
-  function topFailed(ch,chips,label){ch.topTries=(ch.topTries||0)+1;const left=CFG.top.tries-ch.topTries;
+  function topFailed(ch,chips,label){ch.topTries=(ch.topTries||0)+1;const sb=ch.bond;if(sb&&sb.st==='married'){sb.promo=(sb.promo||0)+1;chips.push(`배우자 승급 · ${sb.name} (+1급)`)}const left=CFG.top.tries-ch.topTries;
     if(left<=0){ch.colorFailed=true;chips.push(label+' 실패 · 다시 기회 없음')}else{ch.topNext=(ch.year||0)+CFG.top.wait;chips.push(`${label} 실패 · 남은 기회 ${left}번 · ${CFG.top.wait}년 뒤 다시`)}}
   /* ===== 손가락 서열 =====
      손가락마다 서열표가 있고, 오를 때마다 그 서열의 보정을 더한다. branch면 1d100으로 갈래를 고른다 */
@@ -522,6 +522,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){ch.deck.push('o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
     for(const f of [].concat(fx.flag||[]))ch.flags[f]=(ch.flags[f]||0)+1;
+    if([].concat(fx.flag||[]).includes('taboo'))bondTaboo(ch);
     if(fx.join){
       /* 손가락 가입: 소지를 뺀 네 손가락 중 하나를 직접 고른다 (고르지 않고 넘어오면 무작위 · 엄지 특화 출신은 엄지 확률 보정) */
       if(fx.join.from==='finger'&&!fx.join.name){ch.fingerPick=true;chips.push('손가락 · 어느 손가락에 설지 고른다')}
@@ -664,7 +665,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.mind<m0&&out)out(`정신력 −${m0-ch.mind} (${ch.mind}/${mindMax(ch)})`);
     if(ch.ego)return;
     if(ch.mind<=0){if(activeC&&activeC.ch===ch&&!activeC.over)mindBreak(activeC);else ch.mindDead=true}
-    else if(ch.mind===1&&!ch.distortDone)ch.distortPend=true;
+    else if(ch.mind===1&&!ch.distortDone){if(bondMarried(ch)&&!ch.bond.saved){ch.bond.saved=true;ch.mind=CFG.bond.saveMind;out&&out(`가족의 목소리 · ${ch.bond.name}의 목소리가 당신을 붙잡았다 · 정신력 ${ch.mind}`)}else ch.distortPend=true}
     else if(ch.mind<=M.voiceAt&&!ch.voiceUsed)ch.voicePend=true;
   }
   const gainMind=(ch,n)=>{const m0=ch.mind;ch.mind=Math.min(mindMax(ch),ch.mind+n);return ch.mind-m0};
@@ -731,8 +732,134 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     corpBump(ch,CP.up,chips);corpBump(ch,T_.per||{},chips);chips.push(`특이점 ${c.n} 강화 ${c.up}/${CP.upMax}`);
   }
   function corpForb(ch,chips){
-    const c=ch.corp;if(!corpYes(ch)||c.forb>=CP.forbMax)return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
+    const c=ch.corp;if(!corpYes(ch)||c.forb>=CP.forbMax)return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;bondTaboo(ch);corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
     if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다')}
+  }
+  /* ===== 인연(동반자) =====
+     ch.bond = {st: 'pick'(이름 정하는 중)|'met'|'married'|'lost'(배우자의 죽음)|'left'(결혼 전에 떠남)|'declined', kids[{n,born,job,told}], route, name, step, tries, love, since, next, saved} */
+  const BD=CFG.bond;
+  const bondGap=()=>BD.gap[0]+d(BD.gap[1]-BD.gap[0]+1)-1;
+  /* 이름은 마음대로 짓는 것이라 성별을 정하지 않는 표현만 쓰고, 이름 뒤 조사(은/는·이/가·과/와)는 받침에 맞춘다 */
+  const bondFill=(t,b)=>{const name=(b&&b.name)||'그 사람',c=name.charCodeAt(name.length-1),fin=c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28!==0;
+    return String(t||'').replace(/\{n\}(은|이|과)?/g,(m,j)=>name+(j?(j==='은'?(fin?'은':'는'):j==='이'?(fin?'이':'가'):(fin?'과':'와')):''))};
+  function bondNameErr(n){n=(n||'').trim();if(!n)return '이름을 적는다';if(n.length>12)return '12글자까지 쓸 수 있다';return ''}
+  function setBondName(ch,name,force){
+    const b=ch.bond;if(!b||b.st!=='pick'||(!force&&bondNameErr(name)))return false;
+    b.name=(name||'').trim()||'그 사람';b.st='met';b.since=ch.year||0;b.next=(ch.year||0)+bondGap();ch.bondPick=false;return true;
+  }
+  const bondMarried=ch=>!!(ch.bond&&ch.bond.st==='married');
+  function bondMarry(ch,chips){
+    const b=ch.bond,R=bondData(ch);b.st='married';b.since=ch.year||0;
+    addStats(ch.stats,BD.marry);if(BD.marry.maxHp)ch.hp+=BD.marry.maxHp;
+    chips.push(`결혼 · ${b.name}`);chips.push(bondFill(R.married,b));
+    chips.push(`최대 HP +${BD.marry.maxHp} · 최대 정신력 +${BD.marry.mindMax} · 사건 판정 +${BD.marry.check}`);
+  }
+  /* 결혼 전에 기회를 모두 쓰면 상대가 떠난다 (작은 대가) */
+  function bondLeft(ch,chips){
+    const b=ch.bond,R=bondData(ch);b.st='left';
+    ch.stats.mindMax=(ch.stats.mindMax||0)-BD.leaveMind;ch.mind=Math.min(ch.mind,mindMax(ch));
+    chips.push(`떠났다 · ${b.name}`);chips.push(bondFill(R.left,b));chips.push(`최대 정신력 −${BD.leaveMind} (영구)`);
+  }
+  /* 결혼한 뒤 금기(도시의 해가 되는 짓)를 저지르면 그때부터 해마다 dieChance%로 배우자가 세상을 떠난다 */
+  /* 배우자 사망 확률(%): 금기를 저지른 뒤엔 dieChance, 여기에 히든 보스를 이겨 쌓인 위험(0.1%씩)을 더한다 */
+  function bondRisk(b,y){return (b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0)}
+  function bondTaboo(ch){const b=ch.bond;if(b&&b.st==='married'&&b.tabooAt==null)b.tabooAt=ch.year||0}
+  /* 결혼한 뒤의 배우자의 죽음 (큰 대가). 아이는 남는다 */
+  function bondDeath(ch,chips){
+    const b=ch.bond;b.st='lost';
+    ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));
+    chips.push(`배우자의 죽음 · ${b.name}`);chips.push(`최대 정신력 −${BD.lossMind} (영구)`);
+  }
+  const kf=(t,n)=>bondFill(String(t).replace(/\{k\}/g,'{n}'),{name:n});
+  const kidWord=b=>(b.kids||[]).length>1?'자식들':'자식';
+  const kidAge=(k,y)=>Math.max(0,(y||0)-k.born);
+  /* 토벌 의뢰: 결혼 중인 배우자와 성인이 된 아이 중 가장 강한 가족 (level 0~8, 급수 = 9 − level). 배우자는 결혼한 햇수가 지날수록 급수가 오른다 */
+  const kidLevel=(k,y)=>Math.min(8,Math.floor((kidAge(k,y)-BD.kid.adult)/BD.hunt.years)+(BD.hunt.job[k.job]||0));
+  const spouseLevel=(b,y)=>Math.min(8,(BD.hunt.spouse[b.route]??1)+(b.promo||0)+Math.floor(Math.max(0,(y||0)-(b.since||0))/BD.hunt.spouseYears));
+  function familyHunter(ch,y){
+    const b=ch.bond;if(!b)return null;
+    const cs=(b.kids||[]).filter(k=>!k.dead&&kidAge(k,y)>=BD.kid.adult).map(k=>({n:k.n,job:k.job,lv:kidLevel(k,y),kid:k}));
+    if(b.st==='married')cs.push({n:b.name,job:BD.hunt.spouseJob[b.route]||'fixer',lv:spouseLevel(b,y),spouse:true});
+    return cs.reduce((a,c)=>!a||c.lv>a.lv?c:a,null);
+  }
+  function kidHuntEvent(G){
+    const ch=G.ch,y=G.year;if(!ch.distForm||(y<(ch.huntNext||0)))return null;
+    const k=familyHunter(ch,y);if(!k)return null;
+    ch.huntNext=y+BD.hunt.gap;if(d(100)>BD.hunt.chance)return null;
+    const H=D.bond.hunt,Lv=Math.max(0,k.lv),e=D.enemies.kid_hunt,Z=BD.hunt;
+    const jb=k.spouse?'배우자':(H.jobs[k.job]||'');ch.kidFoe=k.n;ch.kidFoeSpouse=!!k.spouse;ch.kidFoeLv=Lv;
+    e.n=`${k.n} · ${jb} ${9-Lv}급`;e.hp=56+Lv*Z.hp;e.atk=3+Lv*Z.atk;e.eva=2+Lv*Z.eva;e.spd=5+Lv*Z.spd;
+    e.deck=k.job==='fixer'?['lunge','a_maw','guard','lunge']:k.job==='assoc'?['a_maw','lunge','a_maw','guard']:['lunge','guard','lunge','guard'];
+    e.intro=kf(k.spouse?H.introSpouse:H.intro,k.n).replace('{j}',`${jb} ${9-Lv}급`);
+    return {type:'fight',enemy:'kid_hunt',enc:{id:'kid_hunt',roll:null,table:null,label:'토벌 의뢰'}};
+  }
+  /* 청혼: roll이면 1dN을 굴려 성공 범위면 결혼, 아니면 기회 1회 소모 (기회를 다 쓰면 인연이 끝난다) */
+  function bondPropose(ch,chips,roll){
+    const b=ch.bond;if(!b||b.st!=='met')return;
+    let ok=false;
+    if(roll){const r=d(BD.die);ok=r>=BD.ok[0]&&r<=BD.ok[1];chips.push(`1d${BD.die} · ${r} (${BD.ok[0]}~${BD.ok[1]} 성공)`)}
+    if(ok){bondMarry(ch,chips);return}
+    b.tries=(b.tries||0)+1;chips.push(bondFill(roll?D.bond.proposeNo:D.bond.proposeWaitFail,b)+` · 남은 기회 ${Math.max(0,BD.tries-b.tries)}/${BD.tries}`);
+    if(b.tries>=BD.tries)bondLeft(ch,chips);else b.next=(ch.year||0)+bondGap();
+  }
+  /* 인연 루트: 혈귀는 혈귀 전용, 동부 외곽 출신은 외곽 전용, 그 밖에는 소속(사무소·협회·날개·손가락) */
+  const bondRouteOf=ch=>ch.race==='hyeolgwi'?'hyeolgwi':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null);
+  /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
+  const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
+  function bondMeetEvent(ch){
+    const B=D.bond,rt=bondRouteOf(ch),R0=rt&&B&&B.routes[rt];
+    if(!R0)return null;
+    const vi=R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;
+    return {t:R.meet.t,x:R.meet.x,c:[
+      {l:B.meetYes,h:'동반자의 이름을 정한다 · 이후 몇 해마다 사건이 온다',ok:{t:B.meetYesT,fx:{bondMeet:rt,bondVariant:vi}}},
+      {l:B.meetNo,h:'다시 만나지 않는다',ok:{t:B.meetNoT,fx:{bondDecline:true}}}]};
+  }
+  /* 인연이 맺어진 뒤의 사건(3~4년마다)과 청혼. 만남은 일상 사건 안에서 일어난다 */
+  function bondEvent(G){
+    const ch=G.ch,b=ch.bond,y=G.year,B=D.bond;
+    if(!B||ch.distForm||ch.job||!b)return null;
+    const R=bondData(ch);if(!R)return null;
+    if(b.st==='married'||b.st==='lost'){
+      const KD=BD.kid,kids=b.kids||(b.kids=[]);
+      /* 성인이 된 아이: 사무소·해결사·협회 중 태어날 때 정해진 곳에 들어간다 */
+      const grown=kids.find(k=>!k.told&&kidAge(k,y)>=KD.adult);
+      if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
+        return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
+      if(b.st!=='married')return null;
+      if(d(1000)<=bondRisk(b,y)*10)
+        return {t:B.deathT,x:bondFill(R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`,ok:{t:bondFill(B.deathAT,b),fx:{bondDeath:true}}}]};
+      const last=kids.length?kids[kids.length-1].born:-99;
+      if(y-b.since>=KD.from&&kids.length<KD.max&&y-last>=KD.gap&&d(100)<=KD.chance){
+        const used=kids.map(k=>k.n),pool=B.kidNames.filter(n=>!used.includes(n)),nm=one(pool.length?pool:B.kidNames);
+        return {t:B.kidBirth.t,x:B.kidBirth.x,c:[{l:B.kidBirth.a,h:`최대 정신력 +${KD.mind} · 아이는 당신과 함께 나이를 먹는다`,ok:{t:kf(B.kidBirth.at,nm),fx:{bondKid:nm}}}]};
+      }
+      return null;
+    }
+    if(b.st!=='met')return null;
+    if(y<b.next)return null;
+    b.next=y+bondGap();
+    if(b.step<BD.steps){
+      const S=R.steps[b.step];b.step++;
+      return {t:S.t,x:bondFill(S.x,b),c:[
+        {l:S.a,h:`인연 +1 · 정신력 +${BD.loveMind}`,ok:{t:bondFill(B.stepAT,b),fx:{bondLove:1}}},
+        {l:S.b,h:'변화 없음',ok:{t:bondFill(B.stepBT,b),fx:{}}}]};
+    }
+    const left=BD.tries-(b.tries||0);
+    return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[
+      {l:B.proposeYes,h:`1d${BD.die} · ${BD.ok[0]}~${BD.ok[1]}이면 결혼 · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
+      {l:B.proposeWait,h:`1d100 · ${BD.waitDc} 이상이면 기회를 쓰지 않고 넘어간다`,check:{s:null,dc:BD.waitDc},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]};
+  }
+  /* 일상: 사건이 있는 해 일부에 온다. 안정적으로 능력치를 조금 올려 주는 사건이고, 인연이 없는 캐릭터는 일부가 인연(조우자)을 만나는 사건이 된다 */
+  const DL=CFG.daily;
+  function dailyEvent(G){
+    const ch=G.ch,y=G.year,L=D.dailyLife;
+    if(!L||!L.length||ch.distForm||ch.job||y<DL.from||d(100)>DL.chance)return null;
+    if(!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&d(100)<=BD.meetChance){const e=bondMeetEvent(ch);if(e)return e}
+    if((ch.dailyN||0)>=DL.max)return null;
+    const seen=ch.dailySeen=ch.dailySeen||[];let pool=L.map((e,i)=>i).filter(i=>!seen.includes(i));
+    if(!pool.length){seen.length=0;pool=L.map((e,i)=>i)}
+    const i=one(pool);seen.push(i);ch.dailyN=(ch.dailyN||0)+1;const e=L[i];
+    return {t:'일상 · '+e.t,x:e.x,c:e.o.map(o=>({l:o.l,h:o.h,ok:{t:o.t,fx:o.fx}}))};
   }
   /* 검지의 히든 직업 · 신탁대행자: 검지 루트 최종 서열(대행자·전령)에 오른 뒤 가끔 울리는 단말기를 만난다. 줍으면 1d100이 dc 이상일 때 신탁대행자가 되고
      전리품 '신의 단말기'를 얻는다. 패시브 지령 독촉: 지령 스택 최대 oracle.presc, 지령을 수행하지 못한 라운드의 다음 라운드는 명중 −missHit · 회피 −missEva */
@@ -787,7 +914,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const X=CFG.distort,s=ch.stats;
     for(const it of Object.values(ch.gear)){if(!it)continue;for(const [k,v] of Object.entries(it.fx||{}))if(k!=='dmin'&&k in s)s[k]-=v;(ch.stash=ch.stash||[]).push(it)}
     ch.gear={};s.dmin=calcDmin(ch);addStats(s,X.fx);ch.hp=clamp(ch.hp+(X.fx.maxHp||0),1,s.maxHp);
-    ch.distForm={n:(name||'').trim()||'이름 없는 뒤틀림'};ch.distPick=false;ch.distortPend=false;ch.distortDone=true;ch.voiceUsed=true;ch.mind=mindMax(ch);
+    ch.distForm={n:(name||'').trim()||'이름 없는 뒤틀림'};ch.huntNext=(ch.year||0)+(BD.hunt?BD.hunt.gap:3);ch.distPick=false;ch.distortPend=false;ch.distortDone=true;ch.voiceUsed=true;ch.mind=mindMax(ch);
     ch.deck=X.deck.slice();ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.offers=[];ch.packOffer=null;
     for(const g of ch.gearOffers||[])(ch.stash=ch.stash||[]).push(g);ch.gearOffers=[];
     (ch.relics=ch.relics||[]).push('뒤틀림 · '+ch.distForm.n);
@@ -839,6 +966,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
     if(mc.wingPick)setWing(mc,'새벽',true);
+    if(mc.bondPick)setBondName(mc,'동반자',true);
     if(mc.seongPick)setSeongdo(mc,'무명',true);
     if(mc.orgPick)chooseOrg(mc,one(D.orgs[mc.orgPick]));
     if(mc.fingerPick)chooseFinger(mc,mc.thumbBias&&d(100)<=mc.thumbBias?'엄지':one(D.orgs.finger));
@@ -868,7 +996,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
-      {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+G.ch.corp.up*(mt.yearPer||0))}G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
+      {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+G.ch.corp.up*(mt.yearPer||0))}
+      if(bondMarried(G.ch))gainMind(G.ch,BD.yearMind);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
     if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year;
     let f=fixedSpec(G.year);
@@ -910,6 +1039,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(topReady(ch))return {type:'event',ev:topEvent(ch)};
     if(examReady(ch)&&ch.examSkipYear!==G.year-1){const k=career(ch);return {type:'event',ev:(isFinger(ch)&&D.fingers[ch.aff.name].exam)||(CR[k]&&CR[k].exam)||D.promotionExam}}
     if(D.corp){const ce=corpEvent(G);if(ce)return {type:'event',ev:ce}}
+    {const kh=kidHuntEvent(G);if(kh)return kh}
+    {const bv=bondEvent(G);if(bv)return {type:'event',ev:bv}}
+    {const dv=dailyEvent(G);if(dv)return {type:'event',ev:dv}}
     {const pe=pinkyEvent(G);if(pe)return {type:'event',ev:pe}}
     {const oe=oracleEvent(G);if(oe)return {type:'event',ev:oe}}
     {const se=eastScoutEvent(G);if(se)return {type:'event',ev:se}}
@@ -996,6 +1128,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.singGrow)corpGrow(ch,chips);
     if(fx.singUp)corpUp(ch,chips);
     if(fx.corpForb)corpForb(ch,chips);
+    if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
+    if(fx.bondDecline)ch.bond={st:'declined'};
+    if(fx.bondDeath&&ch.bond&&ch.bond.st==='married')bondDeath(ch,chips);
+    if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);chips.push(`아이 · ${k_.n}`);chips.push(`최대 정신력 +${BD.kid.mind}`)}
+    if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
+    if(fx.bondPropose)bondPropose(ch,chips,true);
+    if(fx.bondSlip)bondPropose(ch,chips,false);
+    if(fx.bondWait)chips.push('기회는 그대로다');
     if(roll&&roll.ok&&!fx.examPass&&!fx.colorPass&&!fx.topPass)addPts(ch,CFG.promo.gain.check,chips);
     const up=gainXp(ch,xp);chips.push('경험치 +'+xp);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     let enc=fx.combat?encounter(ch,fx.combat):null;
@@ -1009,6 +1149,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.hp=clamp(C.P.hp+CFG.winHeal,1,ch.stats.maxHp);chips.push('HP +'+CFG.winHeal);
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
+    if(C.id==='kid_hunt'&&ch.bond){
+      if(ch.kidFoeSpouse){if(ch.bond.st==='married'){ch.bond.st='lost';chips.push(kf(D.bond.hunt.winSpouse,ch.bond.name))}}
+      else{const kk=(ch.bond.kids||[]).find(k=>k.n===ch.kidFoe&&!k.dead);if(kk){kk.dead=true;chips.push(kf(D.bond.hunt.win,kk.n))}}}
     if(ch.flags&&ch.flags.redMist){const h=Math.min(CFG.redMist.heal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('붉은 안개 · 적을 쓰러뜨려 HP +'+h)}}
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
@@ -1017,6 +1160,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.bloomNote){chips.push(ch.bloomNote);ch.bloomNote=null}
     let title=null,tlabel=null,newly=false,colorRoll=null,unlock=null;
     const foe=D.enemies[C.id];
+    /* 인연: 결혼 중 히든 보스를 이길 때마다 배우자 사망 위험이 0.1%씩 쌓인다 (엔딩까지 가려면 거의 반드시 잡아야 하는 상대) */
+    if(ch.bond&&ch.bond.st==='married'&&foe.hidden)ch.bond.risk=(ch.bond.risk||0)+BD.riskStep;
     /* 피의 각인된 갈망: 전투가 끝나면 자식이 흩어지고(각자 확률), 이긴 일반·보스 적은 새 자식이 된다. 히든 보스·환상체는 안 된다 */
     if(kidsOn(ch)){
       const KD=CFG.kids,before=ch.kids||0;let keep=0;for(let i=0;i<before;i++)if(d(100)>KD.lose)keep++;
@@ -1108,6 +1253,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const mt=mindTier(ch),ct=corpType(ch),tm=ct&&ct.tier?ct.tier+ch.corp.up*(ct.tierPer||0):1;
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;P.chargeHit=CH.hit||0;P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}
+    /* 토벌 의뢰의 가족: 주인공과 같은 카드를 쓰고, 능력치는 내 능력치의 배수 (특색급(최고 급수)은 mulTop, 그 밑은 mul) */
+    if(e.kidHunt){const K=CFG.bond.hunt,m=(ch.kidFoeLv||0)>=K.topLv?K.mulTop:K.mul;
+      E.maxHp=E.hp=Math.max(1,Math.round(P.maxHp*m));E.atk=Math.max(1,Math.round(P.atk*m));E.eva=Math.round(P.eva*m);E.spd=Math.round(P.spd*m);E.deck=ch.deck.slice()}
     const C={ch,P,E,id,penalty,duel:assocOf(ch)===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
     activeC=C;
     if(ch.mindDead&&!ch.ego&&!ch.distForm)mindBreak(C);
@@ -1573,5 +1721,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,chooseFinger,chooseOrg,nailThr,setSeongdo,setTri,triOk,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,chooseFinger,chooseOrg,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
