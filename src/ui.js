@@ -324,7 +324,7 @@ export function startUI(E,app){
       <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${esc(ch.name||T.you)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
       <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${G.infinite&&G.year>CFG.years+CFG.endless.span*CFG.endless.grades.length?'제 2막 무한 모드 · '+(E.gradeRaw(G.year)-CFG.endless.grades.length+1)+'단계':'제 2막 · '+CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
       ${bar(ch.hp,s.maxHp)}
-      ${vMind(ch)}
+      ${vMind(ch)}${G.infinite&&UI.screen!=='end'?`<button class="btn quiet" data-a="outerend">외곽에서 이야기를 끝낸다</button>`:''}
       ${vPassive(ch)}
       <div class="mono small dim">HP ${ch.hp}/${s.maxHp} · 공격 ${sg(s.atk)} · 회피 ${sg(s.eva)} · 속도 ${sg(s.spd)} · 판정 ${sg(s.check)} · 카드 ${ch.deck.length}장</div>
       <div class="mono small dim">Lv ${ch.lv} · 경험치 ${ch.xp}${nx!=null?'/'+nx:' (최고)'}${E.canPromote(ch)?` · ${E.ptsName(ch)} ${ch.pp||0}/${E.promoNeed(ch)}`:''} · ${Object.values(ch.gear).map(g=>esc(g.n)).join(' · ')}</div>
@@ -606,7 +606,7 @@ export function startUI(E,app){
   const TITLE_REC=['본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','특색'];
   function vRecords(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
-    const ends=[['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','불순물 너머'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에']];
+    const ends=[['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에']];
     const groups=[['초반','early'],['중반','mid'],['후반','late'],['보스·이름난 상대','boss'],['히든','hidden']];
     const foes=g=>Object.entries(D.enemies).filter(([,e])=>e.tier===g);
     const total=Object.keys(D.enemies).length;
@@ -1126,15 +1126,35 @@ export function startUI(E,app){
       +`<div class="mono small dim">덱 ${c.deck.length}장${(c.side||[]).length?` · 카드함 ${c.side.length}장`:''}</div>`;
   }
   /* 육신 뒤틀림 상태로 맞은 엔딩: 전용 문구 */
-  const distEyebrow=(w,tr,dt)=>!w&&dt&&dt.hunt?'사랑하던 이의 손에':tr?'뒤틀린 채 불순물을 넘어섰다':w?`뒤틀린 채 ${CFG.years}년을 살아냈다`:'뒤틀림이 쓰러졌다';
+  const distEyebrow=(w,tr,dt)=>!w&&dt&&dt.hunt?'사랑하던 이의 손에':tr?'뒤틀린 채 발톱과 조율자를 넘어섰다':w?`뒤틀린 채 ${CFG.years}년을 살아냈다`:'뒤틀림이 쓰러졌다';
   function distLead(c,w,tr,dt){
     const raw=c.distForm.n,n=esc(raw),ch_=raw.charCodeAt(raw.length-1),bat=ch_>=0xAC00&&ch_<=0xD7A3&&(ch_-0xAC00)%28>0;
-    if(tr)return `도시의 별도, 불순물도 그것을 삼키지 못했다. 마지막 위협이 지나간 뒤 골목에 남은 것은 '${n}'${bat?'이라는':'라는'} 이름 하나였다. 그 이름이 한때 사람이었다는 것을 아는 이는 이제 아무도 없다.`;
+    if(tr)return `도시의 별도, 발톱도, 조율자도 그것을 삼키지 못했다. 마지막 위협이 지나간 뒤 골목에 남은 것은 '${n}'${bat?'이라는':'라는'} 이름 하나였다. 그 이름이 한때 사람이었다는 것을 아는 이는 이제 아무도 없다.`;
     if(w)return `도시는 그것을 '${n}'${bat?'이라고':'라고'} 불렀다. 처음에는 괴담이었고, 나중에는 골목의 일부가 되었다. 해결사들이 몇 번 찾아왔지만 돌아간 사람보다 돌아가지 못한 사람이 더 많았다. 원래 이름을 기억하는 사람은 남지 않았다. 그래도 가끔, 그것은 사람이던 시절의 버릇대로 어느 집 문 앞에서 한참을 멈춰 선다.`;
     if(dt&&dt.hunt)return c.kidFoeSpouse?`'${n}'${bat?'은':'는'} 낯익은 손에 쓰러졌다. 의뢰서를 든 사람은 사랑하던 이였다. 이름을 불렀지만 뒤틀린 목소리는 대답이 되지 못했고, 마지막으로 본 것은 곁에서 늙어 가던 얼굴이었다.`:`'${n}'${bat?'은':'는'} 낯익은 손에 쓰러졌다. 의뢰서를 든 사람은 함께 나이를 먹던 아이였다. 이름을 불렀지만 뒤틀린 목소리는 대답이 되지 못했고, 마지막으로 본 것은 자신을 닮은 얼굴이었다.`;
     return `'${n}'${bat?'은':'는'} ${dt&&dt.foe?esc(dt.foe)+'의 손에':'골목 끝에서'} 쓰러졌다. 의뢰서에는 '뒤틀림 제거 완료'라고만 적혔다. 그 아래, 원래 이름을 적는 칸은 비어 있었다.`;
   }
   /* 아이가 있으면 엔딩마다 한 문단이 붙는다: 뒤틀림사(도시가 기억하지 못함) · 쓰러짐 · 살아냄, 1막·2막·무한 모드별 */
+  /* 엔딩 에필로그: 이 판의 행적을 이야기로 엮는다 (출신 · 진로 · 만난 이들 · 가족 · 마음 · 마지막) */
+  function epilogue(c,w,tr){
+    const nm=c.name||'당신',yr=G.year,P=[];
+    const jong=(x)=>{const ch=x.charCodeAt(x.length-1);return ch>=0xAC00&&ch<=0xD7A3&&(ch-0xAC00)%28?'은':'는'};
+    P.push(`${esc(nm)}${jong(nm)} ${esc(c.o.n)}으로 태어났다. ${esc(c.t.n)}을(를) 타고났고, ${esc(c.f.n)}을(를) 짊어진 채, ${esc(c.w.n)}${/[가-힣]$/.test(c.w.n)?'을(를)':''} 손에 쥐고 이 도시의 골목에 섰다.`);
+    if(c.job)P.push(`평범한 길은 일찍 닫혔다. ${esc(T.jobs[c.job])}의 자리가 ${esc(nm)}에게 주어졌고, 그 일은 사는 내내 이름을 대신했다.`);
+    else if(c.aff&&c.corp&&c.corp.wing)P.push(`담장 안에서 시작해 담장을 스스로 세웠다. ${esc(c.corp.wing)}의 대표로서 이름을 걸었고, 그 이름은 다른 이들의 일자리가 되었다.`);
+    else if(c.aff&&c.fr)P.push(`${esc(affName(c))}에 들어가 ${esc(c.fr.n)}까지 올랐다. 서열은 손이 아니라 버틴 햇수로 정해졌고, ${esc(nm)}${jong(nm)} 그 계단을 하나씩 밟았다.`);
+    else if(c.aff)P.push(`${esc(affName(c))}의 일원으로 해를 넘겼다.`);
+    else P.push('어디에도 속하지 않았다. 혼자 움직이는 편이 낫다는 말은 처음 한 말 그대로 끝까지 남았다.');
+    if(c.licensed&&!c.job)P.push(`해결사로서는 ${c.rank}${T.rankUnit}${c.title?` · ${esc(c.title)}`:''}에 닿았다. 의뢰서에 적힌 이름 하나하나가 ${yr}년 동안 쌓은 기록이다.`);
+    else if(c.title)P.push(`${esc(c.title)}이라는 이름이 붙었다. 누가 먼저 불렀는지는 아무도 기억하지 못한다.`);
+    if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${c.beaten.map(id=>esc(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
+    if(E.bondMarried(c)){const k=(c.bond.kids||[]);P.push(`곁에는 ${esc(c.bond.name)}이(가) 있었다. ${k.length?`아이 ${k.map(x=>esc(x.n)).join(' · ')}${k.length>1?'과(와) 함께':'와(과) 함께'} 식탁을 나눴다. `:''}도시의 해가 바뀔 때마다 한 사람 몫의 자리가 더 비어 있지 않다는 것이 가장 큰 보상이었다.`)}
+    else if(c.bond&&c.bond.st==='lost')P.push('한 번은 곁에 누군가 있었다. 지키지 못한 이름 하나가 오래 남았다.');
+    if(c.distForm)P.push(`육신은 뒤틀렸고, ${esc(c.distForm.n)}이라는 이름이 붙었다. 그래도 걸음은 멈추지 않았다.`);
+    else if(c.ego)P.push(`마음이 무너지려던 순간 붙잡은 모양이 ${esc(c.ego.n||'E.G.O')}이(가) 되어 곁에 남았다. 그것은 무기이기 전에 버틴 증거였다.`);
+    P.push(w?(tr?`${yr}년. 도시가 붙일 수 있는 가장 높은 이름을 넘어섰다. 발톱도, 조율자도 ${esc(nm)}의 길을 막지 못했다. 끝이라고 부르던 자리 너머로 길은 이어져 있었다.`:`${yr}년. 도시는 해마다 시끄러웠고 해마다 조용해졌다. ${esc(nm)}${jong(nm)} 그 소란 속에서 끝까지 서 있었다. 이야기는 여기서 한 막을 내린다.`):'');
+    return P.filter(Boolean);
+  }
   function kinLine(c,w,dt){
     const b=c.bond,kids=(b&&b.kids||[]).filter(k=>!k.dead);if(!D.bond.ending)return '';
     if(!w&&dt&&dt.hunt)return `<p class="small" style="border-left:2px solid var(--gold);padding-left:10px">${esc(E.bondFill(D.bond.hunt.ending[G.infinite?'inf':G.endless?'act2':'act1'].replace(/\{k\}/g,'{n}'),{name:dt.hunt}))}</p>`;
@@ -1151,7 +1171,7 @@ export function startUI(E,app){
     blankwed:['아무것도 없는 존재 · 가족',`아무것도 없던 존재가 누군가의 이름을 불렀고, 누군가가 대답했다. ${CFG.years}년이 지나 첫 번째 막이 끝났을 때 곁에는 같은 지붕 아래의 사람이 있다. 아무것도 없던 곳에서 시작한 이야기가 둘이 되었다.`]};
   function vEnd(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),tr=w&&UI.trueEnd,df=c.distForm;
-    return `<div id="endShot" class="stack" style="gap:12px"><div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow"${df?' style="color:#c25050"':''}>${df?distEyebrow(w,tr,dt):UI.oldEnd?'히든 엔딩 · 늙었다는 것은 살아남았다는 것':tr?'불순물을 넘어섰다':blankEnd(c,w)?BLANK_END[blankEnd(c,w)][0]:w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'당신은 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':'도시는 당신을 기억하지 않는다'} · ${E.age(G)}세</div>
+    return `<div id="endShot" class="stack" style="gap:12px"><div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow"${df?' style="color:#c25050"':''}>${df?distEyebrow(w,tr,dt):UI.outerEnd?'외곽에서 이야기를 끝냈다':UI.oldEnd?'히든 엔딩 · 늙었다는 것은 살아남았다는 것':tr?'발톱과 조율자를 넘어섰다':blankEnd(c,w)?BLANK_END[blankEnd(c,w)][0]:w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'당신은 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':'도시는 당신을 기억하지 않는다'} · ${E.age(G)}세</div>
       <h1 style="color:${c.color}">${esc(c.name||careerLine(c))}</h1>
       ${c.name?`<div class="mono small" style="color:${c.color}">${careerLine(c)}</div>`:''}
       ${df?`<div><span class="chip" style="color:#c25050;border-color:#c25050">뒤틀림 · ${esc(df.n)}</span></div>`:''}
@@ -1160,8 +1180,9 @@ export function startUI(E,app){
       ${c.title?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${c.titleKind==='top'?'칭호':T.titleLabel} · ${esc(c.title)}</span></div>`:''}
       ${!w&&dt?`<div class="mono small bad">${dt.year}년차 · ${dt.cause==='distort'?'뒤틀림':dt.cause==='mind'?'정신 붕괴로 쓰러졌다':esc(dt.foe)+'에게 쓰러졌다'}${dt.hidden?' (히든 보스)':''}</div>`:''}
       <div class="row" style="gap:8px;flex-wrap:wrap"><span class="chip" style="color:${c.hard?'#c25050':c.easy?'#6aa0c4':'var(--fg)'};border-color:currentColor">난이도 · ${diffOf(c)}</span><span class="mono small dim" style="align-self:center">시드 ${c.seed}</span></div>
-      <p class="lead">${df?distLead(c,w,tr,dt):UI.oldEnd?'백 살을 넘겼다. 이 도시에서 늙는다는 것은 끝까지 이겨 왔다는 뜻이다.':blankEnd(c,w)?BLANK_END[blankEnd(c,w)][1]:dt&&dt.cause==='distort'?'당신의 모양을 한 무언가가 골목에 남았다. 사람들은 그것을 더 이상 당신의 이름으로 부르지 않는다.':dt&&dt.cause==='mind'?'몸은 멀쩡했지만, 마음이 먼저 꺼졌다.':tr?'도시가 붙일 수 있는 가장 높은 이름 너머까지 걸어갔다. 그 뒤로 당신을 부르는 이름은 도시의 어느 장부에도 맞지 않았다.':endLead(c,w)}</p>
+      <p class="lead">${df?distLead(c,w,tr,dt):UI.outerEnd?'머리가 닫은 문 바깥, 아무도 이름을 붙이지 않은 땅에서 당신은 걸음을 멈췄다. 괴수들의 울음이 멀어졌다. 쫓겨난 것이 아니라 스스로 닿은 자리라고, 누군가는 기록할 것이다.':UI.oldEnd?'백 살을 넘겼다. 이 도시에서 늙는다는 것은 끝까지 이겨 왔다는 뜻이다.':blankEnd(c,w)?BLANK_END[blankEnd(c,w)][1]:dt&&dt.cause==='distort'?'당신의 모양을 한 무언가가 골목에 남았다. 사람들은 그것을 더 이상 당신의 이름으로 부르지 않는다.':dt&&dt.cause==='mind'?'몸은 멀쩡했지만, 마음이 먼저 꺼졌다.':tr?'바랄의 발톱도, 제나의 봉인도 당신을 멈추지 못했다. 금기를 정하던 쪽이 처음으로 질문을 받았고, 도시의 문은 한 번도 닫힌 적 없는 방향으로 한 뼘 열렸다. 당신을 부르는 이름은 도시의 어느 장부에도 맞지 않았다. 끝이라고 불리던 자리 너머로 외곽이 이어진다.':endLead(c,w)}</p>
       ${kinLine(c,w,dt)}
+      ${w?`<div class="panel stack" style="gap:8px"><span class="eyebrow">행적</span>${epilogue(c,w,tr).map(t=>`<p class="small" style="line-height:1.65">${t}</p>`).join('')}</div>`:''}
       ${vRecord(c,w,gi)}
       ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${c.beaten.map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
       <div class="panel stack"><div class="stat"><div><b>${c.lv}</b><span>레벨</span></div><div><b>${sg(c.stats.atk)}</b><span>공격</span></div><div><b>${sg(c.stats.eva)}</b><span>회피</span></div><div><b>${sg(c.stats.spd)}</b><span>속도</span></div></div>
@@ -1170,7 +1191,7 @@ export function startUI(E,app){
       <div class="mono small dim" style="text-align:center">도시의 한 해 · cityyear-fanmade.github.io/city-year · Project Moon 팬메이드</div></div>
       ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 1막 종료</span><p class="small">여기서 끝내도 된다. 제 2막이 시작되면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 제 2막의 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">제 2막 시작</button></div>`:''}
       ${w&&UI.oldEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 엔딩</span><p class="small">여기서 끝내도 된다. 계속 살아가면 무한 모드가 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
-      ${w&&UI.trueEnd&&!G.infinite?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 2막 · 무한 모드</span><p class="small">여기서 끝내도 된다. 계속 살아가면 위협 보정이 끝없이 오르고, ${CFG.infinite.every}년마다 더 강해진 불순물이 나타나며, 루트 전용 히든 보스를 만날 확률이 오른다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="infinite">무한 모드로 계속한다</button></div>`:''}
+      ${w&&UI.trueEnd&&!G.infinite?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 2막 · 무한 모드</span><p class="small">여기서 끝내도 된다. 계속 살아가면 머리에게 외곽으로 쫓겨난 셈이 되어 위협 보정이 끝없이 오르고, ${CFG.infinite.every}년마다 외곽의 괴수(더 강해진 불순물)가 나타나며, 루트 전용 히든 보스를 만날 확률이 오른다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="infinite">무한 모드로 계속한다</button></div>`:''}
       <div class="row" style="gap:8px"><button class="btn quiet" style="flex:1" data-a="share">기록 공유</button><button class="btn quiet" style="flex:1" data-a="saveimg">이미지로 저장</button></div>
       ${UI.imgUrl?`<p class="small dim">저장이 막힌 환경이다. 아래 이미지를 길게 눌러 저장한다.</p><img src="${UI.imgUrl}" alt="엔딩 기록 이미지" style="width:100%;border-radius:8px">`:''}
       ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<input id="shareBox" readonly value="${esc(UI.shareText)}" onclick="this.select()" style="width:100%;font:inherit;font-size:13px">`:''}
@@ -1180,7 +1201,7 @@ export function startUI(E,app){
   const PAGES='https://cityyear-fanmade.github.io/city-year/';
   const b64e=o=>{const u=new TextEncoder().encode(JSON.stringify(o));let x='';u.forEach(c=>x+=String.fromCharCode(c));return btoa(x).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
   const b64d=t=>{const x=atob(t.replace(/-/g,'+').replace(/_/g,'/'));return JSON.parse(new TextDecoder().decode(Uint8Array.from(x,c=>c.charCodeAt(0))))};
-  function shareHead(){const w=UI.endWin,dt=UI.death;return w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'불순물을 넘어섰다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'사랑하던 이의 손에':dt&&dt.cause==='distort'?'뒤틀렸다':'도시는 나를 기억하지 않는다'}
+  function shareHead(){const w=UI.endWin,dt=UI.death;return w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'사랑하던 이의 손에':dt&&dt.cause==='distort'?'뒤틀렸다':'도시는 나를 기억하지 않는다'}
   function shareLink(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
     const o={v:1,h:shareHead(),w:w?1:0,n:c.name||'',k:careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&'),t:c.title||'',col:c.color,y:lived,a:E.age(G),
@@ -1205,7 +1226,7 @@ export function startUI(E,app){
   /* 공유용 기록 글 */
   function shareText(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
-    const head=w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'불순물을 넘어섰다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'나는 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'나는 뒤틀렸다':'도시는 나를 기억하지 않는다';
+    const head=w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'나는 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'나는 뒤틀렸다':'도시는 나를 기억하지 않는다';
     const foes=[...c.beaten,...(c.minis||[])].map(id=>D.enemies[id].n);
     const url=/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.href.split('#')[0]:'https://cityyear-fanmade.github.io/city-year/';
     return [`[도시의 한 해] ${head}`,(c.name?`${c.name} · `:'')+careerLine(c).replace(/<[^>]*>/g,'')+(c.title?` · ${c.title}`:''),
@@ -1237,7 +1258,7 @@ export function startUI(E,app){
     g.fillStyle=col;g.fillRect(52,52,W-104,10);
     const T_=(t,x,y,f,cl,al)=>{g.font=f;g.fillStyle=cl;g.textAlign=al||'left';g.fillText(t,x,y)};
     const fit=(t,max,size,fam,weight)=>{let z=size;do{g.font=`${weight||''} ${z}px ${fam}`;z-=2}while(g.measureText(t).width>max&&z>20);return g.font};
-    const head=w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'불순물을 넘어섰다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'당신은 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':'도시는 당신을 기억하지 않는다';
+    const head=w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'당신은 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':'도시는 당신을 기억하지 않는다';
     T_('도시의 한 해',W/2,140,`500 34px ${mono}`,gold,'center');
     T_(head,W/2,200,`400 30px ${sans}`,w?gold:'#c46a5a','center');
     const nm=c.name||careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&');
@@ -1327,7 +1348,7 @@ export function startUI(E,app){
     UI.fight=null;UI.pending=null;UI.curSt=st;UI.oldEnd=false;
     /* 100살 히든 엔딩은 한 번 본 뒤로는 다시 뜨지 않는다 (이미 본 기록이 있으면 그냥 이어서 간다) */
     if(st.type==='end'&&st.old&&loadRec().endings.includes('old')){nextYear();return}
-    if(st.type==='end'){UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.oldEnd=!!st.old;UI.death=st.cause?{year:G.year,foe:st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;recordEnd();UI.screen='end';render();return}
+    if(st.type==='end'){UI.outerEnd=false;UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.oldEnd=!!st.old;UI.death=st.cause?{year:G.year,foe:st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;recordEnd();UI.screen='end';render();return}
     UI.omen=null;UI.showIncome=G.year>1;
     if(st.type==='omen')UI.omen=st;
     else if(st.type==='fight'){UI.fight=st.enemy;UI.enc=st.enc}else UI.ev=st.ev;
@@ -1368,7 +1389,7 @@ export function startUI(E,app){
   function recordEnd(){
     syncTitles();
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
-    const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:(w&&c.distForm?'distwin':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':'death');
+    const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:(w&&c.distForm?'distwin':w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':'death');
     if(!r.endings.includes(k))r.endings.push(k);if(fe==='wed'&&!r.endings.includes('wed'))r.endings.push('wed');r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;if(w&&c.easy)r.easyClear=(r.easyClear||0)+1;
     r.best.years=Math.max(r.best.years,lived);r.best.lv=Math.max(r.best.lv,c.lv);if(G.endless)r.best.grade=Math.max(r.best.grade,E.gradeAt(G.year));
     if(dt&&dt.id==='godmother'){r.titles=r.titles||{};r.titles['정해진 운명']=(r.titles['정해진 운명']||0)+1}
@@ -1457,6 +1478,7 @@ export function startUI(E,app){
     dice(i){DICE=i;store.set('cityYearDice',i);render()},
     skin(i){SKIN=i;store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;nextYear()},
+    outerend(){if(!G||!G.infinite)return;if(typeof confirm==='function'&&!confirm('외곽에서 이야기를 끝낼까? 이 판은 여기까지가 기록이 된다.'))return;UI.outerEnd=true;UI.endWin=true;UI.trueEnd=true;UI.oldEnd=false;UI.death=null;recordEnd();UI.screen='end';render()},
     oldgo(){UI.oldEnd=false;UI.shareText=UI.shareMsg=UI.imgUrl=null;nextYear()},
     infinite(){G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infImp=1;UI.shareText=UI.shareMsg=UI.imgUrl=null;nextYear()},
     async saveimg(){
@@ -1555,7 +1577,7 @@ export function startUI(E,app){
     skip(){SKIP=true;if(wake)wake();if(tapWake)tapWake()},
     tap(){if(tapWake)tapWake()},
     fin(){
-      if(C.over==='lose'){UI.endWin=false;UI.trueEnd=false;UI.death=G.ch.mindDead?{year:G.year,foe:'정신 붕괴',cause:'mind'}:{year:G.year,id:C.id,foe:D.enemies[C.id].n,hidden:!!D.enemies[C.id].hidden,hunt:C.id==='kid_hunt'?G.ch.kidFoe:null};recordEnd();UI.screen='end';render();return}
+      if(C.over==='lose'){UI.outerEnd=false;UI.endWin=false;UI.trueEnd=false;UI.death=G.ch.mindDead?{year:G.year,foe:'정신 붕괴',cause:'mind'}:{year:G.year,id:C.id,foe:D.enemies[C.id].n,hidden:!!D.enemies[C.id].hidden,hunt:C.id==='kid_hunt'?G.ch.kidFoe:null};recordEnd();UI.screen='end';render();return}
       const r=E.winRewards(G,C);syncTitles();recAdd('beaten',C.id);saveGame({after:true,pending:null});
       if(r.unlock)addUnlock(r.unlock);
       if(r.endText)UI.endText=r.endText;

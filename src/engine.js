@@ -1062,7 +1062,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const baseEnd=CFG.years+X_.span*X_.grades.length,INF=CFG.infinite;
     if(G.infinite&&G.year>baseEnd){
       /* 제 2막 무한 모드: 위협 등급 전투는 후반 조우, every년마다 강화 불순물 */
-      if((G.year-baseEnd)%INF.every===0)return {type:'fight',enemy:X_.final,enc:{hidden:true,label:`강화 불순물 · ${(G.ch.infImp||1)}번째`}};
+      if((G.year-baseEnd)%INF.every===0)return {type:'fight',enemy:X_.final,enc:{hidden:true,label:`외곽의 괴수 · ${(G.ch.infImp||1)}번째`}};
       f=k_%X_.span?null:'table:late';
     }else
     if(k_>0)f=k_%X_.span?null:gradeAt(G.year)===X_.grades.length-1?X_.finalFirst:gradeAt(G.year)===X_.grades.indexOf('도시의 별')&&!(G.ch.minis||[]).includes(X_.star)?X_.star:'table:late';
