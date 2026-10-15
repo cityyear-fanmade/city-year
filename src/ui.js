@@ -300,9 +300,9 @@ export function startUI(E,app){
     :af==='검지'?'지령 수행 · ☆ 칸 카드를 내면 1(최대 5) · 호흡 +4 · 받는 피해 −5%×스택'
     :af==='중지'?'되갚음 · 맞을 때마다 1(최대 5) · 스택 1당 받는 피해 −2 · 다음 적중에서 스택을 모두 써 피해 +스택 · 소모한 스택 1당 HP 1 회복'
     :af==='약지'?`작품 · 적중할 때마다 +1(전투 한정, 최대 ${CFG.ring.max}) · 스택당 명중 +${CFG.ring.hit} · 최대면 다음 적중 피해 ×${CFG.ring.finish} 후 ${CFG.ring.after}로`
-    :af==='흑운회'?`암운 · 전투 시작 구름 1 (덱 6장 +1 · 8장 +1 · 10장 +1) · 출혈을 걸거나 맞을 때마다 구름 +1 · 5가 되면 흑운: 피해 주사위마다 +${CFG.syn['흑운회'].die} · 적중 시 출혈 +1 · 라운드 끝에 구름 2로 · 덱 10장이면 흑운 중 받는 피해 ×${CFG.syn['흑운회'].half}`
-    :af==='검계'?'호흡결 · 매 라운드 호흡 +1 · 덱 6장 호흡 자연 감소 2→1 · 8장 호흡 +1 더 · 10장 호흡이 줄지 않음 · 호흡 '+CFG.syn['검계'].per+'당 모든 카드 피해 +1 · 호흡 10 이상 적중은 방어·보호막 무시'
-    :af==='밤의 송곳'?'뒷골목의 룰 · 출혈이 걸린 적에게 명중 +'+CFG.syn['밤의 송곳'].bleedHit+' · 선공이면 상대 회피 절반 · 덱 6장 속도 굴림 +5 · 8장 +10 · 10장 +15 (선공 첫 적중 출혈 +1)':null;
+    :af==='흑운회'?`암운 · 덱 8장부터 열린다 (그 아래로 줄이면 닫힘) · 전투 시작 구름 3 (10장이면 4) · 출혈을 걸거나 맞을 때마다 구름 +1 · 5가 되면 흑운: 피해 주사위마다 +${CFG.syn['흑운회'].die} · 적중 시 출혈 +1 · 라운드 끝에 구름 2로 · 덱 10장이면 흑운 중 받는 피해 ×${CFG.syn['흑운회'].half}`
+    :af==='검계'?'호흡결 · 덱 8장부터 열린다 (그 아래로 줄이면 닫힘) · 매 라운드 호흡 +2 · 호흡 자연 감소 1 (10장이면 줄지 않음) · 호흡 '+CFG.syn['검계'].per+'당 모든 카드 피해 +1 · 호흡 10 이상 적중은 방어·보호막 무시'
+    :af==='밤의 송곳'?'뒷골목의 룰 · 덱 8장부터 열린다 (그 아래로 줄이면 닫힘) · 출혈이 걸린 적에게 명중 +'+CFG.syn['밤의 송곳'].bleedHit+' · 선공이면 상대 회피 절반 · 속도 굴림 +10 (10장이면 +15, 선공 첫 적중 출혈 +1)':null;
   /* 지속형 패시브: 손가락·히든 출생 등 늘 켜져 있는 효과를 HUD에 한 줄로 */
   function vPassive(ch){
     const P=[];const af=ch.aff&&ch.aff.name;
@@ -963,7 +963,7 @@ export function startUI(E,app){
   function vOrgPick(){
     const t=G.ch.orgPick;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">${t==='wing'?'날개 입사':t==='office'?'사무소 입소':t==='syn'?'조직 가입':'협회 입회'}</span>
-      <p class="small">${t==='wing'?'어느 날개에 들어갈지 고른다.':t==='office'?'어느 사무소에 들어갈지 고른다.':t==='syn'?'어느 조직에 들어갈지 고른다. 덱 6 · 8 · 10장에서 패시브가 한 단계씩 열린다.':'어느 협회에 들어갈지 고른다.'}</p>
+      <p class="small">${t==='wing'?'어느 날개에 들어갈지 고른다.':t==='office'?'어느 사무소에 들어갈지 고른다.':t==='syn'?'어느 조직에 들어갈지 고른다. 전용 책장 8장으로 시작하고, 덱 8장부터 패시브가 열려 10장에서 최종 단계가 된다.':'어느 협회에 들어갈지 고른다.'}</p>
       ${D.orgs[t].map(n=>t==='syn'?(()=>{const F=D.fingers[n];return `<button class="btn" data-a="orgset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small">${esc(F.trait)}</span><span class="mono small" style="color:var(--gold)">${F.ranks.map(r=>esc(r.n)).join(' → ')}</span><span class="small dim">${esc(fingerPassive(n,0))}</span><span class="small dim">${esc(F.lore||'')}</span></button>`})():`<button class="btn" data-a="orgset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small dim">${esc(t==='office'?((D.offices||[]).find(o=>o.n===n)||{}).h||'':orgBrief(t,n))}</span></button>`).join('')}</div>`;
   }
   function vFingerPick(){
