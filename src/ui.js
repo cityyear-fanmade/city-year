@@ -866,7 +866,7 @@ export function startUI(E,app){
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
@@ -935,6 +935,15 @@ export function startUI(E,app){
       <button class="btn primary" data-a="nameset">이 이름으로 정한다</button></div>`;
   }
   /* 인연(동반자): 이름 정하기와 가족 탭 */
+  const josa=(x,a,b)=>{const ch=String(x).replace(/[^가-힣]+$/,'').slice(-1).charCodeAt(0),f=ch>=0xAC00&&ch<=0xD7A3?(ch-0xAC00)%28:0;return x+(a==='으로'?(f&&f!==8?'으로':'로'):f?a:b)};
+  function vKidPick(){
+    const ch=G.ch,k=(ch.bond&&ch.bond.kids||[]).find(x=>x.pend)||{n:''};
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">아이 · ${esc(josa(ch.bond.name,'과','와'))}의 아이</span>
+      <p class="small">아이의 이름을 정한다. 비워 두면 ${esc(josa(k.n,'으로','로'))} 부른다.</p>
+      <div class="row"><span class="small">이름</span><input id="kidname" maxlength="12" value="${esc(UI.kidName||'')}" autocomplete="off" placeholder="${esc(k.n)}" style="width:min(14em,60vw)"></div>
+      <span class="small bad">${UI.kidErr||''}</span>
+      <button class="btn primary" data-a="kidset">이 이름으로 부른다</button></div>`;
+  }
   function vBondPick(){
     const b=G.ch.bond,R=E.bondData(G.ch);
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">인연 · ${esc(R.who)}</span>
@@ -1449,6 +1458,12 @@ export function startUI(E,app){
       if(err){UI.singErr=err;UI.singName=n;render();return}
       E.setSing(G.ch,ty,n);UI.singErr='';UI.singName='';UI.singType=null;resave();
       UI.res.chips=[...UI.res.chips,`특이점 · ${n} (${CFG.corp.types[ty].n})`,...E.singChips(G.ch)];render();
+    },
+    kidset(){
+      const n=(($('kidname')||{}).value||'').trim(),err=E.kidNameErr(G.ch,n);
+      if(err){UI.kidErr=err;UI.kidName=n;render();return}
+      const k=(G.ch.bond.kids||[]).find(x=>x.pend),nm=n||(k&&k.n)||'';E.setKidName(G.ch,n);UI.kidErr='';UI.kidName='';resave();
+      UI.res.chips=[...UI.res.chips,`아이 · ${nm}`];render();
     },
     bondset(){
       const n=(($('bondname')||{}).value||'').trim(),err=E.bondNameErr(n);
