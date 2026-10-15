@@ -1188,7 +1188,9 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       ch.strikes=(ch.strikes||0)+1;
       if(C_.strikes&&ch.strikes>=C_.strikes){
         ch.strikes=0;
-        if(C_.strike==='fire'){chips.push(`${ch.aff.name} 해고 · 소속을 잃었다`);ch.aff=null;ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0}
+        if(C_.strike==='fire'){chips.push(`${ch.aff.name} 해고 · 소속을 잃었다`);ch.aff=null;ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;
+          /* 날개를 잃으면 아직 날개를 세우지 못한 특이점 개발 길도 끊긴다 (대표는 해고된 사람이 될 수 없다) */
+          if(ch.corp&&ch.corp.st==='dev'){ch.corp.st='declined';chips.push('특이점 개발 · 날개를 잃어 개발이 중단된다')}}
         if(C_.strike==='purge'){ch.purge=C_.purgeFoe;chips.push('숙청 대상이 되었다')}
       }
     }
