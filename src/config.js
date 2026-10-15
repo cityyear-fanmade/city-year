@@ -88,7 +88,8 @@ export const CFG = {
   cardGrade: [{from: 1, n: '', b: 0, hit: 0, dice: 0}, {from: 16, n: '+1', b: 2, hit: 5, dice: 0}, {from: 31, n: '+2', b: 3, hit: 10, dice: 1}, {from: 46, n: '+3', b: 5, hit: 15, dice: 1}],
   /* 잊힌 유물: year년차가 시작될 때 반드시 나오는 사건. 1d100에서 chance 이하면 유물 선택 */
   /* 6시즌: 덱 최대 장수, 암시장 카드 상자(확률·가격) */
-  deck: {max: 12},
+  /* 덱 보정: from장 이상부터 per장마다 공격 +atk (6장 +2, 8장 +4, 10장 +6, 12장 +8). 덱을 압축한 쪽과 꽉 채운 쪽의 격차를 줄인다 */
+  deck: {max: 12, bonus: {from: 6, per: 2, atk: 2}},
   blackCard: {chance: 50, price: 250},
   /* 6시즌 사무소: 개설 가능 급수(이상), 개설 사건을 다시 묻는 간격, 소속 없는 해결사가 사무소 문을 두드리는 간격 */
   /* 6시즌 E.G.O 발현자: 전용 카드 '발현'을 낸 누적 횟수(need)가 차는 순간 E.G.O 무기 등급이 오른다. 등급별 수치는 birth.json egoWeapons[].grow */
