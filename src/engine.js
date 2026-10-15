@@ -1563,7 +1563,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 피해 감소(%): 영구 효과 + 황혼 키워드 (체력 from 이하부터 base%, low 이하에서 max%까지 선형으로 오른다) */
       {let red=(B.dr||0)+(B.triCut||0)+(B.midDr||0),tw='';const T_=B.wx&&B.wx.twilight;
         if(T_){const r_=B.hp/B.maxHp;if(r_<=T_.from){const x=Math.min(T_.max,T_.base+(T_.from-Math.max(r_,T_.low))/(T_.from-T_.low)*(T_.max-T_.base));red+=x;tw=` 황혼`}}
-        if(red>0){const x=Math.floor(dmg*red/100);if(x>0){dmg-=x;note+=`${tw} 피해감소${Math.round(red)}%−${x}`}}}
+        if(red>0){const x=Math.floor(dmg*red/100);if(x>0){dmg-=x;note+=`${tw} ${B.midDr?(B.midDr>=CFG.middle.dr[3]?'초근성 ':'근성 '):''}피해감소${Math.round(red)}%−${x}`}}}
       if(c.spdDice&&A.spd>=c.spdDice[0]){const x=rolls.length*c.spdDice[1];dmg+=x;note+=` 속도 ${A.spd} · 주사위 ${rolls.length}개 +${c.spdDice[1]}=+${x}`}
       if(A.spent>0&&c.fixPer){const fp=c.fixPer+(A.focusOn?A.focus.fix:0),x=A.spent*fp;dmg+=x;note+=` 충전 ${A.spent}×${fp}=고정 +${x}`}
       if(B.shield>0){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}
