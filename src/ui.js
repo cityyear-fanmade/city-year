@@ -1138,21 +1138,24 @@ export function startUI(E,app){
   /* 엔딩 에필로그: 이 판의 행적을 이야기로 엮는다 (출신 · 진로 · 만난 이들 · 가족 · 마음 · 마지막) */
   function epilogue(c,w,tr){
     const nm=c.name||'당신',yr=G.year,P=[];
-    const jong=(x)=>{const ch=x.charCodeAt(x.length-1);return ch>=0xAC00&&ch<=0xD7A3&&(ch-0xAC00)%28?'은':'는'};
-    P.push(`${esc(nm)}${jong(nm)} ${esc(c.o.n)}으로 태어났다. ${esc(c.t.n)}을(를) 타고났고, ${esc(c.f.n)}을(를) 짊어진 채, ${esc(c.w.n)}${/[가-힣]$/.test(c.w.n)?'을(를)':''} 손에 쥐고 이 도시의 골목에 섰다.`);
-    if(c.job)P.push(`평범한 길은 일찍 닫혔다. ${esc(T.jobs[c.job])}의 자리가 ${esc(nm)}에게 주어졌고, 그 일은 사는 내내 이름을 대신했다.`);
-    else if(c.aff&&c.corp&&c.corp.wing)P.push(`담장 안에서 시작해 담장을 스스로 세웠다. ${esc(c.corp.wing)}의 대표로서 이름을 걸었고, 그 이름은 다른 이들의 일자리가 되었다.`);
-    else if(c.aff&&c.fr)P.push(`${esc(affName(c))}에 들어가 ${esc(c.fr.n)}까지 올랐다. 서열은 손이 아니라 버틴 햇수로 정해졌고, ${esc(nm)}${jong(nm)} 그 계단을 하나씩 밟았다.`);
-    else if(c.aff)P.push(`${esc(affName(c))}의 일원으로 해를 넘겼다.`);
+    /* 조사: 받침이 있으면 앞 것, 없으면 뒤 것 (으로/로는 ㄹ 받침도 뒤 것) */
+    const jp=(x,a,b)=>{const ch=String(x).replace(/[^가-힣]+$/,'').slice(-1).charCodeAt(0),f=ch>=0xAC00&&ch<=0xD7A3?(ch-0xAC00)%28:0;return x+(a==='으로'?(f&&f!==8?'으로':'로'):f?a:b)};
+    const J={eun:x=>jp(x,'은','는'),eul:x=>jp(x,'을','를'),i:x=>jp(x,'이','가'),gwa:x=>jp(x,'과','와'),ro:x=>jp(x,'으로','로')};
+    const E_=esc;
+    P.push(`${J.eun(E_(nm))} ${J.ro(E_(c.o.n))} 태어났다. ${J.eul(E_(c.t.n))} 타고났고, ${J.eul(E_(c.f.n))} 짊어진 채, ${J.eul(E_(c.w.n))} 손에 쥐고 이 도시의 골목에 섰다.`);
+    if(c.job)P.push(`평범한 길은 일찍 닫혔다. ${E_(T.jobs[c.job])}의 자리가 ${E_(nm)}에게 주어졌고, 그 일은 사는 내내 이름을 대신했다.`);
+    else if(c.aff&&c.corp&&c.corp.wing)P.push(`담장 안에서 시작해 담장을 스스로 세웠다. ${E_(c.corp.wing)}의 대표로서 이름을 걸었고, 그 이름은 다른 이들의 일자리가 되었다.`);
+    else if(c.aff&&c.fr)P.push(`${E_(affName(c))}에 들어가 ${E_(c.fr.n)}까지 올랐다. 서열은 손이 아니라 버틴 햇수로 정해졌고, ${J.eun(E_(nm))} 그 계단을 하나씩 밟았다.`);
+    else if(c.aff)P.push(`${E_(affName(c))}의 일원으로 해를 넘겼다.`);
     else P.push('어디에도 속하지 않았다. 혼자 움직이는 편이 낫다는 말은 처음 한 말 그대로 끝까지 남았다.');
-    if(c.licensed&&!c.job)P.push(`해결사로서는 ${c.rank}${T.rankUnit}${c.title?` · ${esc(c.title)}`:''}에 닿았다. 의뢰서에 적힌 이름 하나하나가 ${yr}년 동안 쌓은 기록이다.`);
-    else if(c.title)P.push(`${esc(c.title)}이라는 이름이 붙었다. 누가 먼저 불렀는지는 아무도 기억하지 못한다.`);
-    if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${c.beaten.map(id=>esc(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
-    if(E.bondMarried(c)){const k=(c.bond.kids||[]);P.push(`곁에는 ${esc(c.bond.name)}이(가) 있었다. ${k.length?`아이 ${k.map(x=>esc(x.n)).join(' · ')}${k.length>1?'과(와) 함께':'와(과) 함께'} 식탁을 나눴다. `:''}도시의 해가 바뀔 때마다 한 사람 몫의 자리가 더 비어 있지 않다는 것이 가장 큰 보상이었다.`)}
+    if(c.licensed&&!c.job)P.push(`해결사로서는 ${c.rank}${T.rankUnit}${c.title?` · ${E_(c.title)}`:''}에 닿았다. 의뢰서에 적힌 이름 하나하나가 ${yr}년 동안 쌓은 기록이다.`);
+    else if(c.title)P.push(`${jp(E_(c.title),'이라는','라는')} 이름이 붙었다. 누가 먼저 불렀는지는 아무도 기억하지 못한다.`);
+    if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${c.beaten.map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
+    if(E.bondMarried(c)){const k=(c.bond.kids||[]);P.push(`곁에는 ${J.i(E_(c.bond.name))} 있었다. ${k.length?`아이 ${jp(k.map(x=>E_(x.n)).join(' · '),'과','와')} 함께 식탁을 나눴다. `:''}도시의 해가 바뀔 때마다 한 사람 몫의 자리가 더 비어 있지 않다는 것이 가장 큰 보상이었다.`)}
     else if(c.bond&&c.bond.st==='lost')P.push('한 번은 곁에 누군가 있었다. 지키지 못한 이름 하나가 오래 남았다.');
-    if(c.distForm)P.push(`육신은 뒤틀렸고, ${esc(c.distForm.n)}이라는 이름이 붙었다. 그래도 걸음은 멈추지 않았다.`);
-    else if(c.ego)P.push(`마음이 무너지려던 순간 붙잡은 모양이 ${esc(c.ego.n||'E.G.O')}이(가) 되어 곁에 남았다. 그것은 무기이기 전에 버틴 증거였다.`);
-    P.push(w?(tr?`${yr}년. 도시가 붙일 수 있는 가장 높은 이름을 넘어섰다. 발톱도, 조율자도 ${esc(nm)}의 길을 막지 못했다. 끝이라고 부르던 자리 너머로 길은 이어져 있었다.`:`${yr}년. 도시는 해마다 시끄러웠고 해마다 조용해졌다. ${esc(nm)}${jong(nm)} 그 소란 속에서 끝까지 서 있었다. 이야기는 여기서 한 막을 내린다.`):'');
+    if(c.distForm)P.push(`육신은 뒤틀렸고, ${J.i(E_(c.distForm.n))} 이름이 되었다. 그래도 걸음은 멈추지 않았다.`);
+    else if(c.ego)P.push(`마음이 무너지려던 순간 붙잡은 모양이 ${J.i(E_(c.ego.n||'E.G.O'))} 되어 곁에 남았다. 그것은 무기이기 전에 버틴 증거였다.`);
+    P.push(w?(tr?`${yr}년. 도시가 붙일 수 있는 가장 높은 이름을 넘어섰다. 발톱도, 조율자도 ${J.eul(E_(nm))} 막지 못했다. 끝이라고 부르던 자리 너머로 길은 이어져 있었다.`:`${yr}년. 도시는 해마다 시끄러웠고 해마다 조용해졌다. ${J.eun(E_(nm))} 그 소란 속에서 끝까지 서 있었다. 이야기는 여기서 한 막을 내린다.`):'');
     return P.filter(Boolean);
   }
   function kinLine(c,w,dt){
@@ -1627,6 +1630,7 @@ export function startUI(E,app){
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
+    testPatch(o){if(!G)return;Object.assign(G.ch,o);render()},
     testEnd(y,t,o){if(!G)return;G.year=G.ch.year=y||CFG.years;UI.endWin=true;UI.trueEnd=!!t;UI.oldEnd=!!o;UI.death=null;UI.screen='end';render()},
     testFight(id,hp,php){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;if(php){C.P.hp=C.P.maxHp=php}render()},
     /* 자동 테스트용: 특색 심사 통과 직후 화면 */
