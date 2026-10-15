@@ -682,7 +682,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const o of [D.items,D.special,D.cards])for(const v of Object.values(o||{}))add(v.n);
     for(const v of Object.values(D.relics||{})){add(v.n);if(v.open)add(v.open.n)}
     for(const v of Object.values(D.hiddenJobs||{})){add(v.n);if(v.weapon)add(v.weapon.n)}
-    for(const e of Object.values(D.enemies)){if(e.drop){add(e.drop.n);if(e.drop.gear)add(e.drop.gear.n)}}
+    for(const e of Object.values(D.enemies)){if(e.drop){add(e.drop.n);if(e.drop.gear)add(e.drop.gear.n);for(const x of e.drop.extra||[])add(x.n)}}
     return n;
   }
   function egoNameErr(name){
@@ -768,7 +768,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 결혼한 뒤 금기(도시의 해가 되는 짓)를 저지르면 그때부터 해마다 dieChance%로 배우자가 세상을 떠난다 */
   /* 배우자 사망 확률(%): 금기를 저지른 뒤엔 dieChance, 여기에 히든 보스를 이겨 쌓인 위험(0.1%씩)을 더한다 */
-  function bondRisk(b,y){return (b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0)}
+  function bondRisk(b,y,ch){return ((b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0))*(ch&&ch.flags&&ch.flags.bondGuard?0.5:1)}
   function bondTaboo(ch){const b=ch.bond;if(b&&b.st==='married'&&b.tabooAt==null)b.tabooAt=ch.year||0}
   /* 결혼한 뒤의 배우자의 죽음 (큰 대가). 아이는 남는다 */
   function bondDeath(ch,chips){
@@ -835,7 +835,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       if(b.st!=='married')return null;
-      if(d(1000)<=bondRisk(b,y)*10)
+      if(d(1000)<=bondRisk(b,y,ch)*10)
         return {t:B.deathT,x:bondFill(R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`,ok:{t:bondFill(B.deathAT,b),fx:{bondDeath:true}}}]};
       const last=kids.length?kids[kids.length-1].born:-99;
       if(y-b.since>=KD.from&&kids.length<KD.max&&y-last>=KD.gap&&d(100)<=KD.chance){
@@ -1194,6 +1194,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 특수환: 승리하면 능력치 하나를 골라 영구 증가 (전리품보다 먼저, 전리품이 맨 끝) */
       if(foe.pill){ch.pillPick=true;chips.push(`${foe.pill.n} · 능력치 하나를 골라 +${foe.pill.v} (영구)`)}
       if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
+        if(dr.flag)ch.flags[dr.flag]=1;
+        for(const x of dr.extra||[]){addStats(ch.stats,x.fx);if(x.fx.maxHp)ch.hp+=x.fx.maxHp;ch.relics.push(x.n);if(x.flag)ch.flags[x.flag]=1;chips.push(`전리품 · ${x.n} (${x.e}, 영구)`)}
         if(dr.gear){offerGear(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 · ${dr.gear.n} (${dr.gear.e}) · 장착할지 고른다`)}
         chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
         else for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
@@ -1269,7 +1271,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       E.maxHp=E.hp=Math.max(1,Math.round(P.maxHp*m));E.atk=Math.max(1,Math.round(P.atk*m));E.eva=Math.round(P.eva*m);E.spd=Math.round(P.spd*m);E.deck=ch.deck.slice()}
     /* 인연과 함께 싸우는 보스(엘레나): 결혼한 인연이 라운드마다 추가 공격 */
     const ally=e.ally&&ch.bond&&ch.bond.st==='married'?{name:ch.bond.name,lv:spouseLevel(ch.bond,ch.year||0)}:null;
-    const C={ch,P,E,id,ally,penalty,duel:assocOf(ch)===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
+    const allyFirst=ch.flags&&ch.flags.bondFirst&&ch.bond&&ch.bond.st==='married'?{name:ch.bond.name,lv:spouseLevel(ch.bond,ch.year||0)}:null;
+    const C={ch,P,E,id,ally,allyFirst,penalty,duel:assocOf(ch)===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
     activeC=C;
     if(ch.mindDead&&!ch.ego&&!ch.distForm)mindBreak(C);
     newRound(C);
@@ -1666,7 +1669,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     });
     C.step=-1;
     /* 인연의 추가 공격 */
-    if(C.ally&&E.hp>0&&P.hp>0){const A_=C.ally,x=Math.max(1,CFG.bond.ally.base+CFG.bond.ally.per*A_.lv+d(7)-4);E.hp=Math.max(0,E.hp-x);L('dmg',`${A_.name} · 인연의 추가 공격 · ${E.name}에게 ${x} 피해`);push({k:'bleed',side:'E',dmg:x})}
+    {const A_=C.ally||(C.round===1?C.allyFirst:null);if(A_&&E.hp>0&&P.hp>0){const x=Math.max(1,CFG.bond.ally.base+CFG.bond.ally.per*A_.lv+d(7)-4);E.hp=Math.max(0,E.hp-x);L('dmg',`${A_.name} · 인연의 추가 공격 · ${E.name}에게 ${x} 피해`);push({k:'bleed',side:'E',dmg:x})}}
     /* 연주(피아니스트): 라운드마다 악장 1. every에 닿으면 고정 피해 dmg, 그 라운드에 방어 자세였으면 절반 */
     if(E.passive&&E.passive.id==='recital'&&E.hp>0&&P.hp>0){
       const R=E.passive;E.recital=(E.recital||0)+1;
