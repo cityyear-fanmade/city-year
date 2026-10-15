@@ -962,9 +962,9 @@ export function startUI(E,app){
   }
   function vOrgPick(){
     const t=G.ch.orgPick;
-    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">${t==='wing'?'날개 입사':t==='office'?'사무소 입소':'협회 입회'}</span>
-      <p class="small">${t==='wing'?'어느 날개에 들어갈지 고른다.':t==='office'?'어느 사무소에 들어갈지 고른다.':'어느 협회에 들어갈지 고른다.'}</p>
-      ${D.orgs[t].map(n=>`<button class="btn" data-a="orgset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small dim">${esc(t==='office'?((D.offices||[]).find(o=>o.n===n)||{}).h||'':orgBrief(t,n))}</span></button>`).join('')}</div>`;
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">${t==='wing'?'날개 입사':t==='office'?'사무소 입소':t==='syn'?'조직 가입':'협회 입회'}</span>
+      <p class="small">${t==='wing'?'어느 날개에 들어갈지 고른다.':t==='office'?'어느 사무소에 들어갈지 고른다.':t==='syn'?'어느 조직에 들어갈지 고른다. 덱 6 · 8 · 10장에서 패시브가 한 단계씩 열린다.':'어느 협회에 들어갈지 고른다.'}</p>
+      ${D.orgs[t].map(n=>t==='syn'?(()=>{const F=D.fingers[n];return `<button class="btn" data-a="orgset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small">${esc(F.trait)}</span><span class="mono small" style="color:var(--gold)">${F.ranks.map(r=>esc(r.n)).join(' → ')}</span><span class="small dim">${esc(fingerPassive(n,0))}</span><span class="small dim">${esc(F.lore||'')}</span></button>`})():`<button class="btn" data-a="orgset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small dim">${esc(t==='office'?((D.offices||[]).find(o=>o.n===n)||{}).h||'':orgBrief(t,n))}</span></button>`).join('')}</div>`;
   }
   function vFingerPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">손가락 가입</span>
