@@ -503,7 +503,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 사건·성장·보상 효과를 적용하고 화면용 칩을 돌려준다 */
   /* 소속에 들어간다: 소속·직급 기록을 새로 쓰고 첫 직급의 보정을 받는다 */
   function joinAff(ch,J,name,chips){
-    ch.aff={type:J.type,name};chips.push(((D.fingers[name]&&D.fingers[name].kind)||T.affTypes[J.type]||'소속')+' · '+name);
+    ch.aff={type:J.type,name};(ch.affLog=ch.affLog||[]).includes(name)||ch.affLog.push(name);chips.push(((D.fingers[name]&&D.fingers[name].kind)||T.affTypes[J.type]||'소속')+' · '+name);
     if(isN(ch)&&ch.gear.aug){chips.push(`의체를 버린다 · ${ch.gear.aug.n} → 보관함`);unequip(ch,'aug')}
     ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0;
     /* 동부 출신 외곽 생존자가 N사 날개에 들어가면 못 대신 전용 키워드 '운명': 모든 판정(사건 판정 · 전투 명중·회피 굴림) +fate */
