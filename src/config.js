@@ -184,7 +184,7 @@ export const CFG = {
   freeWing: {names: ['K사 날개', 'J사 날개', 'G사 날개'], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
   burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5},
   /* 패시브 근성(형님)·초근성(큰형님) 받는 피해 감소 %: 맞아야 강해지는 중지가 후반에 버티도록 */
-  middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 20]},
+  middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30]},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
