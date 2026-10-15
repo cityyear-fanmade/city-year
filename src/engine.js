@@ -74,7 +74,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const d=n=>1+Math.floor(rng()*n);
   const T=D.text;
   /* 6시즌: 세계관 사무소. 급수 범위(hi~lo급)에 맞는 곳만 문이 열린다. 갈림길과 '사무소 문을 두드린다'가 같은 목록을 쓴다 */
-  const officeChoice=o=>({l:o.n,h:o.h,req:['licensed','canfix',`rankin:${o.hi}-${o.lo}`],ok:{t:o.t,fx:Object.assign({},o.fx,{join:{type:'office',name:o.n}})}});
+  const officeChoice=o=>({l:o.n,h:o.h,req:['licensed','canfix',`rankin:${o.hi}-${(D.orgs.office||[]).includes(o.n)?9:o.lo}`],ok:{t:o.t,fx:Object.assign({},o.fx,{join:{type:'office',name:o.n}})}});
   if(D.offices&&!D.officesBuilt){D.officesBuilt=true;
     if(D.officeKnock)D.officeKnock.c=[...D.offices.map(officeChoice),{l:'혼자 일한다',ok:{t:'아직은 혼자가 편하다.',fx:{}}}];
     if(D.affiliation)D.affiliation.c=[...D.offices.map(officeChoice),...D.affiliation.c]}
@@ -499,10 +499,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(isFinger(ch))chips.push(...fingerStep(ch));
     else if(CR[ch.aff.type]&&CR[ch.aff.type].ranks)chips.push(...careerStep(ch));
   }
+  /* 사무소 입소: 그 사무소의 보정(능력치·카드)을 받고 소속이 된다 */
+  function joinOffice(ch,name){const o=(D.offices||[]).find(x=>x.n===name);if(!o)return [];return applyFx(ch,Object.assign({},o.fx,{join:{type:'office',name:o.n}})).chips}
   /* 날개·협회 입사: 들어갈 곳을 직접 고른다 (고르지 않고 넘어오면 무작위) */
   function chooseOrg(ch,name){
     const t=ch.orgPick;if(!t||!(D.orgs[t]||[]).includes(name))return null;
-    const chips=[];ch.orgPick=null;joinAff(ch,{type:t,from:t},name,chips);return chips;
+    ch.orgPick=null;
+    if(t==='office')return joinOffice(ch,name);
+    const chips=[];joinAff(ch,{type:t,from:t},name,chips);return chips;
   }
   function chooseFinger(ch,name){
     if(!ch.fingerPick||!D.orgs.finger.includes(name))return null;
@@ -526,7 +530,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.join){
       /* 손가락 가입: 소지를 뺀 네 손가락 중 하나를 직접 고른다 (고르지 않고 넘어오면 무작위 · 엄지 특화 출신은 엄지 확률 보정) */
       if(fx.join.from==='finger'&&!fx.join.name){ch.fingerPick=true;chips.push('손가락 · 어느 손가락에 설지 고른다')}
-      else if((fx.join.from==='wing'||fx.join.from==='assoc')&&!fx.join.name){ch.orgPick=fx.join.from;chips.push(`${T.affTypes[fx.join.from]} · 어느 곳에 들어갈지 고른다`)}
+      else if((fx.join.from==='wing'||fx.join.from==='assoc'||fx.join.from==='office')&&!fx.join.name){ch.orgPick=fx.join.from;chips.push(`${T.affTypes[fx.join.from]} · 어느 곳에 들어갈지 고른다`)}
       else joinAff(ch,fx.join,fx.join.name||one(D.orgs[fx.join.from]),chips);
     }
     /* 사건으로 승급 (해결사만, 최고 급수 미만일 때) */
@@ -534,6 +538,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.pts)addPts(ch,fx.pts*CFG.promo.gain.check,chips);
     if(fx.pinkyKey){const ks=ch.pinkyKeys=ch.pinkyKeys||[],K=D.pinky.keys[ks.length];if(K){ks.push(K.k);chips.push(`소지의 별 · ${K.k} (${ks.length}/${D.pinky.keys.length})`);if(ks.length>=D.pinky.keys.length){ch.seongPick=true;chips.push('성도 · 이름을 정한다')}}}
     if(fx.oracle&&!ch.oracle){ch.oracle=true;(ch.relics=ch.relics||[]).push('히든 직업 · 신탁대행자','전리품 · 신의 단말기');addStats(s,D.oracle.loot.fx);chips.push('히든 직업 · 신탁대행자 · 지령 독촉',`전리품 · 신의 단말기 · ${D.oracle.loot.e}`)}
+    if(fx.officeJoin){chips.push(...joinOffice(ch,one(fx.officeJoin)))}
     if(fx.eastScout&&!isN(ch)){joinAff(ch,{type:'wing',from:'wing'},CFG.nWing.name,chips);ch.eastScoutDone=true;for(let i=ch.fi||0;i<CFG.eastN.startFi;i++){ch.promos=(ch.promos||0)+1;const c=careerStep(ch);if(c)chips.push(...c)}}
     if(fx.oracleFail){ch.oracleTries=(ch.oracleTries||0)+1;ch.oracleNext=(ch.year||0)+CFG.oracle.every}
     if(fx.oracleDecline)ch.oracleTries=CFG.oracle.tries;
