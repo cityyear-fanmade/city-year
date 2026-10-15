@@ -3475,15 +3475,15 @@
   "elena": {
    "n": "엘레나 · 핏빛 밤",
    "color": "#b01e3c",
-   "hp": 300,
-   "atk": 15,
-   "eva": 11,
-   "spd": 11,
+   "hp": 320,
+   "atk": 14,
+   "eva": 10,
+   "spd": 10,
    "deck": [
     "noon",
     "bloodlet",
-    "supper",
-    "bloodlet"
+    "noon",
+    "supper"
    ],
    "hidden": true,
    "tier": "hidden",
@@ -3493,8 +3493,8 @@
     "id": "echo",
     "n": "끝없는 갈증",
     "need": 3,
-    "dmg": 20,
-    "d": "적중할 때마다 갈증 1. 3이 되면 고정 피해 20을 주고 비운다"
+    "dmg": 18,
+    "d": "적중할 때마다 갈증 1. 3이 되면 고정 피해 18을 주고 비운다"
    },
    "hard": {
     "hp": 1.2,
