@@ -254,7 +254,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.64,
@@ -327,7 +328,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.66,
@@ -392,7 +394,8 @@
        "dr": 5
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "bonusCards": [
     {
@@ -468,7 +471,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 2.65,
@@ -540,7 +544,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.9,
@@ -679,7 +684,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.68,
@@ -748,7 +754,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.8,
@@ -817,7 +824,8 @@
        "dr": 5
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.94,
@@ -888,7 +896,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.84,
@@ -955,7 +964,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "thumbDrop": {
     "n": "동부십검",
@@ -1543,7 +1553,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    }
   },
   "bloodbag": {
@@ -1741,7 +1752,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    }
   },
   "rat_knife": {
@@ -3230,7 +3242,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    }
   },
   "orchestra": {
@@ -3308,7 +3321,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    }
   },
   "matthias": {
@@ -3377,7 +3391,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.6,
@@ -3556,7 +3571,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    }
   },
   "abel": {
@@ -3623,7 +3639,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.65,
@@ -3723,7 +3740,8 @@
        "defUp": 6
       }
      }
-    ]
+    ],
+    "gearChance": 50
    }
   },
   "kid_hunt": {
@@ -3982,7 +4000,8 @@
        "dr": 5
       }
      }
-    ]
+    ],
+    "gearChance": 50
    },
    "hard": {
     "hp": 1.6,
@@ -3993,10 +4012,10 @@
   "baral": {
    "n": "발톱 · 바랄",
    "color": "#f0ead8",
-   "hp": 330,
-   "atk": 14,
-   "eva": 10,
-   "spd": 12,
+   "hp": 390,
+   "atk": 16,
+   "eva": 12,
+   "spd": 13,
    "deck": [
     "x_exec",
     "x_blink",
@@ -4072,10 +4091,10 @@
   "zena": {
    "n": "조율자 · 제나",
    "color": "#f6dc8c",
-   "hp": 430,
-   "atk": 15,
-   "eva": 12,
-   "spd": 8,
+   "hp": 500,
+   "atk": 17,
+   "eva": 14,
+   "spd": 9,
    "deck": [
     "x_bind",
     "x_pillar",

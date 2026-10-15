@@ -285,9 +285,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const aidCount=(ch,id)=>[...ch.deck,...(ch.side||[]),...(ch.offers||[])].filter(x=>x===id).length;
   function buyAid(ch,id){const B=CFG.blackAid,p=B.price[id];if(!p||ch.deckLocked||ch.cardMoney||ch.money<p||aidCount(ch,id)>=B.max)return false;ch.money-=p;(ch.offers=ch.offers||[]).push(id);return true}
   /* 공방 치유소: 돈을 내고 HP를 회복한다 (방문마다 CFG.clinic.max번) */
+  const clinicPrice=ch=>CFG.clinic.price+CFG.clinic.step*(ch.healBought||0);
   function buyHeal(ch){
-    const K=CFG.clinic;if(ch.money<K.price||ch.hp>=ch.stats.maxHp)return 0;
-    const h=Math.min(K.hp,ch.stats.maxHp-ch.hp);ch.money-=K.price;ch.hp+=h;return h;
+    const K=CFG.clinic,p=clinicPrice(ch);if(ch.money<p||ch.hp>=ch.stats.maxHp)return 0;
+    const h=Math.min(K.hp,ch.stats.maxHp-ch.hp);ch.money-=p;ch.hp+=h;ch.healBought=(ch.healBought||0)+1;return h;
   }
   /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 쓰여 HP를 heal 회복한다 (전투마다 1개). 최대 carry개, 무한 모드 뒤엔 값이 오른다 */
   const ampPrice=ch=>CFG.ample.price;
@@ -1265,7 +1266,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(dr.title){ch.titles=ch.titles||[];if(!ch.titles.includes(dr.title)){ch.titles.push(dr.title);(ch.titleLog=ch.titleLog||[]).push(dr.title)}chips.push('칭호 · '+dr.title)}
         for(const x of dr.extra||[]){addStats(ch.stats,x.fx);if(x.fx.maxHp)ch.hp+=x.fx.maxHp;ch.relics.push(x.n);if(x.flag)ch.flags[x.flag]=1;chips.push(`전리품 · ${x.n} (${x.e}, 영구)`)}
         if(dr.gear){offerGear(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 · ${dr.gear.n} (${dr.gear.e}) · 장착할지 고른다`)}
-        for(const g of dr.gears||[]){offerGear(ch,Object.assign({grade:5},g));chips.push(`전리품 ${g.slot==='armor'?'방어구':'장비'} · ${g.n} (${g.e}) · 장착할지 고른다`)}
+        for(const g of dr.gears||[]){if(dr.gear&&dr.gearChance!=null&&d(100)>dr.gearChance)continue;offerGear(ch,Object.assign({grade:5},g));chips.push(`전리품 ${g.slot==='armor'?'방어구':'장비'} · ${g.n} (${g.e}) · 장착할지 고른다`)}
         chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
         else for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
       if(foe.quest){ch.flags[foe.quest.flag]=1;ch.bookNext=G.year+CFG.redBook.every;(ch.relics=ch.relics||[]).push(foe.quest.relic);chips.push(foe.quest.text)}
@@ -1863,5 +1864,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,chooseFinger,chooseOrg,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,chooseFinger,chooseOrg,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

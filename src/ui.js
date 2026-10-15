@@ -475,12 +475,12 @@ export function startUI(E,app){
   }
   /* 공방 치유소 · 암시장 K사 엠플 */
   function vClinic(){
-    const ch=G.ch,K=CFG.clinic,A=CFG.ample,n=UI.healed||0,left=K.max-n,full=ch.hp>=ch.stats.maxHp,ok=left>0&&!full&&ch.money>=K.price;
+    const ch=G.ch,K=CFG.clinic,A=CFG.ample,n=UI.healed||0,left=K.max-n,cp=E.clinicPrice(ch),full=ch.hp>=ch.stats.maxHp,ok=left>0&&!full&&ch.money>=cp;
     const ap=E.ampPrice(ch),have=ch.ample||0,bought=ch.ampleBought||0,aok=have<A.carry&&bought<A.limit&&ch.money>=ap;
-    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">치유소</b><span class="mono" style="color:var(--gold)">${E.money(K.price)} · 이번 방문 ${n}/${K.max}</span></div>
-      <p class="small dim">돈을 내고 상처를 치료한다. 한 번에 HP ${K.hp} 회복.</p>
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">치유소</b><span class="mono" style="color:var(--gold)">${E.money(cp)} · 이번 방문 ${n}/${K.max}</span></div>
+      <p class="small dim">돈을 내고 상처를 치료한다. 한 번에 HP ${K.hp} 회복. 치료를 받을 때마다 값이 ${E.money(K.step)}씩 오른다 (이번 판 ${ch.healBought||0}번 받음).</p>
       ${UI.healMsg?`<p class="good small">${esc(UI.healMsg)}</p>`:''}
-      <button class="btn" data-a="heal" ${ok?'':'disabled'}><b>치료 받는다</b><span class="mono small dim">HP ${ch.hp}/${ch.stats.maxHp}${full?' · 이미 멀쩡하다':left<=0?' · 오늘은 더 받을 수 없다':ch.money<K.price?' · 돈이 모자란다':''}</span></button></div>
+      <button class="btn" data-a="heal" ${ok?'':'disabled'}><b>치료 받는다</b><span class="mono small dim">HP ${ch.hp}/${ch.stats.maxHp}${full?' · 이미 멀쩡하다':left<=0?' · 오늘은 더 받을 수 없다':ch.money<cp?' · 돈이 모자란다':''}</span></button></div>
     <div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">${A.name}</b><span class="mono" style="color:var(--gold)">${E.money(ap)}</span></div>
       <p class="small dim">암시장에서 도는 전리품. 전투 중 HP가 ${A.below} 이하가 되면 자동으로 쓰여 HP를 ${A.heal} 회복한다. 전투마다 1개, 최대 ${A.carry}개까지 지닌다. 쓰고 나면 다음 공방에서 다시 살 수 있지만, 한 판에 모두 ${A.limit}개까지만 살 수 있다.</p>
       <button class="btn" data-a="ample" ${aok?'':'disabled'}><b>${A.name} 구입</b><span class="mono small dim">지닌 수 ${have}/${A.carry} · 산 수 ${bought}/${A.limit}${bought>=A.limit?' · 더는 살 수 없다':have>=A.carry?' · 더는 지닐 수 없다':ch.money<ap?' · 돈이 모자란다':''}</span></button></div>`;
