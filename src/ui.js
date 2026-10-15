@@ -606,6 +606,10 @@ export function startUI(E,app){
     return `<div class="stack" style="gap:6px"><span class="eyebrow">난이도 · 새로 태어날 때부터 적용</span><div class="seg">${b('easy','쉬움')}${b('normal','보통')}${b('hard','하드')}</div>
       <div class="panel stack" style="gap:3px;padding:10px 12px">${info}</div></div>`}
   const TITLE_REC=['본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','특색'];
+  /* 기록실 힌트: 아직 열리지 않은 칭호와 엔딩이 어떤 길 끝에 있는지 짐작만 하게 한다 */
+  const TITLE_HINT={'본부 직속':'협회 최고 자리에 올라 본부의 부름을 넘긴다','특이점 부서':'날개 임원에 오른 뒤 핵심 부서의 심사를 통과한다','상석':'손가락의 서열 맨 위에서 마지막 부름을 통과한다',[CFG.nWing.eastTitle]:'동쪽 외곽 출신으로 N사 날개에 들어가 끝까지 오른다','피의 왈츠':'인연과 함께 핏빛 존재와 맞선다','엄지를 넘어선 자':'엄지의 아랫 조직 끝에서 엄지에게 칼을 뽑는다','정해진 운명':'엄지의 가장 높은 이에게 맞섰다가 쓰러진다','곰과 범을 넘어선 자':'검계의 끝에서 본국의 칼을 마주한다','특색':'해결사 1급에서 도시가 색을 불러 줄지 심사를 받는다'};
+  const END_HINT={death:'어딘가에서 쓰러진다',mind:'정신력이 0이 된다',distort:'정신력이 한계에 닿아 몸이 뒤틀린다',win:CFG.years+'년을 끝까지 산다',true:'제 2막 마지막 등급을 넘는다',outer:'무한 모드에서 스스로 외곽에서 끝낸다',out_seal:'무한 모드에서 외곽의 괴수를 여러 번 쓰러뜨린다',out_star:'무한 모드에서 이름난 상대를 아주 많이 이긴다',out_settle:'무한 모드에서 가족과 오래 산다',distwin:'뒤틀린 채로 '+CFG.years+'년을 넘긴다',old:'무한 모드에서 백 살을 넘겨 산다',blank:'어떤 보정도 없이 시작해 제 1막을 넘긴다',blankwed:'그렇게 시작해 가족과 함께 넘긴다',wed:'결혼한 채로 제 1막을 넘긴다',lovekill:'뒤틀린 채 사랑하던 이에게 쓰러진다'};
+  const hintRow=(open,label,hint)=>`<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${open?'':' dim'}" style="justify-self:start">${open?label:'???'}</span>${open?'':`<span class="small dim">${esc(hint||'')}</span>`}</div>`;
   function vRecords(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
     const ends=[['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에']];
@@ -619,10 +623,10 @@ export function startUI(E,app){
         <div class="row between"><span>최고 레벨</span><b class="mono">${r.best.lv||'—'}</b></div>
         <div class="row between"><span>도달한 위협 등급</span><b class="mono">${r.best.grade>=0?X.grades[r.best.grade]:'—'}</b></div>
         <div class="row between"><span>끝낸 판</span><b class="mono">${r.runs}</b></div></div>
-      <div class="panel stack" style="gap:6px"><span class="eyebrow">칭호 · 최고 등급에 오른 횟수</span><div class="chips">${TITLE_REC.map(n=>{const c=(r.titles||{})[n]||0;return `<span class="chip${c?'':' dim'}">${c?`${n} ×${c}`:'???'}</span>`}).join('')}</div></div>
+      <div class="panel stack" style="gap:6px"><span class="eyebrow">칭호 · 최고 등급에 오른 횟수</span><div class="stack" style="gap:6px">${TITLE_REC.map(n=>{const c=(r.titles||{})[n]||0;return hintRow(c,`${esc(n)} ×${c}`,TITLE_HINT[n])}).join('')}</div></div>
       ${(()=>{const GR=[['날개','wing'],['협회','assoc'],['사무소','office'],['손가락','finger'],['조직','syn']],all=GR.flatMap(([,k])=>D.orgs[k]||[]),got=(r.affs||[]).filter(n=>all.includes(n));
         return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소속 ${got.length}/${all.length}</span>${GR.map(([n,k])=>`<div><span class="small dim">${n}</span><div class="chips">${(D.orgs[k]||[]).map(o=>`<span class="chip${(r.affs||[]).includes(o)?'':' dim'}">${(r.affs||[]).includes(o)?esc(o):'???'}</span>`).join('')}</div></div>`).join('')}<p class="small dim">한 번이라도 들어간 소속이 열린다.</p></div>`})()}
-      <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span><div class="chips">${ends.map(([k,n])=>`<span class="chip${r.endings.includes(k)?'':' dim'}">${r.endings.includes(k)?n:'???'}</span>`).join('')}</div></div>
+      <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span><div class="stack" style="gap:6px">${ends.map(([k,n])=>hintRow(r.endings.includes(k),esc(n),END_HINT[k])).join('')}</div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">타고난 것 ${r.innate.length}/${Object.keys(D.innate).length}</span><div class="chips">${Object.entries(D.innate).map(([k,v])=>`<span class="chip${r.innate.includes(k)?'':' dim'}">${r.innate.includes(k)?esc(v.n):'???'}</span>`).join('')}</div></div>
       ${vJobs()}
       <div class="panel stack" style="gap:8px"><span class="eyebrow">만난 상대 ${r.seen.filter(id=>D.enemies[id]).length}/${total} · 이긴 상대 ${r.beaten.filter(id=>D.enemies[id]).length}</span>
@@ -862,7 +866,7 @@ export function startUI(E,app){
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
@@ -931,6 +935,15 @@ export function startUI(E,app){
       <button class="btn primary" data-a="nameset">이 이름으로 정한다</button></div>`;
   }
   /* 인연(동반자): 이름 정하기와 가족 탭 */
+  const josa=(x,a,b)=>{const ch=String(x).replace(/[^가-힣]+$/,'').slice(-1).charCodeAt(0),f=ch>=0xAC00&&ch<=0xD7A3?(ch-0xAC00)%28:0;return x+(a==='으로'?(f&&f!==8?'으로':'로'):f?a:b)};
+  function vKidPick(){
+    const ch=G.ch,k=(ch.bond&&ch.bond.kids||[]).find(x=>x.pend)||{n:''};
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">아이 · ${esc(josa(ch.bond.name,'과','와'))}의 아이</span>
+      <p class="small">아이의 이름을 정한다. 비워 두면 ${esc(josa(k.n,'으로','로'))} 부른다.</p>
+      <div class="row"><span class="small">이름</span><input id="kidname" maxlength="12" value="${esc(UI.kidName||'')}" autocomplete="off" placeholder="${esc(k.n)}" style="width:min(14em,60vw)"></div>
+      <span class="small bad">${UI.kidErr||''}</span>
+      <button class="btn primary" data-a="kidset">이 이름으로 부른다</button></div>`;
+  }
   function vBondPick(){
     const b=G.ch.bond,R=E.bondData(G.ch);
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">인연 · ${esc(R.who)}</span>
@@ -1445,6 +1458,12 @@ export function startUI(E,app){
       if(err){UI.singErr=err;UI.singName=n;render();return}
       E.setSing(G.ch,ty,n);UI.singErr='';UI.singName='';UI.singType=null;resave();
       UI.res.chips=[...UI.res.chips,`특이점 · ${n} (${CFG.corp.types[ty].n})`,...E.singChips(G.ch)];render();
+    },
+    kidset(){
+      const n=(($('kidname')||{}).value||'').trim(),err=E.kidNameErr(G.ch,n);
+      if(err){UI.kidErr=err;UI.kidName=n;render();return}
+      const k=(G.ch.bond.kids||[]).find(x=>x.pend),nm=n||(k&&k.n)||'';E.setKidName(G.ch,n);UI.kidErr='';UI.kidName='';resave();
+      UI.res.chips=[...UI.res.chips,`아이 · ${nm}`];render();
     },
     bondset(){
       const n=(($('bondname')||{}).value||'').trim(),err=E.bondNameErr(n);
