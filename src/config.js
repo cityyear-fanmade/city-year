@@ -181,7 +181,9 @@ export const CFG = {
      흐트러짐: 단계(stages)마다 상대의 명중 −hit · 주는 피해 −dmg · 받는 피해 +take, 라운드 끝에 decay씩 줄고, stun(적 등급별) 이상이면 다음 라운드 기절 */
   nail: {cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */
-  bon: {max: 5, need: [0, 1, 2, 4, 5], atk: [0, 5, 9, 13, 17, 21], eva: [0, 2, 4, 6, 8, 9], dmgB: [0, 0, 0, 1, 1, 2], accel: {max: 3, hit: 5, eva: 5}},
+  bon: {max: 5, need: [0, 1, 2, 4, 5], atk: [0, 5, 9, 13, 17, 21], eva: [0, 2, 4, 6, 8, 9], dmgB: [0, 0, 0, 1, 1, 2], accel: {max: 3, hit: 5, eva: 5},
+    /* 전용 검술 카드 강화: 검 단계별 카드 피해 +cardB[L], 후반(lateFrom년차부터 lateEvery년마다 +latePer, 최대 +lateMax) */
+    cardB: [0, 0, 0, 1, 2, 3], lateFrom: 40, lateEvery: 5, latePer: 1, lateMax: 14},
   /* 혈귀 특수 루트: 라만차랜드 초대장이 오는 해 */
   lamancha: {year: 16},
   /* 격리 실패: 이 해부터, 사건이 오는 해마다 확률(%) */
