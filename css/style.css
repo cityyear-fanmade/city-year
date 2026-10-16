@@ -405,3 +405,25 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 
 .cfgbtn{position:fixed;right:12px;top:10px;z-index:30;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--dim);font-size:18px;line-height:1;cursor:pointer}
 .cfgbtn:hover{color:var(--gold);border-color:var(--gold)}
+
+/* ===== PC 보조 UI (1360px 이상): 왼쪽 수치판 + 양옆 은은한 장식. 모바일과 좁은 화면에는 나타나지 않는다 ===== */
+.side-l{display:none}
+@media (min-width:1360px){
+
+  .side-l{display:flex;flex-direction:column;gap:5px;position:fixed;left:20px;top:50%;transform:translateY(-50%);width:176px;z-index:20;padding:12px 12px 10px;
+    background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:14px;font:500 12px/1.4 var(--mono);color:var(--dim)}
+  .side-l .stitle{font:700 13px/1.3 var(--serif);color:var(--fg);padding-bottom:6px;border-bottom:1px solid var(--line);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .side-l .srow{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .side-l .srow b{color:var(--fg);font-weight:600;text-align:right;min-width:0}
+  .side-l .srow b.gname{color:var(--gold);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:104px}
+  .side-l .ssep{height:1px;background:var(--line);margin:3px 0}
+  html body::before,html body::after{content:"";position:fixed;top:0;bottom:0;width:calc((100vw - 780px)/2 - 230px);min-width:30px;pointer-events:none;
+    background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--gold) 10%,transparent) 30%,color-mix(in srgb,var(--gold) 10%,transparent) 70%,transparent);
+    border-inline:1px dashed color-mix(in srgb,var(--gold) 24%,transparent)}
+  html body::before{left:208px}html body::after{right:208px}
+}
+
+@media (min-width:1360px){ html body .side-l,html body .dock-out{z-index:60} }
+.sheet .roll{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.sheet .roll .n{display:flex;flex-direction:column;gap:2px;min-width:0}
+@media (min-width:1360px){ .hud-dup{display:none} }
+.side-l .bufup{color:#7fd1a0;font-style:normal}
