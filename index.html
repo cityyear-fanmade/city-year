@@ -2650,7 +2650,7 @@ function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords';
-  const VERSION='v8.0.0';
+  const VERSION='v8.0.5';
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
   const syncAffs=()=>{const c=G&&G.ch;if(!c||!(c.affLog||[]).length)return;const r=loadRec();r.affs=r.affs||[];let ch=false;for(const n of c.affLog)if(!r.affs.includes(n)){r.affs.push(n);ch=true}if(ch)store.set(REC,JSON.stringify(r))};
