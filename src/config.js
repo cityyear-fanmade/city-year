@@ -124,7 +124,7 @@ export const CFG = {
   /* 인연(동반자) 시스템: 일상 중에 인연을 만난다(혈귀·동부 외곽 출신은 전용 인연). 이름을 붙이면 gap[0]~gap[1]년마다 사건이 steps번,
      그다음 청혼 사건. 청혼은 die면 굴려 ok 안에 들면 성공(결혼), 기회는 tries번. 결혼하면 marry 보정, 해마다 yearMind 정신력, 정신력이 1이 되면 한 번 saveMind로 붙잡아 준다.
      기회를 모두 쓰면 인연이 끝나고 최대 정신력이 lossMind 줄어든다 (영구) */
-  bond: {routes: ['office', 'assoc', 'wing', 'finger', 'kuro', 'blade', 'awl'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], tries: 2, waitDc: 40,
+  bond: {routes: ['office', 'assoc', 'wing', 'finger', 'thumb', 'pointer', 'middle', 'ring', 'kuro', 'blade', 'awl'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], tries: 2, waitDc: 40,
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
     /* 결혼 뒤: 금기를 저지른 다음 해부터 해마다 dieChance% 배우자가 세상을 떠난다(최대 정신력 −lossMind). 아이: kid.from년 뒤부터 해마다 chance%, 최대 max명, 간격 gap년, 태어나면 최대 정신력 +mind. adult살이 되면 사무소·해결사·협회 중 한 곳에 들어간다 */
     /* 히든 인연(상대가 처음부터 2~1급 해결사): 해결사 등록자가 rank급 이하일 때 만남이 열리면 chance% 확률로 이 길이 된다 */
@@ -135,7 +135,7 @@ export const CFG = {
     /* 뒤틀린 뒤: 성인이 된 아이가 있으면 gap년마다 chance%로 토벌 의뢰가 온다. 여럿이면 가장 강한 아이(등급)가 온다. 등급 = 20세 이후 2년마다 +1(최대 8) + 직업 가산 */
     hunt: {gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1, mul: 1.1, mulTop: 1.5, topLv: 8,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
-      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7}, spouseYears: 3, spouseJob: {office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},
+      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7}, spouseYears: 3, spouseJob: {office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
   /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */
@@ -199,7 +199,10 @@ export const CFG = {
   freeWing: {names: ['K사 날개', 'J사 날개', 'G사 날개'], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
   burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5},
   /* 패시브 근성(형님)·초근성(큰형님) 받는 피해 감소 %: 맞아야 강해지는 중지가 후반에 버티도록 */
-  middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30]},
+  /* 중지 회피 환산: evaEff = 서열별(막내·동생·작은형님·큰형님) 회피의 '피하는 힘' 비율, 줄어든 회피 1당 받는 피해 감소 evaDr%p (근성과 합쳐 drCap까지). cap = 플레이어 되갚음 스택 최대(적은 5), counter = 방어 카드를 낸 라운드에 맞으면 되갚음 스택 × counter의 고정 피해 반격, sinkHit = 중지를 노린 침잠의 명중 감소 배율 */
+  middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30], evaEff: [1, 1, 0.5, 0], evaDr: 0.5, drCap: 50, counter: 3, sinkHit: 0.5, cap: 10},
+  /* 의리 순례(중지 전용 루트): 동생(fi 1) 이상이 되면 해마다 chance%로 원한의 책 제안, 거절하면 gap년 뒤 다시. 둘째 장 전투에서 아우가 맞으면(kin) 분노 +anger, 셋째 장 시험은 rounds라운드 버티기 */
+  giri: {fi: 1, chance: 35, gap: 5, kin: 50, anger: 5},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
