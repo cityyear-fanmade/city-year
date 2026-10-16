@@ -642,6 +642,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* beat:any = 히든 보스를 하나라도 이김, beat:a|b = 그중 하나를 이김 */
     if(req==='beat:any')return ch.beaten.length>0;
     if(req.startsWith('beat:'))return req.slice(5).split('|').some(id=>ch.beaten.includes(id));
+    if(req.startsWith('noflag:'))return !(ch.flags[req.slice(7)]);
     if(req.startsWith('notaffname:'))return !(ch.aff&&ch.aff.name===req.slice(11));
     if(req.startsWith('affname:'))return !!ch.aff&&ch.aff.name===req.slice(8);
     if(req.startsWith('rank<='))return ch.licensed&&ch.rank<=+req.slice(6);
@@ -1846,7 +1847,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(C.ch.infinite&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.floor(e_*IN.erodePer);
       if(e_>0&&x>0){P.hp=Math.max(0,P.hp-x);L('dmg',`${P.name} · 세계의 균열이 몸을 갉는다 · 고정 피해 ${x}`)}}
     ampUse(C,L);
-    if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
+    if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';
   }
   /* K사 엠플: 살아 있고 HP가 below 이하이면 자동으로 쓴다 (전투마다 1개) */
   function ampUse(C,L){
