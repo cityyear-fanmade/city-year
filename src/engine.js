@@ -406,7 +406,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   const multAt=i=>CFG.promo.mult[Math.min(i,CFG.promo.mult.length-1)];
   /* 지금까지 오른 단계 수. 해결사는 실제 급수로 센다 (사무소에 들어가면 promos가 0으로 돌아가도 급수는 남으므로) */
-  const promoDone=ch=>career(ch)==='fixer'?Math.max(0,T.rankStart-(ch.rank||T.rankStart)):(ch.promos||0);
+  /* 손가락은 시험 말고도 서열이 오른다(의리 순례 등): 지금 서열(fi)로 센다. 승진 횟수로 세면 큰형님인데도 승급 시험이 계속 뜬다 */
+  const promoDone=ch=>career(ch)==='fixer'?Math.max(0,T.rankStart-(ch.rank||T.rankStart)):career(ch)==='finger'?(ch.fi||0):(ch.promos||0);
   function promoNeed(ch){
     const k=career(ch),n=Math.max(1,steps(k,ch));let sum=0,m=1;
     for(let i=0;i<n;i++){sum+=m;m*=multAt(i)}
