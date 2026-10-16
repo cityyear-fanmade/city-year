@@ -426,3 +426,4 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 @media (min-width:1360px){ html body .side-l,html body .dock-out{z-index:60} }
 .sheet .roll{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.sheet .roll .n{display:flex;flex-direction:column;gap:2px;min-width:0}
 @media (min-width:1360px){ .hud-dup{display:none} }
+.side-l .bufup{color:#7fd1a0;font-style:normal}
