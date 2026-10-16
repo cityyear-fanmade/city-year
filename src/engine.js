@@ -542,7 +542,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.check){s.check+=fx.check;chips.push('사건 판정 '+sg(fx.check))}
     if(fx.startBreath){s.startBreath+=fx.startBreath;chips.push('시작 '+D.keywords.breath.n+' +'+fx.startBreath)}
     const cid=fx.card||(fx.reward?rewardCard(ch):null);
-    addCard(ch,cid,chips);
+    addCard(ch,cid,chips,null,true);
     if(fx.officeFound){ch.officePick=true;chips.push('사무소 개설 · 이름과 전문 분야를 정한다')}
     if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){ch.deck.push('o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
@@ -1046,6 +1046,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.money<CFG.shop.delCost||ch.deck.length<=CFG.shop.minDeck||!ch.deck[i]||D.cards[ch.deck[i]].fixed)return false;
     ch.money-=CFG.shop.delCost;return ch.deck.splice(i,1)[0];
   }
+  /* 히든 직업 전용 문구: 사건의 jobs[직업].c = [{i:선택지 번호, ...덮어쓸 값}] (null이면 그 항목을 지운다) */
+  function evForJob(ev,ch){
+    const J=ev&&ev.jobs&&ch&&ch.job&&ev.jobs[ch.job];if(!J)return ev;
+    const o=Object.assign({},ev);delete o.jobs;if(J.x)o.x=J.x;
+    o.c=ev.c.map((c,i)=>{const ov=(J.c||[]).find(z=>z.i===i);if(!ov)return c;const n=Object.assign({},c);for(const [k,v] of Object.entries(ov)){if(k==='i')continue;if(v===null)delete n[k];else n[k]=v}return n});
+    return o;
+  }
   function newGame(ch){return {ch,year:0,pool:sample(D.events.map((_,i)=>i),D.events.length)}}
   const age=G=>CFG.startAge+G.year-1;
   /* 다음 해: 끝 / 고정 전투 / 사건 */
@@ -1166,14 +1173,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!G.pool.length)G.pool=sample(D.events.map((_,i)=>i),D.events.length);
     /* first 표시가 있는 사건(소속 전용 등)은 조건이 맞으면 먼저 나온다 */
     const fi=G.pool.findIndex(i=>D.events[i].first&&meets(G.ch,D.events[i].req));
-    if(fi>=0)return {type:'event',ev:D.events[G.pool.splice(fi,1)[0]]};
+    if(fi>=0)return {type:'event',ev:evForJob(D.events[G.pool.splice(fi,1)[0]],G.ch)};
     /* 출신 진로 보정이 있으면 그 진로의 권유 사건(tag)이 보정값 × pathEventMul % 확률로 먼저 나온다 */
     const tagged=G.pool.filter(i=>{const e=D.events[i];return e.tag&&(G.ch.paths[e.tag]||0)>0&&meets(G.ch,e.req)});
     if(tagged.length){
       const ti=one(tagged);
-      if(d(100)<=(G.ch.paths[D.events[ti].tag]||0)*CFG.pathEventMul){G.pool.splice(G.pool.indexOf(ti),1);return {type:'event',ev:D.events[ti]}}
+      if(d(100)<=(G.ch.paths[D.events[ti].tag]||0)*CFG.pathEventMul){G.pool.splice(G.pool.indexOf(ti),1);return {type:'event',ev:evForJob(D.events[ti],G.ch)}}
     }
-    while(G.pool.length){const ev=D.events[G.pool.pop()];if(meets(G.ch,ev.req))return {type:'event',ev}}
+    while(G.pool.length){const ev=D.events[G.pool.pop()];if(meets(G.ch,ev.req))return {type:'event',ev:evForJob(ev,G.ch)}}
     return {type:'event',ev:D.events.find(e=>e.fallback)||D.events[0]};
   }
   /* 불길한 예감에 대한 답: go면 히든 보스, 아니면 원래 고정 전투 지정대로 조우 */
