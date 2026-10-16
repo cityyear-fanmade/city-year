@@ -343,6 +343,13 @@ export function startUI(E,app){
     card:'<rect x="3" y="7" width="12" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/>',relic:'<path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6"/>'};
   const icon=k=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${ICON[k]}</svg>`;
   function bagTabs(ch){return [['stat','능력치',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
+  /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
+  function vSideL(){
+    const ch=G.ch,s=ch.stats,pad=(k,v)=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`;
+    const rows=[['HP',`${ch.hp}/${s.maxHp}`],['정신력',ch.distForm?'뒤틀림':`${ch.mind}/${E.mindMax(ch)}`],['공격',sg(s.atk)],['회피',sg(s.eva)],['속도',sg(s.spd)],['판정',sg(s.check)],['최소 피해',s.dmin],['카드',`${ch.deck.length}/${E.deckMax(ch)}`],['레벨',`Lv ${ch.lv}`],['자산',E.money(ch.money)]];
+    const gear=Object.entries(D.slots).map(([k,n])=>`<div class="srow"><span>${n}</span><b class="gname">${ch.gear[k]?esc(ch.gear[k].n):'없음'}</b></div>`).join('');
+    return `<aside class="side-l" aria-label="수치판"><div class="stitle">${esc(ch.name||T.you)}</div>${rows.map(([k,v])=>pad(k,v)).join('')}<div class="ssep"></div>${gear}</aside>`;
+  }
   function vDock(cls){
     const ch=G.ch;
     return `<div class="dock ${cls}">${bagTabs(ch).map(([k,n,b])=>`<button class="tile" data-a="bag" data-i="${k}" aria-label="가방 · ${n}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>`;
@@ -1362,7 +1369,7 @@ export function startUI(E,app){
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
     const ov=UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const ovKey=UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':'c')+(UI.swap?'s':''):ov?'bag':'';
-    app.innerHTML=`<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out'):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
+    app.innerHTML=`<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     UI.lastOv=ovKey;document.documentElement.classList.toggle('ovopen',!!ov);
     const lg=$('log');if(lg)lg.scrollTop=lg.scrollHeight;
