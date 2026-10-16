@@ -1079,9 +1079,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(b.sweetAt==null)b.sweetAt=b.since||G.year;
     if(G.year-b.sweetAt<every)return null;
     b.sweetAt=G.year;
-    const seen=b.sweetSeen=b.sweetSeen||[];let pool=S.items.map((e,i)=>i).filter(i=>!seen.includes(i));
-    if(!pool.length){seen.length=0;pool=S.items.map((e,i)=>i)}
-    const i=one(pool);seen.push(i);const e=S.items[i];
+    /* 배우자 소속(route)에 맞는 장면은 route가 같은 것만, 공통 장면은 route가 없는 것만. 소속 장면을 60% 확률로 먼저 고른다 */
+    const seen=b.sweetSeen=b.sweetSeen||[],ok=e=>!e.route||e.route===b.route;
+    let pool=S.items.map((e,i)=>i).filter(i=>ok(S.items[i])&&!seen.includes(i));
+    if(!pool.length){seen.length=0;pool=S.items.map((e,i)=>i).filter(i=>ok(S.items[i]))}
+    const own=pool.filter(i=>S.items[i].route===b.route),gen=pool.filter(i=>!S.items[i].route);
+    const i=one(own.length&&(!gen.length||d(100)<=60)?own:gen.length?gen:pool);seen.push(i);const e=S.items[i];
     const x=bondFill(e.x,b)+(act2&&S.old&&S.old.length?' '+one(S.old):'');
     return {t:'달달한 한때 · '+e.t,x,c:[{l:bondFill(e.a,b),h:'함께하는 시간',ok:{t:bondFill(e.at,b),fx:{}}},{l:bondFill(e.b,b),h:'함께하는 시간',ok:{t:bondFill(e.bt,b),fx:{}}}]};
   }
