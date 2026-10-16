@@ -293,8 +293,9 @@ export function startUI(E,app){
       <div class="stack" style="gap:6px"><span class="eyebrow">인생 주사위</span><div class="seg">${b('dice','free','매번 다르게',DICE)}${b('dice','fixed','시드 고정(재현)',DICE)}</div>
         <span class="small dim">${DICE==='fixed'?'시드가 같고 선택이 같으면 인생 전체의 주사위가 똑같이 나온다 (공유·재현용)':'출생만 시드로 정해지고, 태어난 뒤의 사건 주사위는 판마다 달라진다'}</span></div>
       ${BGM.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">배경음악</span><div class="seg">${b('bgm','off','끔',BGM.isOn()?'on':'off')}${b('bgm','on','켬',BGM.isOn()?'on':'off')}</div>
-        <div class="seg">${b('bgmvol','0.15','작게',String(BGM.vol()))}${b('bgmvol','0.3','보통',String(BGM.vol()))}${b('bgmvol','0.5','크게',String(BGM.vol()))}</div>
-        <span class="small dim">외부 음원 없이 만든 잔잔한 배경음이다. 켜면 소리가 서서히 커지고, 언제든 끌 수 있다. 처음에는 "작게"로 시작한다</span></div>`:''}
+        <div class="stack" style="gap:4px"><div class="row between"><span class="small">음량</span><b class="mono" id="bgmPct">${Math.round(BGM.vol()*100)}%</b></div>
+          <div class="bgmrow"><button class="chip" data-a="bgmstep" data-i="-10" aria-label="음량 10 줄이기">−10</button><input type="range" id="bgmRange" min="0" max="100" step="1" value="${Math.round(BGM.vol()*100)}" aria-label="배경음악 음량"><button class="chip" data-a="bgmstep" data-i="10" aria-label="음량 10 올리기">+10</button></div></div>
+        <span class="small dim">외부 음원 없이 만든 잔잔한 배경음이다. 켜면 소리가 서서히 커지고, 언제든 끌 수 있다. 처음 음량은 15%이고, 막대를 끌거나 −10 · +10 버튼으로 0~100%까지 조절한다</span></div>`:''}
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
   }
@@ -1564,7 +1565,7 @@ export function startUI(E,app){
     autogap(i){AUTOGAP=i;store.set('cityYearAutoGap',i);if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     dice(i){DICE=i;store.set('cityYearDice',i);render()},
     bgm(i){BGM.set(i==='on');bgmSave();render()},
-    bgmvol(i){BGM.setVol(+i);bgmSave();render()},
+    bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;nextYear()},
     outerend(){if(!G||!G.infinite)return;UI.outEnd=null;if(typeof confirm==='function'&&!confirm('외곽에서 이야기를 끝낼까? 이 판은 여기까지가 기록이 된다.'))return;UI.outerEnd=true;UI.endWin=true;UI.trueEnd=true;UI.oldEnd=false;UI.death=null;recordEnd();UI.screen='end';render()},
@@ -1692,6 +1693,8 @@ export function startUI(E,app){
     if(t.classList.contains('bhelp'))UI.helpOpen=t.open},true);
   /* 휴대폰 키보드의 이동·완료(Enter)로도 시드 적용 */
   app.addEventListener('change',e=>{if(e.target.id!=='xfileIn')return;const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{UI.xask=null;xApply(String(r.result||''))};r.readAsText(f)});
+  app.addEventListener('input',e=>{if(e.target.id!=='bgmRange')return;const v=Math.max(0,Math.min(100,+e.target.value||0));BGM.setVol(v/100);const l=document.getElementById('bgmPct');if(l)l.textContent=v+'%'});
+  app.addEventListener('change',e=>{if(e.target.id==='bgmRange')bgmSave()});
   app.addEventListener('keydown',e=>{if(e.target.id==='seedIn'&&e.key==='Enter'){e.preventDefault();e.target.blur();ACT.seed()}});
   app.addEventListener('input',e=>{if(e.target.id==='nm'&&BC)BC.name=e.target.value.trim().slice(0,12);
     if(e.target.id==='cardq'){(UI.cf=UI.cf||{}).q=e.target.value.trim();const l=$('cardlist');if(l)l.innerHTML=cardListHtml()}});
