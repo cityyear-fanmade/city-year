@@ -616,7 +616,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function encounter(ch,s){
     if(s==='abno'){const ls=abnoLeft(ch),AP=CFG.apoc,bl=ls.filter(x=>AP.birds.includes(x)),started=AP.birds.some(x=>(ch.minis||[]).includes(x));
       /* 새 시리즈를 시작했으면 남은 새를 먼저 만난다 */
-      const id=ls.length?(started&&bl.length&&d(100)<=AP.pref?one(bl):one(ls)):'lullaby';return {id,roll:null,table:null,label:'격리 실패'}}
+      const MG=CFG.mgirl;
+      const mgl=ls.filter(x=>MG.ids.includes(x)),mgDone=MG.ids.filter(x=>(ch.minis||[]).includes(x)).length;
+      const pool=mgl.length&&d(100)<=(MG.pref[mgDone]||0)?mgl:ls;
+      const id=ls.length?(started&&bl.length&&d(100)<=AP.pref?one(bl):one(pool)):'lullaby';return {id,roll:null,table:null,label:'격리 실패'}}
     if(!s.startsWith('table:'))return {id:s,roll:null,table:null};
     const name=s.slice(6),T_=D.encounters.tables;
     /* 라만차랜드 루트(혈귀)는 소속보다 먼저 */
@@ -1126,6 +1129,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       for(const h of D.hiddenBosses||[]){
         if(h.infOnly&&!G.infinite)continue;
+        if(h.afterKey&&G.year<(G.ch[h.afterKey]||0))continue;
         if(G.year<(h.from||1)||G.ch.beaten.includes(h.id)||(G.met||[]).includes(h.id)||!meets(G.ch,h.req))continue;
         /* chanceBonus: 조건이 맞으면 확률 가산 (예: 검지 소속은 대행자 +30%) */
         const ch_=h.chance?Math.min(95,h.chance+(h.chanceBonus&&meets(G.ch,h.chanceBonus.req)?h.chanceBonus.add:0)+(G.infinite?INF.hiddenAdd:0)):0;
@@ -1309,6 +1313,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       (ch.minis=ch.minis||[]).push(C.id);const dr=foe.drop;if(dr.ego)ch.egoGear=(ch.egoGear||0)+1;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
       chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');
       /* 새 시리즈를 모두 이기면 종말의 예언 */
+      {const MG=CFG.mgirl;if(MG.ids.includes(C.id)&&!ch.flags[MG.flag]&&MG.ids.every(id=>ch.minis.includes(id))){ch.flags[MG.flag]=1;ch.nihilAt=(G.year||0)+MG.gap}}
       const AP=CFG.apoc;if(AP.birds.includes(C.id)&&!ch.flags[AP.flag]&&AP.birds.every(id=>ch.minis.includes(id))){ch.flags[AP.flag]=1;(ch.relics=ch.relics||[]).push('종말의 예언');chips.push('종말의 예언 · 검은 숲 깊은 곳에서 무언가 눈을 뜬다')}
     }
     /* 전투 승리 후 등록: 소속이 없거나 사무소 소속일 때만, 소문 판정(1d100 + 해결사 진로 보정 ≥ winLicenseDc) */
