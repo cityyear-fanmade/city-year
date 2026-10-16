@@ -199,7 +199,8 @@ export const CFG = {
   freeWing: {names: ['K사 날개', 'J사 날개', 'G사 날개'], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
   burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5},
   /* 패시브 근성(형님)·초근성(큰형님) 받는 피해 감소 %: 맞아야 강해지는 중지가 후반에 버티도록 */
-  middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30]},
+  /* 중지 회피 환산: evaEff = 서열별(막내·동생·작은형님·큰형님) 회피의 '피하는 힘' 비율, 줄어든 회피 1당 받는 피해 감소 evaDr%p (근성과 합쳐 drCap까지). counter = 방어 카드를 낸 라운드에 맞으면 되갚음 스택 × counter의 고정 피해 반격, sinkHit = 중지를 노린 침잠의 명중 감소 배율 */
+  middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30], evaEff: [1, 1, 0.5, 0], evaDr: 0.5, drCap: 50, counter: 2, sinkHit: 0.5},
   /* 의리 순례(중지 전용 루트): 동생(fi 1) 이상이 되면 해마다 chance%로 원한의 책 제안, 거절하면 gap년 뒤 다시. 둘째 장 전투에서 아우가 맞으면(kin) 분노 +anger, 셋째 장 시험은 rounds라운드 버티기 */
   giri: {fi: 1, chance: 35, gap: 5, kin: 50, anger: 5},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
