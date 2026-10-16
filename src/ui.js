@@ -1076,11 +1076,12 @@ export function startUI(E,app){
     const logLines=arr=>arr.map(l=>`<div class="${l.t}">${esc(l.s)}</div>`).join('');
     const M=isMobile();UI.wasMobile=M;
     const duo=v=>`<div class="duo">${entHtml('E',X,v.E,true)}${entHtml('P',P,v.P,true)}</div>`;
-    const logBox=inner=>M?`<details class="logbox"${UI.logOpen?' open':''}><summary>전투 기록</summary><div class="log" id="log">${inner}</div></details>`:`<div class="log" id="log">${inner}</div>`;
+    const wideScr=()=>window.innerWidth>=1200;
+    const logBox=inner=>M?`<details class="logbox"${UI.logOpen||wideScr()?' open':''}><summary>전투 기록</summary><div class="log" id="log">${inner}</div></details>`:`<div class="log" id="log">${inner}</div>`;
     const autoOff=FIGHT==='auto'?'<button class="btn quiet" data-a="fightmode" data-i="pick">다음 라운드부터 직접 고르기</button>':'';
     if(PLAYING){
       const lg=logBox(logLines(C.log.slice(0,C.logBefore).slice(-40)));
-      return M?`${duo(PRE)}${arenaHtml(true)}${vOrder(true)}<button class="btn quiet" data-a="skip">연출 건너뛰기</button>${lg}${autoOff}`
+      return M?`<div class="cbw"><div class="cbl">${duo(PRE)}${arenaHtml(true)}</div><div class="cbr">${vOrder(true)}<button class="btn quiet" data-a="skip">연출 건너뛰기</button>${lg}${autoOff}</div></div>`
         :`${entHtml('E',X,PRE.E)}${arenaHtml(true)}${entHtml('P',P,PRE.P)}${vOrder()}${lg}<button class="btn quiet" data-a="skip">연출 건너뛰기</button>${autoOff}`;
     }
     const log=logBox(logLines(C.log.slice(-60))||'<div class="sys">전투가 시작되었다.</div>');
@@ -1098,14 +1099,14 @@ export function startUI(E,app){
         <span class="nm">${kindBadge(c)} ${c.n}${c.t==='atk'&&P.cg&&P.cg.n?` <b style="color:var(--gold)">${P.cg.n}</b>`:''}${lk?` <span class="bad small">잠김 · ${esc(C.E.passive.n)}</span>`:''}</span>${c.t==='atk'?`<span class="mono small" style="color:var(--gold)">최종 명중 ${sg(P.atk+c.hit+(P.passHit||0)+(P.cg?P.cg.hit:0))}${P.fsOn&&P.fs?' (+선제 '+CFG.firstHit+')':''}</span>`:''}<span class="cd">${cardLine(c,c.t==='atk'?P.cg:null,P.wx)}</span>
         ${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</button>`;
     }).join('');
-    return `${M?duo({E:X,P})+vOrder(true):entHtml('E',X,X)+arenaHtml(false)+entHtml('P',P,P)+vOrder()+log}
+    return `${M?`<div class="cbw"><div class="cbl">${duo({E:X,P})+vOrder(true)}${log}</div><div class="cbr">`:entHtml('E',X,X)+arenaHtml(false)+entHtml('P',P,P)+vOrder()+log}
       ${P.index&&P.starId?`<div class="prescBar"><b>📜 이번 라운드 지령</b> · <b>${esc(D.cards[P.starId].n)}</b>을(를) 내라 <span class="small">→ 지령 수행 +1 (지금 ${P.presc||0}/5) · 호흡 +4 · 받는 피해 −5%씩</span>${UI.sel.some(j=>j===P.starSlot)?' <b class="good">✔ 지령 카드를 골랐다</b>':''}</div>`:''}
       ${triBar(P)}
       <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">${P.distorted?'빛 없음':`빛 ${left}/${P.light}`}</span></div>
       <div class="hand">${cards}</div>
       ${FIGHT==='auto'?`<div class="check">${UI.paused?'일시정지 · 다음 라운드를 기다린다':'자동 전투 중 · 카드를 알아서 고르고 진행한다'}</div><div class="row" style="gap:8px"><button class="btn${UI.paused?' primary':''}" style="flex:1" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button><button class="btn quiet" style="flex:1" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button></div>`
         :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button><button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`}
-      ${M?`${log}<details class="logbox"><summary>설정 (테마 · 연출 · 전투 진행)</summary><div class="stack" style="margin-top:10px">${vSettings()}</div></details>`:vSettings()}`;
+      ${M?`<details class="logbox"><summary>설정 (테마 · 연출 · 전투 진행)</summary><div class="stack" style="margin-top:10px">${vSettings()}</div></details></div></div>`:vSettings()}`;
   }
   /* 하나 협회 패시브: 카드 위에서 매 라운드 한 가지를 고른다 */
   const TRI_E={gun:'공격 피해 +'+CFG.tri.gun,gon:'받는 피해 −'+CFG.tri.gon+'%',gam:'빛 +'+CFG.tri.gam,ri:'HP +'+CFG.tri.ri.heal+' · 호흡 +'+CFG.tri.ri.breath};

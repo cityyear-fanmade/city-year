@@ -405,3 +405,19 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 
 .cfgbtn{position:fixed;right:12px;top:10px;z-index:30;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--dim);font-size:18px;line-height:1;cursor:pointer}
 .cfgbtn:hover{color:var(--gold);border-color:var(--gold)}
+
+/* ===== PC 넓은 화면(1200px 이상) 전투: 왼쪽은 상태·순서·기록, 오른쪽은 손패·버튼. 좁은 화면은 한 줄 그대로 (display:contents) ===== */
+.cbw,.cbl,.cbr{display:contents}
+@media (min-width:1200px){
+  .wrap:has(.cbw){max-width:1120px}
+  .cbw{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px;align-items:start}
+  .cbl,.cbr{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .cbl{position:sticky;top:16px}
+  .cbl .log{max-height:min(46vh,420px)}
+  .cbr .hand{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cbl .duo{gap:12px}
+}
+@media (min-width:1600px){
+  .wrap:has(.cbw){max-width:1280px}
+  .cbr .hand{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
