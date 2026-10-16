@@ -1411,13 +1411,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 기업 루트 혈청: 라운드가 시작될 때마다 HP 회복 */
     if(P.singHeal&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(P.singHeal,P.maxHp-P.hp);P.hp+=h;HG(P,h);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 혈청 · HP +${h}`}
     C.ePlan=aiPlan(C);
-    if(E.stunRound===C.round){E.stunned=true;C.ePlan=[];C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 흐트러짐 · 이번 라운드 기절 (행동 불가 · 회피 0)`}else{E.stunned=false}
+    if(E.stunRound===C.round){E.stunned=true;for(const c of C.ePlan)if(c.next){E.forceNext=c.next;break}C.ePlan=[];C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 흐트러짐 · 이번 라운드 기절 (행동 불가 · 회피 0)`}else{E.stunned=false}
     /* 적 특성: 무리(공격 카드 한 장 더), 재생(HP 3 회복) */
     if(E.trait==='swarm'){const a=E.deck.map(id=>D.cards[id]).find(c=>c.t==='atk');if(a)C.ePlan.push(a)}
     if(E.trait==='bulwark'&&E.hp>0){E.shield=Math.max(E.shield||0,3)}
     if(E.trait==='focus'&&E.hp>0){E.breath=Math.min(CFG.breath.cap,E.breath+2)}
     if(E.trait==='regen'&&E.hp>0&&E.hp<E.maxHp){const h=Math.min(3,E.maxHp-E.hp);E.hp+=h;C.traitNote=`${E.name} · 재생 · HP +${h}`}else C.traitNote=null;
-    if(jp&&jp.id==='seal'&&C.round%Math.max(2,jp.every-((C.ch&&C.ch.auth)||[]).filter(a=>a==='seal').length)===0){const i=C.ePlan.findIndex(c=>c.t==='atk');if(i>=0){const c=C.ePlan.splice(i,1)[0];C.jobNote=`${P.name} · ${jp.n} · ${E.name}의 ${c.n}을(를) 봉인했다`}}
+    if(jp&&jp.id==='seal'&&C.round%Math.max(2,jp.every-((C.ch&&C.ch.auth)||[]).filter(a=>a==='seal').length)===0){const i=C.ePlan.findIndex(c=>c.t==='atk');if(i>=0){const c=C.ePlan.splice(i,1)[0];if(c.next)E.forceNext=c.next;C.jobNote=`${P.name} · ${jp.n} · ${E.name}의 ${c.n}을(를) 봉인했다`}}
   }
   /* 이번 라운드 발동 순서: 방어 카드 먼저(순서대로), 그다음 공격·버프를 순서대로 한 장씩 번갈아 */
   function queue(C,pp,ep){
