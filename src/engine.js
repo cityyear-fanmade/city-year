@@ -642,7 +642,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* beat:any = 히든 보스를 하나라도 이김, beat:a|b = 그중 하나를 이김 */
     if(req==='beat:any')return ch.beaten.length>0;
     if(req.startsWith('beat:'))return req.slice(5).split('|').some(id=>ch.beaten.includes(id));
-    if(req.startsWith('noflag:'))return !(ch.flags[req.slice(7)]);
+    if(req.startsWith('fi>='))return isFinger(ch)&&(ch.fi||0)>=+req.slice(4);
     if(req.startsWith('notaffname:'))return !(ch.aff&&ch.aff.name===req.slice(11));
     if(req.startsWith('affname:'))return !!ch.aff&&ch.aff.name===req.slice(8);
     if(req.startsWith('rank<='))return ch.licensed&&ch.rank<=+req.slice(6);
