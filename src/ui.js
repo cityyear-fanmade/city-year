@@ -319,6 +319,7 @@ export function startUI(E,app){
     if(ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea'))P.push(`피의 각인된 갈망 · 자식 ${ch.kids||0}/${CFG.kids.max} · 라운드마다 혈찬 +${CFG.kids.per}×자식 · 전투가 끝나면 자식마다 ${CFG.kids.lose}% 흩어짐`);
     if(ch.flags&&ch.flags.redMist)P.push('붉은 안개 · 적을 쓰러뜨리면 HP '+CFG.redMist.heal+' 회복');
     if(ch.hwando)P.push(`섬봉광 검술 · 호흡 1당 치명 피해 +10% (최대 ${CFG.breath.hwandoCap})`);
+    {const bb=E.bonCardB(ch);if(bb>0)P.push(`검술 강화 · 보냐텔리의 검 단계와 연차에 따라 전용 검술 카드 피해 +${bb}`)}
     if(ch.odin){if(ch.yeji||(ch.o&&ch.o.n==='보냐텔리 가문'))P.push(`가속하는 미래 · 보냐텔리 패시브 · 라운드마다 회피 ${CFG.odin.cycle.map(v=>v>0?'+'+v:v).join(' → ')} (마지막은 과부하) 반복`,`버프 · 예지안 · 오딘의 눈과 전용 검술의 시너지 · 전용 검술 카드 피해 +${CFG.odin.yeji}`);else P.push(`버프 · 순간의 예지 · 첫 라운드 회피 +${CFG.odin.first}, 이후 +${CFG.odin.after}`)}
     if(ch.resonance)P.push('궁니르 공명 · 궁니르 카드를 낸 라운드 받는 피해 −60%');
     return P.length?`<div class="passives">${P.map(t=>`<div class="mono small"><span style="color:var(--gold)">◆</span> ${esc(t)}</div>`).join('')}</div>`:'';
