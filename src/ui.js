@@ -43,7 +43,7 @@ export function startUI(E,app){
   const BGM=createBgm(),BGMK='cityYearBgm';
   const bgmSave=()=>store.set(BGMK,JSON.stringify({on:BGM.isOn(),vol:BGM.vol()}));
   {let o={};try{o=JSON.parse(store.get(BGMK)||'{}')||{}}catch(e){}
-    BGM.setVol(typeof o.vol==='number'?o.vol:0.15);BGM.setMood(SKIN);
+    BGM.setVol(typeof o.vol==='number'?o.vol:0.3);BGM.setMood(SKIN);
     if(o.on&&BGM.supported)document.addEventListener('pointerdown',()=>{BGM.set(true);bgmSave()},{once:true})}
   document.documentElement.dataset.skin=SKIN;
 
@@ -295,7 +295,7 @@ export function startUI(E,app){
       ${BGM.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">배경음악</span><div class="seg">${b('bgm','off','끔',BGM.isOn()?'on':'off')}${b('bgm','on','켬',BGM.isOn()?'on':'off')}</div>
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">음량</span><b class="mono" id="bgmPct">${Math.round(BGM.vol()*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="bgmstep" data-i="-10" aria-label="음량 10 줄이기">−10</button><input type="range" id="bgmRange" min="0" max="100" step="1" value="${Math.round(BGM.vol()*100)}" aria-label="배경음악 음량"><button class="chip" data-a="bgmstep" data-i="10" aria-label="음량 10 올리기">+10</button></div></div>
-        <span class="small dim">외부 음원 없이 만든 잔잔한 배경음이다. 켜면 소리가 서서히 커지고, 언제든 끌 수 있다. 처음 음량은 15%이고, 막대를 끌거나 −10 · +10 버튼으로 0~100%까지 조절한다</span></div>`:''}
+        <span class="small dim">외부 음원 없이 만든 잔잔한 배경음이다. 켜면 소리가 서서히 커지고, 언제든 끌 수 있다. 처음 음량은 30%이고, 막대를 끌거나 −10 · +10 버튼으로 0~100%까지 조절한다</span></div>`:''}
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
   }
