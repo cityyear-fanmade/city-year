@@ -10,128 +10,100 @@
   "tables": {
    "early": [
     {
-     "max": 9,
+     "max": 5,
      "enemy": "lamp"
     },
     {
-     "max": 18,
+     "max": 10,
      "enemy": "echo"
     },
     {
-     "max": 27,
+     "max": 15,
      "enemy": "thug"
     },
     {
-     "max": 36,
+     "max": 20,
      "enemy": "strays"
     },
     {
-     "max": 45,
+     "max": 24,
      "enemy": "collector"
     },
     {
-     "max": 55,
+     "max": 28,
      "enemy": "sentry"
     },
     {
-     "max": 64,
+     "max": 32,
      "enemy": "rats"
-    },
-    {
-     "max": 73,
-     "enemy": "unlicensed"
-    },
-    {
-     "max": 82,
-     "enemy": "armthief"
-    },
-    {
-     "max": 91,
-     "enemy": "courier"
-    },
-    {
-     "max": 100,
-     "enemy": "pickpocket"
-    }
-   ],
-   "early@finger": [
-    {
-     "max": 9,
-     "enemy": "lamp"
-    },
-    {
-     "max": 18,
-     "enemy": "echo"
-    },
-    {
-     "max": 27,
-     "enemy": "thug"
     },
     {
      "max": 36,
-     "enemy": "strays"
-    },
-    {
-     "max": 45,
-     "enemy": "rats"
-    },
-    {
-     "max": 55,
      "enemy": "unlicensed"
     },
     {
-     "max": 64,
+     "max": 40,
      "enemy": "armthief"
     },
     {
-     "max": 73,
-     "enemy": "pickpocket"
-    },
-    {
-     "max": 100,
-     "enemy": "collector"
-    }
-   ],
-   "early@wing": [
-    {
-     "max": 8,
-     "enemy": "lamp"
-    },
-    {
-     "max": 17,
-     "enemy": "echo"
-    },
-    {
-     "max": 25,
-     "enemy": "thug"
-    },
-    {
-     "max": 33,
-     "enemy": "strays"
-    },
-    {
-     "max": 42,
-     "enemy": "rats"
-    },
-    {
-     "max": 50,
-     "enemy": "unlicensed"
-    },
-    {
-     "max": 58,
-     "enemy": "armthief"
-    },
-    {
-     "max": 67,
-     "enemy": "pickpocket"
-    },
-    {
-     "max": 75,
+     "max": 44,
      "enemy": "courier"
     },
     {
+     "max": 48,
+     "enemy": "pickpocket"
+    },
+    {
+     "max": 52,
+     "enemy": "gambler"
+    },
+    {
+     "max": 56,
+     "enemy": "hawker"
+    },
+    {
+     "max": 60,
+     "enemy": "pipeman"
+    },
+    {
+     "max": 64,
+     "enemy": "fence"
+    },
+    {
+     "max": 68,
+     "enemy": "stalker"
+    },
+    {
+     "max": 72,
+     "enemy": "plumber"
+    },
+    {
+     "max": 76,
+     "enemy": "mender"
+    },
+    {
+     "max": 80,
+     "enemy": "banner"
+    },
+    {
+     "max": 84,
+     "enemy": "f_runner"
+    },
+    {
+     "max": 88,
+     "enemy": "w_cleaner"
+    },
+    {
+     "max": 92,
+     "enemy": "a_patrol"
+    },
+    {
+     "max": 96,
+     "enemy": "o_runner"
+    },
+    {
      "max": 100,
-     "enemy": "sentry"
+     "enemy": "apprentice"
     }
    ],
    "mid": [
@@ -546,46 +518,70 @@
    ],
    "backstreet": [
     {
-     "max": 17,
+     "max": 10,
      "enemy": "lamp"
     },
     {
-     "max": 33,
+     "max": 20,
      "enemy": "thug"
     },
     {
-     "max": 50,
+     "max": 30,
      "enemy": "collector"
     },
     {
-     "max": 67,
+     "max": 40,
      "enemy": "rats"
     },
     {
-     "max": 83,
+     "max": 50,
      "enemy": "pickpocket"
     },
     {
-     "max": 100,
+     "max": 60,
      "enemy": "unlicensed"
+    },
+    {
+     "max": 70,
+     "enemy": "gambler"
+    },
+    {
+     "max": 80,
+     "enemy": "hawker"
+    },
+    {
+     "max": 90,
+     "enemy": "fence"
+    },
+    {
+     "max": 100,
+     "enemy": "pipeman"
     }
    ],
    "outskirts": [
     {
-     "max": 25,
+     "max": 17,
      "enemy": "strays"
     },
     {
-     "max": 50,
+     "max": 34,
      "enemy": "echo"
     },
     {
-     "max": 75,
+     "max": 51,
      "enemy": "hunter"
     },
     {
-     "max": 100,
+     "max": 68,
      "enemy": "armthief"
+    },
+    {
+     "max": 84,
+     "enemy": "stalker"
+    },
+    {
+     "max": 100,
+     "enemy": "plumber"
     }
    ],
    "late": [

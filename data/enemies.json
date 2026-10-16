@@ -111,7 +111,8 @@
     "guard"
    ],
    "intro": "장부를 든 수금원이 앞을 막는다. 이 구역의 상납금은 아직 덜 걷혔다고 한다.",
-   "tier": "early"
+   "tier": "early",
+   "org": "finger"
   },
   "sentry": {
    "n": "날개 경비 기계",
@@ -126,7 +127,8 @@
     "guard"
    ],
    "intro": "담장 앞의 경비 기계가 붉은 눈을 켠다. 출입 허가가 확인되지 않았다는 안내가 반복된다.",
-   "tier": "early"
+   "tier": "early",
+   "org": "wing"
   },
   "bloodman": {
    "n": "피를 모으는 자",
@@ -1113,7 +1115,8 @@
     "guard"
    ],
    "intro": "한때 같은 사무소 명패 아래 있던 얼굴이다. 이번 의뢰인은 그쪽에 더 많이 냈다.",
-   "tier": "mid"
+   "tier": "mid",
+   "org": "office"
   },
   "cleanup": {
    "n": "날개 처리반",
@@ -1129,7 +1132,8 @@
     "guard"
    ],
    "intro": "회색 방호복의 처리반이 서류를 확인한다. 처리 대상 목록 맨 아래에 당신이 있다.",
-   "tier": "mid"
+   "tier": "mid",
+   "org": "wing"
   },
   "youngsters": {
    "n": "중지 막내들",
@@ -1145,7 +1149,8 @@
     "guard"
    ],
    "intro": "형님의 원수를 갚겠다는 막내들이다. 누가 원수인지는 별로 중요하지 않아 보인다.",
-   "tier": "mid"
+   "tier": "mid",
+   "org": "finger"
   },
   "porter": {
    "n": "뒤틀린 짐꾼",
@@ -4538,6 +4543,211 @@
      }
     ]
    }
+  },
+  "gambler": {
+   "n": "붉은 장갑 도박꾼",
+   "color": "#b4584a",
+   "hp": 24,
+   "atk": 1,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "thrust",
+    "faint",
+    "guard"
+   ],
+   "intro": "붉은 장갑을 낀 사내가 동전을 튕긴다. 앞면이면 지갑, 뒷면이면 칼이다.",
+   "tier": "early"
+  },
+  "hawker": {
+   "n": "수상한 호객꾼",
+   "color": "#c9a96a",
+   "hp": 22,
+   "atk": 0,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "slash",
+    "shadowstep"
+   ],
+   "intro": "웃는 얼굴로 소매를 잡아끈다. 따라가면 안쪽에서 문이 닫히는 가게다.",
+   "tier": "early"
+  },
+  "pipeman": {
+   "n": "쇠파이프 사내",
+   "color": "#8c8f94",
+   "hp": 34,
+   "atk": 2,
+   "eva": 0,
+   "spd": 0,
+   "deck": [
+    "smash",
+    "smash",
+    "guard"
+   ],
+   "intro": "어깨에 걸친 쇠파이프가 바닥을 긁는다. 말 한마디 없이 간격을 좁힌다.",
+   "tier": "early"
+  },
+  "fence": {
+   "n": "장물아비",
+   "color": "#a98c63",
+   "hp": 28,
+   "atk": 1,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "slash",
+    "aim",
+    "guard"
+   ],
+   "intro": "낡은 가방에서 어제 잃어버린 물건이 나온다. 돌려받고 싶으면 값을 치르라 한다.",
+   "tier": "early"
+  },
+  "stalker": {
+   "n": "굶주린 부랑아",
+   "color": "#7a7f6b",
+   "hp": 20,
+   "atk": 1,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "lunge",
+    "slash",
+    "faint"
+   ],
+   "intro": "골목 끝에서 오래 따라온 그림자가 한꺼번에 달려든다. 먹을 것이 있으면 멈추겠지만, 없다.",
+   "tier": "early"
+  },
+  "plumber": {
+   "n": "하수 청소꾼",
+   "color": "#6f8a7d",
+   "hp": 32,
+   "atk": 1,
+   "eva": 0,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "slash",
+    "guard"
+   ],
+   "intro": "맨홀 아래에서 올라온 사내가 긴 갈고리를 든다. 무엇을 건져 올렸는지는 말하지 않는다.",
+   "tier": "early"
+  },
+  "mender": {
+   "n": "의수 정비공",
+   "color": "#9aa6b0",
+   "hp": 30,
+   "atk": 1,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "rustblade",
+    "smash",
+    "guard"
+   ],
+   "intro": "공구를 든 손이 의수보다 빠르다. 고장 난 것은 고치고, 쓸모없는 것은 해체한다.",
+   "tier": "early",
+   "aug": true
+  },
+  "banner": {
+   "n": "떠도는 광고판",
+   "color": "#d0b46a",
+   "hp": 30,
+   "atk": 0,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "glare",
+    "guard"
+   ],
+   "intro": "전기도 없이 켜진 광고판이 느릿느릿 길을 막는다. 문구는 매번 당신의 이름이다.",
+   "tier": "early"
+  },
+  "f_runner": {
+   "n": "손가락 말단 연락책",
+   "color": "#b08a5a",
+   "hp": 26,
+   "atk": 1,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "slash",
+    "thrust",
+    "faint",
+    "guard"
+   ],
+   "intro": "소매 안쪽에 작은 표식이 붙어 있다. 위쪽에서 보낸 심부름이 당신 쪽으로 향한다.",
+   "tier": "early",
+   "org": "finger"
+  },
+  "w_cleaner": {
+   "n": "날개 청소 직원",
+   "color": "#8aa0b4",
+   "hp": 30,
+   "atk": 1,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "slash",
+    "guard"
+   ],
+   "intro": "흰 제복에 얼룩 하나 없다. 정리 대상으로 분류된 것은 당신 쪽이다.",
+   "tier": "early",
+   "org": "wing"
+  },
+  "a_patrol": {
+   "n": "협회 순찰자",
+   "color": "#7f9aa8",
+   "hp": 28,
+   "atk": 1,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "slash",
+    "thrust",
+    "aim",
+    "guard"
+   ],
+   "intro": "등록되지 않은 무기는 압수한다. 순찰자가 규정집을 접으며 칼집에 손을 올린다.",
+   "tier": "early",
+   "org": "assoc"
+  },
+  "o_runner": {
+   "n": "사무소 의뢰 대리인",
+   "color": "#a28f78",
+   "hp": 27,
+   "atk": 1,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "slash",
+    "aim",
+    "faint",
+    "guard"
+   ],
+   "intro": "의뢰서를 대신 전하러 왔다고 한다. 거절 의사는 의뢰서에 쓰여 있지 않다.",
+   "tier": "early",
+   "org": "office"
+  },
+  "apprentice": {
+   "n": "공방 도제",
+   "color": "#8a7a6a",
+   "hp": 29,
+   "atk": 1,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "rustblade",
+    "slash",
+    "guard"
+   ],
+   "intro": "망치 자국이 가득한 손으로 칼을 쥔다. 만든 무기를 시험해 볼 상대를 찾고 있다.",
+   "tier": "early",
+   "org": "workshop"
   }
  },
  "fixedFights": {

@@ -631,10 +631,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const name=s.slice(6),T_=D.encounters.tables;
     /* 라만차랜드 루트(혈귀)는 소속보다 먼저 */
     const key=ch.flags&&ch.flags.lamancha&&T_[`${name}@lamancha`]?`${name}@lamancha`:ch.aff&&T_[`${name}@${ch.aff.type}`]?`${name}@${ch.aff.type}`:name;
-    const r=d(100);
-    let id=pick(T_[key],r).enemy;
-    /* once: 한 번 이긴 미니보스는 다시 나오지 않는다 (표의 첫 적으로 바뀜) */
-    if(D.enemies[id].once&&(ch.minis||[]).includes(id))id=T_[key][0].enemy;
+    /* 같은 조직(enemy.org가 내 소속 종류와 같음)이나 방금 싸운 적은 되도록 다시 굴린다 */
+    const myOrg=ch.aff&&ch.aff.type;let r,id;
+    for(let t=0;t<6;t++){
+      r=d(100);id=pick(T_[key],r).enemy;
+      /* once: 한 번 이긴 미니보스는 다시 나오지 않는다 (표의 첫 적으로 바뀜) */
+      if(D.enemies[id].once&&(ch.minis||[]).includes(id))id=T_[key][0].enemy;
+      const o=D.enemies[id].org;
+      if(!((myOrg&&o===myOrg)||id===ch.lastEnc))break;
+    }
+    ch.lastEnc=id;
     return {id,roll:r,table:name,label:D.encounters.labels[name]||name};
   }
 

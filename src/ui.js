@@ -522,6 +522,7 @@ export function startUI(E,app){
       const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
         const note=st==='owned'?'장착 중':st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
+        if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span><span class="small dim">${D.slots[it.slot]}${cur?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · 이 장비를 맞출까?</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">맞춘다</button><button class="btn quiet" data-a="buyno">취소</button></div></div>`;
         return `<button class="btn" data-a="buy" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.isWs(ch)?`<s class="dim">${E.money(it.price)}</s> `:''}${E.money(E.priceOf(ch,id))}</span></span>
           <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${D.slots[it.slot]} · ${note}</span></button>`;
       }).join('');
@@ -1592,7 +1593,9 @@ export function startUI(E,app){
     shop(){UI.showIncome=false;UI.screen='shop';render()},
     /* 6시즌: 공방 거리에서 쉬어 가기 (공방 거래 없이 정신력 회복) */
     rest(){if(UI.rested)return;if(G.ch.restYear===G.year){UI.rested='이번 해에는 이미 쉬었다 · 정신력은 해마다 한 번만 회복한다';render();return}G.ch.restYear=G.year;const g=E.gainMind(G.ch,CFG.shop.restMind);UI.rested=g?`잠시 쉬었다 · 정신력 +${g} (${G.ch.mind}/${E.mindMax(G.ch)})`:'잠시 쉬었다 · 정신력이 이미 가득하다';UI.showIncome=false;resave();render()},
-    buy(id){if(E.buy(G.ch,id,true)){UI.bought=D.items[id].n;render()}},
+    buy(id){UI.buyAsk=id;render()},
+    buyok(id){UI.buyAsk=null;if(E.buy(G.ch,id,true)){UI.bought=D.items[id].n}render()},
+    buyno(){UI.buyAsk=null;render()},
     eqs(i){if(UI.screen!=='combat'&&E.equipStash(G.ch,+i)){resave();render()}},
     bspecial(id){if(E.buySpecial(G.ch,id,true)){UI.bought=D.special[id].n;render()}},
     noticeok(){store.set('cityYearNotice',NOTICE.id);render()},
@@ -1618,7 +1621,7 @@ export function startUI(E,app){
     heal(){if((UI.healed||0)>=CFG.clinic.max)return;const h=E.buyHeal(G.ch);if(h){UI.healed=(UI.healed||0)+1;UI.healMsg=`HP +${h}`;resave();render()}},
     ample(){if(E.buyAmple(G.ch)){resave();render()}},
     box(t){if(UI.boxDone)return;const c=E.cardBox(G.ch,t);if(c){UI.boxDone=`상자에서 ${D.cards[c].n}이(가) 나왔다.`;render()}},
-    unshop(){saveGame({st:UI.curSt,stock:[],shopDone:true});UI.screen='event';render()},
+    unshop(){UI.buyAsk=null;saveGame({st:UI.curSt,stock:[],shopDone:true});UI.screen='event';render()},
     omen(i){
       const st=E.answerOmen(G,UI.omen,i==='1');saveGame({st,stock:[],shopDone:true});
       const m=UI.omen.omen;UI.omen=null;UI.fight=st.enemy;UI.enc=st.enc;UI.avoidText=st.avoided?m.awayT:null;render();
