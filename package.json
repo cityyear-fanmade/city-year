@@ -1,6 +1,6 @@
 {
   "name": "city-year",
-  "version": "8.0.0",
+  "version": "8.0.5",
   "private": true,
   "description": "도시의 한 해 — 1인 TRPG 텍스트 어드벤처 (프로젝트문 세계관 팬게임)",
   "type": "module",
