@@ -563,7 +563,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(k==='start'){fl.giri=1;(ch.relics=ch.relics||[]).push('원한의 책 · 찢어낸 장부 세 장');chips.push('의리 순례 · 장부의 첫 이름을 찾아간다')}
       else if(k==='later'){ch.giriAt=(ch.year||0)+CFG.giri.gap;chips.push('원한의 책 · 몇 해 뒤에 다시 부른다')}
       else if(k==='obey'){fl.giriChoice=1;fl.giriObey=1;chips.push('형님의 징벌을 받아들인다')}
-      else if(k==='rebel'){fl.giriChoice=1;fl.giriRebel=1;chips.push('장부를 찢었다 · 중지의 금기')}}
+      else if(k==='rebel'){fl.giriChoice=1;fl.giriRebel=1;fl.giriTraitor=1;ch.titles=ch.titles||[];if(!ch.titles.includes('의리를 찢은 자')){ch.titles.push('의리를 찢은 자');(ch.titleLog=ch.titleLog||[]).push('의리를 찢은 자')}chips.push('장부를 찢었다 · 칭호 의리를 찢은 자 · 중지의 금기 · 이후 가족이 쫓아온다')}}
     if(fx.synRoute){const k=fx.synRoute,fl=ch.flags;
       if(k==='accept'){fl.thumbOffer=1;fl.thumbTurn=1;ch.purgeAt=(ch.year||0)+CFG.synRoute.purgeGap;const was=ch.aff.name;joinAff(ch,{type:'finger',from:'finger'},'엄지',chips);while((ch.fi??-1)<2){const st=fingerStep(ch);if(!st)break;chips.push(...st)}chips.push(`${was}의 패시브를 잃는다`)}
       else if(k==='snub'){fl.thumbOffer=1;fl.thumbSnub=1;ch.purgeAt=(ch.year||0)+CFG.synRoute.purgeGap;chips.push('엄지가 마땅치 않게 본다')}
@@ -1123,6 +1123,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           return {type:'omen',boss:h.id,omen:{x:`세계에 균열이 갔다. 갈라진 틈 너머에서 ${nm}의 기척이 느껴진다. 무엇이든 나올 수 있는 시간이다.`,go:'균열 속으로 들어간다',away:'눈을 돌린다',awayT:'균열은 소리 없이 닫혔다. 틈 너머의 것은 다음 기회를 기다린다.'},escape:true,spec:f}}
       }
       for(const h of D.hiddenBosses||[]){
+        if(h.infOnly&&!G.infinite)continue;
         if(G.year<(h.from||1)||G.ch.beaten.includes(h.id)||(G.met||[]).includes(h.id)||!meets(G.ch,h.req))continue;
         /* chanceBonus: 조건이 맞으면 확률 가산 (예: 검지 소속은 대행자 +30%) */
         const ch_=h.chance?Math.min(95,h.chance+(h.chanceBonus&&meets(G.ch,h.chanceBonus.req)?h.chanceBonus.add:0)+(G.infinite?INF.hiddenAdd:0)):0;
