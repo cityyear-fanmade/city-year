@@ -11,7 +11,7 @@ const D=loadData(),err=validateData(D);
 if(err.length){console.error('데이터 오류:\n  '+err.join('\n  '));process.exit(1)}
 /* 모듈 문법만 걷어 낸다: import 줄 삭제, export 키워드 삭제 */
 const strip=s=>s.replace(/^import .*;\s*$/gm,'').replace(/^export (const|function|async function|let)/gm,'$1');
-const js=['src/config.js','src/engine.js','src/ui.js'].map(p=>`/* ---- ${p} ---- */\n`+strip(r(p))).join('\n');
+const js=['src/config.js','src/engine.js','src/bgm.js','src/ui.js'].map(p=>`/* ---- ${p} ---- */\n`+strip(r(p))).join('\n');
 const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[ai+1]):null;
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
