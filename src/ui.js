@@ -330,8 +330,8 @@ export function startUI(E,app){
       ${bar(ch.hp,s.maxHp)}
       ${vMind(ch)}${G.infinite&&UI.screen!=='end'?`<button class="btn quiet" data-a="outerend">외곽에서 이야기를 끝낸다</button>`:''}
       ${vPassive(ch)}
-      <div class="mono small dim">HP ${ch.hp}/${s.maxHp} · 공격 ${sg(s.atk)} · 회피 ${sg(s.eva)} · 속도 ${sg(s.spd)} · 판정 ${sg(s.check)} · 카드 ${ch.deck.length}장</div>
-      <div class="mono small dim">Lv ${ch.lv} · 경험치 ${ch.xp}${nx!=null?'/'+nx:' (최고)'}${E.canPromote(ch)?` · ${E.ptsName(ch)} ${ch.pp||0}/${E.promoNeed(ch)}`:''} · ${Object.values(ch.gear).map(g=>esc(g.n)).join(' · ')}</div>
+      <div class="mono small dim hud-dup">HP ${ch.hp}/${s.maxHp} · 공격 ${sg(s.atk)} · 회피 ${sg(s.eva)} · 속도 ${sg(s.spd)} · 판정 ${sg(s.check)} · 카드 ${ch.deck.length}장</div>
+      <div class="mono small dim hud-dup">Lv ${ch.lv} · 경험치 ${ch.xp}${nx!=null?'/'+nx:' (최고)'}${E.canPromote(ch)?` · ${E.ptsName(ch)} ${ch.pp||0}/${E.promoNeed(ch)}`:''} · ${Object.values(ch.gear).map(g=>esc(g.n)).join(' · ')}</div>
       <div class="row between"><span class="mono small" style="color:var(--gold)">자산 ${E.money(ch.money)}${G.lastIncome&&UI.showIncome?` <span class="dim">(올해 수입 +${E.money(G.lastIncome)})</span>`:''}</span>
         </div>
       ${vDock('dock-in')}
@@ -346,7 +346,7 @@ export function startUI(E,app){
   /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
   function vSideL(){
     const ch=G.ch,s=ch.stats,pad=(k,v)=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`;
-    const rows=[['HP',`${ch.hp}/${s.maxHp}`],['정신력',ch.distForm?'뒤틀림':`${ch.mind}/${E.mindMax(ch)}`],['공격',sg(s.atk)],['회피',sg(s.eva)],['속도',sg(s.spd)],['판정',sg(s.check)],['최소 피해',s.dmin],...(s.dr?[['피해 감소',s.dr+'%']]:[]),...(s.regen?[['HP 회복/라운드',s.regen]]:[]),...(s.startBleed?[['시작 출혈',s.startBleed]]:[]),...(s.startBreath?[['시작 호흡',s.startBreath]]:[]),['카드',`${ch.deck.length}/${E.deckMax(ch)}`],['레벨',`Lv ${ch.lv}`],['자산',E.money(ch.money)]];
+    const rows=[['HP',`${ch.hp}/${s.maxHp}`],['정신력',ch.distForm?'뒤틀림':`${ch.mind}/${E.mindMax(ch)}`],['공격',sg(s.atk)],['회피',sg(s.eva)],['속도',sg(s.spd)],['판정',sg(s.check)],['최소 피해',s.dmin],...(s.dr?[['피해 감소',s.dr+'%']]:[]),...(s.regen?[['HP 회복/라운드',s.regen]]:[]),...(s.startBleed?[['시작 출혈',s.startBleed]]:[]),...(s.startBreath?[['시작 호흡',s.startBreath]]:[]),['카드',`${ch.deck.length}/${E.deckMax(ch)}`],['레벨',`Lv ${ch.lv}`],['경험치',E.xpNext(ch)!=null?`${ch.xp}/${E.xpNext(ch)}`:`${ch.xp} (최고)`],...(E.canPromote(ch)?[[E.ptsName(ch),`${ch.pp||0}/${E.promoNeed(ch)}`]]:[]),['자산',E.money(ch.money)]];
     const gear=Object.entries(D.slots).map(([k,n])=>`<div class="srow"><span>${n}</span><b class="gname">${ch.gear[k]?esc(ch.gear[k].n):'없음'}</b></div>`).join('');
     return `<aside class="side-l" aria-label="수치판"><div class="stitle">${esc(ch.name||T.you)}</div>${rows.map(([k,v])=>pad(k,v)).join('')}<div class="ssep"></div>${gear}</aside>`;
   }
