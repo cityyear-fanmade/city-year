@@ -433,11 +433,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(r.money){const m=earn(ch,r.money);ch.money+=m;out.push('승진 보너스 +'+money(m))}
     giveOrgCards(ch,C_,ch.fi,out);
     /* 최고 직급(임원)에 오르면 전용 카드팩의 마지막 줄(4코스트 카드)을 덱에 더한다 */
-    {const rows=C_.finalRow&&orgRows(ch,C_);
-      if(rows&&ch.fi===C_.ranks.length-1&&ch.cardMoney&&!ch.finalGiven){ch.finalGiven=true;
-        const ids=rows[rows.length-1].filter(id=>ch.deck.length<deckMax(ch));
-        if(ids.length){ch.deck=ch.deck.concat(ids);out.push(`전용 카드 · ${ids.map(id=>D.cards[id].n).join(', ')} (최고 직급)`)}}}
+    if(ch.fi===C_.ranks.length-1)giveFinalCards(ch,C_,out,'최고 직급');
     return out;
+  }
+  function giveFinalCards(ch,C_,out,why){
+    const rows=C_.finalRow&&orgRows(ch,C_);
+    if(!rows||!ch.cardMoney||ch.finalGiven)return;ch.finalGiven=true;
+    const ids=rows[rows.length-1].filter(id=>ch.deck.length<deckMax(ch));
+    if(ids.length){ch.deck=ch.deck.concat(ids);out.push(`전용 카드 · ${ids.map(id=>D.cards[id].n).join(', ')} (${why})`)}
   }
   /* 협회 전용 카드팩: 입회 때 careers.*.cards[소속 이름]의 카드를 한 번에 받아 덱이 통째로 바뀐다.
      전용 카드팩(cardMoney)이라 이후 카드는 얻을 수 없고(대신 돈), 나중에 히든 책장으로 덱이 바뀌어도 협회 패시브는 소속 기록(assocName)으로 남는다 */
@@ -757,7 +760,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function setWing(ch,name,force){
     if(!ch.corp||(!force&&wingNameErr(name)))return false;
     ch.corp.wing=name.trim()+' 날개';ch.corp.st='wing';ch.corp.next=(ch.year||0)+CP.labGap;ch.wingPick=false;
-    (ch.relics=ch.relics||[]).push(`설립 · ${ch.corp.wing}`);return true;
+    (ch.relics=ch.relics||[]).push(`설립 · ${ch.corp.wing}`);
+    /* 임원이 되기 전에 날개를 세우면 승진이 끝난다: 최고 직급 몫의 4코스트 카드를 대표가 되는 때 준다 */
+    {const C_=ch.aff&&ch.aff.type==='wing'&&D.careers.wing;if(C_){const o=[];giveFinalCards(ch,C_,o,'날개 대표');}}
+    return true;
   }
   function corpGrow(ch,chips){const c=ch.corp;if(!corpYes(ch)||c.st!=='dev')return;c.stack++;corpBump(ch,CP.grow,chips);chips.push(`특이점 개발 ${c.stack}/${CP.devMax}`)}
   function corpUp(ch,chips){
