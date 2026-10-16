@@ -1748,7 +1748,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.kuro&&B.hp>0&&dmg>0)addCloud(B,L);
       if(A.passive&&A.passive.id==='stance')A.sal=Math.min(A.passive.salMax,A.sal+1);
       if(B.passive&&B.passive.id==='stance')B.sal=Math.max(0,B.sal-1);
-      if(B.middle&&B.hp>0){B.revenge=Math.min(5,(B.revenge||0)+1+(B.wx&&B.wx.revUp||0))}
+      if(B.middle&&B.hp>0){B.revenge=Math.min(B.isP?CFG.middle.cap:5,(B.revenge||0)+1+(B.wx&&B.wx.revUp||0))}
       /* 중지 수비 반격: 방어 카드(또는 방어 자세)를 낸 라운드에 맞으면 쌓인 되갚음 스택 × counter의 고정 피해로 바로 반격한다 (스택은 그대로, 라운드에 한 번) */
       if(B.middle&&B.hp>0&&A.hp>0&&(B.defRound===C.round||B.guarding)&&B.counterRound!==C.round&&(B.revenge||0)>0){B.counterRound=C.round;const x=B.revenge*CFG.middle.counter;A.hp=Math.max(0,A.hp-x);L('dmg',`  ${B.name} · 수비 반격 · 되갚음 ${B.revenge} · ${A.name} 고정 피해 ${x}`)}
       if(A.trait==='thief'&&B.isP){const m=Math.min(30,C.ch.money);if(m>0){C.ch.money-=m;L('kw',`  ${A.name} · 손버릇 · 돈 −${m}`)}}
