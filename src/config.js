@@ -213,6 +213,8 @@ export const CFG = {
   bloom: {every: 3},
   /* 아무것도 없는 출발: chance% 확률로 운명이 강제되어 히든 출신 n개 중 하나를 고르게 된다 */
   blankFate: {chance: 30, n: 2},
+  /* R사 부화장 복제체 루트: 13연전 → 부화장을 나온 뒤 fleeGap~+fleeRand-1년 뒤 추격이 시작 · 추격대 4번(chaseGap년 간격) → 숙청 집행관 */
+  rb: {total: 13, healPct: 0.5, fleeGap: 8, fleeRand: 5, chaseGap: 3, hides: 2, chasers: ['rh1', 'rh2', 'rh3', 'rh4'], boss: 'rcorp_boss', xp: 4},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},
   middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30], evaEff: [1, 1, 0.5, 0], evaDr: 0.5, drCap: 50, counter: 3, sinkHit: 0.5, cap: 10},

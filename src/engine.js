@@ -117,6 +117,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.s0={maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,check:s.check};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
+    if(o.rb)ch.rb={n:0,chase:0,hides:0};
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
     const IN=CFG.innate,h=(r.o*7919+r.t*104729+r.f*1299709+r.w*15485863+r.n*32452843+ch.kid.reduce((a,k)=>a*31+k.r,7))%1000003;
     if(!keep&&h%IN.chanceDiv===0){const ks=Object.keys(D.innate||{});if(ks.length)ch.innate=ks[Math.floor(h/IN.chanceDiv)%ks.length]}
@@ -126,6 +127,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 히든 직업 전용 무기: 출생 무기는 보관함으로 */
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
+    if(o.gear)equip(ch,Object.assign({grade:5},o.gear));
     /* E.G.O 발현자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=CFG.mind.max+(s.mindMax||0);license(ch);ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
@@ -573,6 +575,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.pinkyKey){const ks=ch.pinkyKeys=ch.pinkyKeys||[],K=D.pinky.keys[ks.length];if(K){ks.push(K.k);chips.push(`소지의 별 · ${K.k} (${ks.length}/${D.pinky.keys.length})`);if(ks.length>=D.pinky.keys.length){ch.seongPick=true;chips.push('성도 · 이름을 정한다')}}}
     if(fx.oracle&&!ch.oracle){ch.oracle=true;(ch.relics=ch.relics||[]).push('히든 직업 · 신탁대행자','전리품 · 신의 단말기');addStats(s,D.oracle.loot.fx);chips.push('히든 직업 · 신탁대행자 · 지령 독촉',`전리품 · 신의 단말기 · ${D.oracle.loot.e}`)}
     if(fx.officeJoin){chips.push(...joinOffice(ch,one(fx.officeJoin)))}
+    if(fx.rb){const r=ch.rb,k=fx.rb,Z=CFG.rb,y=ch.year||0;
+      if(r){
+        if(k==='start')chips.push(`부화장 ${Z.total}연전 · 한 판이 끝날 때마다 HP를 회복한다`);
+        else if(k==='exit'){r.out=1;r.next=y+Z.fleeGap+d(Z.fleeRand)-1;chips.push('부화장을 나왔다 · 곧 R사가 알아챈다')}
+        else if(k==='flee'){r.fled=1;r.cnext=y+Z.chaseGap;chips.push('R사의 숙청 추격대가 풀렸다')}
+        else if(k==='fight'){ch.purge=Z.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
+        else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
+        else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
     if(fx.giri){const k=fx.giri,fl=ch.flags;
       if(k==='start'){fl.giri=1;(ch.relics=ch.relics||[]).push('원한의 책 · 찢어낸 장부 세 장');chips.push('의리 순례 · 장부의 첫 이름을 찾아간다')}
       else if(k==='later'){ch.giriAt=(ch.year||0)+CFG.giri.gap;chips.push('원한의 책 · 몇 해 뒤에 다시 부른다')}
@@ -958,6 +968,25 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 조직 루트 사건: 엄지 전향 제안(흑운회·송곳) → 숙청 소문 → 반역 / 검계 역적 낙인 */
   /* 의리 순례: 중지 동생 이상 → 원한의 책 제안 → 장부 3장 (첫째·둘째는 히든 전투) → 형님의 시험 (순응: 버티기 / 반역: 암살자 추격) */
+  /* ===== R사 부화장 복제체 루트 =====
+     ch.rb = {n(쓰러뜨린 부화장 개체), out(부화장을 나옴), next(추격 시작 해), fled, chase(만난 추격대), hides, cnext(다음 추격 해), bossSeen, done}
+     부화장 연전은 해를 넘기지 않고 이어진다. 공방거리는 쓰지 않는다 */
+  function rbFree(G){
+    const ch=G.ch,r=ch.rb,Z=CFG.rb;if(!r||!D.rbRoute||r.out)return null;
+    if(!r.intro){r.intro=1;return {type:'event',ev:D.rbRoute.hatch}}
+    if(r.n<Z.total)return {type:'fight',enemy:'rc'+String(r.n+1).padStart(2,'0'),enc:{label:`부화장 · ${r.n+1}/${Z.total}`}};
+    return {type:'event',ev:D.rbRoute.exit};
+  }
+  function rbYear(G){
+    const ch=G.ch,r=ch.rb,y=G.year,Z=CFG.rb,R=D.rbRoute;if(!r||!R||!r.out||r.done)return null;
+    if(!r.fled)return y>=r.next?R.flee:null;
+    if(y<r.cnext)return null;
+    if(r.chase>=Z.chasers.length&&Z.chasers.every(id=>ch.beaten.includes(id)))return r.bossSeen?null:R.boss;
+    if(r.chase<Z.chasers.length&&(r.chase===0||ch.beaten.includes(Z.chasers[r.chase-1]))){
+      const E_=R.chase;return r.hides>=Z.hides?Object.assign({},E_,{c:E_.c.slice(0,1)}):E_;
+    }
+    return null;
+  }
   function giriRouteEvent(G){
     const ch=G.ch,y=G.year,R=D.giriRoute,Z=CFG.giri,fl=ch.flags;
     if(!R||ch.distForm||ch.job||!ch.aff||ch.aff.name!=='중지')return null;
@@ -1147,6 +1176,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const id=mc.corp.chain.shift();mc.corp.trial=id;(G.met=G.met||[]).push(id);
       return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
     }
+    {const rv=rbFree(G);if(rv)return rv}
     /* 연전: 바랄을 쓰러뜨리면 쉬지 않고 제나가 나선다 */
     if(G.ch.flags.zenaPend&&!G.ch.beaten.includes(CFG.endless.finalNext))return {type:'fight',enemy:CFG.endless.finalNext,enc:{hidden:true,label:'연전 · 마지막 상대'}};
     /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
@@ -1210,6 +1240,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const bv=bondEvent(G);if(bv)return {type:'event',ev:bv}}
     {const es=bondEscortEvent(G);if(es)return {type:'event',ev:es}}
     {const dv=dailyEvent(G);if(dv)return {type:'event',ev:dv}}
+    {const rv=rbYear(G);if(rv)return {type:'event',ev:rv}}
     {const pe=pinkyEvent(G);if(pe)return {type:'event',ev:pe}}
     {const oe=oracleEvent(G);if(oe)return {type:'event',ev:oe}}
     {const se=eastScoutEvent(G);if(se)return {type:'event',ev:se}}
@@ -1326,6 +1357,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ch.kidFoeSpouse){if(ch.bond.st==='married'){ch.bond.st='lost';chips.push(kf(D.bond.hunt.winSpouse,ch.bond.name))}}
       else{const kk=(ch.bond.kids||[]).find(k=>k.n===ch.kidFoe&&!k.dead);if(kk){kk.dead=true;chips.push(kf(D.bond.hunt.win,kk.n))}}}
     if(ch.flags&&ch.flags.redMist){const h=Math.min(CFG.redMist.heal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('붉은 안개 · 적을 쓰러뜨려 HP +'+h)}}
+    {const f0=D.enemies[C.id];
+      if(f0.rb&&ch.rb&&!f0.hidden&&!f0.rbLast){
+        const r=ch.rb,Z=CFG.rb,h=Math.min(Math.round(ch.stats.maxHp*Z.healPct),ch.stats.maxHp-ch.hp);
+        if(h>0){ch.hp+=h;chips.push('숨을 고른다 · HP +'+h)}
+        r.n++;const up=gainXp(ch,Z.xp);chips.push(`부화장 ${r.n}/${Z.total} · 경험치 +${Z.xp}`);if(up)chips.push('레벨 업 · Lv '+ch.lv);
+        return {chips,title:null,tlabel:null,newly:false,colorRoll:null,unlock:null,hidden:false,endText:f0.endText||null,last:G.year>=lastYear(G)};
+      }
+      if(f0.rbLast&&ch.rb){ch.rb.n++;chips.push('부화장 13연전을 끝냈다')}
+      if(f0.rbBoss&&ch.rb){ch.rb.done=1;chips.push('R사의 추격이 끝났다')}}
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);

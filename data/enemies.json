@@ -5278,6 +5278,341 @@
    "tier": "mid",
    "org": "중지",
    "traitor": true
+  },
+  "rc01": {
+   "n": "복제체 No.01 · 비어 있는 얼굴",
+   "color": "#7d8a99",
+   "hp": 21,
+   "atk": 1,
+   "eva": 0,
+   "spd": 1,
+   "deck": [
+    "r_claw",
+    "slash",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 1번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc02": {
+   "n": "복제체 No.02 · 번호가 지워진 개체",
+   "color": "#7d8a99",
+   "hp": 24,
+   "atk": 2,
+   "eva": 0,
+   "spd": 1,
+   "deck": [
+    "r_claw",
+    "slash",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 2번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc03": {
+   "n": "복제체 No.03 · 숨을 고르는 개체",
+   "color": "#7d8a99",
+   "hp": 27,
+   "atk": 2,
+   "eva": 0,
+   "spd": 2,
+   "deck": [
+    "r_claw",
+    "slash",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 3번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc04": {
+   "n": "복제체 No.04 · 같은 말을 따라 하는 개체",
+   "color": "#7d8a99",
+   "hp": 30,
+   "atk": 2,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "r_claw",
+    "slash",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 4번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc05": {
+   "n": "복제체 No.05 · 웃음이 없는 개체",
+   "color": "#7d8a99",
+   "hp": 33,
+   "atk": 3,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 5번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc06": {
+   "n": "복제체 No.06 · 손톱이 긴 개체",
+   "color": "#7d8a99",
+   "hp": 36,
+   "atk": 3,
+   "eva": 1,
+   "spd": 3,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 6번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc07": {
+   "n": "복제체 No.07 · 뒤를 도는 개체",
+   "color": "#7d8a99",
+   "hp": 39,
+   "atk": 3,
+   "eva": 1,
+   "spd": 3,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 7번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc08": {
+   "n": "복제체 No.08 · 절뚝이는 개체",
+   "color": "#7d8a99",
+   "hp": 42,
+   "atk": 4,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 8번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc09": {
+   "n": "복제체 No.09 · 이를 가는 개체",
+   "color": "#7d8a99",
+   "hp": 45,
+   "atk": 4,
+   "eva": 2,
+   "spd": 4,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "r_pack",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 9번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc10": {
+   "n": "복제체 No.10 · 눈을 감은 개체",
+   "color": "#7d8a99",
+   "hp": 48,
+   "atk": 4,
+   "eva": 2,
+   "spd": 4,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "r_pack",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 10번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc11": {
+   "n": "복제체 No.11 · 가장 닮은 개체",
+   "color": "#7d8a99",
+   "hp": 51,
+   "atk": 5,
+   "eva": 2,
+   "spd": 4,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "r_pack",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 11번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc12": {
+   "n": "복제체 No.12 · 마지막 남은 개체",
+   "color": "#7d8a99",
+   "hp": 54,
+   "atk": 5,
+   "eva": 3,
+   "spd": 5,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "r_pack",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "intro": "부화장 12번째 개체. 같은 얼굴을 한 상대가 서 있다. 둘 중 하나만 이 방을 나간다."
+  },
+  "rc13": {
+   "n": "복제체 No.13 · 마지막 문지기",
+   "color": "#b8c4d0",
+   "hp": 96,
+   "atk": 8,
+   "eva": 8,
+   "spd": 6,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "r_shred",
+    "r_pack",
+    "guard"
+   ],
+   "tier": "early",
+   "rb": true,
+   "rbLast": true,
+   "intro": "출구 앞에 마지막 개체가 서 있다. 지금까지 쓰러뜨린 얼굴들보다 오래 이 방에서 자란 몸이다. 이 문을 나가려면 토끼팀의 두 배는 되어야 한다고 했다.",
+   "endText": "마지막 개체가 무릎을 꿇었다. 열두 개의 번호표가 바닥에 흩어져 있다. 문이 열린다.",
+   "drop": {
+    "n": "토끼팀의 두 배",
+    "fx": {
+     "maxHp": 16,
+     "atk": 3,
+     "eva": 3,
+     "spd": 2
+    },
+    "e": "HP+16 · 공+3 · 회피+3 · 속도+2 (부화장을 나올 수 있는 몸)",
+    "card": "r_exist"
+   }
+  },
+  "rh1": {
+   "n": "제3무리 추격조장",
+   "color": "#6b7a8f",
+   "hp": 52,
+   "atk": 5,
+   "eva": 5,
+   "spd": 5,
+   "deck": [
+    "r_claw",
+    "r_shred",
+    "slash",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "rb": true,
+   "intro": "숙청 추격대다. 번호표가 없는 자를 R사는 이름으로 기억하지 않는다. 오직 회수 대상으로 기록한다.",
+   "endText": "추격대장이 쓰러졌다. 무전기에서 다음 조의 호출 부호가 흘러나온다."
+  },
+  "rh2": {
+   "n": "제4무리 · 까마귀팀 대장",
+   "color": "#2f3340",
+   "hp": 60,
+   "atk": 6,
+   "eva": 7,
+   "spd": 7,
+   "deck": [
+    "r_shred",
+    "r_pack",
+    "guard",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "rb": true,
+   "intro": "숙청 추격대다. 번호표가 없는 자를 R사는 이름으로 기억하지 않는다. 오직 회수 대상으로 기록한다.",
+   "endText": "추격대장이 쓰러졌다. 무전기에서 다음 조의 호출 부호가 흘러나온다."
+  },
+  "rh3": {
+   "n": "제4무리 · 코뿔소팀 대장",
+   "color": "#8a7f73",
+   "hp": 72,
+   "atk": 8,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "r_pack",
+    "r_pack",
+    "r_shred",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "rb": true,
+   "intro": "숙청 추격대다. 번호표가 없는 자를 R사는 이름으로 기억하지 않는다. 오직 회수 대상으로 기록한다.",
+   "endText": "추격대장이 쓰러졌다. 무전기에서 다음 조의 호출 부호가 흘러나온다."
+  },
+  "rh4": {
+   "n": "제4무리 · 순록팀 대장",
+   "color": "#a8b5a2",
+   "hp": 66,
+   "atk": 8,
+   "eva": 8,
+   "spd": 9,
+   "deck": [
+    "r_shred",
+    "r_pack",
+    "r_claw",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "rb": true,
+   "intro": "숙청 추격대다. 번호표가 없는 자를 R사는 이름으로 기억하지 않는다. 오직 회수 대상으로 기록한다.",
+   "endText": "추격대장이 쓰러졌다. 무전기에서 다음 조의 호출 부호가 흘러나온다."
+  },
+  "rcorp_boss": {
+   "n": "R사 숙청 집행관",
+   "color": "#c9d1d9",
+   "hp": 98,
+   "atk": 10,
+   "eva": 8,
+   "spd": 8,
+   "deck": [
+    "r_exist",
+    "r_pack",
+    "r_shred",
+    "r_shred",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "rb": true,
+   "rbBoss": true,
+   "intro": "추격은 여기까지다. 머리가 직접 내린 지침을 쥔 집행관이 길 끝에 서 있다. 얼굴이 낯익다. 본체인지 복제체인지는 끝내 알 수 없다.",
+   "endText": "집행관이 쓰러지며 번호표 한 장을 떨어뜨렸다. 숫자는 지워져 있었다. 당신은 그것을 줍지 않았다. 추격이 끝났다.",
+   "drop": {
+    "n": "지워진 번호표",
+    "fx": {
+     "maxHp": 20,
+     "atk": 2,
+     "eva": 2,
+     "check": 5
+    },
+    "e": "HP+20 · 공+2 · 회피+2 · 판정+5 (이름 없는 번호표)",
+    "title": "번호 없는 자"
+   }
   }
  },
  "fixedFights": {
