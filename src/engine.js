@@ -1134,6 +1134,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.innate==='mark'&&!mc.markOn&&G.year>=CFG.innate.markYear-1)return {type:'event',ev:D.innateEvents.mark};
     if(D.relicEvent&&!mc.relicEvt&&G.year===CFG.relicEvent.year-1){mc.relicEvt=true;return {type:'event',ev:D.relicEvent}}
     {const sw=bondSweetEvent(G);if(sw)return {type:'event',ev:sw}}
+    if(mc.resoPend&&D.familyReso&&G.year>=(mc.resoAt||0)){mc.resoPend=false;mc.resoAsked=true;return {type:'event',ev:D.familyReso}}
     if(mc.familyPend&&D.familyCall){mc.familyPend=false;mc.familyAsked=true;return {type:'event',ev:D.familyCall}}
     /* 조율자: 10년마다 머리의 권한이 한 단계 오른다 (해는 넘어가지 않음) */
     /* 혈귀: 16년차에 라만차랜드 초대장 (해는 넘어가지 않음) */
@@ -1277,7 +1278,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ok){ch.relicPickLate=true;chips.push('유물이 손에 감긴다 · 하나를 고른다')}else{chips.push('손끝에 먼지만 묻었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.familyAsked)ch.familyPend=true}}
     /* 보냐텔리 가문: 잊힌 유물을 놓치면 가문의 부름 · 오딘의 눈 */
     if(fx.odinRoll){const r=d(100),ok=r<=fx.odinRoll&&!(ch.relicIds||[]).includes('odin');chips.push(`1d100 · ${r} (${fx.odinRoll} 이하)`);
-      if(ok){giveRelic(ch,'odin',true);chips.push('유물 · '+D.relics.odin.n+' ('+D.relics.odin.e+')');if(ch.yeji)chips.push('패시브 · 가속하는 미래 · 버프 · 예지안 (전용 검술 카드 피해 +'+CFG.odin.yeji+')');else chips.push('버프 · 순간의 예지 · 첫 라운드 회피 +'+CFG.odin.first+' · 이후 +'+CFG.odin.after)}else chips.push('보물고는 비어 있었다')}
+      if(ok){giveRelic(ch,'odin',true);chips.push('유물 · '+D.relics.odin.n+' ('+D.relics.odin.e+')');if(ch.yeji)chips.push('패시브 · 가속하는 미래 · 버프 · 예지안 (전용 검술 카드 피해 +'+CFG.odin.yeji+')');else chips.push('버프 · 순간의 예지 · 첫 라운드 회피 +'+CFG.odin.first+' · 이후 +'+CFG.odin.after)}else{chips.push(ch.resoAsked?'유물고의 울림이 잦아들었다':'보물고는 비어 있었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.resoAsked){ch.resoPend=true;ch.resoAt=(ch.year||0)+3}}}
     if(fx.wsRoll){
       const r=d(WF.die);chips.push(`1d${WF.die} · ${r} (${WF.minRoll} 이상)`);
       if(r>=WF.minRoll){const was=ch.licensed;if(!was)license(ch);ch.aff={type:'workshop',name:'공방 해결사'};
