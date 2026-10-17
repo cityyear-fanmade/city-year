@@ -518,9 +518,9 @@ export function startUI(E,app){
       <p class="small dim">돈을 내고 상처를 치료한다. 한 번에 HP ${K.hp} 회복. 치료를 받을 때마다 값이 ${E.money(K.step)}씩 오른다 (이번 판 ${ch.healBought||0}번 받음).</p>
       ${UI.healMsg?`<p class="good small">${esc(UI.healMsg)}</p>`:''}
       <button class="btn" data-a="heal" ${ok?'':'disabled'}><b>치료 받는다</b><span class="mono small dim">HP ${ch.hp}/${ch.stats.maxHp}${full?' · 이미 멀쩡하다':left<=0?' · 오늘은 더 받을 수 없다':ch.money<cp?' · 돈이 모자란다':''}</span></button></div>
-    <div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">${A.name}</b><span class="mono" style="color:var(--gold)">${E.money(ap)}</span></div>
+    ${hwHome()?'':`<div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">${A.name}</b><span class="mono" style="color:var(--gold)">${E.money(ap)}</span></div>
       <p class="small dim">암시장에서 도는 전리품. 전투 중 HP가 최대 HP의 ${Math.round(A.belowPct*100)}% 이하가 되면 자동으로 쓰여 최대 HP의 ${Math.round(A.healPct*100)}%를 회복한다. 한 번에 쓰러질 만한 피해를 받으면 쓰러지기 전에 먼저 쓰이고(받은 피해만큼 회복이 줄어든다), 전투 중 횟수 제한 없이 한 번에 1개씩 쓰이고, 최대 ${A.carry}개까지 지닌다. 쓰고 나면 다음 공방에서 다시 살 수 있지만, 한 판에 모두 ${A.limit}개까지만 살 수 있다.</p>
-      <button class="btn" data-a="ample" ${aok?'':'disabled'}><b>${A.name} 구입</b><span class="mono small dim">지닌 수 ${have}/${A.carry} · 산 수 ${bought}/${A.limit}${bought>=A.limit?' · 더는 살 수 없다':have>=A.carry?' · 더는 지닐 수 없다':ch.money<ap?' · 돈이 모자란다':''}</span></button></div>`;
+      <button class="btn" data-a="ample" ${aok?'':'disabled'}><b>${A.name} 구입</b><span class="mono small dim">지닌 수 ${have}/${A.carry} · 산 수 ${bought}/${A.limit}${bought>=A.limit?' · 더는 살 수 없다':have>=A.carry?' · 더는 지닐 수 없다':ch.money<ap?' · 돈이 모자란다':''}</span></button></div>`}`;
   }
   function vShop(){
     const ch=G.ch,acc=E.shopAccess(ch),A=D.access;
@@ -534,7 +534,7 @@ export function startUI(E,app){
     };
     const shops=D.workshops.map(w=>{
       const open=w.grade<=acc;
-      const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade).map(([id,it])=>{
+      const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade).filter(([id,it],_i,all)=>!hwHome()||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
         const note=st==='owned'?'장착 중':st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
         if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span><span class="small dim">${D.slots[it.slot]}${cur?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · 이 장비를 맞출까?</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">맞춘다</button><button class="btn quiet" data-a="buyno">취소</button></div></div>`;
