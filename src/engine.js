@@ -600,6 +600,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
           r.rivals=Z.pairs.map((_,i)=>i).filter(i=>i!==pi).map(i=>'hr_'+i);r.rv=0;r.cnext=y+Z.rivalGap;
           routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('가주 후보 · 흑수 '+(D.cards['zp_'+ka].n.replace('흑수 · ',''))+'·'+(D.cards['zp_'+kb].n.replace('흑수 · ','')));chips.push('가주 후보가 되었다')}
+        else if(k==='mission'){r.mission=1;r.out=1;r.cl=0;r.clues=0;r.clNext=y+3}
+        else if(k==='clue'){ch.purge='hw_cl'+r.cl;r.cl++;r.clNext=y+(r.cl>=D.hwRoute.clue.length?2:Z.clueGap)}
+        else if(k==='return'){r.out=0;r.back=1}
         else if(k==='rival'){ch.purge=r.rivals[r.rv];r.rv++;r.cnext=y+Z.rivalGap}
         else if(k==='host'){r.shrine=1;r.host=1;r.fnext=y+Z.finalGap;s.maxHp+=Z.hostHp;ch.hp+=Z.hostHp;s.mindMax=(s.mindMax||0)+Z.hostMind;ch.mind=Math.min(ch.mind,mindMax(ch));routeWeaponUp(ch,'hw','host',chips);(ch.relics=ch.relics||[]).push('선황충');chips.push(`선황충 · 최대 HP +${Z.hostHp} · 최대 정신력 ${Z.hostMind} · 전투 시작 빛 +${Z.hostLight}`)}
         else if(k==='refuse'){r.shrine=1;ch.purge='hw_elder';routeWeaponUp(ch,'hw','free',chips)}
@@ -671,7 +674,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 같은 조직의 적(enemy.org가 내 소속 종류나 내 소속 이름과 같음)은 배신자·명부의 처리 대상(enemy.traitor)이 아니면 만나지 않는다. 방금 싸운 적도 되도록 피한다 */
     const mine=new Set();if(ch.aff){mine.add(ch.aff.name);mine.add((D.orgs.syn||[]).includes(ch.aff.name)?'syn':ch.aff.type)}
     /* H사 홍원 가문의 후보는 도시의 조직(손가락·조직·협회·날개·사무소·공방)과 얽히지 않는다: 소속 표시가 있는 적은 만나지 않는다 */
-    const house=!!ch.hw;
+    const house=!!ch.hw&&!ch.hw.out;
     const blocked=i=>{const e=D.enemies[i],o=e&&e.org;return !!o&&(house||(!e.traitor&&[].concat(o).some(x=>mine.has(x))))};
     let r,id;
     for(let t=0;t<30;t++){
@@ -999,6 +1002,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      ch.hw = {fi(가문 사건 진행), picked, pair, rivals[적 id], rv(만난 후보 수), cnext, shrine, host(선황충), elderDone, fnext, finalSeen, done} */
   function hwYear(G){
     const ch=G.ch,r=ch.hw,y=G.year,Z=CFG.hw,R=D.hwRoute;if(!r||!R||r.done)return null;
+    /* 1) 홍원 안: 앞의 가문 사건 */
+    if(r.fi<Z.homeEvents)return y>=Z.famAt[r.fi]?R.fam[r.fi]:null;
+    /* 2) 가주의 명으로 홍원 밖에서 영생의 단서를 찾는다 */
+    if(!r.mission)return y>=Z.missionAt?R.mission:null;
+    if(r.out){
+      if((r.cl||0)<R.clue.length)return y>=r.clNext?R.clue[r.cl]:null;
+      return (r.clues||0)>=R.clue.length&&y>=r.clNext?R.back:null;
+    }
+    /* 3) 귀환 뒤 남은 가문 사건 */
     if(r.fi<R.fam.length)return y>=Z.famAt[r.fi]?R.fam[r.fi]:null;
     if(!r.picked){
       if(y<Z.pickAt)return null;
@@ -1024,6 +1036,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     else{const st=ch.stash||[],i=st.findIndex(x=>x.id===W.id);if(i<0)return;st[i]=carryTune(st[i],it)}
     chips&&chips.push(`전용 무기 강화 · ${g.n} (${g.e})`);
   }
+  const s_=(ch,v)=>{ch.stats.maxHp+=v;ch.hp+=v};
   function rbFlee(ch,chips){
     const r=ch.rb,Z=CFG.rb;if(!r||r.fled)return;
     r.fled=1;r.cnext=(ch.year||0)+Z.chaseGap;
@@ -1450,6 +1463,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(f0.rbBoss&&ch.rb){ch.rb.bossDone=1;chips.push('R사의 추격이 끝났다');routeWeaponUp(ch,'rb',3,chips)}
       if(f0.hw&&ch.hw&&C.id.startsWith('hr_')&&ch.hw.rivals&&ch.hw.rivals.every(id=>id===C.id||ch.beaten.includes(id)))routeWeaponUp(ch,'hw',2,chips)
       if(C.id===CFG.endless.finalNext&&ch.rb&&ch.rb.headSeen){ch.rb.done=1;chips.push('금기의 끝')}
+      if(f0.hwClue&&ch.hw){const h_=CFG.hw.clueHp;ch.hw.clues=(ch.hw.clues||0)+1;s_(ch,h_);chips.push(`영생의 단서 ${ch.hw.clues}/4 · 최대 HP +${h_}`)}
       if(f0.hwElder&&ch.hw){ch.hw.elderDone=1;ch.hw.fnext=(ch.year||0)+CFG.hw.finalGap}
       if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리')}}
     addCard(ch,rewardCard(ch),chips,null,true);

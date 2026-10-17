@@ -218,8 +218,8 @@ export const CFG = {
   raven: {tiers: [6, 8, 10], hit: 10, low: 0.5, exec: 0.3, buffs: ['shield', 'breath', 'charge', 'cloud', 'passHit']},
   /* 흑수(黑水): 상대에게 쌓는 스택. 라운드가 끝날 때 스택당 dmg 피해(내가 받으면 dmgMe), 그 뒤 스택은 keep 비율만 남는다. 최대 cap */
   ink: {cap: 12, dmg: 2, dmgMe: 1, keep: 0.5},
-  /* H사 홍원 가주 후보: 가문의 암투(famAt년차 이후 4사건) → 1막 후반 가주 후보 지명(pickAt) · 흑수 한 쌍 선택 → 다른 후보 5명(rivalGap년 간격) → 2막 초(elderFrom~) 철함사의 소요(선황충) → 홍루 */
-  hw: {famAt: [1, 5, 8, 12, 15, 19, 23, 26, 29, 32], pickAt: 34, rivalGap: 3, elderFrom: 58, finalGap: 2, hostHp: 20, hostMind: -8, hostLight: 1,
+  /* H사 홍원 가주 후보: 1막 초 홍원 가문에서 보낸다(가문 사건 homeEvents개) → missionAt년차 가주의 명으로 영생의 단서를 찾아 도시로 나선다(단서 4곳, clueGap년 간격) → 홍원으로 귀환, 남은 가문 사건 → 2막 시작(pickAt)에 가주 후보 지명 · 흑수 한 쌍 선택 → 다른 후보 5명(rivalGap년 간격) → 2막 중반(elderFrom~) 철함사의 소요(선황충) → 홍루 */
+  hw: {famAt: [1, 5, 9, 14, 19, 45, 45, 45, 45, 45], homeEvents: 5, missionAt: 22, clueGap: 5, pickAt: 56, rivalGap: 1, elderFrom: 61, finalGap: 1, clueHp: 3, hostHp: 20, hostMind: -8, hostLight: 1,
     pairs: [['rat', 'ox'], ['tiger', 'rabbit'], ['dragon', 'snake'], ['horse', 'goat'], ['monkey', 'rooster'], ['dog', 'pig']]},
   /* 루트 전용 무기(R사 복제 단검 · H사 홍원의 장도): 루트 이정표마다 단계가 오른다. lv 배열의 인덱스가 단계이고 H사 3단계는 host/free 두 갈래 */
   routeWeapon: {
