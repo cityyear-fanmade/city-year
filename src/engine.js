@@ -594,7 +594,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(r){
         if(k==='fam'||k==='assassin'||k.startsWith('fight:')){r.fi++;if(k==='assassin')ch.purge='hw_assassin';else if(k.startsWith('fight:'))ch.purge=k.slice(6)}
         else if(k.startsWith('pick:')){const pi=+k.slice(5),[ka,kb]=Z.pairs[pi];r.picked=1;r.pair=pi;
-          for(const id of ['zp_'+ka,'zp_'+kb]){ch.deck.push(id);chips.push('흑수 카드 · '+D.cards[id].n)}
+          for(const id of ['zp_'+ka,'zp_'+kb,'hc_6']){ch.deck.push(id);chips.push('흑수 카드 · '+D.cards[id].n)}
           while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
           r.rivals=Z.pairs.map((_,i)=>i).filter(i=>i!==pi).map(i=>'hr_'+i);r.rv=0;r.cnext=y+Z.rivalGap;
           (ch.relics=ch.relics||[]).push('가주 후보 · 흑수 '+(D.cards['zp_'+ka].n.replace('흑수 · ',''))+'·'+(D.cards['zp_'+kb].n.replace('흑수 · ','')));chips.push('가주 후보가 되었다')}
@@ -1549,6 +1549,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ms=mindStat(ch);if(ms){P.atk+=ms;P.eva+=ms;P.spd+=ms;P.maxHp+=ms;P.hp+=ms;mindNote.push(`정신력 ${ch.mind} · 모든 능력치 +${ms}`)}
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
+    P.inkIds=ch.hw&&ch.hw.picked?CFG.hw.pairs[ch.hw.pair].map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
     {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;P.chargeHit=CH.hit||0;P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}
     /* 토벌 의뢰의 가족: 주인공과 같은 카드를 쓰고, 능력치는 내 능력치의 배수 (특색급(최고 급수)은 mulTop, 그 밑은 mul) */
@@ -1658,7 +1659,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function autoTri(C){if(!triOk(C)||C.triRound===C.round)return;const want=C.P.hp<=C.P.maxHp*0.6?['ri','gon','gun']:['gun','gon','ri'];setTri(C,want.find(k=>k!==C.triPrev))}
   function autoPick(C){autoTri(C);
     const P=C.P,low=P.hp/P.maxHp<0.35;
-    const bad=P.bleed+P.rupture+(P.burn||0)+(P.flame||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
+    const bad=P.bleed+P.rupture+(P.burn||0)+(P.flame||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.inkCall?9:0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
       :c.hits*(c.dice*((c.die||6)+1)/2+c.b+(P.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(P.bonB&&BONA.has(c)?P.bonB:0))+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05+(c.spend?Math.min(P.charge||0,c.spend)*(c.fixPer||0)*c.hits:0)+(P.oracle&&P.starId&&c===D.cards[P.starId]?30:0)+(c.nailBurst&&C.E.nail>=Math.min(5,nailThr(C)-(C.E.stagger||0))?(C.E.nail||0)*2*c.nailBurst.mul+(c.nailBurst.add||0):0);
     let best=[],bs=-1;
     for(let m=1;m<1<<P.hand.length;m++){
@@ -1742,6 +1743,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(c.flesh){A.evaB-=30;A.fleshRound=C.round;L('kw',`${A.name} · ${c.n} · 이번 라운드 회피 −30`)}
     if(c.cloudGain&&A.kuro)for(let i=0;i<c.cloudGain;i++)addCloud(A,L);
     if(c.needBlack&&!A.black){L('sys',`${A.name} · ${c.n} · 흑운이 아니면 쓸 수 없다 · 불발`);return}
+    if(c.inkCall){const ids=A.inkIds||[];if(!ids.length){L('sys',`${A.name} · ${c.n} · 길들인 흑수가 없다 · 불발`);return}L('kw',`${A.name} · ${c.n} · 흑수가 응답한다`);for(const id of ids){if(B.hp<=0)break;act(C,A,D.cards[id],L,push)}return}
     if(c.needLow&&B.hp>B.maxHp*CFG.raven.low){L('sys',`${A.name} · ${c.n} · 상대 HP가 ${Math.round(CFG.raven.low*100)}% 이하여야 쓸 수 있다 · 불발`);return}
     if(c.t==='buff'&&(c.heal||c.passNext||c.debuffHit||c.cleanseRand)){
       if(c.cleanseRand){const ks=['bleed','rupture','burn','flame'].filter(k=>(A[k]||0)>0);if(ks.length){const k=ks[d(ks.length)-1],n0=A[k];A[k]=Math.max(0,n0-c.cleanseRand);L('kw',`  ${A.name} · ${c.n} · ${D.keywords[k].n} ${n0} → ${A[k]}`)}}
