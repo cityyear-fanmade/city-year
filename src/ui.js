@@ -1230,8 +1230,8 @@ export function startUI(E,app){
   const diffOf=c=>c.easy?'쉬움':c.hard?'하드':'보통';
   /* 출생 보정 없이 시작한 존재가 제 1막을 넘겼을 때(제 2막에 이르렀을 때)의 전용 엔딩 */
   const blankEnd=(c,w)=>{if(UI.rbEnd&&w)return 'rcorp';if(UI.hwEnd&&w)return UI.hwEnd;if(!(w&&c&&!c.distForm&&!G.endless&&!UI.oldEnd&&!UI.trueEnd))return '';const m=!!(E.bondMarried&&E.bondMarried(c));return c.rb&&c.rb.done?'rcorp':c.blank?(m?'blankwed':'blank'):m?'wed':''};
-  const BLANK_END={hwhost:['선황충을 품은 가주','붉은 누각의 등이 모두 켜졌다. 열두 종의 흑수가 무릎을 꿇고 가주의 자리가 비워졌다. 자리에 앉은 것은 당신이지만, 선황충은 당신의 이름으로 먹고 마신다. 몸은 지칠 줄 모르고 마음은 한 겹 멀다. 홍원은 새 주인을 얻었고, 주인은 아직 자기가 누구인지 모른다.'],
-    hwfree:['홍원의 가주','선황충을 상자에 가둔 채 가주의 자리에 앉았다. 어르신들은 일어서지 않았고 열두 종의 흑수는 흑수환의 효력이 빠져 평범한 몸으로 돌아갔다. 가문의 식탁에는 이제 자리마다 이름표가 없다. 가장 먼 자리에도 따뜻한 밥이 놓인다.'],
+  const BLANK_END={hwhost:['선황충을 품은 가주','붉은 누각의 등이 모두 켜졌다. 열두 흑수가 고개를 숙이고 가주의 자리가 비워졌다. 자리에 앉은 것은 당신이지만, 선황충은 당신의 이름으로 먹고 마신다. 몸은 지칠 줄 모르고 마음은 한 겹 멀다. 홍원은 새 주인을 얻었고, 주인은 아직 자기가 누구인지 모른다.'],
+    hwfree:['홍원의 가주','선황충을 상자에 가둔 채 가주의 자리에 앉았다. 어르신들은 일어서지 않았고 열두 흑수는 새 주인 앞에 말없이 무릎을 꿇었다. 가문의 식탁에는 이제 자리마다 이름표가 없다. 가장 먼 자리에도 따뜻한 밥이 놓인다.'],
     rcorp:['나는 존재한다. 그러므로 살아있다','부화장에서 같은 얼굴 열둘을 쓰러뜨리고 나왔다. 본체인지 복제체인지는 끝내 알 수 없었다. 번호표는 재가 되었고, 추격대의 호출 부호도 끊겼다. 이름 없는 몸으로 첫 번째 막을 넘겼다. 누가 만들었든, 지금 숨을 쉬는 것은 당신이다. 나는 존재한다. 그러므로 살아있다.'],
     blank:['아무것도 없는 존재',`이름도 내력도 쥐여 주지 않은 채 태어난 존재가 ${CFG.years}년을 걸어 첫 번째 막을 넘겼다. 아무것도 없던 손에는 이제 이 도시에서 살아낸 시간이 있다. 도시는 그것을 기억하지 않지만, 당신은 기억한다.`],
     wed:['함께 넘은 첫 번째 막',`같은 이름을 오래 불렀다. 도시는 변했고 서류 속 이름은 닳았지만, 문을 열면 대답하는 사람이 있었다. ${CFG.years}년이 지나 첫 번째 막이 끝났다. 다음 막에도 그 목소리는 곁에 있을 것이다.`],
@@ -1252,7 +1252,7 @@ export function startUI(E,app){
       ${c.title?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${c.titleKind==='top'?'칭호':T.titleLabel} · ${esc(c.title)}</span></div>`:''}
       ${!w&&dt?`<div class="mono small bad">${dt.year}년차 · ${dt.cause==='distort'?'뒤틀림':dt.cause==='mind'?'정신 붕괴로 쓰러졌다':esc(dt.foe)+'에게 쓰러졌다'}${dt.hidden?' (히든 보스)':''}</div>`:''}
       <div class="row" style="gap:8px;flex-wrap:wrap"><span class="chip" style="color:${c.hard?'#c25050':c.easy?'#6aa0c4':'var(--fg)'};border-color:currentColor">난이도 · ${diffOf(c)}</span><span class="mono small dim" style="align-self:center">시드 ${c.seed}</span></div>
-      <p class="lead">${df?distLead(c,w,tr,dt):UI.outEnd?OUTEND[UI.outEnd][1]:UI.outerEnd?'머리가 닫은 문 바깥, 아무도 이름을 붙이지 않은 땅에서 당신은 걸음을 멈췄다. 괴수들의 울음이 멀어졌다. 쫓겨난 것이 아니라 스스로 닿은 자리라고, 누군가는 기록할 것이다.':UI.oldEnd?'백 살을 넘겼다. 이 도시에서 늙는다는 것은 끝까지 이겨 왔다는 뜻이다.':blankEnd(c,w)?BLANK_END[blankEnd(c,w)][1]:dt&&dt.id==='hongru'?'홍루가 가주의 자리 앞에서 붕대를 천천히 풀었다. 흩어진 흑수환의 기운이 그의 몸으로 모였다. 붉은 누각의 등이 하나씩 켜졌고, 홍원에는 군주가 살게 되었다. 이 세계에서 홍원 군주는 그렇게 태어났다.':dt&&dt.cause==='distort'?'당신의 모양을 한 무언가가 골목에 남았다. 사람들은 그것을 더 이상 당신의 이름으로 부르지 않는다.':dt&&dt.cause==='mind'?'몸은 멀쩡했지만, 마음이 먼저 꺼졌다.':tr?'바랄의 발톱도, 제나의 봉인도 당신을 멈추지 못했다. 금기를 정하던 쪽이 처음으로 질문을 받았고, 도시의 문은 한 번도 닫힌 적 없는 방향으로 한 뼘 열렸다. 당신을 부르는 이름은 도시의 어느 장부에도 맞지 않았다. 끝이라고 불리던 자리 너머로 외곽이 이어진다.':endLead(c,w)}</p>
+      <p class="lead">${df?distLead(c,w,tr,dt):UI.outEnd?OUTEND[UI.outEnd][1]:UI.outerEnd?'머리가 닫은 문 바깥, 아무도 이름을 붙이지 않은 땅에서 당신은 걸음을 멈췄다. 괴수들의 울음이 멀어졌다. 쫓겨난 것이 아니라 스스로 닿은 자리라고, 누군가는 기록할 것이다.':UI.oldEnd?'백 살을 넘겼다. 이 도시에서 늙는다는 것은 끝까지 이겨 왔다는 뜻이다.':blankEnd(c,w)?BLANK_END[blankEnd(c,w)][1]:dt&&dt.id==='hongru'?'홍루가 가주의 자리 앞에서 붕대를 천천히 풀었다. 주인을 잃은 열 흑수가 그의 곁으로 모였다. 붉은 누각의 등이 하나씩 켜졌고, 홍원에는 군주가 살게 되었다. 이 세계에서 홍원 군주는 그렇게 태어났다.':dt&&dt.cause==='distort'?'당신의 모양을 한 무언가가 골목에 남았다. 사람들은 그것을 더 이상 당신의 이름으로 부르지 않는다.':dt&&dt.cause==='mind'?'몸은 멀쩡했지만, 마음이 먼저 꺼졌다.':tr?'바랄의 발톱도, 제나의 봉인도 당신을 멈추지 못했다. 금기를 정하던 쪽이 처음으로 질문을 받았고, 도시의 문은 한 번도 닫힌 적 없는 방향으로 한 뼘 열렸다. 당신을 부르는 이름은 도시의 어느 장부에도 맞지 않았다. 끝이라고 불리던 자리 너머로 외곽이 이어진다.':endLead(c,w)}</p>
       ${kinLine(c,w,dt)}
       ${w?`<div class="panel stack" style="gap:8px"><span class="eyebrow">행적</span>${epilogue(c,w,tr).map(t=>`<p class="small" style="line-height:1.65">${t}</p>`).join('')}</div>`:''}
       ${vRecord(c,w,gi)}

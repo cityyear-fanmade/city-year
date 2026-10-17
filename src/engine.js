@@ -1012,7 +1012,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(y<Z.missionAt)return null;
       const idx=sample(Z.pairs.map((_,i)=>i),4).sort((a,b)=>a-b);
       return {t:R.mission.t,x:R.mission.x,c:idx.map(pi=>{const w=d(2)-1,key=Z.pairs[pi][w],nm=R.pick.pairs[pi][w],hj=R.pick.pairs[pi][2][w],cd=D.cards['zp_'+key];
-        return {l:`${nm}(${hj})의 흑수환을 받아 나선다`,h:`흑수환 한 알(${nm}의 특성) · 흑수 카드 1장 · ${cd.d.split(' · ')[1]||cd.d.split(' · ')[0]} · 홍원 밖으로 나선다 · 돈 +200`,ok:{t:`가주가 소매에서 ${nm}의 특성이 담긴 흑수환을 꺼내 건넸다. 삼키자 온몸에 외곽 생물의 감각이 번졌다. 붉은 대문을 나서며 뒤를 돌아보지 않았다.`,fx:{hw:`mission1:${pi}:${w}`,money:200}}}})};
+        return {l:`${nm}(${hj})의 특성을 지닌 흑수를 데리고 나선다`,h:`흑수 부하 한 사람(${nm}의 특성) · 흑수 카드 1장 · ${cd.d.split(' · ')[1]||cd.d.split(' · ')[0]} · 홍원 밖으로 나선다 · 돈 +200`,ok:{t:`가주가 ${nm}의 특성을 지닌 흑수를 앞으로 세웠다. 흑수는 말없이 고개를 숙이고 한 걸음 뒤에 섰다. 붉은 대문을 나서며 뒤를 돌아보지 않았다.`,fx:{hw:`mission1:${pi}:${w}`,money:200}}}})};
     }
     if(r.out){
       if((r.cl||0)<R.clue.length)return y>=r.clNext?R.clue[r.cl]:null;
@@ -1023,8 +1023,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!r.picked){
       if(y<Z.pickAt)return null;
       const pi=r.pair,[na,nb,hz]=R.pick.pairs[pi],pn=r.w?na:nb,ph=r.w?hz[0]:hz[1],ca=D.cards['zp_'+Z.pairs[pi][1-r.w]];
-      return {t:R.pick.t,x:R.pick.x+` 영생의 단서를 찾아 나서던 날 삼킨 알과 짝이 되는 ${pn}(${ph})의 흑수환이 마침내 건네진다.`,c:[
-        {l:`짝이 되는 ${pn}(${ph})의 흑수환을 삼킨다`,h:`흑수환 한 알 더 · ${ca.n.replace('흑수 · ','')}: ${ca.d.split(' · ')[1]||ca.d.split(' · ')[0]} · 흑수여, 답하라 카드 · 후보 5명과 맞선다`,ok:{t:`${pn}의 특성이 몸에 깃들었다. 이제 두 종의 외곽 생물의 감각이 한 몸에서 움직인다.`,fx:{hw:'pick'}}}]};
+      return {t:R.pick.t,x:R.pick.x+` 영생의 단서를 찾아 나서던 날 데리고 나선 흑수와 짝이 되는 ${pn}(${ph})의 흑수가 마침내 합류한다.`,c:[
+        {l:`짝이 되는 ${pn}(${ph})의 흑수를 받아들인다`,h:`흑수 부하 한 사람 더 · ${ca.n.replace('흑수 · ','')}: ${ca.d.split(' · ')[1]||ca.d.split(' · ')[0]} · 흑수여, 답하라 카드 · 후보 5명과 맞선다`,ok:{t:`${pn}의 흑수가 고개를 숙이고 곁에 섰다. 이제 두 사람이 당신의 부하다.`,fx:{hw:'pick'}}}]};
     }
     if(r.rv<r.rivals.length){
       if(y<r.cnext||(r.rv>0&&!ch.beaten.includes(r.rivals[r.rv-1])))return null;
@@ -1045,7 +1045,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     chips&&chips.push(`전용 무기 강화 · ${g.n} (${g.e})`);
   }
   const s_=(ch,v)=>{ch.stats.maxHp+=v;ch.hp+=v};
-  /* 홍루: 내가 삼킨 두 종을 뺀 흑수 열 종의 특성이 차례로 덤벼든다 (E.zChain = 흑수 키 순서) */
+  /* 홍루: 내 부하 두 사람을 뺀 흑수 열 사람이 차례로 덤벼든다 (E.zChain = 흑수 키 순서) */
   const ZKEYS=['rat','ox','tiger','rabbit','dragon','snake','horse','goat','monkey','rooster','dog','pig'];
   function zNext(A,c){const cur=Object.keys(D.cards).find(k=>D.cards[k]===c)||'',k=cur.replace(/^zp?_/,''),i=A.zChain.indexOf(k);return i<0?c.next:'z_'+A.zChain[(i+1)%A.zChain.length]}
   function rbFlee(ch,chips){
@@ -1578,7 +1578,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     let penalty=null;
     if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit;if(ch.fate){P.nailHit=0;P.atk+=CFG.nWing.fate;P.eva+=CFG.nWing.fate}}
     if(pen&&!(ch.licensed&&ch.rank<=pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
-    /* 홍루: 쓰러진 후보들에게서 빠져나온 흑수 열 종. 내가 삼킨 두 종은 빠진다 */
+    /* 홍루: 쓰러진 후보들의 흑수 열 사람. 내 부하 두 사람은 빠진다 */
     if(e.zodiac10){const own=ch.hw&&ch.hw.picked?CFG.hw.pairs[ch.hw.pair]:[];E.zChain=ZKEYS.filter(k=>!own.includes(k));E.deck=['z_'+E.zChain[0]]}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
     let hpNote=null;
@@ -1790,7 +1790,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(c.flesh){A.evaB-=30;A.fleshRound=C.round;L('kw',`${A.name} · ${c.n} · 이번 라운드 회피 −30`)}
     if(c.cloudGain&&A.kuro)for(let i=0;i<c.cloudGain;i++)addCloud(A,L);
     if(c.needBlack&&!A.black){L('sys',`${A.name} · ${c.n} · 흑운이 아니면 쓸 수 없다 · 불발`);return}
-    if(c.inkCall){const ids=A.inkIds||[];if(!ids.length){L('sys',`${A.name} · ${c.n} · 삼킨 흑수환이 없다 · 불발`);return}L('kw',`${A.name} · ${c.n} · 흑수가 응답한다`);for(const id of ids){if(B.hp<=0)break;act(C,A,D.cards[id],L,push)}return}
+    if(c.inkCall){const ids=A.inkIds||[];if(!ids.length){L('sys',`${A.name} · ${c.n} · 곁에 흑수가 없다 · 불발`);return}L('kw',`${A.name} · ${c.n} · 흑수 부하가 나선다`);for(const id of ids){if(B.hp<=0)break;act(C,A,D.cards[id],L,push)}return}
     if(c.needLow&&B.hp>B.maxHp*CFG.raven.low){L('sys',`${A.name} · ${c.n} · 상대 HP가 ${Math.round(CFG.raven.low*100)}% 이하여야 쓸 수 있다 · 불발`);return}
     if(c.t==='buff'&&(c.heal||c.passNext||c.debuffHit||c.cleanseRand)){
       if(c.cleanseRand){const ks=['bleed','rupture','burn','flame'].filter(k=>(A[k]||0)>0);if(ks.length){const k=ks[d(ks.length)-1],n0=A[k];A[k]=Math.max(0,n0-c.cleanseRand);L('kw',`  ${A.name} · ${c.n} · ${D.keywords[k].n} ${n0} → ${A[k]}`)}}
