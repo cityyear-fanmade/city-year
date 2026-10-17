@@ -1246,7 +1246,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const riftOmen=nm=>({x:`세계에 균열이 갔다. 갈라진 틈 너머에서 ${nm}의 기척이 느껴진다. 이 세계에서는 만날 수 없던 운명이 균열을 타고 흘러든다.`,go:'균열 속으로 들어간다',away:'눈을 돌린다',awayT:'균열은 소리 없이 닫혔다. 만날 수 없던 운명은 다음 기회를 기다린다.'});
   const omenOf=(ch,o)=>{if(!o||!ch.bond||!ch.bond.name)return o||{};const f=t=>t&&bondFill(t,ch.bond);return Object.assign({},o,{x:f(o.x),go:f(o.go),away:f(o.away),awayT:f(o.awayT)})};
   function answerOmen(G,st,go){
-    if(go||!st.escape){(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,label:st.rift?'균열 너머의 운명':T.hiddenBoss}}}
+    if(go||!st.escape){(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:!!st.rift,label:st.rift?'균열 너머의 운명':T.hiddenBoss}}}
     const e=encounter(G.ch,st.spec);return {type:'fight',enemy:e.id,enc:e,avoided:st.boss};
   }
   /* 고를 수 있는 선택지 (조건이 맞지 않는 선택지는 빠진다). i는 원래 번호 */
