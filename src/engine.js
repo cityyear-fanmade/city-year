@@ -1589,7 +1589,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit;if(ch.fate){P.nailHit=0;P.atk+=CFG.nWing.fate;P.eva+=CFG.nWing.fate}}
     if(pen&&!(ch.licensed&&ch.rank<=pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
     /* 홍루: 쓰러진 후보들의 흑수 열 사람. 내 부하 두 사람은 빠진다 */
-    if(e.noHeal)E.noHeal=true;
     if(e.zodiac10){const own=ch.hw&&ch.hw.picked?CFG.hw.pairs[ch.hw.pair]:[];E.zChain=ZKEYS.filter(k=>!own.includes(k));E.deck=['z_'+E.zChain[0]]}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
     let hpNote=null;
@@ -1672,9 +1671,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(jp&&jp.id==='rush'&&C.round%jp.every===0){P.light+=jp.light;C.jobNote=`${P.name} · ${jp.n} · 이번 라운드 빛 +${jp.light}`}
     /* 적은 라운드 시작 때 낼 카드를 정한다 (화면에 의도로 공개) */
     /* 라운드마다 HP 회복 (전리품·장비 효과) */
-    if(P.regen>0&&!E.noHeal&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(P.regen,P.maxHp-P.hp);P.hp+=h;HG(P,h);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 회복 · HP +${h}`}
+    if(P.regen>0&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(P.regen,P.maxHp-P.hp);P.hp+=h;HG(P,h);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 회복 · HP +${h}`}
     /* 기업 루트 혈청: 라운드가 시작될 때마다 HP 회복 */
-    if(P.singHeal&&!E.noHeal&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(P.singHeal,P.maxHp-P.hp);P.hp+=h;HG(P,h);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 혈청 · HP +${h}`}
+    if(P.singHeal&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(P.singHeal,P.maxHp-P.hp);P.hp+=h;HG(P,h);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 혈청 · HP +${h}`}
     C.ePlan=aiPlan(C);
     if(E.stunRound===C.round){E.stunned=true;for(const c of C.ePlan)if(c.next){E.forceNext=c.next;break}C.ePlan=[];C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 흐트러짐 · 이번 라운드 기절 (행동 불가 · 회피 0)`}else{E.stunned=false}
     /* 적 특성: 무리(공격 카드 한 장 더), 재생(HP 3 회복) */
@@ -1806,7 +1805,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(c.needLow&&B.hp>B.maxHp*CFG.raven.low){L('sys',`${A.name} · ${c.n} · 상대 HP가 ${Math.round(CFG.raven.low*100)}% 이하여야 쓸 수 있다 · 불발`);return}
     if(c.t==='buff'&&(c.heal||c.passNext||c.debuffHit||c.cleanseRand)){
       if(c.cleanseRand){const ks=['bleed','rupture','burn','flame'].filter(k=>(A[k]||0)>0);if(ks.length){const k=ks[d(ks.length)-1],n0=A[k];A[k]=Math.max(0,n0-c.cleanseRand);L('kw',`  ${A.name} · ${c.n} · ${D.keywords[k].n} ${n0} → ${A[k]}`)}}
-      if(c.heal&&A.isP&&B.noHeal)L('sys',`${A.name} · ${c.n} · 치유 봉쇄 · ${B.name} 앞에서는 회복이 듣지 않는다`);else if(c.heal){const h=Math.min(c.heal,A.maxHp-A.hp);A.hp+=h;HG(A,h);L('kw',`${A.name} · ${c.n} · HP +${h}`)}
+      if(c.heal){const h=Math.min(c.heal,A.maxHp-A.hp);A.hp+=h;HG(A,h);L('kw',`${A.name} · ${c.n} · HP +${h}`)}
       if(c.passNext){A.passHitNext=(A.passHitNext||0)+c.passNext;L('kw',`  ${A.name} · 다음 라운드 명중 ${sg(c.passNext)}`)}
       if(c.debuffHit){B.passHitNext=(B.passHitNext||0)+c.debuffHit;L('kw',`  ${B.name} · 다음 라운드 명중 ${sg(c.debuffHit)} (1라운드)`)}
     }
@@ -1899,7 +1898,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.breathDice&&A.breath>0){dmg+=A.breath;pnote+=` 골단 · 호흡 ${A.breath} 가산`}
       /* 뒤틀린 책장: 도박 카드 (주사위 한 번, 맞으면 큰 피해) */
       if(c.gamble){const g=c.gamble,r=d(g.die),win=g.win.includes(r);if(g.keep){if(win)dmg=g.dmg;note+=` 1d${g.die} ${r}${win?` 사의 경계 · 피해 ${g.dmg}`:''}`}else{dmg=win?g.dmg:g.lose;rolls.length=0;rolls.push(r);note+=` 1d${g.die} ${r}${win?' 대박':''}`}
-        if(win&&g.heal&&!(A.isP&&B.noHeal)){const h=Math.min(g.heal,A.maxHp-A.hp);A.hp+=h;note+=` HP+${h}`}
+        if(win&&g.heal){const h=Math.min(g.heal,A.maxHp-A.hp);A.hp+=h;note+=` HP+${h}`}
         if(!win&&g.self){A.hp=Math.max(1,A.hp-g.self);note+=` 반동 −${g.self}`}}
       if(gr&&gr.n)note+=` 등급${gr.n}(피해+${gr.b})`;
       note+=pnote;
@@ -1941,7 +1940,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if((A.sink||0)>=CFG.sink.per){const x=Math.floor(A.sink/CFG.sink.per)*CFG.sink.dmg;dmg=Math.max(1,dmg-x);note+=` 침잠−${x}`}
       if(A.wx&&A.wx.mark){B.mk=(B.mk||0)+1;if(B.mk>=A.wx.mark.need){dmg*=2;B.mk=0;note+=' 표적×2'}}
       /* 중지 패시브 되갚음: 맞을 때마다 1 (최대 5), 다음 적중 피해 +2×스택 */
-      if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP&&!B.noHeal?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
+      if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
       if(A.isP&&A.angry>0&&dmg>0){dmg+=A.angry;note+=` 분노+${A.angry}`;A.angry=0}
       if(A.wx&&A.wx.grudge&&A.grudge>0){const x=A.grudge*A.wx.grudge;dmg+=x;note+=` ${A.wx.grudgeN||'원한'}+${x}`;A.grudge=0}
       if(A.wx&&A.wx.crush&&A.crRound!==C.round){A.crRound=C.round;dmg+=A.wx.crush;note+=` ${A.wx.crushN||'짓누름'}+${A.wx.crush}`}
