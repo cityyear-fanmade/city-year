@@ -221,6 +221,19 @@ export const CFG = {
   /* H사 홍원 가주 후보: 가문의 암투(famAt년차 이후 4사건) → 1막 후반 가주 후보 지명(pickAt) · 흑수 한 쌍 선택 → 다른 후보 5명(rivalGap년 간격) → 2막 초(elderFrom~) 철함사의 소요(선황충) → 홍루 */
   hw: {famAt: [1, 5, 8, 12, 15, 19, 23, 26, 29, 32], pickAt: 34, rivalGap: 3, elderFrom: 58, finalGap: 2, hostHp: 20, hostMind: -8, hostLight: 1,
     pairs: [['rat', 'ox'], ['tiger', 'rabbit'], ['dragon', 'snake'], ['horse', 'goat'], ['monkey', 'rooster'], ['dog', 'pig']]},
+  /* 루트 전용 무기(R사 복제 단검 · H사 홍원의 장도): 루트 이정표마다 단계가 오른다. lv 배열의 인덱스가 단계이고 H사 3단계는 host/free 두 갈래 */
+  routeWeapon: {
+    rb: {id: 'w_clone', lv: [
+      {n: '복제 단검', fx: {atk: 3, eva: 2}, dice: [2, 4], e: '공+3 · 회피+2 · 피해 2d4 (부화장에서 쥐여 준 단검)'},
+      {n: '번호 없는 단검', fx: {atk: 5, eva: 2}, dice: [2, 5], e: '공+5 · 회피+2 · 피해 2d5'},
+      {n: '번호 없는 단검', fx: {atk: 5, eva: 4}, dice: [2, 5], wx: {hitBleed: 1}, e: '공+5 · 회피+4 · 피해 2d5 · 적중 시 출혈 +1'},
+      {n: '존재의 단검', fx: {atk: 8, eva: 4}, dice: [2, 6], wx: {hitBleed: 1, finish: {at: 0.3, dmg: 5}}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 출혈 +1 · 상대 HP 30% 이하면 피해 +5'}]},
+    hw: {id: 'w_hongwon', lv: [
+      {n: '홍원의 장도', fx: {atk: 3, eva: 2}, dice: [2, 4], e: '공+3 · 회피+2 · 피해 2d4 (가문의 의례용 장도)'},
+      {n: '후보의 장도', fx: {atk: 5, eva: 2}, dice: [2, 5], e: '공+5 · 회피+2 · 피해 2d5'},
+      {n: '후보의 장도', fx: {atk: 5, eva: 4}, dice: [2, 5], wx: {hitInk: 1}, e: '공+5 · 회피+4 · 피해 2d5 · 적중 시 흑수 +1'}],
+      host: {n: '가주의 장도', fx: {atk: 8, eva: 4}, dice: [2, 6], wx: {hitInk: 1, lightUp: 1}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 흑수 +1 · 전투 시작 빛 +1'},
+      free: {n: '가주의 장도', fx: {atk: 5, eva: 7}, dice: [2, 6], wx: {hitInk: 1, inkCap: 4}, e: '공+5 · 회피+7 · 피해 2d6 · 적중 시 흑수 +1 · 흑수 스택 한도 +4'}}},
   rb: {total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, team: [[30, '토끼팀'], [60, '순록팀'], [90, '코뿔소팀'], [100, '까마귀팀']], foes: {'까마귀팀': 'rh2', '코뿔소팀': 'rh3', '순록팀': 'rh4', '토끼팀': 'rh5'}, headFrom: 64, headGap: 1, bossGap: 3, head: ['baral'], boss: 'rcorp_boss', xp: 4, trial: {baral: {hp: 0.75, atk: -1}, zena: {hp: 0.75, atk: -1}}},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},

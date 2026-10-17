@@ -129,7 +129,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 히든 직업 전용 무기: 출생 무기는 보관함으로 */
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
-    if(o.gear)equip(ch,Object.assign({grade:5},o.gear));
+    if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e}}
     /* E.G.O 발현자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=CFG.mind.max+(s.mindMax||0);license(ch);ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
@@ -597,10 +597,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           for(const id of ['zp_'+ka,'zp_'+kb,'hc_6']){ch.deck.push(id);chips.push('흑수 카드 · '+D.cards[id].n)}
           while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
           r.rivals=Z.pairs.map((_,i)=>i).filter(i=>i!==pi).map(i=>'hr_'+i);r.rv=0;r.cnext=y+Z.rivalGap;
-          (ch.relics=ch.relics||[]).push('가주 후보 · 흑수 '+(D.cards['zp_'+ka].n.replace('흑수 · ',''))+'·'+(D.cards['zp_'+kb].n.replace('흑수 · ','')));chips.push('가주 후보가 되었다')}
+          routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('가주 후보 · 흑수 '+(D.cards['zp_'+ka].n.replace('흑수 · ',''))+'·'+(D.cards['zp_'+kb].n.replace('흑수 · ','')));chips.push('가주 후보가 되었다')}
         else if(k==='rival'){ch.purge=r.rivals[r.rv];r.rv++;r.cnext=y+Z.rivalGap}
-        else if(k==='host'){r.shrine=1;r.host=1;r.fnext=y+Z.finalGap;s.maxHp+=Z.hostHp;ch.hp+=Z.hostHp;s.mindMax=(s.mindMax||0)+Z.hostMind;ch.mind=Math.min(ch.mind,mindMax(ch));(ch.relics=ch.relics||[]).push('선황충');chips.push(`선황충 · 최대 HP +${Z.hostHp} · 최대 정신력 ${Z.hostMind} · 전투 시작 빛 +${Z.hostLight}`)}
-        else if(k==='refuse'){r.shrine=1;ch.purge='hw_elder'}
+        else if(k==='host'){r.shrine=1;r.host=1;r.fnext=y+Z.finalGap;s.maxHp+=Z.hostHp;ch.hp+=Z.hostHp;s.mindMax=(s.mindMax||0)+Z.hostMind;ch.mind=Math.min(ch.mind,mindMax(ch));routeWeaponUp(ch,'hw','host',chips);(ch.relics=ch.relics||[]).push('선황충');chips.push(`선황충 · 최대 HP +${Z.hostHp} · 최대 정신력 ${Z.hostMind} · 전투 시작 빛 +${Z.hostLight}`)}
+        else if(k==='refuse'){r.shrine=1;ch.purge='hw_elder';routeWeaponUp(ch,'hw','free',chips)}
         else if(k==='final'){r.finalSeen=1;ch.purge='hongru'}}}
     if(fx.giri){const k=fx.giri,fl=ch.flags;
       if(k==='start'){fl.giri=1;(ch.relics=ch.relics||[]).push('원한의 책 · 찢어낸 장부 세 장');chips.push('의리 순례 · 장부의 첫 이름을 찾아간다')}
@@ -1006,6 +1006,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!r.shrine)return y>=Z.elderFrom?R.shrine:null;
     if(!r.finalSeen&&(r.host||r.elderDone)&&y>=r.fnext)return R.final;
     return null;
+  }
+  /* 루트 전용 무기 강화: kind rb|hw, key = 단계 인덱스 또는 'host'|'free'. 끼고 있거나 보관함에 있는 같은 id의 무기를 새 단계로 바꾼다 */
+  function routeWeaponUp(ch,kind,key,chips){
+    const W=CFG.routeWeapon[kind],g=W[key]||W.lv[key];if(!g)return;
+    const it={id:W.id,slot:'weapon',grade:5,lvl:typeof key==='number'?key:9,n:g.n,e:g.e,fx:Object.assign({},g.fx),wx:Object.assign({dice:g.dice},g.wx||{})};
+    const old=ch.gear.weapon&&ch.gear.weapon.id===W.id?ch.gear.weapon:null;
+    if(old){equip(ch,carryTune(old,it));ch.stash=(ch.stash||[]).filter(x=>x!==old)}
+    else{const st=ch.stash||[],i=st.findIndex(x=>x.id===W.id);if(i<0)return;st[i]=carryTune(st[i],it)}
+    chips&&chips.push(`전용 무기 강화 · ${g.n} (${g.e})`);
   }
   function rbFlee(ch,chips){
     const r=ch.rb,Z=CFG.rb;if(!r||r.fled)return;
@@ -1428,8 +1437,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         r.n++;const up=gainXp(ch,Z.xp);chips.push(`부화장 ${r.n}/${Z.total} · 경험치 +${Z.xp}`);if(up)chips.push('레벨 업 · Lv '+ch.lv);
         return {chips,title:null,tlabel:null,newly:false,colorRoll:null,unlock:null,hidden:false,endText:f0.endText||null,last:G.year>=lastYear(G)};
       }
-      if(f0.rbLast&&ch.rb){ch.rb.n++;chips.push('부화장 13연전을 끝냈다')}
-      if(f0.rbBoss&&ch.rb){ch.rb.bossDone=1;chips.push('R사의 추격이 끝났다')}
+      if(f0.rbLast&&ch.rb){ch.rb.n++;chips.push('부화장 13연전을 끝냈다');routeWeaponUp(ch,'rb',1,chips)}
+      if(f0.rb&&ch.rb&&f0.hidden&&!f0.rbBoss&&ch.rb.chasers&&ch.rb.chasers.every(id=>id===C.id||ch.beaten.includes(id)))routeWeaponUp(ch,'rb',2,chips)
+      if(f0.rbBoss&&ch.rb){ch.rb.bossDone=1;chips.push('R사의 추격이 끝났다');routeWeaponUp(ch,'rb',3,chips)}
+      if(f0.hw&&ch.hw&&C.id.startsWith('hr_')&&ch.hw.rivals&&ch.hw.rivals.every(id=>id===C.id||ch.beaten.includes(id)))routeWeaponUp(ch,'hw',2,chips)
       if(C.id===CFG.endless.finalNext&&ch.rb&&ch.rb.headSeen){ch.rb.done=1;chips.push('금기의 끝')}
       if(f0.hwElder&&ch.hw){ch.hw.elderDone=1;ch.hw.fnext=(ch.year||0)+CFG.hw.finalGap}
       if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리')}}
@@ -1549,6 +1560,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ms=mindStat(ch);if(ms){P.atk+=ms;P.eva+=ms;P.spd+=ms;P.maxHp+=ms;P.hp+=ms;mindNote.push(`정신력 ${ch.mind} · 모든 능력치 +${ms}`)}
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
+    if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
     P.inkIds=ch.hw&&ch.hw.picked?CFG.hw.pairs[ch.hw.pair].map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
     {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;P.chargeHit=CH.hit||0;P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}
@@ -1731,7 +1743,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.distorted&&to!=='s')continue;
       const X=to==='s'?A:D_;
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
-      X[k]=Math.min(k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?CFG.burn.max:k==='ink'?CFG.ink.cap:k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:CFG.stackCap,X[k]+n);
+      X[k]=Math.min(k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?CFG.burn.max:k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:CFG.stackCap,X[k]+n);
       L('kw',`  ${X.name}에게 ${D.keywords[k].n} +${n} (지금 ${X[k]})`);
       if(k==='bleed'&&to!=='s'&&A.kuro)addCloud(A,L);
     }
@@ -1857,6 +1869,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.ring&&A.work>0){dmg+=CFG.ring.dmg*A.work;note+=` 작품 ${A.work}+${CFG.ring.dmg*A.work}`;if(A.work>=CFG.ring.max){dmg=Math.floor(dmg*CFG.ring.finish);A.work=CFG.ring.after;note+=` 완성×${CFG.ring.finish}`}}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
+      if(A.wx&&A.wx.finish&&B.hp<=B.maxHp*A.wx.finish.at){dmg+=A.wx.finish.dmg;note+=` 마무리+${A.wx.finish.dmg}`}
       if(A.triDmg){dmg+=A.triDmg;note+=` 건+${A.triDmg}`}
       if(A.hungerUse>0){dmg+=A.hungerUse;note+=` 굶주림+${A.hungerUse}`;A.hungerUse=0}
       if(c.bleedDmg&&B.bleed>0){const x=B.bleed*c.bleedDmg;dmg+=x;note+=` 출혈 ${B.bleed}×${c.bleedDmg}+${x}`}
@@ -1906,6 +1919,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
+      if(A.wx&&A.wx.hitBleed&&B.hp>0){B.bleed=Math.min(CFG.stackCap,B.bleed+A.wx.hitBleed);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 출혈 +${A.wx.hitBleed} (지금 ${B.bleed})`)}
+      if(A.wx&&A.wx.hitInk&&B.hp>0){B.ink=Math.min(CFG.ink.cap+(A.wx.inkCap||0),(B.ink||0)+A.wx.hitInk);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 흑수 +${A.wx.hitInk} (지금 ${B.ink})`)}
       if(c.verdict&&B.hp<=0&&A.rv)L('kw','처리 완료. 흔적은 남지 않았다.');
       if(c.erase&&B.hp>0){B.lightUp=0;B.lightNext=0;const ks=['bleed','rupture','burn','flame','nail','sink'].filter(k=>(B[k]||0)>0);for(const k of ks)B[k]=Math.min(CFG.stackCap,Math.floor(B[k]*1.5));L('kw',`  ${A.name} · ${c.n} · ${B.name}이(가) 아껴 둔 빛이 증발했다${ks.length?' · '+ks.map(k=>`${D.keywords[k].n} ${B[k]}`).join(' · ')+' (×1.5)':''}`)}
       if(A.rv&&B.hp>0){const k=CFG.raven.buffs.find(k=>(B[k]||0)>0);if(k){const nm={shield:'보호막',breath:'호흡',charge:'충전',cloud:'구름',passHit:'명중 보정'}[k];if(k==='passHit')B.passHit=0;else B[k]--;L('kw',`  ${A.name} · 까마귀의 눈 · ${B.name}의 ${nm} 1 말소`)}}
