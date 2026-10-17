@@ -1455,7 +1455,7 @@ export function startUI(E,app){
     UI.stock=[];saveGame({st});UI.screen='event';render();
   }
   /* H사 홍원 가문 안에 사는 동안은 공방 거리 대신 홍원의 저잣거리 */
-  const hwHome=()=>!!(G&&G.ch&&G.ch.hw&&!G.ch.hw.out);
+  const hwHome=()=>!!(G&&G.ch&&G.ch.hw&&!G.ch.hw.out&&!G.ch.hw.done);
   const HWSHOP=[['저잣거리 대장간','홍원 성문 안쪽 골목의 대장간이다. 가문 이름을 대면 값을 속이지 않는다.'],['홍원 장인방','가문에 칼을 대는 장인들이 모여 사는 방이다. 후보라는 이름이 문을 연다.'],['가문의 보물고','선대가 모아 둔 물건을 푸는 방이다. 가주의 허락 없이는 열리지 않는다.']];
   function vShopAsk(){
     const nb=(G.year-1)+CFG.shop.every+1,hh=hwHome();
