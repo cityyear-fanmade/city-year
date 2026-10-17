@@ -342,7 +342,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const WF=CFG.workshopFixer;
   const isWs=ch=>!!ch.aff&&ch.aff.type==='workshop';
   const priceOf=(ch,id)=>{const p=D.items[id].price;return isWs(ch)?Math.round(p*(1-WF.discount)):p};
-  const sellValue=it=>Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
+  const sellValue=it=>(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
   function sellStash(ch,i){const st=ch.stash||[];if(!isWs(ch)||!st[i])return 0;const v=sellValue(st[i]);st.splice(i,1);ch.money+=v;return v}
   /* 암시장: 영구 강화(한 번만)와 특수 장비 */
   function canBuySpecial(ch,id){
@@ -1183,9 +1183,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 공방 장비 정비: 장착 중인 장비 1개에 공격 또는 회피 +1을 시도한다 (성공 chance%, 시도는 성패와 상관없이 소모) */
   const tuneCost=g=>CFG.shop.tune.base+CFG.shop.tune.step*(g.tries||0);
+  /* 정비 최대 횟수: 공방 해결사는 더 많이 할 수 있다 */
+  const tuneMax=ch=>isWs(ch)?CFG.shop.tune.maxWs:CFG.shop.tune.max;
   function tuneGear(ch,slot,stat){
     const T=CFG.shop.tune,g=ch.gear[slot];
-    if(!g||ch.distForm||!['atk','eva'].includes(stat)||(g.tries||0)>=T.max||ch.money<tuneCost(g))return null;
+    if(!g||ch.distForm||!['atk','eva'].includes(stat)||(g.tries||0)>=tuneMax(ch)||ch.money<tuneCost(g))return null;
     const cost=tuneCost(g);ch.money-=cost;
     const ng=structuredClone(g);ng.tries=(g.tries||0)+1;
     const ok=d(100)<=T.chance;
@@ -1491,6 +1493,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리')}}
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
+    {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     if(ch.egoNote){chips.push(ch.egoNote);ch.egoNote=null}
     if(ch.bloomNote){chips.push(ch.bloomNote);ch.bloomNote=null}
@@ -2179,6 +2182,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,extraOut,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
