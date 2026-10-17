@@ -541,13 +541,13 @@ export function startUI(E,app){
         return `<button class="btn" data-a="buy" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.isWs(ch)?`<s class="dim">${E.money(it.price)}</s> `:''}${E.money(E.priceOf(ch,id))}</span></span>
           <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${D.slots[it.slot]} · ${note}</span></button>`;
       }).join('');
-      return `<div class="panel stack" style="gap:8px${open?'':';opacity:.6'}"><div class="row between"><b class="serif">${w.n}</b><span class="chip${open?'':' dim'}">${w.grade}등급${open?'':' · 잠김'}</span></div>
-        <p class="small dim">${w.t}${open?'':' 들어가려면 '+need(w.grade)+'.'}</p>${open?`<div class="stack">${items}</div>`:''}</div>`;
+      return `<div class="panel stack" style="gap:8px${open?'':';opacity:.6'}"><div class="row between"><b class="serif">${hwHome()?HWSHOP[w.grade-1][0]:w.n}</b><span class="chip${open?'':' dim'}">${w.grade}등급${open?'':' · 잠김'}</span></div>
+        <p class="small dim">${hwHome()?HWSHOP[w.grade-1][1]:w.t}${open?'':' 들어가려면 '+need(w.grade)+'.'}</p>${open?`<div class="stack">${items}</div>`:''}</div>`;
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
-    return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">공방 · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
+    return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">${hwHome()?'홍원의 저잣거리':'공방'} · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
       <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vBlack()}${vSell()}${vSwapCard()}${vTune()}
-      <button class="btn primary" data-a="unshop">공방을 나간다</button>`;
+      <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':'공방을 나간다'}</button>`;
   }
   /* 공방 해결사: 보관함 장비 판매 */
   function vSell(){
@@ -1446,18 +1446,21 @@ export function startUI(E,app){
     if(st.type==='omen')UI.omen=st;
     else if(st.type==='fight'){UI.fight=st.enemy;UI.enc=st.enc}else UI.ev=st.ev;
     /* 공방 거리: 1년차부터 3년마다 들를지 묻는다. 들러도 해는 넘어가지 않는다 */
-    if((G.year-1)%CFG.shop.every===0&&!shopDone&&!G.ch.rb&&!G.ch.hw){
-      UI.stock=stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
+    if((G.year-1)%CFG.shop.every===0&&!shopDone&&!G.ch.rb){
+      UI.stock=hwHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
       UI.bought=null;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.rested=null;UI.healed=0;UI.healMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
     }
     UI.stock=[];saveGame({st});UI.screen='event';render();
   }
+  /* H사 홍원 가문 안에 사는 동안은 공방 거리 대신 홍원의 저잣거리 */
+  const hwHome=()=>!!(G&&G.ch&&G.ch.hw&&!G.ch.hw.out);
+  const HWSHOP=[['저잣거리 대장간','홍원 성문 안쪽 골목의 대장간이다. 가문 이름을 대면 값을 속이지 않는다.'],['홍원 장인방','가문에 칼을 대는 장인들이 모여 사는 방이다. 후보라는 이름이 문을 연다.'],['가문의 보물고','선대가 모아 둔 물건을 푸는 방이다. 가주의 허락 없이는 열리지 않는다.']];
   function vShopAsk(){
-    const nb=(G.year-1)+CFG.shop.every+1;
-    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · 공방 거리</div><h2>공방 거리를 지난다</h2>
-      <p class="lead">장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
+    const nb=(G.year-1)+CFG.shop.every+1,hh=hwHome();
+    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · ${hh?'홍원의 저잣거리':'공방 거리'}</div><h2>${hh?'홍원의 저잣거리를 지난다':'공방 거리를 지난다'}</h2>
+      <p class="lead">${hh?'붉은 대문 안쪽에 가문의 저잣거리가 있다. 장인과 상인은 모두 가문의 이름 아래 있다. 들러도 한 해가 지나가지는 않는다.':'장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.'}${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
       <p class="small dim">다음 기회는 ${Math.min(nb,CFG.years)}년차.</p>
       ${UI.broker?`<div class="check" style="border-color:var(--gold)"><b>${esc(G.ch.office.name)}</b> · 일감을 알선했다 · ${UI.broker.kind==='gear'?'의수 ':'카드 '}<b>${esc(UI.broker.n)}</b>${UI.broker.locked?' (덱 고정이라 돈으로 받았다)':''}</div>`:''}</div>
       ${UI.rested?`<p class="good small">${UI.rested}</p>`:''}
