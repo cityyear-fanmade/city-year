@@ -1562,7 +1562,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',hunger:ch.flags&&ch.flags.hunger?0:null,name:ch.name||T.you,color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?corpType(ch).heal+ch.corp.up*corpType(ch).per:0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+ch.corp.up*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singUp:ch.corp?ch.corp.up||0:0,singHeal:corpType(ch)&&corpType(ch).heal?corpType(ch).heal+ch.corp.up*corpType(ch).per:0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+ch.corp.up*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     P.ample=ch.ample||0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;
@@ -1667,7 +1667,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 라운드마다 HP 회복 (전리품·장비 효과) */
     if(P.regen>0&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(P.regen,P.maxHp-P.hp);P.hp+=h;HG(P,h);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 회복 · HP +${h}`}
     /* 기업 루트 혈청: 라운드가 시작될 때마다 HP 회복 */
-    if(P.singHeal&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(P.singHeal,P.maxHp-P.hp);P.hp+=h;HG(P,h);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 혈청 · HP +${h}`}
+    if(P.singHeal&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(Math.max(P.singHeal,Math.floor(P.maxHp*(CFG.corp.types.serum.pct+P.singUp*CFG.corp.types.serum.pctPer))),P.maxHp-P.hp);P.hp+=h;HG(P,h);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 혈청 · HP +${h}`}
     C.ePlan=aiPlan(C);
     if(E.stunRound===C.round){E.stunned=true;for(const c of C.ePlan)if(c.next){E.forceNext=c.next;break}C.ePlan=[];C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 흐트러짐 · 이번 라운드 기절 (행동 불가 · 회피 0)`}else{E.stunned=false}
     /* 적 특성: 무리(공격 카드 한 장 더), 재생(HP 3 회복) */
@@ -1782,8 +1782,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.distorted&&to!=='s')continue;
       const X=to==='s'?A:D_;
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
-      X[k]=Math.min(k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?CFG.burn.max:k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:CFG.stackCap,X[k]+n);
-      L('kw',`  ${X.name}에게 ${D.keywords[k].n} +${n} (지금 ${X[k]})`);
+      const cap_=k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?CFG.burn.max:k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:CFG.stackCap,b4_=X[k]||0;
+      X[k]=Math.min(cap_,b4_+n);
+      L('kw',`  ${X.name}에게 ${D.keywords[k].n} +${n} (지금 ${X[k]}/${cap_}${b4_+n>cap_?` · 최대치라 실제 +${X[k]-b4_}`:''})`);
       if(k==='bleed'&&to!=='s'&&A.kuro)addCloud(A,L);
     }
   }
@@ -2118,16 +2119,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function hpLoss(C,X,x,L){
     if(X.isP&&X.ample>0&&x>=X.hp&&!X.distorted){
       const K=CFG.ample;let h=X.hp-x,u=0;
-      while(X.ample>0&&h<=0){X.ample--;u++;h+=K.heal}
+      const ah_=Math.floor(X.maxHp*K.healPct);while(X.ample>0&&h<=0){X.ample--;u++;h+=ah_}
       h=Math.min(h,X.maxHp);X.hp=Math.max(0,h);
-      L('amp',`${X.name} · ${K.name} ${u}개 사용 (치명적인 피해 ${x} · 회복 ${K.heal*u}에서 깎여 HP ${X.hp}, 남은 ${X.ample}개)`);
+      L('amp',`${X.name} · ${K.name} ${u}개 사용 (치명적인 피해 ${x} · 회복 ${ah_*u}에서 깎여 HP ${X.hp}, 남은 ${X.ample}개)`);
       return;
     }
     X.hp=Math.max(0,X.hp-x);
   }
   function ampUse(C,L){
     const P=C.P,K=CFG.ample;if(!(P.ample>0)||P.hp<=0||P.hp>Math.floor(P.maxHp*K.belowPct)||C.E.hp<=0)return;
-    const h=Math.min(K.heal,P.maxHp-P.hp);P.hp+=h;P.ample--;L('amp',`${P.name} · ${K.name} 사용 · HP +${h} · 지금 ${P.hp}/${P.maxHp} (남은 ${P.ample}개)`);
+    const h=Math.min(Math.floor(P.maxHp*K.healPct),P.maxHp-P.hp);P.hp+=h;P.ample--;L('amp',`${P.name} · ${K.name} 사용 · HP +${h} · 지금 ${P.hp}/${P.maxHp} (남은 ${P.ample}개)`);
   }
   /* 자동 전투 (시뮬): 카드 고르는 순서도 행동 순서를 따른다 */
   function fightAuto(ch,id){

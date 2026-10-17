@@ -21,7 +21,7 @@ export const CFG = {
   /* 치유소: 치료를 받을 때마다 값이 step씩 오른다 (한 판 전체 누적, 방문마다 최대 max번) */
   clinic: {price: 500, step: 500, hp: 30, max: 3},
   /* 암시장 K사 엠플: 전투 중 HP가 최대 HP의 belowPct 이하가 되면 자동으로 heal 회복(전투당 사용 횟수 제한 없음, 한 번에 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
-  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, belowPct: 0.2, heal: 50},
+  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, belowPct: 0.2, healPct: 0.5},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
   orderBonusLight: 1, catchupBonus: 5, spdMul: 2, spdHit: {per: 5, max: 4}, gapFirst: 30, firstHit: 10,
@@ -107,7 +107,7 @@ export const CFG = {
   corp: {from: 20, chance: 20, devMax: 2, devGap: 2, devChance: 60, labGap: 1, labChance: 80, upMax: 3, forbMax: 8, chain: ['claw', 'arbiter'],
     types: {
       warp: {n: '워프', e: '속도 +4 · 사건 판정 +3 · 전투 처음 3라운드 항상 선공 (강화마다 속도 +2 · 판정 +2 · 선공 1라운드 더)', base: {spd: 4, check: 3}, per: {spd: 2, check: 2}, lead: 3, leadPer: 1},
-      serum: {n: '혈청', e: '전투 중 매 라운드 시작에 HP 5 회복', heal: 5, per: 0},
+      serum: {n: '혈청', e: '전투 중 매 라운드 시작에 HP 5 또는 최대 HP의 3% 중 큰 쪽 회복 (강화마다 +1%)', heal: 5, per: 0, pct: 0.03, pctPer: 0.01},
       moon: {n: '월광석', e: '최대 정신력 +8 · 해마다 정신력 +2 · 회피 실패로 정신력이 깎이지 않는다 · 정신력 구간 보정 ×1.6 (강화마다 최대 정신력 +2 · 해마다 +1 · 보정 +0.2배)', base: {mindMax: 8}, per: {mindMax: 2}, year: 2, yearPer: 1, tier: 1.6, tierPer: 0.2}
     },
     trial: {claw: {hp: 1, atk: 0}, arbiter: {hp: 1, atk: 0}}, grow: {maxHp: 3}, up: {maxHp: 8, atk: 2}, forb: {maxHp: 5, atk: 2, eva: 1}, clear: {maxHp: 15, atk: 3, eva: 2}},
