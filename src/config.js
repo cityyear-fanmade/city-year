@@ -216,8 +216,8 @@ export const CFG = {
   /* R사 부화장 복제체 루트: 0년차 13연전 → 일과 생활(전용 인연) → 1막 후반(fleeAt~) R사 추격대 4번(chaseGap년 간격) → 2막 초 숙청 집행관(R사의 끝) → 2막 중반(headFrom년차~) 정비 한 번 → 금기 위반 확인 즉시 발톱 바랄 → 조율자 제나 → 엔딩 */
   /* 까마귀팀 패시브 '까마귀의 눈'(전용 카드 rv_*): 적중마다 상대의 버프 1개를 지운다 · 6장: 버프 없는 상대에게 명중 +10 · 8장: 상대 HP 50% 이하면 주사위마다 +1 · 10장: 상대 HP 30% 이하면 방어 자세·회피 봉쇄 */
   raven: {tiers: [6, 8, 10], hit: 10, low: 0.5, exec: 0.3, buffs: ['shield', 'breath', 'charge', 'cloud', 'passHit']},
-  /* 흑수(黑水): 상대에게 쌓는 스택. 라운드가 끝날 때 스택당 dmg 피해(내가 받으면 dmgMe), 그 뒤 스택은 keep 비율만 남는다. 최대 cap */
-  ink: {cap: 12, dmg: 2, dmgMe: 1, keep: 0.5},
+  /* 흑수(黑獸): 상대에게 쌓는 스택. follow: 부하 흑수가 내 공격 뒤에 거드는 추가타(데려온 순서대로 한 사람씩) 피해·흑수 스택. 라운드가 끝날 때 스택당 dmg 피해(내가 받으면 dmgMe), 그 뒤 스택은 keep 비율만 남는다. 최대 cap */
+  ink: {cap: 12, dmg: 2, dmgMe: 1, keep: 0.5, follow: 3, followInk: 1},
   /* H사 홍원 가주 후보: 1막 초 홍원 가문에서 보낸다(가문 사건 homeEvents개) → missionAt년차 가주의 명으로 영생의 단서를 찾아 도시로 나선다(단서 4곳, clueGap년 간격) → 홍원으로 귀환, 남은 가문 사건 → 2막 시작(pickAt)에 가주 후보 지명 · 흑수 한 쌍 선택 → 다른 후보 5명(rivalGap년 간격) → 2막 중반(elderFrom~) 철함사의 소요(선황충) → 홍루 */
   hw: {famAt: [1, 5, 9, 14, 19, 45, 45, 45, 45, 45], homeEvents: 5, missionAt: 22, clueGap: 5, pickAt: 56, rivalGap: 1, elderFrom: 61, finalGap: 1, clueHp: 3, hostHp: 20, hostMind: -8, hostLight: 1,
     pairs: [['rat', 'ox'], ['tiger', 'rabbit'], ['dragon', 'snake'], ['horse', 'goat'], ['monkey', 'rooster'], ['dog', 'pig']]},
