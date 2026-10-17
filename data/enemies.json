@@ -341,7 +341,8 @@
     "hp": 1.66,
     "atk": 2,
     "eva": 1
-   }
+   },
+   "noHeal": true
   },
   "library": {
    "n": "도서관의 사서",
@@ -1290,7 +1291,8 @@
    "tier": "boss",
    "hard": {
     "hp": 5.1
-   }
+   },
+   "noHeal": true
   },
   "freischutz": {
    "n": "마탄의 사수",
@@ -4199,7 +4201,8 @@
     "hp": 1.66,
     "atk": 2,
     "eva": 1
-   }
+   },
+   "noHeal": true
   },
   "pil1": {
    "n": "원한의 장부 · 첫 페이지",
@@ -5612,7 +5615,8 @@
     },
     "e": "HP+20 · 공+2 · 회피+2 · 판정+5 (이름 없는 번호표)",
     "title": "번호 없는 자"
-   }
+   },
+   "noHeal": true
   },
   "rh5": {
    "n": "제4무리 · 토끼팀 대장",
@@ -5821,7 +5825,8 @@
    },
    "hw": true,
    "hwFinal": true,
-   "zodiac10": true
+   "zodiac10": true,
+   "noHeal": true
   },
   "hw_agent": {
    "n": "가문의 대리인",
