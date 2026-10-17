@@ -579,7 +579,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(r){
         if(k==='start')chips.push(`부화장 ${Z.total}연전 · 한 판이 끝날 때마다 HP를 회복한다`);
         else if(k==='exit'){r.out=1;r.next=Math.max(y+1,Z.fleeAt+d(Z.fleeRand)-1);chips.push('부화장을 나왔다 · 금기의 기록은 아직 지워지지 않았다')}
-        else if(k==='flee'){r.fled=1;r.chain=Z.head.filter(id=>!ch.beaten.includes(id));chips.push('금기 위반이 확인되었다 · 머리의 사자가 곧바로 온다')}
+        else if(k==='flee'){r.fled=1;r.cnext=y+Z.chaseGap;chips.push('R사의 숙청 추격대가 풀렸다')}
+        else if(k==='prep'){r.prep=1;r.hAt=y+Z.headGap;if(fx.healAll){ch.hp=s.maxHp;ch.mind=mindMax(ch);chips.push('HP · 정신력 전부 회복')}if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}}
+        else if(k==='head'){r.headSeen=1;r.chain=Z.head.filter(id=>!ch.beaten.includes(id));chips.push('금기 위반이 확인되었다 · 머리의 사자가 곧바로 온다')}
         else if(k==='fight'){ch.purge=Z.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
@@ -893,13 +895,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 인연 루트: 혈귀는 혈귀 전용, 동부 외곽 출신은 외곽 전용, 그 밖에는 소속(사무소·협회·날개·손가락) */
   const FINGER_ROUTE={'엄지':'thumb','검지':'pointer','중지':'middle','약지':'ring'};
-  const bondRouteOf=ch=>ch.race==='hyeolgwi'?'hyeolgwi':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null);
+  const bondRouteOf=ch=>ch.race==='hyeolgwi'?'hyeolgwi':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null);
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
   function bondMeetEvent(ch){
     const B=D.bond;let rt=bondRouteOf(ch);
     /* 히든: 해결사 3급 이하라면 가끔 처음부터 2~1급 해결사인 상대를 만난다 */
-    if(rt&&rt!=='hyeolgwi'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
+    if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
     const R0=rt&&B&&B.routes[rt];
     if(!R0)return null;
     const vi=R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;
@@ -975,7 +977,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch,r=ch.rb,Z=CFG.rb;if(!r||!D.rbRoute)return null;
     /* 금기 위반이 확인되면 머리가 바로 보낸다: 발톱 → 조율자 (쉬지 않고 이어진다) */
     if(r.out&&r.chain&&r.chain.length){
-      const id=r.chain.shift();(G.met=G.met||[]).push(id);if(!r.chain.length)r.cnext=Math.max(G.year+Z.chaseGap,Z.chaseFrom);
+      const id=r.chain.shift();(G.met=G.met||[]).push(id);if(!r.chain.length)r.cnext=G.year+Z.bossGap;
       return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
     }
     if(r.out)return null;
@@ -986,12 +988,19 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function rbYear(G){
     const ch=G.ch,r=ch.rb,y=G.year,Z=CFG.rb,R=D.rbRoute;if(!r||!R||!r.out||r.done)return null;
     if(!r.fled)return y>=r.next?R.flee:null;
-    if((r.chain&&r.chain.length)||!(y>=r.cnext))return null;
-    if(r.chase>=Z.chasers.length&&Z.chasers.every(id=>ch.beaten.includes(id)))return r.bossSeen?null:R.boss;
-    if(r.chase<Z.chasers.length&&(r.chase===0||ch.beaten.includes(Z.chasers[r.chase-1]))){
-      const E_=R.chase;return r.hides>=Z.hides?Object.assign({},E_,{c:E_.c.slice(0,1)}):E_;
+    const beat=Z.chasers.every(id=>ch.beaten.includes(id));
+    if(!beat){
+      if(y<r.cnext)return null;
+      if(r.chase<Z.chasers.length&&(r.chase===0||ch.beaten.includes(Z.chasers[r.chase-1]))){
+        const E_=R.chase;return r.hides>=Z.hides?Object.assign({},E_,{c:E_.c.slice(0,1)}):E_;
+      }
+      return null;
     }
-    return null;
+    /* 2막 중반: 정비 한 번 → 7일의 금기(위반 확인 즉시 발톱·조율자) → 숙청 집행관 */
+    if(!r.prep)return y>=Z.headFrom?R.prep:null;
+    if(!r.headSeen)return y>=r.hAt?R.head:null;
+    if(r.chain&&r.chain.length)return null;
+    return !r.bossSeen&&y>=r.cnext?R.boss:null;
   }
   function giriRouteEvent(G){
     const ch=G.ch,y=G.year,R=D.giriRoute,Z=CFG.giri,fl=ch.flags;
@@ -1241,12 +1250,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch;
     if(topReady(ch))return {type:'event',ev:topEvent(ch)};
     if(examReady(ch)&&ch.examSkipYear!==G.year-1){const k=career(ch);return {type:'event',ev:(isFinger(ch)&&D.fingers[ch.aff.name].exam)||(CR[k]&&CR[k].exam)||D.promotionExam}}
+    {const rv=rbYear(G);if(rv)return {type:'event',ev:rv}}
     if(D.corp){const ce=corpEvent(G);if(ce)return {type:'event',ev:ce}}
     {const kh=kidHuntEvent(G);if(kh)return kh}
     {const bv=bondEvent(G);if(bv)return {type:'event',ev:bv}}
     {const es=bondEscortEvent(G);if(es)return {type:'event',ev:es}}
     {const dv=dailyEvent(G);if(dv)return {type:'event',ev:dv}}
-    {const rv=rbYear(G);if(rv)return {type:'event',ev:rv}}
     {const pe=pinkyEvent(G);if(pe)return {type:'event',ev:pe}}
     {const oe=oracleEvent(G);if(oe)return {type:'event',ev:oe}}
     {const se=eastScoutEvent(G);if(se)return {type:'event',ev:se}}
@@ -1462,7 +1471,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 보스별 난이도 보정(hard): 체력 배수, 공격·회피 가산 */
     const IM_=ch.infinite&&id===X_.final?(ch.infImp||0):0;
     const SI_=ch.infinite?Math.max(0,gradeRaw(ch.year||0)-X_.grades.length+1):0;
-    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:null,ehh0=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,SI_));
+    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||null,ehh0=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,SI_));
     const ehh=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0;
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
     const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:Math.max(1,e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});

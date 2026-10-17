@@ -142,7 +142,7 @@ export const CFG = {
     /* 뒤틀린 뒤: 성인이 된 아이가 있으면 gap년마다 chance%로 토벌 의뢰가 온다. 여럿이면 가장 강한 아이(등급)가 온다. 등급 = 20세 이후 2년마다 +1(최대 8) + 직업 가산 */
     hunt: {gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1, mul: 1.1, mulTop: 1.5, topLv: 8,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
-      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7}, spouseYears: 3, spouseJob: {office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},
+      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1}, spouseYears: 3, spouseJob: {rcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
   /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */
@@ -213,8 +213,8 @@ export const CFG = {
   bloom: {every: 3},
   /* 아무것도 없는 출발: chance% 확률로 운명이 강제되어 히든 출신 n개 중 하나를 고르게 된다 */
   blankFate: {chance: 30, n: 2},
-  /* R사 부화장 복제체 루트: 0년차 13연전 → 1막 후반(fleeAt~+fleeRand-1년차) 7일의 금기: 위반이 확인되면 머리의 발톱 → 조율자 연전 → 2막(chaseFrom년차~) 추격대 4번(chaseGap년 간격) → 숙청 집행관 */
-  rb: {total: 13, healPct: 0.5, fleeAt: 36, fleeRand: 5, chaseFrom: 56, chaseGap: 2, hides: 2, head: ['claw', 'arbiter'], chasers: ['rh1', 'rh2', 'rh3', 'rh4'], boss: 'rcorp_boss', xp: 4},
+  /* R사 부화장 복제체 루트: 0년차 13연전 → 일과 생활(전용 인연) → 1막 후반(fleeAt~) R사 추격대 4번(chaseGap년 간격) → 2막 중반(headFrom년차~) 정비 한 번 → 7일의 금기: 위반 확인 즉시 발톱 → 조율자 → 숙청 집행관 */
+  rb: {total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, chasers: ['rh1', 'rh2', 'rh3', 'rh4'], headFrom: 62, headGap: 1, bossGap: 3, head: ['claw', 'arbiter'], boss: 'rcorp_boss', xp: 4, trial: {claw: {hp: 0.75, atk: -1}, arbiter: {hp: 0.75, atk: -1}}},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},
   middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30], evaEff: [1, 1, 0.5, 0], evaDr: 0.5, drCap: 50, counter: 3, sinkHit: 0.5, cap: 10},
