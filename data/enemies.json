@@ -111,7 +111,8 @@
     "guard"
    ],
    "intro": "장부를 든 수금원이 앞을 막는다. 이 구역의 상납금은 아직 덜 걷혔다고 한다.",
-   "tier": "early"
+   "tier": "early",
+   "org": "finger"
   },
   "sentry": {
    "n": "날개 경비 기계",
@@ -126,7 +127,8 @@
     "guard"
    ],
    "intro": "담장 앞의 경비 기계가 붉은 눈을 켠다. 출입 허가가 확인되지 않았다는 안내가 반복된다.",
-   "tier": "early"
+   "tier": "early",
+   "org": "wing"
   },
   "bloodman": {
    "n": "피를 모으는 자",
@@ -175,7 +177,8 @@
     "guard"
    ],
    "intro": "조직의 행동대장이 장갑을 고쳐 낀다. 오늘 할 일 목록에 당신 이름이 있다.",
-   "tier": "mid"
+   "tier": "mid",
+   "org": "syn"
   },
   "hunter": {
    "n": "외곽 사냥꾼",
@@ -1113,7 +1116,9 @@
     "guard"
    ],
    "intro": "한때 같은 사무소 명패 아래 있던 얼굴이다. 이번 의뢰인은 그쪽에 더 많이 냈다.",
-   "tier": "mid"
+   "tier": "mid",
+   "org": "office",
+   "traitor": true
   },
   "cleanup": {
    "n": "날개 처리반",
@@ -1129,7 +1134,8 @@
     "guard"
    ],
    "intro": "회색 방호복의 처리반이 서류를 확인한다. 처리 대상 목록 맨 아래에 당신이 있다.",
-   "tier": "mid"
+   "tier": "mid",
+   "org": "wing"
   },
   "youngsters": {
    "n": "중지 막내들",
@@ -1145,7 +1151,8 @@
     "guard"
    ],
    "intro": "형님의 원수를 갚겠다는 막내들이다. 누가 원수인지는 별로 중요하지 않아 보인다.",
-   "tier": "mid"
+   "tier": "mid",
+   "org": "finger"
   },
   "porter": {
    "n": "뒤틀린 짐꾼",
@@ -1177,7 +1184,8 @@
     "guard"
    ],
    "intro": "협회 감찰관이 장부를 덮는다. 당신의 기록에서 고칠 부분을 찾았다고 한다.",
-   "tier": "late"
+   "tier": "late",
+   "org": "assoc"
   },
   "bountyhunter": {
    "n": "현상금 사냥꾼",
@@ -2257,7 +2265,8 @@
    ],
    "trait": "swarm",
    "tier": "mid",
-   "intro": "공방의 막내들이 망치를 들고 우르르 나온다."
+   "intro": "공방의 막내들이 망치를 들고 우르르 나온다.",
+   "org": "workshop"
   },
   "ob_b": {
    "n": "올드보이 공방 해결사",
@@ -2274,7 +2283,8 @@
    ],
    "trait": "callus",
    "tier": "mid",
-   "intro": "공방 무기를 시험해 보러 나온 해결사. 갑옷이 두껍다."
+   "intro": "공방 무기를 시험해 보러 나온 해결사. 갑옷이 두껍다.",
+   "org": "workshop"
   },
   "ob_c": {
    "n": "올드보이 공방 시험수",
@@ -2291,7 +2301,8 @@
    ],
    "trait": "enrage",
    "tier": "mid",
-   "intro": "새 해머의 성능을 시험해야 한다며 다가온다."
+   "intro": "새 해머의 성능을 시험해야 한다며 다가온다.",
+   "org": "workshop"
   },
   "ob_d": {
    "n": "올드보이 공방 수금원",
@@ -2307,7 +2318,8 @@
    ],
    "trait": "thief",
    "tier": "mid",
-   "intro": "공방 외상값을 받으러 왔다고 한다. 당신은 외상을 진 적이 없다."
+   "intro": "공방 외상값을 받으러 왔다고 한다. 당신은 외상을 진 적이 없다.",
+   "org": "workshop"
   },
   "ob_boss": {
    "n": "올드보이 공방장",
@@ -2340,7 +2352,8 @@
      "spd": 1
     },
     "e": "공+1 · HP+4 · 속도+1"
-   }
+   },
+   "org": "workshop"
   },
   "zw_a": {
    "n": "츠바이 협회 해결사",
@@ -2367,7 +2380,8 @@
     "오토",
     "프리다",
     "레온"
-   ]
+   ],
+   "org": "츠바이 협회"
   },
   "zw_b": {
    "n": "츠바이 협회 호위",
@@ -2394,7 +2408,8 @@
     "오토",
     "프리다",
     "레온"
-   ]
+   ],
+   "org": "츠바이 협회"
   },
   "zw_c": {
    "n": "츠바이 협회 돌격조",
@@ -2421,7 +2436,8 @@
     "오토",
     "프리다",
     "레온"
-   ]
+   ],
+   "org": "츠바이 협회"
   },
   "zw_d": {
    "n": "츠바이 협회 신참",
@@ -2448,7 +2464,8 @@
     "오토",
     "프리다",
     "레온"
-   ]
+   ],
+   "org": "츠바이 협회"
   },
   "zw_boss": {
    "n": "츠바이 협회 지부장",
@@ -2484,7 +2501,8 @@
      "eva": 1
     },
     "e": "HP+10 · 회피+1"
-   }
+   },
+   "org": "츠바이 협회"
   },
   "sv_a": {
    "n": "세븐 협회 분석가",
@@ -2510,7 +2528,8 @@
     "루시",
     "헨리",
     "엘라"
-   ]
+   ],
+   "org": "세븐 협회"
   },
   "sv_b": {
    "n": "세븐 협회 추적자",
@@ -2537,7 +2556,8 @@
     "루시",
     "헨리",
     "엘라"
-   ]
+   ],
+   "org": "세븐 협회"
   },
   "sv_c": {
    "n": "세븐 협회 정보원",
@@ -2564,7 +2584,8 @@
     "루시",
     "헨리",
     "엘라"
-   ]
+   ],
+   "org": "세븐 협회"
   },
   "sv_d": {
    "n": "세븐 협회 현장 요원",
@@ -2591,7 +2612,8 @@
     "루시",
     "헨리",
     "엘라"
-   ]
+   ],
+   "org": "세븐 협회"
   },
   "sv_boss": {
    "n": "세븐 협회 지부장",
@@ -2627,7 +2649,8 @@
      "check": 3
     },
     "e": "공+2 · 판정+3"
-   }
+   },
+   "org": "세븐 협회"
   },
   "liu_a": {
    "n": "리우 협회 해결사",
@@ -2653,7 +2676,8 @@
     "첸",
     "하오",
     "유안"
-   ]
+   ],
+   "org": "리우 협회"
   },
   "liu_b": {
    "n": "리우 협회 수련생",
@@ -2679,7 +2703,8 @@
     "첸",
     "하오",
     "유안"
-   ]
+   ],
+   "org": "리우 협회"
   },
   "liu_c": {
    "n": "리우 협회 무투가",
@@ -2706,7 +2731,8 @@
     "첸",
     "하오",
     "유안"
-   ]
+   ],
+   "org": "리우 협회"
   },
   "liu_d": {
    "n": "리우 협회 사범",
@@ -2732,7 +2758,8 @@
     "첸",
     "하오",
     "유안"
-   ]
+   ],
+   "org": "리우 협회"
   },
   "liu_boss": {
    "n": "리우 협회 지부장",
@@ -2768,7 +2795,8 @@
      "maxHp": 6
     },
     "e": "공+2 · HP+6"
-   }
+   },
+   "org": "리우 협회"
   },
   "shi_a": {
    "n": "시 협회 해결사",
@@ -2794,7 +2822,8 @@
     "카즈마",
     "미오",
     "소라"
-   ]
+   ],
+   "org": "시 협회"
   },
   "shi_b": {
    "n": "시 협회 암살조",
@@ -2820,7 +2849,8 @@
     "카즈마",
     "미오",
     "소라"
-   ]
+   ],
+   "org": "시 협회"
   },
   "shi_c": {
    "n": "시 협회 검객",
@@ -2847,7 +2877,8 @@
     "카즈마",
     "미오",
     "소라"
-   ]
+   ],
+   "org": "시 협회"
   },
   "shi_d": {
    "n": "시 협회 수습",
@@ -2873,7 +2904,8 @@
     "카즈마",
     "미오",
     "소라"
-   ]
+   ],
+   "org": "시 협회"
   },
   "shi_boss": {
    "n": "시 협회 지부장",
@@ -2909,7 +2941,8 @@
      "spd": 2
     },
     "e": "회피+3 · 속도+2"
-   }
+   },
+   "org": "시 협회"
   },
   "kuro_boss": {
    "n": "쿠로쿠모 회 와카가시라",
@@ -2941,7 +2974,8 @@
      "dmgB": 1
     },
     "e": "공+2 · 피해+1"
-   }
+   },
+   "org": "흑운회"
   },
   "judgebird": {
    "n": "심판새",
@@ -4538,6 +4572,579 @@
      }
     ]
    }
+  },
+  "gambler": {
+   "n": "붉은 장갑 도박꾼",
+   "color": "#b4584a",
+   "hp": 24,
+   "atk": 1,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "thrust",
+    "faint",
+    "guard"
+   ],
+   "intro": "붉은 장갑을 낀 사내가 동전을 튕긴다. 앞면이면 지갑, 뒷면이면 칼이다.",
+   "tier": "early"
+  },
+  "hawker": {
+   "n": "수상한 호객꾼",
+   "color": "#c9a96a",
+   "hp": 22,
+   "atk": 0,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "slash",
+    "shadowstep"
+   ],
+   "intro": "웃는 얼굴로 소매를 잡아끈다. 따라가면 안쪽에서 문이 닫히는 가게다.",
+   "tier": "early"
+  },
+  "pipeman": {
+   "n": "쇠파이프 사내",
+   "color": "#8c8f94",
+   "hp": 34,
+   "atk": 2,
+   "eva": 0,
+   "spd": 0,
+   "deck": [
+    "smash",
+    "smash",
+    "guard"
+   ],
+   "intro": "어깨에 걸친 쇠파이프가 바닥을 긁는다. 말 한마디 없이 간격을 좁힌다.",
+   "tier": "early"
+  },
+  "fence": {
+   "n": "장물아비",
+   "color": "#a98c63",
+   "hp": 28,
+   "atk": 1,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "slash",
+    "aim",
+    "guard"
+   ],
+   "intro": "낡은 가방에서 어제 잃어버린 물건이 나온다. 돌려받고 싶으면 값을 치르라 한다.",
+   "tier": "early"
+  },
+  "stalker": {
+   "n": "굶주린 부랑아",
+   "color": "#7a7f6b",
+   "hp": 20,
+   "atk": 1,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "lunge",
+    "slash",
+    "faint"
+   ],
+   "intro": "골목 끝에서 오래 따라온 그림자가 한꺼번에 달려든다. 먹을 것이 있으면 멈추겠지만, 없다.",
+   "tier": "early"
+  },
+  "plumber": {
+   "n": "하수 청소꾼",
+   "color": "#6f8a7d",
+   "hp": 32,
+   "atk": 1,
+   "eva": 0,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "slash",
+    "guard"
+   ],
+   "intro": "맨홀 아래에서 올라온 사내가 긴 갈고리를 든다. 무엇을 건져 올렸는지는 말하지 않는다.",
+   "tier": "early"
+  },
+  "mender": {
+   "n": "의수 정비공",
+   "color": "#9aa6b0",
+   "hp": 30,
+   "atk": 1,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "rustblade",
+    "smash",
+    "guard"
+   ],
+   "intro": "공구를 든 손이 의수보다 빠르다. 고장 난 것은 고치고, 쓸모없는 것은 해체한다.",
+   "tier": "early",
+   "aug": true
+  },
+  "banner": {
+   "n": "떠도는 광고판",
+   "color": "#d0b46a",
+   "hp": 30,
+   "atk": 0,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "glare",
+    "guard"
+   ],
+   "intro": "전기도 없이 켜진 광고판이 느릿느릿 길을 막는다. 문구는 매번 당신의 이름이다.",
+   "tier": "early"
+  },
+  "f_runner": {
+   "n": "손가락 말단 연락책",
+   "color": "#b08a5a",
+   "hp": 26,
+   "atk": 1,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "slash",
+    "thrust",
+    "faint",
+    "guard"
+   ],
+   "intro": "소매 안쪽에 작은 표식이 붙어 있다. 위쪽에서 보낸 심부름이 당신 쪽으로 향한다.",
+   "tier": "early",
+   "org": "finger"
+  },
+  "w_cleaner": {
+   "n": "날개 청소 직원",
+   "color": "#8aa0b4",
+   "hp": 30,
+   "atk": 1,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "slash",
+    "guard"
+   ],
+   "intro": "흰 제복에 얼룩 하나 없다. 정리 대상으로 분류된 것은 당신 쪽이다.",
+   "tier": "early",
+   "org": "wing"
+  },
+  "a_patrol": {
+   "n": "협회 순찰자",
+   "color": "#7f9aa8",
+   "hp": 28,
+   "atk": 1,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "slash",
+    "thrust",
+    "aim",
+    "guard"
+   ],
+   "intro": "등록되지 않은 무기는 압수한다. 순찰자가 규정집을 접으며 칼집에 손을 올린다.",
+   "tier": "early",
+   "org": "assoc"
+  },
+  "o_runner": {
+   "n": "사무소 의뢰 대리인",
+   "color": "#a28f78",
+   "hp": 27,
+   "atk": 1,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "slash",
+    "aim",
+    "faint",
+    "guard"
+   ],
+   "intro": "의뢰서를 대신 전하러 왔다고 한다. 거절 의사는 의뢰서에 쓰여 있지 않다.",
+   "tier": "early",
+   "org": "office"
+  },
+  "apprentice": {
+   "n": "공방 도제",
+   "color": "#8a7a6a",
+   "hp": 29,
+   "atk": 1,
+   "eva": 1,
+   "spd": 1,
+   "deck": [
+    "rustblade",
+    "slash",
+    "guard"
+   ],
+   "intro": "망치 자국이 가득한 손으로 칼을 쥔다. 만든 무기를 시험해 볼 상대를 찾고 있다.",
+   "tier": "early",
+   "org": "workshop"
+  },
+  "o_clerk": {
+   "n": "사무소 징수 직원",
+   "color": "#a28f78",
+   "hp": 36,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "thrust",
+    "aim",
+    "guard"
+   ],
+   "intro": "장부를 옆구리에 낀 직원이 문 앞을 막는다. 밀린 의뢰비는 사무소 규정대로 몸으로도 받는다.",
+   "tier": "mid",
+   "org": "office"
+  },
+  "a_auditor": {
+   "n": "협회 감시관",
+   "color": "#7f9aa8",
+   "hp": 38,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "precise",
+    "thrust",
+    "guard"
+   ],
+   "intro": "협회 휘장을 단 감시관이 규정집을 덮는다. 등록되지 않은 일은 모두 위반이라고 한다.",
+   "tier": "mid",
+   "org": "assoc"
+  },
+  "w_guard": {
+   "n": "날개 순찰병",
+   "color": "#8aa0b4",
+   "hp": 40,
+   "atk": 3,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "smash",
+    "heavy",
+    "thrust",
+    "guard"
+   ],
+   "intro": "담장 바깥을 도는 순찰병이 걸음을 멈춘다. 허가되지 않은 이동은 정리 대상이다.",
+   "tier": "mid",
+   "org": "wing"
+  },
+  "f_enforcer": {
+   "n": "손가락 집행인",
+   "color": "#b08a5a",
+   "hp": 38,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "rend",
+    "thrust",
+    "guard"
+   ],
+   "intro": "손가락의 규칙을 몸으로 집행하는 사람이 골목을 막는다. 어긴 사람 이름은 이미 알고 있다.",
+   "tier": "mid",
+   "org": "finger"
+  },
+  "s_enforcer": {
+   "n": "조직 집행조",
+   "color": "#8c6f5a",
+   "hp": 40,
+   "atk": 4,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "smash",
+    "rend",
+    "heavy",
+    "guard"
+   ],
+   "intro": "조직의 일을 맡은 건달 셋이 말없이 둘러선다. 윗선의 지시는 짧고 정확하다.",
+   "tier": "mid",
+   "org": "syn"
+  },
+  "w_defector": {
+   "n": "날개를 이탈한 연구원",
+   "color": "#8aa0b4",
+   "hp": 36,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "lunge",
+    "precise",
+    "rend",
+    "guard"
+   ],
+   "intro": "날개를 벗어난 연구원이 연구 자료를 품에 안고 도망치고 있다. 회수 명령이 내려진 이름이다.",
+   "tier": "mid",
+   "org": "wing",
+   "traitor": true
+  },
+  "a_defector": {
+   "n": "협회를 이탈한 해결사",
+   "color": "#7f9aa8",
+   "hp": 38,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "precise",
+    "rend",
+    "guard"
+   ],
+   "intro": "협회 배지를 떼어 낸 해결사가 길을 막는다. 제명된 이름은 이제 협회가 아니라 당신이 처리한다.",
+   "tier": "mid",
+   "org": "assoc",
+   "traitor": true
+  },
+  "f_deserter": {
+   "n": "손가락 탈주자",
+   "color": "#b08a5a",
+   "hp": 38,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "thrust",
+    "rend",
+    "guard"
+   ],
+   "intro": "서열을 버리고 달아난 사람이 골목 끝에서 돌아선다. 손가락은 도망친 자를 오래 기억한다.",
+   "tier": "mid",
+   "org": "finger",
+   "traitor": true
+  },
+  "s_runaway": {
+   "n": "조직의 배신자",
+   "color": "#8c6f5a",
+   "hp": 38,
+   "atk": 4,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "smash",
+    "rend",
+    "thrust",
+    "guard"
+   ],
+   "intro": "조직의 돈을 들고 달아난 배신자가 칼을 뽑는다. 숙청 명단의 첫 줄에 이 이름이 있었다.",
+   "tier": "mid",
+   "org": "syn",
+   "traitor": true
+  },
+  "o_ledger": {
+   "n": "명부에 오른 의뢰인",
+   "color": "#a28f78",
+   "hp": 36,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "aim",
+    "precise",
+    "guard"
+   ],
+   "intro": "사무소의 처리 명부에 올라간 사람이 문을 걸어 잠갔다. 의뢰서에는 붉은 줄이 그어져 있다.",
+   "tier": "mid",
+   "org": "office",
+   "traitor": true
+  },
+  "a_ledger": {
+   "n": "협회 제명 명부의 이름",
+   "color": "#7f9aa8",
+   "hp": 40,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "thrust",
+    "heavy",
+    "guard"
+   ],
+   "intro": "협회가 제명한 해결사의 이름이 처리 명부에 올라 있다. 서류에는 이유가 한 줄로만 적혀 있다.",
+   "tier": "mid",
+   "org": "assoc",
+   "traitor": true
+  },
+  "f_ledger": {
+   "n": "손가락 처분 명부의 이름",
+   "color": "#b08a5a",
+   "hp": 38,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "rend",
+    "thrust",
+    "guard"
+   ],
+   "intro": "처분 명부에 오른 사람이 마지막 서열을 걸고 앞을 막는다. 명부는 손가락의 것이고 칼은 당신의 것이다.",
+   "tier": "mid",
+   "org": "finger",
+   "traitor": true
+  },
+  "s_ledger": {
+   "n": "숙청 명단의 이름",
+   "color": "#8c6f5a",
+   "hp": 40,
+   "atk": 4,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "smash",
+    "rend",
+    "heavy",
+    "guard"
+   ],
+   "intro": "조직이 지운 이름이 어둠 속에서 걸어 나온다. 지워진 이름은 한 번은 되살아난다.",
+   "tier": "mid",
+   "org": "syn",
+   "traitor": true
+  },
+  "w_ledger": {
+   "n": "처분 명부의 연구원",
+   "color": "#8aa0b4",
+   "hp": 38,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "lunge",
+    "precise",
+    "rend",
+    "guard"
+   ],
+   "intro": "날개의 처분 명부에 오른 연구원이 자료를 내려놓고 칼을 쥔다. 담장 안의 일은 담장 안에서 끝낸다.",
+   "tier": "mid",
+   "org": "wing",
+   "traitor": true
+  },
+  "a_elite": {
+   "n": "협회 본부 감찰단",
+   "color": "#7f9aa8",
+   "hp": 48,
+   "atk": 5,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "e_audit",
+    "precise",
+    "thrust",
+    "guard"
+   ],
+   "intro": "본부에서 내려온 감찰단이 서류와 함께 나타났다. 감찰은 서면으로 시작해서 칼로 끝난다.",
+   "tier": "late",
+   "org": "assoc"
+  },
+  "w_officer": {
+   "n": "날개 처리반 장교",
+   "color": "#8aa0b4",
+   "hp": 50,
+   "atk": 5,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "smash",
+    "heavy",
+    "precise",
+    "guard"
+   ],
+   "intro": "처리반을 이끄는 장교가 한 걸음 앞으로 나선다. 정리는 늘 마지막 한 명에서 끝난다.",
+   "tier": "late",
+   "org": "wing"
+  },
+  "f_judge": {
+   "n": "손가락 서열 심사관",
+   "color": "#b08a5a",
+   "hp": 48,
+   "atk": 5,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "slash",
+    "rend",
+    "precise",
+    "guard"
+   ],
+   "intro": "서열을 판정하는 심사관이 앞에 선다. 판정은 이름을 부른 뒤에 내려진다.",
+   "tier": "late",
+   "org": "finger"
+  },
+  "s_captain": {
+   "n": "조직 간부",
+   "color": "#8c6f5a",
+   "hp": 50,
+   "atk": 5,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "smash",
+    "rend",
+    "heavy",
+    "guard"
+   ],
+   "intro": "조직의 간부가 부하를 물리고 직접 나선다. 지시가 아니라 책임을 지는 얼굴이다.",
+   "tier": "late",
+   "org": "syn"
+  },
+  "o_proxy": {
+   "n": "사무소 대행 해결사",
+   "color": "#a28f78",
+   "hp": 48,
+   "atk": 5,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "slash",
+    "aim",
+    "precise",
+    "guard"
+   ],
+   "intro": "의뢰인을 대신해 나선 해결사가 서명이 담긴 서류를 접는다. 서류의 끝에는 당신의 이름이 있다.",
+   "tier": "late",
+   "org": "office"
+  },
+  "w_traitor": {
+   "n": "날개 기밀을 판 감독관",
+   "color": "#8aa0b4",
+   "hp": 50,
+   "atk": 5,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "lunge",
+    "precise",
+    "rend",
+    "guard"
+   ],
+   "intro": "기밀을 팔아넘긴 감독관이 출구 앞에서 돌아선다. 날개는 이 이름을 지우라고 했다.",
+   "tier": "late",
+   "org": "wing",
+   "traitor": true
+  },
+  "a_traitor": {
+   "n": "협회 기밀을 판 지부장",
+   "color": "#7f9aa8",
+   "hp": 52,
+   "atk": 5,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "slash",
+    "precise",
+    "heavy",
+    "guard"
+   ],
+   "intro": "지부를 팔아넘긴 지부장이 마지막 서류를 불태운다. 본부는 이 이름의 처리를 맡겼다.",
+   "tier": "late",
+   "org": "assoc",
+   "traitor": true
   }
  },
  "fixedFights": {
