@@ -610,7 +610,7 @@ export function startUI(E,app){
       ${UI.confirmNew?`<p class="small bad">저장된 판이 지워진다. 정말 새로 시작하려면 ${UI.confirmNew==='daily'?'오늘의 시드':'새로 시작하기'}를 한 번 더 누른다.</p>`:''}
       <button class="btn" data-a="daily" ${expired()?'disabled':''}><b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다</span></button>
       <button class="btn quiet" data-a="records"><b>기록실</b><span class="dim small">만난 적 · 본 엔딩 · 해금 · 최고 기록</span></button>
-      <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다</span></button>
+      <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다 (만난 적만 공개)</span></button>
       <a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a>
       <div class="panel stack" style="gap:4px"><span class="eyebrow">지금 고민 중인 방향</span>
         <ul class="small dim" style="margin:0;padding-left:18px;display:grid;gap:3px">${DIRECTION.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></div>
@@ -1378,10 +1378,10 @@ export function startUI(E,app){
       <p class="small dim">${line}</p></div>`;
   }
   function vSim(){
-    const s=SIM,pc=x=>Math.round(x*100)+'%';
+    const s=SIM,pc=x=>Math.round(x*100)+'%',seen=loadRec().seen||[];
     return `<div class="stack" style="gap:6px"><div class="eyebrow">밸런스 측정 · 각 ${s.n}회</div><h2>자동 전투 결과</h2></div>
       <div class="panel tbl"><table><thead><tr><th>적</th><th>승률</th><th>평균 라운드</th><th>승리 시 잔여 HP</th></tr></thead><tbody>
-      ${s.rows.map(r=>`<tr><td>${r.n}</td><td>${pc(r.win)}</td><td>${r.rounds.toFixed(1)}</td><td>${r.left.toFixed(0)}</td></tr>`).join('')}</tbody></table></div>
+      ${s.rows.map(r=>seen.includes(r.id)?`<tr><td>${r.n}</td><td>${pc(r.win)}</td><td>${r.rounds.toFixed(1)}</td><td>${r.left.toFixed(0)}</td></tr>`:`<tr class="dim"><td>???</td><td>???</td><td>???</td><td>???</td></tr>`).join('')}</tbody></table></div>
       <div class="panel stack"><div class="row between"><span>연속 ${s.chainIds.length}전 클리어</span><b class="mono" style="color:var(--gold)">${pc(s.chain)}</b></div>
       <div class="row between"><span>연속 ${s.chainIds.length}전 · 성장 반영</span><b class="mono" style="color:var(--gold)">${pc(s.grown)}</b></div>
       <p class="small dim">무작위 캐릭터(성장기 포함), 카드는 손패에서 무작위로 낸다. 전투 사이 HP ${CFG.chainHeal} 회복. 더 많이 돌리려면 터미널에서 npm run sim -- --n 2000</p></div>
