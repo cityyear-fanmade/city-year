@@ -578,8 +578,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.rb){const r=ch.rb,k=fx.rb,Z=CFG.rb,y=ch.year||0;
       if(r){
         if(k==='start')chips.push(`부화장 ${Z.total}연전 · 한 판이 끝날 때마다 HP를 회복한다`);
-        else if(k==='exit'){r.out=1;r.next=y+Z.fleeGap+d(Z.fleeRand)-1;chips.push('부화장을 나왔다 · 곧 R사가 알아챈다')}
-        else if(k==='flee'){r.fled=1;r.cnext=y+Z.chaseGap;chips.push('R사의 숙청 추격대가 풀렸다')}
+        else if(k==='exit'){r.out=1;r.next=Math.max(y+1,Z.fleeAt+d(Z.fleeRand)-1);chips.push('부화장을 나왔다 · 금기의 기록은 아직 지워지지 않았다')}
+        else if(k==='flee'){r.fled=1;r.chain=Z.head.filter(id=>!ch.beaten.includes(id));chips.push('금기 위반이 확인되었다 · 머리의 사자가 곧바로 온다')}
         else if(k==='fight'){ch.purge=Z.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
@@ -972,7 +972,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      ch.rb = {n(쓰러뜨린 부화장 개체), out(부화장을 나옴), next(추격 시작 해), fled, chase(만난 추격대), hides, cnext(다음 추격 해), bossSeen, done}
      부화장 연전은 해를 넘기지 않고 이어진다. 공방거리는 쓰지 않는다 */
   function rbFree(G){
-    const ch=G.ch,r=ch.rb,Z=CFG.rb;if(!r||!D.rbRoute||r.out)return null;
+    const ch=G.ch,r=ch.rb,Z=CFG.rb;if(!r||!D.rbRoute)return null;
+    /* 금기 위반이 확인되면 머리가 바로 보낸다: 발톱 → 조율자 (쉬지 않고 이어진다) */
+    if(r.out&&r.chain&&r.chain.length){
+      const id=r.chain.shift();(G.met=G.met||[]).push(id);if(!r.chain.length)r.cnext=Math.max(G.year+Z.chaseGap,Z.chaseFrom);
+      return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
+    }
+    if(r.out)return null;
     if(!r.intro){r.intro=1;return {type:'event',ev:D.rbRoute.hatch}}
     if(r.n<Z.total)return {type:'fight',enemy:'rc'+String(r.n+1).padStart(2,'0'),enc:{label:`부화장 · ${r.n+1}/${Z.total}`}};
     return {type:'event',ev:D.rbRoute.exit};
@@ -980,7 +986,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function rbYear(G){
     const ch=G.ch,r=ch.rb,y=G.year,Z=CFG.rb,R=D.rbRoute;if(!r||!R||!r.out||r.done)return null;
     if(!r.fled)return y>=r.next?R.flee:null;
-    if(y<r.cnext)return null;
+    if((r.chain&&r.chain.length)||!(y>=r.cnext))return null;
     if(r.chase>=Z.chasers.length&&Z.chasers.every(id=>ch.beaten.includes(id)))return r.bossSeen?null:R.boss;
     if(r.chase<Z.chasers.length&&(r.chase===0||ch.beaten.includes(Z.chasers[r.chase-1]))){
       const E_=R.chase;return r.hides>=Z.hides?Object.assign({},E_,{c:E_.c.slice(0,1)}):E_;
