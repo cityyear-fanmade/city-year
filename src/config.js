@@ -145,6 +145,8 @@ export const CFG = {
       spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1, hcorp: 1}, spouseYears: 3, spouseJob: {rcorp: 'fixer', hcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
+  /* 회복 수단(회복 카드·재생·혈청·엠플)이 없는 빌드가 히든 보스 전투에서 받는 보정: 시작 보호막(최대 HP 비율)·받는 피해 감소(%) */
+  noHealAid: {shield: 0.3, dr: 10},
   /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */
   /* 조직: 덱이 at[0](8)장 이상일 때 패시브가 열리고(그 아래로 압축하면 닫힌다), at[1](10)장에서 최종 단계가 된다. 흑운회: 시작 구름 start[단계] · max에 닿으면 흑운(주사위마다 +die · 적중 출혈 +bleedPlus · 마지막 단계에서 받는 피해 ×half) · 라운드 끝에 구름 reset.
      검계: 라운드 시작 호흡 +1(8장부터 +2) · 호흡 자연 감소 decay[단계] · 호흡 2당 모든 카드 +1. 밤의 송곳: 속도 굴림 +init[단계] · 출혈 걸린 적에게 명중 +bleedHit · 선공이면 상대 회피 절반 */
