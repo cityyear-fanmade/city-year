@@ -1358,7 +1358,9 @@
    "die": 9,
    "b": 0,
    "hit": 20,
-   "once": true
+   "once": true,
+   "exec": 1,
+   "execHit": 30
   },
   "h_seom": {
    "n": "환도 · 섬",
