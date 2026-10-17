@@ -1045,6 +1045,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     chips&&chips.push(`전용 무기 강화 · ${g.n} (${g.e})`);
   }
   const s_=(ch,v)=>{ch.stats.maxHp+=v;ch.hp+=v};
+  /* 홍루: 길들인 두 마리를 뺀 흑수 열 마리가 차례로 덤벼든다 (E.zChain = 흑수 키 순서) */
+  const ZKEYS=['rat','ox','tiger','rabbit','dragon','snake','horse','goat','monkey','rooster','dog','pig'];
+  function zNext(A,c){const cur=Object.keys(D.cards).find(k=>D.cards[k]===c)||'',k=cur.replace(/^zp?_/,''),i=A.zChain.indexOf(k);return i<0?c.next:'z_'+A.zChain[(i+1)%A.zChain.length]}
   function rbFlee(ch,chips){
     const r=ch.rb,Z=CFG.rb;if(!r||r.fled)return;
     r.fled=1;r.cnext=(ch.year||0)+Z.chaseGap;
@@ -1575,6 +1578,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     let penalty=null;
     if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit;if(ch.fate){P.nailHit=0;P.atk+=CFG.nWing.fate;P.eva+=CFG.nWing.fate}}
     if(pen&&!(ch.licensed&&ch.rank<=pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
+    /* 홍루: 쓰러진 후보들의 흑수 열 마리. 내가 길들인 두 마리는 빠진다 */
+    if(e.zodiac10){const own=ch.hw&&ch.hw.picked?CFG.hw.pairs[ch.hw.pair]:[];E.zChain=ZKEYS.filter(k=>!own.includes(k));E.deck=['z_'+E.zChain[0]]}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
     let hpNote=null;
     if(P.laev==='open'){P.flame=1}
@@ -2053,7 +2058,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     queue(C,pp,ep).forEach((st,i)=>{
       C.step=i;const A=C[st.side],c=st.card;
-      if(c.next){if(A.isP)A.grantNext=c.next;else A.forceNext=c.next;L('sys',`${A.name} · ${c.n} · 다음 라운드 ${D.cards[c.next].n} 준비`)}
+      if(c.next){const nx_=!A.isP&&A.zChain?zNext(A,c):c.next;if(A.isP)A.grantNext=c.next;else A.forceNext=nx_;L('sys',`${A.name} · ${c.n} · 다음 라운드 ${D.cards[nx_].n} 준비`)}
       if(A.isP&&c.t==='atk'&&(c.shield||c.lightNext)){if(c.shield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.shield);L('kw',`  ${A.name} · ${c.n} · 보호막 +${c.shield} (지금 ${A.shield})`)}if(c.lightNext){A.lightNext=(A.lightNext||0)+c.lightNext;L('kw',`  ${A.name} · ${c.n} · 다음 라운드 빛 +${c.lightNext}`)}}
       if(A.isP&&c.bloomGrant&&D.cards[c.bloomGrant]){A.bloomUses=(A.bloomUses||0)+1;L('sys',`  ${A.name} · 개화 ${A.bloomUses}회${A.bloomUses%CFG.bloom.every?` · ${CFG.bloom.every-A.bloomUses%CFG.bloom.every}회 더 쓰면 1회용 스킬`:''}`);if(A.bloomUses%CFG.bloom.every===0&&!A.grantNext){A.grantNext=c.bloomGrant;L('sys',`  ${A.name} · ${c.n} · 다음 라운드 손패에 ${D.cards[c.bloomGrant].n} (1회용)`)}}
       if(A.isP&&c.egoGrow){C.ch.egoUses=(C.ch.egoUses||0)+1;const up=egoGrow(C.ch);
