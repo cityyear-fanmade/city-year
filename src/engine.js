@@ -1927,10 +1927,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ampUse(C,L);
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
   }
-  /* K사 엠플: 살아 있고 HP가 below 이하이면 자동으로 쓴다 (전투마다 1개) */
+  /* K사 엠플: 살아 있고 HP가 최대 HP의 belowPct 이하이면 자동으로 쓴다 (한 번에 1개, 전투당 제한 없음) */
   function ampUse(C,L){
-    const P=C.P,K=CFG.ample;if(!(P.ample>0)||P.ampUsed||P.hp<=0||P.hp>K.below||C.E.hp<=0)return;
-    const h=Math.min(K.heal,P.maxHp-P.hp);P.hp+=h;P.ample--;P.ampUsed=true;L('kw',`${P.name} · ${K.name} 사용 · HP +${h} (남은 ${P.ample}개)`);
+    const P=C.P,K=CFG.ample;if(!(P.ample>0)||P.hp<=0||P.hp>Math.floor(P.maxHp*K.belowPct)||C.E.hp<=0)return;
+    const h=Math.min(K.heal,P.maxHp-P.hp);P.hp+=h;P.ample--;L('amp',`${P.name} · ${K.name} 사용 · HP +${h} · 지금 ${P.hp}/${P.maxHp} (남은 ${P.ample}개)`);
   }
   /* 자동 전투 (시뮬): 카드 고르는 순서도 행동 순서를 따른다 */
   function fightAuto(ch,id){

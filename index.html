@@ -437,6 +437,11 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 .sheet .roll{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.sheet .roll .n{display:flex;flex-direction:column;gap:2px;min-width:0}
 @media (min-width:1360px){ .hud-dup{display:none} }
 .side-l .bufup{color:#7fd1a0;font-style:normal}
+<<<<<<< HEAD
+=======
+.bgmrow{display:flex;gap:8px;align-items:center}.bgmrow input[type=range]{flex:1;min-width:0;accent-color:var(--gold);height:28px}
+.log .amp{font-weight:700;color:var(--bg,#0b0b0e);background:var(--gold);padding:3px 8px;border-radius:6px;margin:3px 0;display:block;box-shadow:0 0 0 1px var(--gold)}
+>>>>>>> 7ded49a (K사 엠플: 발동 기준 최대 HP 20% 이하, 전투당 사용 횟수 제한 제거(구입 제한만 유지), 사용 시 눈에 띄는 알림 줄)
 </style>
 </head>
 <body>
@@ -466,8 +471,8 @@ const CFG = {
   /* 공방 치유소: 한 번에 hp 회복, 방문마다 max번 */
   /* 치유소: 치료를 받을 때마다 값이 step씩 오른다 (한 판 전체 누적, 방문마다 최대 max번) */
   clinic: {price: 500, step: 500, hp: 30, max: 3},
-  /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 heal 회복(전투마다 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
-  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, below: 30, heal: 50},
+  /* 암시장 K사 엠플: 전투 중 HP가 최대 HP의 belowPct 이하가 되면 자동으로 heal 회복(전투당 사용 횟수 제한 없음, 한 번에 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
+  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, belowPct: 0.2, heal: 50},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
   orderBonusLight: 1, catchupBonus: 5, spdMul: 2, spdHit: {per: 5, max: 4}, gapFirst: 30, firstHit: 10,
@@ -2615,10 +2620,10 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     ampUse(C,L);
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
   }
-  /* K사 엠플: 살아 있고 HP가 below 이하이면 자동으로 쓴다 (전투마다 1개) */
+  /* K사 엠플: 살아 있고 HP가 최대 HP의 belowPct 이하이면 자동으로 쓴다 (한 번에 1개, 전투당 제한 없음) */
   function ampUse(C,L){
-    const P=C.P,K=CFG.ample;if(!(P.ample>0)||P.ampUsed||P.hp<=0||P.hp>K.below||C.E.hp<=0)return;
-    const h=Math.min(K.heal,P.maxHp-P.hp);P.hp+=h;P.ample--;P.ampUsed=true;L('kw',`${P.name} · ${K.name} 사용 · HP +${h} (남은 ${P.ample}개)`);
+    const P=C.P,K=CFG.ample;if(!(P.ample>0)||P.hp<=0||P.hp>Math.floor(P.maxHp*K.belowPct)||C.E.hp<=0)return;
+    const h=Math.min(K.heal,P.maxHp-P.hp);P.hp+=h;P.ample--;L('amp',`${P.name} · ${K.name} 사용 · HP +${h} · 지금 ${P.hp}/${P.maxHp} (남은 ${P.ample}개)`);
   }
   /* 자동 전투 (시뮬): 카드 고르는 순서도 행동 순서를 따른다 */
   function fightAuto(ch,id){
@@ -3172,7 +3177,7 @@ function startUI(E,app){
       ${UI.healMsg?`<p class="good small">${esc(UI.healMsg)}</p>`:''}
       <button class="btn" data-a="heal" ${ok?'':'disabled'}><b>치료 받는다</b><span class="mono small dim">HP ${ch.hp}/${ch.stats.maxHp}${full?' · 이미 멀쩡하다':left<=0?' · 오늘은 더 받을 수 없다':ch.money<cp?' · 돈이 모자란다':''}</span></button></div>
     <div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">${A.name}</b><span class="mono" style="color:var(--gold)">${E.money(ap)}</span></div>
-      <p class="small dim">암시장에서 도는 전리품. 전투 중 HP가 ${A.below} 이하가 되면 자동으로 쓰여 HP를 ${A.heal} 회복한다. 전투마다 1개, 최대 ${A.carry}개까지 지닌다. 쓰고 나면 다음 공방에서 다시 살 수 있지만, 한 판에 모두 ${A.limit}개까지만 살 수 있다.</p>
+      <p class="small dim">암시장에서 도는 전리품. 전투 중 HP가 최대 HP의 ${Math.round(A.belowPct*100)}% 이하가 되면 자동으로 쓰여 HP를 ${A.heal} 회복한다. 전투 중 횟수 제한 없이 한 번에 1개씩 쓰이고, 최대 ${A.carry}개까지 지닌다. 쓰고 나면 다음 공방에서 다시 살 수 있지만, 한 판에 모두 ${A.limit}개까지만 살 수 있다.</p>
       <button class="btn" data-a="ample" ${aok?'':'disabled'}><b>${A.name} 구입</b><span class="mono small dim">지닌 수 ${have}/${A.carry} · 산 수 ${bought}/${A.limit}${bought>=A.limit?' · 더는 살 수 없다':have>=A.carry?' · 더는 지닐 수 없다':ch.money<ap?' · 돈이 모자란다':''}</span></button></div>`;
   }
   function vShop(){
