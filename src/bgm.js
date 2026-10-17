@@ -26,7 +26,7 @@ export function createBgm(){
     }
   };
   let ctx=null,master=null,bus=null,bright=null,analyser=null,noiseBuf=null,on=false,vol=0.3,mood='base',scene='calm',timer=null,hidden=false;
-  let barT=0,barN=0,lastScene='calm';
+  let barT=0,barN=0,lastScene='calm',cur=null,duckUntil=0;
   const AC=typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext);
   const hz=m=>440*Math.pow(2,(m-69)/12),rnd=Math.random,pick=a=>a[Math.floor(rnd()*a.length)];
   /* 사용자 음량(0~1) → 마스터 음량 */
@@ -39,12 +39,23 @@ export function createBgm(){
     bus=ctx.createGain();bus.connect(master);
     /* 방 울림: 짧은 되울림을 살짝 섞는다 */
     const dl=ctx.createDelay(1),fb=ctx.createGain(),lp=ctx.createBiquadFilter(),wet=ctx.createGain();dl.delayTime.value=0.19;fb.gain.value=0.3;lp.type='lowpass';lp.frequency.value=2800;wet.gain.value=P.moods.base.wet;
-    bus.connect(dl);dl.connect(lp);lp.connect(fb);fb.connect(dl);lp.connect(wet);wet.connect(master);bus._wet=wet;
+    bus.connect(dl);dl.connect(lp);lp.connect(fb);fb.connect(dl);lp.connect(wet);wet.connect(master);bus._wet=wet;bus._fb=fb;
     bright=ctx.createBiquadFilter();bright.type='lowpass';bright.frequency.value=P.moods.base.cut;bright.Q.value=0.4;bright.connect(bus);
     master.connect(comp);comp.connect(ctx.destination);
     analyser=ctx.createAnalyser();analyser.fftSize=2048;comp.connect(analyser);
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate*0.4,ctx.sampleRate);{const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
     return true;
+  }
+  /* 장면(평시·전투)마다 새 출력 묶음을 만든다. 장면이 바뀌면 이전 묶음을 빠르게 줄여 끄고, 이미 예약된 이전 장면의 소리가 새 장면과 겹치지 않게 한다 */
+  function newEpoch(){
+    const now=ctx.currentTime;
+    if(cur){const o=cur;for(const g of [o.b,o.u,o.m]){g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+0.28)}setTimeout(()=>{try{for(const g of [o.b,o.u,o.m])g.disconnect()}catch(e){}},1200)}
+    const mk=dest=>{const g=ctx.createGain();g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.3);g.connect(dest);return g};
+    cur={b:mk(bright),u:mk(bus),m:mk(master)};
+    /* 장면이 바뀔 때 되울림(꼬리)도 잠깐 끊어 이전 소리가 길게 남지 않게 한다 */
+    const w=bus._wet,fb=bus._fb;duckUntil=now+0.9;
+    w.gain.cancelScheduledValues(now);w.gain.setValueAtTime(w.gain.value,now);w.gain.linearRampToValueAtTime(0,now+0.08);
+    fb.gain.cancelScheduledValues(now);fb.gain.setValueAtTime(0,now);fb.gain.setValueAtTime(0.3,now+0.5);
   }
   function ramp(target,t){
     if(!ctx)return;const g=master.gain,now=ctx.currentTime;
@@ -55,27 +66,27 @@ export function createBgm(){
     const f=hz(m),o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain();o.type='sine';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2.01;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     g2.gain.setValueAtTime(peak*0.35,t);g2.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
-    o.connect(g);o2.connect(g2);g2.connect(g);g.connect(bright);o.start(t);o.stop(t+dur+0.05);o2.start(t);o2.stop(t+0.25);
+    o.connect(g);o2.connect(g2);g2.connect(g);g.connect(cur.b);o.start(t);o.stop(t+dur+0.05);o2.start(t);o2.stop(t+0.25);
   }
   function bassN(m,t,dur,peak){            // 어쿠스틱 베이스풍: 짧게 퉁기고 곧 사그라든다
     const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();o.type='triangle';o.frequency.value=hz(m);f.type='lowpass';f.frequency.value=520;f.Q.value=0.6;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.012);g.gain.exponentialRampToValueAtTime(peak*0.35,t+dur*0.55);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.05);
+    o.connect(f);f.connect(g);g.connect(cur.m);o.start(t);o.stop(t+dur+0.05);
   }
   function noiseHit(t,peak,dur,hp,lpf){    // 심벌·브러시: 거른 노이즈
     const n=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=noiseBuf;f.type='highpass';f.frequency.value=hp;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    n.connect(f);if(lpf){const l=ctx.createBiquadFilter();l.type='lowpass';l.frequency.value=lpf;f.connect(l);l.connect(g)}else f.connect(g);g.connect(master);n.start(t,rnd()*0.15);n.stop(t+dur+0.02);
+    n.connect(f);if(lpf){const l=ctx.createBiquadFilter();l.type='lowpass';l.frequency.value=lpf;f.connect(l);l.connect(g)}else f.connect(g);g.connect(cur.m);n.start(t,rnd()*0.15);n.stop(t+dur+0.02);
   }
   function feather(t,peak){                // 킥: 거의 들리지 않는 부드러운 박동
     const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(48,t+0.1);
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
-    o.connect(g);g.connect(master);o.start(t);o.stop(t+0.2);
+    o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.2);
   }
   function horn(m,t,dur,peak,cut){         // 가끔 지나가는 멜로디: 먹먹한 삼각파
     const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();o.type='triangle';o.frequency.value=hz(m);f.type='lowpass';f.frequency.value=cut;f.Q.value=0.8;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.03);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f);f.connect(g);g.connect(bus);o.start(t);o.stop(t+dur+0.05);
+    o.connect(f);f.connect(g);g.connect(cur.u);o.start(t);o.stop(t+dur+0.05);
   }
   /* 한 마디를 예약한다 */
   function scheduleBar(T,M){
@@ -105,9 +116,9 @@ export function createBgm(){
     barT=T+4*bd;barN++;
   }
   function schedule(now,M){
-    if(lastScene!==scene){lastScene=scene;barT=now+0.1}
+    if(lastScene!==scene){lastScene=scene;newEpoch();barT=now+0.32}
     if(barT<now)barT=now+0.05;
-    const wet=bus._wet;if(wet)wet.gain.setTargetAtTime(M.wet*(scene==='fight'?0.7:1),now,1.5);
+    const wet=bus._wet;if(wet&&now>duckUntil)wet.gain.setTargetAtTime(M.wet*(scene==='fight'?0.7:1),now,0.6);
     bright.frequency.setTargetAtTime(M.cut*(scene==='fight'?1.25:1),now,2);
     let g=0;while(barT<now+2.2&&g++<3)scheduleBar(barT,M);
   }
@@ -119,7 +130,7 @@ export function createBgm(){
     if(!ensure())return false;
     ctx.resume&&ctx.resume();
     if(!timer)timer=setInterval(tick,700);
-    barT=ctx.currentTime+0.1;barN=0;lastScene=scene;
+    newEpoch();barT=ctx.currentTime+0.1;barN=0;lastScene=scene;
     tick();ramp(gainOf(vol),P.fadeIn);return true;
   }
   function stop(){
@@ -130,7 +141,7 @@ export function createBgm(){
   if(typeof document!=='undefined')document.addEventListener('visibilitychange',()=>{
     hidden=document.hidden;if(!ctx)return;
     if(hidden){ramp(0,0.4);setTimeout(()=>{if(hidden&&ctx.state==='running')ctx.suspend()},500)}
-    else if(on){ctx.resume().then(()=>{barT=ctx.currentTime+0.1;ramp(gainOf(vol),1.2)})}
+    else if(on){ctx.resume().then(()=>{newEpoch();barT=ctx.currentTime+0.1;ramp(gainOf(vol),1.2)})}
   });
   return {
     supported:!!AC,
