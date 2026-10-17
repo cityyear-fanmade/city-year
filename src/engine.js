@@ -676,7 +676,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!s.startsWith('table:'))return {id:s,roll:null,table:null};
     const name=s.slice(6),T_=D.encounters.tables;
     /* 라만차랜드 루트(혈귀)는 소속보다 먼저 */
-    const key=ch.flags&&ch.flags.lamancha&&T_[`${name}@lamancha`]?`${name}@lamancha`:ch.aff&&T_[`${name}@${ch.aff.type}`]?`${name}@${ch.aff.type}`:name;
+    const key=ch.hw&&!ch.hw.out&&T_[`${name}@hwhome`]?`${name}@hwhome`:ch.flags&&ch.flags.lamancha&&T_[`${name}@lamancha`]?`${name}@lamancha`:ch.aff&&T_[`${name}@${ch.aff.type}`]?`${name}@${ch.aff.type}`:name;
     /* 같은 조직의 적(enemy.org가 내 소속 종류나 내 소속 이름과 같음)은 배신자·명부의 처리 대상(enemy.traitor)이 아니면 만나지 않는다. 방금 싸운 적도 되도록 피한다 */
     const mine=new Set();if(ch.aff){mine.add(ch.aff.name);mine.add((D.orgs.syn||[]).includes(ch.aff.name)?'syn':ch.aff.type)}
     /* H사 홍원 가문의 후보는 도시의 조직(손가락·조직·협회·날개·사무소·공방)과 얽히지 않는다: 소속 표시가 있는 적은 만나지 않는다 */
@@ -1344,6 +1344,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(examReady(ch)&&ch.examSkipYear!==G.year-1){const k=career(ch);return {type:'event',ev:(isFinger(ch)&&D.fingers[ch.aff.name].exam)||(CR[k]&&CR[k].exam)||D.promotionExam}}
     {const rv=rbYear(G);if(rv)return {type:'event',ev:rv}}
     {const hv=hwYear(G);if(hv)return {type:'event',ev:hv}}
+    /* H사 홍원 가문 안에서 사는 동안은 도시의 일반 사건 대신 홍원의 한 해 사건이 온다 */
+    if(ch.hw&&!ch.hw.out&&D.hwYearly&&D.hwYearly.length){const used=ch.hw.yUsed=ch.hw.yUsed||[];let left=D.hwYearly.map((_,i)=>i).filter(i=>!used.includes(i));if(!left.length){ch.hw.yUsed=[];left=D.hwYearly.map((_,i)=>i)}const i=one(left);ch.hw.yUsed.push(i);return {type:'event',ev:D.hwYearly[i]}}
     if(D.corp){const ce=corpEvent(G);if(ce)return {type:'event',ev:ce}}
     {const kh=kidHuntEvent(G);if(kh)return kh}
     {const bv=bondEvent(G);if(bv)return {type:'event',ev:bv}}

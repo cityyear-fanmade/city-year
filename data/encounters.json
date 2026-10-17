@@ -621,6 +621,60 @@
      "max": 100,
      "enemy": "barber"
     }
+   ],
+   "early@hwhome": [
+    {
+     "max": 35,
+     "enemy": "hw_train"
+    },
+    {
+     "max": 70,
+     "enemy": "hw_page"
+    },
+    {
+     "max": 100,
+     "enemy": "hw_assassin"
+    }
+   ],
+   "mid@hwhome": [
+    {
+     "max": 50,
+     "enemy": "hw_guard"
+    },
+    {
+     "max": 100,
+     "enemy": "hw_steward"
+    }
+   ],
+   "late@hwhome": [
+    {
+     "max": 50,
+     "enemy": "hw_master"
+    },
+    {
+     "max": 100,
+     "enemy": "hw_guard"
+    }
+   ],
+   "backstreet@hwhome": [
+    {
+     "max": 50,
+     "enemy": "hw_guard"
+    },
+    {
+     "max": 100,
+     "enemy": "hw_steward"
+    }
+   ],
+   "outskirts@hwhome": [
+    {
+     "max": 50,
+     "enemy": "hw_guard"
+    },
+    {
+     "max": 100,
+     "enemy": "hw_steward"
+    }
    ]
   }
  }
