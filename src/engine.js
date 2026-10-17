@@ -589,6 +589,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='fight'){ch.purge=r.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
+    if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push('혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP 15 회복)');
+      if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
     if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
       if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}
       if(r){
@@ -704,6 +706,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='licensed')return ch.licensed;
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
+    if(req==='nohyeol')return ch.race!=='hyeolgwi';
+    if(req==='noroute')return !ch.rb&&!ch.hw;
     if(req==='bondmarried')return !!(ch.bond&&ch.bond.st==='married');
     if(req==='nofinger')return !isFinger(ch);
     if(req==='nojob')return !ch.job;
