@@ -385,7 +385,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const eastN=ch=>isN(ch)&&isEastOuter(ch);
   /* 동부 외곽의 N사 직급과 해결사 급수를 맞춘다: 직급에 맞는 급수보다 낮으면(숫자가 크면) 그 급수까지 올린다 */
   function alignEast(ch,chips){if(!eastN(ch)||!ch.licensed||ch.fi==null)return;const tgt=CFG.eastN.align[ch.fi]??9;while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);chips.push(...p.chips)}}
-  const noFixer=ch=>isFinger(ch)||isFounder(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
+  const noFixer=ch=>!!ch.hw||isFinger(ch)||isFounder(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
   function license(ch){
     /* 손가락 조직원·날개 직원은 해결사로 등록될 수 없다 */
     if(ch.licensed||noFixer(ch))return false;
@@ -1334,7 +1334,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const e=encounter(G.ch,f);return {type:'fight',enemy:e.id,enc:e};
     }
     /* 갈림길: 공방 해결사 제안이 가끔(WF.chance%) 끼어든다 */
-    if(G.year===CFG.affiliationYear&&!G.ch.aff){
+    if(G.year===CFG.affiliationYear&&!G.ch.aff&&!G.ch.hw){
       if(D.workshopChoice&&!noFixer(G.ch)&&d(100)<=WF.chance)return {type:'event',ev:Object.assign({},D.affiliation,{x:D.affiliation.x+(D.workshopIntro||''),c:[...D.affiliation.c,D.workshopChoice]})};
       return {type:'event',ev:D.affiliation};
     }
