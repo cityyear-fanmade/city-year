@@ -112,7 +112,10 @@
    ],
    "intro": "장부를 든 수금원이 앞을 막는다. 이 구역의 상납금은 아직 덜 걷혔다고 한다.",
    "tier": "early",
-   "org": "finger"
+   "org": [
+    "엄지",
+    "중지"
+   ]
   },
   "sentry": {
    "n": "날개 경비 기계",
@@ -1152,7 +1155,7 @@
    ],
    "intro": "형님의 원수를 갚겠다는 막내들이다. 누가 원수인지는 별로 중요하지 않아 보인다.",
    "tier": "mid",
-   "org": "finger"
+   "org": "중지"
   },
   "porter": {
    "n": "뒤틀린 짐꾼",
@@ -1233,7 +1236,8 @@
     "guard"
    ],
    "intro": "누군가 서명을 남긴 사람 모양의 작품이다. 마무리할 색이 하나 부족하다고 한다.",
-   "tier": "late"
+   "tier": "late",
+   "org": "약지"
   },
   "pianist": {
    "n": "피아니스트",
@@ -4710,7 +4714,7 @@
    ],
    "intro": "소매 안쪽에 작은 표식이 붙어 있다. 위쪽에서 보낸 심부름이 당신 쪽으로 향한다.",
    "tier": "early",
-   "org": "finger"
+   "org": "검지"
   },
   "w_cleaner": {
    "n": "날개 청소 직원",
@@ -4844,7 +4848,10 @@
    ],
    "intro": "손가락의 규칙을 몸으로 집행하는 사람이 골목을 막는다. 어긴 사람 이름은 이미 알고 있다.",
    "tier": "mid",
-   "org": "finger"
+   "org": [
+    "엄지",
+    "중지"
+   ]
   },
   "s_enforcer": {
    "n": "조직 집행조",
@@ -5074,7 +5081,10 @@
    ],
    "intro": "서열을 판정하는 심사관이 앞에 선다. 판정은 이름을 부른 뒤에 내려진다.",
    "tier": "late",
-   "org": "finger"
+   "org": [
+    "엄지",
+    "검지"
+   ]
   },
   "s_captain": {
    "n": "조직 간부",
@@ -5144,6 +5154,129 @@
    "intro": "지부를 팔아넘긴 지부장이 마지막 서류를 불태운다. 본부는 이 이름의 처리를 맡겼다.",
    "tier": "late",
    "org": "assoc",
+   "traitor": true
+  },
+  "th_soldato": {
+   "n": "엄지 솔다토",
+   "color": "#b08a5a",
+   "hp": 38,
+   "atk": 4,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "smash",
+    "heavy",
+    "thrust",
+    "guard"
+   ],
+   "intro": "흰 장갑을 낀 솔다토가 말없이 가로막는다. 윗사람의 말은 한 번이면 충분하다는 얼굴이다.",
+   "tier": "mid",
+   "org": "엄지"
+  },
+  "pt_agent": {
+   "n": "검지 수행자",
+   "color": "#b08a5a",
+   "hp": 36,
+   "atk": 3,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "precise",
+    "aim",
+    "guard"
+   ],
+   "intro": "지령서를 접은 수행자가 골목 끝에서 걸어 나온다. 이유는 묻지 않는 사람의 걸음이다.",
+   "tier": "mid",
+   "org": "검지"
+  },
+  "rg_apprentice": {
+   "n": "약지 작품 견습",
+   "color": "#b08a5a",
+   "hp": 34,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "precise",
+    "thrust",
+    "guard"
+   ],
+   "intro": "손톱 밑에 물감이 낀 견습이 총을 붓처럼 돌린다. 오늘의 작품은 당신이라고 한다.",
+   "tier": "mid",
+   "org": "약지"
+  },
+  "th_traitor": {
+   "n": "엄지를 배신한 솔다토",
+   "color": "#b08a5a",
+   "hp": 38,
+   "atk": 4,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "smash",
+    "heavy",
+    "rend",
+    "guard"
+   ],
+   "intro": "서열을 배신한 솔다토가 장갑을 벗어 던진다. 엄지는 이 이름의 처리를 맡겼다.",
+   "tier": "mid",
+   "org": "엄지",
+   "traitor": true
+  },
+  "pt_defector": {
+   "n": "지령을 거부한 수행자",
+   "color": "#b08a5a",
+   "hp": 36,
+   "atk": 3,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "precise",
+    "rend",
+    "guard"
+   ],
+   "intro": "지령서를 찢은 수행자가 서 있다. 이유를 물은 사람이 없었던 것이 처음으로 후회된다.",
+   "tier": "mid",
+   "org": "검지",
+   "traitor": true
+  },
+  "rg_deserter": {
+   "n": "작품을 불태운 약지",
+   "color": "#b08a5a",
+   "hp": 34,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "precise",
+    "rend",
+    "guard"
+   ],
+   "intro": "자신의 작품을 불태운 사람이 붓 대신 총구를 든다. 약지는 이 이름의 처리를 맡겼다.",
+   "tier": "mid",
+   "org": "약지",
+   "traitor": true
+  },
+  "md_deserter": {
+   "n": "중지를 이탈한 막내",
+   "color": "#b08a5a",
+   "hp": 36,
+   "atk": 3,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "rend",
+    "precise",
+    "guard"
+   ],
+   "intro": "장부를 찢고 도망친 막내가 골목 끝에서 돌아선다. 중지는 갚지 않은 이름을 오래 기억한다.",
+   "tier": "mid",
+   "org": "중지",
    "traitor": true
   }
  },

@@ -108,200 +108,228 @@
    ],
    "mid": [
     {
-     "max": 9,
+     "max": -1,
      "enemy": "lullaby"
     },
     {
-     "max": 11,
+     "max": 1,
      "enemy": "bloodman"
     },
     {
-     "max": 14,
+     "max": 4,
      "enemy": "doll"
     },
     {
-     "max": 17,
+     "max": 7,
      "enemy": "hunter"
     },
     {
-     "max": 18,
+     "max": 8,
      "enemy": "lieutenant"
     },
     {
-     "max": 21,
+     "max": 11,
      "enemy": "sweeper"
     },
     {
-     "max": 23,
+     "max": 13,
      "enemy": "turncoat"
     },
     {
-     "max": 26,
+     "max": 16,
      "enemy": "cleanup"
     },
     {
-     "max": 29,
+     "max": 19,
      "enemy": "youngsters"
     },
     {
-     "max": 31,
+     "max": 21,
      "enemy": "porter"
     },
     {
-     "max": 33,
+     "max": 23,
      "enemy": "rat_knife"
     },
     {
-     "max": 34,
+     "max": 24,
      "enemy": "rat_watch"
     },
     {
-     "max": 36,
+     "max": 26,
      "enemy": "rat_butcher"
     },
     {
-     "max": 38,
+     "max": 28,
      "enemy": "rat_collector"
     },
     {
-     "max": 39,
+     "max": 29,
      "enemy": "rat_father"
     },
     {
-     "max": 41,
+     "max": 31,
      "enemy": "iron_a"
     },
     {
-     "max": 43,
+     "max": 33,
      "enemy": "iron_b"
     },
     {
-     "max": 44,
+     "max": 34,
      "enemy": "iron_c"
     },
     {
-     "max": 46,
+     "max": 36,
      "enemy": "iron_d"
     },
     {
-     "max": 47,
+     "max": 37,
      "enemy": "iron_boss"
     },
     {
-     "max": 49,
+     "max": 39,
      "enemy": "pb_a"
     },
     {
-     "max": 50,
+     "max": 40,
      "enemy": "pb_b"
     },
     {
-     "max": 52,
+     "max": 42,
      "enemy": "pb_c"
     },
     {
-     "max": 54,
+     "max": 44,
      "enemy": "pb_d"
     },
     {
-     "max": 55,
+     "max": 45,
      "enemy": "pb_boss"
     },
     {
-     "max": 58,
+     "max": 48,
      "enemy": "ch_a"
     },
     {
-     "max": 60,
+     "max": 50,
      "enemy": "ch_b"
     },
     {
-     "max": 61,
+     "max": 51,
      "enemy": "ch_c"
     },
     {
-     "max": 63,
+     "max": 53,
      "enemy": "ch_d"
     },
     {
-     "max": 64,
+     "max": 54,
      "enemy": "ch_boss"
     },
     {
-     "max": 66,
+     "max": 56,
      "enemy": "ob_a"
     },
     {
-     "max": 67,
+     "max": 57,
      "enemy": "ob_b"
     },
     {
-     "max": 69,
+     "max": 59,
      "enemy": "ob_c"
     },
     {
-     "max": 71,
+     "max": 61,
      "enemy": "ob_d"
     },
     {
-     "max": 72,
+     "max": 62,
      "enemy": "ob_boss"
     },
     {
-     "max": 74,
+     "max": 64,
      "enemy": "o_clerk"
     },
     {
-     "max": 76,
+     "max": 66,
      "enemy": "a_auditor"
     },
     {
-     "max": 78,
+     "max": 68,
      "enemy": "w_guard"
     },
     {
-     "max": 80,
+     "max": 70,
      "enemy": "f_enforcer"
     },
     {
-     "max": 82,
+     "max": 72,
      "enemy": "s_enforcer"
     },
     {
-     "max": 84,
+     "max": 74,
      "enemy": "w_defector"
     },
     {
-     "max": 86,
+     "max": 76,
      "enemy": "a_defector"
     },
     {
-     "max": 88,
+     "max": 78,
      "enemy": "f_deserter"
     },
     {
-     "max": 90,
+     "max": 80,
      "enemy": "s_runaway"
     },
     {
-     "max": 92,
+     "max": 82,
      "enemy": "o_ledger"
     },
     {
-     "max": 94,
+     "max": 84,
      "enemy": "a_ledger"
     },
     {
-     "max": 96,
+     "max": 86,
      "enemy": "f_ledger"
     },
     {
-     "max": 98,
+     "max": 88,
      "enemy": "s_ledger"
     },
     {
-     "max": 100,
+     "max": 90,
      "enemy": "w_ledger"
+    },
+    {
+     "max": 92,
+     "enemy": "th_soldato"
+    },
+    {
+     "max": 94,
+     "enemy": "pt_agent"
+    },
+    {
+     "max": 96,
+     "enemy": "rg_apprentice"
+    },
+    {
+     "max": 97,
+     "enemy": "th_traitor"
+    },
+    {
+     "max": 98,
+     "enemy": "pt_defector"
+    },
+    {
+     "max": 99,
+     "enemy": "rg_deserter"
+    },
+    {
+     "max": 100,
+     "enemy": "md_deserter"
     }
    ],
    "backstreet": [
