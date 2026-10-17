@@ -1319,7 +1319,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(G.infinite&&G.year>baseEnd&&d(100)<=INF.crack){
         const pool=(D.hiddenBosses||[]).filter(h=>D.enemies[h.id]&&!G.ch.beaten.includes(h.id)&&!(G.met||[]).includes(h.id));
         if(pool.length){const h=one(pool),nm=D.enemies[h.id].n;
-          return {type:'omen',boss:h.id,omen:{x:`세계에 균열이 갔다. 갈라진 틈 너머에서 ${nm}의 기척이 느껴진다. 무엇이든 나올 수 있는 시간이다.`,go:'균열 속으로 들어간다',away:'눈을 돌린다',awayT:'균열은 소리 없이 닫혔다. 틈 너머의 것은 다음 기회를 기다린다.'},escape:true,spec:f}}
+          return {type:'omen',boss:h.id,omen:riftOmen(nm),rift:true,escape:true,spec:f}}
       }
       for(const h of D.hiddenBosses||[]){
         if(h.infOnly&&!G.infinite)continue;
@@ -1328,6 +1328,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         /* chanceBonus: 조건이 맞으면 확률 가산 (예: 검지 소속은 대행자 +30%) */
         const ch_=h.chance?Math.min(95,h.chance+(h.chanceBonus&&meets(G.ch,h.chanceBonus.req)?h.chanceBonus.add:0)+(G.infinite?INF.hiddenAdd:0)):0;
         if(ch_&&d(100)>ch_)continue;
+        if(G.infinite&&G.year>baseEnd)return {type:'omen',boss:h.id,omen:riftOmen(D.enemies[h.id].n),rift:true,escape:!h.noEscape,spec:f};
         return {type:'omen',boss:h.id,omen:omenOf(G.ch,h.omen),escape:!h.noEscape,spec:f};
       }
       const e=encounter(G.ch,f);return {type:'fight',enemy:e.id,enc:e};
@@ -1378,9 +1379,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 불길한 예감에 대한 답: go면 히든 보스, 아니면 원래 고정 전투 지정대로 조우 */
   /* 인연이 걸린 전조 문구의 {n}을 이름으로 채운다 */
+  /* 제 2막 무한 모드: 이 세계에서는 만날 수 없던 히든도 균열을 통해 나타난다 */
+  const riftOmen=nm=>({x:`세계에 균열이 갔다. 갈라진 틈 너머에서 ${nm}의 기척이 느껴진다. 이 세계에서는 만날 수 없던 운명이 균열을 타고 흘러든다.`,go:'균열 속으로 들어간다',away:'눈을 돌린다',awayT:'균열은 소리 없이 닫혔다. 만날 수 없던 운명은 다음 기회를 기다린다.'});
   const omenOf=(ch,o)=>{if(!o||!ch.bond||!ch.bond.name)return o||{};const f=t=>t&&bondFill(t,ch.bond);return Object.assign({},o,{x:f(o.x),go:f(o.go),away:f(o.away),awayT:f(o.awayT)})};
   function answerOmen(G,st,go){
-    if(go||!st.escape){(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,label:T.hiddenBoss}}}
+    if(go||!st.escape){(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,label:st.rift?'균열 너머의 운명':T.hiddenBoss}}}
     const e=encounter(G.ch,st.spec);return {type:'fight',enemy:e.id,enc:e,avoided:st.boss};
   }
   /* 고를 수 있는 선택지 (조건이 맞지 않는 선택지는 빠진다). i는 원래 번호 */
