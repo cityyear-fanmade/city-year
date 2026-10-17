@@ -637,15 +637,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const name=s.slice(6),T_=D.encounters.tables;
     /* 라만차랜드 루트(혈귀)는 소속보다 먼저 */
     const key=ch.flags&&ch.flags.lamancha&&T_[`${name}@lamancha`]?`${name}@lamancha`:ch.aff&&T_[`${name}@${ch.aff.type}`]?`${name}@${ch.aff.type}`:name;
-    /* 같은 조직(enemy.org가 내 소속 종류와 같음)이나 방금 싸운 적은 되도록 다시 굴린다 */
-    const myOrg=ch.aff&&ch.aff.type;let r,id;
-    for(let t=0;t<6;t++){
+    /* 같은 조직의 적(enemy.org가 내 소속 종류나 내 소속 이름과 같음)은 배신자·명부의 처리 대상(enemy.traitor)이 아니면 만나지 않는다. 방금 싸운 적도 되도록 피한다 */
+    const mine=new Set();if(ch.aff){mine.add(ch.aff.name);mine.add((D.orgs.syn||[]).includes(ch.aff.name)?'syn':ch.aff.type)}
+    const blocked=i=>{const e=D.enemies[i],o=e&&e.org;return !!o&&!e.traitor&&mine.has(o)};
+    let r,id;
+    for(let t=0;t<30;t++){
       r=d(100);id=pick(T_[key],r).enemy;
       /* once: 한 번 이긴 미니보스는 다시 나오지 않는다 (표의 첫 적으로 바뀜) */
       if(D.enemies[id].once&&(ch.minis||[]).includes(id))id=T_[key][0].enemy;
-      const o=D.enemies[id].org;
-      if(!((myOrg&&o===myOrg)||id===ch.lastEnc))break;
+      if(!blocked(id)&&(id!==ch.lastEnc||t>=6))break;
     }
+    if(blocked(id)){const ok=T_[key].find(x=>!blocked(x.enemy));if(ok)id=ok.enemy}
     ch.lastEnc=id;
     return {id,roll:r,table:name,label:D.encounters.labels[name]||name};
   }
