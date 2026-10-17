@@ -96,7 +96,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     t:{n:'재능 없음',t:'',e:'',fx:{}},f:{n:'결점 없음',t:'',e:'',fx:{}},w:{n:'맨손',e:'아무것도 쥐지 않았다',fx:{}}};
   /* 아무것도 없는 출발의 운명: chance% 확률로 히든 출신 n개 중 하나를 고르게 강요한다 (고를 수 있는 건 히든 출신 굴림 값) */
   function blankFate(){
-    const F=CFG.blankFate,H=(D.hiddenOrigins||[]).map(x=>x.roll);
+    const F=CFG.blankFate,H=(D.hiddenOrigins||[]).map(x=>x.roll).filter(r=>!F.pool||F.pool.includes(r));
     if(H.length<F.n||d(100)>F.chance)return null;
     const pool=H.slice(),out=[];while(out.length<F.n){out.push(pool.splice(d(pool.length)-1,1)[0])}
     return out.sort((a,b)=>a-b);
@@ -117,6 +117,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.s0={maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,check:s.check};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
+    if(o.hw)ch.hw={fi:0,rv:0};
     if(o.rb){const Z=CFG.rb,tr=d(100),tm=Z.team.find(t=>tr<=t[0])[1];
       ch.rteam=tm;ch.rb={n:0,chase:0,hides:0,chasers:['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==tm).map(t=>Z.foes[t]))};(ch.relics=ch.relics||[]).push('R사 부화장 · '+tm+' 개체')}
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
@@ -588,6 +589,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='fight'){ch.purge=r.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
+    if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
+      if(r){
+        if(k==='fam'||k==='assassin'){r.fi++;if(k==='assassin')ch.purge='hw_assassin'}
+        else if(k.startsWith('pick:')){const pi=+k.slice(5),[ka,kb]=Z.pairs[pi];r.picked=1;r.pair=pi;
+          for(const id of ['zp_'+ka,'zp_'+kb]){ch.deck.push(id);chips.push('흑수 카드 · '+D.cards[id].n)}
+          while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
+          r.rivals=Z.pairs.map((_,i)=>i).filter(i=>i!==pi).map(i=>'hr_'+i);r.rv=0;r.cnext=y+Z.rivalGap;
+          (ch.relics=ch.relics||[]).push('가주 후보 · 흑수 '+(D.cards['zp_'+ka].n.replace('흑수 · ',''))+'·'+(D.cards['zp_'+kb].n.replace('흑수 · ','')));chips.push('가주 후보가 되었다')}
+        else if(k==='rival'){ch.purge=r.rivals[r.rv];r.rv++;r.cnext=y+Z.rivalGap}
+        else if(k==='host'){r.shrine=1;r.host=1;r.fnext=y+Z.finalGap;s.maxHp+=Z.hostHp;ch.hp+=Z.hostHp;s.mindMax=(s.mindMax||0)+Z.hostMind;ch.mind=Math.min(ch.mind,mindMax(ch));(ch.relics=ch.relics||[]).push('선황충');chips.push(`선황충 · 최대 HP +${Z.hostHp} · 최대 정신력 ${Z.hostMind} · 전투 시작 빛 +${Z.hostLight}`)}
+        else if(k==='refuse'){r.shrine=1;ch.purge='hw_elder'}
+        else if(k==='final'){r.finalSeen=1;ch.purge='hongru'}}}
     if(fx.giri){const k=fx.giri,fl=ch.flags;
       if(k==='start'){fl.giri=1;(ch.relics=ch.relics||[]).push('원한의 책 · 찢어낸 장부 세 장');chips.push('의리 순례 · 장부의 첫 이름을 찾아간다')}
       else if(k==='later'){ch.giriAt=(ch.year||0)+CFG.giri.gap;chips.push('원한의 책 · 몇 해 뒤에 다시 부른다')}
@@ -973,6 +986,26 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 조직 루트 사건: 엄지 전향 제안(흑운회·송곳) → 숙청 소문 → 반역 / 검계 역적 낙인 */
   /* 의리 순례: 중지 동생 이상 → 원한의 책 제안 → 장부 3장 (첫째·둘째는 히든 전투) → 형님의 시험 (순응: 버티기 / 반역: 암살자 추격) */
+  /* ===== H사 홍원 가주 후보 루트 =====
+     ch.hw = {fi(가문 사건 진행), picked, pair, rivals[적 id], rv(만난 후보 수), cnext, shrine, host(선황충), elderDone, fnext, finalSeen, done} */
+  function hwYear(G){
+    const ch=G.ch,r=ch.hw,y=G.year,Z=CFG.hw,R=D.hwRoute;if(!r||!R||r.done)return null;
+    if(r.fi<R.fam.length)return y>=Z.famAt[r.fi]?R.fam[r.fi]:null;
+    if(!r.picked){
+      if(y<Z.pickAt)return null;
+      const idx=sample(Z.pairs.map((_,i)=>i),4).sort((a,b)=>a-b);
+      return {t:R.pick.t,x:R.pick.x,c:idx.map(i=>{const [ka,kb]=Z.pairs[i],[na,nb,hz]=R.pick.pairs[i],A=D.cards['zp_'+ka],B=D.cards['zp_'+kb];
+        return {l:`${na} · ${nb} (${hz})`,h:`흑수 카드 2장 · ${A.n.replace('흑수 · ','')}: ${A.d.split(' · ')[1]||A.d.split(' · ')[0]} / ${B.n.replace('흑수 · ','')}: ${B.d.split(' · ')[1]||B.d.split(' · ')[0]}`,ok:{t:`${na}와 ${nb}의 흑수가 소매 속으로 스며들었다. 이제 후계가 끝날 때까지 놓을 수 없다.`,fx:{hw:'pick:'+i}}}})};
+    }
+    if(r.rv<r.rivals.length){
+      if(y<r.cnext||(r.rv>0&&!ch.beaten.includes(r.rivals[r.rv-1])))return null;
+      const E_=D.enemies[r.rivals[r.rv]];return Object.assign({},R.rival,{x:R.rival.x.replace('{n}',E_.n)});
+    }
+    if(!ch.beaten.includes(r.rivals[r.rivals.length-1]))return null;
+    if(!r.shrine)return y>=Z.elderFrom?R.shrine:null;
+    if(!r.finalSeen&&(r.host||r.elderDone)&&y>=r.fnext)return R.final;
+    return null;
+  }
   function rbFlee(ch,chips){
     const r=ch.rb,Z=CFG.rb;if(!r||r.fled)return;
     r.fled=1;r.cnext=(ch.year||0)+Z.chaseGap;
@@ -1202,6 +1235,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
     }
     {const rv=rbFree(G);if(rv)return rv}
+    if(mc.hw&&mc.hw.done&&!mc.hw.ended){mc.hw.ended=true;return {type:'end',win:true,hw:mc.hw.host?'hwhost':'hwfree'}}
     if(mc.rb&&mc.rb.done&&!mc.rb.ended){mc.rb.ended=true;return {type:'end',win:true,rb:true}}
     /* 연전: 바랄을 쓰러뜨리면 쉬지 않고 제나가 나선다 */
     if(G.ch.flags.zenaPend&&!G.ch.beaten.includes(CFG.endless.finalNext))return {type:'fight',enemy:CFG.endless.finalNext,enc:{hidden:true,label:'연전 · 마지막 상대'}};
@@ -1262,6 +1296,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(topReady(ch))return {type:'event',ev:topEvent(ch)};
     if(examReady(ch)&&ch.examSkipYear!==G.year-1){const k=career(ch);return {type:'event',ev:(isFinger(ch)&&D.fingers[ch.aff.name].exam)||(CR[k]&&CR[k].exam)||D.promotionExam}}
     {const rv=rbYear(G);if(rv)return {type:'event',ev:rv}}
+    {const hv=hwYear(G);if(hv)return {type:'event',ev:hv}}
     if(D.corp){const ce=corpEvent(G);if(ce)return {type:'event',ev:ce}}
     {const kh=kidHuntEvent(G);if(kh)return kh}
     {const bv=bondEvent(G);if(bv)return {type:'event',ev:bv}}
@@ -1394,7 +1429,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       if(f0.rbLast&&ch.rb){ch.rb.n++;chips.push('부화장 13연전을 끝냈다')}
       if(f0.rbBoss&&ch.rb){ch.rb.bossDone=1;chips.push('R사의 추격이 끝났다')}
-      if(C.id===CFG.endless.finalNext&&ch.rb&&ch.rb.headSeen){ch.rb.done=1;chips.push('금기의 끝')}}
+      if(C.id===CFG.endless.finalNext&&ch.rb&&ch.rb.headSeen){ch.rb.done=1;chips.push('금기의 끝')}
+      if(f0.hwElder&&ch.hw){ch.hw.elderDone=1;ch.hw.fnext=(ch.year||0)+CFG.hw.finalGap}
+      if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리')}}
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
@@ -1510,6 +1547,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.awl){const w=CFG.syn['밤의 송곳'];P.synInit=w.init[P.synT];mindNote.push(`뒷골목의 룰 · 속도 굴림 +${P.synInit} (덱 ${ch.deck.length}장)`)}
     const ms=mindStat(ch);if(ms){P.atk+=ms;P.eva+=ms;P.spd+=ms;P.maxHp+=ms;P.hp+=ms;mindNote.push(`정신력 ${ch.mind} · 모든 능력치 +${ms}`)}
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
+    if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
     {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;P.chargeHit=CH.hit||0;P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}
     /* 토벌 의뢰의 가족: 주인공과 같은 카드를 쓰고, 능력치는 내 능력치의 배수 (특색급(최고 급수)은 mulTop, 그 밑은 mul) */
