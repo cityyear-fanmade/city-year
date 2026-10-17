@@ -555,6 +555,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.startBreath){s.startBreath+=fx.startBreath;chips.push('시작 '+D.keywords.breath.n+' +'+fx.startBreath)}
     const cid=fx.card||(fx.reward?rewardCard(ch):null);
     addCard(ch,cid,chips,null,true);
+    if(fx.escort)ch.flags.escortNext=1;
     if(fx.officeFound){ch.officePick=true;chips.push('사무소 개설 · 이름과 전문 분야를 정한다')}
     if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){ch.deck.push('o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
@@ -1088,6 +1089,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const x=bondFill(e.x,b)+(act2&&S.old&&S.old.length?' '+one(S.old):'');
     return {t:'달달한 한때 · '+e.t,x,c:[{l:bondFill(e.a,b),h:'함께하는 시간',ok:{t:bondFill(e.at,b),fx:{}}},{l:bondFill(e.b,b),h:'함께하는 시간',ok:{t:bondFill(e.bt,b),fx:{}}}]};
   }
+  /* 외곽 동행 의뢰(무한 모드): 배우자와 함께 나서는 전투. 배우자 소속에 따라 전투형(협공)·비전투형(지원)·수비형(막아섬) */
+  const escortKind=route=>{const K=CFG.escort.kinds;return K.guard.includes(route)?'guard':K.support.includes(route)?'support':'fighter'};
+  const outerPhase=G=>!!G.infinite&&G.year>CFG.years+CFG.endless.span*CFG.endless.grades.length;
+  function bondEscortEvent(G){
+    const ch=G.ch,b=ch.bond,S=D.bond&&D.bond.escort,Z=CFG.escort;
+    if(!S||!b||b.st!=='married'||ch.distForm||ch.job||!outerPhase(G))return null;
+    if(b.escortAt==null)b.escortAt=G.year;
+    if(G.year<b.escortAt)return null;
+    b.escortAt=G.year+Z.gap;if(d(100)>Z.chance)return null;
+    const K=S.kinds[escortKind(b.route)];
+    return {t:K.t,x:bondFill(K.x,b),c:[{l:bondFill(K.a,b),h:bondFill(K.h,b),ok:{t:bondFill(K.at,b),fx:{combat:'table:outskirts',escort:true}}},{l:bondFill(K.b,b),h:'변화 없음',ok:{t:bondFill(K.bt,b),fx:{}}}]};
+  }
   function newGame(ch){return {ch,year:0,pool:sample(D.events.map((_,i)=>i),D.events.length)}}
   const age=G=>CFG.startAge+G.year-1;
   /* 다음 해: 끝 / 고정 전투 / 사건 */
@@ -1193,6 +1206,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(D.corp){const ce=corpEvent(G);if(ce)return {type:'event',ev:ce}}
     {const kh=kidHuntEvent(G);if(kh)return kh}
     {const bv=bondEvent(G);if(bv)return {type:'event',ev:bv}}
+    {const es=bondEscortEvent(G);if(es)return {type:'event',ev:es}}
     {const dv=dailyEvent(G);if(dv)return {type:'event',ev:dv}}
     {const pe=pinkyEvent(G);if(pe)return {type:'event',ev:pe}}
     {const oe=oracleEvent(G);if(oe)return {type:'event',ev:oe}}
@@ -1305,6 +1319,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.hp=clamp(C.P.hp+CFG.winHeal,1,ch.stats.maxHp);chips.push('HP +'+CFG.winHeal);
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
+    if(C.escort){const Z=CFG.escort,m=earn(ch,Z.money+Z.moneyPer*C.escort.lv);ch.money+=m;chips.push(`동행 의뢰 보수 · ${C.escort.name} · +${money(m)}`)}
     if(C.id==='kid_hunt'&&ch.bond){
       if(ch.kidFoeSpouse){if(ch.bond.st==='married'){ch.bond.st='lost';chips.push(kf(D.bond.hunt.winSpouse,ch.bond.name))}}
       else{const kk=(ch.bond.kids||[]).find(k=>k.n===ch.kidFoe&&!k.dead);if(kk){kk.dead=true;chips.push(kf(D.bond.hunt.win,kk.n))}}}
@@ -1432,6 +1447,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ally=e.ally&&ch.bond&&ch.bond.st==='married'?{name:ch.bond.name,lv:spouseLevel(ch.bond,ch.year||0)}:null;
     const allyFirst=ch.flags&&ch.flags.bondFirst&&ch.bond&&ch.bond.st==='married'?{name:ch.bond.name,lv:spouseLevel(ch.bond,ch.year||0)}:null;
     const C={ch,P,E,id,ally,allyFirst,penalty,duel:assocOf(ch)===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
+    {const fl=ch.flags||{};if(fl.escortNext){fl.escortNext=0;if(ch.bond&&ch.bond.st==='married')C.escort={name:ch.bond.name,kind:escortKind(ch.bond.route),lv:spouseLevel(ch.bond,ch.year||0)}}}
     activeC=C;
     if(ch.mindDead&&!ch.ego&&!ch.distForm)mindBreak(C);
     newRound(C);
@@ -1763,6 +1779,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.spdDice&&A.spd>=c.spdDice[0]){const x=rolls.length*c.spdDice[1];dmg+=x;note+=` 속도 ${A.spd} · 주사위 ${rolls.length}개 +${c.spdDice[1]}=+${x}`}
       if(A.spent>0&&c.fixPer){const fp=c.fixPer+(A.focusOn?A.focus.fix:0),x=A.spent*fp;dmg+=x;note+=` 충전 ${A.spent}×${fp}=고정 +${x}`}
       if(B.kuro&&B.black&&B.synT>=3){dmg=Math.max(1,Math.floor(dmg*CFG.syn['흑운회'].half));note+=' 흑운 ×'+CFG.syn['흑운회'].half}
+      if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
       if(B.passive&&B.passive.id==='lockledger'&&A.isP&&B.hp-dmg<=0&&!note.includes('되갚음+')){dmg=Math.max(0,B.hp-1);note+=' 장부가 지워지지 않는다';}
       B.hp=Math.max(0,B.hp-dmg);
@@ -1850,6 +1867,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     C.step=-1;push({k:'head'});
     P.evaB=E.evaB=0;
+    if(C.escort){const es=C.escort,Z=CFG.escort,K=D.bond.escort.kinds[es.kind];
+      if(C.round===1)L('sys',`${es.name} · 동행 의뢰 · ${K.tag}`);
+      if(es.kind==='support'){const sh=Z.support.shield+Z.support.shieldPer*es.lv,hl=Math.max(0,Math.min(Z.support.heal+Z.support.healPer*es.lv,P.maxHp-P.hp));P.shield=Math.min(CFG.shieldCap,(P.shield||0)+sh);if(hl>0){P.hp+=hl;HG(P,hl)}L('kw',`  ${es.name} · 지원 · 보호막 +${sh}${hl>0?` · HP +${hl}`:''}`)}}
     if(P.odin&&P.odinMid)L('kw',`${P.name} · 오딘의 눈 · 되갚음의 예지 · 이번 라운드 첫 피격 되갚음 +${CFG.odin.midHit}`);else if(P.odin){const v=odinEva(C.round,P);L('kw',`${P.name} · 오딘의 눈 · ${P.yeji?'가속하는 미래':'순간의 예지'} · 회피 ${v>0?'+':''}${v}${v<0?' (과부하)':''}`)}
     if(P.laev==='open'&&C.round>1&&C.round%CFG.laev.selfEvery===0){P.flame=Math.min(CFG.stackCap,(P.flame||0)+1);L('kw',`${P.name} · 레바테인 · 자신에게 붉은 화염 1 (지금 ${P.flame})`)}
     /* 아무 카드도 내지 않으면 방어 자세 */
@@ -1887,6 +1907,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     });
     C.step=-1;
     /* 인연의 추가 공격 */
+    if(C.escort&&C.escort.kind==='fighter'&&E.hp>0&&P.hp>0){const es=C.escort,Z=CFG.escort.fighter,x=Z.base+Z.per*es.lv+d(Z.rand)-1;E.hp=Math.max(0,E.hp-x);L('dmg',`${es.name} · 협공 · ${E.name}에게 고정 피해 ${x}`);push({k:'bleed',side:'E',dmg:x})}
     {const A_=C.round===1?C.allyFirst:null;if(A_&&E.hp>0&&P.hp>0){const x=Math.max(1,CFG.bond.ally.base+CFG.bond.ally.per*A_.lv+d(7)-4);E.hp=Math.max(0,E.hp-x);L('dmg',`${A_.name} · 인연의 추가 공격 · ${E.name}에게 ${x} 피해`);push({k:'bleed',side:'E',dmg:x})}}
     /* 연주(피아니스트): 라운드마다 악장 1. every에 닿으면 고정 피해 dmg, 그 라운드에 방어 자세였으면 절반 */
     if(E.passive&&E.passive.id==='recital'&&E.hp>0&&P.hp>0){
