@@ -590,8 +590,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
     if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
+      if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}
       if(r){
-        if(k==='fam'||k==='assassin'){r.fi++;if(k==='assassin')ch.purge='hw_assassin'}
+        if(k==='fam'||k==='assassin'||k.startsWith('fight:')){r.fi++;if(k==='assassin')ch.purge='hw_assassin';else if(k.startsWith('fight:'))ch.purge=k.slice(6)}
         else if(k.startsWith('pick:')){const pi=+k.slice(5),[ka,kb]=Z.pairs[pi];r.picked=1;r.pair=pi;
           for(const id of ['zp_'+ka,'zp_'+kb]){ch.deck.push(id);chips.push('흑수 카드 · '+D.cards[id].n)}
           while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
@@ -911,13 +912,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 인연 루트: 혈귀는 혈귀 전용, 동부 외곽 출신은 외곽 전용, 그 밖에는 소속(사무소·협회·날개·손가락) */
   const FINGER_ROUTE={'엄지':'thumb','검지':'pointer','중지':'middle','약지':'ring'};
-  const bondRouteOf=ch=>ch.race==='hyeolgwi'?'hyeolgwi':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null);
+  const bondRouteOf=ch=>ch.race==='hyeolgwi'?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null);
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
   function bondMeetEvent(ch){
     const B=D.bond;let rt=bondRouteOf(ch);
     /* 히든: 해결사 3급 이하라면 가끔 처음부터 2~1급 해결사인 상대를 만난다 */
-    if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
+    if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&rt!=='hcorp'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
     const R0=rt&&B&&B.routes[rt];
     if(!R0)return null;
     const vi=R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;

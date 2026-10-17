@@ -129,7 +129,7 @@ export const CFG = {
   /* 외곽 동행 의뢰(무한 모드 2막 이후): 결혼한 배우자와 gap년 간격으로 chance% 확률로 함께 외곽 의뢰를 나선다. 배우자 소속에 따라
      전투형(협공: 라운드마다 base+per×급수+1d(rand)−1 고정 피해) · 비전투형(지원: 라운드마다 보호막·HP 회복) · 수비형(첫 피격마다 cut% 줄이고 반격) */
   escort: {chance: 35, gap: 6, money: 300, moneyPer: 100,
-    kinds: {fighter: ['hyeolgwi', 'east', 'highfixer', 'blade', 'awl', 'ring', 'kuro', 'finger'], support: ['office', 'assoc', 'wing', 'pointer'], guard: ['thumb', 'middle']},
+    kinds: {fighter: ['hyeolgwi', 'east', 'highfixer', 'blade', 'awl', 'ring', 'kuro', 'finger'], support: ['office', 'assoc', 'wing', 'pointer'], guard: ['thumb', 'middle', 'hcorp']},
     fighter: {base: 6, per: 2, rand: 4}, support: {shield: 12, shieldPer: 4, heal: 4, healPer: 1}, guard: {cut: 35, cutPer: 4, cutMax: 70, counter: 5, counterPer: 2}},
   bond: {sweetEvery: 7, sweetEvery2: 12, routes: ['office', 'assoc', 'wing', 'finger', 'thumb', 'pointer', 'middle', 'ring', 'kuro', 'blade', 'awl'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], tries: 2, waitDc: 40,
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
@@ -142,7 +142,7 @@ export const CFG = {
     /* 뒤틀린 뒤: 성인이 된 아이가 있으면 gap년마다 chance%로 토벌 의뢰가 온다. 여럿이면 가장 강한 아이(등급)가 온다. 등급 = 20세 이후 2년마다 +1(최대 8) + 직업 가산 */
     hunt: {gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1, mul: 1.1, mulTop: 1.5, topLv: 8,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
-      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1}, spouseYears: 3, spouseJob: {rcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},
+      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1, hcorp: 1}, spouseYears: 3, spouseJob: {rcorp: 'fixer', hcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
   /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */
@@ -219,7 +219,7 @@ export const CFG = {
   /* 흑수(黑水): 상대에게 쌓는 스택. 라운드가 끝날 때 스택당 dmg 피해(내가 받으면 dmgMe), 그 뒤 스택은 keep 비율만 남는다. 최대 cap */
   ink: {cap: 12, dmg: 2, dmgMe: 1, keep: 0.5},
   /* H사 홍원 가주 후보: 가문의 암투(famAt년차 이후 4사건) → 1막 후반 가주 후보 지명(pickAt) · 흑수 한 쌍 선택 → 다른 후보 5명(rivalGap년 간격) → 2막 초(elderFrom~) 철함사의 소요(선황충) → 홍루 */
-  hw: {famAt: [1, 5, 8, 12], pickAt: 34, rivalGap: 3, elderFrom: 58, finalGap: 2, hostHp: 20, hostMind: -8, hostLight: 1,
+  hw: {famAt: [1, 5, 8, 12, 15, 19, 23, 26, 29, 32], pickAt: 34, rivalGap: 3, elderFrom: 58, finalGap: 2, hostHp: 20, hostMind: -8, hostLight: 1,
     pairs: [['rat', 'ox'], ['tiger', 'rabbit'], ['dragon', 'snake'], ['horse', 'goat'], ['monkey', 'rooster'], ['dog', 'pig']]},
   rb: {total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, team: [[30, '토끼팀'], [60, '순록팀'], [90, '코뿔소팀'], [100, '까마귀팀']], foes: {'까마귀팀': 'rh2', '코뿔소팀': 'rh3', '순록팀': 'rh4', '토끼팀': 'rh5'}, headFrom: 64, headGap: 1, bossGap: 3, head: ['baral'], boss: 'rcorp_boss', xp: 4, trial: {baral: {hp: 0.75, atk: -1}, zena: {hp: 0.75, atk: -1}}},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */

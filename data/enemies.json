@@ -5821,6 +5821,23 @@
    },
    "hw": true,
    "hwFinal": true
+  },
+  "hw_agent": {
+   "n": "가문의 대리인",
+   "color": "#6b3b2e",
+   "hp": 52,
+   "atk": 5,
+   "eva": 5,
+   "spd": 5,
+   "deck": [
+    "hc_2",
+    "hc_5",
+    "hc_1",
+    "guard"
+   ],
+   "tier": "mid",
+   "hw": true,
+   "intro": "대리인이 장부를 접는다. 방계의 돈으로 움직이는 사람이다. 칼 쓰는 법은 가문이 가르쳤다."
   }
  },
  "fixedFights": {
