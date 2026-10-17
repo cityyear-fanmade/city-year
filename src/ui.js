@@ -1128,7 +1128,7 @@ export function startUI(E,app){
     /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
     const cost=UI.sel.reduce((a,i)=>a+D.cards[P.hand[i]].c-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
     const cards=P.hand.map((id,i)=>{
-      const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&c.c>left)||(c.needBlack&&!P.black);
+      const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&c.c>left)||(c.needBlack&&!P.black)||(c.needLow&&X.hp>X.maxHp*CFG.raven.low);
       return `<button class="card ${si>=0?'sel':''}${P.index&&i===P.starSlot?' presc':''}" data-a="pick" data-i="${i}" ${dis?'disabled':''}>
         <span class="cost">${c.c}</span>${si>=0?`<em class="ord">${si+1}</em>`:''}${P.index&&i===P.starSlot?'<span class="prescTag">📜 지령</span>':''}
         <span class="nm">${kindBadge(c)} ${c.n}${c.t==='atk'&&P.cg&&P.cg.n?` <b style="color:var(--gold)">${P.cg.n}</b>`:''}${lk?` <span class="bad small">잠김 · ${esc(C.E.passive.n)}</span>`:''}</span>${c.t==='atk'?`<span class="mono small" style="color:var(--gold)">최종 명중 ${sg(P.atk+c.hit+(P.passHit||0)+(P.cg?P.cg.hit:0))}${P.fsOn&&P.fs?' (+선제 '+CFG.firstHit+')':''}</span>`:''}<span class="cd">${cardLine(c,c.t==='atk'?P.cg:null,P.wx)}</span>
