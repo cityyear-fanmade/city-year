@@ -218,8 +218,8 @@ export const CFG = {
   /* R사 부화장 복제체 루트: 0년차 13연전 → 일과 생활(전용 인연) → 1막 후반(fleeAt~) R사 추격대 4번(chaseGap년 간격) → 2막 초 숙청 집행관(R사의 끝) → 2막 중반(headFrom년차~) 정비 한 번 → 금기 위반 확인 즉시 발톱 바랄 → 조율자 제나 → 엔딩 */
   /* 까마귀팀 패시브 '까마귀의 눈'(전용 카드 rv_*): 적중마다 상대의 버프 1개를 지운다 · 6장: 버프 없는 상대에게 명중 +10 · 8장: 상대 HP 50% 이하면 주사위마다 +1 · 10장: 상대 HP 30% 이하면 방어 자세·회피 봉쇄 */
   raven: {tiers: [6, 8, 10], hit: 10, low: 0.5, exec: 0.3, buffs: ['shield', 'breath', 'charge', 'cloud', 'passHit']},
-  /* 흑수(黑獸): 상대에게 쌓는 스택. follow: 부하 흑수가 내 공격 뒤에 거드는 추가타(데려온 순서대로 한 사람씩) 피해·흑수 스택. 라운드가 끝날 때 스택당 dmg 피해(내가 받으면 dmgMe), 그 뒤 스택은 keep 비율만 남는다. 최대 cap */
-  ink: {cap: 12, dmg: 2, dmgMe: 1, keep: 0.5, follow: 3, followInk: 1},
+  /* 수흔(獸痕): 흑수가 남긴 짐승의 흔적, 상대에게 쌓는 스택. follow: 부하 흑수가 내 공격 뒤에 거드는 추가타(데려온 순서대로 한 사람씩) 기본 피해, followPer: 부하가 둘 이상이면 인원이 늘 때마다 추가 피해, followInk: 상대에게 쌓는 수흔. 라운드가 끝날 때 스택당 dmg 피해(내가 받으면 dmgMe), 그 뒤 스택은 keep 비율만 남는다. 최대 cap */
+  ink: {cap: 12, dmg: 2, dmgMe: 1, keep: 0.5, follow: 3, followPer: 1, followInk: 1},
   /* H사 홍원 가주 후보: 1막 초 홍원 가문에서 보낸다(가문 사건 homeEvents개) → missionAt년차 가주의 명으로 영생의 단서를 찾아 도시로 나선다(단서 4곳, clueGap년 간격) → 홍원으로 귀환, 남은 가문 사건 → 2막 시작(pickAt)에 가주 후보 지명 · 흑수 한 쌍 선택 → 다른 후보 5명(rivalGap년 간격) → 2막 중반(elderFrom~) 철함사의 소요(선황충) → 홍루 */
   hw: {dan: {name: '홍단', heal: [0, 2, 3, 4]}, winHealUp: 10, famAt: [1, 5, 9, 14, 19, 45, 45, 45, 45, 45], homeEvents: 5, missionAt: 22, clueGap: 5, pickAt: 56, rivalGap: 1, elderFrom: 61, finalGap: 1, clueHp: 3, hostHp: 20, hostMind: -8, hostLight: 1,
     pairs: [['rat', 'ox'], ['tiger', 'rabbit'], ['dragon', 'snake'], ['horse', 'goat'], ['monkey', 'rooster'], ['dog', 'pig']]},
@@ -233,9 +233,9 @@ export const CFG = {
     hw: {id: 'w_hongwon', lv: [
       {n: '홍원의 장도', fx: {atk: 3, eva: 2}, dice: [2, 4], e: '공+3 · 회피+2 · 피해 2d4 (가문의 의례용 장도)'},
       {n: '후보의 장도', fx: {atk: 5, eva: 2}, dice: [2, 5], e: '공+5 · 회피+2 · 피해 2d5'},
-      {n: '후보의 장도', fx: {atk: 5, eva: 4}, dice: [2, 5], wx: {hitInk: 1}, e: '공+5 · 회피+4 · 피해 2d5 · 적중 시 흑수 +1'}],
-      host: {n: '가주의 장도', fx: {atk: 8, eva: 4}, dice: [2, 6], wx: {hitInk: 1, lightUp: 1}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 흑수 +1 · 전투 시작 빛 +1'},
-      free: {n: '가주의 장도', fx: {atk: 5, eva: 7}, dice: [2, 6], wx: {hitInk: 1, inkCap: 4}, e: '공+5 · 회피+7 · 피해 2d6 · 적중 시 흑수 +1 · 흑수 스택 한도 +4'}}},
+      {n: '후보의 장도', fx: {atk: 5, eva: 4}, dice: [2, 5], wx: {hitInk: 1}, e: '공+5 · 회피+4 · 피해 2d5 · 적중 시 수흔 +1'}],
+      host: {n: '가주의 장도', fx: {atk: 8, eva: 4}, dice: [2, 6], wx: {hitInk: 1, lightUp: 1}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 수흔 +1 · 전투 시작 빛 +1'},
+      free: {n: '가주의 장도', fx: {atk: 5, eva: 7}, dice: [2, 6], wx: {hitInk: 1, inkCap: 4}, e: '공+5 · 회피+7 · 피해 2d6 · 적중 시 수흔 +1 · 수흔 스택 한도 +4'}}},
   rb: {total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, team: [[30, '토끼팀'], [60, '순록팀'], [90, '코뿔소팀'], [100, '까마귀팀']], foes: {'까마귀팀': 'rh2', '코뿔소팀': 'rh3', '순록팀': 'rh4', '토끼팀': 'rh5'}, headFrom: 64, headGap: 1, bossGap: 3, head: ['baral'], boss: 'rcorp_boss', xp: 4, trial: {baral: {hp: 0.75, atk: -1}, zena: {hp: 0.75, atk: -1}}},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},
