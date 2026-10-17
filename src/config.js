@@ -20,8 +20,8 @@ export const CFG = {
   /* 공방 치유소: 한 번에 hp 회복, 방문마다 max번 */
   /* 치유소: 치료를 받을 때마다 값이 step씩 오른다 (한 판 전체 누적, 방문마다 최대 max번) */
   clinic: {price: 500, step: 500, hp: 30, max: 3},
-  /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 heal 회복(전투마다 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
-  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, below: 30, heal: 50},
+  /* 암시장 K사 엠플: 전투 중 HP가 최대 HP의 belowPct 이하가 되면 자동으로 heal 회복(전투당 사용 횟수 제한 없음, 한 번에 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
+  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, belowPct: 0.2, heal: 50},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
   orderBonusLight: 1, catchupBonus: 5, spdMul: 2, spdHit: {per: 5, max: 4}, gapFirst: 30, firstHit: 10,
