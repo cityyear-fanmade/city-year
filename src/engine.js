@@ -170,12 +170,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 보냐텔리의 검 단계(+무한 모드 후반)에 따라 전용 검술 카드의 피해가 오른다 */
   function bonCardB(ch){
     const w=ch&&ch.gear&&ch.gear.weapon;if(!(w&&w.id==='bonatelli'))return 0;
-    const B=CFG.bon;return (B.cardB[w.lvl||0]||0)+Math.min(B.lateMax,Math.floor(Math.max(0,((ch.year||0)-B.lateFrom))/B.lateEvery)*B.latePer);
+    const B=CFG.bon;return (B.cardB[w.lvl||0]||0)+Math.min(B.lateMax,Math.floor(Math.max(0,((ch.year||0)-B.lateFrom))/B.lateEvery)*B.latePer)+(!ch.odin&&(w.lvl||0)>=B.noEyeFrom?B.noEye:0);
   }
   function bonItem(L){
     const B=CFG.bon,fx={atk:B.atk[L],eva:B.eva[L]};if(B.dmgB[L])fx.dmgB=B.dmgB[L];
     return {id:'bonatelli',slot:'weapon',grade:5,lvl:L,n:'보냐텔리의 검'+(L?' +'+L:''),
-      e:`공+${fx.atk} · 회피+${fx.eva}${fx.dmgB?' · 피해+'+fx.dmgB:''} · 가속(공격한 라운드마다 명중·회피 +5, 최대 3)`,fx,wx:{accel:B.accel}};
+      e:`공+${fx.atk} · 회피+${fx.eva}${fx.dmgB?' · 피해+'+fx.dmgB:''} · 가속(공격한 라운드마다 명중·회피 +5, 최대 ${L>=B.max?B.accel.max+1:B.accel.max})`,fx,wx:{accel:L>=B.max?Object.assign({},B.accel,{max:B.accel.max+1}):B.accel}};
   }
   /* ===== 6시즌: E.G.O 발현자의 무기 성장 =====
      전용 카드 '발현'을 낸 누적 횟수가 CFG.egoGrow.need에 닿는 순간 TETH → HE → WAW → ALEPH. 수치는 egoWeapons[].grow[등급-1] */
@@ -1646,7 +1646,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const hits=c.hits+(c.t==='atk'&&A.wx&&A.wx.extraHit?A.wx.extraHit:0);
     /* 가속: 라운드마다 처음 공격할 때 1스택 (전투당 최대 3) */
     /* 엄지 패시브 탄환: 공격 카드마다 1발 소모 · 상대에게 '예의를 지킬 것' 1 (상대 명중 −1×스택) */
-    if(c.t==='atk'&&A.thumb&&A.ammo>0&&!A.distorted){A.ammo--;B.manner=(B.manner||0)+1;L('kw',`${A.name} · 탄환 1발 (남은 ${A.ammo}) · ${B.name}에게 예의를 지킬 것 ${B.manner} (명중 −${B.manner})`)}
+    if(c.t==='atk'&&A.thumb&&!A.distorted&&A.ammo<=0&&A.ammoRound!==C.round){A.ammoRound=C.round;A.ammo=CFG.thumbRefund;L('kw',`${A.name} · 탄환 ${CFG.thumbRefund}발 되돌아온다 (이번 라운드 한 번)`)}
+    if(c.t==='atk'&&A.thumb&&A.ammo>0&&!A.distorted){A.ammo--;B.manner=(B.manner||0)+1;L('kw',`${A.name} · 탄환 1발 (남은 ${A.ammo}) · ${B.name}에게 예의를 지킬 것 ${B.manner} (명중 −${B.manner*CFG.thumbManner})`)}
     if(c.t==='atk'&&c.serum)addSerum(A,c,L);
     if(c.t==='atk'&&A.wx&&A.wx.accel&&A.accRound!==C.round&&(A.accel||0)<A.wx.accel.max){A.accRound=C.round;A.accel=(A.accel||0)+1;L('kw',`${A.name} · 가속 ${A.accel}/${A.wx.accel.max} (명중·회피 +${A.accel*A.wx.accel.hit})`)}
     for(let h=0;h<hits;h++){
@@ -1677,7 +1678,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const acA=A.wx&&A.wx.accel?(A.accel||0)*A.wx.accel.hit:0,acB=B.wx&&B.wx.accel?(B.accel||0)*B.wx.accel.eva:0;
       const trH=(A.trait==='bloodscent'&&B.bleed>0?15:0)+(A.trait==='enrage'&&A.hp<=A.maxHp/2?15:0),trE=B.trait==='coward'&&B.hp<=B.maxHp/2?20:0;
       const exH=(c.execHit&&(B.disp||0)>0?c.execHit:0)+trH;if(exH)pnote+=` 처분 표식 명중+${exH}`;
-      let am=A.atk+(!A.isP&&C.ally?CFG.bond.allyHit:0)+(A.awl&&B.bleed>0?CFG.syn['밤의 송곳'].bleedHit:0)+c.hit+exH-(A.manner||0)+(gr?gr.hit:0)+fsb+Math.min(CFG.spdHit.max,Math.max(0,Math.floor((A.spd-B.spd)/CFG.spdHit.per)))+A.passHit+acA+(A.wx&&A.wx.hitB||0)+(A.ring?CFG.ring.hit*A.work:0)+(sub?sub.atk:0)-3*(A.prescript||0)-Math.floor((B.middle?CFG.middle.sinkHit:1)*CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per))-((staggerStage(A)||{}).hit||0)-(A.isP&&A.laev==='open'&&isBlue(A)?Math.round(CFG.laev.selfBlueHit*(A.laevF||1)):0),dm=B.eva+B.evaB-(B.evaPen||0)+(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0)+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?odinEva(C.round,B):0);
+      let am=A.atk+(!A.isP&&C.ally?CFG.bond.allyHit:0)+(A.awl&&B.bleed>0?CFG.syn['밤의 송곳'].bleedHit:0)+c.hit+exH-(A.manner||0)*CFG.thumbManner+(gr?gr.hit:0)+fsb+Math.min(CFG.spdHit.max,Math.max(0,Math.floor((A.spd-B.spd)/CFG.spdHit.per)))+A.passHit+acA+(A.wx&&A.wx.hitB||0)+(A.ring?CFG.ring.hit*A.work:0)+(sub?sub.atk:0)-3*(A.prescript||0)-Math.floor((B.middle?CFG.middle.sinkHit:1)*CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per))-((staggerStage(A)||{}).hit||0)-(A.isP&&A.laev==='open'&&isBlue(A)?Math.round(CFG.laev.selfBlueHit*(A.laevF||1)):0),dm=B.eva+B.evaB-(B.evaPen||0)+(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0)+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?odinEva(C.round,B):0);
       if(B.stunned)dm=0;
       /* 중지: 서열이 오를수록 회피의 '피하는 힘'이 줄어든다(evaEff). 줄어든 만큼은 받는 피해 감소로 돌려준다 */
       if(B.middle&&B.isP&&B.midEff<1&&!B.stunned)dm-=Math.floor(Math.max(0,B.eva+B.evaB-(B.evaPen||0)+(B.odin?Math.max(0,odinEva(C.round,B)):0))*(1-B.midEff));
@@ -1714,7 +1715,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         let mi=0;rolls.forEach((v,i)=>{if(v<rolls[mi])mi=i});
         const nv=Math.max(lo2,d(die));if(nv>rolls[mi]){note+=` 재굴림 ${rolls[mi]}→${nv}`;rolls[mi]=nv}
       }
-      let dmg=rolls.reduce((a,b)=>a+b,0)+c.b+(gr?gr.b:0)+(A.prescPlus||0)+(A.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(A.bonB&&BONA.has(c)?A.bonB:0);
+      let dmg=rolls.reduce((a,b)=>a+b,0)+c.b+(gr?gr.b:0)+(A.prescPlus||0)+(A.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(A.bonB&&BONA.has(c)?A.bonB:0)+(c.markB&&B.disp?c.markB*B.disp:0);
       /* 인연과 함께 싸우는 보스: 배우자가 같은 공격을 같이 굴린다. 피해 주사위 합 = (본인 + 배우자)의 ¾씩 */
       let spR=null;
       if(A.isP&&C.ally&&rolls.length){const dd=wd?wd[1]:die;spR=rolls.map(()=>c.range&&!wd?c.range[0]-1+d(c.range[1]-c.range[0]+1):Math.max(lo2,d(dd)));
@@ -1802,7 +1803,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 보냐텔리 검술: 처분 표식, 엘레판테(표식이 있으면 다음 라운드 처분 1회) */
       if(c.grant&&(B.disp||0)>0&&B.hp>0&&!A.grantNext){A.grantNext=c.grant;L('sys',`  ${A.name} · 처분 표식 · 다음 손패에 ${D.cards[c.grant].n}`)}
       if(c.seal&&B.hp>0){B.sealMark=Math.min(5,(B.sealMark||0)+c.seal);L('kw',`  ${B.name}에게 봉인 각인 ${B.sealMark}/5`)}
-      if(c.dmark&&B.hp>0){B.disp=Math.min(5,(B.disp||0)+c.dmark);L('kw',`  ${B.name}에게 처분 표식 ${B.disp}`)}
+      if(c.dmark&&B.hp>0){B.disp=Math.min(CFG.bon.markMax,(B.disp||0)+c.dmark);L('kw',`  ${B.name}에게 처분 표식 ${B.disp}`)}
       /* 마에스트로 책장: 재료 수집 부여 / 신체관극(상대 디버프 수만큼 재료) */
       if(c.mat&&B.hp>0){B.matc=(B.matc||0)+c.mat;L('kw',`  ${B.name}에게 재료 수집 ${B.matc}`)}
       if(c.harvest&&B.matc>0){const n=['bleed','rupture','burn','flame','prescript','warp','shock','chain','web','mk','matc'].reduce((a,k)=>a+(B[k]>0?B[k]:0),0);
