@@ -228,7 +228,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
   /* 히든 보스 전용 책장: 받으면 덱이 통째로 바뀌고 영구 고정, 거절하면 지금 덱 유지 */
-  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;ch.offers=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
+  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;ch.offers=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
   function declinePack(ch){if(!ch.packOffer)return false;ch.packOffer=null;return true}
   /* 고정 카드(E.G.O 전용)는 덱에서 뺄 수 없다. 예전 판에서 카드함으로 빠진 고정 카드는 덱으로 돌려놓고, 덱이 넘치면 일반 카드가 카드함으로 간다 */
   function repairFixed(ch){
@@ -566,6 +566,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.pinkyKey){const ks=ch.pinkyKeys=ch.pinkyKeys||[],K=D.pinky.keys[ks.length];if(K){ks.push(K.k);chips.push(`소지의 별 · ${K.k} (${ks.length}/${D.pinky.keys.length})`);if(ks.length>=D.pinky.keys.length){ch.seongPick=true;chips.push('성도 · 이름을 정한다')}}}
     if(fx.oracle&&!ch.oracle){ch.oracle=true;(ch.relics=ch.relics||[]).push('히든 직업 · 신탁대행자','전리품 · 신의 단말기');addStats(s,D.oracle.loot.fx);chips.push('히든 직업 · 신탁대행자 · 지령 독촉',`전리품 · 신의 단말기 · ${D.oracle.loot.e}`)}
     if(fx.officeJoin){chips.push(...joinOffice(ch,one(fx.officeJoin)))}
+    if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push('혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP 15 회복)');
+      if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
     if(fx.giri){const k=fx.giri,fl=ch.flags;
       if(k==='start'){fl.giri=1;(ch.relics=ch.relics||[]).push('원한의 책 · 찢어낸 장부 세 장');chips.push('의리 순례 · 장부의 첫 이름을 찾아간다')}
       else if(k==='later'){ch.giriAt=(ch.year||0)+CFG.giri.gap;chips.push('원한의 책 · 몇 해 뒤에 다시 부른다')}
@@ -668,6 +670,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='licensed')return ch.licensed;
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
+    if(req==='nohyeol')return ch.race!=='hyeolgwi';
+    if(req==='noroute')return !ch.rb&&!ch.hw;
     if(req==='bondmarried')return !!(ch.bond&&ch.bond.st==='married');
     if(req==='nofinger')return !isFinger(ch);
     if(req==='nojob')return !ch.job;
@@ -1225,7 +1229,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const ti=one(tagged);
       if(d(100)<=(G.ch.paths[D.events[ti].tag]||0)*CFG.pathEventMul){G.pool.splice(G.pool.indexOf(ti),1);return {type:'event',ev:evForJob(D.events[ti],G.ch)}}
     }
-    while(G.pool.length){const ev=D.events[G.pool.pop()];if(meets(G.ch,ev.req))return {type:'event',ev:evForJob(ev,G.ch)}}
+    while(G.pool.length){const ev=D.events[G.pool.pop()];if(meets(G.ch,ev.req)&&(!ev.chance||d(100)<=ev.chance))return {type:'event',ev:evForJob(ev,G.ch)}}
     return {type:'event',ev:D.events.find(e=>e.fallback)||D.events[0]};
   }
   /* 불길한 예감에 대한 답: go면 히든 보스, 아니면 원래 고정 전투 지정대로 조우 */
