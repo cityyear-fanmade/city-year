@@ -1784,8 +1784,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
       if(B.passive&&B.passive.id==='lockledger'&&A.isP&&B.hp-dmg<=0&&!note.includes('되갚음+')){dmg=Math.max(0,B.hp-1);note+=' 장부가 지워지지 않는다';}
-      B.hp=Math.max(0,B.hp-dmg);
+      /* K사 엠플: 한 번에 HP 이하의 피해(치명타)를 받으면 쓰러지기 전에 엠플이 쓰인다. 받은 피해만큼 회복이 깎인다 (HP − 피해 + 회복) */
+      let ampNote='';
+      if(B.isP&&B.ample>0&&dmg>=B.hp&&!B.distorted){
+        const K=CFG.ample;let hp_=B.hp-dmg,used=0;
+        while(B.ample>0&&hp_<=0){B.ample--;used++;hp_+=K.heal}
+        hp_=Math.min(hp_,B.maxHp);
+        ampNote=` · ${K.name} ${used}개 사용 (치명적인 피해 ${dmg} · 회복 ${K.heal*used}에서 깎여 HP ${Math.max(0,hp_)}, 남은 ${B.ample}개)`;
+        B.hp=Math.max(0,hp_);
+      }else B.hp=Math.max(0,B.hp-dmg);
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
+      if(ampNote)L('amp',`${B.name}${ampNote}`);
       if(c.hitShield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
       if(A.kuro&&A.black&&B.hp>0){B.bleed=Math.min(CFG.stackCap,B.bleed+CFG.syn['흑운회'].bleedPlus);L('kw',`  ${A.name} · 흑운 · ${B.name}에게 출혈 +${CFG.syn['흑운회'].bleedPlus} (지금 ${B.bleed})`)}
