@@ -1338,7 +1338,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const ti=one(tagged);
       if(d(100)<=(G.ch.paths[D.events[ti].tag]||0)*CFG.pathEventMul){G.pool.splice(G.pool.indexOf(ti),1);return {type:'event',ev:evForJob(D.events[ti],G.ch)}}
     }
-    while(G.pool.length){const ev=D.events[G.pool.pop()];if(meets(G.ch,ev.req))return {type:'event',ev:evForJob(ev,G.ch)}}
+    while(G.pool.length){const ev=D.events[G.pool.pop()];if(meets(G.ch,ev.req)&&(!ev.chance||d(100)<=ev.chance))return {type:'event',ev:evForJob(ev,G.ch)}}
     return {type:'event',ev:D.events.find(e=>e.fallback)||D.events[0]};
   }
   /* 불길한 예감에 대한 답: go면 히든 보스, 아니면 원래 고정 전투 지정대로 조우 */
