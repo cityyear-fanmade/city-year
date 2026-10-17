@@ -1607,8 +1607,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
-    /* 회복 수단이 하나도 없는 빌드는 보스·히든 전투에서 보호막과 피해 감소를 받는다 */
-    if(e.hidden&&!P.regen&&!P.singHeal&&!(ch.ample>0)&&!(P.deck||ch.deck).some(id=>D.cards[id]&&(D.cards[id].heal||D.cards[id].inkCall&&0))){const A_=CFG.noHealAid,sh_=Math.floor(P.maxHp*A_.shield);P.shield=Math.min(CFG.shieldCap,(P.shield||0)+sh_);P.dr=(P.dr||0)+A_.dr;if(P.dr0!=null)P.dr0+=A_.dr;mindNote.push(`회복 수단이 없다 · 보호막 +${sh_} · 받는 피해 −${A_.dr}%`)}
     P.inkIds=ch.hw&&ch.hw.mission?(()=>{const pr=CFG.hw.pairs[ch.hw.pair],f=pr[ch.hw.w];return (ch.hw.picked?[f,pr[1-ch.hw.w]]:[f]).map(k=>'zp_'+k)})():null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
     {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;P.chargeHit=CH.hit||0;P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}
