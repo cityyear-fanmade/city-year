@@ -1290,6 +1290,16 @@
    "tier": "boss",
    "hard": {
     "hp": 5.1
+   },
+   "bonus": {
+    "n": "불순물의 잔재",
+    "money": 1500,
+    "moneyPer": 300,
+    "fx": {
+     "maxHp": 6,
+     "atk": 1
+    },
+    "e": "최대 HP +6 · 공격 +1"
    }
   },
   "freischutz": {
