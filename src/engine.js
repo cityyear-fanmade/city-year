@@ -595,12 +595,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}
       if(r){
         if(k==='fam'||k==='assassin'||k.startsWith('fight:')){r.fi++;if(k==='assassin')ch.purge='hw_assassin';else if(k.startsWith('fight:'))ch.purge=k.slice(6)}
-        else if(k.startsWith('pick:')){const pi=+k.slice(5),[ka,kb]=Z.pairs[pi];r.picked=1;r.pair=pi;
-          for(const id of ['zp_'+ka,'zp_'+kb,'hc_6']){ch.deck.push(id);chips.push('흑수 카드 · '+D.cards[id].n)}
+        else if(k.startsWith('mission1:')){const [,pi,w]=k.split(':').map(Number),key=Z.pairs[pi][w];r.mission=1;r.out=1;r.cl=0;r.clues=0;r.clNext=y+3;r.pair=pi;r.w=w;
+          ch.deck.push('zp_'+key);chips.push('흑수 카드 · '+D.cards['zp_'+key].n);
+          while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
+          (ch.relics=ch.relics||[]).push('흑수 · '+D.cards['zp_'+key].n.replace('흑수 · ',''))}
+        else if(k==='pick'){const pi=r.pair,partner=Z.pairs[pi][1-r.w];r.picked=1;
+          for(const id of ['zp_'+partner,'hc_6']){ch.deck.push(id);chips.push('흑수 카드 · '+D.cards[id].n)}
           while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
           r.rivals=Z.pairs.map((_,i)=>i).filter(i=>i!==pi).map(i=>'hr_'+i);r.rv=0;r.cnext=y+Z.rivalGap;
-          routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('가주 후보 · 흑수 '+(D.cards['zp_'+ka].n.replace('흑수 · ',''))+'·'+(D.cards['zp_'+kb].n.replace('흑수 · ','')));chips.push('가주 후보가 되었다')}
-        else if(k==='mission'){r.mission=1;r.out=1;r.cl=0;r.clues=0;r.clNext=y+3}
+          routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('가주 후보 · 흑수 '+D.cards['zp_'+partner].n.replace('흑수 · ',''));chips.push('가주 후보가 되었다')}
         else if(k==='clue'){ch.purge='hw_cl'+r.cl;r.cl++;r.clNext=y+(r.cl>=D.hwRoute.clue.length?2:Z.clueGap)}
         else if(k==='return'){r.out=0;r.back=1}
         else if(k==='rival'){ch.purge=r.rivals[r.rv];r.rv++;r.cnext=y+Z.rivalGap}
@@ -1005,7 +1008,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 1) 홍원 안: 앞의 가문 사건 */
     if(r.fi<Z.homeEvents)return y>=Z.famAt[r.fi]?R.fam[r.fi]:null;
     /* 2) 가주의 명으로 홍원 밖에서 영생의 단서를 찾는다 */
-    if(!r.mission)return y>=Z.missionAt?R.mission:null;
+    if(!r.mission){
+      if(y<Z.missionAt)return null;
+      const idx=sample(Z.pairs.map((_,i)=>i),4).sort((a,b)=>a-b);
+      return {t:R.mission.t,x:R.mission.x,c:idx.map(pi=>{const w=d(2)-1,key=Z.pairs[pi][w],nm=R.pick.pairs[pi][w],hj=R.pick.pairs[pi][2][w],cd=D.cards['zp_'+key];
+        return {l:`${nm}(${hj})의 흑수를 받아 나선다`,h:`흑수 한 마리 · ${cd.d.split(' · ')[1]||cd.d.split(' · ')[0]} · 홍원 밖으로 나선다 · 돈 +200`,ok:{t:`가주가 소매에서 ${nm}의 흑수를 꺼내 건넸다. 검은 물이 손바닥에서 스며든다. 붉은 대문을 나서며 뒤를 돌아보지 않았다.`,fx:{hw:`mission1:${pi}:${w}`,money:200}}}})};
+    }
     if(r.out){
       if((r.cl||0)<R.clue.length)return y>=r.clNext?R.clue[r.cl]:null;
       return (r.clues||0)>=R.clue.length&&y>=r.clNext?R.back:null;
@@ -1014,9 +1022,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(r.fi<R.fam.length)return y>=Z.famAt[r.fi]?R.fam[r.fi]:null;
     if(!r.picked){
       if(y<Z.pickAt)return null;
-      const idx=sample(Z.pairs.map((_,i)=>i),4).sort((a,b)=>a-b);
-      return {t:R.pick.t,x:R.pick.x,c:idx.map(i=>{const [ka,kb]=Z.pairs[i],[na,nb,hz]=R.pick.pairs[i],A=D.cards['zp_'+ka],B=D.cards['zp_'+kb];
-        return {l:`${na} · ${nb} (${hz})`,h:`흑수 카드 2장 · ${A.n.replace('흑수 · ','')}: ${A.d.split(' · ')[1]||A.d.split(' · ')[0]} / ${B.n.replace('흑수 · ','')}: ${B.d.split(' · ')[1]||B.d.split(' · ')[0]}`,ok:{t:`${na}와 ${nb}의 흑수가 소매 속으로 스며들었다. 이제 후계가 끝날 때까지 놓을 수 없다.`,fx:{hw:'pick:'+i}}}})};
+      const pi=r.pair,[na,nb,hz]=R.pick.pairs[pi],pn=r.w?na:nb,ph=r.w?hz[0]:hz[1],ca=D.cards['zp_'+Z.pairs[pi][1-r.w]];
+      return {t:R.pick.t,x:R.pick.x+` 영생의 단서를 찾아 나서던 날 손에 쥐었던 흑수와 짝을 이루는 ${pn}(${ph})가 마침내 응답한다.`,c:[
+        {l:`짝을 이루는 ${pn}(${ph})를 받아들인다`,h:`흑수 한 마리 더 · ${ca.n.replace('흑수 · ','')}: ${ca.d.split(' · ')[1]||ca.d.split(' · ')[0]} · 흑수여, 답하라 카드 · 후보 5명과 맞선다`,ok:{t:`${pn}의 흑수가 소매 속으로 스며들었다. 이제 두 마리가 한 손에서 움직인다.`,fx:{hw:'pick'}}}]};
     }
     if(r.rv<r.rivals.length){
       if(y<r.cnext||(r.rv>0&&!ch.beaten.includes(r.rivals[r.rv-1])))return null;
