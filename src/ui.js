@@ -884,12 +884,13 @@ export function startUI(E,app){
         <button class="btn primary" data-a="fight">맞선다</button>`;
     }
     const ev=UI.ev,ch=G.ch;
+    const lockBtns=E.lockedOptions(G,ev).map(({c,i})=>({i,html:`<button class="btn" disabled><b>🔒 ${c.l}</b><span class="mono small dim">${c.lock}</span></button>`}));
     const btns=E.options(G,ev).map(({c,i})=>{
       let hint=c.h||'판정 없음 · 결과 확정';
       if(c.ok&&c.ok.fx&&c.ok.fx.relicRoll)hint=`1d100 · ${E.relicChance(ch)} 이하가 나오면 유물을 고른다${ch.relicBase?' (출신 보정 '+ch.relicBase+'%)':''}${(ch.stats.relicApt||0)>0?' (유물 적성 +'+ch.stats.relicApt+')':''}`;
       if(c.check){const pm=E.pathMod(ch,c.check);hint=`${c.check.s?STAT[c.check.s]+' 판정':'운 판정'} · 1d${c.check.pure?100:E.checkDie(ch)} ${sg(E.checkMod(ch,c.check))} ≥ ${E.checkDc(ch,c.check)}${pm?` (출신 ${T.paths[c.check.path]} 보정 +${pm})`:''}${c.h?' · '+c.h:''}`}
-      return `<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`;
-    }).join('');
+      return {i,html:`<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`};
+    }).concat(lockBtns).sort((a,b)=>a.i-b.i).map(x=>x.html).join('');
     return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead">${ev.x}</p></div><div class="stack">${btns}</div>`;
   }
   function nextLabel(){
@@ -1746,7 +1747,7 @@ export function startUI(E,app){
     testApoc(){if(!G)return;const g=Object.assign({grade:5},structuredClone(D.enemies.apocalypse.drop.gear));G.ch.gearOffers=[g];UI.res={t:'종말이 쓰러졌다.',chips:['종말의 예언 · 검은 숲 깊은 곳에서 무언가 눈을 뜬다']};UI.screen='result';render()},
     testChain(){if(!G)return;G.ch.aff={type:'wing',name:'K사 날개'};G.ch.year=G.year=45;G.ch.corp={st:'wing',type:'serum',n:'시험',stack:2,up:3,forb:2,wing:'새벽 날개',chain:['claw','arbiter'],next:99};UI.ev=D.corp.head;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testCorp(k){if(!G)return;G.ch.aff={type:'wing',name:'K사 날개'};G.ch.year=G.year=22;if(!G.ch.corp)G.ch.corp={st:'offer'};UI.ev=D.corp[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
-    testEvent(k){if(!G)return;G.ch.licensed=true;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
+    testEvent(k,lic){if(!G)return;G.ch.licensed=lic!==false;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testBroker(){if(!G)return;UI.stock=[];UI.broker=E.officeBroker(G.ch);UI.screen='shopask';render()},
     testOrigin(n){if(!BC)return;const o=D.origins.find(x=>x.n===n);if(!o)return;E.reseed(BC.seed);let c;for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;render()},
     testOmen(id){if(!G)return;const h=D.hiddenBosses.find(x=>x.id===id);UI.omen={type:'omen',boss:id,omen:h.omen||{},escape:!h.noEscape,spec:'table:early'};UI.screen='event';render()}};

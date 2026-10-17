@@ -74,7 +74,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const d=n=>1+Math.floor(rng()*n);
   const T=D.text;
   /* 6시즌: 세계관 사무소. 급수 범위(hi~lo급)에 맞는 곳만 문이 열린다. 갈림길과 '사무소 문을 두드린다'가 같은 목록을 쓴다 */
-  const officeChoice=o=>({l:o.n,h:o.h,req:['licensed','canfix',`rankin:${o.hi}-${(D.orgs.office||[]).includes(o.n)?9:o.lo}`],ok:{t:o.t,fx:Object.assign({},o.fx,{join:{type:'office',name:o.n}})}});
+  const officeChoice=o=>({l:o.n,h:o.h,lock:`해결사 ${o.hi}~${(D.orgs.office||[]).includes(o.n)?9:o.lo}급만 들어갈 수 있다`,lockReq:['licensed','canfix'],req:['licensed','canfix',`rankin:${o.hi}-${(D.orgs.office||[]).includes(o.n)?9:o.lo}`],ok:{t:o.t,fx:Object.assign({},o.fx,{join:{type:'office',name:o.n}})}});
   if(D.offices&&!D.officesBuilt){D.officesBuilt=true;
     if(D.officeKnock)D.officeKnock.c=[...D.offices.map(officeChoice),{l:'혼자 일한다',ok:{t:'아직은 혼자가 편하다.',fx:{}}}];
     if(D.affiliation)D.affiliation.c=[...D.offices.map(officeChoice),...D.affiliation.c]}
@@ -1299,6 +1299,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 고를 수 있는 선택지 (조건이 맞지 않는 선택지는 빠진다). i는 원래 번호 */
   const options=(G,ev)=>ev.c.map((c,i)=>({c,i})).filter(o=>meets(G.ch,o.c.req));
+  /* 조건이 안 맞아 숨겨지는 선택지 중 lock(이유)이 적힌 것은 잠금으로 보여 준다. lockReq가 맞을 때만(해당 없는 선택지는 계속 숨김) */
+  const lockedOptions=(G,ev)=>ev.c.map((c,i)=>({c,i})).filter(o=>o.c.lock&&!meets(G.ch,o.c.req)&&meets(G.ch,o.c.lockReq));
   /* 판정 보정 = 능력치 + 사건 판정 보정 + (그 진로 판정이면) 출신 진로 보정 */
   const pathMod=(ch,check)=>check.path?(ch.paths[check.path]||0):0;
   const checkDc=(ch,check)=>check.dc==='exam'?examDc(ch):check.dc==='color'?CFG.colorDc:check.dc==='top'?CFG.topDc:check.dc;
@@ -2067,5 +2069,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,chooseFinger,chooseOrg,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
