@@ -141,7 +141,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     (ch.relics=ch.relics||[]).push(R.n);(ch.relicIds=ch.relicIds||[]).push(id);ch.relicPick=false;ch.relicPickLate=false;
     if(R.odin){ch.odin=true;if(ch.o&&ch.o.n==='보냐텔리 가문')ch.yeji=true}
     /* 환도 + 궁니르: 공명 패시브와 전용 카드 2장 */
-    if(id==='gungnir'&&ch.hwando&&!ch.resonance){ch.resonance=true;ch.relics.push('궁니르 공명');ch.deck.push('g_gungnir','g_gungnir')}
+    if(id==='gungnir'&&ch.hwando&&!ch.resonance){ch.resonance=true;ch.relics.push('궁니르 공명');forceAdd(ch,'g_gungnir','g_gungnir')}
     if(R.gear){const g=Object.assign({id:R.gear.id||id,grade:5},R.gear);if(late)offerGear(ch,g);else{equip(ch,g);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth')}}
   }
   /* 이미 가진 유물은 다시 고를 수 없다 */
@@ -234,7 +234,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     o.splice(i,1);return true;
   }
   function dropOffer(ch,i){const o=ch.offers||[];if(!o[i])return false;o.splice(i,1);return true}
-  function deckOut(ch,i){if(ch.deckLocked||ch.cardMoney||!ch.deck[i]||D.cards[ch.deck[i]].fixed||ch.deck.length<=CFG.shop.minDeck)return false;(ch.side=ch.side||[]).push(ch.deck.splice(i,1)[0]);return true}
+  /* 덱이 고정이어도 사건·루트가 억지로 밀어 넣은 카드(고정 카드 제외)는 뺄 수 있다. 카드함 대신 사라진다 */
+  const forceAdd=(ch,...ids)=>{(ch.extra=ch.extra||[]).push(...ids);ch.deck.push(...ids)};
+  const extraOut=(ch,i)=>{const id=ch.deck[i];return !!id&&(ch.deckLocked||ch.cardMoney)&&!D.cards[id].fixed&&(ch.extra||[]).includes(id)};
+  function deckOut(ch,i){if(extraOut(ch,i)&&ch.deck.length>CFG.shop.minDeck){ch.extra.splice(ch.extra.indexOf(ch.deck[i]),1);ch.deck.splice(i,1);return true}if(ch.deckLocked||ch.cardMoney||!ch.deck[i]||D.cards[ch.deck[i]].fixed||ch.deck.length<=CFG.shop.minDeck)return false;(ch.side=ch.side||[]).push(ch.deck.splice(i,1)[0]);return true}
   function deckIn(ch,i){const sd=ch.side||[];if(ch.deckLocked||ch.cardMoney||!sd[i]||!deckRoom(ch))return false;ch.deck.push(sd.splice(i,1)[0]);return true}
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
@@ -561,7 +564,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     addCard(ch,cid,chips,null,true);
     if(fx.escort)ch.flags.escortNext=1;
     if(fx.officeFound){ch.officePick=true;chips.push('사무소 개설 · 이름과 전문 분야를 정한다')}
-    if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){ch.deck.push('o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
+    if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){forceAdd(ch,'o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
     for(const f of [].concat(fx.flag||[]))ch.flags[f]=(ch.flags[f]||0)+1;
     if([].concat(fx.flag||[]).includes('taboo'))bondTaboo(ch);
@@ -596,11 +599,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(r){
         if(k==='fam'||k==='assassin'||k.startsWith('fight:')){r.fi++;if(k==='assassin')ch.purge='hw_assassin';else if(k.startsWith('fight:'))ch.purge=k.slice(6)}
         else if(k.startsWith('mission1:')){const [,pi,w]=k.split(':').map(Number),key=Z.pairs[pi][w];r.mission=1;r.out=1;r.cl=0;r.clues=0;r.clNext=y+3;r.pair=pi;r.w=w;
-          ch.deck.push('zp_'+key);chips.push('흑수 카드 · '+D.cards['zp_'+key].n);
+          forceAdd(ch,'zp_'+key);chips.push('흑수 카드 · '+D.cards['zp_'+key].n);
           while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
           (ch.relics=ch.relics||[]).push('흑수 · '+D.cards['zp_'+key].n.replace('흑수 · ',''))}
         else if(k==='pick'){const pi=r.pair,partner=Z.pairs[pi][1-r.w];r.picked=1;
-          for(const id of ['zp_'+partner,'hc_6']){ch.deck.push(id);chips.push('흑수 카드 · '+D.cards[id].n)}
+          for(const id of ['zp_'+partner,'hc_6']){forceAdd(ch,id);chips.push('흑수 카드 · '+D.cards[id].n)}
           while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
           r.rivals=Z.pairs.map((_,i)=>i).filter(i=>i!==pi).map(i=>'hr_'+i);r.rv=0;r.cnext=y+Z.rivalGap;
           routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('가주 후보 · 흑수 '+D.cards['zp_'+partner].n.replace('흑수 · ',''));chips.push('가주 후보가 되었다')}
@@ -2165,6 +2168,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    isFinger,extraOut,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
