@@ -427,8 +427,4 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 .sheet .roll{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.sheet .roll .n{display:flex;flex-direction:column;gap:2px;min-width:0}
 @media (min-width:1360px){ .hud-dup{display:none} }
 .side-l .bufup{color:#7fd1a0;font-style:normal}
-<<<<<<< HEAD
-=======
-.bgmrow{display:flex;gap:8px;align-items:center}.bgmrow input[type=range]{flex:1;min-width:0;accent-color:var(--gold);height:28px}
 .log .amp{font-weight:700;color:var(--bg,#0b0b0e);background:var(--gold);padding:3px 8px;border-radius:6px;margin:3px 0;display:block;box-shadow:0 0 0 1px var(--gold)}
->>>>>>> 7ded49a (K사 엠플: 발동 기준 최대 HP 20% 이하, 전투당 사용 횟수 제한 제거(구입 제한만 유지), 사용 시 눈에 띄는 알림 줄)
