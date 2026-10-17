@@ -170,7 +170,9 @@ export const CFG = {
     /* 순록팀: 충전 20까지. 최대 체력 step만큼 잃을 때마다(최대 max번) 공격 피해 +dmg · 충전 at 이상이면 소모 카드의 충전 1당 고정 피해 +fix */
     'R사 날개/순록팀': {cap: 20, loss: 1, power: {step: 0.3, max: 2, dmg: 3}, focus: {at: 10, fix: 2}},
     /* 코뿔소팀: 충전 20까지. 최대 체력 step만큼 잃을 때마다(최대 max번) 방어 회피 +def · 충전 at 이상이면 받는 피해 −dr% */
-    'R사 날개/코뿔소팀': {cap: 20, loss: 0, wall: {step: 0.3, max: 2, def: 3}, armor: {at: 10, dr: 8}}}},
+    'R사 날개/코뿔소팀': {cap: 20, loss: 0, wall: {step: 0.3, max: 2, def: 3}, armor: {at: 10, dr: 8}},
+    /* 까마귀팀(특수, 부화장에서만 배정): 충전 14까지 · 라운드 시작마다 +1 · 적중마다 +1 · 피격으로 잃지 않는다 · 충전 7 이상이면 소모 카드의 충전 1당 고정 피해 +2 · 속도 +3 */
+    'R사 날개/까마귀팀': {cap: 14, round: 1, hit: 1, loss: 0, spd: 3, focus: {at: 7, fix: 2}}}},
   /* 하나 협회 전용 패시브: 라운드마다 카드를 고르기 전에 한 가지를 고른다. gun: 이번 라운드 공격 피해 +n, gon: 받는 피해 n% 감소, gam: 이번 라운드 빛 +n, ri: 체력 회복과 호흡 */
   tri: {org: '하나 협회', names: {gun: '건', gon: '곤', gam: '감', ri: '이'}, gun: 2, gon: 30, gam: 1, ri: {heal: 2, breath: 2}},
   /* 혈귀 루트 '피의 각인된 갈망'(돌네시아를 쓰러뜨린 뒤): 일반·보스 적을 이기면 자식 +1(최대 max, 히든·환상체 제외),
@@ -214,7 +216,7 @@ export const CFG = {
   /* 아무것도 없는 출발: chance% 확률로 운명이 강제되어 히든 출신 n개 중 하나를 고르게 된다 */
   blankFate: {chance: 30, n: 2},
   /* R사 부화장 복제체 루트: 0년차 13연전 → 일과 생활(전용 인연) → 1막 후반(fleeAt~) R사 추격대 4번(chaseGap년 간격) → 2막 중반(headFrom년차~) 정비 한 번 → 7일의 금기: 위반 확인 즉시 발톱 → 조율자 → 숙청 집행관 */
-  rb: {total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, chasers: ['rh1', 'rh2', 'rh3', 'rh4'], headFrom: 62, headGap: 1, bossGap: 3, head: ['claw', 'arbiter'], boss: 'rcorp_boss', xp: 4, trial: {claw: {hp: 0.75, atk: -1}, arbiter: {hp: 0.75, atk: -1}}},
+  rb: {total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, team: [[30, '토끼팀'], [60, '순록팀'], [90, '코뿔소팀'], [100, '까마귀팀']], foes: {'까마귀팀': 'rh2', '코뿔소팀': 'rh3', '순록팀': 'rh4', '토끼팀': 'rh5'}, headFrom: 62, headGap: 1, bossGap: 3, head: ['claw', 'arbiter'], boss: 'rcorp_boss', xp: 4, trial: {claw: {hp: 0.75, atk: -1}, arbiter: {hp: 0.75, atk: -1}}},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},
   middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30], evaEff: [1, 1, 0.5, 0], evaDr: 0.5, drCap: 50, counter: 3, sinkHit: 0.5, cap: 10},

@@ -117,7 +117,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.s0={maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,check:s.check};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
-    if(o.rb)ch.rb={n:0,chase:0,hides:0};
+    if(o.rb){const Z=CFG.rb,tr=d(100),tm=Z.team.find(t=>tr<=t[0])[1];
+      ch.rteam=tm;ch.rb={n:0,chase:0,hides:0,chasers:['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==tm).map(t=>Z.foes[t]))};(ch.relics=ch.relics||[]).push('R사 부화장 · '+tm+' 개체')}
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
     const IN=CFG.innate,h=(r.o*7919+r.t*104729+r.f*1299709+r.w*15485863+r.n*32452843+ch.kid.reduce((a,k)=>a*31+k.r,7))%1000003;
     if(!keep&&h%IN.chanceDiv===0){const ks=Object.keys(D.innate||{});if(ks.length)ch.innate=ks[Math.floor(h/IN.chanceDiv)%ks.length]}
@@ -578,11 +579,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.rb){const r=ch.rb,k=fx.rb,Z=CFG.rb,y=ch.year||0;
       if(r){
         if(k==='start')chips.push(`부화장 ${Z.total}연전 · 한 판이 끝날 때마다 HP를 회복한다`);
-        else if(k==='exit'){r.out=1;r.next=Math.max(y+1,Z.fleeAt+d(Z.fleeRand)-1);chips.push('부화장을 나왔다 · 금기의 기록은 아직 지워지지 않았다')}
-        else if(k==='flee'){r.fled=1;r.cnext=y+Z.chaseGap;chips.push('R사의 숙청 추격대가 풀렸다')}
+        else if(k==='exit'){r.out=1;r.next=Math.max(y+1,Z.fleeAt+d(Z.fleeRand)-1);chips.push('부화장을 나왔다');
+          const dl=ch.deckLocked;ch.deckLocked=true;joinAff(ch,{type:'wing',from:'wing'},'R사 날개',chips);ch.deckLocked=dl;
+          {const C_=CR.wing,rows=orgRows(ch,C_);if(rows&&!ch.cardMoney&&!ch.packOffer){ch.packOffer={n:ch.rteam+' 전용 책장',cards:(C_.finalRow?rows.slice(0,-1):rows).flat(),relic:'R사 날개 · '+ch.rteam};chips.push(`${ch.rteam} 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다 · 복제체의 몸 카드는 남는다)`)}}}
+        else if(k==='flee')rbFlee(ch,chips)
         else if(k==='prep'){r.prep=1;r.hAt=y+Z.headGap;if(fx.healAll){ch.hp=s.maxHp;ch.mind=mindMax(ch);chips.push('HP · 정신력 전부 회복')}if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}}
         else if(k==='head'){r.headSeen=1;r.chain=Z.head.filter(id=>!ch.beaten.includes(id));chips.push('금기 위반이 확인되었다 · 머리의 사자가 곧바로 온다')}
-        else if(k==='fight'){ch.purge=Z.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
+        else if(k==='fight'){ch.purge=r.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
     if(fx.giri){const k=fx.giri,fl=ch.flags;
@@ -609,7 +612,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       ch.strikes=(ch.strikes||0)+1;
       if(C_.strikes&&ch.strikes>=C_.strikes){
         ch.strikes=0;
-        if(C_.strike==='fire'){chips.push(`${ch.aff.name} 해고 · 소속을 잃었다`);ch.aff=null;ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;
+        if(C_.strike==='fire'){chips.push(`${ch.aff.name} 해고 · 소속을 잃었다`);ch.aff=null;ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;if(ch.rb&&ch.rb.out)rbFlee(ch,chips);
           /* 날개를 잃으면 아직 날개를 세우지 못한 특이점 개발 길도 끊긴다 (대표는 해고된 사람이 될 수 없다) */
           if(ch.corp&&ch.corp.st==='dev'){ch.corp.st='declined';chips.push('특이점 개발 · 날개를 잃어 개발이 중단된다')}}
         if(C_.strike==='purge'){ch.purge=C_.purgeFoe;chips.push('숙청 대상이 되었다')}
@@ -970,6 +973,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 조직 루트 사건: 엄지 전향 제안(흑운회·송곳) → 숙청 소문 → 반역 / 검계 역적 낙인 */
   /* 의리 순례: 중지 동생 이상 → 원한의 책 제안 → 장부 3장 (첫째·둘째는 히든 전투) → 형님의 시험 (순응: 버티기 / 반역: 암살자 추격) */
+  function rbFlee(ch,chips){
+    const r=ch.rb,Z=CFG.rb;if(!r||r.fled)return;
+    r.fled=1;r.cnext=(ch.year||0)+Z.chaseGap;
+    if(ch.aff&&ch.aff.name==='R사 날개'){ch.aff=null;ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0}
+    chips.push('R사를 탈주했다 · 소속을 잃고 숙청 추격대가 풀렸다')
+  }
   /* ===== R사 부화장 복제체 루트 =====
      ch.rb = {n(쓰러뜨린 부화장 개체), out(부화장을 나옴), next(추격 시작 해), fled, chase(만난 추격대), hides, cnext(다음 추격 해), bossSeen, done}
      부화장 연전은 해를 넘기지 않고 이어진다. 공방거리는 쓰지 않는다 */
@@ -981,17 +990,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
     }
     if(r.out)return null;
-    if(!r.intro){r.intro=1;return {type:'event',ev:D.rbRoute.hatch}}
+    if(!r.intro){r.intro=1;return {type:'event',ev:Object.assign({},D.rbRoute.hatch,{x:D.rbRoute.hatch.x+` 손등의 번호표 밑에는 R사 날개 ${ch.rteam} 표식이 찍혀 있다.`})}}
     if(r.n<Z.total)return {type:'fight',enemy:'rc'+String(r.n+1).padStart(2,'0'),enc:{label:`부화장 · ${r.n+1}/${Z.total}`}};
-    return {type:'event',ev:D.rbRoute.exit};
+    return {type:'event',ev:Object.assign({},D.rbRoute.exit,{x:D.rbRoute.exit.x+` 배치 팀: ${ch.rteam}.`})};
   }
   function rbYear(G){
     const ch=G.ch,r=ch.rb,y=G.year,Z=CFG.rb,R=D.rbRoute;if(!r||!R||!r.out||r.done)return null;
     if(!r.fled)return y>=r.next?R.flee:null;
-    const beat=Z.chasers.every(id=>ch.beaten.includes(id));
+    const beat=r.chasers.every(id=>ch.beaten.includes(id));
     if(!beat){
       if(y<r.cnext)return null;
-      if(r.chase<Z.chasers.length&&(r.chase===0||ch.beaten.includes(Z.chasers[r.chase-1]))){
+      if(r.chase<r.chasers.length&&(r.chase===0||ch.beaten.includes(r.chasers[r.chase-1]))){
         const E_=R.chase;return r.hides>=Z.hides?Object.assign({},E_,{c:E_.c.slice(0,1)}):E_;
       }
       return null;
