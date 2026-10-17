@@ -1005,11 +1005,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       return null;
     }
-    /* 2막 중반: 정비 한 번 → 7일의 금기(위반 확인 즉시 발톱·조율자) → 숙청 집행관 */
+    /* 숙청 집행관(R사의 끝) → 2막 중반: 정비 한 번 → 금기 위반 확인(즉시 바랄 → 제나 연전) */
+    if(!r.bossSeen)return y>=r.cnext?R.boss:null;
+    if(!r.bossDone)return null;
     if(!r.prep)return y>=Z.headFrom?R.prep:null;
     if(!r.headSeen)return y>=r.hAt?R.head:null;
-    if(r.chain&&r.chain.length)return null;
-    return !r.bossSeen&&y>=r.cnext?R.boss:null;
+    return null;
   }
   function giriRouteEvent(G){
     const ch=G.ch,y=G.year,R=D.giriRoute,Z=CFG.giri,fl=ch.flags;
@@ -1201,6 +1202,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
     }
     {const rv=rbFree(G);if(rv)return rv}
+    if(mc.rb&&mc.rb.done&&!mc.rb.ended){mc.rb.ended=true;return {type:'end',win:true,rb:true}}
     /* 연전: 바랄을 쓰러뜨리면 쉬지 않고 제나가 나선다 */
     if(G.ch.flags.zenaPend&&!G.ch.beaten.includes(CFG.endless.finalNext))return {type:'fight',enemy:CFG.endless.finalNext,enc:{hidden:true,label:'연전 · 마지막 상대'}};
     /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
@@ -1391,7 +1393,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         return {chips,title:null,tlabel:null,newly:false,colorRoll:null,unlock:null,hidden:false,endText:f0.endText||null,last:G.year>=lastYear(G)};
       }
       if(f0.rbLast&&ch.rb){ch.rb.n++;chips.push('부화장 13연전을 끝냈다')}
-      if(f0.rbBoss&&ch.rb){ch.rb.done=1;chips.push('R사의 추격이 끝났다')}}
+      if(f0.rbBoss&&ch.rb){ch.rb.bossDone=1;chips.push('R사의 추격이 끝났다')}
+      if(C.id===CFG.endless.finalNext&&ch.rb&&ch.rb.headSeen){ch.rb.done=1;chips.push('금기의 끝')}}
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
