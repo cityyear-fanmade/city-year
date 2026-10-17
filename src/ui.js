@@ -609,7 +609,7 @@ export function startUI(E,app){
     if(!EXP)return '';
     if(expired())return `<div class="panel stack" style="gap:6px;border-color:var(--bleed)"><b>플레이테스트가 끝났습니다</b><span class="small dim">참여해 주셔서 고맙습니다.</span></div>`;
     const left=Math.max(0,Math.ceil((EXP-Date.now())/60000)),t=left>=120?`약 ${Math.floor(left/60)}시간`:`약 ${left}분`;
-    return `<div class="check" style="border-color:var(--bleed)"><b>v6 테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
+    return `<div class="check" style="border-color:var(--bleed)"><b>테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   function vTitle(){
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>

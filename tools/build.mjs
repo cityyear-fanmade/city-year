@@ -3,6 +3,7 @@
    플레이테스트용: npm run build -- --expires 2026-10-11T11:30:00Z → dist/city-year-playtest.html
    (그 시각이 지나면 새 판을 시작할 수 없다)
    R사·H사 루트 테스트용: npm run build -- --routetest → dist/city-year-route-test.html (운명 선택이 항상 뜬다)
+   공유용(마감 있음): npm run build -- --routetest --expires 2026-10-17T15:00:00Z → dist/city-year-route-playtest.html
    GitHub Pages용: npm run build -- --pages → 저장소 루트 index.html */
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {loadData} from '../src/data-node.js';
@@ -21,10 +22,10 @@ let html=r('dev.html')
   .replace('<link rel="stylesheet" href="css/style.css">',()=>`<style>\n${r('css/style.css')}</style>`)
   .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\n(()=>{\n${js}\nconst DATA=${JSON.stringify(D)};\nwindow.CITY=startUI(createEngine(DATA),document.getElementById('app'));\n})();\n</script>`);
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');
-if(expires)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 플레이테스트</title>')
+if(expires)html=html.replace(routeTest?'<title>도시의 한 해 · R사·H사 테스트</title>':'<title>도시의 한 해</title>',routeTest?'<title>도시의 한 해 · R사·H사 플레이테스트</title>':'<title>도시의 한 해 플레이테스트</title>')
   .replace('<script>\n(()=>{',`<script>\nwindow.CITY_EXPIRES=${expires};\n(()=>{`);
 const pages=process.argv.includes('--pages')&&!expires;
-const out=pages?'index.html':routeTest?'city-year-route-test.html':expires?'city-year-playtest.html':'city-year.html';
+const out=pages?'index.html':routeTest&&expires?'city-year-route-playtest.html':routeTest?'city-year-route-test.html':expires?'city-year-playtest.html':'city-year.html';
 mkdirSync(new URL('../dist/',import.meta.url),{recursive:true});
 writeFileSync(new URL((pages?'../':'../dist/')+out,import.meta.url),html);
 console.log(`${pages?'':'dist/'}${out} · ${(html.length/1024).toFixed(0)}KB${expires?' · 종료 '+new Date(expires).toISOString():''}`);
