@@ -305,6 +305,9 @@ export function startUI(E,app){
   /* E.G.O 발현자: 무기 등급과 다음 등급까지 남은 발현 횟수 */
   const egoGrowTag=ch=>{if(ch.egoUses==null)return '';const G=CFG.egoGrow,L=E.egoLvFor(ch.egoUses),nx=G.need[L+1];
     return ` · <span style="color:var(--gold)">${G.tier[L]}</span>${nx!=null?` · 발현 ${ch.egoUses}/${nx}`:''}`};
+  /* E.G.O 발현자: 다음 등급까지의 진행 막대 (정신력 아래 · 전투 화면에도) */
+  const egoBar=ch=>{if(ch.egoUses==null)return '';const G=CFG.egoGrow,u=ch.egoUses,L=E.egoLvFor(u),nx=G.need[L+1],pct=nx==null?100:Math.round((u-G.need[L])/(nx-G.need[L])*100);
+    return `<div class="egobar"><div class="row between small"><b style="color:var(--gold)">E.G.O 성장 · ${G.tier[L]}${nx!=null?` → ${G.tier[L+1]}`:' (최대)'}</b><span class="mono">${nx!=null?`발현 ${u}/${nx}`:`발현 ${u}회`}</span></div><div class="bar"><i style="width:${pct}%"></i></div>${nx!=null?`<div class="small dim">전용 카드 '발현'을 ${nx-u}번 더 쓰면 ${G.tier[L+1]}로 자란다</div>`:''}</div>`};
   function vMind(ch){
     const m=ch.mind,mx=E.mindMax(ch),t=E.mindTier(ch),low=m<=CFG.mind.voiceAt;
     return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor} · 빛 +${CFG.mind.light}(처음 ${CFG.mind.lightRounds}라운드)`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}${E.mindStat(ch)?` · 모든 능력치 +${E.mindStat(ch)}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}${egoGrowTag(ch)}${ch.innate?` · <span style="color:var(--gold)">${esc(innateName(ch))}</span>`:''}${E.cardGrade(ch.year,ch).n?` · 카드 등급 <b style="color:var(--gold)">${E.cardGrade(ch.year,ch).n}</b>`:''}</span></div>
@@ -341,7 +344,7 @@ export function startUI(E,app){
       <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${esc(ch.name||T.you)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
       <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${G.infinite&&G.year>CFG.years+CFG.endless.span*CFG.endless.grades.length?'제 2막 무한 모드 · '+(E.gradeRaw(G.year)-CFG.endless.grades.length+1)+'단계':'제 2막 · '+CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
       ${bar(ch.hp,s.maxHp)}
-      ${vMind(ch)}${G.infinite&&UI.screen!=='end'?`<button class="btn quiet" data-a="outerend">외곽에서 이야기를 끝낸다</button>`:''}
+      ${vMind(ch)}${egoBar(ch)}${G.infinite&&UI.screen!=='end'?`<button class="btn quiet" data-a="outerend">외곽에서 이야기를 끝낸다</button>`:''}
       ${vPassive(ch)}
       <div class="mono small dim hud-dup">HP ${ch.hp}/${s.maxHp} · 공격 ${sg(s.atk)} · 회피 ${sg(s.eva)} · 속도 ${sg(s.spd)} · 판정 ${sg(s.check)} · 카드 ${ch.deck.length}장</div>
       <div class="mono small dim hud-dup">Lv ${ch.lv} · 경험치 ${ch.xp}${nx!=null?'/'+nx:' (최고)'}${E.canPromote(ch)?` · ${E.ptsName(ch)} ${ch.pp||0}/${E.promoNeed(ch)}`:''} · ${Object.values(ch.gear).map(g=>esc(g.n)).join(' · ')}</div>
@@ -1138,6 +1141,7 @@ export function startUI(E,app){
     return `${M?duo({E:X,P})+vOrder(true):entHtml('E',X,X)+arenaHtml(false)+entHtml('P',P,P)+vOrder()+log}
       ${P.index&&P.starId?`<div class="prescBar"><b>📜 이번 라운드 지령</b> · <b>${esc(D.cards[P.starId].n)}</b>을(를) 내라 <span class="small">→ 지령 수행 +1 (지금 ${P.presc||0}/5) · 호흡 +4 · 받는 피해 −5%씩</span>${UI.sel.some(j=>j===P.starSlot)?' <b class="good">✔ 지령 카드를 골랐다</b>':''}</div>`:''}
       ${triBar(P)}
+      ${egoBar(C.ch)}
       <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">${P.distorted?'빛 없음':`빛 ${left}/${P.light}`}</span></div>
       <div class="hand">${cards}</div>
       ${FIGHT==='auto'?`<div class="check">${UI.paused?'일시정지 · 다음 라운드를 기다린다':'자동 전투 중 · 카드를 알아서 고르고 진행한다'}</div><div class="row" style="gap:8px"><button class="btn${UI.paused?' primary':''}" style="flex:1" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button><button class="btn quiet" style="flex:1" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button></div>`
