@@ -955,10 +955,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(y<b.next)return null;
     b.next=y+bondGap();
     if(b.step<BD.steps){
-      const S=R.steps[b.step];b.step++;
+      const si=b.step,S=R.steps[si];b.step++;
+      /* 선택 결과 문구: 그 사건(S.at/S.bt)에 적힌 것이 먼저, 없으면 단계별 문구 목록에서 무작위로 */
+      const resT=(own,pool,gen)=>bondFill(own||(pool&&pool[si]&&pool[si].length?one(pool[si]):gen),b);
       return {t:S.t,x:bondFill(S.x,b),c:[
-        {l:S.a,h:`인연 +1 · 정신력 +${BD.loveMind}`,ok:{t:bondFill(B.stepAT,b),fx:{bondLove:1}}},
-        {l:S.b,h:'변화 없음',ok:{t:bondFill(B.stepBT,b),fx:{}}}]};
+        {l:S.a,h:`인연 +1 · 정신력 +${BD.loveMind}`,ok:{t:resT(S.at,B.stepATs,B.stepAT),fx:{bondLove:1}}},
+        {l:S.b,h:'변화 없음',ok:{t:resT(S.bt,B.stepBTs,B.stepBT),fx:{}}}]};
     }
     const left=BD.tries-(b.tries||0);
     return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[

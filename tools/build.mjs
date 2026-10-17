@@ -4,6 +4,7 @@
    (그 시각이 지나면 새 판을 시작할 수 없다)
    R사·H사 루트 테스트용: npm run build -- --routetest → dist/city-year-route-test.html (운명 선택이 항상 뜬다)
    공유용(마감 있음): npm run build -- --routetest --expires 2026-10-17T15:00:00Z → dist/city-year-route-playtest.html
+   음악 제외: --nobgm (배경음악 코드를 넣지 않는다)
    GitHub Pages용: npm run build -- --pages → 저장소 루트 index.html */
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {loadData} from '../src/data-node.js';
@@ -13,8 +14,9 @@ const D=loadData(),err=validateData(D);
 if(err.length){console.error('데이터 오류:\n  '+err.join('\n  '));process.exit(1)}
 /* 모듈 문법만 걷어 낸다: import 줄 삭제, export 키워드 삭제 */
 const strip=s=>s.replace(/^import .*;\s*$/gm,'').replace(/^export (const|function|async function|let)/gm,'$1');
-const routeTest=process.argv.includes('--routetest');
-const js0=['src/config.js','src/engine.js','src/bgm.js','src/ui.js'].map(p=>`/* ---- ${p} ---- */\n`+strip(r(p))).join('\n');
+const routeTest=process.argv.includes('--routetest'),noBgm=process.argv.includes('--nobgm');
+const BGM_STUB=`function createBgm(){const f=()=>{};return {supported:false,isOn:()=>false,set:f,setMood:f,setScene:f,setVol:f,vol:()=>0,level:()=>0,debug:()=>null}}`;
+const js0=['src/config.js','src/engine.js','src/bgm.js','src/ui.js'].map(p=>`/* ---- ${p} ---- */\n`+(noBgm&&p==='src/bgm.js'?BGM_STUB:strip(r(p)))).join('\n');
 const js=routeTest?js0.replace(/blankFate: \{chance: \d+,/,'blankFate: {chance: 100,'):js0;
 const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[ai+1]):null;
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
