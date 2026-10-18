@@ -432,3 +432,7 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 
 .egobar{border-left:2px solid var(--gold);padding:4px 8px;margin:4px 0;background:rgba(201,162,74,.07);display:flex;flex-direction:column;gap:4px}
   .ctitle{color:var(--gold);font-weight:600}
+
+/* 시작 화면 맨 위 일대기 버튼: 어느 테마에서나 눈에 띄게 금색 테두리 */
+.chronbtn{border-color:var(--gold);text-align:left}
+.chronbtn b{color:var(--gold)}
