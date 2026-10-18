@@ -17,8 +17,9 @@ export function startUI(E,app){
   const HARDK='cityYearHard',DIFFK='cityYearDiff';
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
-  const REC='cityYearRecords';
-  const VERSION='v8.1.9';
+  const REC='cityYearRecords',DAILYK='cityYearDaily';
+  const VERSION='v8.2.0';
+  const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
   const syncAffs=()=>{const c=G&&G.ch;if(!c||!(c.affLog||[]).length)return;const r=loadRec();r.affs=r.affs||[];let ch=false;for(const n of c.affLog)if(!r.affs.includes(n)){r.affs.push(n);ch=true}if(ch)store.set(REC,JSON.stringify(r))};
@@ -645,7 +646,7 @@ export function startUI(E,app){
       ${vPlaytest()}
       <div class="stack">${vContinue()}${vHardToggle()}<button class="btn ${loadSave()?'':'primary'}" data-a="start" ${expired()?'disabled':''}>${loadSave()?'<b>새로 시작하기</b><span class="dim small">저장된 판은 지워진다</span>':'태어난다'}</button>
       ${UI.confirmNew?`<p class="small bad">저장된 판이 지워진다. 정말 새로 시작하려면 ${UI.confirmNew==='daily'?'오늘의 시드':'새로 시작하기'}를 한 번 더 누른다.</p>`:''}
-      <button class="btn" data-a="daily" ${expired()?'disabled':''}><b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다</span></button>
+      <button class="btn" data-a="daily" ${expired()?'disabled':''}><b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다${(()=>{const d=loadDaily()[todayKey()];return d&&d.best?` · 오늘 ${d.n}회 도전 · 최고 ${d.best.w?'완주':d.best.y+'년'}`:''})()}</span></button>
       <button class="btn quiet" data-a="records"><b>기록실</b><span class="dim small">만난 적 · 본 엔딩 · 해금 · 최고 기록</span></button>
       <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다 (만난 적만 공개)</span></button>
       <a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a>
@@ -667,7 +668,7 @@ export function startUI(E,app){
     const cl=el.cloneNode(true),c=G.ch;cl.removeAttribute('id');
     cl.querySelectorAll('button,script').forEach(x=>x.remove());cl.querySelectorAll('[data-a]').forEach(x=>x.removeAttribute('data-a'));
     const res=((cl.querySelector('.eyebrow')||{}).textContent||'').trim();
-    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),v:UPDATES.v,name:c.name||'',line:careerLine(c),res,yr:G.year,win:!!UI.endWin,html:cl.outerHTML};
+    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),v:UPDATES.v,name:c.name||'',line:careerLine(c),res,yr:G.year,win:!!UI.endWin,dy:c.daily||'',html:cl.outerHTML};
   }
   function chronAuto(){
     const e=chronSnap();if(!e)return;const o=loadChron();
@@ -683,7 +684,7 @@ export function startUI(E,app){
   function vChron(){
     const o=loadChron(),tab=UI.chTab==='fame'?'fame':'life',L=o[tab],msg=UI.chMsg;UI.chMsg='';
     const b=(k,l)=>`<button class="${tab===k?'on':''}" data-a="chtab" data-i="${k}">${l}</button>`;
-    const row=e=>`<div class="panel stack" style="gap:5px"><div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">${esc(e.name||e.line)}</b><span class="mono small dim" style="white-space:nowrap;text-align:right">${chDate(e.t)}${e.v?`<br>${esc(e.v)}`:''}</span></div><span class="small dim">${esc(e.line)}</span><span class="small" style="color:var(--gold)">${esc(e.res)}${e.yr?` · ${e.yr}년차`:''}</span>${chBtns(tab,e)}</div>`;
+    const row=e=>`<div class="panel stack" style="gap:5px"><div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">${esc(e.name||e.line)}</b><span class="mono small dim" style="white-space:nowrap;text-align:right">${chDate(e.t)}${e.v?`<br>${esc(e.v)}`:''}</span></div><span class="small dim">${esc(e.line)}</span><span class="small" style="color:var(--gold)">${esc(e.res)}${e.yr?` · ${e.yr}년차`:''}${e.dy?` · 오늘의 시드 ${esc(e.dy)}`:''}</span>${chBtns(tab,e)}</div>`;
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저에만 남는 기록</div><h2>일대기</h2></div>
       <div class="seg">${b('life',`일대기 ${o.life.length}/${CHRON_LIFE}`)}${b('fame',`명예의 전당 ${o.fame.length}/${CHRON_FAME}`)}</div>
       <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
@@ -691,10 +692,11 @@ export function startUI(E,app){
       ${L.length?L.map(row).join(''):`<div class="panel"><p class="small dim">${tab==='life'?'아직 저장된 판이 없다. 이야기가 끝나면 여기에 쌓인다.':'아직 올린 판이 없다. 일대기에서 골라 올린다.'}</p></div>`}
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
+  const chMsgP=()=>{const m=UI.chMsg;UI.chMsg='';return m?`<p class="small bad">${esc(m)}</p>`:''};
   function vChronView(){
     const o=loadChron(),sel=UI.chSel||{},e=(o[sel.tab]||[]).find(x=>x.id===sel.id);
     if(!e)return `<div class="panel"><p class="small dim">기록을 찾을 수 없다.</p></div><button class="btn primary" data-a="chron">돌아가기</button>`;
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장${e.v?' · '+esc(e.v):''}</div></div>${e.html}${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장${e.v?' · '+esc(e.v):''}</div></div><div id="chShot" class="stack" style="gap:12px">${e.html}</div>${chMsgP()}${UI.imgUrl&&UI.screen==='chronview'?`<img alt="일대기 이미지" src="${UI.imgUrl}" style="width:100%;border-radius:6px"><p class="small dim">이미지를 길게 눌러(또는 오른쪽 클릭) 저장한다.</p>`:''}<button class="btn" data-a="chimg" data-i="${sel.tab}:${e.id}"><b>이미지로 저장 · 공유</b><span class="dim small">이 결과 화면을 그림 파일로 만든다</span></button>${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
   }
   /* 기록실 */
   /* 난이도: easy(쉬움) / normal(보통) / hard(하드). 예전 하드 켜기 설정(cityYearHard)도 이어 받는다 */
@@ -730,6 +732,13 @@ export function startUI(E,app){
         return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소속 ${got.length}/${all.length}</span>${GR.map(([n,k])=>`<div><span class="small dim">${n}</span><div class="chips">${(D.orgs[k]||[]).map(o=>`<span class="chip${(r.affs||[]).includes(o)?'':' dim'}">${(r.affs||[]).includes(o)?esc(o):'???'}</span>`).join('')}</div></div>`).join('')}<p class="small dim">한 번이라도 들어간 소속이 열린다.</p></div>`})()}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span><div class="stack" style="gap:6px">${ends.map(([k,n])=>hintRow(r.endings.includes(k),esc(n),END_HINT[k])).join('')}</div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">타고난 것 ${r.innate.length}/${Object.keys(D.innate).length}</span><div class="chips">${Object.entries(D.innate).map(([k,v])=>`<span class="chip${r.innate.includes(k)?'':' dim'}">${r.innate.includes(k)?esc(v.n):'???'}</span>`).join('')}</div>${Object.entries(D.innate).filter(([k,v])=>v.unlock&&!(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small dim">잠김 · ${r.innate.includes(k)?esc(v.n):'???'} — 해금: ${esc(v.unlock)}</span>`).join('')}</div>
+${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px"><span class="eyebrow">판 통계</span><p class="small dim">v8.2.0부터 집계한다. 이야기가 끝나면 여기에 쌓인다.</p></div>`;
+        const top=(m,n)=>Object.entries(m||{}).sort((a,b)=>b[1]-a[1]).slice(0,n),line=(l,arr)=>arr.length?`<div class="row between" style="align-items:flex-start;gap:10px"><span>${l}</span><span class="small" style="text-align:right">${arr.map(([k,v])=>`${esc(k)} ×${v}`).join(' · ')}</span></div>`:'',en=Object.fromEntries(ends);
+        return `<div class="panel stack" style="gap:6px"><span class="eyebrow">판 통계 · v8.2.0부터 집계</span>
+        <div class="row between"><span>집계한 판</span><b class="mono">${S.n}</b></div>
+        <div class="row between"><span>평균 생존</span><b class="mono">${(S.sum/S.n).toFixed(1)}년</b></div>
+        <div class="row between"><span>가장 짧게 · 길게</span><b class="mono">${S.min}년 · ${S.max}년</b></div>
+        ${line('엔딩',top(S.ends,6).map(([k,v])=>[en[k]||k,v]))}${line('자주 쓴 소속',top(S.aff,3))}${line('자주 나온 출신',top(S.ori,3))}${line('자주 나온 타고난 것',top(S.inn,3))}</div>`})()}
       ${vJobs()}
       <div class="panel stack" style="gap:8px"><span class="eyebrow">만난 상대 ${r.seen.filter(id=>D.enemies[id]).length}/${total} · 이긴 상대 ${r.beaten.filter(id=>D.enemies[id]).length}</span>
         ${groups.map(([n,g])=>{const l=foes(g);return l.length?`<div><span class="small dim">${n}</span><div class="chips">${l.map(([id,e])=>`<span class="chip${r.seen.includes(id)?'':' dim'}" ${r.beaten.includes(id)?`style="color:${e.color};border-color:${e.color}"`:''}>${r.seen.includes(id)?esc(e.n)+(r.beaten.includes(id)?' ✓':''):'???'}</span>`).join('')}</div></div>`:''}).join('')}
@@ -838,7 +847,7 @@ export function startUI(E,app){
   const noticeBody=(sec=NOTICE.sec)=>sec.map(([h,items])=>`<div class="stack" style="gap:4px"><b>${h}</b><ul class="small" style="margin:0;padding-left:18px;display:grid;gap:3px">${items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join('');
   function vUpdates(){return `<details class="panel"><summary><b>이번 업데이트 · ${UPDATES.v}</b></summary><div class="stack" style="gap:10px;margin-top:10px">${noticeBody(NOTICE.sec)}</div><ul class="small" style="margin:8px 0 0;padding-left:18px">${UPDATES.items.map(t=>`<li>${t}</li>`).join('')}</ul></details>`}
   /* 세이브 옮기기: 이 브라우저의 세이브·기록실·해금을 코드(또는 파일)로 내보내고, 다른 기기에서 불러온다 */
-  const XKEYS=[SAVE,REC,'cityYearUnlocks'];
+  const XKEYS=[SAVE,REC,'cityYearUnlocks','cityYearChron','cityYearDaily'];
   const xEncode=()=>{const d={};for(const k of XKEYS){const v=store.get(k);if(v)d[k]=v}return 'CY1:'+btoa(unescape(encodeURIComponent(JSON.stringify({cy:1,v:UPDATES.v,t:Date.now(),d}))))};
   function xDecode(txt){
     let t=String(txt||'').trim();if(!t)throw new Error('코드가 비어 있다');
@@ -853,8 +862,8 @@ export function startUI(E,app){
   function vTransfer(){
     const has=!!loadSave();
     return `<details${UI.xopen?' open':''}><summary>세이브 옮기기 (다른 기기에서 이어하기)</summary><div class="stack" style="gap:10px;margin-top:8px">
-      <p class="small dim">이 기기의 세이브·기록실·해금을 코드로 만들어 다른 기기에서 불러온다. 불러오면 그 기기에 있던 세이브와 기록은 덮어쓴다. 설정(테마·연출)은 옮겨지지 않는다.</p>
-      <button class="btn" data-a="xport"><b>내보내기</b><span class="dim small">${has?'지금 이어하기 세이브까지 포함한다':'이어하기 세이브는 없다 · 기록실과 해금만 담긴다'}</span></button>
+      <p class="small dim">이 기기의 세이브·기록실·해금·일대기·명예의 전당·오늘의 시드 기록을 코드로 만들어 다른 기기에서 불러온다. 불러오면 그 기기에 있던 세이브와 기록(일대기·명예의 전당 포함)은 덮어쓴다. 설정(테마·연출)은 옮겨지지 않는다.</p>
+      <button class="btn" data-a="xport"><b>내보내기</b><span class="dim small">${has?'지금 이어하기 세이브까지 포함한다':'이어하기 세이브는 없다 · 기록실·해금·일대기만 담긴다'}</span></button>
       ${UI.xcode?`<textarea id="xcode" readonly rows="4" style="width:100%;font:12px/1.4 var(--mono);background:var(--panel2,#11151d);color:var(--fg);border:1px solid var(--line,#2a2f3a);border-radius:8px;padding:8px">${UI.xcode}</textarea>
         <div class="row" style="gap:8px"><button class="chip" data-a="xcopy">코드 복사</button><button class="chip" data-a="xfile">파일로 저장</button></div>`:''}
       <textarea id="xin" rows="3" placeholder="여기에 코드를 붙여 넣는다" style="width:100%;font:12px/1.4 var(--mono);background:var(--panel2,#11151d);color:var(--fg);border:1px solid var(--line,#2a2f3a);border-radius:8px;padding:8px"></textarea>
@@ -1312,6 +1321,14 @@ export function startUI(E,app){
   const OUTEND={seal:['균열이 닫혔다','외곽의 괴수들이 하나둘 울음을 멈췄다. 세계의 균열은 당신이 선 자리에서 가장 먼저 아물었다. 머리도 닫지 못한 문을, 당신이 한 겹 닫았다.'],
     star:['도시의 별이 되었다','이름을 가진 존재들 거의 전부와 맞서 이겼다. 도시의 장부에는 더 이상 당신에게 붙일 이름이 없었고, 사람들은 하늘에 새로 뜬 별 하나를 당신의 이름으로 불렀다.'],
     settle:['외곽에 집을 지었다','괴수의 울음이 닿지 않는 언덕에 작은 집을 지었다. 식탁에는 가족의 자리가 있고, 창밖의 균열은 오늘도 멀리서 닫혀 간다.']};
+  /* 오늘의 시드: 그날 도전 기록. 이번 결과를 이전 최고와 견준다 */
+  function vDailyCmp(){
+    const o=UI.dailyCmp;if(!o||!G||!G.ch||G.ch.daily!==o.day)return '';
+    const sc=x=>(x.w?1000:0)+x.y,cur=o.cur,pv=o.prev,row=(l,x)=>`<div class="row between" style="gap:10px"><span>${l}</span><b class="small" style="text-align:right">${esc(x.h||'')} · ${x.y}년 · Lv ${x.lv}</b></div>`;
+    let cmp='첫 도전이다. 다음 도전부터 이 기록과 견줘 준다.';
+    if(pv){const d=sc(cur)-sc(pv);cmp=cur.w&&!pv.w?'이전 최고보다 나아졌다 (완주).':d>0?`이전 최고보다 ${d}년 더 살았다.`:d===0?'이전 최고와 같다.':`이전 최고보다 ${-d}년 짧다.`}
+    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">오늘의 시드 · ${esc(o.day)} · ${o.n}번째 도전</span>${row('이번',cur)}${pv?row('이전 최고',pv):''}<p class="small" style="color:var(--gold)">${cmp}</p></div>`;
+  }
   function vEnd(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),tr=w&&UI.trueEnd,df=c.distForm;
     /* 전투 중 E.G.O 개화·뒤틀림 이름을 정하기 전에 판이 끝났으면(전투에서 쓰러짐 등) 결과 화면에서 먼저 정한다 */
@@ -1334,6 +1351,7 @@ export function startUI(E,app){
       ${endDeck(c)}
       <div class="mono small dim">${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(affName(c)):c.licensed?' · '+T.licensed:''}</div></div>
       <div class="mono small dim" style="text-align:center">도시의 한 해 · cityyear-fanmade.github.io/city-year · Project Moon 팬메이드</div></div>
+      ${vDailyCmp()}
       ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 1막 종료</span><p class="small">여기서 끝내도 된다. 제 2막이 시작되면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 제 2막의 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">제 2막 시작</button></div>`:''}
       ${w&&UI.outEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">무한 모드 엔딩</span><p class="small">여기서 끝내도 된다. 계속 살아가면 무한 모드가 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
       ${w&&UI.oldEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 엔딩</span><p class="small">여기서 끝내도 된다. 계속 살아가면 무한 모드가 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
@@ -1387,11 +1405,11 @@ export function startUI(E,app){
     return new Promise(res=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
       sc.onload=()=>res(!!window.html2canvas);sc.onerror=()=>res(false);document.head.appendChild(sc);setTimeout(()=>res(!!window.html2canvas),8000)});
   }
-  async function shotEnd(){
-    const el=$('endShot');if(!el||!(await loadShot()))return null;
+  async function shotEnd(id){
+    id=id||'endShot';const el=$(id);if(!el||!(await loadShot()))return null;
     try{await document.fonts.ready}catch(e){}
     try{const bg=getComputedStyle(document.body).backgroundColor||'#0d0d0f';
-      return await window.html2canvas(el,{backgroundColor:bg,scale:2,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById('endShot');if(e){e.style.padding='28px 22px';e.style.background=bg}}})}catch(e){return null}
+      return await window.html2canvas(el,{backgroundColor:bg,scale:2,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){e.style.padding='28px 22px';e.style.background=bg}}})}catch(e){return null}
   }
   /* 엔딩 카드 이미지 (1080×1350): 캔버스에 직접 그린다. 외부 라이브러리 없음 */
   async function endCard(){
@@ -1562,6 +1580,13 @@ export function startUI(E,app){
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
     if(!r.endings.includes(k))r.endings.push(k);if(fe==='wed'&&!r.endings.includes('wed'))r.endings.push('wed');r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;if(w&&c.easy)r.easyClear=(r.easyClear||0)+1;
+    const S=r.st=r.st||{n:0,sum:0,min:null,max:0,ends:{},aff:{},ori:{},inn:{}},bump=(m,n)=>{if(n)m[n]=(m[n]||0)+1};
+    S.n++;S.sum+=lived;S.min=S.min==null?lived:Math.min(S.min,lived);S.max=Math.max(S.max,lived);bump(S.ends,k);bump(S.aff,affName(c)||(c.licensed?T.licensed:''));bump(S.ori,c.o&&c.o.n);
+    [c.innate,c.innate2].filter(Boolean).forEach(i=>bump(S.inn,D.innate[i]&&D.innate[i].n));
+    if(c.daily){let h='';try{h=shareHead()}catch(e){}const dd=loadDaily(),cur={w:w?1:0,y:lived,lv:c.lv,h,df:diffOf(c)},sc=x=>(x.w?1000:0)+x.y,e0=dd[c.daily]||{n:0,best:null};
+      UI.dailyCmp={day:c.daily,prev:e0.best,last:e0.last||null,n:e0.n+1,cur};
+      e0.n++;e0.last=cur;if(!e0.best||sc(cur)>sc(e0.best))e0.best=cur;dd[c.daily]=e0;
+      const ks=Object.keys(dd).sort();while(ks.length>40)delete dd[ks.shift()];store.set(DAILYK,JSON.stringify(dd))}else UI.dailyCmp=null;
     r.best.years=Math.max(r.best.years,lived);r.best.lv=Math.max(r.best.lv,c.lv);if(G.endless)r.best.grade=Math.max(r.best.grade,E.gradeAt(G.year));
     if(dt&&dt.id==='godmother'){r.titles=r.titles||{};r.titles['정해진 운명']=(r.titles['정해진 운명']||0)+1}
     store.set(REC,JSON.stringify(r));if(!w)store.del(SAVE);
@@ -1688,9 +1713,17 @@ export function startUI(E,app){
     start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='title')store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     cont(){const o=loadSave();if(!o)return;G=o.G;C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
+    async chimg(v){
+      const [tab,id]=String(v).split(':'),e=(loadChron()[tab]||[]).find(x=>x.id===id);if(!e)return;
+      const cv=await shotEnd('chShot');if(!cv){UI.chMsg='이미지를 만들 수 없다. 인터넷 연결(이미지 도구 불러오기)을 확인해 주세요.';render();return}
+      const name=`도시의한해_일대기_${(e.v||'')}_${e.id}.png`,blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+      try{const f=new File([blob],name,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(er){if(er&&er.name==='AbortError')return}
+      try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(er){}
+      if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');UI.chMsg='';render()}
+    },
     chron(){UI.screen='chron';render()},
     chtab(k){UI.chTab=k==='fame'?'fame':'life';UI.screen='chron';render()},
-    chview(v){const [tab,id]=String(v).split(':');UI.chSel={tab,id};UI.screen='chronview';render()},
+    chview(v){const [tab,id]=String(v).split(':');UI.imgUrl=null;UI.chSel={tab,id};UI.screen='chronview';render()},
     chfame(id){const o=loadChron(),e=o.life.find(x=>x.id===id);if(!e)return;
       if(o.fame.some(x=>x.key===e.key)){UI.chMsg='이미 명예의 전당에 있다.'}
       else if(o.fame.length>=CHRON_FAME){UI.chMsg=`명예의 전당은 최대 ${CHRON_FAME}개다. 하나를 삭제한 뒤 올려 주세요.`;UI.chTab='fame'}
@@ -1823,6 +1856,7 @@ export function startUI(E,app){
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
     testRouteEnd(k,act2){if(!G)return;G.endless=!!act2;G.year=G.ch.year=act2?66:CFG.years;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=k==='rcorp';UI.hwEnd=k==='rcorp'?null:(k||'hwhost');UI.death=null;UI.screen='end';render()},
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
+    testRec(){if(!G)return;recordEnd();render()},
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
     testTitles(a){if(G)G.ch.titles=a},
