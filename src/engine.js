@@ -184,7 +184,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     s.dmin=calcDmin(ch);
     /* 무기 피해 주사위 면 수 (궁니르 d10). 장비 중 가장 큰 값, 기본 d6 */
     s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
-    if(item.card&&!ownsCard(ch,item.card)&&!ch.deckLocked){putCard(ch,item.card);if(ch.cardMoney&&ch.deck.includes(item.card))(ch.extra=ch.extra||[]).push(item.card)}
+    if(item.card&&!ownsCard(ch,item.card)&&!routeCard(ch,item.card,null)&&!ch.deckLocked){putCard(ch,item.card);if(ch.cardMoney&&ch.deck.includes(item.card))(ch.extra=ch.extra||[]).push(item.card)}
   }
   /* ===== 6시즌: N사 날개 · 의체 심판: 의수를 쓰지 않고, 의체 상대(enemies aug)를 심판한다 ===== */
   const isN=ch=>!!ch.aff&&ch.aff.name===CFG.nWing.name;
@@ -261,6 +261,19 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function deckIn(ch,i){const sd=ch.side||[];if(ch.deckLocked||ch.cardMoney||!sd[i]||!deckRoom(ch))return false;ch.deck.push(sd.splice(i,1)[0]);return true}
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
+  /* 카드가 들어갈 자리: 전용 팩(덱 고정·전용 카드팩)을 쓰는 중에 다른 곳에서 강제로 들어오는 카드(의수·승진)는
+     지금 덱에 끼우지 않고, 그 카드가 속한 팩(없으면 기본 카드팩)의 보관함으로 보낸다. 보냈으면 true */
+  const packByName=(ch,n)=>(ch.packs||[]).find(p=>p.n===n);
+  function routeCard(ch,cid,owner,chips,label){
+    if(!(ch.deckLocked||ch.cardMoney))return false;
+    if(owner&&(ch.orgPack===owner||ch.packName===owner+' 전용 카드팩'))return false;
+    const t=(owner&&packByName(ch,owner+' 전용 카드팩'))||packByName(ch,'기본 카드팩');
+    if(!t)return false;
+    if((ch.packs||[]).some(p=>p.deck.includes(cid)||p.side.includes(cid)))return true;
+    (t.deck.length<deckMax(ch)?t.deck:t.side).push(cid);
+    chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → ${t.n}에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);
+    return true;
+  }
   /* ===== 카드팩 보관함 =====
      덱이 통째로 바뀌기 전에 지금 팩(덱·카드함·고정 여부)을 보관한다. 전투 밖에서 팩을 바꿔 끼울 수 있고, 해마다 한 번만 바꾼다.
      같은 해에 방금 떠난 팩으로 되돌릴 수는 있지만, 되돌린 뒤에는 그 해에 더 바꿀 수 없다 (실수로 바꿨을 때) */
@@ -507,7 +520,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const rows=C_.finalRow&&orgRows(ch,C_);
     if(!rows||!ch.cardMoney||ch.finalGiven)return;ch.finalGiven=true;
     const ids=rows[rows.length-1].filter(id=>ch.deck.length<deckMax(ch));
-    if(ids.length){ch.deck=ch.deck.concat(ids);if(ch.orgPack!==ch.aff.name)(ch.extra=ch.extra||[]).push(...ids);out.push(`전용 카드 · ${ids.map(id=>D.cards[id].n).join(', ')} (${why})`)}
+    const keep=ids.filter(id=>!routeCard(ch,id,ch.aff.name,out,'전용 카드'));
+    if(keep.length){ch.deck=ch.deck.concat(keep);if(ch.orgPack!==ch.aff.name)(ch.extra=ch.extra||[]).push(...keep)}
+    if(keep.length)out.push(`전용 카드 · ${keep.map(id=>D.cards[id].n).join(', ')} (${why})`);
   }
   /* 협회 전용 카드팩: 입회 때 careers.*.cards[소속 이름]의 카드를 한 번에 받아 덱이 통째로 바뀐다.
      전용 카드팩(cardMoney)이라 이후 카드는 얻을 수 없고(대신 돈), 나중에 히든 책장으로 덱이 바뀌어도 협회 패시브는 소속 기록(assocName)으로 남는다 */
