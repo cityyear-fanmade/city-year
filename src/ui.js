@@ -473,7 +473,7 @@ export function startUI(E,app){
   }
   function vRelic(){
     const ch=G.ch;
-    return (ch.relics||[]).length?`<div>${ch.relics.map(n=>{const e=Object.values(D.enemies).find(x=>x.drop&&x.drop.n===n),r=Object.values(D.relics||{}).find(x=>x.n===n),nt=(D.relicNotes||{})[n];return `<div class="invr rel"><span>${esc(n)}</span><b class="mono" style="color:var(--gold)">${e?esc(e.drop.e):r?esc(r.e):nt?esc(nt):''}</b></div>`}).join('')}</div>`:'<p class="small dim">아직 전리품이 없다. 숨은 보스를 이기면 얻는다.</p>';
+    return (ch.relics||[]).length?`<div>${ch.relics.map(n=>{const e=Object.values(D.enemies).find(x=>x.drop&&x.drop.n===n),r=Object.values(D.relics||{}).find(x=>x.n===n),nt=(D.relicNotes||{})[n]||(n.startsWith('성도 · ')&&ch.seongNote?ch.seongNote.replace(/^[^·]*· /,''):'');return `<div class="invr rel"><span>${esc(n)}</span><b class="mono" style="color:var(--gold)">${e?esc(e.drop.e):r?esc(r.e):nt?esc(nt):''}</b></div>`}).join('')}</div>`:'<p class="small dim">아직 전리품이 없다. 숨은 보스를 이기면 얻는다.</p>';
   }
   function sheet(inner,cls,closable){
     return `<div class="ov"><div class="ovbg"${closable?' data-a="bagclose"':''}></div><div class="sheet ${cls}" role="dialog" aria-modal="true">${inner}</div></div>`;
@@ -1642,7 +1642,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const n=(($('seongname')||{}).value||'').trim(),err=E.nameErr(n);
       if(err){UI.seongErr=err;UI.seongName=n;render();return}
       const it=E.setSeongdo(G.ch,n);UI.seongErr='';UI.seongName='';resave();
-      UI.res.chips=[...UI.res.chips,`성도 · ${it.n}  획득 · ${it.e}`];render();
+      UI.res.chips=[...UI.res.chips,`전리품 · 성도 · ${it.n}  획득 · ${it.e} (능력치에 더해졌다)`];render();
     },
     wingset(){
       const n=(($('wingname')||{}).value||'').trim(),err=E.wingNameErr(n);

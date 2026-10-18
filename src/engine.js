@@ -1196,12 +1196,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const n=(ch.pinkyKeys||[]).length,K=D.pinky.keys[n];
     return {t:K.t,x:K.x,c:[{l:K.l,h:`1d100 · ${P_.dc} 이상이면 ${K.k}를 얻는다 (${n}/${D.pinky.keys.length})`,check:{s:null,dc:P_.dc,pure:true},ok:{t:K.ok,fx:{pinkyKey:true}},fail:{t:K.fail,fx:{}}}]};
   }
-  /* 성도: 인의예지를 모두 모으면 이름을 붙인 전용 무기. 공격·회피·추가 피해·명중을 각각 굴린다 */
+  /* 성도: 인의예지를 모두 모으면 이름을 붙인 전리품(무기가 아닌 패시브). 공격·회피·추가 피해를 각각 굴려 능력치에 영구히 더한다 */
   function setSeongdo(ch,name,force){
     if(!ch.seongPick||(!force&&nameErr(name)))return false;
-    const R=CFG.pinky.seongdo,r=([a,b])=>a-1+d(b-a+1),fx={atk:r(R.atk),eva:r(R.eva)},db=r(R.dmgB),hit=r(R.hit);if(db)fx.dmgB=db;
-    const nm=(name||'').trim()||'이름 없는',it={id:'w_seongdo',slot:'weapon',grade:5,n:nm+'성도',e:`공+${fx.atk} · 회피+${fx.eva}${db?' · 피해+'+db:''} · 명중+${hit} (소지의 도 · 인의예지)`,fx,wx:{hitB:hit}};
-    offerGear(ch,it);ch.seongPick=false;ch.seongDone=true;(ch.relics=ch.relics||[]).push(`성도 · ${it.n}`);return it;
+    const R=CFG.pinky.seongdo,r=([a,b])=>a-1+d(b-a+1),fx={atk:r(R.atk),eva:r(R.eva),dmgB:r(R.dmgB)};
+    const nm=(name||'').trim()||'이름 없는',n=nm+'성도',e=`공+${fx.atk} · 회피+${fx.eva} · 피해+${fx.dmgB}`;
+    addStats(ch.stats,fx);ch.seongNote=`${n} · ${e}`;ch.seongFx=fx;
+    ch.seongPick=false;ch.seongDone=true;(ch.relics=ch.relics||[]).push(`성도 · ${n}`);return {n,e,fx};
   }
   /* 해마다 순서: 제안(from년차부터 chance%) → 개발 진척 → 날개 설립 → 실험. 사건을 보이면 그 사건을 돌려준다 */
   function corpEvent(G){
