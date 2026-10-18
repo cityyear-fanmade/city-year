@@ -677,7 +677,7 @@ export function startUI(E,app){
   }
   const chDate=t=>new Date(t).toLocaleString('ko-KR',{year:'2-digit',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
   function chBtns(tab,e,view){
-    return `<div class="row" style="gap:6px;flex-wrap:wrap">${view?'':`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chview" data-i="${tab}:${e.id}">펼쳐 보기</button>`}${tab==='life'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chfame" data-i="${e.id}">명예의 전당에 올리기</button>`:''}<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chdel" data-i="${tab}:${e.id}">삭제</button></div>`;
+    return `<div class="row" style="gap:6px;flex-wrap:wrap">${view?'':`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chview" data-i="${tab}:${e.id}">펼쳐 보기</button>`}${tab==='life'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chfame" data-i="${e.id}">명예의 전당에 올리기</button>`:''}<button class="btn quiet" data-a="chdel" data-i="${tab}:${e.id}"${UI.delAsk===tab+':'+e.id?' style="width:auto;padding:8px 12px;border-color:#c25050;color:#c25050"':' style="width:auto;padding:8px 12px"'}>${UI.delAsk===tab+':'+e.id?'정말 삭제 · 한 번 더':'삭제'}</button></div>`;
   }
   /* 시작 화면 일대기 버튼: 좁은 화면은 위 한 줄(chron-in), 넓은 화면은 틀 바깥 왼쪽 위 모서리(chron-out). 틀 안에 두면 단테·검지 테마의 clip-path에 잘린다 */
   const chronBtn=cls=>{const o=loadChron();return `<button class="btn chronbtn ${cls}" data-a="chron"><b>📜 일대기 · 명예의 전당</b><span class="dim small">지난 판의 결과 화면 ${o.life.length}/${CHRON_LIFE} · 명예의 전당 ${o.fame.length}/${CHRON_FAME}</span></button>`};
@@ -1505,7 +1505,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
-    const ov=UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?'<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto"><b>첫 화면으로</b><span class="dim small">진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다</span></button>':''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
+    const ov=UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const ovKey=UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
     app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
@@ -1723,15 +1723,15 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(er){}
       if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');UI.chMsg='';render()}
     },
-    chron(){UI.screen='chron';render()},
-    chtab(k){UI.chTab=k==='fame'?'fame':'life';UI.screen='chron';render()},
-    chview(v){const [tab,id]=String(v).split(':');UI.imgUrl=null;UI.chSel={tab,id};UI.screen='chronview';render()},
+    chron(){UI.delAsk=null;UI.screen='chron';render()},
+    chtab(k){UI.delAsk=null;UI.chTab=k==='fame'?'fame':'life';UI.screen='chron';render()},
+    chview(v){const [tab,id]=String(v).split(':');UI.delAsk=null;UI.imgUrl=null;UI.chSel={tab,id};UI.screen='chronview';render()},
     chfame(id){const o=loadChron(),e=o.life.find(x=>x.id===id);if(!e)return;
       if(o.fame.some(x=>x.key===e.key)){UI.chMsg='이미 명예의 전당에 있다.'}
       else if(o.fame.length>=CHRON_FAME){UI.chMsg=`명예의 전당은 최대 ${CHRON_FAME}개다. 하나를 삭제한 뒤 올려 주세요.`;UI.chTab='fame'}
       else{o.fame.unshift(e);saveChron(o);UI.chMsg='명예의 전당에 올렸다.'}
       UI.screen='chron';render()},
-    chdel(v){const [tab,id]=String(v).split(':');if(typeof confirm==='function'&&!confirm('이 기록을 삭제할까? 되돌릴 수 없다.'))return;
+    chdel(v){const [tab,id]=String(v).split(':');if(UI.delAsk!==v){UI.delAsk=v;render();return}UI.delAsk=null;
       const o=loadChron();o[tab]=(o[tab]||[]).filter(x=>x.id!==id);saveChron(o);UI.chTab=tab;UI.screen='chron';render()},
     records(){UI.screen='records';render()},
     daily(){if(loadSave()&&UI.confirmNew!=='daily'){UI.confirmNew='daily';render();return}store.del(SAVE);UI.confirmNew=null;if(expired()){UI.screen='title';render();return}UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=todayKey();born(dailySeed(UI.daily),'',true);UI.endText=null;UI.screen='birth';render()},
@@ -1760,10 +1760,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bag(k){UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;render()},
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
     bagclose(){if(UI.cfg){UI.cfg=false;render();return}UI.bag=null;UI.dropAsk=null;render()},
-    cfg(){UI.cfg=true;if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
-    cfgclose(){UI.cfg=false;render()},
+    cfg(){UI.cfg=true;UI.homeAsk=false;if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
+    cfgclose(){UI.cfg=false;UI.homeAsk=false;render()},
     home(){
-      if(typeof confirm==='function'&&!confirm('첫 화면으로 돌아갈까? 진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다. (전투 중이면 그 전투는 처음부터 다시 시작한다)'))return;
+      if(UI.screen!=='birth'&&!UI.homeAsk){UI.homeAsk=true;render();return}UI.homeAsk=false;
       if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}UI.cfg=false;UI.bag=false;UI.confirmNew=null;UI.paused=false;PLAYING=false;
       if(UI.screen==='end'||!loadSave()){UI.screen='title';render();return}
       UI.screen='title';render();
