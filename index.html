@@ -518,7 +518,7 @@ const CFG = {
   oldAge: 100,
   /* 사건 판정 주사위 최대치(플레이어): 타고난 것 등으로 아무리 커져도 이 값에서 멈춘다 */
   checkMax: 220,
-  infinite: {erodeFrom: 90, erodePer: 0.5, enemyMax: 260, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, atkGrow: 1, evaGrow: 0.5},
+  infinite: {erodeFrom: 90, erodePer: 0.5, enemyMax: 260, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 10000000, atkGrow: 1, evaGrow: 0.5},
   /* 정신력: 최대 max. healEvery년마다 +yearHeal. 선택지·환상체 조우 2d3 감소, 회피 실패 시 1d evadeDie에서 1이면 1 감소(E.G.O 장비 1개당 +1).
      voiceAt 이하에서 한 번 "들리는 목소리": 1d voiceDie를 voiceRolls번, 모두 voiceDc 이상이면 개화, 실패하면 1d failLoss 감소.
      0이면 사망, 1이면 뒤틀림 판정 1d2 (1이면 개화하고 가득 회복, 2면 뒤틀림 엔딩). tiers: 전투 시작 때 호흡·회피 보정 */
@@ -2324,8 +2324,9 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     /* 보스별 난이도 보정(hard): 체력 배수, 공격·회피 가산 */
     const IM_=ch.infinite&&id===X_.final?(ch.infImp||0):0;
     const SI_=ch.infinite?Math.max(0,gradeRaw(ch.year||0)-X_.grades.length+1):0;
-    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||null,ehh0=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,SI_));
-    const ehh=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0;
+    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||null,ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
+    const ehhCap=ch.infinite?Math.min(ehh0_,CFG.infinite.hpMax):ehh0_;
+    const ehh0=ehhCap,ehh=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0;
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
     const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:Math.max(1,e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 무한 모드에서도 적의 명중·회피는 enemyMax에서 멈춘다 */
