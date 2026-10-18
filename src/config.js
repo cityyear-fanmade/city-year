@@ -91,6 +91,8 @@ export const CFG = {
     /* v6.1: 카드 교환(덱 카드 1장을 일반 보상 카드 무작위 1장으로, 방문마다 swapMax장까지) · 장비 정비(장착 장비마다 최대 tune.max번 시도, chance% 확률로 공격 또는 회피 +1, 시도 비용 base+step×지금까지 시도) */
     swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150}},
   /* 타고난 것: 출생 굴림과 별개로 1/chanceDiv 확률. 시드 재현을 위해 출생 굴림 값에서 파생 (새 주사위를 쓰지 않는다) */
+  /* 해금 조건이 있는 타고난 것: hits=한 전투에서 맞은 횟수(회피 제외) · spdUp=출생 때보다 오른 속도 · lv=최고 레벨 기록 */
+  innateUnlock: {hits: 20, spdUp: 14, lv: 20},
   innate: {chanceDiv: 100, secondDiv: 10, scholarMul: 1.4, willCut: 0.5, willHeal: 1, swiftDmg: 3, growMul: 1.2, money: 1.2, intuitionDie: 20, psycho: 2, markYear: 30, markMul: 1.6, miracleEvery: 10, miracleDie: 5},
   /* 카드 등급: 연차가 쌓이면 내 공격 카드가 강해진다 (from년차부터). 적중마다 피해 +b, 명중 +hit, 주사위 +dice개 */
   cardGrade: [{from: 1, n: '', b: 0, hit: 0, dice: 0}, {from: 16, n: '+1', b: 2, hit: 5, dice: 0}, {from: 31, n: '+2', b: 3, hit: 10, dice: 1}, {from: 46, n: '+3', b: 5, hit: 15, dice: 1}],
