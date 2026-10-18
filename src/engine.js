@@ -126,7 +126,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const x of [o,t,f])addStats(s,x.fx);
     const kid=keep?keep.kid.map(k=>{addStats(s,k.x.fx);return k}):childhood(s);
     const ch={r,o,t,f,w,kid,ci,blank:!!keep&&!(keep.fate&&HO),fated:!!(keep&&keep.fate&&HO),color:D.colors[ci].hex,licensed:false,title:null,aff:null,paths:Object.assign({},o.paths),
-      flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:CFG.mind.max+(s.mindMax||0),stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||o.money||0,
+      flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0)),stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||o.money||0,
       deck:o.deck?o.deck.slice():['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
     ch.s0={maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,check:s.check};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
@@ -141,7 +141,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const h2=(r.o*104729+r.t*7919+r.f*15485863+r.w*1299709+r.n*49979687+ch.kid.reduce((a,k)=>a*37+k.r,11))%1000003;
       if(!keep&&ch.innate&&h2%IN.secondDiv===0){const ks=innatePool().filter(k=>k!==ch.innate);if(ks.length)ch.innate2=ks[Math.floor(h2/IN.secondDiv)%ks.length]}}
     /* 출생 때 한 번 적용되는 타고난 것 (강철 체질 · 질풍 · 굳은 정신) */
-    for(const k of [ch.innate,ch.innate2]){const E_=k&&D.innate[k]&&D.innate[k].fx;if(!E_)continue;const s_=ch.stats;for(const [sk,v] of Object.entries(E_))s_[sk]=(s_[sk]||0)+v;if(E_.maxHp)ch.hp+=E_.maxHp;if(E_.mindMax)ch.mind=CFG.mind.max+(s_.mindMax||0)}
+    for(const k of [ch.innate,ch.innate2]){const E_=k&&D.innate[k]&&D.innate[k].fx;if(!E_)continue;const s_=ch.stats;for(const [sk,v] of Object.entries(E_))s_[sk]=(s_[sk]||0)+v;if(E_.maxHp)ch.hp+=E_.maxHp;if(E_.mindMax)ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s_.mindMax||0))}
     if(J){ch.job=job;ch.aff={type:'head',name:'머리'};if(J.deck){ch.deck=J.deck.slice();ch.cardMoney=true}else for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
     /* 출생 때 굴린 무기는 무기 칸의 첫 장비 */
     equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
@@ -151,7 +151,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e}}
     /* E.G.O 발현자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
-      ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=CFG.mind.max+(s.mindMax||0);license(ch);ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
+      ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
     ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;
     return ch;
   }
@@ -776,7 +776,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const M=CFG.mind;
   const mindFloor=ch=>ch.ego?M.ego[ch.ego.type].floor:0;
   /* 성장기 '목소리가 들림': 정신력 최대치 +5 */
-  const mindMax=ch=>M.max+((ch.stats&&ch.stats.mindMax)||0);
+  const mindMax=ch=>Math.min(M.cap||Infinity,M.max+((ch.stats&&ch.stats.mindMax)||0));
   /* ===== 전투 중 정신력이 0이 되면: 50% E.G.O 개화, 아니면 육신 뒤틀림 (둘 다 그 자리에서 전투에 반영) =====
      이름은 전투가 끝난 뒤 정한다 (ch.namePend) */
   let activeC=null;
