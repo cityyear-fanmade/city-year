@@ -978,7 +978,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     return `<div class="row" style="justify-content:flex-start"><button class="btn quiet" data-a="title" style="width:auto;padding:6px 12px"><b>← 첫 화면으로</b></button></div><div class="stack" style="gap:6px"><div class="eyebrow">무작위 출생 · 1d100</div><h2>${b.name?esc(b.name)+'은(는)':'당신은'} 이렇게 태어났다</h2></div>
       <div class="panel stack" style="gap:10px">
         <label class="field" for="nm"><span class="eyebrow">이름</span><input id="nm" maxlength="12" value="${esc(b.name||'')}" placeholder="${T.you}" autocomplete="off"></label>
-        <div class="row between"><span class="mono small dim">시드 <b style="color:var(--fg)">${b.seed}</b> · ${UI.daily&&b.seed===dailySeed(UI.daily)?`<b style="color:var(--gold)">오늘의 시드 ${UI.daily}</b>`:'태어날 때마다 새로 뽑힌다'}</span></div>
+        <div class="row between"><span class="mono small dim">시드 <b style="color:var(--fg)">${b.seed}</b> · ${dailyKeyOf(b.seed)?`<b style="color:var(--gold)">${dailyKeyOf(b.seed)===todayKey()?'오늘의 시드':'지난 시드'} ${dailyKeyOf(b.seed)}</b>`:'태어날 때마다 새로 뽑힌다'}</span></div>
         <div class="row" style="flex-wrap:nowrap"><input id="seedIn" inputmode="numeric" enterkeyhint="go" maxlength="12" placeholder="시드 번호로 다시 태어나기" autocomplete="off" style="flex:1;min-width:0">
           <button class="chip" data-a="seed">이 시드로</button></div>
       </div>
@@ -1821,7 +1821,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     relic(k){UI.relic=k;render()},
     job(k){UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(UI.daily&&BC.seed===dailySeed(UI.daily))BC.daily=UI.daily;if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
+    live(){if(BC&&BC.fateChoices&&!BC.fated)return;{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.showIncome=false;UI.screen='shop';render()},
@@ -1914,7 +1914,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 자동 전투 간격: [카드 고르기 전, 행동 개시 전] ms */
   const autoGap=()=>AUTOGAP==='slow'?[1600,1100]:AUTOGAP==='fast'?[150,150]:AUTOGAP==='mid'?[600,500]:[1000,800];
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
-  function born(seed,name,daily){const dly=daily||(UI.daily&&seed===dailySeed(UI.daily));E.reseed(seed);const pl=dly&&UI.daily&&CFG.dailyPlan[UI.daily];BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,dly?(pl&&pl.origin)||CFG.dailyOrigin:null);if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;BC.seed=seed;BC.name=name||'';BC.fresh=true}
+  /* 오늘의 시드와 같은 시드(지나간 날의 시드를 번호로 입력한 경우 포함)면 그날의 출신·타고난 것 지정을 그대로 쓴다 */
+  const dailyKeyOf=seed=>UI.daily&&seed===dailySeed(UI.daily)?UI.daily:(Object.keys(CFG.dailyPlan||{}).find(k=>dailySeed(k)===seed)||null);
+  function born(seed,name,daily){const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,dly?(pl&&pl.origin)||CFG.dailyOrigin:null);if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;BC.seed=seed;BC.name=name||'';BC.fresh=true}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
   window.addEventListener('resize',()=>{if(UI.screen==='combat'&&!PLAYING&&UI.wasMobile!==isMobile())render()});
   app.addEventListener('toggle',e=>{const t=e.target;if(!t.classList)return;
