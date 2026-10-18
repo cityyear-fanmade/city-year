@@ -1634,6 +1634,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ms=mindStat(ch);if(ms){P.atk+=ms;P.eva+=ms;P.spd+=ms;P.maxHp+=ms;P.hp+=ms;mindNote.push(`정신력 ${ch.mind} · 모든 능력치 +${ms}`)}
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
+    if((ch.lv||1)>=CFG.lvLight.at)P.lightUp=(P.lightUp||0)+CFG.lvLight.up;
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
     P.inkIds=ch.hw&&ch.hw.mission&&hwHave(ch).length?hwHave(ch).map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
@@ -2095,7 +2096,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const [X,plays] of [[P,pp],[E,ep]]){
       X.guarding=plays.length===0&&!X.stunned;
       if(X.guarding){
-        X.passHitNext=CFG.guard.nextHit;X.lightNext=CFG.guard.lightNext||0;X.lightUp=Math.min(CFG.guard.lightUpMax,X.lightUp+CFG.guard.lightUp);
+        X.passHitNext=CFG.guard.nextHit;X.lightNext=CFG.guard.lightNext||0;X.lightUp=Math.max(X.lightUp,Math.min(CFG.guard.lightUpMax,X.lightUp+CFG.guard.lightUp));
         L('sys',`${X.name} · 방어 자세 · 이번 라운드 방어 판정 · 다음 라운드 명중 +${CFG.guard.nextHit} · 빛 +${CFG.guard.lightUp} (전투 동안)`);
         /* 플레이어 방어 자세: 출혈을 지혈해 스택을 줄인다 */
         if(X.isP&&X.bleed>0&&CFG.guard.bleedCut){const b0=X.bleed;X.bleed=Math.floor(X.bleed*CFG.guard.bleedCut);L('kw',`  ${X.name} 지혈 · ${D.keywords.bleed.n} ${b0} → ${X.bleed}`)}
