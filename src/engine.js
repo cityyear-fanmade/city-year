@@ -142,7 +142,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!keep&&ch.innate&&h2%IN.secondDiv===0){const ks=innatePool().filter(k=>k!==ch.innate);if(ks.length)ch.innate2=ks[Math.floor(h2/IN.secondDiv)%ks.length]}}
     /* 출생 때 한 번 적용되는 타고난 것 (강철 체질 · 질풍 · 굳은 정신) */
     for(const k of [ch.innate,ch.innate2]){const E_=k&&D.innate[k]&&D.innate[k].fx;if(!E_)continue;const s_=ch.stats;for(const [sk,v] of Object.entries(E_))s_[sk]=(s_[sk]||0)+v;if(E_.maxHp)ch.hp+=E_.maxHp;if(E_.mindMax)ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s_.mindMax||0))}
-    if(J){ch.job=job;ch.aff={type:'head',name:'머리'};if(J.deck){ch.deck=J.deck.slice();ch.cardMoney=true}else for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
+    if(J){ch.job=job;ch.aff={type:'head',name:'머리'};if(J.deck){ch.deck=J.deck.slice();ch.cardMoney=true;ch.packName=J.n+' 전용 카드팩'}else for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
     /* 출생 때 굴린 무기는 무기 칸의 첫 장비 */
     equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
     /* 히든 직업 전용 무기: 출생 무기는 보관함으로 */
@@ -261,8 +261,32 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function deckIn(ch,i){const sd=ch.side||[];if(ch.deckLocked||ch.cardMoney||!sd[i]||!deckRoom(ch))return false;ch.deck.push(sd.splice(i,1)[0]);return true}
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
-  /* 히든 보스 전용 책장: 받으면 덱이 통째로 바뀌고 영구 고정, 거절하면 지금 덱 유지 */
-  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;ch.offers=[];ch.picks=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
+  /* ===== 카드팩 보관함 =====
+     덱이 통째로 바뀌기 전에 지금 팩(덱·카드함·고정 여부)을 보관한다. 전투 밖에서 팩을 바꿔 끼울 수 있고, 해마다 한 번만 바꾼다.
+     같은 해에 방금 떠난 팩으로 되돌릴 수는 있지만, 되돌린 뒤에는 그 해에 더 바꿀 수 없다 (실수로 바꿨을 때) */
+  const PACKMAX=8;
+  const packSnap=ch=>({n:ch.packName||'기본 카드팩',deck:ch.deck.slice(),side:(ch.side||[]).slice(),extra:(ch.extra||[]).slice(),deckLocked:!!ch.deckLocked,cardMoney:!!ch.cardMoney,orgPack:ch.orgPack||null,finalGiven:!!ch.finalGiven});
+  function stashPack(ch,newName){(ch.packs=ch.packs||[]).push(packSnap(ch));if(ch.packs.length>PACKMAX)ch.packs.shift();ch.packName=newName||'전용 카드팩';ch.packSwitch=null}
+  /* 'ok' 바꿀 수 있음 · 'year' 올해는 이미 바꿨음 · 'busy' 받을 카드가 남아 있음 · 'no' 바꿀 수 없음 */
+  function packCan(ch,i){
+    const t=(ch.packs||[])[i];if(!t||ch.distForm)return 'no';
+    if((ch.offers||[]).length||(ch.picks||[]).length||ch.packOffer||(ch.gearOffers||[]).length)return 'busy';
+    const lim=ch.packSwitch,y=ch.year||0;
+    if(lim&&lim.y===y&&(lim.lock||lim.from!==t.n))return 'year';
+    return 'ok';
+  }
+  function switchPack(ch,i){
+    if(packCan(ch,i)!=='ok')return false;
+    const ps=ch.packs,t=ps[i],y=ch.year||0,lim=ch.packSwitch,undo=!!(lim&&lim.y===y&&lim.from===t.n),cur=packSnap(ch),fx=ch.deck.filter(id=>D.cards[id].fixed);
+    ps.splice(i,1);ps.push(cur);
+    ch.deck=t.deck.filter(id=>!D.cards[id].fixed).concat(fx);ch.side=t.side.filter(id=>!D.cards[id].fixed);ch.extra=t.extra.slice();
+    ch.deckLocked=t.deckLocked;ch.cardMoney=t.cardMoney;ch.orgPack=t.orgPack;ch.finalGiven=t.finalGiven;ch.packName=t.n;
+    ch.packSwitch=undo?{y,from:'',lock:true}:{y,from:cur.n};
+    while(ch.deck.length>deckMax(ch)){const k=ch.deck.map(id=>D.cards[id].fixed).lastIndexOf(false);if(k<0)break;(ch.side=ch.side||[]).push(ch.deck.splice(k,1)[0])}
+    return true;
+  }
+  /* 히든 보스 전용 책장: 받으면 덱이 통째로 바뀌고 영구 고정, 거절하면 지금 덱 유지 (이전 덱은 카드팩 보관함에 남는다) */
+  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}stashPack(ch,P.n);ch.extra=[];ch.finalGiven=false;ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;ch.offers=[];ch.picks=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
   function declinePack(ch){if(!ch.packOffer)return false;ch.packOffer=null;return true}
   /* 고정 카드(E.G.O 전용)는 덱에서 뺄 수 없다. 예전 판에서 카드함으로 빠진 고정 카드는 덱으로 돌려놓고, 덱이 넘치면 일반 카드가 카드함으로 간다 */
   function repairFixed(ch){
@@ -496,8 +520,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.assocName=ch.aff.name;
     if(at!==0||!rows||ch.deckLocked||ch.cardMoney)return;
     const ids=(C_.finalRow?rows.slice(0,-1):rows).flat();
-    ch.deck=ids.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;ch.cardMoney=true;ch.orgPack=ch.aff.name;
-    out.push(`전용 카드팩 · ${ch.aff.name} ${ids.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈)`);
+    ch.deck=ids.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];stashPack(ch,ch.aff.name+' 전용 카드팩');ch.extra=[];ch.packOffer=null;ch.cardMoney=true;ch.orgPack=ch.aff.name;
+    out.push(`전용 카드팩 · ${ch.aff.name} ${ids.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈 · 이전 덱은 가방의 카드팩 보관함에 남는다)`);
   }
   const assocOf=ch=>ch.assocName||(ch.aff&&ch.aff.type==='assoc'?ch.aff.name:null);
   /* 최고 단계의 특수 사건: 해결사는 특색 심사, 다른 진로는 careers.*.top */
@@ -523,7 +547,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(r.cards&&CFG.syn[ch.aff.name])ch.flags.synTop=1;
     const out=[`${ch.aff.name} · ${r.n}`,...(r.e?[r.e]:[])];
     /* 조직 전용 책장: 들어가는 순간 덱이 통째로 바뀐다 (이후 카드는 얻지 못하고 대신 돈). 최고 서열에서 전용 카드 2장이 더해져 10장이 된다 */
-    if(ch.fi===0&&F.pack&&!ch.deckLocked&&!ch.cardMoney){ch.deck=F.pack.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;ch.cardMoney=true;out.push(`전용 카드팩 · ${ch.aff.name} ${F.pack.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈)`)}
+    if(ch.fi===0&&F.pack&&!ch.deckLocked&&!ch.cardMoney){stashPack(ch,ch.aff.name+' 전용 카드팩');ch.extra=[];ch.deck=F.pack.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;ch.cardMoney=true;out.push(`전용 카드팩 · ${ch.aff.name} ${F.pack.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈 · 이전 덱은 가방의 카드팩 보관함에 남는다)`)}
     return out;
   }
   const canFingerUp=ch=>isFinger(ch)&&!!D.fingers[ch.aff.name].ranks[(ch.fi??-1)+1];
@@ -2251,6 +2275,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    setInnateOpen,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setInnateOpen,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

@@ -375,7 +375,7 @@ export function startUI(E,app){
   const eqTitle=ch=>ch.equipTitle&&titleList(ch).some(t=>t[0]===ch.equipTitle)?ch.equipTitle:'';
   const titledName=ch=>{const t=eqTitle(ch);return (t?`<span class="ctitle">[${esc(t)}]</span><br>`:'')+esc(ch.name||T.you)};
   const entName=X=>X.tt&&X.name.startsWith(`[${X.tt}] `)?`<span class="ctitle">[${esc(X.tt)}]</span><br>${ulName(X.name.slice(X.tt.length+3),X.ul)}`:ulName(X.name,X.ul);
-  function bagTabs(ch){return [['stat','출생',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat([['title','칭호',titleList(ch).length?String(titleList(ch).length):'']]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
+  function bagTabs(ch){return [['stat','출생',''],['pack','카드팩',(ch.packs||[]).length?'보관 '+ch.packs.length:''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat([['title','칭호',titleList(ch).length?String(titleList(ch).length):'']]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
   /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
   function vSideL(P){
     const ch=G.ch,s=ch.stats,pad=(k,v)=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`,up=n=>n?` <i class="bufup">${n>0?'+':'−'}${Math.abs(n)}</i>`:'';
@@ -540,9 +540,21 @@ export function startUI(E,app){
       <div class="seg" style="margin:8px 0;flex:none;min-height:44px">${HELPTABS.map(([k,n])=>`<button class="${t===k?'on':''}" data-a="helptab" data-i="${k}">${n}</button>`).join('')}</div>
       <div class="stack" style="gap:8px;flex:none">${body}</div>`,'bag',true);
   }
+  /* 카드팩 보관함: 덱이 통째로 바뀐 적이 있으면 이전 팩이 여기에 남는다. 해마다 한 번 바꿔 끼운다 */
+  function vPacks(){
+    const ch=G.ch,ps=ch.packs||[],msg=UI.packMsg;UI.packMsg='';
+    const chips=ids=>{const cnt={};ids.forEach(id=>{if(D.cards[id])cnt[id]=(cnt[id]||0)+1});return `<div class="chips">${Object.keys(cnt).map(id=>`<span class="chip">${esc(D.cards[id].n)}${cnt[id]>1?' ×'+cnt[id]:''}</span>`).join('')}</div>`};
+    const flag=(l,c)=>l?`<span class="mono small dim">${c?'덱 고정 · ':''}${c?'새 카드는 돈으로 받는다':'카드를 지우고 옮길 수 있다'}</span>`:'';
+    const why={year:'올해는 이미 바꿨다. 다음 해에 바꿀 수 있다.',busy:'받을 카드·장비를 먼저 고른다.',no:'지금은 바꿀 수 없다.'};
+    return `<p class="small dim">덱이 통째로 바뀌는 전용 카드팩을 받으면 이전 덱이 여기에 남는다. 전투 밖에서 해마다 한 번 바꿔 끼울 수 있다. 실수로 바꿨다면 같은 해 안에 방금 떠난 팩으로 한 번 되돌릴 수 있지만, 되돌린 뒤에는 그 해에 더 바꿀 수 없다.</p>
+      ${msg?`<p class="small bad">${esc(msg)}</p>`:''}
+      <div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b style="color:var(--gold)">지금 쓰는 팩 · ${esc(ch.packName||'기본 카드팩')}</b><span class="mono small dim">덱 ${ch.deck.length}장</span></div>${flag(1,ch.deckLocked||ch.cardMoney)}${chips(ch.deck)}</div>
+      ${ps.length?ps.map((t,i)=>{const can=E.packCan(ch,i),ask=UI.packSwAsk===i;return `<div class="panel stack" style="gap:6px"><div class="row between"><b>${esc(t.n)}</b><span class="mono small dim">덱 ${t.deck.length}장${t.side.length?' · 카드함 '+t.side.length+'장':''}</span></div>${flag(1,t.deckLocked||t.cardMoney)}${chips(t.deck)}
+        ${can==='ok'?`<button class="btn${ask?' primary':''}" data-a="packsw" data-i="${i}"><b>${ask?'정말 바꾼다 · 한 번 더 누른다':'이 팩으로 바꾼다'}</b><span class="dim small">지금 팩은 보관함으로 간다</span></button>`:`<p class="small dim">${why[can]||''}</p>`}</div>`}).join(''):'<div class="panel"><p class="small dim">보관한 팩이 없다. 전용 카드팩을 받아 덱이 통째로 바뀌면 이전 덱이 여기에 남는다.</p></div>'}`;
+  }
   function vBag(){
     const ch=G.ch,t=UI.bag;
-    const body={stat:vStat,gear:vGear,card:vCards,relic:vRelic,family:vFamily,title:vTitleBag}[t]();
+    const body={stat:vStat,pack:vPacks,gear:vGear,card:vCards,relic:vRelic,family:vFamily,title:vTitleBag}[t]();
     return sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">가방</b><span class="mono small" style="color:var(--gold);margin-left:auto">자산 ${E.money(ch.money)}</span><button class="chip" data-a="bagclose">닫기 ✕</button></div>
       <div class="bagtabs">${bagTabs(ch).map(([k,n,b])=>`<button class="tile sm${t===k?' on':''}" data-a="bag" data-i="${k}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>
       <div class="stack" style="gap:10px">${body}</div>`,'bag',true);
@@ -563,10 +575,10 @@ export function startUI(E,app){
     }
     if(ch.packOffer){const P=ch.packOffer,cnt={};P.cards.forEach(id=>cnt[id]=(cnt[id]||0)+1);
       return sheet(`<span class="eyebrow">전용 책장 · ${P.cards.length}장</span><h2>${esc(P.n)}으로 덱을 바꿀까</h2>
-        <div class="check" style="border-color:var(--bleed)"><b class="bad">주의 · 영구 적용</b><br>바꾸면 지금 덱 ${ch.deck.length}장과 카드함 ${(ch.side||[]).length}장이 모두 사라지고 덱이 고정된다. 이후 카드를 지우거나 옮기거나 다시 바꿀 수 없고, 새 카드는 돈으로 받는다.</div>
+        <div class="check" style="border-color:var(--bleed)"><b class="bad">주의 · 덱이 통째로 바뀐다</b><br>바꾸면 지금 덱 ${ch.deck.length}장과 카드함 ${(ch.side||[]).length}장이 '${esc(ch.packName||'기본 카드팩')}'으로 가방의 카드팩 보관함에 남는다. 새 팩은 덱이 고정되고 새 카드는 돈으로 받는다. 보관한 팩은 가방의 카드팩 탭에서 해마다 한 번 바꿔 끼울 수 있다.</div>
         ${P.e?`<div class="check"><b>패시브</b> · ${esc(P.e)}</div>`:''}
         <div class="invcards">${Object.keys(cnt).map(id=>cardRow(id,cnt[id]>1?`<span class="mono small dim">×${cnt[id]}</span>`:'')).join('')}</div>
-        <button class="btn${UI.packAsk?' primary':''}" data-a="packyes">${UI.packAsk?'정말 바꾼다 (되돌릴 수 없다)':'이 책장으로 바꾼다'}</button>
+        <button class="btn${UI.packAsk?' primary':''}" data-a="packyes">${UI.packAsk?'정말 바꾼다 (이전 덱은 보관된다)':'이 책장으로 바꾼다'}</button>
         <button class="btn primary" data-a="packno">지금 덱을 지킨다</button>
         <p class="small dim">지금 덱을 지키면 이 책장은 사라진다. 다른 전리품은 그대로 받는다.</p>`,'offer',false)}
     if((ch.picks||[]).length&&!(ch.offers||[]).length){const g=ch.picks[0];
@@ -1822,7 +1834,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bspecial(id){if(E.buySpecial(G.ch,id,true)){UI.bought=D.special[id].n;render()}},
     noticeok(){store.set('cityYearNotice',NOTICE.id);render()},
     titleeq(i){const L=titleList(G.ch),t=L[+i];if(!t)return;G.ch.equipTitle=G.ch.equipTitle===t[0]?'':t[0];resave();render()},
-    bag(k){UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;render()},
+    packsw(i){
+      i=+i;if(UI.packSwAsk!==i){UI.packSwAsk=i;render();return}UI.packSwAsk=null;
+      if(E.switchPack(G.ch,i)){UI.packMsg='카드팩을 바꿨다 · 지금 쓰는 팩: '+(G.ch.packName||'기본 카드팩');resave()}else UI.packMsg='지금은 바꿀 수 없다.';
+      render();
+    },
+    bag(k){UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;UI.packSwAsk=null;render()},
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
     help(){UI.help='card';if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     helptab(k){UI.help=k;render()},
@@ -1835,7 +1852,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       if(UI.screen==='end'||!loadSave()){UI.screen='title';render();return}
       UI.screen='title';render();
     },
-    packyes(){if(!UI.packAsk){UI.packAsk=true;render();return}UI.packAsk=false;const n=G.ch.packOffer.n;if(E.acceptPack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 덱이 바뀌고 고정되었다`];resave();render()}},
+    packyes(){if(!UI.packAsk){UI.packAsk=true;render();return}UI.packAsk=false;const n=G.ch.packOffer.n;if(E.acceptPack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 덱이 바뀌고 고정되었다 (이전 덱은 가방의 카드팩 보관함에 남았다)`];resave();render()}},
     packno(){UI.packAsk=false;const n=G.ch.packOffer.n;if(E.declinePack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 지금 덱을 지켰다`];resave();render()}},
     gwear(){E.resolveGear(G.ch,0,true);resave();render()},
     gkeep(){E.resolveGear(G.ch,0,false);resave();render()},
@@ -1951,6 +1968,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testRelic(k){if(!G)return;E.giveRelic(G.ch,k,true);UI.res={t:'유물',chips:[]};UI.screen='result';render()},
     testArt(n){if(!G)return;G.ch.artSense=n;render()},
     testAff(type,name){if(!G)return;G.ch.aff={type,name};const r=D.careers[type]&&D.careers[type].cards&&D.careers[type].cards[name];if(r){G.ch.deck=r.flat().concat(G.ch.deck.filter(id=>D.cards[id].fixed));G.ch.assocName=name;G.ch.cardMoney=true}render()},
+    testPack(){if(!G)return;UI.res=UI.res||{t:'시험',chips:[]};G.ch.packOffer={n:'시험 책장',cards:['slash','thrust','guard','hc_1'],relic:'시험 책장'};render()},
     testStash(){if(!G)return;for(const id of ['club','sword','greatsword'])G.ch.stash.push(Object.assign({id},D.items[id]));G.ch.stash.push(Object.assign({id:'x',grade:5,slot:'aug',n:'시험용 유물',e:'',fx:{}}));render()},
     testOffice(){if(!G)return;G.ch.licensed=true;G.ch.rank=5;G.ch.officePick=true;UI.res={t:'사무소 개설',chips:[]};UI.screen='result';render()},
     testPill(){if(!G)return;G.ch.pillPick=true;UI.res={t:'붕대 사이에서 작은 환이 나왔다.',chips:['특수환 · 능력치 하나를 골라 +10 (영구)','전리품 · 붉은 붕대 (HP+20, 영구)']};UI.screen='result';render()},
