@@ -667,7 +667,7 @@ export function startUI(E,app){
     const cl=el.cloneNode(true),c=G.ch;cl.removeAttribute('id');
     cl.querySelectorAll('button,script').forEach(x=>x.remove());cl.querySelectorAll('[data-a]').forEach(x=>x.removeAttribute('data-a'));
     const res=((cl.querySelector('.eyebrow')||{}).textContent||'').trim();
-    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),name:c.name||'',line:careerLine(c),res,yr:G.year,win:!!UI.endWin,html:cl.outerHTML};
+    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),v:UPDATES.v,name:c.name||'',line:careerLine(c),res,yr:G.year,win:!!UI.endWin,html:cl.outerHTML};
   }
   function chronAuto(){
     const e=chronSnap();if(!e)return;const o=loadChron();
@@ -681,7 +681,7 @@ export function startUI(E,app){
   function vChron(){
     const o=loadChron(),tab=UI.chTab==='fame'?'fame':'life',L=o[tab],msg=UI.chMsg;UI.chMsg='';
     const b=(k,l)=>`<button class="${tab===k?'on':''}" data-a="chtab" data-i="${k}">${l}</button>`;
-    const row=e=>`<div class="panel stack" style="gap:5px"><div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">${esc(e.name||e.line)}</b><span class="mono small dim" style="white-space:nowrap">${chDate(e.t)}</span></div><span class="small dim">${esc(e.line)}</span><span class="small" style="color:var(--gold)">${esc(e.res)}${e.yr?` · ${e.yr}년차`:''}</span>${chBtns(tab,e)}</div>`;
+    const row=e=>`<div class="panel stack" style="gap:5px"><div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">${esc(e.name||e.line)}</b><span class="mono small dim" style="white-space:nowrap;text-align:right">${chDate(e.t)}${e.v?`<br>${esc(e.v)}`:''}</span></div><span class="small dim">${esc(e.line)}</span><span class="small" style="color:var(--gold)">${esc(e.res)}${e.yr?` · ${e.yr}년차`:''}</span>${chBtns(tab,e)}</div>`;
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저에만 남는 기록</div><h2>일대기</h2></div>
       <div class="seg">${b('life',`일대기 ${o.life.length}/${CHRON_LIFE}`)}${b('fame',`명예의 전당 ${o.fame.length}/${CHRON_FAME}`)}</div>
       <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
@@ -692,7 +692,7 @@ export function startUI(E,app){
   function vChronView(){
     const o=loadChron(),sel=UI.chSel||{},e=(o[sel.tab]||[]).find(x=>x.id===sel.id);
     if(!e)return `<div class="panel"><p class="small dim">기록을 찾을 수 없다.</p></div><button class="btn primary" data-a="chron">돌아가기</button>`;
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장</div></div>${e.html}${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장${e.v?' · '+esc(e.v):''}</div></div>${e.html}${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
   }
   /* 기록실 */
   /* 난이도: easy(쉬움) / normal(보통) / hard(하드). 예전 하드 켜기 설정(cityYearHard)도 이어 받는다 */
