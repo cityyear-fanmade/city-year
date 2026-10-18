@@ -93,7 +93,7 @@ export const CFG = {
   /* 타고난 것: 출생 굴림과 별개로 1/chanceDiv 확률. 시드 재현을 위해 출생 굴림 값에서 파생 (새 주사위를 쓰지 않는다) */
   /* 해금 조건이 있는 타고난 것: hits=한 전투에서 맞은 횟수(회피 제외) · spdUp=출생 때보다 오른 속도 · lv=최고 레벨 기록 */
   innateUnlock: {hits: 20, spdUp: 30, lv: 20},
-  innate: {chanceDiv: 100, secondDiv: 10, scholarMul: 1.4, willCut: 0.5, willHeal: 1, willFrom: 15, willSteps: 6, swiftPer: 8, growMul: 1.2, money: 1.2, intuitionDie: 20, psycho: 2, markYear: 30, markMul: 1.6, miracleEvery: 10, miracleDie: 5},
+  innate: {chanceDiv: 100, secondDiv: 10, scholarMul: 1.4, willCut: 0.5, willHeal: 1, willFrom: 15, willSteps: 18, willHp: 3, swiftPer: 8, growMul: 1.2, money: 1.2, intuitionDie: 20, psycho: 2, markYear: 30, markMul: 1.6, miracleEvery: 10, miracleDie: 5},
   /* 카드 등급: 연차가 쌓이면 내 공격 카드가 강해진다 (from년차부터). 적중마다 피해 +b, 명중 +hit, 주사위 +dice개 */
   cardGrade: [{from: 1, n: '', b: 0, hit: 0, dice: 0}, {from: 16, n: '+1', b: 2, hit: 5, dice: 0}, {from: 31, n: '+2', b: 3, hit: 10, dice: 1}, {from: 46, n: '+3', b: 5, hit: 15, dice: 1}],
   /* 잊힌 유물: year년차가 시작될 때 반드시 나오는 사건. 1d100에서 chance 이하면 유물 선택 */
