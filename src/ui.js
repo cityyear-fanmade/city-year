@@ -898,7 +898,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const sw=D.colors.map((c,i)=>`<button class="sw ${i===b.ci?'on':''}" data-a="color" data-i="${i}" style="background:${c.hex}" aria-label="${c.adj} 색" title="${c.adj}"></button>`).join('');
     const kid=b.kid.length?`<div class="stack" style="gap:6px"><div class="eyebrow">성장기 · 1d100 × ${b.kid.length}</div>
       <div class="panel">${b.kid.map(k=>row(k.age+'세',k.r,k.x,D.childhood.table)).join('')}</div></div>`:'';
-    return `<div class="stack" style="gap:6px"><div class="eyebrow">무작위 출생 · 1d100</div><h2>${b.name?esc(b.name)+'은(는)':'당신은'} 이렇게 태어났다</h2></div>
+    return `<div class="row" style="justify-content:flex-start"><button class="btn quiet" data-a="title" style="width:auto;padding:6px 12px"><b>← 첫 화면으로</b></button></div><div class="stack" style="gap:6px"><div class="eyebrow">무작위 출생 · 1d100</div><h2>${b.name?esc(b.name)+'은(는)':'당신은'} 이렇게 태어났다</h2></div>
       <div class="panel stack" style="gap:10px">
         <label class="field" for="nm"><span class="eyebrow">이름</span><input id="nm" maxlength="12" value="${esc(b.name||'')}" placeholder="${T.you}" autocomplete="off"></label>
         <div class="row between"><span class="mono small dim">시드 <b style="color:var(--fg)">${b.seed}</b> · ${UI.daily&&b.seed===dailySeed(UI.daily)?`<b style="color:var(--gold)">오늘의 시드 ${UI.daily}</b>`:'태어날 때마다 새로 뽑힌다'}</span></div>
@@ -922,7 +922,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${vJobRoll()}${vJobPick()}
       ${b.fateChoices&&!b.fated?`<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">운명이 찾아왔다 · 하나를 고르거나 거절한다</span><span class="small">아무것도 쥐지 않고 태어났지만, 이름 없는 존재에게도 길이 두 갈래로 놓였다.</span>${b.fateChoices.map(r_=>{const h=D.hiddenOrigins.find(x=>x.roll===r_);return `<button class="btn" data-a="fate" data-i="${r_}"><b>${esc(h.n)}</b><span class="small">${esc(h.t)}</span><span class="mono small" style="color:var(--gold)">${esc(h.e)}</span></button>`}).join('')}<button class="btn" data-a="nofate"><b>운명을 거절한다</b><span class="small">아무것도 쥐지 않은 채 그대로 시작한다. 이름 없는 삶, 솔로 엔딩을 노리는 길이다.</span></button></div>`:''}
       <div class="stack"><button class="btn primary" data-a="live" ${(b.relicPick&&!UI.relic)||(b.fateChoices&&!b.fated)?'disabled':''}>${b.fateChoices&&!b.fated?'운명을 먼저 고른다':b.relicPick&&!UI.relic?'유물을 먼저 고른다':'이 삶을 산다'}</button>
-      ${b.blank||UI.job?'':'<button class="btn quiet" data-a="blank">어떤 출생 보정도 없이 시작한다</button>'}</div>${vSettings()}`;
+      ${b.blank||UI.job?'':'<button class="btn quiet" data-a="blank">어떤 출생 보정도 없이 시작한다</button>'}<button class="btn quiet" data-a="title"><b>첫 화면으로</b><span class="dim small">출생 굴림을 접고 처음으로 돌아간다</span></button></div>${vSettings()}`;
   }
   /* 6시즌: 출생 규칙 설명 + 표 전체 (이번에 나온 칸 표시) */
   function vBirthHelp(b){
@@ -1505,7 +1505,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
-    const ov=UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
+    const ov=UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?'<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto"><b>첫 화면으로</b><span class="dim small">진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다</span></button>':''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const ovKey=UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
     app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
@@ -1762,6 +1762,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bagclose(){if(UI.cfg){UI.cfg=false;render();return}UI.bag=null;UI.dropAsk=null;render()},
     cfg(){UI.cfg=true;if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     cfgclose(){UI.cfg=false;render()},
+    home(){
+      if(typeof confirm==='function'&&!confirm('첫 화면으로 돌아갈까? 진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다. (전투 중이면 그 전투는 처음부터 다시 시작한다)'))return;
+      if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}UI.cfg=false;UI.bag=false;UI.confirmNew=null;UI.paused=false;PLAYING=false;
+      if(UI.screen==='end'||!loadSave()){UI.screen='title';render();return}
+      UI.screen='title';render();
+    },
     packyes(){if(!UI.packAsk){UI.packAsk=true;render();return}UI.packAsk=false;const n=G.ch.packOffer.n;if(E.acceptPack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 덱이 바뀌고 고정되었다`];resave();render()}},
     packno(){UI.packAsk=false;const n=G.ch.packOffer.n;if(E.declinePack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 지금 덱을 지켰다`];resave();render()}},
     gwear(){E.resolveGear(G.ch,0,true);resave();render()},
