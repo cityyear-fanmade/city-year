@@ -460,7 +460,7 @@ export function startUI(E,app){
   function vTitleBag(){
     const L=titleList(G.ch);
     const cur=eqTitle(G.ch);
-    return L.length?`<div><p class="small dim">칭호를 장착하면 이름 앞에 [칭호]로 표시된다.</p>${L.map(([n,d],i)=>`<div class="invr rel"><span>${esc(n)}${d?`<br><b class="mono small dim">${esc(d)}</b>`:''}</span><button class="chip${cur===n?' on':''}" data-a="titleeq" data-i="${i}">${cur===n?'장착 중 · 해제':'장착'}</button></div>`).join('')}</div>`:'<p class="small dim">아직 얻은 칭호가 없다.</p>';
+    return L.length?`<div><p class="small dim">칭호를 장착하면 이름 위에 [칭호]로 표시된다.</p>${L.map(([n,d],i)=>`<div class="invr rel"><span>${esc(n)}${d?`<br><b class="mono small dim">${esc(d)}</b>`:''}</span><button class="chip${cur===n?' on':''}" data-a="titleeq" data-i="${i}">${cur===n?'장착 중 · 해제':'장착'}</button></div>`).join('')}</div>`:'<p class="small dim">아직 얻은 칭호가 없다.</p>';
   }
   function vRelic(){
     const ch=G.ch;
