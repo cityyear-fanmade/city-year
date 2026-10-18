@@ -1,22 +1,24 @@
-/* 배경음악: 외부 음원 없이 Web Audio로 합성한다 (저작권 문제 없음). 직접 만든 재즈풍 코드 진행과 리듬이다.
+/* 배경음악: 외부 음원 없이 Web Audio로 합성한다 (저작권 문제 없음). 직접 만든 곡이다.
    - 기본은 꺼져 있고, 사용자가 설정에서 켠 뒤에만 소리가 난다 (브라우저 정책상 한 번 눌러야 시작)
    - 켤 때 마스터 음량을 0에서 서서히 올리고, 전체 출력은 컴프레서를 거친다
-   - 평소(calm)는 느린 스윙: 걷는 베이스, 라이드 심벌, 브러시, 전기 피아노의 엇박 컴핑, 가끔 지나가는 멜로디
-     전투(fight)는 템포를 올리고 리듬을 촘촘히 한다. 코드는 ii7 · V13 · Imaj9 · vi9 (한 마디에 하나) */
+   - 두 가지 스타일을 사용자가 고른다
+     · 잔잔(calm): 로비 같은 느린 피아노 아르페지오 + 패드 + 가끔 종소리 멜로디. 전투에 들어가면 템포가 오르고 박동·브러시가 붙는다
+     · 격정(passion): 평소부터 빠른 곡. 4박 킥, 스네어, 16분 하이햇, 톱니파 오스티나토. 전투에 들어가면 더 빨라지고 멜로디·심벌이 붙는다
+   - 코드 진행은 둘 다 Am9 · Fmaj9 · Cmaj9 · G6 (한 마디에 하나) */
 export function createBgm(){
   /* 모든 값은 여기서 조절한다 */
   const P={
     maxGain:2,          // 음량 100%일 때 마스터 음량 (컴프레서가 최고점을 눌러 준다)
     fadeIn:3,           // 켤 때 서서히 커지는 시간(초)
     fadeOut:0.8,        // 끌 때 서서히 줄어드는 시간(초)
-    bpm:{calm:76,fight:136},
-    swing:0.64,         // 엇박 위치 (0.5=straight, 0.67=셋잇단 스윙)
-    /* 코드: bass=근음(C=0 기준 반음), iv=베이스가 걷는 구성음, v=전기 피아노 보이싱(근음 생략), sc=즉흥에 쓰는 음계 */
+    bpm:{calm:{calm:64,fight:94},passion:{calm:132,fight:152}},   // [스타일][장면]
+    cutMul:{calm:{calm:1,fight:1.25},passion:{calm:1.9,fight:2.2}}, // 장면별 밝기
+    /* 코드(C=0 기준 반음): b=베이스 근음, t=코드 구성음(피아노 아르페지오·패드·오스티나토), sc=멜로디에 쓰는 음계(A 단음계 계열) */
     chords:[
-      {bass:2,iv:[0,3,7,10],v:[5,9,12,16],sc:[2,5,7,9,12,14,17]},        // Dm9
-      {bass:7,iv:[0,4,7,10],v:[5,11,14,16],sc:[7,9,11,12,14,16,17]},     // G13
-      {bass:0,iv:[0,4,7,11],v:[4,7,11,14],sc:[0,2,4,7,9,11,14]},         // Cmaj9
-      {bass:9,iv:[0,3,7,10],v:[12,16,19,23],sc:[9,12,14,16,19,21,23]}    // Am9
+      {b:9,t:[-3,0,4,7,11],sc:[9,12,16,19,21,23,28]},    // Am9
+      {b:5,t:[-7,-3,0,4,7],sc:[9,12,14,16,17,19,21]},     // Fmaj9
+      {b:0,t:[0,4,7,11,14],sc:[12,14,16,19,21,23,24]},    // Cmaj9
+      {b:7,t:[-5,-1,2,4,9],sc:[11,12,14,16,19,21,23]}     // G6/9
     ],
     moods:{
       base:    {root:60,cut:2600,room:1,wet:0.22},
@@ -25,8 +27,8 @@ export function createBgm(){
       ruina:   {root:58,cut:2200,room:1.3,wet:0.3}
     }
   };
-  let ctx=null,master=null,bus=null,bright=null,analyser=null,noiseBuf=null,on=false,vol=0.3,mood='base',scene='calm',timer=null,hidden=false;
-  let barT=0,barN=0,lastScene='calm',cur=null,duckUntil=0;
+  let ctx=null,master=null,bus=null,bright=null,analyser=null,noiseBuf=null,on=false,vol=0.3,mood='base',scene='calm',style='calm',timer=null,hidden=false;
+  let barT=0,barN=0,lastScene='calm',lastStyle='calm',cur=null,duckUntil=0;
   const AC=typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext);
   const hz=m=>440*Math.pow(2,(m-69)/12),rnd=Math.random,pick=a=>a[Math.floor(rnd()*a.length)];
   /* 사용자 음량(0~1) → 마스터 음량 */
@@ -78,49 +80,73 @@ export function createBgm(){
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     n.connect(f);if(lpf){const l=ctx.createBiquadFilter();l.type='lowpass';l.frequency.value=lpf;f.connect(l);l.connect(g)}else f.connect(g);g.connect(cur.m);n.start(t,rnd()*0.15);n.stop(t+dur+0.02);
   }
-  function feather(t,peak){                // 킥: 거의 들리지 않는 부드러운 박동
-    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(48,t+0.1);
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
-    o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.2);
+  function feather(t,peak){                // 킥: 부드러운 박동
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(style==='passion'?130:90,t);o.frequency.exponentialRampToValueAtTime(46,t+0.11);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
+    o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.24);
+  }
+  function snare(t,peak){                  // 스네어: 노이즈 + 짧은 몸통음
+    noiseHit(t,peak,0.15,1400,7000);
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(210,t);o.frequency.exponentialRampToValueAtTime(120,t+0.09);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak*0.9,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
+    o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.14);
   }
   function horn(m,t,dur,peak,cut){         // 가끔 지나가는 멜로디: 먹먹한 삼각파
     const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();o.type='triangle';o.frequency.value=hz(m);f.type='lowpass';f.frequency.value=cut;f.Q.value=0.8;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.03);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     o.connect(f);f.connect(g);g.connect(cur.u);o.start(t);o.stop(t+dur+0.05);
   }
-  /* 한 마디를 예약한다 */
-  function scheduleBar(T,M){
-    const fight=scene==='fight',bd=60/P.bpm[scene],sw=P.swing,ci=barN%P.chords.length,C=P.chords[ci],N=P.chords[(barN+1)%P.chords.length],R=M.root;
-    const at=k=>T+k*bd,bassBase=R-24;
-    /* 걷는 베이스: 근음 → 구성음 → 구성음 → 다음 근음으로 반음 접근 */
-    {const nr=bassBase+N.bass,notes=[bassBase+C.bass,bassBase+C.bass+pick(C.iv.slice(1)),bassBase+C.bass+pick(C.iv.slice(1)),nr+(rnd()<0.5?-1:1)];
-      for(let k=0;k<4;k++){const m=notes[k]<bassBase-5?notes[k]+12:notes[k];bassN(m,at(k),bd*0.9,k===0?0.1:0.075);
-        if(fight&&k===1&&rnd()<0.5)bassN(m+7,at(k+sw),bd*0.4,0.05)}}
-    /* 라이드: 딩, 딩-따, 딩, 딩-따 */
-    for(const k of [0,1,1+sw,2,3,3+sw]){const acc=k%1===0;noiseHit(at(k),(acc?0.022:0.014)*(fight?1.25:1),acc?0.22:0.12,7200,10500)}
-    if(fight)for(const k of [0.5,2.5])noiseHit(at(k),0.01,0.08,8000,11000);
-    /* 하이햇 풋(2·4박)과 브러시, 전투에서는 가벼운 킥 */
-    for(const k of [1,3]){noiseHit(at(k),0.03,0.07,2400,4500);noiseHit(at(k)+0.01,fight?0.016:0.01,0.16,1800,4200)}
-    if(fight){for(let k=0;k<4;k++)feather(at(k),0.045);if(rnd()<0.6)noiseHit(at(2+sw),0.014,0.07,2000,4600)}
-    /* 전기 피아노 컴핑: 1박과 엇박 */
-    const pats=fight?[[0,1+sw,2,3+sw],[0,1.5,2+sw,3],[sw,2,3+sw]]:[[0,1+sw],[0,2+sw],[sw,2],[0,1+sw,3+sw]];
-    for(const k of pick(pats)){
-      const long=k===0,dur=(long?1.1:0.55)*bd*(fight?0.75:1);
-      C.v.forEach((o,i)=>ep(R+o,at(k)+i*0.012+(rnd()*0.008),(long?0.021:0.016),dur+0.15));
-    }
-    /* 즉흥: 가끔 두세 음이 지나간다 */
-    if(rnd()<(fight?0.22:0.42)){
-      const n=3+Math.floor(rnd()*3),k0=pick([0.5,1,1.5,2,2.5]);let ix=Math.floor(rnd()*C.sc.length);
-      for(let i=0;i<n;i++){const k=k0+i*0.5;if(k>=4)break;const kk=k%1===0?k:Math.floor(k)+sw;horn(R+12+C.sc[ix]+(rnd()<0.2?12:0),at(kk),bd*0.45,0.03,M.cut);ix=Math.max(0,Math.min(C.sc.length-1,ix+pick([-2,-1,1,2])))}
-    }
+  function padN(m,t,dur,peak){             // 패드: 살짝 어긋난 두 삼각파를 느리게 키우고 줄인다
+    const g=ctx.createGain(),f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=1100;f.Q.value=0.3;
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+dur*0.35);g.gain.linearRampToValueAtTime(peak*0.8,t+dur*0.8);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    for(const dt of [-6,6]){const o=ctx.createOscillator();o.type='triangle';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
+    f.connect(g);g.connect(cur.u);
+  }
+  function bellN(m,t,peak){                // 종소리 멜로디: 맑은 사인 + 비정수배 윗배음, 길게 울린다
+    const f=hz(m),o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain();o.type='sine';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2.76;
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+2.2);
+    g2.gain.setValueAtTime(peak*0.25,t);g2.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+    o.connect(g);o2.connect(g2);g2.connect(g);g.connect(cur.u);o.start(t);o.stop(t+2.3);o2.start(t);o2.stop(t+0.6);
+  }
+  function sawN(m,t,dur,peak,cut){         // 격정의 오스티나토·베이스: 톱니파를 짧게 끊는다
+    const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();o.type='sawtooth';o.frequency.value=hz(m);f.type='lowpass';f.frequency.setValueAtTime(cut,t);f.frequency.exponentialRampToValueAtTime(cut*0.45,t+dur);f.Q.value=1.1;
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(f);f.connect(g);g.connect(cur.b);o.start(t);o.stop(t+dur+0.05);
+  }
+  /* 잔잔 한 마디: 베이스 한 음 + 패드 + 피아노 아르페지오(평시 8분, 전투 16분 느낌) + 가끔 종소리 */
+  function barCalm(T,M){
+    const fight=scene==='fight',bd=60/P.bpm.calm[scene],C=P.chords[barN%P.chords.length],R=M.root,at=k=>T+k*bd,bb=R-24;
+    bassN(bb+C.b,at(0),bd*3.6,0.1);if(fight||barN%2===1)bassN(bb+C.b+(fight?12:7),at(2),bd*1.6,0.05);
+    C.t.slice(0,4).forEach((o,i)=>padN(R+o-12,T+i*0.02,bd*4,0.012));
+    const seq=fight?[0,2,1,3,2,4,3,2,1,3,2,4,3,2,1,0]:[0,1,2,3,2,1,4,3];     // 아르페지오가 오르내리는 순서
+    const step=fight?0.25:0.5;
+    seq.forEach((ix,n)=>{const m=R+C.t[ix%C.t.length]+(ix>=C.t.length?12:0)+(n%4===3?12:0);ep(m,at(n*step),(n===0?0.026:0.018)*(fight?0.9:1),bd*(fight?0.9:1.6))});
+    if(fight){for(const k of [0,2])feather(at(k),0.05);for(const k of [1,3])noiseHit(at(k),0.012,0.14,1800,4200);for(let k=0.5;k<4;k+=1)noiseHit(at(k),0.008,0.05,7000,10500)}
+    if(rnd()<(fight?0.5:0.5)){const n=2+Math.floor(rnd()*3),k0=pick([0,0.5,1,2]);let ix=Math.floor(rnd()*C.sc.length);
+      for(let i=0;i<n;i++){const k=k0+i*(fight?0.5:1);if(k>=4)break;bellN(R+12+C.sc[ix],at(k),fight?0.022:0.018);ix=Math.max(0,Math.min(C.sc.length-1,ix+pick([-2,-1,1,2])))}}
+    barT=T+4*bd;barN++;
+  }
+  /* 격정 한 마디: 4박 킥, 2·4박 스네어, 16분 하이햇, 8분 톱니 베이스, 16분 오스티나토. 전투에서는 템포가 오르고 크래시·멜로디·옥타브 베이스가 붙는다 */
+  function barPassion(T,M){
+    const fight=scene==='fight',bd=60/P.bpm.passion[scene],C=P.chords[barN%P.chords.length],R=M.root,at=k=>T+k*bd,bb=R-24;
+    for(let k=0;k<4;k++)feather(at(k),fight?0.15:0.12);
+    if(fight&&barN%2===1)feather(at(3.5),0.09);
+    for(const k of [1,3])snare(at(k),fight?0.07:0.055);
+    for(let n=0;n<16;n++){const acc=n%4===0;noiseHit(at(n/4),(acc?0.022:0.012)*(fight?1.2:1),acc?0.07:0.035,7800,11000)}
+    if(barN%4===0)noiseHit(T,fight?0.045:0.03,fight?1.1:0.7,4200,11000);
+    for(let n=0;n<8;n++){const m=bb+C.b+(n%4===3&&fight?12:0);sawN(m,at(n/2),bd*0.46,fight?0.17:0.14,900)}
+    const ost=[0,2,1,2,0,2,3,2,0,2,1,2,3,2,4,2];
+    ost.forEach((ix,n)=>sawN(R+C.t[ix%C.t.length]+12+(ix>=C.t.length?12:0),at(n/4),bd*0.26,(n%4===0?0.075:0.05)*(fight?1.15:1),M.cut*1.4));
+    if(fight&&rnd()<0.8){const n=4+Math.floor(rnd()*3),k0=pick([0,1,2]);let ix=Math.floor(rnd()*C.sc.length);
+      for(let i=0;i<n;i++){const k=k0+i*0.5;if(k>=4)break;horn(R+12+C.sc[ix],at(k),bd*0.4,0.06,M.cut*2);ix=Math.max(0,Math.min(C.sc.length-1,ix+pick([-2,-1,1,2])))}}
     barT=T+4*bd;barN++;
   }
   function schedule(now,M){
-    if(lastScene!==scene){lastScene=scene;newEpoch();barT=now+0.32}
+    if(lastScene!==scene||lastStyle!==style){if(lastStyle!==style)barN=0;lastScene=scene;lastStyle=style;newEpoch();barT=now+0.32}
     if(barT<now)barT=now+0.05;
-    const wet=bus._wet;if(wet&&now>duckUntil)wet.gain.setTargetAtTime(M.wet*(scene==='fight'?0.7:1),now,0.6);
-    bright.frequency.setTargetAtTime(M.cut*(scene==='fight'?1.25:1),now,2);
-    let g=0;while(barT<now+2.2&&g++<3)scheduleBar(barT,M);
+    const wet=bus._wet;if(wet&&now>duckUntil)wet.gain.setTargetAtTime(M.wet*(scene==='fight'?0.7:1)*(style==='passion'?0.7:1),now,0.6);
+    bright.frequency.setTargetAtTime(M.cut*P.cutMul[style][scene],now,2);
+    let g=0;while(barT<now+2.2&&g++<3)(style==='passion'?barPassion:barCalm)(barT,M);
   }
   function tick(){
     if(!ctx||!on||hidden)return;
@@ -130,7 +156,7 @@ export function createBgm(){
     if(!ensure())return false;
     ctx.resume&&ctx.resume();
     if(!timer)timer=setInterval(tick,700);
-    newEpoch();barT=ctx.currentTime+0.1;barN=0;lastScene=scene;
+    newEpoch();barT=ctx.currentTime+0.1;barN=0;lastScene=scene;lastStyle=style;
     tick();ramp(gainOf(vol),P.fadeIn);return true;
   }
   function stop(){
@@ -147,11 +173,13 @@ export function createBgm(){
     supported:!!AC,
     isOn:()=>on,vol:()=>vol,
     level:()=>{if(!analyser)return null;const d=new Float32Array(2048);analyser.getFloatTimeDomainData(d);let p=0,q=0;for(const v of d){const a=Math.abs(v);if(a>p)p=a;q+=v*v}return {peakDb:+(20*Math.log10(p+1e-9)).toFixed(1),rmsDb:+(10*Math.log10(q/d.length+1e-12)).toFixed(1)}},
-    debug:()=>({state:ctx&&ctx.state,gain:master?master.gain.value:null,on,vol,mood,scene}),
+    debug:()=>({state:ctx&&ctx.state,gain:master?master.gain.value:null,on,vol,mood,scene,style}),
     /* 켜기/끄기: 켜는 것은 사용자가 누른 순간(클릭 처리 안)에서만 호출해야 한다 */
     set(v){if(v===on)return on;on=!!v;if(on)start();else stop();return on},
     setVol(v){vol=Math.max(0,Math.min(1,+v||0));if(on&&ctx)ramp(gainOf(vol),0.3)},
     setMood(k){if(P.moods[k])mood=k},
-    setScene(k){scene=k==='fight'?'fight':'calm'}
+    setScene(k){scene=k==='fight'?'fight':'calm'},
+    style:()=>style,
+    setStyle(k){if(k==='calm'||k==='passion')style=k}
   };
 }
