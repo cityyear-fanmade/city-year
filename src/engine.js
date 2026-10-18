@@ -664,8 +664,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const xpFor=l=>CFG.levels[Math.min(l,CFG.levels.length)-1];
   function lvOf(xp){let l=1;while(xp>=xpFor(l+1))l++;return l}
   const xpNext=ch=>xpFor(ch.lv+1);
-  /* 2막에 들어서면 최소 CFG.act2Lv 레벨: 모자란 경험치를 채워 레벨 업 성장 굴림을 한꺼번에 받는다 */
-  function enterAct2(ch){const need=xpFor(CFG.act2Lv)-ch.xp;return need>0?gainXp(ch,need):0}
   function gainXp(ch,n){const b=ch.lv;ch.xp+=n;ch.lv=lvOf(ch.xp);ch.lvPend+=ch.lv-b;return ch.lv-b}
   /* 덱이 고정(책장·전용 카드팩)이면 카드를 받을 수 없으므로 '보상 카드' 성장은 선택지에서 뺀다 */
   function rollGrowth(ch){
@@ -2214,7 +2212,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {n,rows,chain:chainSim(n,false),grown:chainSim(n,true),chainIds:chainIds()};
   }
 
-  return {D,d,reseed,sample,enterAct2,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
+  return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
