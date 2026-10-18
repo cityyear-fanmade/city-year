@@ -343,7 +343,7 @@ export function startUI(E,app){
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `<div class="panel stack">
-      <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${esc(ch.name||T.you)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
+      <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${titledName(ch)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
       <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${G.infinite&&G.year>CFG.years+CFG.endless.span*CFG.endless.grades.length?'제 2막 무한 모드 · '+(E.gradeRaw(G.year)-CFG.endless.grades.length+1)+'단계':'제 2막 · '+CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
       ${bar(ch.hp,s.maxHp)}
       ${vMind(ch)}${egoBar(ch)}${G.infinite&&UI.screen!=='end'?`<button class="btn quiet" data-a="outerend">외곽에서 이야기를 끝낸다</button>`:''}
@@ -363,13 +363,15 @@ export function startUI(E,app){
   /* 칭호칸: 직급·특색 칭호, 보스를 쓰러뜨려 얻은 추가 칭호, 루트의 표식(가주 후보 등) */
   const MARKNOTE={'가주 후보':'가주의 명으로 후계 경쟁에 나선 몸이다. 다른 후보들과 겨루게 된다.','홍원의 가주':'홍원의 가주 자리에 올랐다.'};
   const titleList=ch=>[...(ch.title?[[ch.title,'']]:[]),...(ch.titles||[]).map(t=>[t,'']),...(ch.marks||[]).map(m=>[m,MARKNOTE[m]||''])];
+  const eqTitle=ch=>ch.equipTitle&&titleList(ch).some(t=>t[0]===ch.equipTitle)?ch.equipTitle:'';
+  const titledName=ch=>{const t=eqTitle(ch);return (t?`<span class="ctitle">[${esc(t)}]</span> `:'')+esc(ch.name||T.you)};
   function bagTabs(ch){return [['stat','출생',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat(titleList(ch).length?[['title','칭호',String(titleList(ch).length)]]:[]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
   /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
   function vSideL(P){
     const ch=G.ch,s=ch.stats,pad=(k,v)=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`,up=n=>n?` <i class="bufup">${n>0?'+':'−'}${Math.abs(n)}</i>`:'';
     const rows=[['HP',P?`${Math.max(0,P.hp)}/${P.maxHp}`:`${ch.hp}/${s.maxHp}`],['정신력',ch.distForm?'뒤틀림':`${ch.mind}/${E.mindMax(ch)}`],['공격',sg(s.atk)+(P?up(P.atk-s.atk):'')],['회피',sg(s.eva)+(P?up((P.evaB||0)):'')],['속도',sg(s.spd)+(P?up(P.spd-s.spd):'')],['판정',sg(s.check)],['최소 피해',s.dmin],...(s.dr?[['피해 감소',s.dr+'%']]:[]),...(s.regen?[['HP 회복/라운드',s.regen]]:[]),...(s.startBleed?[['시작 출혈',s.startBleed]]:[]),...(s.startBreath?[['시작 호흡',s.startBreath]]:[]),['카드',`${ch.deck.length}/${E.deckMax(ch)}`],['레벨',`Lv ${ch.lv}`],['경험치',E.xpNext(ch)!=null?`${ch.xp}/${E.xpNext(ch)}`:`${ch.xp} (최고)`],...(E.canPromote(ch)?[[E.ptsName(ch),`${ch.pp||0}/${E.promoNeed(ch)}`]]:[]),['자산',E.money(ch.money)]];
     const gear=Object.entries(D.slots).map(([k,n])=>`<div class="srow"><span>${n}</span><b class="gname">${ch.gear[k]?esc(ch.gear[k].n):'없음'}</b></div>`).join('');
-    return `<aside class="side-l" aria-label="수치판"><div class="stitle">${esc(ch.name||T.you)}</div>${rows.map(([k,v])=>pad(k,v)).join('')}<div class="ssep"></div>${gear}</aside>`;
+    return `<aside class="side-l" aria-label="수치판"><div class="stitle">${titledName(ch)}</div>${rows.map(([k,v])=>pad(k,v)).join('')}<div class="ssep"></div>${gear}</aside>`;
   }
   function vDock(cls){
     const ch=G.ch;
@@ -456,7 +458,8 @@ export function startUI(E,app){
   }
   function vTitleBag(){
     const L=titleList(G.ch);
-    return L.length?`<div>${L.map(([n,d])=>`<div class="invr rel"><span>${esc(n)}</span>${d?`<b class="mono small dim">${esc(d)}</b>`:''}</div>`).join('')}</div>`:'<p class="small dim">아직 얻은 칭호가 없다.</p>';
+    const cur=eqTitle(G.ch);
+    return L.length?`<div><p class="small dim">칭호를 장착하면 이름 앞에 [칭호]로 표시된다.</p>${L.map(([n,d],i)=>`<div class="invr rel"><span>${esc(n)}${d?`<br><b class="mono small dim">${esc(d)}</b>`:''}</span><button class="chip${cur===n?' on':''}" data-a="titleeq" data-i="${i}">${cur===n?'장착 중 · 해제':'장착'}</button></div>`).join('')}</div>`:'<p class="small dim">아직 얻은 칭호가 없다.</p>';
   }
   function vRelic(){
     const ch=G.ch;
@@ -706,7 +709,7 @@ export function startUI(E,app){
       ['🙏 감사합니다',['의견과 제보를 주신 모든 분들께 감사드립니다.']]];
   const NOTICE={id:'v8.1.0',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🆕 v8.1.0 새로 들어온 것',['가방에 "칭호" 칸이 생겼습니다. 직급·특색 칭호, 보스를 쓰러뜨려 얻은 추가 칭호, 홍원의 "가주 후보" 같은 표식이 여기에 모입니다. 칭호가 있을 때만 탭이 나옵니다.','홍원 가문의 후계 후보: 흑수 선인에게 재갈을 청해 흑수 부하를 늘릴 수 있습니다. 영생의 단서를 하나 찾을 때마다 최대 세 번, 1d100 45 이상(예물을 올리면 30 이상)이면 재갈 하나를 얻습니다. 실패하면 못 얻습니다.','소 · 용 · 원숭이 · 닭의 재갈은 가주의 것이라 후보는 얻을 수 없고, 가주가 되면 영구히 당신 것이 됩니다.','부하는 최대 6명입니다. 부하가 많을수록 부하가 거드는 피해와 "흑수여, 답하라"의 위력이 커지고, 홍루가 거두는 흑수는 그만큼 줄어듭니다.','철함사에서 부하가 4명 이상이면 "철함사의 목을 친다"가 열립니다. 철함사의 가모는 매 라운드 "공허한 순종"을 걸어 내 명중을 깎지만, 부하가 거들 때마다 풀리고 부하가 많을수록 가모가 약해집니다. 이긴 뒤에는 새 엔딩이 있습니다.','홍원 설정: 어느 세계선에서는 홍루가 열두 재갈을 모두 모아 홍원의 군주가 되었다고 전해집니다.']],
+    sec:[['🆕 v8.1.0 새로 들어온 것',['가방에 "칭호" 칸이 생겼습니다. 직급·특색 칭호, 보스를 쓰러뜨려 얻은 추가 칭호, 홍원의 "가주 후보" 같은 표식이 여기에 모입니다. 칭호가 있을 때만 탭이 나옵니다. 칭호를 "장착"하면 이름 앞에 [칭호]로 표시됩니다.','홍원 가문의 후계 후보: 흑수 선인에게 재갈을 청해 흑수 부하를 늘릴 수 있습니다. 영생의 단서를 하나 찾을 때마다 최대 세 번, 1d100 45 이상(예물을 올리면 30 이상)이면 재갈 하나를 얻습니다. 실패하면 못 얻습니다.','소 · 용 · 원숭이 · 닭의 재갈은 가주의 것이라 후보는 얻을 수 없고, 가주가 되면 영구히 당신 것이 됩니다.','부하는 최대 6명입니다. 부하가 많을수록 부하가 거드는 피해와 "흑수여, 답하라"의 위력이 커지고, 홍루가 거두는 흑수는 그만큼 줄어듭니다.','철함사에서 부하가 4명 이상이면 "철함사의 목을 친다"가 열립니다. 철함사의 가모는 매 라운드 "공허한 순종"을 걸어 내 명중을 깎지만, 부하가 거들 때마다 풀리고 부하가 많을수록 가모가 약해집니다. 이긴 뒤에는 새 엔딩이 있습니다.','홍원 설정: 어느 세계선에서는 홍루가 열두 재갈을 모두 모아 홍원의 군주가 되었다고 전해집니다.']],
     ['🔧 v8.1.0 수정',['전리품 칸에 "흑수 · 용"과 "가주 후보 · 흑수 용"이 서로 다른 형식으로 섞여 나오던 표기를 정리했습니다. 가주 후보는 칭호 칸으로 옮겼습니다.']],
     ['🏮 홍원 가문의 후계 후보 안내',['출신 없이 시작하면 뜨는 운명 선택에서 고를 수 있는 길입니다.','처음에는 홍원 가문 안에서 삽니다. 도시의 일반 사건과 일반 적 대신 홍원 전용 사건과 가문의 적이 나옵니다. 해결사 등록과 갈림길은 없습니다.','공방 거리 대신 "홍원의 저잣거리"를 지납니다. 품목은 적고 K사 엠플은 팔지 않습니다.','가주의 명을 받으면 영생의 단서를 찾아 처음으로 홍원 밖 도시로 나갑니다. 단서는 네 곳이고, 돌아온 뒤 가주 후보로 지명됩니다.','흑수: 흑수환으로 외곽 생물의 특성을 지닌 사람들이고, 재갈을 쥔 사람의 말만 듣습니다. 나갈 때 한 사람, 지명될 때 한 사람이 부하로 붙고, 영생의 단서를 찾아 나선 길에서 흑수 선인을 만나면 재갈을 더 청할 수 있습니다(성공하면 부하가 늘고 실패하면 못 얻습니다). 소·용·원숭이·닭의 재갈은 가주의 것이라 후보는 얻을 수 없습니다. 흑수 카드가 아닌 공격이 적중할 때마다 부하가 순서대로 거들고(부하가 둘이면 한 사람당 피해가 더 큽니다), 맞은 상대에게는 흑수가 남긴 짐승의 흔적 "수흔"이 쌓입니다. "흑수여, 답하라"는 부하 전원이 나서서 때립니다.','홍단: 가문이 자제에게 내리는 강화 시술입니다. 전투 중 매 라운드 시작에 HP를 회복하고, 첫 가문 사건 뒤 2, 출가 때 3, 지명 때 4가 됩니다.','홍원의 장도는 세 단계로 강화되고, 전투에서 이긴 뒤 HP 회복이 +10 늘어납니다.','철함사에서는 선황충을 품거나 거부하는 길 외에, 재갈을 충분히 모았다면 철함사의 가모를 직접 치는 길이 열립니다. 부하가 많을수록 쉬워집니다. 가주 자리를 두고 다른 후보들과 겨루고, 마지막에 가주의 자리가 정해집니다. 이후에는 이어서 계속 살아갈 수 있습니다.']],
     ['🆕 v8.0.8 새로 들어온 것',['출신 없이 시작하면 운명 선택이 항상 뜨고, 운명으로 새로운 길 두 가지를 만날 수 있습니다. 자세한 내용은 직접 확인해 보세요.','배경음악이 재즈풍으로 바뀌었고, 전투에 들어가고 나올 때 소리가 겹치지 않습니다.','인연 선택 결과 문구가 사건마다 달라지고 더 달달해졌습니다.','공방 해결사: 장비 정비를 최대 10번까지 할 수 있고, 히든 장비를 훨씬 비싸게 팔 수 있습니다.','이름 없는 불순물을 쓰러뜨리면 돈과 영구 능력치 보상을 받습니다.']],
@@ -1650,6 +1653,7 @@ export function startUI(E,app){
     eqs(i){if(UI.screen!=='combat'&&E.equipStash(G.ch,+i)){resave();render()}},
     bspecial(id){if(E.buySpecial(G.ch,id,true)){UI.bought=D.special[id].n;render()}},
     noticeok(){store.set('cityYearNotice',NOTICE.id);render()},
+    titleeq(i){const L=titleList(G.ch),t=L[+i];if(!t)return;G.ch.equipTitle=G.ch.equipTitle===t[0]?'':t[0];resave();render()},
     bag(k){UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;render()},
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
     bagclose(){if(UI.cfg){UI.cfg=false;render();return}UI.bag=null;UI.dropAsk=null;render()},
