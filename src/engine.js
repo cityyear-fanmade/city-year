@@ -1616,7 +1616,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit;if(ch.fate){P.nailHit=0;P.atk+=CFG.nWing.fate;P.eva+=CFG.nWing.fate}}
     if(pen&&!(ch.licensed&&ch.rank<=pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
     /* 홍루: 홍루를 따르는 흑수들. 내 부하 두 사람은 빠진다 */
-    if(e.zodiac10){const own=hwHave(ch);E.zChain=ZKEYS.filter(k=>!own.includes(k));E.deck=['z_'+E.zChain[0]]}
+    if(e.zodiac10){const own=hwHave(ch);E.zChain=ZKEYS.filter(k=>!own.slice(0,2).includes(k));E.zExtra=Math.min(CFG.hw.zExtraMax,Math.max(0,own.length-CFG.hw.zExtraFrom));E.deck=['z_'+E.zChain[0]]}
     if(e.hwKamo){const n=hwHave(ch).length,cut=Math.min(CFG.hw.kamoCutMax,Math.max(0,n-3)*CFG.hw.kamoCut);E.maxHp=Math.round(E.maxHp*(1-cut));E.hp=E.maxHp}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
     let hpNote=null;
@@ -1707,6 +1707,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     C.ePlan=aiPlan(C);
     if(E.stunRound===C.round){E.stunned=true;for(const c of C.ePlan)if(c.next){E.forceNext=c.next;break}C.ePlan=[];C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 흐트러짐 · 이번 라운드 기절 (행동 불가 · 회피 0)`}else{E.stunned=false}
     /* 적 특성: 무리(공격 카드 한 장 더), 재생(HP 3 회복) */
+    /* 홍루: 내 부하가 많을수록 따르는 흑수가 한 사람씩 더 덤벼든다 (연계는 이어지지 않는 단발) */
+    if(E.zExtra&&E.zChain&&!E.stunned&&E.hp>0&&C.ePlan.length&&C.round%CFG.hw.zExtraEvery===0){const base=C.ePlan[0],cur=Object.keys(D.cards).find(k=>D.cards[k]===base)||'',ci=E.zChain.indexOf(cur.replace(/^zp?_/,''));for(let j=1;j<=E.zExtra;j++){const k=E.zChain[(Math.max(ci,0)+j*3)%E.zChain.length],c=D.cards['z_'+k];if(c)C.ePlan.push(Object.assign({},c,{next:null}))}}
     if(E.trait==='swarm'){const a=E.deck.map(id=>D.cards[id]).find(c=>c.t==='atk');if(a)C.ePlan.push(a)}
     if(E.trait==='bulwark'&&E.hp>0){E.shield=Math.max(E.shield||0,3)}
     if(E.trait==='focus'&&E.hp>0){E.breath=Math.min(CFG.breath.cap,E.breath+2)}
