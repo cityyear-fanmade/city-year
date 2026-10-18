@@ -1635,7 +1635,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ms=mindStat(ch);if(ms){P.atk+=ms;P.eva+=ms;P.spd+=ms;P.maxHp+=ms;P.hp+=ms;mindNote.push(`정신력 ${ch.mind} · 모든 능력치 +${ms}`)}
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
-    if((ch.lv||1)>=CFG.lvLight.at)P.lightUp=(P.lightUp||0)+CFG.lvLight.up;
+    {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.lightUp=(P.lightUp||0)+CFG.lvLight.up*n}
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
     P.inkIds=ch.hw&&ch.hw.mission&&hwHave(ch).length?hwHave(ch).map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
@@ -1996,7 +1996,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
       if(c.verdict){const x=Math.floor((B.maxHp-B.hp)/10);dmg=Math.max(dmg,rawDmg)+x;note+=` 처형 · 방어·감소 무시 · 잃은 체력 ${B.maxHp-B.hp} → 고정 +${x}`}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
-      if(B.passive&&B.passive.id==='lockledger'&&A.isP&&A.middle&&B.hp-dmg<=0&&!note.includes('되갚음+')){dmg=Math.max(0,B.hp-1);note+=' 장부가 지워지지 않는다';}
       hpLoss(C,B,dmg,L);
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
