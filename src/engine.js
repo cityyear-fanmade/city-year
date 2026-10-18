@@ -101,6 +101,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const pool=H.slice(),out=[];while(out.length<F.n){out.push(pool.splice(d(pool.length)-1,1)[0])}
     return out.sort((a,b)=>a-b);
   }
+  const hasInn=(ch,k)=>ch.innate===k||ch.innate2===k;
   function newChar(job,fixO,keep){
     const r=keep?Object.assign({},keep.r):{o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=!keep&&job&&D.hiddenJobs[job];
     if(J)r.o=J.roll;
@@ -123,6 +124,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
     const IN=CFG.innate,h=(r.o*7919+r.t*104729+r.f*1299709+r.w*15485863+r.n*32452843+ch.kid.reduce((a,k)=>a*31+k.r,7))%1000003;
     if(!keep&&h%IN.chanceDiv===0){const ks=Object.keys(D.innate||{});if(ks.length)ch.innate=ks[Math.floor(h/IN.chanceDiv)%ks.length]}
+    /* 타고난 것은 최대 2개까지 같이 뜰 수 있다: 첫 번째가 뜬 사람에게만 다른 해시로 두 번째를 굴린다 (secondDiv분의 1, 첫 번째와 다른 것) */
+    {const h2=(r.o*104729+r.t*7919+r.f*15485863+r.w*1299709+r.n*49979687+ch.kid.reduce((a,k)=>a*37+k.r,11))%1000003;
+      if(!keep&&ch.innate&&h2%IN.secondDiv===0){const ks=Object.keys(D.innate||{}).filter(k=>k!==ch.innate);if(ks.length)ch.innate2=ks[Math.floor(h2/IN.secondDiv)%ks.length]}}
+    /* 출생 때 한 번 적용되는 타고난 것 (강철 체질 · 질풍 · 굳은 정신) */
+    for(const k of [ch.innate,ch.innate2]){const E_=k&&D.innate[k]&&D.innate[k].fx;if(!E_)continue;const s_=ch.stats;for(const [sk,v] of Object.entries(E_))s_[sk]=(s_[sk]||0)+v;if(E_.maxHp)ch.hp+=E_.maxHp;if(E_.mindMax)ch.mind=CFG.mind.max+(s_.mindMax||0)}
     if(J){ch.job=job;ch.aff={type:'head',name:'머리'};if(J.deck){ch.deck=J.deck.slice();ch.cardMoney=true}else for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
     /* 출생 때 굴린 무기는 무기 칸의 첫 장비 */
     equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
@@ -219,7 +225,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function offerGear(ch,item){(ch.gearOffers=ch.gearOffers||[]).push(item)}
   function resolveGear(ch,i,wear){const o=ch.gearOffers||[];if(!o[i])return false;const it=o.splice(i,1)[0];if(wear)equip(ch,it);else (ch.stash=ch.stash||[]).push(it);return true}
   /* ===== 6시즌: 덱은 최대 CFG.deck.max장 (E.G.O가 개화하면 CFG.mind.deckPlus장 더). 넘치는 카드는 카드함에 두고, 공방 밖에서도 자유롭게 넣고 뺀다 ===== */
-  const ownsCard=(ch,cid)=>ch.deck.includes(cid)||(ch.side||[]).includes(cid)||(ch.offers||[]).includes(cid);
+  const ownsCard=(ch,cid)=>ch.deck.includes(cid)||(ch.side||[]).includes(cid)||(ch.offers||[]).includes(cid)||(ch.picks||[]).some(g=>g.includes(cid));
   const deckMax=ch=>CFG.deck.max+(ch.ego?CFG.mind.deckPlus:0);
   const deckRoom=ch=>ch.deck.length<deckMax(ch);
   function putCard(ch,cid,chips,label){
@@ -242,7 +248,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
   /* 히든 보스 전용 책장: 받으면 덱이 통째로 바뀌고 영구 고정, 거절하면 지금 덱 유지 */
-  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;ch.offers=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
+  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;ch.offers=[];ch.picks=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
   function declinePack(ch){if(!ch.packOffer)return false;ch.packOffer=null;return true}
   /* 고정 카드(E.G.O 전용)는 덱에서 뺄 수 없다. 예전 판에서 카드함으로 빠진 고정 카드는 덱으로 돌려놓고, 덱이 넘치면 일반 카드가 카드함으로 간다 */
   function repairFixed(ch){
@@ -260,6 +266,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function autoOffers(ch){
     if(ch.packOffer)acceptPack(ch);
+    while((ch.picks||[]).length)pickTake(ch,0);
     while((ch.offers||[]).length){if(deckRoom(ch))takeOffer(ch,0,'deck');else dropOffer(ch,0)}
     while((ch.gearOffers||[]).length)resolveGear(ch,0,true);
   }
@@ -297,8 +304,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return theme==='debuff'?kw.some(k=>k[2]!=='s'):(c.t==='buff'||c.t==='def'||kw.some(k=>k[2]==='s'))});
   function cardBox(ch,theme){
     const B=CFG.blackCard;if(ch.money<B.price||ch.deckLocked||ch.cardMoney)return null;
-    const all=boxPool(theme),fresh=all.filter(id=>!ownsCard(ch,id)),cid=one(fresh.length?fresh:all);if(!cid)return null;
-    ch.money-=B.price;(ch.offers=ch.offers||[]).push(cid);return cid;
+    const all=boxPool(theme);if(!all.length)return null;
+    ch.money-=B.price;const r=offerPick(ch,all,null,'상자');return r;
   }
   /* 암시장 응급 카드: 같은 카드를 덱·카드함·제안 합쳐 max장까지 살 수 있다 */
   const aidCount=(ch,id)=>[...ch.deck,...(ch.side||[]),...(ch.offers||[])].filter(x=>x===id).length;
@@ -368,11 +375,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const it=D.items[id];ch.money-=priceOf(ch,id);if(offer)offerGear(ch,Object.assign({id},it));else equip(ch,Object.assign({id},it));return true;
   }
   /* 금전운: 버는 돈 +20% */
-  const earn=(ch,n)=>n>0&&ch.innate==='fortune'?Math.round(n*CFG.innate.money):n;
+  const earn=(ch,n)=>n>0&&hasInn(ch,'fortune')?Math.round(n*CFG.innate.money):n;
   /* 성장력: 레벨 업 성장 능력치 1.2배 (소수점은 쌓아 두었다가 1이 되면 오른다) */
   function applyGrowth(ch,fx){
     const r=applyFx(ch,fx);
-    if(ch.innate==='growth'){const acc=ch.growAcc=ch.growAcc||{},ex={};
+    if(hasInn(ch,'growth')){const acc=ch.growAcc=ch.growAcc||{},ex={};
       for(const [k,v] of Object.entries(fx))if(typeof v==='number'&&v>0&&k in ch.stats){acc[k]=(acc[k]||0)+v*(CFG.innate.growMul-1);const n=Math.floor(acc[k]+1e-9);if(n>0){acc[k]-=n;ex[k]=n}}
       if(Object.keys(ex).length){addStats(ch.stats,ex);if(ex.maxHp)ch.hp+=ex.maxHp;r.chips.push('성장력 · '+Object.entries(ex).map(([k,v])=>k+'+'+v).join(' '))}}
     return r;
@@ -475,7 +482,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.assocName=ch.aff.name;
     if(at!==0||!rows||ch.deckLocked||ch.cardMoney)return;
     const ids=(C_.finalRow?rows.slice(0,-1):rows).flat();
-    ch.deck=ids.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.packOffer=null;ch.cardMoney=true;
+    ch.deck=ids.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;ch.cardMoney=true;
     out.push(`전용 카드팩 · ${ch.aff.name} ${ids.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈)`);
   }
   const assocOf=ch=>ch.assocName||(ch.aff&&ch.aff.type==='assoc'?ch.aff.name:null);
@@ -502,7 +509,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(r.cards&&CFG.syn[ch.aff.name])ch.flags.synTop=1;
     const out=[`${ch.aff.name} · ${r.n}`,...(r.e?[r.e]:[])];
     /* 조직 전용 책장: 들어가는 순간 덱이 통째로 바뀐다 (이후 카드는 얻지 못하고 대신 돈). 최고 서열에서 전용 카드 2장이 더해져 10장이 된다 */
-    if(ch.fi===0&&F.pack&&!ch.deckLocked&&!ch.cardMoney){ch.deck=F.pack.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.packOffer=null;ch.cardMoney=true;out.push(`전용 카드팩 · ${ch.aff.name} ${F.pack.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈)`)}
+    if(ch.fi===0&&F.pack&&!ch.deckLocked&&!ch.cardMoney){ch.deck=F.pack.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;ch.cardMoney=true;out.push(`전용 카드팩 · ${ch.aff.name} ${F.pack.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈)`)}
     return out;
   }
   const canFingerUp=ch=>isFinger(ch)&&!!D.fingers[ch.aff.name].ranks[(ch.fi??-1)+1];
@@ -526,6 +533,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(offer){(ch.offers=ch.offers||[]).push(cid);chips&&chips.push(`${label||'카드'} 발견 · ${D.cards[cid].n} (받을지 고른다)`);return}
     putCard(ch,cid,chips,label);
   }
+  /* 카드 고르기: 새 카드를 한 장만 제안하지 않고 CFG.cardPick.n장 가운데 하나를 고르게 한다 (고정 덱이면 예전처럼 돈). 안 가진 카드를 먼저 뽑는다 */
+  function offerPick(ch,pool,chips,label){
+    if(ch.deckLocked||ch.cardMoney){const cid=one(pool.filter(id=>!ownsCard(ch,id)))||one(pool);return addCard(ch,cid,chips,label,true)}
+    const fresh=pool.filter(id=>!ownsCard(ch,id)),src=fresh.length>=CFG.cardPick.n?fresh:fresh.concat(pool.filter(id=>!fresh.includes(id))),set=[];
+    const left=src.slice();while(set.length<CFG.cardPick.n&&left.length)set.push(left.splice(d(left.length)-1,1)[0]);
+    if(!set.length)return null;
+    if(set.length===1)return addCard(ch,set[0],chips,label,true);
+    (ch.picks=ch.picks||[]).push(set);chips&&chips.push(`${label||'카드'} 발견 · ${set.length}장 가운데 하나를 고른다`);return set;
+  }
+  function pickTake(ch,i){const g=(ch.picks||[])[0];if(!g||!g[i])return false;const cid=g[i];ch.picks.shift();(ch.offers=ch.offers||[]).unshift(cid);return true}
+  function pickSkip(ch){if(!(ch.picks||[]).length)return false;ch.picks.shift();return true}
   function rewardCard(ch){const pool=D.rewards.filter(id=>!ownsCard(ch,id));return pool.length?one(pool):null}
   /* 사건·성장·보상 효과를 적용하고 화면용 칩을 돌려준다 */
   /* 소속에 들어간다: 소속·직급 기록을 새로 쓰고 첫 직급의 보정을 받는다 */
@@ -562,8 +580,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.money){const m=earn(ch,fx.money);ch.money=Math.max(0,ch.money+m);chips.push((m>0?'+':'−')+money(Math.abs(m))+(m!==fx.money?' (금전운)':''))}
     if(fx.check){s.check+=fx.check;chips.push('사건 판정 '+sg(fx.check))}
     if(fx.startBreath){s.startBreath+=fx.startBreath;chips.push('시작 '+D.keywords.breath.n+' +'+fx.startBreath)}
-    const cid=fx.card||(fx.reward?rewardCard(ch):null);
-    addCard(ch,cid,chips,null,true);
+    if(fx.card)addCard(ch,fx.card,chips,null,true);else if(fx.reward)offerPick(ch,D.rewards,chips,null);
     if(fx.escort)ch.flags.escortNext=1;
     if(fx.officeFound){ch.officePick=true;chips.push('사무소 개설 · 이름과 전문 분야를 정한다')}
     if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){forceAdd(ch,'o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
@@ -664,7 +681,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const xpFor=l=>CFG.levels[Math.min(l,CFG.levels.length)-1];
   function lvOf(xp){let l=1;while(xp>=xpFor(l+1))l++;return l}
   const xpNext=ch=>xpFor(ch.lv+1);
-  function gainXp(ch,n){const b=ch.lv;ch.xp+=n;ch.lv=lvOf(ch.xp);ch.lvPend+=ch.lv-b;return ch.lv-b}
+  function gainXp(ch,n){const b=ch.lv;if(hasInn(ch,'scholar')&&n>0){ch.xpAcc=(ch.xpAcc||0)+n*(CFG.innate.scholarMul-1);const x=Math.floor(ch.xpAcc+1e-9);if(x>0){ch.xpAcc-=x;n+=x}}ch.xp+=n;ch.lv=lvOf(ch.xp);ch.lvPend+=ch.lv-b;return ch.lv-b}
   /* 덱이 고정(책장·전용 카드팩)이면 카드를 받을 수 없으므로 '보상 카드' 성장은 선택지에서 뺀다 */
   function rollGrowth(ch){
     const out=[],locked=!!(ch&&(ch.deckLocked||ch.cardMoney));let g=0;
@@ -1191,7 +1208,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const it of Object.values(ch.gear)){if(!it)continue;for(const [k,v] of Object.entries(it.fx||{}))if(k!=='dmin'&&k in s)s[k]-=v;(ch.stash=ch.stash||[]).push(it)}
     ch.gear={};s.dmin=calcDmin(ch);addStats(s,X.fx);ch.hp=clamp(ch.hp+(X.fx.maxHp||0),1,s.maxHp);
     ch.distForm={n:(name||'').trim()||'이름 없는 뒤틀림'};ch.huntNext=(ch.year||0)+(BD.hunt?BD.hunt.gap:3);ch.distPick=false;ch.distortPend=false;ch.distortDone=true;ch.voiceUsed=true;ch.mind=mindMax(ch);
-    ch.deck=X.deck.slice();ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.offers=[];ch.packOffer=null;
+    ch.deck=X.deck.slice();ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;
     for(const g of ch.gearOffers||[])(ch.stash=ch.stash||[]).push(g);ch.gearOffers=[];
     (ch.relics=ch.relics||[]).push('뒤틀림 · '+ch.distForm.n);
   }
@@ -1290,7 +1307,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
-    if(mc.innate==='mark'&&!mc.markOn&&G.year>=CFG.innate.markYear-1)return {type:'event',ev:D.innateEvents.mark};
+    if(hasInn(mc,'mark')&&!mc.markOn&&G.year>=CFG.innate.markYear-1)return {type:'event',ev:D.innateEvents.mark};
     if(D.relicEvent&&!mc.relicEvt&&!mc.hw&&G.year===CFG.relicEvent.year-1){mc.relicEvt=true;return {type:'event',ev:D.relicEvent}}
     {const sw=bondSweetEvent(G);if(sw)return {type:'event',ev:sw}}
     if(mc.resoPend&&D.familyReso&&G.year>=(mc.resoAt||0)){mc.resoPend=false;mc.resoAsked=true;return {type:'event',ev:D.familyReso}}
@@ -1424,13 +1441,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const checkDc=(ch,check)=>check.dc==='exam'?examDc(ch):check.dc==='color'?CFG.colorDc:check.dc==='top'?CFG.topDc:check.dc;
   /* pure: 능력치·판정 보정 없이 주사위만 (사무소 개설) */
   /* 약지 예술적 감각: 선택지 판정 주사위 최대치 +5×스택 (1d100 → 1d105 …, 보정치가 아님) */
-  const checkDie=ch=>Math.min(CFG.checkMax,100+(ch.artSense||0)*CFG.artSense.die+(ch.innate==='miracle'?Math.floor((ch.year||0)/CFG.innate.miracleEvery)*CFG.innate.miracleDie:0));
+  const checkDie=ch=>Math.min(CFG.checkMax,100+(ch.artSense||0)*CFG.artSense.die+(hasInn(ch,'miracle')?Math.floor((ch.year||0)/CFG.innate.miracleEvery)*CFG.innate.miracleDie:0));
   function checkMod(ch,check){if(check.pure)return 0;return (check.s?ch.stats[check.s]:0)+ch.stats.check+mindStat(ch)+pathMod(ch,check)+(check.dc==='color'?ch.colorBonus||0:0)}
   /* 선택: 판정이 있으면 1d100 + 능력치 + 판정 보정 ≥ 난이도 */
   function choose(G,ev,i){
     const ch=G.ch,c=ev.c[i];let res=c.ok,roll=null,xp=CFG.xp.plain,xpNote=null;
     if(c.check){
-      const ib=ch.innate==='intuition'&&!c.check.pure?d(CFG.innate.intuitionDie):0;
+      const ib=hasInn(ch,'intuition')&&!c.check.pure?d(CFG.innate.intuitionDie):0;
       const dc=checkDc(ch,c.check),mod=checkMod(ch,c.check)+ib,cd=c.check.pure?100:checkDie(ch),r=d(cd),tot=r+mod,ok=tot>=dc;
       if(ib)xpNote=`타고난 직감 +${ib}`;
       roll={r,mod,tot,dc,ok,die:cd};res=ok?c.ok:c.fail;xp=ok?CFG.xp.ok:CFG.xp.fail;
@@ -1516,7 +1533,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(f0.hwClue&&ch.hw){const h_=CFG.hw.clueHp;ch.hw.clues=(ch.hw.clues||0)+1;ch.hw.sNext=(ch.year||0)+1;s_(ch,h_);chips.push(`영생의 단서 ${ch.hw.clues}/4 · 최대 HP +${h_}`)}
       if(f0.hwElder&&ch.hw){ch.hw.elderDone=1;ch.hw.fnext=(ch.year||0)+CFG.hw.finalGap}
       if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리');{const cw=CFG.hw.crown.filter(k=>!hwHave(ch).includes(k));if(cw.length){(ch.hw.have=ch.hw.have||[]).push(...cw);chips.push(`가주의 재갈 · ${cw.map(k=>aniOf(k).nm).join(' · ')} · 영구히 당신의 것이 되었다`)}}ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
-    addCard(ch,rewardCard(ch),chips,null,true);
+    offerPick(ch,D.rewards,chips,null);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
@@ -1598,7 +1615,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',hunger:ch.flags&&ch.flags.hunger?0:null,name:(eqT(ch)?`[${eqT(ch)}] `:'')+(ch.name||T.you),tt:eqT(ch)||'',color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:ch.innate==='psycho',cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min(corpType(ch).healMax||999,corpType(ch).heal+ch.corp.up*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+ch.corp.up*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min(corpType(ch).healMax||999,corpType(ch).heal+ch.corp.up*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+ch.corp.up*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     P.ample=ch.ample||0;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;
@@ -2213,6 +2230,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

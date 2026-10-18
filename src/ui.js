@@ -301,7 +301,8 @@ export function startUI(E,app){
   }
   const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+ch.fr.n:''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
     +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
-  const innateName=c=>c.innate?(c.innate==='mark'&&c.markOn?D.innate.mark.awake:D.innate[c.innate].n):null;
+  const innateOne=(c,k)=>k==='mark'&&c.markOn?D.innate.mark.awake:D.innate[k].n;
+  const innateName=c=>c.innate?[c.innate,c.innate2].filter(Boolean).map(k=>innateOne(c,k)).join(' · '):null;
   /* E.G.O 발현자: 무기 등급과 다음 등급까지 남은 발현 횟수 */
   const egoGrowTag=ch=>{if(ch.egoUses==null)return '';const G=CFG.egoGrow,L=E.egoLvFor(ch.egoUses),nx=G.need[L+1];
     return ` · <span style="color:var(--gold)">${G.tier[L]}</span>${nx!=null?` · 발현 ${ch.egoUses}/${nx}`:''}`};
@@ -499,6 +500,11 @@ export function startUI(E,app){
         <button class="btn${UI.packAsk?' primary':''}" data-a="packyes">${UI.packAsk?'정말 바꾼다 (되돌릴 수 없다)':'이 책장으로 바꾼다'}</button>
         <button class="btn primary" data-a="packno">지금 덱을 지킨다</button>
         <p class="small dim">지금 덱을 지키면 이 책장은 사라진다. 다른 전리품은 그대로 받는다.</p>`,'offer',false)}
+    if((ch.picks||[]).length&&!(ch.offers||[]).length){const g=ch.picks[0];
+      return sheet(`<span class="eyebrow">카드 발견 · ${g.length}장 가운데 하나${ch.picks.length>1?` · 남은 묶음 ${ch.picks.length}`:''}</span><h2>하나를 고른다</h2>
+        <div class="invcards">${g.map((id,j)=>cardRow(id,`<button class="chip" data-a="pkpick" data-i="${j}">이 카드를 고른다</button>`)).join('')}</div>
+        <button class="btn quiet" data-a="pkskip">모두 버린다</button>
+        <p class="small dim">고른 카드는 다음 화면에서 덱에 넣거나 카드함에 둘 수 있다.</p>`,'offer',false)}
     const cid=ch.offers[0],room=E.deckRoom(ch),many=ch.offers.length>1?` · 남은 ${ch.offers.length}장`:'';
     if(UI.swap)return sheet(`<span class="eyebrow">덱의 카드와 바꾸기 · 빠진 카드는 카드함으로</span>${cardRow(cid)}
       <div class="invcards">${ch.deck.map((id,j)=>cardRow(id,D.cards[id].fixed?'<span class="small dim">전용 · 바꿀 수 없다</span>':`<button class="chip" data-a="oswap" data-i="${j}">이 카드와 바꾼다</button>`)).join('')}</div>
@@ -844,7 +850,7 @@ export function startUI(E,app){
       </div>
       ${b.o.hidden?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">${b.fated?'운명이 강제된 출생':'숨은 출생 · 출신 '+b.r.o}</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">${esc(b.o.e)}</span></div>`:''}
       ${b.fated?`<div class="panel stack" style="gap:6px"><span class="mono small" style="color:var(--gold)">재능 · 결점 · 무기 · 타고난 것 없음 · 출신과 성장기 보정만 가진다</span></div>`:b.blank?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">출생 보정 없음</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">출신 · 재능 · 결점 · 무기 · 타고난 것 없음 · 맨손 · 성장기 보정만 가진다</span></div>`:`<div class="panel">${row('출신',b.r.o,b.o,UI.job?null:D.origins)}${row('재능',b.r.t,b.t,D.talents)}${row('결점',b.r.f,b.f,D.flaws)}${row('무기',b.r.w,b.w,D.weapons)}</div>`}
-      ${b.innate?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">타고난 것 · 1%</span><b class="serif">${esc(D.innate[b.innate].n)}</b><span class="mono small" style="color:var(--gold)">${esc(D.innate[b.innate].e)}</span></div>`:''}
+      ${b.innate?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">타고난 것 · 1%${b.innate2?' · 둘이 함께':''}</span>${[b.innate,b.innate2].filter(Boolean).map(k=>`<b class="serif">${esc(D.innate[k].n)}</b><span class="mono small" style="color:var(--gold)">${esc(D.innate[k].e)}</span>`).join('')}</div>`:''}
       <button class="btn quiet" data-a="reroll">다시 태어난다</button>
       ${kid}
       ${vBirthHelp(b)}
@@ -1431,10 +1437,10 @@ export function startUI(E,app){
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
-    const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length);
+    const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
     const ov=UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
-    const ovKey=UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':'c')+(UI.swap?'s':''):ov?'bag':'';
+    const ovKey=UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
     app.innerHTML=`<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     UI.lastOv=ovKey;document.documentElement.classList.toggle('ovopen',!!ov);
@@ -1442,7 +1448,7 @@ export function startUI(E,app){
     if(s!==lastScreen){window.scrollTo(0,0);lastScreen=s}
     if(s==='birth'&&BC.fresh&&MODE!=='off'){BC.fresh=false;rollAnim()}
     if(s==='level'&&UI.lvFresh&&MODE!=='off'){UI.lvFresh=false;rollAnim()}
-    if(s==='result'&&UI.res.anim&&UI.res.roll){UI.res.anim=false;UI.animing=true;resultAnim().then(()=>{UI.animing=false;if(G&&((G.ch.offers||[]).length||(G.ch.gearOffers||[]).length||G.ch.packOffer))render()})}
+    if(s==='result'&&UI.res.anim&&UI.res.roll){UI.res.anim=false;UI.animing=true;resultAnim().then(()=>{UI.animing=false;if(G&&((G.ch.offers||[]).length||(G.ch.picks||[]).length||(G.ch.gearOffers||[]).length||G.ch.packOffer))render()})}
     if(s==='combat'&&FIGHT==='auto'&&!PLAYING&&C&&!C.over&&!UI.autoTimer&&!UI.paused&&!UI.cfg){const g=autoGap();
       UI.autoTimer=setTimeout(()=>{UI.autoTimer=null;if(FIGHT==='auto'&&UI.screen==='combat'&&!PLAYING&&!C.over&&!UI.paused&&!UI.cfg){UI.sel=E.autoPick(C);render();setTimeout(()=>{if(FIGHT==='auto'&&!PLAYING&&!C.over&&!UI.paused)ACT.go()},g[1])}},g[0])}
   }
@@ -1644,7 +1650,7 @@ export function startUI(E,app){
     relic(k){UI.relic=k;render()},
     job(k){UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(UI.daily&&BC.seed===dailySeed(UI.daily))BC.daily=UI.daily;if(BC.innate)recAdd('innate',BC.innate);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
+    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(UI.daily&&BC.seed===dailySeed(UI.daily))BC.daily=UI.daily;if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.showIncome=false;UI.screen='shop';render()},
@@ -1669,6 +1675,8 @@ export function startUI(E,app){
     otake(to){if(E.takeOffer(G.ch,0,to)){UI.swap=false;resave();render()}},
     oswapmode(){UI.swap=!UI.swap;render()},
     oswap(j){if(E.takeOffer(G.ch,0,'swap',j)){UI.swap=false;resave();render()}},
+    pkpick(i){if(E.pickTake(G.ch,+i)){UI.swap=false;resave();render()}},
+    pkskip(){if(E.pickSkip(G.ch)){resave();render()}},
     odrop(){if(E.dropOffer(G.ch,0)){UI.swap=false;resave();render()}},
     dout(i){UI.dropAsk=null;if(E.deckOut(G.ch,+i)){resave();render()}},
     din(i){UI.dropAsk=null;if(E.deckIn(G.ch,+i)){resave();render()}},
@@ -1678,7 +1686,7 @@ export function startUI(E,app){
     aid(id){if(E.buyAid(G.ch,id))render()},
     heal(){if((UI.healed||0)>=CFG.clinic.max)return;const h=E.buyHeal(G.ch);if(h){UI.healed=(UI.healed||0)+1;UI.healMsg=`HP +${h}`;resave();render()}},
     ample(){if(E.buyAmple(G.ch)){resave();render()}},
-    box(t){if(UI.boxDone)return;const c=E.cardBox(G.ch,t);if(c){UI.boxDone=`상자에서 ${D.cards[c].n}이(가) 나왔다.`;render()}},
+    box(t){if(UI.boxDone)return;const c=E.cardBox(G.ch,t);if(c){UI.boxDone=Array.isArray(c)?`상자에서 카드 ${c.length}장이 나왔다. 하나를 고른다.`:'상자에서 카드가 나왔다.';render()}},
     unshop(){UI.buyAsk=null;saveGame({st:UI.curSt,stock:[],shopDone:true});UI.screen='event';render()},
     omen(i){
       const st=E.answerOmen(G,UI.omen,i==='1');saveGame({st,stock:[],shopDone:true});
