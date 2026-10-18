@@ -608,7 +608,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           for(const id of ['zp_'+partner,'hc_6']){forceAdd(ch,id);chips.push('흑수 카드 · '+D.cards[id].n)}
           while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
           r.rivals=Z.pairs.map((_,i)=>i).filter(i=>i!==pi).map(i=>'hr_'+i);r.rv=0;r.cnext=y+Z.rivalGap;
-          ch.hwDan=3;chips.push(`${CFG.hw.dan.name} 완성 · 전투 중 매 라운드 시작에 HP ${CFG.hw.dan.heal[3]} 회복`);routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('가주 후보 · 흑수 '+D.cards['zp_'+partner].n.replace('흑수 · ',''));chips.push('가주 후보가 되었다')}
+          ch.hwDan=3;chips.push(`${CFG.hw.dan.name} 완성 · 전투 중 매 라운드 시작에 HP ${CFG.hw.dan.heal[3]} 회복`);routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('흑수 · '+D.cards['zp_'+partner].n.replace('흑수 · ',''),'가주 후보');chips.push('가주 후보가 되었다')}
         else if(k==='clue'){ch.purge='hw_cl'+r.cl;r.cl++;r.clNext=y+(r.cl>=D.hwRoute.clue.length?2:Z.clueGap)}
         else if(k==='return'){r.out=0;r.back=1}
         else if(k==='rival'){ch.purge=r.rivals[r.rv];r.rv++;r.cnext=y+Z.rivalGap}
