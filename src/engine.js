@@ -660,9 +660,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.license){licensed=license(ch);if(licensed){chips.push(T.licenseGained+' · '+ch.rank+T.rankUnit);alignEast(ch,chips)}}
     return {chips,licensed};
   }
-  /* 레벨 상한 없음: 표 끝(CFG.levels) 뒤로는 레벨 하나에 필요한 경험치가 lvExtra.base × 2^(레벨÷lvExtra.every − 1)로, every레벨 구간마다 2배씩 커진다 (18~23: 6, 24~31: 12, 32~39: 24…) */
-  const xpMemo=[];
-  const xpFor=l=>{const T=CFG.levels,K=CFG.lvExtra;if(l<=T.length)return T[l-1];if(xpMemo[l]!=null)return xpMemo[l];let x=T[T.length-1];for(let k=T.length+1;k<=l;k++)x+=K.base*Math.pow(2,Math.floor(k/K.every)-1);return xpMemo[l]=x};
+  /* 레벨 상한 없음(표는 120레벨까지 만들어 둔다): 레벨당 필요 경험치는 8, 16, 24… 레벨부터 2배씩 늘어난다 (CFG.lvCurve) */
+  const xpFor=l=>CFG.levels[Math.min(l,CFG.levels.length)-1];
   function lvOf(xp){let l=1;while(xp>=xpFor(l+1))l++;return l}
   const xpNext=ch=>xpFor(ch.lv+1);
   /* 2막에 들어서면 최소 CFG.act2Lv 레벨: 모자란 경험치를 채워 레벨 업 성장 굴림을 한꺼번에 받는다 */

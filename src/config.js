@@ -1,4 +1,11 @@
 /* 임시 수치: 밸런스는 여기만 바꾼다. `npm run sim`으로 확인한다. */
+const LV_CURVE = {base: 7.15, every: 8};
+const LEVELS = (() => {
+  const {base, every} = LV_CURVE, out = [0];
+  let acc = 0;
+  for (let L = 2; L <= 120; L++) { acc += base * Math.pow(2, Math.floor(L / every)); out.push(Math.round(acc)); }
+  return out;
+})();
 export const CFG = {
   /* 피해 주사위 최소값: 장비(최댓값) + 재능·성장기의 '+1'(겹치면 더해짐), 합계는 dminCap까지 */
   dminCap: 4,
@@ -263,8 +270,10 @@ export const CFG = {
   /* 레벨 보너스: at레벨마다(8, 16, 24…) 모든 전투에서 빛과 빛 최대치 +up */
   lvLight: {at: 8, up: 1},
   xp: {ok: 2, fail: 1, plain: 1, win: 4},
-  lvExtra: {base: 3, every: 8}, act2Lv: 17,
-  levels: [0, 4, 9, 15, 22, 30, 40, 52, 66, 82, 100, 118, 121, 124, 127, 130, 133],
+  act2Lv: 17,
+  /* 레벨 필요 경험치: 레벨 하나(L)를 올리는 데 lvCurve.base × 2^(floor(L÷every)) — 8, 16, 24… 레벨부터 2배씩 어려워진다. levels[i]는 레벨 i+1의 누적 경험치 */
+  lvCurve: LV_CURVE,
+  levels: LEVELS,
   /* 시뮬: 고정 전투 직전마다 쌓인다고 보는 레벨 업 수 (경험치 표 기준 추정) */
   simGrowth: [0, 2, 1]
 };
