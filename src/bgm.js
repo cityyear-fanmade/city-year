@@ -164,7 +164,7 @@ export function createBgm(){
     barT=T+4*bd;barN++;
   }
   /* 격정 한 마디: 피아노가 끌고 간다. 오른손은 16분 되풀이 음형, 왼손은 옥타브 베이스 · 현이 낮게 깔리고 큰북과 스네어가 조여 든다.
-     전투에서는 템포가 오르고 킥이 4박으로 늘며 4번째 박에 스네어 연타, 높은 옥타브 선율이 붙는다 */
+     전투에서는 템포가 오르고 킥이 4박으로 늘며 4번째 박에 스네어 연타가 붙는다. 음역은 가운데 도 근처 아래쪽에 머문다 */
   function barPassion(T,M){
     const fight=scene==='fight',bd=60/P.bpm.passion[scene],C=P.pChords[barN%P.pChords.length],R=M.root,at=k=>T+k*bd,last=barN%4===3;
     /* 왼손: 옥타브 베이스 */
@@ -174,9 +174,9 @@ export function createBgm(){
     C.t.forEach((o,i)=>strN(R+o-12,T+i*0.02,bd*4,fight?0.014:0.011));
     /* 오른손: 16분 되풀이 음형 (낮은 음 → 가운데 → 높은 음 → 가운데), 박 머리에 힘을 준다 */
     const pat=[0,1,2,1, 0,1,3,1, 0,2,3,2, 1,2,3,2];
-    pat.forEach((ix,n)=>{const m=R+C.t[ix]+12;pianoN(m,at(n/4),(n%4===0?0.05:0.032)*(fight?1.15:1),bd*0.55)});
-    /* 선율: 박 머리마다 위에서 눌러 내리는 음 (전투에서는 옥타브 위가 겹친다) */
-    {const ix0=Math.floor(rnd()*C.sc.length);[0,1,2,3].forEach((k,i)=>{const m=R+24+C.sc[(ix0+i*2)%C.sc.length]-12*(i%2);if(rnd()<(fight?0.9:0.55))pianoN(m,at(k+0.5),fight?0.04:0.03,bd*1.2)})}
+    pat.forEach((ix,n)=>{const m=R+C.t[ix];pianoN(m,at(n/4),(n%4===0?0.05:0.032)*(fight?1.15:1),bd*0.55)});
+    /* 선율: 박 머리마다 눌러 내리는 음 (가운데 음역에 머무르고, 전투에서만 옥타브 위가 작게 겹친다) */
+    {const ix0=Math.floor(rnd()*C.sc.length);[0,1,2,3].forEach((k,i)=>{const m=R-12+C.sc[(ix0+i*2)%C.sc.length];if(rnd()<(fight?0.9:0.55)){pianoN(m,at(k+0.5),fight?0.045:0.035,bd*1.2);if(fight)pianoN(m+12,at(k+0.5),0.014,bd*0.9)}})}
     /* 타악 */
     if(fight){for(let k=0;k<4;k++)feather(at(k),0.11)}else{feather(at(0),0.1);feather(at(2),0.09)}
     for(const k of [1,3])snare(at(k),fight?0.05:0.04);
