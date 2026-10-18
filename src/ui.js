@@ -479,7 +479,7 @@ export function startUI(E,app){
     return `<div class="ov"><div class="ovbg"${closable?' data-a="bagclose"':''}></div><div class="sheet ${cls}" role="dialog" aria-modal="true">${inner}</div></div>`;
   }
   /* 도움말(카드·키워드·규칙): 전투 중에도 열어 볼 수 있는 읽기 전용 창 */
-  const HELPTABS=[['card','카드'],['kw','키워드'],['rule','규칙']];
+  const HELPTABS=[['card','카드 읽는 법'],['kw','키워드'],['rule','규칙']];
   function kwDoc(){
     const K=D.keywords,N=CFG.nail.stages.map(g=>`${g.at}: 명중 −${g.hit}${g.dmg?` · 주는 피해 −${g.dmg}`:''}`).join(' / ');
     return [
@@ -522,13 +522,10 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px"><b style="color:var(--gold)">카드 읽는 법</b>${rows.map(([n,x])=>`<div class="stack" style="gap:2px"><b class="small">${esc(n)}</b><span class="small dim">${esc(x)}</span></div>`).join('')}</div>`;
   }
   function vHelp(){
-    const t=UI.help==='kw'||UI.help==='rule'?UI.help:'card',ch=G.ch,P=C&&C.P,hand=P&&P.hand?P.hand.map(x=>x&&x.id||x):[];
+    const t=UI.help==='kw'||UI.help==='rule'?UI.help:'card';
     let body='';
     if(t==='card'){
-      const cnt={};for(const id of ch.deck)cnt[id]=(cnt[id]||0)+1;
-      const ids=Object.keys(cnt).filter(id=>D.cards[id]);
-      body=cardGuide()+`<p class="small dim">덱 ${ch.deck.length}장${hand.length?' · 지금 손패에 있는 카드는 맨 위에 모았다':''}. 전투 중에도 읽기만 할 수 있다.</p>`+
-        ids.sort((a,b)=>(hand.includes(b)?1:0)-(hand.includes(a)?1:0)).map(id=>cardRow(id)+(cnt[id]>1?`<div class="mono small dim" style="margin:-4px 0 4px 8px">× ${cnt[id]}</div>`:'')).join('');
+      body=cardGuide();
     }else if(t==='kw'){
       body=`<p class="small dim">카드의 키워드와 걸리는 상태의 뜻이다.</p>`+kwDoc().map(([n,k,x])=>`<div class="panel stack" style="gap:3px;padding:10px 12px"><b style="color:${k?kwc(k):'var(--gold)'}">${esc(n)}</b><span class="small">${esc(x)}</span></div>`).join('');
     }else{
