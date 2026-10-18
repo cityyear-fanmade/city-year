@@ -28,7 +28,7 @@ export const CFG = {
   /* 치유소: 치료를 받을 때마다 값이 step씩 오른다 (한 판 전체 누적, 방문마다 최대 max번) */
   clinic: {price: 500, step: 500, hp: 30, max: 3},
   /* 암시장 K사 엠플: 전투 중 HP가 최대 HP의 belowPct 이하가 되면 자동으로 heal 회복(전투당 사용 횟수 제한 없음, 한 번에 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
-  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, belowPct: 0.2, healPct: 0.5},
+  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, /* 2막 무한 모드에 들어서면 구매 횟수 제한(limit)이 없어진다(carry는 그대로) */ belowPct: 0.2, healPct: 0.5},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
   orderBonusLight: 1, catchupBonus: 5, spdMul: 2, spdHit: {per: 5, max: 4}, gapFirst: 30, firstHit: 10,
@@ -74,7 +74,7 @@ export const CFG = {
   oldAge: 100,
   /* 사건 판정 주사위 최대치(플레이어): 타고난 것 등으로 아무리 커져도 이 값에서 멈춘다 */
   checkMax: 220,
-  infinite: {erodeFrom: 90, erodePer: 0.5, enemyMax: 260, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 10000000, atkGrow: 1, evaGrow: 0.5},
+  infinite: {erodeFrom: 90, erodePer: 0.5, erodeMax: 18, enemyMax: 260, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 10000000, atkGrow: 1, evaGrow: 0.5},
   /* 정신력: 최대 max. healEvery년마다 +yearHeal. 선택지·환상체 조우 2d3 감소, 회피 실패 시 1d evadeDie에서 1이면 1 감소(E.G.O 장비 1개당 +1).
      voiceAt 이하에서 한 번 "들리는 목소리": 1d voiceDie를 voiceRolls번, 모두 voiceDc 이상이면 개화, 실패하면 1d failLoss 감소.
      0이면 사망, 1이면 뒤틀림 판정 1d2 (1이면 개화하고 가득 회복, 2면 뒤틀림 엔딩). tiers: 전투 시작 때 호흡·회피 보정 */

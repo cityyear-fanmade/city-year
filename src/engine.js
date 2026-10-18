@@ -333,7 +333,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 쓰여 HP를 heal 회복한다 (전투마다 1개). 최대 carry개, 무한 모드 뒤엔 값이 오른다 */
   const ampPrice=ch=>CFG.ample.price;
   function buyAmple(ch){
-    const K=CFG.ample;if(ch.hw&&!ch.hw.out&&!ch.hw.done)return false;if((ch.ample||0)>=K.carry||(ch.ampleBought||0)>=K.limit||ch.money<ampPrice(ch))return false;
+    const K=CFG.ample;if(ch.hw&&!ch.hw.out&&!ch.hw.done)return false;if((ch.ample||0)>=K.carry||((ch.ampleBought||0)>=K.limit&&!ch.infinite)||ch.money<ampPrice(ch))return false;
     ch.money-=ampPrice(ch);ch.ample=(ch.ample||0)+1;ch.ampleBought=(ch.ampleBought||0)+1;return true;
   }
   /* 공방 등급: 기본 → 소속 → 해결사 급수 보너스 */
@@ -2187,7 +2187,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(X.kuro&&X.black){X.black=false;X.cloud=CFG.syn['흑운회'].reset;L('kw',`${X.name} · 흑운이 가라앉았다 · 구름 ${X.cloud}`)}
       for(const k of ['prescript','warp','shock','chain','web','sink'])if(X[k]>0)X[k]--}
     /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
-    if(C.ch.infinite&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.floor(e_*IN.erodePer);
+    if(C.ch.infinite&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.min(IN.erodeMax,Math.floor(e_*IN.erodePer));
       if(e_>0&&x>0){hpLoss(C,P,x,L);L('dmg',`${P.name} · 세계의 균열이 몸을 갉는다 · 고정 피해 ${x}`)}}
     ampUse(C,L);
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
