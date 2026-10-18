@@ -184,7 +184,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     s.dmin=calcDmin(ch);
     /* 무기 피해 주사위 면 수 (궁니르 d10). 장비 중 가장 큰 값, 기본 d6 */
     s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
-    if(item.card&&!ownsCard(ch,item.card)&&!ch.deckLocked)putCard(ch,item.card);
+    if(item.card&&!ownsCard(ch,item.card)&&!ch.deckLocked){putCard(ch,item.card);if(ch.cardMoney&&ch.deck.includes(item.card))(ch.extra=ch.extra||[]).push(item.card)}
   }
   /* ===== 6시즌: N사 날개 · 의체 심판: 의수를 쓰지 않고, 의체 상대(enemies aug)를 심판한다 ===== */
   const isN=ch=>!!ch.aff&&ch.aff.name===CFG.nWing.name;
@@ -256,8 +256,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function dropOffer(ch,i){const o=ch.offers||[];if(!o[i])return false;o.splice(i,1);return true}
   /* 덱이 고정이어도 사건·루트가 억지로 밀어 넣은 카드(고정 카드 제외)는 뺄 수 있다. 카드함 대신 사라진다 */
   const forceAdd=(ch,...ids)=>{(ch.extra=ch.extra||[]).push(...ids);ch.deck.push(...ids)};
-  const extraOut=(ch,i)=>{const id=ch.deck[i];return !!id&&(ch.deckLocked||ch.cardMoney)&&!D.cards[id].fixed&&(ch.extra||[]).includes(id)};
-  function deckOut(ch,i){if(extraOut(ch,i)&&ch.deck.length>CFG.shop.minDeck){ch.extra.splice(ch.extra.indexOf(ch.deck[i]),1);ch.deck.splice(i,1);return true}if(ch.deckLocked||ch.cardMoney||!ch.deck[i]||D.cards[ch.deck[i]].fixed||ch.deck.length<=CFG.shop.minDeck)return false;(ch.side=ch.side||[]).push(ch.deck.splice(i,1)[0]);return true}
+  const extraOut=(ch,i)=>{const id=ch.deck[i];return !!id&&(ch.deckLocked||ch.cardMoney)&&!D.cards[id].fixed&&((ch.extra||[]).includes(id)||Object.values(ch.gear||{}).some(g=>g&&g.card===id))};
+  function deckOut(ch,i){if(extraOut(ch,i)&&ch.deck.length>CFG.shop.minDeck){const xi=(ch.extra||[]).indexOf(ch.deck[i]);if(xi>=0)ch.extra.splice(xi,1);ch.deck.splice(i,1);return true}if(ch.deckLocked||ch.cardMoney||!ch.deck[i]||D.cards[ch.deck[i]].fixed||ch.deck.length<=CFG.shop.minDeck)return false;(ch.side=ch.side||[]).push(ch.deck.splice(i,1)[0]);return true}
   function deckIn(ch,i){const sd=ch.side||[];if(ch.deckLocked||ch.cardMoney||!sd[i]||!deckRoom(ch))return false;ch.deck.push(sd.splice(i,1)[0]);return true}
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
@@ -483,7 +483,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const rows=C_.finalRow&&orgRows(ch,C_);
     if(!rows||!ch.cardMoney||ch.finalGiven)return;ch.finalGiven=true;
     const ids=rows[rows.length-1].filter(id=>ch.deck.length<deckMax(ch));
-    if(ids.length){ch.deck=ch.deck.concat(ids);out.push(`전용 카드 · ${ids.map(id=>D.cards[id].n).join(', ')} (${why})`)}
+    if(ids.length){ch.deck=ch.deck.concat(ids);if(ch.orgPack!==ch.aff.name)(ch.extra=ch.extra||[]).push(...ids);out.push(`전용 카드 · ${ids.map(id=>D.cards[id].n).join(', ')} (${why})`)}
   }
   /* 협회 전용 카드팩: 입회 때 careers.*.cards[소속 이름]의 카드를 한 번에 받아 덱이 통째로 바뀐다.
      전용 카드팩(cardMoney)이라 이후 카드는 얻을 수 없고(대신 돈), 나중에 히든 책장으로 덱이 바뀌어도 협회 패시브는 소속 기록(assocName)으로 남는다 */
@@ -496,7 +496,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.assocName=ch.aff.name;
     if(at!==0||!rows||ch.deckLocked||ch.cardMoney)return;
     const ids=(C_.finalRow?rows.slice(0,-1):rows).flat();
-    ch.deck=ids.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;ch.cardMoney=true;
+    ch.deck=ids.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;ch.cardMoney=true;ch.orgPack=ch.aff.name;
     out.push(`전용 카드팩 · ${ch.aff.name} ${ids.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈)`);
   }
   const assocOf=ch=>ch.assocName||(ch.aff&&ch.aff.type==='assoc'?ch.aff.name:null);
