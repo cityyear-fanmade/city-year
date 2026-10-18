@@ -1667,6 +1667,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.awl){const w=CFG.syn['밤의 송곳'];P.synInit=w.init[P.synT];mindNote.push(`뒷골목의 룰 · 속도 굴림 +${P.synInit} (덱 ${ch.deck.length}장)`)}
     const ms=mindStat(ch);if(ms){P.atk+=ms;P.eva+=ms;P.spd+=ms;P.maxHp+=ms;P.hp+=ms;mindNote.push(`정신력 ${ch.mind} · 모든 능력치 +${ms}`)}
     if(mt){const tb=Math.round(mt.breath*tm),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
+    /* 굳은 정신: 기본 정신력 보정에 더해, 정신력 15부터 5마다 호흡·회피 +1 (최대 willSteps단계), 3단계마다 모든 능력치 +1 */
+    if(hasInn(ch,'will')&&ch.mind>=CFG.innate.willFrom){const n=Math.min(CFG.innate.willSteps,Math.floor((ch.mind-CFG.innate.willFrom)/5)+1),st=Math.floor(n/3),br=Math.min(n,Math.max(0,CFG.breath.cap-P.breath));
+      P.breath+=br;P.eva+=n;if(st){P.atk+=st;P.eva+=st;P.spd+=st;P.maxHp+=st;P.hp+=st}mindNote.push(`굳은 정신 · 정신력 ${ch.mind} · 호흡 +${br} · 회피 +${n}${st?` · 모든 능력치 +${st}`:''}`)}
     if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.lightUp=(P.lightUp||0)+CFG.lvLight.up*n}
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
