@@ -642,7 +642,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           ch.hwDan=3;chips.push(`${CFG.hw.dan.name} 완성 · 전투 중 매 라운드 시작에 HP ${CFG.hw.dan.heal[3]} 회복`);routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('흑수 · '+D.cards['zp_'+partner].n.replace('흑수 · ',''));(ch.marks=ch.marks||[]).includes('가주 후보')||ch.marks.push('가주 후보');chips.push('가주 후보가 되었다')}
         else if(k==='sage'||k==='sagefail'){r.sage=(r.sage||0)+1;r.sNext=y+1;
           if(k==='sage'){const pool=hwAllowed().filter(x=>!hwHave(ch).includes(x));
-            if(pool.length&&hwHave(ch).length<Z.haveMax){const key=one(pool),a=aniOf(key);(r.have=r.have||[]).push(key);(ch.relics=ch.relics||[]).push('흑수 · '+a.nm);chips.push(`흑수 선인의 재갈 · ${a.nm}(${a.hj}) · 흑수 부하가 늘었다 (${r.have.length}명)`)}
+            if(pool.length&&hwHave(ch).length<Z.haveMax){const key=one(pool),a=aniOf(key);(r.have=r.have||[]).push(key);(ch.relics=ch.relics||[]).push('흑수 · '+a.nm);chips.push(`흑수 선인의 재갈 · ${a.nm}(${a.hj}) · 흑수 부하가 늘었다 (${r.have.length}명)`);
+              if(D.cards['zp_'+key]){forceAdd(ch,'zp_'+key);chips.push('흑수 카드 · '+D.cards['zp_'+key].n);while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}}}
             else chips.push('얻을 수 있는 재갈이 더는 없다')}
           else chips.push('재갈을 얻지 못했다')}
         else if(k==='clue'){ch.purge='hw_cl'+r.cl;r.cl++;r.clNext=y+(r.cl>=D.hwRoute.clue.length?2:Z.clueGap)}
@@ -2040,7 +2041,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.hitShield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
       if(A.wx&&A.wx.hitBleed&&B.hp>0){B.bleed=Math.min(CFG.stackCap,B.bleed+A.wx.hitBleed);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 출혈 +${A.wx.hitBleed} (지금 ${B.bleed})`)}
-      if(A.inkIds&&A.inkIds.length&&!c.inkFollow&&!c.n.startsWith('흑수 ·')&&B.hp>0){const id=A.inkIds[(A.inkI=A.inkI||0)%A.inkIds.length],K=CFG.ink;if(A.obey>0)A.obey--;A.inkI++;let x=K.follow+Math.max(0,A.inkIds.length-1)*K.followPer;if(B.shield>0){const ab=Math.min(B.shield,x);B.shield-=ab;x-=ab}hpLoss(C,B,x,L);B.ink=Math.min(K.cap+(A.wx&&A.wx.inkCap||0),(B.ink||0)+K.followInk);L('hit',`  ${A.name}의 ${D.cards[id].n.replace('흑수 · ','')} 흑수가 거든다 · ${B.name}에게 ${x} · 수흔 +${K.followInk} (지금 ${B.ink})`)}
+      if(A.inkIds&&A.inkIds.length&&!c.inkFollow&&B.hp>0&&(!c.n.startsWith('흑수 ·')||h===hits-1)){const id=A.inkIds[(A.inkI=A.inkI||0)%A.inkIds.length],K=CFG.ink;if(A.obey>0)A.obey--;A.inkI++;let x=K.follow+Math.max(0,A.inkIds.length-1)*K.followPer;if(B.shield>0){const ab=Math.min(B.shield,x);B.shield-=ab;x-=ab}hpLoss(C,B,x,L);B.ink=Math.min(K.cap+(A.wx&&A.wx.inkCap||0),(B.ink||0)+K.followInk);L('hit',`  ${A.name}의 ${D.cards[id].n.replace('흑수 · ','')} 흑수가 거든다 · ${B.name}에게 ${x} · 수흔 +${K.followInk} (지금 ${B.ink})`)}
       if(A.wx&&A.wx.hitInk&&B.hp>0){B.ink=Math.min(CFG.ink.cap+(A.wx.inkCap||0),(B.ink||0)+A.wx.hitInk);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 수흔 +${A.wx.hitInk} (지금 ${B.ink})`)}
       if(c.verdict&&B.hp<=0&&A.rv)L('kw','처리 완료. 흔적은 남지 않았다.');
       if(c.erase&&B.hp>0){B.lightUp=0;B.lightNext=0;const ks=['bleed','rupture','burn','flame','nail','sink'].filter(k=>(B[k]||0)>0);for(const k of ks)B[k]=Math.min(CFG.stackCap,Math.floor(B[k]*1.5));L('kw',`  ${A.name} · ${c.n} · ${B.name}이(가) 아껴 둔 빛이 증발했다${ks.length?' · '+ks.map(k=>`${D.keywords[k].n} ${B[k]}`).join(' · ')+' (×1.5)':''}`)}
