@@ -608,7 +608,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           for(const id of ['zp_'+partner,'hc_6']){forceAdd(ch,id);chips.push('흑수 카드 · '+D.cards[id].n)}
           while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}
           r.rivals=Z.pairs.map((_,i)=>i).filter(i=>i!==pi).map(i=>'hr_'+i);r.rv=0;r.cnext=y+Z.rivalGap;
-          ch.hwDan=3;chips.push(`${CFG.hw.dan.name} 완성 · 전투 중 매 라운드 시작에 HP ${CFG.hw.dan.heal[3]} 회복`);routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('흑수 · '+D.cards['zp_'+partner].n.replace('흑수 · ',''),'가주 후보');chips.push('가주 후보가 되었다')}
+          ch.hwDan=3;chips.push(`${CFG.hw.dan.name} 완성 · 전투 중 매 라운드 시작에 HP ${CFG.hw.dan.heal[3]} 회복`);routeWeaponUp(ch,'hw',1,chips);(ch.relics=ch.relics||[]).push('흑수 · '+D.cards['zp_'+partner].n.replace('흑수 · ',''));(ch.marks=ch.marks||[]).includes('가주 후보')||ch.marks.push('가주 후보');chips.push('가주 후보가 되었다')}
         else if(k==='clue'){ch.purge='hw_cl'+r.cl;r.cl++;r.clNext=y+(r.cl>=D.hwRoute.clue.length?2:Z.clueGap)}
         else if(k==='return'){r.out=0;r.back=1}
         else if(k==='rival'){ch.purge=r.rivals[r.rv];r.rv++;r.cnext=y+Z.rivalGap}
@@ -1492,7 +1492,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.id===CFG.endless.finalNext&&ch.rb&&ch.rb.headSeen){ch.rb.done=1;chips.push('금기의 끝')}
       if(f0.hwClue&&ch.hw){const h_=CFG.hw.clueHp;ch.hw.clues=(ch.hw.clues||0)+1;s_(ch,h_);chips.push(`영생의 단서 ${ch.hw.clues}/4 · 최대 HP +${h_}`)}
       if(f0.hwElder&&ch.hw){ch.hw.elderDone=1;ch.hw.fnext=(ch.year||0)+CFG.hw.finalGap}
-      if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리')}}
+      if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리');ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
     addCard(ch,rewardCard(ch),chips,null,true);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}

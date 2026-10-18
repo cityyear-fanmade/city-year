@@ -358,9 +358,12 @@ export function startUI(E,app){
   /* ===== 6시즌: 가방 =====
      HUD 오른쪽의 네모 칸(능력치·장비·카드·전리품)을 누르면 가방을 열듯 화면이 펼쳐진다 */
   const ICON={family:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/>',stat:'<path d="M4 20V11M10 20V4M16 20v-8M21 20H3"/>',gear:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
-    card:'<rect x="3" y="7" width="12" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/>',relic:'<path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6"/>'};
+    card:'<rect x="3" y="7" width="12" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/>',relic:'<path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6"/>',title:'<path d="M12 3l2.600 5.400 5.900.8-4.300 4.100 1 5.800L12 16.300 6.800 19.100l1-5.800L3.500 9.200l5.900-.8z"/>'};
   const icon=k=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${ICON[k]}</svg>`;
-  function bagTabs(ch){return [['stat','출생',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
+  /* 칭호칸: 직급·특색 칭호, 보스를 쓰러뜨려 얻은 추가 칭호, 루트의 표식(가주 후보 등) */
+  const MARKNOTE={'가주 후보':'가주의 명으로 후계 경쟁에 나선 몸이다. 다른 후보들과 겨루게 된다.','홍원의 가주':'홍원의 가주 자리에 올랐다.'};
+  const titleList=ch=>[...(ch.title?[[ch.title,'']]:[]),...(ch.titles||[]).map(t=>[t,'']),...(ch.marks||[]).map(m=>[m,MARKNOTE[m]||''])];
+  function bagTabs(ch){return [['stat','출생',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat(titleList(ch).length?[['title','칭호',String(titleList(ch).length)]]:[]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
   /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
   function vSideL(P){
     const ch=G.ch,s=ch.stats,pad=(k,v)=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`,up=n=>n?` <i class="bufup">${n>0?'+':'−'}${Math.abs(n)}</i>`:'';
@@ -451,6 +454,10 @@ export function startUI(E,app){
       ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림',s.adv>=1?'있음':Math.round(s.adv*100)+'% 확률',null)]:[]),
       row('카드 등급',E.cardGrade(ch.year,ch).n||'기본',null),...(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)?[row('특이점 · '+esc(ch.corp.n),`${CFG.corp.types[ch.corp.type].e}${ch.corp.wing?' · '+esc(ch.corp.wing):''}`,null)]:[]),...(E.isN(ch)?[row('N사 · 의체 심판',`의수를 쓰지 않는다 · 신체 강화 공격 +${CFG.nWing.atk} · 회피 +${CFG.nWing.eva} · 속도 +${CFG.nWing.spd} · 의체 상대 적중마다 피해 +${CFG.nWing.augDmg}`,null)]:[]),...(ch.aff&&ch.aff.name==='중지'?[row('중지 · 되갚음','맞을 때마다 1 (최대 5) · 다음 적중 +2×스택',null)]:[]),...(ch.aff&&ch.aff.name==='검지'?[row('검지 · 지령 수행',`☆ 칸 카드를 내면 1 (최대 5) · 호흡 +4 · 받는 피해 −5%×스택 · 가득 찬 뒤 ${CFG.prescPlus.every}번 더 수행할 때마다 카드 수치(피해 · 회피 · 보호막) +1 (최대 +${CFG.prescPlus.max})`,null)]:[]),...(ch.office?[row('내 사무소',esc(ch.office.name)+' · '+E.OKW[ch.office.kw],null)]:[]),...((ch.auth||[]).length?[row('조율자 권한',ch.auth.length+'단계 ('+ch.auth.map(a=>a==='seal'?'봉인':'집행').join('·')+')',null)]:[])].join('')}</div>`;
   }
+  function vTitleBag(){
+    const L=titleList(G.ch);
+    return L.length?`<div>${L.map(([n,d])=>`<div class="invr rel"><span>${esc(n)}</span>${d?`<b class="mono small dim">${esc(d)}</b>`:''}</div>`).join('')}</div>`:'<p class="small dim">아직 얻은 칭호가 없다.</p>';
+  }
   function vRelic(){
     const ch=G.ch;
     return (ch.relics||[]).length?`<div>${ch.relics.map(n=>{const e=Object.values(D.enemies).find(x=>x.drop&&x.drop.n===n),r=Object.values(D.relics||{}).find(x=>x.n===n),nt=(D.relicNotes||{})[n];return `<div class="invr rel"><span>${esc(n)}</span><b class="mono" style="color:var(--gold)">${e?esc(e.drop.e):r?esc(r.e):nt?esc(nt):''}</b></div>`}).join('')}</div>`:'<p class="small dim">아직 전리품이 없다. 숨은 보스를 이기면 얻는다.</p>';
@@ -460,7 +467,7 @@ export function startUI(E,app){
   }
   function vBag(){
     const ch=G.ch,t=UI.bag;
-    const body={stat:vStat,gear:vGear,card:vCards,relic:vRelic,family:vFamily}[t]();
+    const body={stat:vStat,gear:vGear,card:vCards,relic:vRelic,family:vFamily,title:vTitleBag}[t]();
     return sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">가방</b><span class="mono small" style="color:var(--gold);margin-left:auto">자산 ${E.money(ch.money)}</span><button class="chip" data-a="bagclose">닫기 ✕</button></div>
       <div class="bagtabs">${bagTabs(ch).map(([k,n,b])=>`<button class="tile sm${t===k?' on':''}" data-a="bag" data-i="${k}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>
       <div class="stack" style="gap:10px">${body}</div>`,'bag',true);
