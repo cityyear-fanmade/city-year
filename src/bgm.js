@@ -53,7 +53,7 @@ export function createBgm(){
     bright=ctx.createBiquadFilter();bright.type='lowpass';bright.frequency.value=P.moods.base.cut;bright.Q.value=0.4;bright.connect(bus);
     master.connect(comp);comp.connect(ctx.destination);
     analyser=ctx.createAnalyser();analyser.fftSize=2048;comp.connect(analyser);
-    noiseBuf=ctx.createBuffer(1,ctx.sampleRate*0.4,ctx.sampleRate);{const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+    noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2.2,ctx.sampleRate);{const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
     return true;
   }
   /* 장면(평시·전투)마다 새 출력 묶음을 만든다. 장면이 바뀌면 이전 묶음을 빠르게 줄여 끄고, 이미 예약된 이전 장면의 소리가 새 장면과 겹치지 않게 한다 */
@@ -86,7 +86,7 @@ export function createBgm(){
   function noiseHit(t,peak,dur,hp,lpf){    // 심벌·브러시: 거른 노이즈
     const n=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=noiseBuf;f.type='highpass';f.frequency.value=hp;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    n.connect(f);if(lpf){const l=ctx.createBiquadFilter();l.type='lowpass';l.frequency.value=lpf;f.connect(l);l.connect(g)}else f.connect(g);g.connect(cur.m);n.start(t,rnd()*0.15);n.stop(t+dur+0.02);
+    n.connect(f);if(lpf){const l=ctx.createBiquadFilter();l.type='lowpass';l.frequency.value=lpf;f.connect(l);l.connect(g)}else f.connect(g);g.connect(cur.m);n.start(t,rnd()*0.9);n.stop(t+dur+0.02);
   }
   function feather(t,peak,soft){           // 킥: 부드러운 박동 (soft=잔잔)
     const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(soft?90:120,t);o.frequency.exponentialRampToValueAtTime(46,t+0.11);
@@ -110,19 +110,18 @@ export function createBgm(){
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.02);g.gain.setValueAtTime(peak,t+dur*0.7);g.gain.linearRampToValueAtTime(0.0001,t+dur);
     o.connect(f);f.connect(g);g.connect(cur.b);o.start(t);o.stop(t+dur+0.05);
   }
-  function pianoN(m,t,peak,dur){           // 피아노: 삼각파 + 윗배음 둘, 짧게 때리고 서서히 가라앉는다
-    const f=hz(m),o=ctx.createOscillator(),o2=ctx.createOscillator(),o3=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain(),g3=ctx.createGain();
-    o.type='triangle';o2.type='sine';o3.type='sine';o.frequency.value=f;o2.frequency.value=f*2;o3.frequency.value=f*3.01;
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.exponentialRampToValueAtTime(peak*0.4,t+dur*0.25);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    g2.gain.setValueAtTime(0.5,t);g2.gain.exponentialRampToValueAtTime(0.01,t+dur*0.6);g3.gain.setValueAtTime(0.22,t);g3.gain.exponentialRampToValueAtTime(0.005,t+dur*0.3);
-    o.connect(g);o2.connect(g2);o3.connect(g3);g2.connect(g);g3.connect(g);g.connect(cur.b);o.start(t);o2.start(t);o3.start(t);o.stop(t+dur+0.05);o2.stop(t+dur+0.05);o3.stop(t+dur+0.05);
+  function pianoN(m,t,peak,dur){           // 피아노: 삼각파 + 한 옥타브 위 사인, 짧게 때리고 서서히 가라앉는다 (발음 수를 줄여 부하를 낮춘다)
+    const f=hz(m),o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain();
+    o.type='triangle';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2;
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.006);g.gain.exponentialRampToValueAtTime(peak*0.4,t+dur*0.25);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    g2.gain.setValueAtTime(0.45,t);g2.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.5);
+    o.connect(g);o2.connect(g2);g2.connect(g);g.connect(cur.b);o.start(t);o2.start(t);o.stop(t+dur+0.05);o2.stop(t+dur*0.5+0.1);
   }
-  function strN(m,t,dur,peak){             // 현: 톱니파를 낮게 걸러 떨림을 얹고 천천히 키운다
-    const f=ctx.createBiquadFilter(),g=ctx.createGain(),tr=ctx.createGain(),lfo=ctx.createOscillator(),lg=ctx.createGain();f.type='lowpass';f.frequency.value=1000;f.Q.value=0.4;
-    tr.gain.value=0.78;lfo.frequency.value=5.5;lg.gain.value=0.22;lfo.connect(lg);lg.connect(tr.gain);
+  function strN(m,t,dur,peak){             // 현: 톱니파 하나를 낮게 걸러 천천히 키운다
+    const f=ctx.createBiquadFilter(),g=ctx.createGain(),o=ctx.createOscillator();f.type='lowpass';f.frequency.value=900;f.Q.value=0.4;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+dur*0.3);g.gain.linearRampToValueAtTime(peak*0.85,t+dur*0.85);g.gain.linearRampToValueAtTime(0.0001,t+dur);
-    for(const dt of [-7,7]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
-    lfo.start(t);lfo.stop(t+dur+0.05);f.connect(tr);tr.connect(g);g.connect(cur.u);
+    o.type='sawtooth';o.frequency.value=hz(m);o.connect(f);o.start(t);o.stop(t+dur+0.05);
+    f.connect(g);g.connect(cur.u);
   }
   function boom(t,peak){                   // 큰북: 낮게 떨어지는 사인
     const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(82,t);o.frequency.exponentialRampToValueAtTime(38,t+0.35);
@@ -130,11 +129,10 @@ export function createBgm(){
     o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.75);
   }
   function leadN(m,t,dur,peak,cut){        // 이어 부는 선율: 살짝 어긋난 두 삼각파, 느리게 시작해 길게 이어진다
-    const f=ctx.createBiquadFilter(),g=ctx.createGain(),lfo=ctx.createOscillator(),lg=ctx.createGain();f.type='lowpass';f.frequency.value=cut;f.Q.value=0.5;
-    lfo.frequency.value=5;lg.gain.value=5;lfo.connect(lg);
+    const f=ctx.createBiquadFilter(),g=ctx.createGain();f.type='lowpass';f.frequency.value=cut;f.Q.value=0.5;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.05);g.gain.setValueAtTime(peak,t+dur*0.6);g.gain.linearRampToValueAtTime(0.0001,t+dur);
-    for(const dt of [-5,5]){const o=ctx.createOscillator();o.type='triangle';o.frequency.value=hz(m);o.detune.value=dt;lg.connect(o.detune);o.connect(f);o.start(t);o.stop(t+dur+0.05)}
-    lfo.start(t);lfo.stop(t+dur+0.05);f.connect(g);g.connect(cur.u);
+    for(const dt of [-5,5]){const o=ctx.createOscillator();o.type='triangle';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
+    f.connect(g);g.connect(cur.u);
   }
   /* 한 마디를 예약한다 */
   function barJazz(T,M){
@@ -192,7 +190,7 @@ export function createBgm(){
     if(barT<now)barT=now+0.05;
     const wet=bus._wet;if(wet&&now>duckUntil)wet.gain.setTargetAtTime(M.wet*(scene==='fight'?0.7:1)*(style==='passion'?0.7:1),now,0.6);
     bright.frequency.setTargetAtTime(M.cut*P.cutMul[style][scene],now,2);
-    let g=0;while(barT<now+2.2&&g++<3)(style==='passion'?barPassion:barJazz)(barT,M);
+    let g=0;while(barT<now+2.2&&g++<1)(style==='passion'?barPassion:barJazz)(barT,M);
   }
   function tick(){
     if(!ctx||!on||hidden)return;
@@ -201,7 +199,7 @@ export function createBgm(){
   function start(){
     if(!ensure())return false;
     ctx.resume&&ctx.resume();
-    if(!timer)timer=setInterval(tick,700);
+    if(!timer)timer=setInterval(tick,350);
     newEpoch();barT=ctx.currentTime+0.1;barN=0;lastScene=scene;lastStyle=style;
     tick();ramp(gainOf(vol),P.fadeIn);return true;
   }
