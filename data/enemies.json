@@ -6058,7 +6058,8 @@
   {
    "id": "pil1",
    "req": [
-    "flag:giri"
+    "flag:giri",
+    "affname:중지"
    ],
    "chance": 100,
    "from": 1,
