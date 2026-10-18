@@ -5,7 +5,7 @@ import {createBgm} from './bgm.js';
 
 export function startUI(E,app){
   const D=E.D,T=D.text;
-  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0'};
+  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',obey:'#8a7fb8'};
   const kwc=k=>KWC[k]||'var(--gold)';
 
   /* ===== 설정 저장 (연출 속도, 배경 테마) ===== */
@@ -18,7 +18,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords';
-  const VERSION='v8.0.9';
+  const VERSION='v8.1.0';
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
   const syncAffs=()=>{const c=G&&G.ch;if(!c||!(c.affLog||[]).length)return;const r=loadRec();r.affs=r.affs||[];let ch=false;for(const n of c.affLog)if(!r.affs.includes(n)){r.affs.push(n);ch=true}if(ch)store.set(REC,JSON.stringify(r))};
@@ -239,7 +239,7 @@ export function startUI(E,app){
   const ulName=(n,u)=>u?esc(n).replace(esc(u),`<s>${esc(u)}</s>`):esc(n);
   function bar(v,max){return `<div class="bar"><i style="width:${clamp(v/max*100,0,100)}%"></i></div>`}
   /* 걸려 있는 키워드: 수치와 다음에 일어날 일을 같이 보여 준다 */
-  const KWHINT={nail:n=>'망치 카드가 쌓인 못을 흐트러짐으로 바꾼다',stagger:n=>{const st=CFG.nail.stages.filter(g=>n>=g.at).pop(),thr=C&&C.E?E.nailThr(C):CFG.nail.stun.mid;return `기절 ${n}/${thr}${st?` · 명중 −${st.hit}${st.dmg?` · 주는 피해 −${st.dmg}`:''}${st.take?` · 받는 피해 +${st.take}`:''}`:''}`},burn:n=>`라운드 끝에 스택×${CFG.burn.dmg} 피해(내가 받으면 ×${CFG.burn.dmgMe}) · 스택 절반 · 최대 ${CFG.burn.max}`,charge:n=>`쓰면 소모 · 맞으면 −${G&&G.ch&&C&&C.P?C.P.chargeLoss:1}`,ink:n=>`라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반이 된다 (최대 ${CFG.ink.cap})`,sink:n=>`주는 피해 −${Math.floor(n/CFG.sink.per)*CFG.sink.dmg} · 명중 −${CFG.sink.hit*Math.floor(n/CFG.sink.per)} (${CFG.sink.per}당 1단계 · 라운드마다 −1)`,flame:n=>n>=CFG.laev.blueAt?`받는 피해 ×${CFG.laev.blueMul}`:`받는 피해 ×1.5 · ${CFG.laev.blueAt}스택이면 푸른 화염`,bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>n>=1&&n<=CFG.breath.evaMax?`회피 +${CFG.breath.eva}`:`치명 ${E.critPct(n)}%`};
+  const KWHINT={obey:n=>`내 명중 −${n*CFG.hw.obey.hit} · 흑수 부하가 거들 때마다 −1 · 흑수여, 답하라는 전부 푼다`,nail:n=>'망치 카드가 쌓인 못을 흐트러짐으로 바꾼다',stagger:n=>{const st=CFG.nail.stages.filter(g=>n>=g.at).pop(),thr=C&&C.E?E.nailThr(C):CFG.nail.stun.mid;return `기절 ${n}/${thr}${st?` · 명중 −${st.hit}${st.dmg?` · 주는 피해 −${st.dmg}`:''}${st.take?` · 받는 피해 +${st.take}`:''}`:''}`},burn:n=>`라운드 끝에 스택×${CFG.burn.dmg} 피해(내가 받으면 ×${CFG.burn.dmgMe}) · 스택 절반 · 최대 ${CFG.burn.max}`,charge:n=>`쓰면 소모 · 맞으면 −${G&&G.ch&&C&&C.P?C.P.chargeLoss:1}`,ink:n=>`라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반이 된다 (최대 ${CFG.ink.cap})`,sink:n=>`주는 피해 −${Math.floor(n/CFG.sink.per)*CFG.sink.dmg} · 명중 −${CFG.sink.hit*Math.floor(n/CFG.sink.per)} (${CFG.sink.per}당 1단계 · 라운드마다 −1)`,flame:n=>n>=CFG.laev.blueAt?`받는 피해 ×${CFG.laev.blueMul}`:`받는 피해 ×1.5 · ${CFG.laev.blueAt}스택이면 푸른 화염`,bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>n>=1&&n<=CFG.breath.evaMax?`회피 +${CFG.breath.eva}`:`치명 ${E.critPct(n)}%`};
   function stacks(X){
     const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?`<small>받는 피해 ×${X.blueM||CFG.laev.blueMul} · 라운드마다 ${X[k]*(X.blueD||CFG.laev.blueDot)}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
     if(X.stunned)out.push('<span class="chip stk" style="--kc:#b07cc6"><b>기절</b><small>이번 라운드 행동 불가 · 회피 0</small></span>');
@@ -343,7 +343,7 @@ export function startUI(E,app){
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `<div class="panel stack">
-      <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${esc(ch.name||T.you)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
+      <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${titledName(ch)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
       <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${G.infinite&&G.year>CFG.years+CFG.endless.span*CFG.endless.grades.length?'제 2막 무한 모드 · '+(E.gradeRaw(G.year)-CFG.endless.grades.length+1)+'단계':'제 2막 · '+CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
       ${bar(ch.hp,s.maxHp)}
       ${vMind(ch)}${egoBar(ch)}${G.infinite&&UI.screen!=='end'?`<button class="btn quiet" data-a="outerend">외곽에서 이야기를 끝낸다</button>`:''}
@@ -358,15 +358,21 @@ export function startUI(E,app){
   /* ===== 6시즌: 가방 =====
      HUD 오른쪽의 네모 칸(능력치·장비·카드·전리품)을 누르면 가방을 열듯 화면이 펼쳐진다 */
   const ICON={family:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/>',stat:'<path d="M4 20V11M10 20V4M16 20v-8M21 20H3"/>',gear:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
-    card:'<rect x="3" y="7" width="12" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/>',relic:'<path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6"/>'};
+    card:'<rect x="3" y="7" width="12" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/>',relic:'<path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6"/>',title:'<path d="M12 3l2.600 5.400 5.900.8-4.300 4.100 1 5.800L12 16.300 6.800 19.100l1-5.800L3.500 9.200l5.900-.8z"/>'};
   const icon=k=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${ICON[k]}</svg>`;
-  function bagTabs(ch){return [['stat','출생',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
+  /* 칭호칸: 직급·특색 칭호, 보스를 쓰러뜨려 얻은 추가 칭호, 루트의 표식(가주 후보 등) */
+  const MARKNOTE={'가주 후보':'가주의 명으로 후계 경쟁에 나선 몸이다. 다른 후보들과 겨루게 된다.','홍원의 가주':'홍원의 가주 자리에 올랐다.'};
+  const titleList=ch=>[...(ch.title?[[ch.title,'']]:[]),...(ch.titles||[]).map(t=>[t,'']),...(ch.marks||[]).map(m=>[m,MARKNOTE[m]||''])];
+  const eqTitle=ch=>ch.equipTitle&&titleList(ch).some(t=>t[0]===ch.equipTitle)?ch.equipTitle:'';
+  const titledName=ch=>{const t=eqTitle(ch);return (t?`<span class="ctitle">[${esc(t)}]</span><br>`:'')+esc(ch.name||T.you)};
+  const entName=X=>X.tt&&X.name.startsWith(`[${X.tt}] `)?`<span class="ctitle">[${esc(X.tt)}]</span><br>${ulName(X.name.slice(X.tt.length+3),X.ul)}`:ulName(X.name,X.ul);
+  function bagTabs(ch){return [['stat','출생',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat(titleList(ch).length?[['title','칭호',String(titleList(ch).length)]]:[]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
   /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
   function vSideL(P){
     const ch=G.ch,s=ch.stats,pad=(k,v)=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`,up=n=>n?` <i class="bufup">${n>0?'+':'−'}${Math.abs(n)}</i>`:'';
     const rows=[['HP',P?`${Math.max(0,P.hp)}/${P.maxHp}`:`${ch.hp}/${s.maxHp}`],['정신력',ch.distForm?'뒤틀림':`${ch.mind}/${E.mindMax(ch)}`],['공격',sg(s.atk)+(P?up(P.atk-s.atk):'')],['회피',sg(s.eva)+(P?up((P.evaB||0)):'')],['속도',sg(s.spd)+(P?up(P.spd-s.spd):'')],['판정',sg(s.check)],['최소 피해',s.dmin],...(s.dr?[['피해 감소',s.dr+'%']]:[]),...(s.regen?[['HP 회복/라운드',s.regen]]:[]),...(s.startBleed?[['시작 출혈',s.startBleed]]:[]),...(s.startBreath?[['시작 호흡',s.startBreath]]:[]),['카드',`${ch.deck.length}/${E.deckMax(ch)}`],['레벨',`Lv ${ch.lv}`],['경험치',E.xpNext(ch)!=null?`${ch.xp}/${E.xpNext(ch)}`:`${ch.xp} (최고)`],...(E.canPromote(ch)?[[E.ptsName(ch),`${ch.pp||0}/${E.promoNeed(ch)}`]]:[]),['자산',E.money(ch.money)]];
     const gear=Object.entries(D.slots).map(([k,n])=>`<div class="srow"><span>${n}</span><b class="gname">${ch.gear[k]?esc(ch.gear[k].n):'없음'}</b></div>`).join('');
-    return `<aside class="side-l" aria-label="수치판"><div class="stitle">${esc(ch.name||T.you)}</div>${rows.map(([k,v])=>pad(k,v)).join('')}<div class="ssep"></div>${gear}</aside>`;
+    return `<aside class="side-l" aria-label="수치판"><div class="stitle">${titledName(ch)}</div>${rows.map(([k,v])=>pad(k,v)).join('')}<div class="ssep"></div>${gear}</aside>`;
   }
   function vDock(cls){
     const ch=G.ch;
@@ -451,6 +457,11 @@ export function startUI(E,app){
       ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림',s.adv>=1?'있음':Math.round(s.adv*100)+'% 확률',null)]:[]),
       row('카드 등급',E.cardGrade(ch.year,ch).n||'기본',null),...(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)?[row('특이점 · '+esc(ch.corp.n),`${CFG.corp.types[ch.corp.type].e}${ch.corp.wing?' · '+esc(ch.corp.wing):''}`,null)]:[]),...(E.isN(ch)?[row('N사 · 의체 심판',`의수를 쓰지 않는다 · 신체 강화 공격 +${CFG.nWing.atk} · 회피 +${CFG.nWing.eva} · 속도 +${CFG.nWing.spd} · 의체 상대 적중마다 피해 +${CFG.nWing.augDmg}`,null)]:[]),...(ch.aff&&ch.aff.name==='중지'?[row('중지 · 되갚음','맞을 때마다 1 (최대 5) · 다음 적중 +2×스택',null)]:[]),...(ch.aff&&ch.aff.name==='검지'?[row('검지 · 지령 수행',`☆ 칸 카드를 내면 1 (최대 5) · 호흡 +4 · 받는 피해 −5%×스택 · 가득 찬 뒤 ${CFG.prescPlus.every}번 더 수행할 때마다 카드 수치(피해 · 회피 · 보호막) +1 (최대 +${CFG.prescPlus.max})`,null)]:[]),...(ch.office?[row('내 사무소',esc(ch.office.name)+' · '+E.OKW[ch.office.kw],null)]:[]),...((ch.auth||[]).length?[row('조율자 권한',ch.auth.length+'단계 ('+ch.auth.map(a=>a==='seal'?'봉인':'집행').join('·')+')',null)]:[])].join('')}</div>`;
   }
+  function vTitleBag(){
+    const L=titleList(G.ch);
+    const cur=eqTitle(G.ch);
+    return L.length?`<div><p class="small dim">칭호를 장착하면 이름 앞에 [칭호]로 표시된다.</p>${L.map(([n,d],i)=>`<div class="invr rel"><span>${esc(n)}${d?`<br><b class="mono small dim">${esc(d)}</b>`:''}</span><button class="chip${cur===n?' on':''}" data-a="titleeq" data-i="${i}">${cur===n?'장착 중 · 해제':'장착'}</button></div>`).join('')}</div>`:'<p class="small dim">아직 얻은 칭호가 없다.</p>';
+  }
   function vRelic(){
     const ch=G.ch;
     return (ch.relics||[]).length?`<div>${ch.relics.map(n=>{const e=Object.values(D.enemies).find(x=>x.drop&&x.drop.n===n),r=Object.values(D.relics||{}).find(x=>x.n===n),nt=(D.relicNotes||{})[n];return `<div class="invr rel"><span>${esc(n)}</span><b class="mono" style="color:var(--gold)">${e?esc(e.drop.e):r?esc(r.e):nt?esc(nt):''}</b></div>`}).join('')}</div>`:'<p class="small dim">아직 전리품이 없다. 숨은 보스를 이기면 얻는다.</p>';
@@ -460,7 +471,7 @@ export function startUI(E,app){
   }
   function vBag(){
     const ch=G.ch,t=UI.bag;
-    const body={stat:vStat,gear:vGear,card:vCards,relic:vRelic,family:vFamily}[t]();
+    const body={stat:vStat,gear:vGear,card:vCards,relic:vRelic,family:vFamily,title:vTitleBag}[t]();
     return sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">가방</b><span class="mono small" style="color:var(--gold);margin-left:auto">자산 ${E.money(ch.money)}</span><button class="chip" data-a="bagclose">닫기 ✕</button></div>
       <div class="bagtabs">${bagTabs(ch).map(([k,n,b])=>`<button class="tile sm${t===k?' on':''}" data-a="bag" data-i="${k}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>
       <div class="stack" style="gap:10px">${body}</div>`,'bag',true);
@@ -648,11 +659,11 @@ export function startUI(E,app){
   const TITLE_REC=['본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','의리를 지킨 자','의리를 찢은 자','끝내 갚지 않은 자','배신자를 갚은 자','허무를 넘어선 자','특색'];
   /* 기록실 힌트: 아직 열리지 않은 칭호와 엔딩이 어떤 길 끝에 있는지 짐작만 하게 한다 */
   const TITLE_HINT={'본부 직속':'협회 최고 자리에 올라 본부의 부름을 넘긴다','특이점 부서':'날개 임원에 오른 뒤 핵심 부서의 심사를 통과한다','상석':'손가락의 서열 맨 위에서 마지막 부름을 통과한다',[CFG.nWing.eastTitle]:'동쪽 외곽 출신으로 N사 날개에 들어가 끝까지 오른다','피의 왈츠':'인연과 함께 핏빛 존재와 맞선다','엄지를 넘어선 자':'엄지의 아랫 조직 끝에서 엄지에게 칼을 뽑는다','정해진 운명':'엄지의 가장 높은 이에게 맞섰다가 쓰러진다','곰과 범을 넘어선 자':'검계의 끝에서 본국의 칼을 마주한다','의리를 지킨 자':'중지의 동생이 되어 받은 장부를 갚고 큰누님의 여섯 대를 버틴다','배신자를 갚은 자':'큰형님이 되어 큰누님을 쓰러뜨린 뒤, 달아난 마티아스를 쫓는다','허무를 넘어선 자':'격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤, 하나가 된 무언가를 마주한다','의리를 찢은 자':'중지의 마지막 장부를 받아들이지 않고 찢는다','끝내 갚지 않은 자':'의리를 찢은 뒤 쫓아오는 중지의 사슬을 끊어낸다','특색':'해결사 1급에서 도시가 색을 불러 줄지 심사를 받는다'};
-  const END_HINT={hwlose:'붉은 누각의 등이 켜진다',hwhost:'가주의 자리에 앉는다',hwfree:'가주의 자리에 앉는다',rcorp:'존재를 끝까지 증명한다',death:'어딘가에서 쓰러진다',mind:'정신력이 0이 된다',distort:'정신력이 한계에 닿아 몸이 뒤틀린다',win:CFG.years+'년을 끝까지 산다',true:'제 2막 마지막 등급을 넘는다',outer:'무한 모드에서 스스로 외곽에서 끝낸다',out_seal:'무한 모드에서 외곽의 괴수를 여러 번 쓰러뜨린다',out_star:'무한 모드에서 이름난 상대를 아주 많이 이긴다',out_settle:'무한 모드에서 가족과 오래 산다',distwin:'뒤틀린 채로 '+CFG.years+'년을 넘긴다',old:'무한 모드에서 백 살을 넘겨 산다',blank:'어떤 보정도 없이 시작해, 결혼하지 않은 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',blankwed:'그렇게 시작해 결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',wed:'결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',lovekill:'뒤틀린 채 사랑하던 이에게 쓰러진다'};
+  const END_HINT={hwlose:'붉은 누각의 등이 켜진다',hwhost:'가주의 자리에 앉는다',hwfree:'가주의 자리에 앉는다',hwbreak:'철함사를 친다',rcorp:'존재를 끝까지 증명한다',death:'어딘가에서 쓰러진다',mind:'정신력이 0이 된다',distort:'정신력이 한계에 닿아 몸이 뒤틀린다',win:CFG.years+'년을 끝까지 산다',true:'제 2막 마지막 등급을 넘는다',outer:'무한 모드에서 스스로 외곽에서 끝낸다',out_seal:'무한 모드에서 외곽의 괴수를 여러 번 쓰러뜨린다',out_star:'무한 모드에서 이름난 상대를 아주 많이 이긴다',out_settle:'무한 모드에서 가족과 오래 산다',distwin:'뒤틀린 채로 '+CFG.years+'년을 넘긴다',old:'무한 모드에서 백 살을 넘겨 산다',blank:'어떤 보정도 없이 시작해, 결혼하지 않은 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',blankwed:'그렇게 시작해 결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',wed:'결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',lovekill:'뒤틀린 채 사랑하던 이에게 쓰러진다'};
   const hintRow=(open,label,hint)=>`<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${open?'':' dim'}" style="justify-self:start">${open?label:'???'}</span>${open?'':`<span class="small dim">${esc(hint||'')}</span>`}</div>`;
   function vRecords(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
-    const ends=[['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에']];
+    const ends=[['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에']];
     const groups=[['초반','early'],['중반','mid'],['후반','late'],['보스·이름난 상대','boss'],['히든','hidden']];
     const foes=g=>Object.entries(D.enemies).filter(([,e])=>e.tier===g);
     const total=Object.keys(D.enemies).length;
@@ -697,9 +708,11 @@ export function startUI(E,app){
       ['🩹 K사 엠플 조정',['전투 중 자동으로 HP를 크게 회복하는 효과가 너무 강하다는 의견이 있어 조정했습니다.','가격은 5,000안으로 통일했습니다. 무한 모드 이후에도 같은 값입니다.','지닐 수 있는 수는 그대로 최대 3개입니다. 한 판에 살 수 있는 수는 모두 5개로 제한됩니다.','자동으로 회복하는 양이 60에서 50으로 줄었습니다.']],
       ['🔧 버그 수정',['날개에서 해고되어도 날개를 세우는 길(특이점 개발)이 이어지던 문제를 고쳤습니다. 날개를 잃으면 개발이 중단됩니다.','직접 세운 날개의 대표가 소속이 비어 있으면 공방이 1등급으로 잠기고 해결사로 등록되던 문제를 고쳤습니다. 대표는 날개 임원과 같은 공방 등급을 받고 해결사를 겸할 수 없습니다. 이미 등록된 저장본은 다음 해로 넘어갈 때 정리됩니다.','일부 숨은 길에서 직급과 해결사 급수가 맞지 않던 문제를 고쳤습니다.']],
       ['🙏 감사합니다',['의견과 제보를 주신 모든 분들께 감사드립니다.']]];
-  const NOTICE={id:'v8.0.9',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v8.1.0',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🏮 v8.0.9 홍원 가문의 후계 후보 안내',['출신 없이 시작하면 뜨는 운명 선택에서 고를 수 있는 길입니다.','처음에는 홍원 가문 안에서 삽니다. 도시의 일반 사건과 일반 적 대신 홍원 전용 사건과 가문의 적이 나옵니다. 해결사 등록과 갈림길은 없습니다.','공방 거리 대신 "홍원의 저잣거리"를 지납니다. 품목은 적고 K사 엠플은 팔지 않습니다.','가주의 명을 받으면 영생의 단서를 찾아 처음으로 홍원 밖 도시로 나갑니다. 단서는 네 곳이고, 돌아온 뒤 가주 후보로 지명됩니다.','흑수: 흑수환으로 외곽 생물의 특성을 지닌 사람들입니다. 나갈 때 한 사람, 지명될 때 한 사람이 부하로 붙습니다. 흑수 카드가 아닌 공격이 적중할 때마다 부하가 순서대로 거들고(부하가 둘이면 한 사람당 피해가 더 큽니다), 맞은 상대에게는 흑수가 남긴 짐승의 흔적 "수흔"이 쌓입니다. "흑수여, 답하라"는 부하 전원이 나서서 때립니다.','홍단: 가문이 자제에게 내리는 강화 시술입니다. 전투 중 매 라운드 시작에 HP를 회복하고, 첫 가문 사건 뒤 2, 출가 때 3, 지명 때 4가 됩니다.','홍원의 장도는 세 단계로 강화되고, 전투에서 이긴 뒤 HP 회복이 +10 늘어납니다.','가주 자리를 두고 다른 후보들과 겨루고, 마지막에 가주의 자리가 정해집니다. 이후에는 이어서 계속 살아갈 수 있습니다.']],
+    sec:[['🆕 v8.1.0 새로 들어온 것',['가방에 "칭호" 칸이 생겼습니다. 직급·특색 칭호, 보스를 쓰러뜨려 얻은 추가 칭호, 홍원의 "가주 후보" 같은 표식이 여기에 모입니다. 칭호가 있을 때만 탭이 나옵니다. 칭호를 "장착"하면 상단 카드와 전투 화면에서 이름 위에 [칭호]가 표시됩니다.','홍원 가문의 후계 후보: 흑수 선인에게 재갈을 청해 흑수 부하를 늘릴 수 있습니다. 영생의 단서를 하나 찾을 때마다 최대 세 번, 1d100 45 이상(예물을 올리면 30 이상)이면 재갈 하나를 얻습니다. 실패하면 못 얻습니다.','소 · 용 · 원숭이 · 닭의 재갈은 가주의 것이라 후보는 얻을 수 없고, 가주가 되면 영구히 당신 것이 됩니다.','부하는 최대 6명입니다. 부하가 많을수록 부하가 거드는 피해와 "흑수여, 답하라"의 위력이 커지고, 부하가 넷 이상이면 홍루를 따르는 흑수 한 사람이 네 라운드마다 더 덤벼듭니다.','철함사에서 부하가 4명 이상이면 "철함사의 목을 친다"가 열립니다. 철함사의 가모는 매 라운드 "공허한 순종"을 걸어 내 명중을 깎지만, 부하가 거들 때마다 풀리고 부하가 많을수록 가모가 약해집니다. 이긴 뒤에는 새 엔딩이 있습니다.','다른 가주 후보들도 소·용·원숭이·닭의 재갈은 쥐지 못합니다. 쥐·뱀 후보는 흑수 한 사람만 거느리고, 원숭이·닭 후보는 부하 없이 홀로 싸웁니다.','홍원 설정: 홍루를 따르는 흑수는 열 종으로 정해져 있고, 어느 세계선에서는 홍루가 열두 재갈을 모두 모아 홍원의 군주가 되었다고 전해집니다.']],
+    ['🔧 v8.1.0 수정',['전리품 칸에 "흑수 · 용"과 "가주 후보 · 흑수 용"이 서로 다른 형식으로 섞여 나오던 표기를 정리했습니다. 가주 후보는 칭호 칸으로 옮겼습니다.']],
+    ['🏮 홍원 가문의 후계 후보 안내',['출신 없이 시작하면 뜨는 운명 선택에서 고를 수 있는 길입니다.','처음에는 홍원 가문 안에서 삽니다. 도시의 일반 사건과 일반 적 대신 홍원 전용 사건과 가문의 적이 나옵니다. 해결사 등록과 갈림길은 없습니다.','공방 거리 대신 "홍원의 저잣거리"를 지납니다. 품목은 적고 K사 엠플은 팔지 않습니다.','가주의 명을 받으면 영생의 단서를 찾아 처음으로 홍원 밖 도시로 나갑니다. 단서는 네 곳이고, 돌아온 뒤 가주 후보로 지명됩니다.','흑수: 흑수환으로 외곽 생물의 특성을 지닌 사람들이고, 재갈을 쥔 사람의 말만 듣습니다. 나갈 때 한 사람, 지명될 때 한 사람이 부하로 붙고, 영생의 단서를 찾아 나선 길에서 흑수 선인을 만나면 재갈을 더 청할 수 있습니다(성공하면 부하가 늘고 실패하면 못 얻습니다). 소·용·원숭이·닭의 재갈은 가주의 것이라 후보는 얻을 수 없습니다. 흑수 카드가 아닌 공격이 적중할 때마다 부하가 순서대로 거들고(부하가 둘이면 한 사람당 피해가 더 큽니다), 맞은 상대에게는 흑수가 남긴 짐승의 흔적 "수흔"이 쌓입니다. "흑수여, 답하라"는 부하 전원이 나서서 때립니다.','홍단: 가문이 자제에게 내리는 강화 시술입니다. 전투 중 매 라운드 시작에 HP를 회복하고, 첫 가문 사건 뒤 2, 출가 때 3, 지명 때 4가 됩니다.','홍원의 장도는 세 단계로 강화되고, 전투에서 이긴 뒤 HP 회복이 +10 늘어납니다.','철함사에서는 선황충을 품거나 거부하는 길 외에, 재갈을 충분히 모았다면 철함사의 가모를 직접 치는 길이 열립니다. 부하가 많을수록 쉬워집니다. 가주 자리를 두고 다른 후보들과 겨루고, 마지막에 가주의 자리가 정해집니다. 이후에는 이어서 계속 살아갈 수 있습니다.']],
     ['🆕 v8.0.8 새로 들어온 것',['출신 없이 시작하면 운명 선택이 항상 뜨고, 운명으로 새로운 길 두 가지를 만날 수 있습니다. 자세한 내용은 직접 확인해 보세요.','배경음악이 재즈풍으로 바뀌었고, 전투에 들어가고 나올 때 소리가 겹치지 않습니다.','인연 선택 결과 문구가 사건마다 달라지고 더 달달해졌습니다.','공방 해결사: 장비 정비를 최대 10번까지 할 수 있고, 히든 장비를 훨씬 비싸게 팔 수 있습니다.','이름 없는 불순물을 쓰러뜨리면 돈과 영구 능력치 보상을 받습니다.']],
     ['🔧 v8.0.8 수정 · 조정',['일반 출생 굴림에서 운명 전용 출신이 잘못 나오던 문제를 고쳤습니다.','제 2막에서 루트 엔딩을 본 뒤 "계속 살아간다"가 뜨지 않아 이어서 할 수 없던 문제를 고쳤습니다.','제 2막 이후 검계 · 밤의 송곳의 배신 사건과 중지의 의리 순례 사건이 나오지 않습니다. (1막에서만 나옵니다)','숨은 출신 일부의 전용 카드 효과와 사건을 고쳤습니다.','디버프 로그에 현재 스택과 최대 스택이 함께 나오고, 최대치에 걸려 덜 오른 경우 실제 오른 양이 표시됩니다.','규칙 요약의 화상 · 붉은 화염 · 푸른 화염 설명과 기록실 엔딩 힌트를 실제 규칙에 맞게 고쳤습니다.','무한 모드에서 균열로 나타나는 히든 보스의 도입부와 전투 표시가 전용 문구로 나옵니다.']],
     ['🛠 v8.0.7 변경',['K사 엠플의 회복량이 최대 HP의 50%로 바뀌었습니다.','기업 루트의 특이점 "혈청"은 라운드마다 HP 5를 회복하고, 강화할 때마다 +2씩 늘어 최대 10까지 오릅니다.','덱이 고정된 상태에서도 사건이 밀어 넣은 카드 중 고정 카드가 아닌 것은 덱에서 뺄 수 있습니다.','밸런스 측정에서 아직 만나지 않은 적은 ???로 가려집니다.','디버프 로그에 현재 스택과 최대 스택이 함께 표시되고, 최대치에 걸려 덜 오른 경우 실제로 오른 양이 나옵니다.','E.G.O 무기 전 등급(TETH · HE · WAW · ALEPH)의 수치가 올랐습니다.','엄지: 탄환이 기본 8발(서열마다 +3)이 되었고, 탄환이 바닥나도 라운드마다 처음 공격에 1발이 돌아옵니다. 예의를 지킬 것 1스택당 상대 명중 감소가 −2가 되었습니다.','보냐텔리 가문: 검 강화 수치와 전용 검술 카드, 처분 표식 효과를 조정했습니다.','제 2막 이후에는 검계 · 밤의 송곳의 배신 사건과 중지의 의리 순례 사건이 나오지 않습니다.','무한 모드에서 히든 보스가 균열을 타고 나타날 때 전용 문구가 나옵니다.','기록실의 엔딩 힌트에 조건을 더 자세히 적었습니다.']],
@@ -1073,8 +1086,8 @@ export function startUI(E,app){
   const isMobile=()=>true;
   function entHtml(side,X,v,compact){
     const col=X.color;PREV[side]={...v};
-    const head=compact?`<div class="entname"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${ulName(X.name,X.ul)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span>`
-      :`<div class="row between"><div class="row"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${ulName(X.name,X.ul)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span></div>`;
+    const head=compact?`<div class="entname"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span>`
+      :`<div class="row between"><div class="row"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span></div>`;
     return `<div class="panel stack ent${compact?' compact':''}" id="ent-${side}" style="background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
       ${head}
       <div class="bar" id="bar-${side}"><i style="width:${clamp(v.hp/X.maxHp*100,0,100)}%;background:${col}"></i></div>
@@ -1237,6 +1250,7 @@ export function startUI(E,app){
   /* 출생 보정 없이 시작한 존재가 제 1막을 넘겼을 때(제 2막에 이르렀을 때)의 전용 엔딩 */
   const blankEnd=(c,w)=>{if(UI.rbEnd&&w)return 'rcorp';if(UI.hwEnd&&w)return UI.hwEnd;if(!(w&&c&&!c.distForm&&!G.endless&&!UI.oldEnd&&!UI.trueEnd))return '';const m=!!(E.bondMarried&&E.bondMarried(c));return c.rb&&c.rb.done?'rcorp':c.blank?(m?'blankwed':'blank'):m?'wed':''};
   const BLANK_END={hwhost:['선황충을 품은 가주','붉은 누각의 등이 모두 켜졌다. 열두 흑수가 고개를 숙이고 가주의 자리가 비워졌다. 자리에 앉은 것은 당신이지만, 선황충은 당신의 이름으로 먹고 마신다. 몸은 지칠 줄 모르고 마음은 한 겹 멀다. 홍원은 새 주인을 얻었고, 주인은 아직 자기가 누구인지 모른다.'],
+    hwbreak:['철함사의 목을 친 가주','흑수 선인에게서 얻은 재갈이 허리춤에서 짤랑거렸다. 수레는 멈췄고 선황충은 숙주를 얻지 못한 채 향 속에서 말라 갔다. 어르신들은 일어서지 못했다. 열두 흑수가 새 가주 앞에 고개를 숙이고, 가주의 몫이던 네 재갈마저 당신의 허리춤으로 건너왔다. 홍원의 가주 자리는 더 이상 함정이 아니다.'],
     hwfree:['홍원의 가주','선황충을 상자에 가둔 채 가주의 자리에 앉았다. 어르신들은 일어서지 않았고 열두 흑수는 새 주인 앞에 말없이 무릎을 꿇었다. 가문의 식탁에는 이제 자리마다 이름표가 없다. 가장 먼 자리에도 따뜻한 밥이 놓인다.'],
     rcorp:['나는 존재한다. 그러므로 살아있다','부화장에서 같은 얼굴 열둘을 쓰러뜨리고 나왔다. 본체인지 복제체인지는 끝내 알 수 없었다. 번호표는 재가 되었고, 추격대의 호출 부호도 끊겼다. 이름 없는 몸으로 첫 번째 막을 넘겼다. 누가 만들었든, 지금 숨을 쉬는 것은 당신이다. 나는 존재한다. 그러므로 살아있다.'],
     blank:['아무것도 없는 존재',`이름도 내력도 쥐여 주지 않은 채 태어난 존재가 ${CFG.years}년을 걸어 첫 번째 막을 넘겼다. 아무것도 없던 손에는 이제 이 도시에서 살아낸 시간이 있다. 도시는 그것을 기억하지 않지만, 당신은 기억한다.`],
@@ -1640,6 +1654,7 @@ export function startUI(E,app){
     eqs(i){if(UI.screen!=='combat'&&E.equipStash(G.ch,+i)){resave();render()}},
     bspecial(id){if(E.buySpecial(G.ch,id,true)){UI.bought=D.special[id].n;render()}},
     noticeok(){store.set('cityYearNotice',NOTICE.id);render()},
+    titleeq(i){const L=titleList(G.ch),t=L[+i];if(!t)return;G.ch.equipTitle=G.ch.equipTitle===t[0]?'':t[0];resave();render()},
     bag(k){UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;render()},
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
     bagclose(){if(UI.cfg){UI.cfg=false;render();return}UI.bag=null;UI.dropAsk=null;render()},
