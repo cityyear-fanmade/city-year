@@ -638,7 +638,7 @@ export function startUI(E,app){
     return `<div class="check" style="border-color:var(--bleed)"><b>테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   function vTitle(){
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
+    return `<div class="row" style="justify-content:flex-start"><button class="btn quiet" data-a="chron" style="width:auto;padding:6px 12px"><b>일대기</b></button></div><div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vUpdates()}
@@ -657,6 +657,42 @@ export function startUI(E,app){
     const o=loadSave();if(!o)return '';const c=o.G.ch,y=o.G.year;
     const when=new Date(o.t).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
     return `<button class="btn primary" data-a="cont"><b>이어서 하기</b><span class="small">${esc(c.name||'이름 없는 사람')} · ${E.rankLabel(c)} · ${y}년차 · ${CFG.startAge+y-1}세</span><span class="dim small">${when} 저장${o.v!==UPDATES.v?` · ${o.v} 저장본`:''}</span></button>`;
+  }
+  /* 일대기: 클리어·쓰러짐 결과 화면을 판마다 자동 저장(최대 10개). 명예의 전당은 직접 고른 판만(최대 5개). 둘 다 직접 삭제할 수 있다 */
+  const CHRON='cityYearChron',CHRON_LIFE=10,CHRON_FAME=5;
+  const loadChron=()=>{try{const o=JSON.parse(store.get(CHRON)||'{}');return{life:Array.isArray(o.life)?o.life:[],fame:Array.isArray(o.fame)?o.fame:[]}}catch(e){return{life:[],fame:[]}}};
+  const saveChron=o=>store.set(CHRON,JSON.stringify(o));
+  function chronSnap(){
+    const el=$('endShot');if(!el)return null;
+    const cl=el.cloneNode(true),c=G.ch;cl.removeAttribute('id');
+    cl.querySelectorAll('button,script').forEach(x=>x.remove());cl.querySelectorAll('[data-a]').forEach(x=>x.removeAttribute('data-a'));
+    const res=((cl.querySelector('.eyebrow')||{}).textContent||'').trim();
+    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),name:c.name||'',line:careerLine(c),res,yr:G.year,win:!!UI.endWin,html:cl.outerHTML};
+  }
+  function chronAuto(){
+    const e=chronSnap();if(!e)return;const o=loadChron();
+    if(o.life.some(x=>x.key===e.key)||o.fame.some(x=>x.key===e.key))return;
+    o.life.unshift(e);o.life=o.life.slice(0,CHRON_LIFE);saveChron(o);
+  }
+  const chDate=t=>new Date(t).toLocaleString('ko-KR',{year:'2-digit',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  function chBtns(tab,e,view){
+    return `<div class="row" style="gap:6px;flex-wrap:wrap">${view?'':`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chview" data-i="${tab}:${e.id}">펼쳐 보기</button>`}${tab==='life'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chfame" data-i="${e.id}">명예의 전당에 올리기</button>`:''}<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chdel" data-i="${tab}:${e.id}">삭제</button></div>`;
+  }
+  function vChron(){
+    const o=loadChron(),tab=UI.chTab==='fame'?'fame':'life',L=o[tab],msg=UI.chMsg;UI.chMsg='';
+    const b=(k,l)=>`<button class="${tab===k?'on':''}" data-a="chtab" data-i="${k}">${l}</button>`;
+    const row=e=>`<div class="panel stack" style="gap:5px"><div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">${esc(e.name||e.line)}</b><span class="mono small dim" style="white-space:nowrap">${chDate(e.t)}</span></div><span class="small dim">${esc(e.line)}</span><span class="small" style="color:var(--gold)">${esc(e.res)}${e.yr?` · ${e.yr}년차`:''}</span>${chBtns(tab,e)}</div>`;
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저에만 남는 기록</div><h2>일대기</h2></div>
+      <div class="seg">${b('life',`일대기 ${o.life.length}/${CHRON_LIFE}`)}${b('fame',`명예의 전당 ${o.fame.length}/${CHRON_FAME}`)}</div>
+      <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
+      ${msg?`<p class="small bad">${esc(msg)}</p>`:''}
+      ${L.length?L.map(row).join(''):`<div class="panel"><p class="small dim">${tab==='life'?'아직 저장된 판이 없다. 이야기가 끝나면 여기에 쌓인다.':'아직 올린 판이 없다. 일대기에서 골라 올린다.'}</p></div>`}
+      <button class="btn primary" data-a="title">돌아가기</button>`;
+  }
+  function vChronView(){
+    const o=loadChron(),sel=UI.chSel||{},e=(o[sel.tab]||[]).find(x=>x.id===sel.id);
+    if(!e)return `<div class="panel"><p class="small dim">기록을 찾을 수 없다.</p></div><button class="btn primary" data-a="chron">돌아가기</button>`;
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장</div></div>${e.html}${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
   }
   /* 기록실 */
   /* 난이도: easy(쉬움) / normal(보통) / hard(하드). 예전 하드 켜기 설정(cityYearHard)도 이어 받는다 */
@@ -1441,7 +1477,7 @@ export function startUI(E,app){
   function render(){
     const s=UI.screen;
     BGM.setScene(s==='combat'?'fight':'calm');
-    const h={shared:vShared,records:vRecords,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
+    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
@@ -1451,6 +1487,7 @@ export function startUI(E,app){
     const ovKey=UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
     app.innerHTML=`<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
+    if(s==='end'){if(!UI.chronDone&&$('endShot')){UI.chronDone=true;try{chronAuto()}catch(e){}}}else UI.chronDone=false;
     UI.lastOv=ovKey;document.documentElement.classList.toggle('ovopen',!!ov);
     const lg=$('log');if(lg)lg.scrollTop=lg.scrollHeight;
     if(s!==lastScreen){window.scrollTo(0,0);lastScreen=s}
@@ -1649,6 +1686,16 @@ export function startUI(E,app){
     start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='title')store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     cont(){const o=loadSave();if(!o)return;G=o.G;C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
+    chron(){UI.screen='chron';render()},
+    chtab(k){UI.chTab=k==='fame'?'fame':'life';UI.screen='chron';render()},
+    chview(v){const [tab,id]=String(v).split(':');UI.chSel={tab,id};UI.screen='chronview';render()},
+    chfame(id){const o=loadChron(),e=o.life.find(x=>x.id===id);if(!e)return;
+      if(o.fame.some(x=>x.key===e.key)){UI.chMsg='이미 명예의 전당에 있다.'}
+      else if(o.fame.length>=CHRON_FAME){UI.chMsg=`명예의 전당은 최대 ${CHRON_FAME}개다. 하나를 삭제한 뒤 올려 주세요.`;UI.chTab='fame'}
+      else{o.fame.unshift(e);saveChron(o);UI.chMsg='명예의 전당에 올렸다.'}
+      UI.screen='chron';render()},
+    chdel(v){const [tab,id]=String(v).split(':');if(typeof confirm==='function'&&!confirm('이 기록을 삭제할까? 되돌릴 수 없다.'))return;
+      const o=loadChron();o[tab]=(o[tab]||[]).filter(x=>x.id!==id);saveChron(o);UI.chTab=tab;UI.screen='chron';render()},
     records(){UI.screen='records';render()},
     daily(){if(loadSave()&&UI.confirmNew!=='daily'){UI.confirmNew='daily';render();return}store.del(SAVE);UI.confirmNew=null;if(expired()){UI.screen='title';render();return}UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=todayKey();born(dailySeed(UI.daily),'',true);UI.endText=null;UI.screen='birth';render()},
     blank(){if(!BC||BC.blank||UI.job)return;const nm=BC.name,sd=BC.seed;BC=E.newChar(null,null,{r:BC.r,kid:BC.kid});BC.seed=sd;BC.name=nm;BC.fresh=false;UI.relic=null;BC.fateChoices=E.blankFate();render()},
