@@ -479,7 +479,7 @@ const CFG = {
   /* 치유소: 치료를 받을 때마다 값이 step씩 오른다 (한 판 전체 누적, 방문마다 최대 max번) */
   clinic: {price: 500, step: 500, hp: 30, max: 3},
   /* 암시장 K사 엠플: 전투 중 HP가 최대 HP의 belowPct 이하가 되면 자동으로 heal 회복(전투당 사용 횟수 제한 없음, 한 번에 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
-  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, belowPct: 0.2, healPct: 0.5},
+  ample: {name: 'K사 엠플', price: 5000, carry: 3, limit: 5, /* 2막 무한 모드에 들어서면 구매 횟수 제한(limit)이 없어진다(carry는 그대로) */ belowPct: 0.2, healPct: 0.5},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
   /* 순서: 1등 빛 보너스, 꼴등 추격 보정, 선제 격차와 명중 보너스 */
   orderBonusLight: 1, catchupBonus: 5, spdMul: 2, spdHit: {per: 5, max: 4}, gapFirst: 30, firstHit: 10,
@@ -525,7 +525,7 @@ const CFG = {
   oldAge: 100,
   /* 사건 판정 주사위 최대치(플레이어): 타고난 것 등으로 아무리 커져도 이 값에서 멈춘다 */
   checkMax: 220,
-  infinite: {erodeFrom: 90, erodePer: 0.5, enemyMax: 260, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 10000000, atkGrow: 1, evaGrow: 0.5},
+  infinite: {erodeFrom: 90, erodePer: 0.5, erodeMax: 18, enemyMax: 260, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 10000000, atkGrow: 1, evaGrow: 0.5},
   /* 정신력: 최대 max. healEvery년마다 +yearHeal. 선택지·환상체 조우 2d3 감소, 회피 실패 시 1d evadeDie에서 1이면 1 감소(E.G.O 장비 1개당 +1).
      voiceAt 이하에서 한 번 "들리는 목소리": 1d voiceDie를 voiceRolls번, 모두 voiceDc 이상이면 개화, 실패하면 1d failLoss 감소.
      0이면 사망, 1이면 뒤틀림 판정 1d2 (1이면 개화하고 가득 회복, 2면 뒤틀림 엔딩). tiers: 전투 시작 때 호흡·회피 보정 */
@@ -1068,7 +1068,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 쓰여 HP를 heal 회복한다 (전투마다 1개). 최대 carry개, 무한 모드 뒤엔 값이 오른다 */
   const ampPrice=ch=>CFG.ample.price;
   function buyAmple(ch){
-    const K=CFG.ample;if(ch.hw&&!ch.hw.out&&!ch.hw.done)return false;if((ch.ample||0)>=K.carry||(ch.ampleBought||0)>=K.limit||ch.money<ampPrice(ch))return false;
+    const K=CFG.ample;if(ch.hw&&!ch.hw.out&&!ch.hw.done)return false;if((ch.ample||0)>=K.carry||((ch.ampleBought||0)>=K.limit&&!ch.infinite)||ch.money<ampPrice(ch))return false;
     ch.money-=ampPrice(ch);ch.ample=(ch.ample||0)+1;ch.ampleBought=(ch.ampleBought||0)+1;return true;
   }
   /* 공방 등급: 기본 → 소속 → 해결사 급수 보너스 */
@@ -2922,7 +2922,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(X.kuro&&X.black){X.black=false;X.cloud=CFG.syn['흑운회'].reset;L('kw',`${X.name} · 흑운이 가라앉았다 · 구름 ${X.cloud}`)}
       for(const k of ['prescript','warp','shock','chain','web','sink'])if(X[k]>0)X[k]--}
     /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
-    if(C.ch.infinite&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.floor(e_*IN.erodePer);
+    if(C.ch.infinite&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.min(IN.erodeMax,Math.floor(e_*IN.erodePer));
       if(e_>0&&x>0){hpLoss(C,P,x,L);L('dmg',`${P.name} · 세계의 균열이 몸을 갉는다 · 고정 피해 ${x}`)}}
     ampUse(C,L);
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
@@ -3927,7 +3927,7 @@ function startUI(E,app){
       ['🙏 감사합니다',['의견과 제보를 주신 모든 분들께 감사드립니다.']]];
   const NOTICE={id:'v8.1.4',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🆕 v8.1.4 새로 들어온 것',['배경음악을 새로 만들었습니다. 설정의 배경음악에서 "고요"와 "불길" 두 가지를 고를 수 있고, 둘 다 전투에 들어가면 템포가 오릅니다.']],
+    sec:[['🆕 v8.1.4 새로 들어온 것',['배경음악을 새로 만들었습니다. 설정의 배경음악에서 "고요"와 "불길" 두 가지를 고를 수 있고, 둘 다 전투에 들어가면 템포가 오릅니다.','2막 무한 모드의 "세계의 균열" 고정 피해에 상한(라운드당 18)을 두었습니다. 장기전에서 연차가 올라도 더 커지지 않습니다.','2막 무한 모드에 들어서면 K사 엠플의 구매 횟수 제한(한 판 5개)이 없어집니다. (한 번에 지니는 수 3개는 그대로입니다.)']],
     ['🆕 v8.1.1 새로 들어온 것',['새 카드를 얻을 때 3장 가운데 하나를 고릅니다. 성장 보상, 전투 보상, 암시장 카드 상자가 해당하고, 마음에 드는 카드가 없으면 모두 버릴 수 있습니다. (덱이 고정된 시드는 예전처럼 카드 대신 돈입니다.)','보상으로 나오는 공격 카드 21종의 피해를 코스트에 비례해 올렸습니다. 덱이 고정되지 않은 일반 시드가 히든 상대를 넘기기 쉬워집니다.','타고난 것 4종이 해금 요소로 추가되었습니다. 해금하면 태어날 때 1%로 나옵니다. 기록실의 "타고난 것"에서 해금 조건을 볼 수 있습니다.','· 강철 체질 (한 전투에서 20번 맞기) : 최대 HP +50 · 받는 피해 10% 감소','· 질풍 (속도가 출생 때보다 30 이상 오르기) : 언제나 선공 · 속도 8마다 모든 공격 피해 +1','· 타고난 학자 (레벨 20 달성 기록) : 경험치 +40%','· 굳은 정신 (E.G.O 개화 1회) : 최대 정신력 +30 · 정신력 감소 절반 · 해마다 정신력 +1 더 회복 · 정신력 15부터 5마다 한 단계씩 호흡·최대 HP·회피·능력치 보정 (100까지)','타고난 것이 최대 2개까지 함께 나올 수 있습니다. 첫 번째가 나온 사람에게 낮은 확률로 두 번째가 붙습니다.','정신력 최대치 상한이 110이 되었습니다. 어떤 경로로 올려도 110을 넘지 않습니다.']],
     ['🆕 v8.1.0 새로 들어온 것',['가방에 "칭호" 칸이 생겼습니다. 직급·특색 칭호, 보스를 쓰러뜨려 얻은 추가 칭호, 홍원의 "가주 후보" 같은 표식이 여기에 모입니다. 칭호가 있을 때만 탭이 나옵니다. 칭호를 "장착"하면 상단 카드와 전투 화면에서 이름 위에 [칭호]가 표시됩니다.','홍원 가문의 후계 후보: 흑수 선인에게 재갈을 청해 흑수 부하를 늘릴 수 있습니다. 영생의 단서를 하나 찾을 때마다 최대 세 번, 1d100 45 이상(예물을 올리면 30 이상)이면 재갈 하나를 얻습니다. 실패하면 못 얻습니다.','소 · 용 · 원숭이 · 닭의 재갈은 가주의 것이라 후보는 얻을 수 없고, 가주가 되면 영구히 당신 것이 됩니다.','부하는 최대 6명입니다. 부하가 많을수록 부하가 거드는 피해와 "흑수여, 답하라"의 위력이 커지고, 부하가 넷 이상이면 홍루를 따르는 흑수 한 사람이 네 라운드마다 더 덤벼듭니다.','철함사에서 부하가 4명 이상이면 "철함사의 목을 친다"가 열립니다. 철함사의 가모는 매 라운드 "공허한 순종"을 걸어 내 명중을 깎지만, 부하가 거들 때마다 풀리고 부하가 많을수록 가모가 약해집니다. 이긴 뒤에는 새 엔딩이 있습니다.','다른 가주 후보들도 소·용·원숭이·닭의 재갈은 쥐지 못합니다. 쥐·뱀 후보는 흑수 한 사람만 거느리고, 원숭이·닭 후보는 부하 없이 홀로 싸웁니다.','홍원 설정: 홍루를 따르는 흑수는 열 종으로 정해져 있고, 어느 세계선에서는 홍루가 열두 재갈을 모두 모아 홍원의 군주가 되었다고 전해집니다.']],
     ['🔧 v8.1.0 수정',['전리품 칸에 "흑수 · 용"과 "가주 후보 · 흑수 용"이 서로 다른 형식으로 섞여 나오던 표기를 정리했습니다. 가주 후보는 칭호 칸으로 옮겼습니다.','출신 없이 시작할 때 뜨는 운명 선택(R사·H사)에 "운명을 거절한다"를 추가했습니다. 거절하면 아무것도 쥐지 않은 채 그대로 시작해 솔로 엔딩을 노릴 수 있습니다.','칭호 탭이 칭호가 없어도 항상 보입니다.','레벨 상한이 없어졌습니다. 필요 경험치 곡선을 바꿔서 2막 초중반이면 레벨 17에 닿고, 그 뒤로도 계속 오릅니다 (레벨 8, 16, 24… 부터 한 레벨을 올리는 데 필요한 경험치가 2배씩 늘어납니다).','레벨 보너스: 레벨 8마다 모든 전투에서 빛과 빛 최대치가 +1 늘어납니다 (8, 16, 24 …).','2막 무한 모드에서 적 HP가 끝없이 불어나던 문제를 막았습니다 (성장 상한 · HP 상한 1천만).','원한의 장부 · 첫 페이지의 "되갚음이 아니면 쓰러뜨릴 수 없다" 규칙을 없앴습니다. 소속과 상관없이 일반 전투처럼 끝낼 수 있습니다.']],
