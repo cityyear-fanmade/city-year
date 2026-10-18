@@ -3,7 +3,7 @@
    - 켤 때 마스터 음량을 0에서 서서히 올리고, 전체 출력은 컴프레서를 거친다
    - 두 가지 스타일을 사용자가 고른다
      · 잔잔(calm): 원래 쓰던 느린 스윙 재즈. 걷는 베이스, 라이드 심벌, 브러시, 전기 피아노 컴핑, 가끔 지나가는 멜로디. 전투에 들어가면 템포가 오른다 (ii7 · V13 · Imaj9 · vi9)
-     · 격정(passion): 평소부터 빠른 곡. 4박 킥, 스네어, 8분 베이스, 패드, 아르페지오, 이어지는 선율. 전투에 들어가면 더 빨라지고 쉐이커·심벌·옥타브 선율이 붙는다 (Am9 · Fmaj9 · Cmaj9 · G6) */
+     · 격정(passion): 평소부터 빠른 피아노 곡. 16분 되풀이 음형과 옥타브 베이스, 낮게 깔리는 현, 큰북·스네어. 전투에 들어가면 더 빨라지고 킥이 4박으로 늘며 스네어 연타와 높은 선율이 붙는다 (Am · F · Dm · E 단조) */
 export function createBgm(){
   /* 모든 값은 여기서 조절한다 */
   const P={
@@ -11,14 +11,15 @@ export function createBgm(){
     fadeIn:3,           // 켤 때 서서히 커지는 시간(초)
     fadeOut:0.8,        // 끌 때 서서히 줄어드는 시간(초)
     bpm:{calm:{calm:76,fight:136},passion:{calm:132,fight:152}},   // [스타일][장면]
-    styleGain:{calm:0.65,passion:0.27},   // 스타일별 전체 음량 보정 (격정은 합성 음원이 꽉 차서 낮춘다)
+    styleGain:{calm:0.65,passion:0.8},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
     cutMul:{calm:{calm:1,fight:1.25},passion:{calm:1.3,fight:1.5}}, // 장면별 밝기
     /* 코드(C=0 기준 반음): b=베이스 근음, t=코드 구성음(피아노 아르페지오·패드·오스티나토), sc=멜로디에 쓰는 음계(A 단음계 계열) */
+    /* 격정(단조): b=베이스 근음, t=피아노·현 구성음, sc=선율 음계(A 화성단음계). Am → F → Dm → E (으뜸 · 여섯째 · 넷째 · 딸림으로 조여 든다) */
     pChords:[
-      {b:9,t:[-3,0,4,7,11],sc:[9,12,16,19,21,23,28]},    // Am9
-      {b:5,t:[-7,-3,0,4,7],sc:[9,12,14,16,17,19,21]},     // Fmaj9
-      {b:0,t:[0,4,7,11,14],sc:[12,14,16,19,21,23,24]},    // Cmaj9
-      {b:7,t:[-5,-1,2,4,9],sc:[11,12,14,16,19,21,23]}     // G6/9
+      {b:9,t:[-3,0,4,9],sc:[9,11,12,14,16,17,20]},    // Am
+      {b:5,t:[-7,-3,0,5],sc:[9,11,12,14,16,17,19]},   // F
+      {b:2,t:[-10,-7,-3,2],sc:[9,11,12,14,16,17,19]}, // Dm
+      {b:4,t:[-8,-4,-1,4],sc:[8,9,11,12,14,16,17]}    // E
     ],
     jazz:[
       {bass:2,iv:[0,3,7,10],v:[5,9,12,16],sc:[2,5,7,9,12,14,17]},        // Dm9
@@ -109,6 +110,25 @@ export function createBgm(){
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.02);g.gain.setValueAtTime(peak,t+dur*0.7);g.gain.linearRampToValueAtTime(0.0001,t+dur);
     o.connect(f);f.connect(g);g.connect(cur.b);o.start(t);o.stop(t+dur+0.05);
   }
+  function pianoN(m,t,peak,dur){           // 피아노: 삼각파 + 윗배음 둘, 짧게 때리고 서서히 가라앉는다
+    const f=hz(m),o=ctx.createOscillator(),o2=ctx.createOscillator(),o3=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain(),g3=ctx.createGain();
+    o.type='triangle';o2.type='sine';o3.type='sine';o.frequency.value=f;o2.frequency.value=f*2;o3.frequency.value=f*3.01;
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.exponentialRampToValueAtTime(peak*0.4,t+dur*0.25);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    g2.gain.setValueAtTime(0.5,t);g2.gain.exponentialRampToValueAtTime(0.01,t+dur*0.6);g3.gain.setValueAtTime(0.22,t);g3.gain.exponentialRampToValueAtTime(0.005,t+dur*0.3);
+    o.connect(g);o2.connect(g2);o3.connect(g3);g2.connect(g);g3.connect(g);g.connect(cur.b);o.start(t);o2.start(t);o3.start(t);o.stop(t+dur+0.05);o2.stop(t+dur+0.05);o3.stop(t+dur+0.05);
+  }
+  function strN(m,t,dur,peak){             // 현: 톱니파를 낮게 걸러 떨림을 얹고 천천히 키운다
+    const f=ctx.createBiquadFilter(),g=ctx.createGain(),tr=ctx.createGain(),lfo=ctx.createOscillator(),lg=ctx.createGain();f.type='lowpass';f.frequency.value=1000;f.Q.value=0.4;
+    tr.gain.value=0.78;lfo.frequency.value=5.5;lg.gain.value=0.22;lfo.connect(lg);lg.connect(tr.gain);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+dur*0.3);g.gain.linearRampToValueAtTime(peak*0.85,t+dur*0.85);g.gain.linearRampToValueAtTime(0.0001,t+dur);
+    for(const dt of [-7,7]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
+    lfo.start(t);lfo.stop(t+dur+0.05);f.connect(tr);tr.connect(g);g.connect(cur.u);
+  }
+  function boom(t,peak){                   // 큰북: 낮게 떨어지는 사인
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(82,t);o.frequency.exponentialRampToValueAtTime(38,t+0.35);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+0.7);
+    o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.75);
+  }
   function leadN(m,t,dur,peak,cut){        // 이어 부는 선율: 살짝 어긋난 두 삼각파, 느리게 시작해 길게 이어진다
     const f=ctx.createBiquadFilter(),g=ctx.createGain(),lfo=ctx.createOscillator(),lg=ctx.createGain();f.type='lowpass';f.frequency.value=cut;f.Q.value=0.5;
     lfo.frequency.value=5;lg.gain.value=5;lfo.connect(lg);
@@ -145,20 +165,26 @@ export function createBgm(){
     }
     barT=T+4*bd;barN++;
   }
-  /* 격정 한 마디: 4박 킥, 2·4박 스네어, 8분 톱니 베이스, 패드, 8분 전기 피아노 아르페지오, 쉬지 않고 이어지는 선율. 전투에서는 템포가 오르고 쉐이커·심벌·옥타브 선율이 붙는다 */
+  /* 격정 한 마디: 피아노가 끌고 간다. 오른손은 16분 되풀이 음형, 왼손은 옥타브 베이스 · 현이 낮게 깔리고 큰북과 스네어가 조여 든다.
+     전투에서는 템포가 오르고 킥이 4박으로 늘며 4번째 박에 스네어 연타, 높은 옥타브 선율이 붙는다 */
   function barPassion(T,M){
-    const fight=scene==='fight',bd=60/P.bpm.passion[scene],C=P.pChords[barN%P.pChords.length],R=M.root,at=k=>T+k*bd,bb=R-24;
-    for(let k=0;k<4;k++)feather(at(k),fight?0.13:0.1);
-    for(const k of [1,3])snare(at(k),fight?0.045:0.035);
-    if(fight)for(let n=0;n<8;n++)noiseHit(at(n/2+(n%2?0:0.25)),0.0045,0.09,3600,6500);
-    if(barN%4===0)noiseHit(T,fight?0.03:0.02,fight?1.2:0.8,3600,6500);
-    for(let n=0;n<8;n++){const m=bb+C.b+(n%4===3&&fight?12:0);sawN(m,at(n/2),bd*0.5,fight?0.15:0.12,800)}
-    C.t.slice(0,4).forEach((o,i)=>{padN(R+o-12,T+i*0.015,bd*4,fight?0.02:0.016);padN(R+o,T+i*0.015,bd*4,0.01)});
-    const arp=[0,2,4,2,1,3,2,1];
-    arp.forEach((ix,n)=>ep(R+C.t[ix%C.t.length]+12,at(n/2),(n%4===0?0.022:0.015),bd*0.8));
-    {const n=fight?8:6,len=4/n;let ix=Math.floor(rnd()*C.sc.length);
-      for(let i=0;i<n;i++){const k=i*len,m=R+12+C.sc[ix];leadN(m,at(k),bd*len*1.15,fight?0.05:0.04,M.cut*1.6);if(fight)leadN(m+12,at(k),bd*len*1.1,0.015,M.cut*1.6);
-        ix=Math.max(0,Math.min(C.sc.length-1,ix+pick([-1,-1,1,1,2,-2])))}}
+    const fight=scene==='fight',bd=60/P.bpm.passion[scene],C=P.pChords[barN%P.pChords.length],R=M.root,at=k=>T+k*bd,last=barN%4===3;
+    /* 왼손: 옥타브 베이스 */
+    const lb=R-24+C.b;
+    for(const k of fight?[0,1.5,2,3.5]:[0,1.5,2.5]){pianoN(lb,at(k),k===0?0.1:0.07,bd*1.1);pianoN(lb+12,at(k),k===0?0.07:0.05,bd*0.9)}
+    /* 현: 구성음을 한 마디 내내 낮게 */
+    C.t.forEach((o,i)=>strN(R+o-12,T+i*0.02,bd*4,fight?0.014:0.011));
+    /* 오른손: 16분 되풀이 음형 (낮은 음 → 가운데 → 높은 음 → 가운데), 박 머리에 힘을 준다 */
+    const pat=[0,1,2,1, 0,1,3,1, 0,2,3,2, 1,2,3,2];
+    pat.forEach((ix,n)=>{const m=R+C.t[ix]+12;pianoN(m,at(n/4),(n%4===0?0.05:0.032)*(fight?1.15:1),bd*0.55)});
+    /* 선율: 박 머리마다 위에서 눌러 내리는 음 (전투에서는 옥타브 위가 겹친다) */
+    {const ix0=Math.floor(rnd()*C.sc.length);[0,1,2,3].forEach((k,i)=>{const m=R+24+C.sc[(ix0+i*2)%C.sc.length]-12*(i%2);if(rnd()<(fight?0.9:0.55))pianoN(m,at(k+0.5),fight?0.04:0.03,bd*1.2)})}
+    /* 타악 */
+    if(fight){for(let k=0;k<4;k++)feather(at(k),0.11)}else{feather(at(0),0.1);feather(at(2),0.09)}
+    for(const k of [1,3])snare(at(k),fight?0.05:0.04);
+    if(fight&&last)for(let n=1;n<4;n++)snare(at(3+n*0.25),0.025+0.008*n);
+    if(barN%2===0)boom(T,fight?0.2:0.15);
+    if(barN%4===0)noiseHit(T,fight?0.025:0.015,1.2,3200,6000);
     barT=T+4*bd;barN++;
   }
   function schedule(now,M){
