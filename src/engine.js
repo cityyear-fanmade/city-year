@@ -1066,7 +1066,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     chips&&chips.push(`전용 무기 강화 · ${g.n} (${g.e})`);
   }
   const s_=(ch,v)=>{ch.stats.maxHp+=v;ch.hp+=v};
-  /* 홍루: 내 부하 두 사람을 뺀 흑수 열 사람이 차례로 덤벼든다 (E.zChain = 흑수 키 순서) */
+  /* 홍루: 내 부하를 뺀 나머지 흑수가 차례로 덤벼든다 (E.zChain = 흑수 키 순서) */
   const ZKEYS=['rat','ox','tiger','rabbit','dragon','snake','horse','goat','monkey','rooster','dog','pig'];
   /* 흑수 재갈: 가주 몫 넷(소·용·원숭이·닭)은 후보가 쥘 수 없다. 흑수 선인에게서 나머지 여덟 재갈을 얻는다 */
   const hwAllowed=()=>ZKEYS.filter(k=>!CFG.hw.crown.includes(k));
@@ -1615,7 +1615,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     let penalty=null;
     if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit;if(ch.fate){P.nailHit=0;P.atk+=CFG.nWing.fate;P.eva+=CFG.nWing.fate}}
     if(pen&&!(ch.licensed&&ch.rank<=pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
-    /* 홍루: 흑수 선인에게서 빼앗은 흑수 열 사람. 내 부하 두 사람은 빠진다 */
+    /* 홍루: 홍루를 따르는 흑수들. 내 부하 두 사람은 빠진다 */
     if(e.zodiac10){const own=hwHave(ch);E.zChain=ZKEYS.filter(k=>!own.includes(k));E.deck=['z_'+E.zChain[0]]}
     if(e.hwKamo){const n=hwHave(ch).length,cut=Math.min(CFG.hw.kamoCutMax,Math.max(0,n-3)*CFG.hw.kamoCut);E.maxHp=Math.round(E.maxHp*(1-cut));E.hp=E.maxHp}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
