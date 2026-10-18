@@ -505,13 +505,29 @@ export function startUI(E,app){
       ['방어 자세',`카드를 하나도 내지 않으면 그 라운드는 회피 대신 방어로 받는다. 막으면 피해 ${CFG.guard.guardHit}, 못 막으면 피해 ×${CFG.guard.guardFailMul}.`],
       ['빛',`라운드마다 ${CFG.light}. 남은 빛으로 손패 카드를 원하는 순서로 낸다. 남긴 빛은 사라진다.`]];
   }
+  /* 카드 읽는 법: 카드 한 장이 어떤 순서로 풀리는지와 카드 문구의 표기를 설명한다 */
+  function cardGuide(){
+    const G_=CFG.cardGrade.slice(1).map(g=>`${g.n}(${g.from}년차~ 피해 +${g.b} · 명중 +${g.hit}${g.dice?' · 주사위 +'+g.dice:''})`).join(' / ');
+    const rows=[
+      ['카드 한 장의 흐름','① 빛(왼쪽 숫자)을 내고 카드를 낸다 → ② 명중 굴림: 1d100 + 공격 + 카드 명중 보정이 상대 1d100 + 회피보다 크면 적중 → ③ 적중하면 피해 주사위를 굴린다 → ④ 같은 적중에 "적중 시" 효과가 붙는다(키워드 스택·보호막 등) → ⑤ 흑수 부하·전용 무기가 있으면 그 효과가 이어진다. 빗나가면 ③~⑤는 일어나지 않는다.'],
+      ['○타','"3타"는 ②~⑤를 3번 따로 반복한다. 명중 굴림도, 피해 주사위도 타마다 새로 굴린다. 출혈이 걸린 쪽은 타마다 피해를 입으므로, 타수가 많은 카드를 낼수록 출혈이 빨리 닳는다.'],
+      ['6d8 · 3d6 표기','"6d8"은 8면체 주사위 6개를 굴려 합친다는 뜻이다. "3d6"은 6면체 3개. 앞 숫자가 개수, 뒤 숫자가 면 수다. 개수가 많을수록 결과가 평균 근처로 모이고, 면 수가 클수록 눈의 폭이 커진다. 면 수를 적지 않은 카드는 6면체다.'],
+      ['+N (피해 뒤 고정값)','"2d4+2"의 +2는 주사위를 합친 값에 더하는 고정 피해다.'],
+      ['피해 주사위 최소 (D6≥N)',`장비·타고난 것에 쓰인 표기다. 주사위 눈이 N보다 작게 나오면 N으로 친다. 여러 곳에서 오는 보정을 합쳐도 최대 ${CFG.dminCap}까지다.`],
+      ['명중 +N / 명중 2회 굴림','카드의 "명중 +N"은 그 카드의 명중 굴림에만 더해지는 값이다(마이너스면 빗나가기 쉽다). "명중 2회 굴림"은 명중 굴림을 두 번 해서 높은 쪽을 쓴다.'],
+      ['적중 시 ○○','명중 굴림에 이겼을 때만 일어나는 효과다. 색이 있는 칩이 키워드이고, "출혈 +2"처럼 상대에게 쌓이는 것이 기본이다. 칩 끝에 "자신"이 붙은 것(예: 호흡 +3 자신)은 나에게 쌓인다.'],
+      ['보호막 · 회피 · 방어 카드','방어 카드의 "회피 +N"은 이번 라운드 상대의 명중 굴림에 맞서는 내 수치에 더해진다. 보호막은 체력 앞에서 피해를 대신 맞아 주는 수치다. 버프 카드는 피해를 주지 않고 나에게 효과를 건다.'],
+      ['이름 옆 +1 · +2 · +3 (등급)','공격 카드에 연차가 지나며 붙는 강화다. '+G_+'. 보호막이 있는 카드도 등급이 오르면 보호막이 늘어난다.']
+    ];
+    return `<div class="panel stack" style="gap:8px"><b style="color:var(--gold)">카드 읽는 법</b>${rows.map(([n,x])=>`<div class="stack" style="gap:2px"><b class="small">${esc(n)}</b><span class="small dim">${esc(x)}</span></div>`).join('')}</div>`;
+  }
   function vHelp(){
     const t=UI.help==='kw'||UI.help==='rule'?UI.help:'card',ch=G.ch,P=C&&C.P,hand=P&&P.hand?P.hand.map(x=>x&&x.id||x):[];
     let body='';
     if(t==='card'){
       const cnt={};for(const id of ch.deck)cnt[id]=(cnt[id]||0)+1;
       const ids=Object.keys(cnt).filter(id=>D.cards[id]);
-      body=`<p class="small dim">덱 ${ch.deck.length}장${hand.length?' · 지금 손패에 있는 카드는 맨 위에 모았다':''}. 전투 중에도 읽기만 할 수 있다.</p>`+
+      body=cardGuide()+`<p class="small dim">덱 ${ch.deck.length}장${hand.length?' · 지금 손패에 있는 카드는 맨 위에 모았다':''}. 전투 중에도 읽기만 할 수 있다.</p>`+
         ids.sort((a,b)=>(hand.includes(b)?1:0)-(hand.includes(a)?1:0)).map(id=>cardRow(id)+(cnt[id]>1?`<div class="mono small dim" style="margin:-4px 0 4px 8px">× ${cnt[id]}</div>`:'')).join('');
     }else if(t==='kw'){
       body=`<p class="small dim">카드의 키워드와 걸리는 상태의 뜻이다.</p>`+kwDoc().map(([n,k,x])=>`<div class="panel stack" style="gap:3px;padding:10px 12px"><b style="color:${k?kwc(k):'var(--gold)'}">${esc(n)}</b><span class="small">${esc(x)}</span></div>`).join('');
