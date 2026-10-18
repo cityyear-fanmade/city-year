@@ -478,6 +478,50 @@ export function startUI(E,app){
   function sheet(inner,cls,closable){
     return `<div class="ov"><div class="ovbg"${closable?' data-a="bagclose"':''}></div><div class="sheet ${cls}" role="dialog" aria-modal="true">${inner}</div></div>`;
   }
+  /* 도움말(카드·키워드·규칙): 전투 중에도 열어 볼 수 있는 읽기 전용 창 */
+  const HELPTABS=[['card','카드'],['kw','키워드'],['rule','규칙']];
+  function kwDoc(){
+    const K=D.keywords,N=CFG.nail.stages.map(g=>`${g.at}: 명중 −${g.hit}${g.dmg?` · 주는 피해 −${g.dmg}`:''}`).join(' / ');
+    return [
+      [K.bleed.n,'bleed','공격할 때마다(빗나가도) 스택만큼 피해를 입고, 그 뒤 1 줄어든다. 내가 방어 자세면 절반으로 지혈한다.'],
+      [K.rupture.n,'rupture','피격 시 스택만큼 추가 피해를 입고, 피격마다 1 줄어든다.'],
+      [K.breath.n,'breath',`최대 ${CFG.breath.cap}, 라운드마다 ${CFG.breath.decay} 줄어든다. 4~9는 치명 ${CFG.breath.base}%에서 90%까지(×${CFG.critMult}), ${CFG.breath.sure} 이상은 확정 치명, 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}.`],
+      [K.ink.n,'ink',`라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.ink.cap}스택.`],
+      [K.burn.n,'burn',`라운드가 끝날 때 스택당 ${CFG.burn.dmg} 피해(내가 받으면 ${CFG.burn.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.burn.max}스택. 적이 거는 화상은 쌓이는 양이 절반이다.`],
+      [K.flame.n,'flame',`(레바테인 전용) 받는 피해 ×1.5, 라운드 끝에 1 감소. ${CFG.laev.blueAt}스택 이상이면 푸른 화염이 되어 받는 피해 ×${CFG.laev.blueMul}, 라운드 끝에 스택당 ${CFG.laev.blueDot} 피해를 주고 1 감소한다.`],
+      [K.charge.n,'charge','자신에게 쌓는 스택. 카드가 정한 만큼 소모하면, 소모한 1당 고정 피해(피해 감소 무시, 보호막은 깎임)를 적중마다 더한다. 라운드가 바뀌어도 줄지 않고, 맞으면 줄어든다. 상한과 쌓이는 방식은 소속마다 다르다.'],
+      [K.sink.n,'sink',`상대에게 쌓는 스택. ${CFG.sink.per}스택마다 한 단계, 단계마다 침잠이 걸린 쪽의 명중 −${CFG.sink.hit} · 주는 피해 −${CFG.sink.dmg}. 라운드마다 1 줄어든다.`],
+      [K.nail.n,'nail','N사 날개: 적중할 때마다 상대에게 쌓인다. 망치 카드가 쌓인 못을 흐트러짐으로 바꾼다.'],
+      [K.stagger.n,'stagger',`쌓일수록 상대가 약해진다. ${N}. 주는 피해는 줄고 받는 피해는 늘며, 기준을 넘으면 기절한다.`],
+      [K.obey.n,'obey',`내 명중 −${CFG.hw.obey.hit}(스택당) · 흑수 부하가 거들 때마다 −1.`],
+      ['기절','','이번 라운드 행동 불가, 회피 0.'],
+      ['일반 디버프 상한','',`스택의 최대치는 ${CFG.stackCap}이다. 방어 카드를 내면 내 출혈·파열이 1/4 줄어든다(적도 같다).`]
+    ];
+  }
+  function ruleDoc(){
+    return [['명중','1d100 + 공격 + 카드 보정 > 상대 1d100 + 회피면 명중, 동점은 방어 성공. 일부 카드·무기는 명중을 두 번 굴려 높은 값을 쓴다.'],
+      ['피해','카드의 d6 개수만큼 굴려 합산한다. 코스트가 높은 카드는 주사위가 많다.'],
+      ['순서',`라운드마다 1d100 + 속도. 1등은 빛 +${CFG.orderBonusLight}, 격차 ${CFG.gapFirst} 이상이면 첫 공격 명중 +${CFG.firstHit}. 뒤처지면 다음 라운드 순서 +${CFG.catchupBonus}.`],
+      ['방어 자세',`카드를 하나도 내지 않으면 그 라운드는 회피 대신 방어로 받는다. 막으면 피해 ${CFG.guard.guardHit}, 못 막으면 피해 ×${CFG.guard.guardFailMul}.`],
+      ['빛',`라운드마다 ${CFG.light}. 남은 빛으로 손패 카드를 원하는 순서로 낸다. 남긴 빛은 사라진다.`]];
+  }
+  function vHelp(){
+    const t=UI.help==='kw'||UI.help==='rule'?UI.help:'card',ch=G.ch,P=C&&C.P,hand=P&&P.hand?P.hand.map(x=>x&&x.id||x):[];
+    let body='';
+    if(t==='card'){
+      const cnt={};for(const id of ch.deck)cnt[id]=(cnt[id]||0)+1;
+      const ids=Object.keys(cnt).filter(id=>D.cards[id]);
+      body=`<p class="small dim">덱 ${ch.deck.length}장${hand.length?' · 지금 손패에 있는 카드는 맨 위에 모았다':''}. 전투 중에도 읽기만 할 수 있다.</p>`+
+        ids.sort((a,b)=>(hand.includes(b)?1:0)-(hand.includes(a)?1:0)).map(id=>cardRow(id)+(cnt[id]>1?`<div class="mono small dim" style="margin:-4px 0 4px 8px">× ${cnt[id]}</div>`:'')).join('');
+    }else if(t==='kw'){
+      body=`<p class="small dim">카드의 키워드와 걸리는 상태의 뜻이다.</p>`+kwDoc().map(([n,k,x])=>`<div class="panel stack" style="gap:3px;padding:10px 12px"><b style="color:${k?kwc(k):'var(--gold)'}">${esc(n)}</b><span class="small">${esc(x)}</span></div>`).join('');
+    }else{
+      body=ruleDoc().map(([n,x])=>`<div class="panel stack" style="gap:3px;padding:10px 12px"><b style="color:var(--gold)">${esc(n)}</b><span class="small">${esc(x)}</span></div>`).join('');
+    }
+    return sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px;flex:none"><b class="serif">설명</b><button class="chip" data-a="bagclose">닫기 ✕</button></div>
+      <div class="seg" style="margin:8px 0;flex:none;min-height:44px">${HELPTABS.map(([k,n])=>`<button class="${t===k?'on':''}" data-a="helptab" data-i="${k}">${n}</button>`).join('')}</div>
+      <div class="stack" style="gap:8px;flex:none">${body}</div>`,'bag',true);
+  }
   function vBag(){
     const ch=G.ch,t=UI.bag;
     const body={stat:vStat,gear:vGear,card:vCards,relic:vRelic,family:vFamily,title:vTitleBag}[t]();
@@ -1505,9 +1549,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
-    const ov=UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
-    const ovKey=UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
-    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
+    const ov=UI.help&&!UI.cfg?vHelp():UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
+    const ovKey=UI.help&&!UI.cfg?'help':UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
+    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>':''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     if(s==='end'){if(!UI.chronDone&&$('endShot')){UI.chronDone=true;try{chronAuto()}catch(e){}}}else UI.chronDone=false;
     UI.lastOv=ovKey;document.documentElement.classList.toggle('ovopen',!!ov);
@@ -1516,8 +1560,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(s==='birth'&&BC.fresh&&MODE!=='off'){BC.fresh=false;rollAnim()}
     if(s==='level'&&UI.lvFresh&&MODE!=='off'){UI.lvFresh=false;rollAnim()}
     if(s==='result'&&UI.res.anim&&UI.res.roll){UI.res.anim=false;UI.animing=true;resultAnim().then(()=>{UI.animing=false;if(G&&((G.ch.offers||[]).length||(G.ch.picks||[]).length||(G.ch.gearOffers||[]).length||G.ch.packOffer))render()})}
-    if(s==='combat'&&FIGHT==='auto'&&!PLAYING&&C&&!C.over&&!UI.autoTimer&&!UI.paused&&!UI.cfg){const g=autoGap();
-      UI.autoTimer=setTimeout(()=>{UI.autoTimer=null;if(FIGHT==='auto'&&UI.screen==='combat'&&!PLAYING&&!C.over&&!UI.paused&&!UI.cfg){UI.sel=E.autoPick(C);render();setTimeout(()=>{if(FIGHT==='auto'&&!PLAYING&&!C.over&&!UI.paused)ACT.go()},g[1])}},g[0])}
+    if(s==='combat'&&FIGHT==='auto'&&!PLAYING&&C&&!C.over&&!UI.autoTimer&&!UI.paused&&!UI.cfg&&!UI.help){const g=autoGap();
+      UI.autoTimer=setTimeout(()=>{UI.autoTimer=null;if(FIGHT==='auto'&&UI.screen==='combat'&&!PLAYING&&!C.over&&!UI.paused&&!UI.cfg&&!UI.help&&!UI.help){UI.sel=E.autoPick(C);render();setTimeout(()=>{if(FIGHT==='auto'&&!PLAYING&&!C.over&&!UI.paused)ACT.go()},g[1])}},g[0])}
   }
 
   /* ===== 진행: 성장 굴림 → 대기 중인 전투 → 다음 해 ===== */
@@ -1759,7 +1803,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     titleeq(i){const L=titleList(G.ch),t=L[+i];if(!t)return;G.ch.equipTitle=G.ch.equipTitle===t[0]?'':t[0];resave();render()},
     bag(k){UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;render()},
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
-    bagclose(){if(UI.cfg){UI.cfg=false;render();return}UI.bag=null;UI.dropAsk=null;render()},
+    help(){UI.help='card';if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
+    helptab(k){UI.help=k;render()},
+    bagclose(){if(UI.help){UI.help=null;render();return}if(UI.cfg){UI.cfg=false;render();return}UI.bag=null;UI.dropAsk=null;render()},
     cfg(){UI.cfg=true;UI.homeAsk=false;if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     cfgclose(){UI.cfg=false;UI.homeAsk=false;render()},
     home(){
