@@ -91,7 +91,7 @@ export const CFG = {
     /* v6.1: 카드 교환(덱 카드 1장을 일반 보상 카드 무작위 1장으로, 방문마다 swapMax장까지) · 장비 정비(장착 장비마다 최대 tune.max번 시도, chance% 확률로 공격 또는 회피 +1, 시도 비용 base+step×지금까지 시도) */
     swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150}},
   /* 타고난 것: 출생 굴림과 별개로 1/chanceDiv 확률. 시드 재현을 위해 출생 굴림 값에서 파생 (새 주사위를 쓰지 않는다) */
-  innate: {chanceDiv: 100, growMul: 1.2, money: 1.2, intuitionDie: 20, psycho: 2, markYear: 30, markMul: 1.6, miracleEvery: 10, miracleDie: 5},
+  innate: {chanceDiv: 100, secondDiv: 10, scholarMul: 1.4, growMul: 1.2, money: 1.2, intuitionDie: 20, psycho: 2, markYear: 30, markMul: 1.6, miracleEvery: 10, miracleDie: 5},
   /* 카드 등급: 연차가 쌓이면 내 공격 카드가 강해진다 (from년차부터). 적중마다 피해 +b, 명중 +hit, 주사위 +dice개 */
   cardGrade: [{from: 1, n: '', b: 0, hit: 0, dice: 0}, {from: 16, n: '+1', b: 2, hit: 5, dice: 0}, {from: 31, n: '+2', b: 3, hit: 10, dice: 1}, {from: 46, n: '+3', b: 5, hit: 15, dice: 1}],
   /* 잊힌 유물: year년차가 시작될 때 반드시 나오는 사건. 1d100에서 chance 이하면 유물 선택 */
@@ -272,6 +272,8 @@ export const CFG = {
   xp: {ok: 2, fail: 1, plain: 1, win: 4},
  
   /* 레벨 필요 경험치: 레벨 하나(L)를 올리는 데 lvCurve.base × 2^(floor(L÷every)) — 8, 16, 24… 레벨부터 2배씩 어려워진다. levels[i]는 레벨 i+1의 누적 경험치 */
+  /* 새 카드를 얻을 때 보여 주는 후보 수 (성장·전투 보상·암시장 상자). 후보 가운데 하나를 고르거나 모두 버린다 */
+  cardPick: {n: 3},
   lvCurve: LV_CURVE,
   levels: LEVELS,
   /* 시뮬: 고정 전투 직전마다 쌓인다고 보는 레벨 업 수 (경험치 표 기준 추정) */
