@@ -102,6 +102,19 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return out.sort((a,b)=>a-b);
   }
   const hasInn=(ch,k)=>ch.innate===k||ch.innate2===k;
+  /* 해금해야 나오는 타고난 것(D.innate[k].unlock): 열린 목록 (UI가 기록실에서 읽어 넣는다). null이면 전부 열려 있다 (시뮬·검사용) */
+  let innateOpen=null;
+  const setInnateOpen=a=>{innateOpen=Array.isArray(a)?a.slice():null};
+  const innatePool=()=>Object.keys(D.innate||{}).filter(k=>!(D.innate[k]&&D.innate[k].unlock)||!innateOpen||innateOpen.includes(k));
+  /* 이번 판 기록으로 새로 열린 타고난 것: 강철 체질(한 전투에서 20번 피격) · 질풍(속도가 기본보다 크게 오름) · 타고난 학자(최고 레벨 기록) · 굳은 정신(E.G.O 개화 1회) */
+  function innateUnlocks(ch,bestLv){
+    const U=CFG.innateUnlock,out=[];
+    if(ch.tough)out.push('iron');
+    if(ch.spd0!=null&&ch.stats.spd-ch.spd0>=U.spdUp)out.push('swift');
+    if(Math.max(bestLv||0,ch.lv||0)>=U.lv)out.push('scholar');
+    if(ch.ego&&!ch.egoBorn)out.push('will');
+    return out.filter(k=>D.innate[k]);
+  }
   function newChar(job,fixO,keep){
     const r=keep?Object.assign({},keep.r):{o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=!keep&&job&&D.hiddenJobs[job];
     if(J)r.o=J.roll;
@@ -123,10 +136,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       ch.rteam=tm;ch.rb={n:0,chase:0,hides:0,chasers:['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==tm).map(t=>Z.foes[t]))};(ch.relics=ch.relics||[]).push('R사 부화장 · '+tm+' 개체')}
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
     const IN=CFG.innate,h=(r.o*7919+r.t*104729+r.f*1299709+r.w*15485863+r.n*32452843+ch.kid.reduce((a,k)=>a*31+k.r,7))%1000003;
-    if(!keep&&h%IN.chanceDiv===0){const ks=Object.keys(D.innate||{});if(ks.length)ch.innate=ks[Math.floor(h/IN.chanceDiv)%ks.length]}
+    if(!keep&&h%IN.chanceDiv===0){const ks=innatePool();if(ks.length)ch.innate=ks[Math.floor(h/IN.chanceDiv)%ks.length]}
     /* 타고난 것은 최대 2개까지 같이 뜰 수 있다: 첫 번째가 뜬 사람에게만 다른 해시로 두 번째를 굴린다 (secondDiv분의 1, 첫 번째와 다른 것) */
     {const h2=(r.o*104729+r.t*7919+r.f*15485863+r.w*1299709+r.n*49979687+ch.kid.reduce((a,k)=>a*37+k.r,11))%1000003;
-      if(!keep&&ch.innate&&h2%IN.secondDiv===0){const ks=Object.keys(D.innate||{}).filter(k=>k!==ch.innate);if(ks.length)ch.innate2=ks[Math.floor(h2/IN.secondDiv)%ks.length]}}
+      if(!keep&&ch.innate&&h2%IN.secondDiv===0){const ks=innatePool().filter(k=>k!==ch.innate);if(ks.length)ch.innate2=ks[Math.floor(h2/IN.secondDiv)%ks.length]}}
     /* 출생 때 한 번 적용되는 타고난 것 (강철 체질 · 질풍 · 굳은 정신) */
     for(const k of [ch.innate,ch.innate2]){const E_=k&&D.innate[k]&&D.innate[k].fx;if(!E_)continue;const s_=ch.stats;for(const [sk,v] of Object.entries(E_))s_[sk]=(s_[sk]||0)+v;if(E_.maxHp)ch.hp+=E_.maxHp;if(E_.mindMax)ch.mind=CFG.mind.max+(s_.mindMax||0)}
     if(J){ch.job=job;ch.aff={type:'head',name:'머리'};if(J.deck){ch.deck=J.deck.slice();ch.cardMoney=true}else for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
@@ -139,6 +152,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* E.G.O 발현자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=CFG.mind.max+(s.mindMax||0);license(ch);ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
+    ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;
     return ch;
   }
   /* 유물 적성자: 출생 때 고른 유물 지급 */
@@ -2017,6 +2031,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.verdict){const x=Math.floor((B.maxHp-B.hp)/10);dmg=Math.max(dmg,rawDmg)+x;note+=` 처형 · 방어·감소 무시 · 잃은 체력 ${B.maxHp-B.hp} → 고정 +${x}`}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
       hpLoss(C,B,dmg,L);
+      if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
@@ -2231,6 +2246,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setInnateOpen,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
