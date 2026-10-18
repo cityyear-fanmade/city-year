@@ -660,8 +660,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.license){licensed=license(ch);if(licensed){chips.push(T.licenseGained+' · '+ch.rank+T.rankUnit);alignEast(ch,chips)}}
     return {chips,licensed};
   }
-  function lvOf(xp){let l=1;for(let i=1;i<CFG.levels.length;i++)if(xp>=CFG.levels[i])l=i+1;return l}
-  const xpNext=ch=>CFG.levels[ch.lv];
+  /* 레벨 상한 없음: 표 끝(CFG.levels) 뒤로는 레벨마다 필요한 경험치 간격이 lvExtra.base+1, +2, +3… 씩 늘어난다 */
+  const xpFor=l=>{const T=CFG.levels,n=l-T.length;return n<=0?T[l-1]:T[T.length-1]+n*CFG.lvExtra.base+n*(n+1)/2};
+  function lvOf(xp){let l=1;while(xp>=xpFor(l+1))l++;return l}
+  const xpNext=ch=>xpFor(ch.lv+1);
   function gainXp(ch,n){const b=ch.lv;ch.xp+=n;ch.lv=lvOf(ch.xp);ch.lvPend+=ch.lv-b;return ch.lv-b}
   /* 덱이 고정(책장·전용 카드팩)이면 카드를 받을 수 없으므로 '보상 카드' 성장은 선택지에서 뺀다 */
   function rollGrowth(ch){
