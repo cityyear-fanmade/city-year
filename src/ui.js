@@ -638,7 +638,7 @@ export function startUI(E,app){
     return `<div class="check" style="border-color:var(--bleed)"><b>테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   function vTitle(){
-    return `<button class="btn chronbtn" data-a="chron"><b>📜 일대기 · 명예의 전당</b><span class="dim small">지난 판의 결과 화면 ${loadChron().life.length}/${CHRON_LIFE} · 명예의 전당 ${loadChron().fame.length}/${CHRON_FAME}</span></button><div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
+    return `${chronBtn('chron-in')}<div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vUpdates()}
@@ -678,6 +678,8 @@ export function startUI(E,app){
   function chBtns(tab,e,view){
     return `<div class="row" style="gap:6px;flex-wrap:wrap">${view?'':`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chview" data-i="${tab}:${e.id}">펼쳐 보기</button>`}${tab==='life'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chfame" data-i="${e.id}">명예의 전당에 올리기</button>`:''}<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chdel" data-i="${tab}:${e.id}">삭제</button></div>`;
   }
+  /* 시작 화면 일대기 버튼: 좁은 화면은 위 한 줄(chron-in), 넓은 화면은 틀 바깥 왼쪽 위 모서리(chron-out). 틀 안에 두면 단테·검지 테마의 clip-path에 잘린다 */
+  const chronBtn=cls=>{const o=loadChron();return `<button class="btn chronbtn ${cls}" data-a="chron"><b>📜 일대기 · 명예의 전당</b><span class="dim small">지난 판의 결과 화면 ${o.life.length}/${CHRON_LIFE} · 명예의 전당 ${o.fame.length}/${CHRON_FAME}</span></button>`};
   function vChron(){
     const o=loadChron(),tab=UI.chTab==='fame'?'fame':'life',L=o[tab],msg=UI.chMsg;UI.chMsg='';
     const b=(k,l)=>`<button class="${tab===k?'on':''}" data-a="chtab" data-i="${k}">${l}</button>`;
@@ -1485,7 +1487,7 @@ export function startUI(E,app){
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
     const ov=UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const ovKey=UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
-    app.innerHTML=`<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
+    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button>':''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     if(s==='end'){if(!UI.chronDone&&$('endShot')){UI.chronDone=true;try{chronAuto()}catch(e){}}}else UI.chronDone=false;
     UI.lastOv=ovKey;document.documentElement.classList.toggle('ovopen',!!ov);

@@ -433,6 +433,8 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 .egobar{border-left:2px solid var(--gold);padding:4px 8px;margin:4px 0;background:rgba(201,162,74,.07);display:flex;flex-direction:column;gap:4px}
   .ctitle{color:var(--gold);font-weight:600}
 
-/* 시작 화면 맨 위 일대기 버튼: 어느 테마에서나 눈에 띄게 금색 테두리 */
+/* 시작 화면 일대기 버튼: 좁은 화면은 틀 안 맨 위(chron-in), 넓은 화면은 틀 바깥 왼쪽 위 고정(chron-out) */
 .chronbtn{border-color:var(--gold);text-align:left}
 .chronbtn b{color:var(--gold)}
+.chron-out{display:none}
+@media (min-width:1180px){.chron-in{display:none}.chron-out{display:flex;position:fixed;top:18px;left:18px;width:210px;z-index:5;background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.4)}}
