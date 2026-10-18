@@ -262,13 +262,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
   /* 카드가 들어갈 자리: 전용 팩(덱 고정·전용 카드팩)을 쓰는 중에 다른 곳에서 강제로 들어오는 카드(의수·승진)는
-     지금 덱에 끼우지 않고, 그 카드가 속한 팩(없으면 기본 카드팩)의 보관함으로 보낸다. 보냈으면 true */
+     지금 덱에 끼우지 않고, 그 카드가 속한 팩(없으면 기본 카드팩)의 보관함으로 보낸다. 보낼 팩도 없으면(처음부터 전용 책장만 쓰는 판) 받지 않는다. 덱에 끼우지 않았으면 true */
   const packByName=(ch,n)=>(ch.packs||[]).find(p=>p.n===n);
   function routeCard(ch,cid,owner,chips,label){
     if(!(ch.deckLocked||ch.cardMoney))return false;
     if(owner&&(ch.orgPack===owner||ch.packName===owner+' 전용 카드팩'))return false;
     const t=(owner&&packByName(ch,owner+' 전용 카드팩'))||packByName(ch,'기본 카드팩');
-    if(!t)return false;
+    if(!t){chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n}은(는) 전용 책장을 쓰는 중이라 받지 않는다`);return true}
     if((ch.packs||[]).some(p=>p.deck.includes(cid)||p.side.includes(cid)))return true;
     (t.deck.length<deckMax(ch)?t.deck:t.side).push(cid);
     chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → ${t.n}에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);
