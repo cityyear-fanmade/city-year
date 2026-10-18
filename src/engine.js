@@ -783,6 +783,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(Array.isArray(req))return req.every(r=>meets(ch,r));
     if(req.any)return req.any.some(r=>meets(ch,r));
     if(req.startsWith('flag:')){const [k,n]=req.slice(5).split('>=');return (ch.flags[k]||0)>=(+n||1)}
+    if(req==='fingerup')return canFingerUp(ch);
     if(req.startsWith('corpup<'))return ((ch.corp&&ch.corp.up)||0)<+req.slice(7);
     if(req.startsWith('corpup>='))return ((ch.corp&&ch.corp.up)||0)>=+req.slice(8);
     if(req==='pinky')return !!ch.pinky;
@@ -1507,6 +1508,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ib)xpNote=`타고난 직감 +${ib}`;
       roll={r,mod,tot,dc,ok,die:cd};res=ok?c.ok:c.fail;xp=ok?CFG.xp.ok:CFG.xp.fail;
     }
+    /* 무한 모드: 결과에 inf가 있으면 그 문구·효과로 바꾼다 (초반 보상이 어울리지 않는 사건) */
+    if(ch.infinite&&res&&res.inf)res=Object.assign({},res,res.inf);
     const fx=res.fx||{};
     const {chips,licensed}=applyFx(ch,fx);
     if(xpNote)chips.unshift(xpNote);
@@ -2228,7 +2231,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(X.kuro&&X.black){X.black=false;X.cloud=CFG.syn['흑운회'].reset;L('kw',`${X.name} · 흑운이 가라앉았다 · 구름 ${X.cloud}`)}
       for(const k of ['prescript','warp','shock','chain','web','sink'])if(X[k]>0)X[k]--}
     /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
-    if(C.ch.infinite&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.min(IN.erodeMax,Math.floor(e_*IN.erodePer));
+    if(C.ch.infinite&&!(C.ch.outSeen&&C.ch.outSeen.seal)&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.min(IN.erodeMax,Math.floor(e_*IN.erodePer));
       if(e_>0&&x>0){hpLoss(C,P,x,L);L('dmg',`${P.name} · 세계의 균열이 몸을 갉는다 · 고정 피해 ${x}`)}}
     ampUse(C,L);
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
