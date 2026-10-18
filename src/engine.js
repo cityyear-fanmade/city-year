@@ -798,7 +798,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.namePend=null;return null;
   }
   function loseMind(ch,n,out){
-    if(n<=0||ch.distForm)return;const m0=ch.mind;ch.mind=Math.max(mindFloor(ch),ch.mind-n);
+    if(n<=0||ch.distForm)return;if(hasInn(ch,'will'))n=Math.ceil(n*CFG.innate.willCut);const m0=ch.mind;ch.mind=Math.max(mindFloor(ch),ch.mind-n);
     if(ch.mind<m0&&out)out(`정신력 −${m0-ch.mind} (${ch.mind}/${mindMax(ch)})`);
     if(ch.ego)return;
     if(ch.mind<=0){if(activeC&&activeC.ch===ch&&!activeC.over)mindBreak(activeC);else ch.mindDead=true}
@@ -1340,7 +1340,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
-    if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
+    if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);if(hasInn(G.ch,'will'))gainMind(G.ch,CFG.innate.willHeal);
       {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+G.ch.corp.up*(mt.yearPer||0))}
       if(bondMarried(G.ch))gainMind(G.ch,BD.yearMind);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
@@ -1615,7 +1615,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',hunger:ch.flags&&ch.flags.hunger?0:null,name:(eqT(ch)?`[${eqT(ch)}] `:'')+(ch.name||T.you),tt:eqT(ch)||'',color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min(corpType(ch).healMax||999,corpType(ch).heal+ch.corp.up*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+ch.corp.up*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min(corpType(ch).healMax||999,corpType(ch).heal+ch.corp.up*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+ch.corp.up*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     P.ample=ch.ample||0;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;
@@ -2000,6 +2000,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.wx&&A.wx.crush&&A.crRound!==C.round){A.crRound=C.round;dmg+=A.wx.crush;note+=` ${A.wx.crushN||'짓누름'}+${A.wx.crush}`}
       if(B.middle&&B.isP&&(B.revenge||0)>0&&CFG.middle.def){const r_=Math.min(dmg-1,B.revenge*CFG.middle.def);if(r_>0){dmg-=r_;note+=` 되갚음 방어−${r_}`}}
       if(B.wx&&B.wx.ward){dmg=Math.max(1,dmg-B.wx.ward);note+=` 책장−${B.wx.ward}`}
+      if(A.swift&&A.lead){dmg+=CFG.innate.swiftDmg;note+=` 질풍 선공+${CFG.innate.swiftDmg}`}
       if(A.psycho||B.psycho){const m=(A.psycho?CFG.innate.psycho:1)*(B.psycho?CFG.innate.psycho:1);dmg*=m;note+=` 사이코패스×${m}`}
       if(A.trait==='enrage'&&A.hp<=A.maxHp/2){dmg+=2;note+=' 분노+2'}
       if(B.trait==='callus'){const r=Math.min(2,dmg-1);if(r>0){dmg-=r;note+=` 굳은살−${r}`}}
