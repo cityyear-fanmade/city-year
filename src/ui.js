@@ -366,7 +366,7 @@ export function startUI(E,app){
   const eqTitle=ch=>ch.equipTitle&&titleList(ch).some(t=>t[0]===ch.equipTitle)?ch.equipTitle:'';
   const titledName=ch=>{const t=eqTitle(ch);return (t?`<span class="ctitle">[${esc(t)}]</span><br>`:'')+esc(ch.name||T.you)};
   const entName=X=>X.tt&&X.name.startsWith(`[${X.tt}] `)?`<span class="ctitle">[${esc(X.tt)}]</span><br>${ulName(X.name.slice(X.tt.length+3),X.ul)}`:ulName(X.name,X.ul);
-  function bagTabs(ch){return [['stat','출생',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat(titleList(ch).length?[['title','칭호',String(titleList(ch).length)]]:[]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
+  function bagTabs(ch){return [['stat','출생',''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat([['title','칭호',titleList(ch).length?String(titleList(ch).length):'']]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
   /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
   function vSideL(P){
     const ch=G.ch,s=ch.stats,pad=(k,v)=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`,up=n=>n?` <i class="bufup">${n>0?'+':'−'}${Math.abs(n)}</i>`:'';
@@ -460,7 +460,7 @@ export function startUI(E,app){
   function vTitleBag(){
     const L=titleList(G.ch);
     const cur=eqTitle(G.ch);
-    return L.length?`<div><p class="small dim">칭호를 장착하면 이름 위에 [칭호]로 표시된다.</p>${L.map(([n,d],i)=>`<div class="invr rel"><span>${esc(n)}${d?`<br><b class="mono small dim">${esc(d)}</b>`:''}</span><button class="chip${cur===n?' on':''}" data-a="titleeq" data-i="${i}">${cur===n?'장착 중 · 해제':'장착'}</button></div>`).join('')}</div>`:'<p class="small dim">아직 얻은 칭호가 없다.</p>';
+    return L.length?`<div><p class="small dim">칭호를 장착하면 이름 위에 [칭호]로 표시된다.</p>${L.map(([n,d],i)=>`<div class="invr rel"><span>${esc(n)}${d?`<br><b class="mono small dim">${esc(d)}</b>`:''}</span><button class="chip${cur===n?' on':''}" data-a="titleeq" data-i="${i}">${cur===n?'장착 중 · 해제':'장착'}</button></div>`).join('')}</div>`:'<p class="small dim">아직 얻은 칭호가 없다. 직급·특색 칭호나 보스 처치 칭호를 얻으면 여기에 모인다.</p>';
   }
   function vRelic(){
     const ch=G.ch;
