@@ -14,7 +14,7 @@ export const CFG = {
   /* 캐릭터 */
   baseHp: 60,
   /* 전투: 빛(코스트), 손패, 키워드 */
-  light: 3, lightMax: 5, hand: 4, stackCap: 10,
+  light: 3, lightMax: 5, hand: 4, stackCap: 10, bleedMax: 20 /* 출혈 최대 스택(파열과 같다) */,
   /* 이름 입력 칸(특이점·E.G.O·뒤틀림·사무소·날개·특색)의 최대 글자 수 (특색은 2글자부터) */
   nameMax: 12,
   breathCritPer: 5, critMult: 1.5,
