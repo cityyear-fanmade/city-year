@@ -1125,12 +1125,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {type:'fight',enemy:'kid_hunt',enc:{id:'kid_hunt',roll:null,table:null,label:'토벌 의뢰'}};
   }
   /* 청혼: roll이면 1dN을 굴려 성공 범위면 결혼, 아니면 기회 1회 소모 (기회를 다 쓰면 인연이 끝난다) */
-  /* 결혼 확률: 인연 이벤트에서 인연을 쌓은 만큼 오른다 (끝까지 쌓았으면 100%) */
-  const marryPct=b=>Math.min(100,BD.marryPct[Math.max(0,Math.min(b.love||0,BD.steps))]+(b.extra||0)*BD.extraPct);
+  /* 결혼 판정: 1d4에 쌓은 인연(인연 이벤트 + '인연을 더 쌓는다')을 더해 marryNeed 이상이면 성공 */
+  const marryScore=b=>Math.min(b.love||0,BD.steps)+(b.extra||0);
   function bondPropose(ch,chips,roll){
     const b=ch.bond;if(!b||b.st!=='met')return;
     let ok=false;
-    if(roll){const pc=marryPct(b),r=d(100);ok=r<=pc;chips.push(`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps} · 1d100 · ${r} (${pc} 이하면 성공)`)}
+    if(roll){const sc=marryScore(b),r=d(BD.die);ok=r+sc>=BD.marryNeed;chips.push(`1d${BD.die} · ${r} + 인연 ${sc} = ${r+sc} (${BD.marryNeed} 이상이면 성공)`)}
     if(ok){bondMarry(ch,chips);return}
     b.tries=(b.tries||0)+1;chips.push(bondFill(roll?D.bond.proposeNo:D.bond.proposeWaitFail,b)+` · 남은 기회 ${Math.max(0,BD.tries-b.tries)}/${BD.tries}`);
     if(b.tries>=BD.tries)bondLeft(ch,chips);else b.next=(ch.year||0)+bondGap();
@@ -1194,8 +1194,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     const left=BD.tries-(b.tries||0);
     return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[
-      {l:B.proposeYes,h:`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps} · 결혼 성공 ${marryPct(b)}% · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
-      ...(marryPct(b)<100?[{l:B.proposeWait,h:`1d${BD.waitDie} · ${BD.waitDc} 이상이면 인연이 더 쌓인다 · 청혼 기회는 쓰지 않는다 (보정 없음)`,check:{s:null,dc:BD.waitDc,pure:true,die:BD.waitDie},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]:[])]};
+      {l:B.proposeYes,h:`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps}${b.extra?` · 더 쌓은 인연 ${b.extra}`:''} · 1d${BD.die} + 인연이 ${BD.marryNeed} 이상이면 결혼 · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
+      ...(1+marryScore(b)<BD.marryNeed?[{l:B.proposeWait,h:`1d${BD.waitDie} · ${BD.waitDc} 이상이면 인연이 더 쌓인다 · 청혼 기회는 쓰지 않는다 (보정 없음)`,check:{s:null,dc:BD.waitDc,pure:true,die:BD.waitDie},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]:[])]};
   }
   /* 일상: 사건이 있는 해 일부에 온다. 안정적으로 능력치를 조금 올려 주는 사건이고, 인연이 없는 캐릭터는 일부가 인연(조우자)을 만나는 사건이 된다 */
   const DL=CFG.daily;

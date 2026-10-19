@@ -144,7 +144,7 @@ export const CFG = {
   escort: {chance: 35, gap: 6, money: 300, moneyPer: 100,
     kinds: {fighter: ['hyeolgwi', 'east', 'highfixer', 'blade', 'awl', 'ring', 'kuro', 'finger'], support: ['office', 'assoc', 'wing', 'pointer'], guard: ['thumb', 'middle', 'hcorp']},
     fighter: {base: 6, per: 2, rand: 4}, support: {shield: 12, shieldPer: 4, heal: 4, healPer: 1}, guard: {cut: 35, cutPer: 4, cutMax: 70, counter: 5, counterPer: 2}},
-  bond: {sweetEvery: 7, sweetEvery2: 12, routes: ['office', 'assoc', 'wing', 'finger', 'thumb', 'pointer', 'middle', 'ring', 'kuro', 'blade', 'awl'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], marryPct: [5, 25, 50, 75] /* 인연 0~3일 때 청혼 성공률(%). 인연 이벤트에서 인연을 쌓은 만큼 오른다 */, extraPct: 25 /* '인연을 더 쌓는다'에 성공할 때마다 +25%p (최대 100%) */, tries: 2, waitDc: 24, waitDie: 60 /* 청혼을 미루는 "기다린다": 보정 없이 1d60이 waitDc 이상이면 기회를 쓰지 않는다 */,
+  bond: {sweetEvery: 7, sweetEvery2: 12, routes: ['office', 'assoc', 'wing', 'finger', 'thumb', 'pointer', 'middle', 'ring', 'kuro', 'blade', 'awl'], from: 8, meetChance: 35, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], marryNeed: 5 /* 청혼 판정: 1d4 + 쌓은 인연(인연 이벤트 최대 3 + '인연을 더 쌓는다' 성공 횟수)이 5 이상이면 결혼 */, tries: 2, waitDc: 24, waitDie: 60 /* 청혼을 미루는 "기다린다": 보정 없이 1d60이 waitDc 이상이면 기회를 쓰지 않는다 */,
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
     /* 결혼 뒤: 금기를 저지른 다음 해부터 해마다 dieChance% 배우자가 세상을 떠난다(최대 정신력 −lossMind). 아이: kid.from년 뒤부터 해마다 chance%, 최대 max명, 간격 gap년, 태어나면 최대 정신력 +mind. adult살이 되면 사무소·해결사·협회 중 한 곳에 들어간다 */
     /* 히든 인연(상대가 처음부터 2~1급 해결사): 해결사 등록자가 rank급 이하일 때 만남이 열리면 chance% 확률로 이 길이 된다 */
