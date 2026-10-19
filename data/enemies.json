@@ -6178,7 +6178,8 @@
   {
    "id": "hongwon",
    "req": [
-    "pinky"
+    "pinky",
+    "noflag:starborn"
    ],
    "chance": 70,
    "from": 40,

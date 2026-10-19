@@ -1181,6 +1181,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function vFingerPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">손가락 가입</span>
       <p class="small">어느 손가락에 설지 고른다. 정하면 그 손가락의 서열표를 따른다.</p>
+      ${G.ch.flags&&G.ch.flags.starborn&&!G.ch.pinky?`<button class="btn" data-a="fingerset" data-i="소지"><b>소지</b><span class="small">${esc(D.pinky.t)}</span><span class="mono small" style="color:var(--gold)">서열 없음 · 인 → 의 → 예 → 지 (5년마다 별을 잇는다)</span><span class="small dim">${esc(D.pinky.e)} · 별을 하나 이을 때마다 성도 한 단계 강화 · 네 별을 모두 이으면 '별을 잇다' 한 장 더</span></button>`:''}
       ${D.orgs.finger.map(n=>{const F=D.fingers[n];return `<button class="btn" data-a="fingerset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small">${esc(F.trait)}</span><span class="mono small" style="color:var(--gold)">${F.ranks.map(r=>esc(r.n||(r.branch||[]).map(b=>b.n).join(' / '))).join(' → ')}</span><span class="small dim">${esc(fingerPassive(n,0)||'')}</span></button>`}).join('')}</div>`;
   }
   function vStarPick(){
