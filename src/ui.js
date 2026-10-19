@@ -49,8 +49,11 @@ export function startUI(E,app){
   if(!SKINS.some(s=>s.k===SKIN))SKIN='base';
   /* 배경음악: 기본은 꺼짐. 켜 둔 채 다시 열면 첫 터치 때 서서히 시작한다 (브라우저는 터치 전에 소리를 낼 수 없다) */
   const BGM=createBgm(),BGMK='cityYearBgm';
-  /* 주사위 효과음: 배경음악 켬/끔과 음량을 따른다. 연출 끔이거나 건너뛰는 중이면 내지 않는다 */
-  const SFX=createSfx(()=>BGM.isOn(),()=>BGM.vol());
+  /* 주사위 효과음: 배경음악과 따로 켜고 끈다 (기본 켬, 음량 70%). 연출 끔이거나 건너뛰는 중이면 내지 않는다 */
+  const SFXK='cityYearSfx';
+  const SFXS=(()=>{let o={};try{o=JSON.parse(store.get(SFXK)||'{}')||{}}catch(e){}return {on:o.on!==false,vol:typeof o.vol==='number'?Math.max(0,Math.min(1,o.vol)):0.7}})();
+  const sfxSave=()=>store.set(SFXK,JSON.stringify(SFXS));
+  const SFX=createSfx(()=>SFXS.on,()=>SFXS.vol);
   const sfx=k=>{if(MODE!=='off'&&!SKIP)SFX.play(k)};
   const bgmSave=()=>store.set(BGMK,JSON.stringify({on:BGM.isOn(),vol:BGM.vol(),style:BGM.style()}));
   {let o={};try{o=JSON.parse(store.get(BGMK)||'{}')||{}}catch(e){}
@@ -315,6 +318,10 @@ export function startUI(E,app){
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">음량</span><b class="mono" id="bgmPct">${Math.round(BGM.vol()*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="bgmstep" data-i="-10" aria-label="음량 10 줄이기">−10</button><input type="range" id="bgmRange" min="0" max="100" step="1" value="${Math.round(BGM.vol()*100)}" aria-label="배경음악 음량"><button class="chip" data-a="bgmstep" data-i="10" aria-label="음량 10 올리기">+10</button></div></div>
         <span class="small dim">외부 음원 없이 만든 배경음이다. 고요와 불길 두 가지 중에서 고른다. 켜면 소리가 서서히 커지고, 언제든 끌 수 있다. 처음 음량은 30%이고, 막대를 끌거나 −10 · +10 버튼으로 0~100%까지 조절한다</span></div>`:''}
+      ${SFX.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">효과음</span><div class="seg">${b('sfx','off','끔',SFXS.on?'on':'off')}${b('sfx','on','켬',SFXS.on?'on':'off')}</div>
+        <div class="stack" style="gap:4px"><div class="row between"><span class="small">효과음 음량</span><b class="mono" id="sfxPct">${Math.round(SFXS.vol*100)}%</b></div>
+          <div class="bgmrow"><button class="chip" data-a="sfxstep" data-i="-10" aria-label="효과음 10 줄이기">−10</button><input type="range" id="sfxRange" min="0" max="100" step="1" value="${Math.round(SFXS.vol*100)}" aria-label="효과음 음량"><button class="chip" data-a="sfxstep" data-i="10" aria-label="효과음 10 올리기">+10</button></div></div>
+        <span class="small dim">주사위가 멈출 때 나는 '탁' 소리다. 배경음악과 따로 켜고 끈다. 연출을 끄면 나지 않는다</span></div>`:''}
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
   }
@@ -1829,6 +1836,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     autogap(i){AUTOGAP=i;store.set('cityYearAutoGap',i);if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     dice(i){DICE=i;store.set('cityYearDice',i);render()},
     bgm(i){BGM.set(i==='on');bgmSave();render()},
+    sfx(i){SFXS.on=i==='on';sfxSave();if(SFXS.on)SFX.play('snap');render()},
+    sfxstep(i){const p=Math.round(SFXS.vol*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;SFXS.vol=clamp(n,0,100)/100;sfxSave();SFX.play('hit');render()},
     qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
     qstyle(){BGM.setStyle(BGM.style()==='passion'?'calm':'passion');bgmSave();render()},
     qvol(){UI.volOpen=!UI.volOpen;render()},
@@ -2006,6 +2015,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 휴대폰 키보드의 이동·완료(Enter)로도 시드 적용 */
   app.addEventListener('change',e=>{if(e.target.id!=='xfileIn')return;const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{UI.xask=null;xApply(String(r.result||''))};r.readAsText(f)});
   app.addEventListener('input',e=>{if(e.target.id!=='bgmRange'&&e.target.id!=='bgmQuick')return;const v=Math.max(0,Math.min(100,+e.target.value||0));BGM.setVol(v/100);for(const id of ['bgmPct','bgmQuickPct']){const l=document.getElementById(id);if(l)l.textContent=v+'%'}});
+  app.addEventListener('input',e=>{if(e.target.id!=='sfxRange')return;const v=Math.max(0,Math.min(100,+e.target.value||0));SFXS.vol=v/100;const l=document.getElementById('sfxPct');if(l)l.textContent=v+'%'});
+  app.addEventListener('change',e=>{if(e.target.id==='sfxRange'){sfxSave();SFX.play('hit')}});
   app.addEventListener('change',e=>{if(e.target.id==='bgmRange'||e.target.id==='bgmQuick'){bgmSave();if(e.target.id==='bgmQuick')render()}});
   document.addEventListener('pointerdown',e=>{if(UI.volOpen&&!e.target.closest('.volbox')){UI.volOpen=false;const p=document.querySelector('.volpop');if(p)p.remove()}});
   app.addEventListener('keydown',e=>{if(e.target.id==='seedIn'&&e.key==='Enter'){e.preventDefault();e.target.blur();ACT.seed()}});
