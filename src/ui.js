@@ -53,6 +53,9 @@ export function startUI(E,app){
     BGM.setVol(typeof o.vol==='number'?o.vol:0.3);BGM.setMood(SKIN);BGM.setStyle(o.style);
     if(o.on&&BGM.supported)document.addEventListener('pointerdown',()=>{BGM.set(true);bgmSave()},{once:true})}
   document.documentElement.dataset.skin=SKIN;
+  /* PC 화면 크기: 일반 / 꽉 채운 화면(글자와 화면 폭을 키운다, 넓은 화면에서만 적용) */
+  let VIEW=store.get('cityYearView')==='wide'?'wide':'normal';
+  document.documentElement.dataset.view=VIEW;
 
   /* ===== 연출 (굴림 / 빠르게 / 끔) ===== */
   let PLAYING=false,SKIP=false,PRE=null,wake=null;
@@ -292,7 +295,8 @@ export function startUI(E,app){
   }
   function vSettings(){
     const b=(a,k,l,cur)=>`<button class="${cur===k?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`;
-    return `<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
+    return `<div class="stack" style="gap:6px"><span class="eyebrow">화면 크기 (PC)</span><div class="seg">${b('view','normal','일반',VIEW)}${b('view','wide','꽉 채운 화면',VIEW)}</div><span class="small dim">${VIEW==='wide'?'넓은 화면에서 글자와 화면 폭을 키운다. 폭이 좁은 화면(휴대폰 등)에서는 일반과 같다':'기본 크기'}</span></div>
+      <div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">주사위 · 전투 연출</span><div class="seg">${b('mode','manual','수동',MODE)}${b('mode','slow','천천히',MODE)}${b('mode','fast','빠르게',MODE)}${b('mode','off','끔',MODE)}</div>
         <span class="small dim">${{manual:'행동마다 버튼을 눌러 직접 주사위를 굴린다',slow:'자동으로 천천히 굴린다',fast:'자동으로 빠르게 굴린다',off:'연출 없이 결과만 본다'}[MODE]}</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">자동 전투 간격</span><div class="seg">${b('autogap','slow','느림',AUTOGAP)}${b('autogap','normal','보통',AUTOGAP)}${b('autogap','mid','조금 빠름',AUTOGAP)}${b('autogap','fast','빠름',AUTOGAP)}</div>
@@ -441,7 +445,7 @@ export function startUI(E,app){
     const up=w&&(w.id==='bonatelli'||w.id==='star')?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b class="serif">${esc(w.n)}</b><span class="mono" style="color:var(--gold)">강화 ${w.lvl}/${w.id==='star'?CFG.star.max:CFG.bon.max}</span></div>
       ${need==null?'<p class="small dim">최대로 강화했다.</p>':`<p class="small">보관함의 장비 하나를 녹여 한 단계 강화한다. 다음 단계 재료 · ${need?need+'등급 이상':'아무 장비'}${need>=5?' (유물·히든 장비)':''}</p>
         <p class="mono small">다음 단계 · ${esc(E.upItem(w,w.lvl+1).e)}</p>
-        ${cbt?'<p class="small dim">전투 중에는 강화할 수 없다.</p>':st.map((g,i)=>(g.grade||0)>=need?`<button class="chip${UI.bonAsk===i?' warn':''}" data-a="bonup" data-i="${i}">${UI.bonAsk===i?'정말 '+esc(g.n)+'을(를) 녹인다':esc(g.n)+' 재료로 쓰기'}</button>`:'').join(' ')||'<p class="small dim">재료로 쓸 수 있는 장비가 보관함에 없다.</p>'}`}</div>`:'';
+        ${cbt?'<p class="small dim">전투 중에는 강화할 수 없다.</p>':st.map((g,i)=>(g.grade||0)>=need&&!(g.id==='birth'&&g.n==='맨손')?`<button class="chip${UI.bonAsk===i?' warn':''}" data-a="bonup" data-i="${i}">${UI.bonAsk===i?'정말 '+esc(g.n)+'을(를) 녹인다':esc(g.n)+' 재료로 쓰기'}</button>`:'').join(' ')||'<p class="small dim">재료로 쓸 수 있는 장비가 보관함에 없다.</p>'}`}</div>`:'';
     return `<div><span class="eyebrow">장착 중</span>${eq}</div>${up}
       <div><span class="eyebrow">보관함 ${st.length}</span>${sl||'<p class="small dim">보관함이 비어 있다. 새 장비를 얻으면 장착할지 보관할지 고를 수 있고, 장착하면 이전 장비가 여기로 온다.</p>'}</div>
       ${st.length?`<p class="small dim">장착을 누르면 같은 칸의 지금 장비와 자리를 바꾼다. 아무것도 사라지지 않는다.</p>`:''}`;
@@ -1789,6 +1793,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bgm(i){BGM.set(i==='on');bgmSave();render()},
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
+    view(i){VIEW=i==='wide'?'wide':'normal';store.set('cityYearView',VIEW);document.documentElement.dataset.view=VIEW;render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;flow()},
     outerend(){if(!G||!G.infinite)return;UI.outEnd=null;if(typeof confirm==='function'&&!confirm('외곽에서 이야기를 끝낼까? 이 판은 여기까지가 기록이 된다.'))return;UI.outerEnd=true;UI.endWin=true;UI.trueEnd=true;UI.oldEnd=false;UI.death=null;recordEnd();UI.screen='end';render()},
