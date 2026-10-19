@@ -447,3 +447,5 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 @media (min-width:1360px){html[data-view="wide"] body{zoom:1.25}}
 @media (min-width:1700px){html[data-view="wide"] body{zoom:1.45}html[data-view="wide"] .wrap{max-width:740px}}
 @media (min-width:1920px){html[data-view="wide"] body{zoom:1.55}html[data-view="wide"] .wrap{max-width:800px}}
+/* 꽉 채운 화면에서는 본문 폭이 달라져서 양옆 장식 띠가 본문 위에 겹치므로 끈다 */
+html[data-view="wide"] body::before,html[data-view="wide"] body::after{display:none}
