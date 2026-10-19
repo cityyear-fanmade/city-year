@@ -2256,7 +2256,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.passive&&B.passive.id==='stance')B.sal=Math.max(0,B.sal-1);
       if(B.middle&&B.hp>0){B.revenge=Math.min(B.isP?CFG.middle.cap:5,(B.revenge||0)+1+(B.wx&&B.wx.revUp||0)+(B.odinMid&&B.odinMidRound!==C.round?(B.odinMidRound=C.round,CFG.odin.midHit):0))}
       /* 중지 수비 반격: 방어 카드(또는 방어 자세)를 낸 라운드에 맞으면 쌓인 되갚음 스택 × counter의 고정 피해로 바로 반격한다 (스택은 그대로, 라운드에 한 번) */
-      if(B.middle&&B.isP&&B.hp>0&&A.hp>0&&(B.defRound===C.round||B.guarding)&&B.counterRound!==C.round&&(B.revenge||0)>0){B.counterRound=C.round;const x=B.revenge*CFG.middle.counter;A.hp=Math.max(0,A.hp-x);L('dmg',`  ${B.name} · 수비 반격 · 되갚음 ${B.revenge} · ${A.name} 고정 피해 ${x}`)}
+      if(B.middle&&B.isP&&B.hp>0&&A.hp>0&&(B.defRound===C.round||B.guarding)&&B.counterRound!==C.round&&(B.revenge||0)>0){B.counterRound=C.round;const x=B.revenge*CFG.middle.counter;A.hp=Math.max(0,A.hp-x);if(x>0)B.dealtR=C.round;L('dmg',`  ${B.name} · 수비 반격 · 되갚음 ${B.revenge} · ${A.name} 고정 피해 ${x}`)}
       if(A.trait==='thief'&&B.isP){const m=Math.min(30,C.ch.money);if(m>0){C.ch.money-=m;L('kw',`  ${A.name} · 손버릇 · 돈 −${m}`)}}
       if(B.trait==='counter'&&B.hp>0&&A.hp>0){A.hp=Math.max(0,A.hp-3);L('dmg',`  ${B.name} · 반격 · ${A.name} 피해 3`)}
       if(B.wx&&B.wx.thorns&&A.hp>0){A.hp=Math.max(0,A.hp-B.wx.thorns);L('dmg',`  ${B.name}의 무기 반격 · ${A.name} 피해 ${B.wx.thorns}`)}
@@ -2370,6 +2370,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 지구전 압박: from라운드부터, 피해를 연속 miss라운드 이상 한 번도 주지 못한 쪽은 라운드마다 최대 HP의 per%×(연속 못 준 라운드 수 − miss + 1) 고정 피해(상한 max%)를 받는다. 한 번이라도 맞히면 처음부터 다시 쌓인다 */
     {const F=CFG.fatigue,n=C.round-F.from+1;if(n>0&&P.hp>0&&E.hp>0&&!(E.passive&&E.passive.id==='trial')){
       if(n===1)L('sys','싸움이 길어진다 · 지친 숨이 거칠어진다 · 이제 상대에게 피해를 연달아 주지 못한 쪽이 라운드마다 최대 HP의 일부를 잃는다');
+      /* 중지: 회피를 못 하는 대신 방어 자세로 받아낸 라운드는 상대가 피해를 준 것으로 치지 않는다 */
+      if(P.middle&&(P.defRound===C.round||P.guarding)&&E.dealtR===C.round)E.dealtR=0;
       for(const X of [P,E]){if(X.dealtR===C.round){X.dry=0;continue}X.dry=(X.dry||0)+1;if(X.dry<F.miss)continue;
         const r=Math.min(F.max,F.per*(X.dry-F.miss+1)),x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · ${X.dry}라운드째 피해를 주지 못했다 · 고정 피해 ${x}`)}}}
     ampUse(C,L);
