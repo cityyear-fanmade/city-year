@@ -816,7 +816,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const xpFor=l=>CFG.levels[Math.min(l,CFG.levels.length)-1];
   function lvOf(xp){let l=1;while(xp>=xpFor(l+1))l++;return l}
   const xpNext=ch=>xpFor(ch.lv+1);
-  function gainXp(ch,n){const b=ch.lv;if(hasInn(ch,'scholar')&&n>0){ch.xpAcc=(ch.xpAcc||0)+n*(CFG.innate.scholarMul-1);const x=Math.floor(ch.xpAcc+1e-9);if(x>0){ch.xpAcc-=x;n+=x}}ch.xp+=n;ch.lv=lvOf(ch.xp);ch.lvPend+=ch.lv-b;return ch.lv-b}
+  function gainXp(ch,n){const b=ch.lv;if(hasInn(ch,'scholar')&&n>0){ch.xpAcc=(ch.xpAcc||0)+n*(CFG.innate.scholarMul-1);const x=Math.floor(ch.xpAcc+1e-9);if(x>0){ch.xpAcc-=x;n+=x}}ch.xp+=n;ch.lv=lvOf(ch.xp)+(ch.lvBonus||0);ch.lvPend+=ch.lv-b;return ch.lv-b}
   /* 덱이 고정(책장·전용 카드팩)이면 카드를 받을 수 없으므로 '보상 카드' 성장은 선택지에서 뺀다 */
   function rollGrowth(ch){
     const out=[],locked=!!(ch&&(ch.deckLocked||ch.cardMoney));let g=0;
@@ -1723,7 +1723,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     offerPick(ch,D.rewards,chips,null);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.xp){gainXp(ch,BN.xp);chips.push(`${BN.n||'전리품'} · 경험치 +${BN.xp}`)}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
-    const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
+    let up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);
+    /* 무한 모드: 경험치 표가 끝난 뒤에도 전투 승리 infLvEvery번마다 레벨이 1 오른다 (성장 선택 1회) */
+    if(ch.infinite&&CFG.infinite.infLvEvery){ch.infWins=(ch.infWins||0)+1;if(ch.infWins>=CFG.infinite.infLvEvery){ch.infWins=0;ch.lvBonus=(ch.lvBonus||0)+1;ch.lv++;ch.lvPend++;up++}}
+    if(up)chips.push('레벨 업 · Lv '+ch.lv);
     if(ch.egoNote){chips.push(ch.egoNote);ch.egoNote=null}
     if(ch.bloomNote){chips.push(ch.bloomNote);ch.bloomNote=null}
     let title=null,tlabel=null,newly=false,colorRoll=null,unlock=null;
@@ -2372,7 +2375,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(C.ch.infinite&&!(C.ch.outSeen&&C.ch.outSeen.seal)&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.min(IN.erodeMax,Math.floor(e_*IN.erodePer));
       if(e_>0&&x>0){hpLoss(C,P,x,L);L('dmg',`${P.name} · 세계의 균열이 몸을 갉는다 · 고정 피해 ${x}`)}}
     /* 지구전 압박: from라운드부터, 피해를 연속 miss라운드 이상 한 번도 주지 못한 쪽은 라운드마다 최대 HP의 per%×(연속 못 준 라운드 수 − miss + 1) 고정 피해(상한 max%)를 받는다. 한 번이라도 맞히면 처음부터 다시 쌓인다 */
-    {const F=CFG.fatigue,n=C.round-F.from+1;if(n>0&&!C.ch.infinite&&P.hp>0&&E.hp>0&&!(E.passive&&E.passive.id==='trial')){
+    {const F=CFG.fatigue,n=C.round-F.from+1;if(n>0&&(!C.ch.infinite||(infYears(C.ch)>0&&D.enemies[C.id].hidden))&&P.hp>0&&E.hp>0&&!(E.passive&&E.passive.id==='trial')){
       if(n===1)L('sys','싸움이 길어진다 · 지친 숨이 거칠어진다 · 이제 상대에게 피해를 연달아 주지 못한 쪽이 라운드마다 최대 HP의 일부를 잃는다');
       /* 중지: 회피를 못 하는 대신 방어 자세로 받아낸 라운드는 상대가 피해를 준 것으로 치지 않는다 */
       if(P.middle&&(P.defRound===C.round||P.guarding)&&E.dealtR===C.round)E.dealtR=0;
