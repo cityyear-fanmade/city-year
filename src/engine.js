@@ -893,7 +893,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='ownoffice')return !!ch.aff&&!!ch.aff.own;
     if(req==='notown')return !(ch.aff&&ch.aff.own);
     if(req==='aff')return !!ch.aff;
-    if(req==='noaff')return !ch.aff;
+    if(req==='noaff')return !ch.aff&&!isFounder(ch);
     if(req.startsWith('aff:'))return !!ch.aff&&ch.aff.type===req.slice(4);
     return true;
   }
