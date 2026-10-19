@@ -1435,7 +1435,11 @@
   },
   {
    "t": "두 번째 초대장",
-   "req": "flag:libraryInvite",
+   "req": [
+    "flag:libraryInvite",
+    "noflag:libraryGuest",
+    "nobeat:library"
+   ],
    "first": true,
    "x": "같은 필체의 초대장이 또 왔다. 이번에는 날짜가 없다. 언제든 오라는 뜻이다.",
    "c": [
