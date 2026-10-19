@@ -1126,7 +1126,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 청혼: roll이면 1dN을 굴려 성공 범위면 결혼, 아니면 기회 1회 소모 (기회를 다 쓰면 인연이 끝난다) */
   /* 결혼 확률: 인연 이벤트에서 인연을 쌓은 만큼 오른다 (끝까지 쌓았으면 100%) */
-  const marryPct=b=>BD.marryPct[Math.max(0,Math.min(b.love||0,BD.steps))];
+  const marryPct=b=>Math.min(100,BD.marryPct[Math.max(0,Math.min(b.love||0,BD.steps))]+(b.extra||0)*BD.extraPct);
   function bondPropose(ch,chips,roll){
     const b=ch.bond;if(!b||b.st!=='met')return;
     let ok=false;
@@ -1195,7 +1195,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const left=BD.tries-(b.tries||0);
     return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[
       {l:B.proposeYes,h:`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps} · 결혼 성공 ${marryPct(b)}% · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
-      {l:B.proposeWait,h:`1d${BD.waitDie} · ${BD.waitDc} 이상이면 기회를 쓰지 않고 넘어간다 (보정 없음)`,check:{s:null,dc:BD.waitDc,pure:true,die:BD.waitDie},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]};
+      ...(marryPct(b)<100?[{l:B.proposeWait,h:`1d${BD.waitDie} · ${BD.waitDc} 이상이면 인연이 더 쌓인다 · 청혼 기회는 쓰지 않는다 (보정 없음)`,check:{s:null,dc:BD.waitDc,pure:true,die:BD.waitDie},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]:[])]};
   }
   /* 일상: 사건이 있는 해 일부에 온다. 안정적으로 능력치를 조금 올려 주는 사건이고, 인연이 없는 캐릭터는 일부가 인연(조우자)을 만나는 사건이 된다 */
   const DL=CFG.daily;
@@ -1732,7 +1732,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
     if(fx.bondPropose)bondPropose(ch,chips,true);
     if(fx.bondSlip)bondPropose(ch,chips,false);
-    if(fx.bondWait)chips.push('기회는 그대로다');
+    if(fx.bondWait&&ch.bond){ch.bond.extra=(ch.bond.extra||0)+1;chips.push('인연을 더 쌓았다 · 청혼 기회는 그대로다')}
     if(roll&&roll.ok&&!fx.examPass&&!fx.colorPass&&!fx.topPass)addPts(ch,CFG.promo.gain.check,chips);
     const up=gainXp(ch,xp);chips.push('경험치 +'+xp);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     let enc=fx.combat?encounter(ch,fx.combat):null;
