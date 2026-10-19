@@ -6,6 +6,8 @@
        진행: Cmaj7 → D → Bm7 → Em7 → Am7 → D → G → G (IV-V-iii-vi 흐름)
      · 불길(passion): 묵직하고 신나는 전투 곡. 4/4박 · 템포 150(전투 168) · D 단조, 일그러진 파워 코드(끊어 치기/길게), 8분 질주 베이스 + 서브 베이스, 무거운 킥의 록 드럼, 16분 피아노 리프, 신스 선율 훅
        진행: Dm → Bb → F → C → Dm → Bb → Gm → A (i-VI-III-VII, 끝에 딸림화음으로 다시 당긴다) · 구간마다 심벌, 8마디 끝마다 스네어 필, 쉬어 가는 구간 뒤 다시 터진다
+   - 히든 보스(boss 장면): 고요·불길 선택과 상관없이 전용 곡 하나. 느리고 무거운 도입(종 · 낮은 지속음 · 합창) 4마디 → 반박자 느낌의 묵직한 본 구간 → 몰아치는 구간(끝에 7/8 마디로 한 번 비튼다) → 숨 고르기 → 본 구간으로 되돌아간다
+       C 단조(화성 단음계)에 감화음·나폴리 화음(Db)을 섞어 불길하게: Cm → Ab → Fm → G → Cm → Db → Bdim → G
    - 참고한 것은 장르의 흐름(템포·박자·구간 구성·악기 역할)뿐이고, 선율과 화성 진행은 직접 만들었다 */
 export function createBgm(){
   /* 모든 값은 여기서 조절한다 */
@@ -14,6 +16,7 @@ export function createBgm(){
     fadeIn:3,           // 켤 때 서서히 커지는 시간(초)
     fadeOut:0.8,        // 끌 때 서서히 줄어드는 시간(초)
     bpm:{calm:{calm:100,fight:132},passion:{calm:150,fight:168}},   // [스타일][장면]
+    bossBpm:{intro:66,main:144},bossGain:0.62,bossCut:2400,
     styleGain:{calm:0.7,passion:0.6},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
     cutMul:{calm:{calm:0.8,fight:1},passion:{calm:1.1,fight:1.3}}, // 장면별 밝기
     /* 코드(C=0 기준 반음): b=베이스 근음, t=구성음(피아노 · 현), sc=선율 음계 */
@@ -29,6 +32,10 @@ export function createBgm(){
       {b:-3,f:7,t:[-3,0,4,7]},{b:2,f:7,t:[2,6,9,12]},{b:7,f:7,t:[-1,2,7,11]},{b:7,f:5,t:[0,2,7,12]}
     ],
     /* 선율: 마디마다 8칸(8분음표). 숫자=가운데 도 기준 반음 · '.'=앞 음을 잇는다 · '_'=쉰다 */
+    /* 히든 보스(C 단조) */
+    bChords:[{b:0,t:[0,3,7,12]},{b:8,t:[-4,0,3,8]},{b:5,t:[-7,-4,0,5]},{b:7,t:[-5,-1,2,7]},{b:0,t:[0,3,7,12]},{b:1,t:[1,5,8,13]},{b:11,t:[-1,2,5,8]},{b:7,t:[-5,-1,2,7]}],
+    bossBell:[12,7,8,7,15,14,11,7],
+    bossLead:['12 . . 15 14 . 12 .','15 . 14 . 12 . 8 .','17 . 15 . 12 . 8 .','11 . . . 14 . 11 .','12 . 15 . 19 . 20 .','20 . 17 . 13 . 17 .','14 . 11 . 8 . 14 .','11 . . . _ _ _ _'],
     calmA:['16 . 19 . 23 . 21 19','18 . . 16 18 . 21 .','18 . 14 . 11 . 14 18','19 . . . 16 . _ _','16 . 19 . 24 . 23 21','21 . 18 . 16 . 18 21','23 . 21 19 . . 18 19','19 . . . _ _ 14 16'],
     calmB:['_ _ 23 . 24 . 23 21','18 . . . 14 . 16 18','_ _ 18 . 21 . 18 14','16 . . . . . _ _','_ _ 16 . 19 . 21 23','21 . . 18 . . 16 .','14 . 16 . 18 . 21 .','19 . . . . . _ _'],
     fireA:['21 . 21 19 21 . 24 .','22 . 21 . 19 . 17 .','17 . 19 21 . . 24 .','19 . . . 16 . 17 19','21 . 21 19 21 . 26 .','24 . 22 . 21 . 22 .','19 . 17 . 19 . 22 .','21 . . . _ _ 25 .'],
@@ -65,7 +72,7 @@ export function createBgm(){
   function newEpoch(){
     const now=ctx.currentTime;
     if(cur){const o=cur;for(const g of [o.b,o.u,o.m]){g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+0.28)}setTimeout(()=>{try{for(const g of [o.b,o.u,o.m])g.disconnect()}catch(e){}},1200)}
-    const mk=dest=>{const g=ctx.createGain();g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(P.styleGain[style],now+0.3);g.connect(dest);return g};
+    const mk=dest=>{const g=ctx.createGain();g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(scene==='boss'?P.bossGain:P.styleGain[style],now+0.3);g.connect(dest);return g};
     cur={b:mk(bright),u:mk(bus),m:mk(master)};
     /* 일그러진 기타 묶음 (불길): 소리를 찌그러뜨린 뒤 높은 쇳소리를 걸러 묵직하게 */
     {const sh=ctx.createWaveShaper(),n=1024,cv=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;cv[i]=Math.tanh(x*6)}sh.curve=cv;sh.oversample='2x';
@@ -248,12 +255,59 @@ export function createBgm(){
       for(const x of mel(L[ci])){const d=x.n*bd/2*0.9;synthN(R+x.m-12,at(x.k/2),d,0.035,cut);if(sec==='A2')synthN(R+x.m,at(x.k/2),d,0.016,cut)}}
     barT=T+4*bd;barN++;
   }
+  /* 종: 사인에 어긋난 배음(2.76배 · 5.4배)을 섞어 길게 울린다 */
+  function bellN(m,t,peak,dur){
+    const f=hz(m),g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    for(const [r,a,d] of [[1,1,1],[2.76,0.35,0.5],[5.4,0.15,0.25]]){const o=ctx.createOscillator(),og=ctx.createGain();o.type='sine';o.frequency.value=f*r;og.gain.setValueAtTime(a,t);og.gain.exponentialRampToValueAtTime(0.0001,t+dur*d);o.connect(og);og.connect(g);o.start(t);o.stop(t+dur*d+0.05)}
+    g.connect(cur.u);
+  }
+  /* 합창 같은 소리: 톱니 둘을 '아' 모음 대역(700·1150Hz)으로 걸러 천천히 키운다 */
+  function choirN(m,t,dur,peak){
+    const g=ctx.createGain(),f1=ctx.createBiquadFilter(),f2=ctx.createBiquadFilter();f1.type='bandpass';f1.frequency.value=700;f1.Q.value=2.5;f2.type='bandpass';f2.frequency.value=1150;f2.Q.value=3;
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+dur*0.4);g.gain.setValueAtTime(peak,t+dur*0.75);g.gain.linearRampToValueAtTime(0.0001,t+dur);
+    for(const dt of [-8,8]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f1);o.connect(f2);o.start(t);o.stop(t+dur+0.05)}
+    f1.connect(g);f2.connect(g);g.connect(cur.u);
+  }
+  /* 히든 보스 한 마디: 0~3 도입(느리게) · 이후 20마디 한 바퀴 — 0~7 본 구간(반박자: 킥 1·3박 반, 스네어 3박, 긴 파워 코드) · 8~15 몰아치기(킥 매 박·스네어 2·4·8분 끊어 치기·선율, 마지막 마디는 7/8) · 16~19 숨 고르기(종·합창·지속음) */
+  function barBoss(T,M){
+    const R=M.root,intro=barN<4,pos=intro?-1:(barN-4)%20,ci=intro?barN%4:pos%8,C=P.bChords[intro?[0,1,2,3][barN]:ci];
+    const bd=60/(intro?P.bossBpm.intro:P.bossBpm.main),at=k=>T+k*bd,lb=R-24+C.b;
+    const sec=intro?'intro':pos<8?'A':pos<16?'B':'break',beats=pos===15?3.5:4;
+    if(sec==='intro'||sec==='break'){
+      subB(lb-12,at(0),bd*4,0.14);
+      C.t.slice(0,3).forEach((o,i)=>choirN(R+o-12,T+i*0.03,bd*4,0.02));
+      bellN(R+P.bossBell[(barN*2)%8],at(0),0.07,bd*3);bellN(R+P.bossBell[(barN*2+1)%8],at(2),0.055,bd*2.2);
+      boom(T,0.24);if(sec==='break'&&pos===19)for(let n=0;n<8;n++)snare(at(2+n/4),0.012+0.005*n);
+      if(barN===3)for(let n=0;n<6;n++)boom(at(2.5+n*0.25),0.06+0.025*n);
+    }else{
+      const gm=R-24+12+C.b;
+      if(sec==='A'){
+        powerC(gm,at(0),bd*2.5,0.055,false);powerC(gm,at(2.5),bd*1.5,0.05,false);
+        for(const k of [0,1.5,2.5])subB(lb-12,at(k),bd*(k===0?1.4:0.9),0.14);
+        sawN(lb,at(0),bd*1.4,0.07,700);sawN(lb,at(2.5),bd*1.4,0.07,700);
+        kickH(at(0),0.22);kickH(at(2.5),0.2);snare(at(2),0.07);
+        for(let n=0;n<4;n++)hat(at(n),n%2?0.012:0.008,false);
+        C.t.slice(0,3).forEach((o,i)=>choirN(R+o-12,T+i*0.03,bd*4,0.012));
+        if(pos%2===0)bellN(R+P.bossBell[pos%8],at(0),0.04,bd*3);
+      }else{
+        for(let n=0;n<beats*2;n++){powerC(gm,at(n/2),n===0?bd*0.9:bd*0.32,n===0?0.05:0.036,n!==0);sawN(lb+(n%4===3?12:0),at(n/2),bd*0.45,n%2?0.06:0.08,1100)}
+        for(let k=0;k<beats;k++){kickH(at(k),0.2);subB(lb-12,at(k),bd*0.9,0.12)}
+        for(const k of [1,3])if(k<beats)snare(at(k),0.065);
+        for(let n=0;n<beats*2;n++)hat(at(n/2),n%2?0.015:0.009,false);
+        for(const x of mel(P.bossLead[ci])){if(x.k>=beats*2)continue;synthN(R+x.m-12,at(x.k/2),x.n*bd/2*0.9,0.035,2600)}
+        if(pos===8)crash(T,0.055);
+        if(pos===15)for(let n=1;n<4;n++)snare(at(2.5+n*0.25),0.03+0.01*n);
+      }
+      if(pos===0)crash(T,0.05),boom(T,0.24);
+    }
+    barT=T+beats*bd;barN++;
+  }
   function schedule(now,M){
-    if(lastScene!==scene||lastStyle!==style){if(lastStyle!==style)barN=0;lastScene=scene;lastStyle=style;newEpoch();barT=now+0.32}
+    if(lastScene!==scene||lastStyle!==style){if(lastStyle!==style||lastScene==='boss'||scene==='boss')barN=0;lastScene=scene;lastStyle=style;newEpoch();barT=now+0.32}
     if(barT<now)barT=now+0.05;
     const wet=bus._wet;if(wet&&now>duckUntil)wet.gain.setTargetAtTime(M.wet*(scene==='fight'?0.7:1)*(style==='passion'?0.7:1),now,0.6);
-    bright.frequency.setTargetAtTime(M.cut*P.cutMul[style][scene],now,2);
-    let g=0;while(barT<now+2.2&&g++<1)(style==='passion'?barPassion:barLobby)(barT,M);
+    bright.frequency.setTargetAtTime(scene==='boss'?Math.min(M.cut,P.bossCut)*1.2:M.cut*P.cutMul[style][scene],now,2);
+    let g=0;while(barT<now+2.2&&g++<1)(scene==='boss'?barBoss:style==='passion'?barPassion:barLobby)(barT,M);
   }
   function tick(){
     if(!ctx||!on||hidden)return;
@@ -285,7 +339,7 @@ export function createBgm(){
     set(v){if(v===on)return on;on=!!v;if(on)start();else stop();return on},
     setVol(v){vol=Math.max(0,Math.min(1,+v||0));if(on&&ctx)ramp(gainOf(vol),0.3)},
     setMood(k){if(P.moods[k])mood=k},
-    setScene(k){scene=k==='fight'?'fight':'calm'},
+    setScene(k){scene=k==='boss'?'boss':k==='fight'?'fight':'calm'},
     style:()=>style,
     setStyle(k){if(k==='calm'||k==='passion')style=k}
   };
