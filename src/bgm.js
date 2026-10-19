@@ -74,9 +74,9 @@ export function createBgm(){
     if(cur){const o=cur;for(const g of [o.b,o.u,o.m]){g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+0.28)}setTimeout(()=>{try{for(const g of [o.b,o.u,o.m])g.disconnect()}catch(e){}},1200)}
     const mk=dest=>{const g=ctx.createGain();g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(scene==='boss'?P.bossGain:P.styleGain[style],now+0.3);g.connect(dest);return g};
     cur={b:mk(bright),u:mk(bus),m:mk(master)};
-    /* 일그러진 기타 묶음 (불길): 소리를 찌그러뜨린 뒤 높은 쇳소리를 걸러 묵직하게 */
-    {const sh=ctx.createWaveShaper(),n=1024,cv=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;cv[i]=Math.tanh(x*6)}sh.curve=cv;sh.oversample='2x';
-      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;lp.Q.value=0.7;const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=70;
+    /* 일그러진 기타 묶음 (불길·보스): 살짝만 찌그러뜨리고(과하면 깨지는 소리처럼 들린다) 높은 쇳소리를 걸러 묵직하게 */
+    {const sh=ctx.createWaveShaper(),n=1024,cv=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;cv[i]=Math.tanh(x*2.2)/Math.tanh(2.2)}sh.curve=cv;sh.oversample='2x';
+      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2000;lp.Q.value=0.5;const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=70;
       const og=ctx.createGain();og.gain.value=0.22;sh.connect(hp);hp.connect(lp);lp.connect(og);og.connect(cur.b);cur.d=sh}
     /* 장면이 바뀔 때 되울림(꼬리)도 잠깐 끊어 이전 소리가 길게 남지 않게 한다 */
     const w=bus._wet,fb=bus._fb;duckUntil=now+0.9;
