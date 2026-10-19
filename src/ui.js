@@ -1419,6 +1419,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(c.licensed&&!c.job)P.push(`해결사로서는 ${c.rank}${T.rankUnit}${c.title?` · ${E_(c.title)}`:''}에 닿았다. 의뢰서에 적힌 이름 하나하나가 ${yr}년 동안 쌓은 기록이다.`);
     else if(c.title)P.push(`${jp(E_(c.title),'이라는','라는')} 이름이 붙었다. 누가 먼저 불렀는지는 아무도 기억하지 못한다.`);
     if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${c.beaten.map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
+    /* 은원 장부: 도운 일·등 돌린 일·지나친 일이 쌓였으면 한 줄씩 남긴다 */
+    {const L=c.ledger||{};
+      if((L.help||0)>=4)P.push('은혜는 갚는 쪽이 먼저 기억한다고 했다. 도운 이들의 얼굴이 도시 곳곳에 남아, 낯선 길에서도 고개를 끄덕여 주었다.');
+      if((L.betray||0)>=2)P.push('원한은 소리 없이 쌓였다. 등을 돌린 이들의 말이 골목마다 돌았고, 그 말은 끝내 이름보다 오래 남았다.');
+      if((L.silence||0)>=5)P.push('지나친 일이 많았다. 잘못이라 할 것은 아니었지만, 도시는 침묵도 장부에 적는다.')}
     if(E.bondMarried(c)){const k=(c.bond.kids||[]);P.push(`곁에는 ${J.i(E_(c.bond.name))} 있었다. ${k.length?`아이 ${jp(k.map(x=>E_(x.n)).join(' · '),'과','와')} 함께 식탁을 나눴다. `:''}도시의 해가 바뀔 때마다 한 사람 몫의 자리가 더 비어 있지 않다는 것이 가장 큰 보상이었다.`)}
     else if(c.bond&&c.bond.st==='lost')P.push('한 번은 곁에 누군가 있었다. 지키지 못한 이름 하나가 오래 남았다.');
     if(c.distForm)P.push(`육신은 뒤틀렸고, ${J.i(E_(c.distForm.n))} 이름이 되었다. 그래도 걸음은 멈추지 않았다.`);

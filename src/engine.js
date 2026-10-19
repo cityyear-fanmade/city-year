@@ -882,6 +882,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.startsWith('affname:'))return !!ch.aff&&ch.aff.name===req.slice(8);
     if(req.startsWith('rank<='))return ch.licensed&&ch.rank<=+req.slice(6);
     if(req.startsWith('rankin:')){const [a,b]=req.slice(7).split('-').map(Number);return ch.licensed&&ch.rank>=a&&ch.rank<=b}
+    if(req.startsWith('memo:')){const [k,v]=req.slice(5).split('='),m=ch.memo&&ch.memo[k];return !!m&&!m.done&&(v==null||m.v===v)}
+    if(req.startsWith('memoyears:')){const [k,n]=req.slice(10).split('>='),m=ch.memo&&ch.memo[k];return !!m&&(ch.year||0)-m.y>=+n}
+    if(req.startsWith('year>='))return (ch.year||0)>=+req.slice(6);
+    if(req.startsWith('ledger:')){const [k,n]=req.slice(7).split('>=');return ((ch.ledger||{})[k]||0)>=+n}
     if(req==='licensed')return ch.licensed;
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
@@ -1640,6 +1644,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 무한 모드: 결과에 inf가 있으면 그 문구·효과로 바꾼다 (초반 보상이 어울리지 않는 사건) */
     if(ch.infinite&&res&&res.inf)res=Object.assign({},res,res.inf);
     const fx=res.fx||{};
+    /* 선택의 기억: 어떤 선택을 했는지(memo)와 보이지 않는 장부(ledger: help 도움·betray 배신·silence 침묵)를 남긴다. 몇 해 뒤 같은 일이 되돌아온다 (memo/memoyears 조건 사건) */
+    if(c.memo){ch.memo=ch.memo||{};ch.memo[c.memo.k]={v:c.memo.v,y:G.year}}
+    if(c.ledger){ch.ledger=ch.ledger||{};for(const [k,n] of Object.entries(c.ledger))ch.ledger[k]=(ch.ledger[k]||0)+n}
+    if(fx.memoDone&&ch.memo&&ch.memo[fx.memoDone])ch.memo[fx.memoDone].done=1;
     const {chips,licensed}=applyFx(ch,fx);
     if(xpNote)chips.unshift(xpNote);
     if(fx.markAwake){const M_=CFG.innate.markMul,s0=ch.stats,b={};
