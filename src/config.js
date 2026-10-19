@@ -153,8 +153,8 @@ export const CFG = {
     ally: {base: 8, per: 2}, allyDice: 0.75, allyHit: 10,
     dieChance: 2, riskStep: 0.1, kid: {from: 5, chance: 22, max: 2, gap: 3, mind: 2, adult: 20},
     /* 뒤틀린 뒤: 성인이 된 아이가 있으면 gap년마다 chance%로 토벌 의뢰가 온다. 여럿이면 가장 강한 아이(등급)가 온다. 등급 = 20세 이후 2년마다 +1(최대 8) + 직업 가산 */
-    /* 손주: 성인이 된 아이가 grand.from~grand.to살 사이에 해마다 chance% 확률로 아이를 하나 낳는다 (이름은 무작위, 한 명까지) */
-    grand: {from: 30, to: 50, chance: 7},
+    /* 손주: 성인이 된 아이가 grand.from~grand.to살 사이에 해마다 chance% 확률로 아이를 하나 낳는다 (이름은 무작위, 한 명까지). legacy%는 일대기에 남은 이름(지난 삶의 나·연인·아이)을 물려받는 확률 */
+    grand: {from: 30, to: 50, chance: 7, legacy: 40},
     hunt: {mind: 8, gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1, mul: 1.1, mulTop: 1.5, topLv: 8,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
       spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1, hcorp: 1}, spouseYears: 3, spouseJob: {rcorp: 'fixer', hcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer'}}},

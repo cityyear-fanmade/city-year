@@ -1133,6 +1133,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:B.meetNo,h:'다시 만나지 않는다',ok:{t:B.meetNoT,fx:{bondDecline:true}}}]};
   }
   /* 인연이 맺어진 뒤의 사건(3~4년마다)과 청혼. 만남은 일상 사건 안에서 일어난다 */
+  let legacyFn=null;
   function bondEvent(G){
     const ch=G.ch,b=ch.bond,y=G.year,B=D.bond;
     if(!B||ch.distForm||ch.job||!b)return null;
@@ -1145,8 +1146,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       /* 손주: 성인이 된 아이가 30~50살 사이에 아이를 하나 낳는다. 이름은 무작위로 굴린다 */
       {const GR=BD.grand,gk=kids.find(k=>!k.dead&&!k.pend&&!k.grand&&kidAge(k,y)>=GR.from&&kidAge(k,y)<=GR.to&&d(100)<=GR.chance);
-        if(gk){const used=[...kids.map(k=>k.n),...kids.filter(k=>k.grand).map(k=>k.grand.n)],all=[...B.kidNames,...(D.namePool||[])],pool=all.filter(n=>!used.includes(n)),gn=one(pool.length?pool:all);
-          return {t:B.grand.t,x:kf(B.grand.x,gk.n).replace(/\{g\}/g,gn),c:[{l:B.grand.a,h:`${gk.n}의 아이 · 이름은 ${gn}`,ok:{t:kf(B.grand.at,gk.n).replace(/\{g\}/g,gn),fx:{bondGrand:{k:gk.n,g:gn}}}}]}}}
+        if(gk){const used=[...kids.map(k=>k.n),...kids.filter(k=>k.grand).map(k=>k.grand.n),ch.name||''],all=[...B.kidNames,...(D.namePool||[])],pool=all.filter(n=>!used.includes(n));
+          /* 일대기에 남은 이름(지난 삶의 나·연인·아이)을 일정 확률로 물려받는다 */
+          let gn,lg=null;{const L=(legacyFn?legacyFn():[]).filter(x=>x&&x.n&&!used.includes(x.n));if(L.length&&d(100)<=BD.grand.legacy)lg=one(L)}
+          gn=lg?lg.n:one(pool.length?pool:all);
+          const lgx=lg&&B.grand.legacy&&B.grand.legacy[lg.k]?' '+B.grand.legacy[lg.k]:'';
+          return {t:B.grand.t,x:kf(B.grand.x,gk.n).replace(/\{g\}/g,gn)+lgx,c:[{l:B.grand.a,h:`${gk.n}의 아이 · 이름은 ${gn}`,ok:{t:kf(B.grand.at,gk.n).replace(/\{g\}/g,gn),fx:{bondGrand:{k:gk.n,g:gn}}}}]}}}
       if(b.st!=='married')return null;
       if(d(1000)<=bondRisk(b,y,ch)*10)
         return {t:B.deathT,x:bondFill(R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`,ok:{t:bondFill(B.deathAT,b),fx:{bondDeath:true}}}]};
@@ -2467,6 +2472,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

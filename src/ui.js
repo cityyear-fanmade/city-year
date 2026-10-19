@@ -772,13 +772,15 @@ export function startUI(E,app){
     const cl=el.cloneNode(true),c=G.ch;cl.removeAttribute('id');
     cl.querySelectorAll('button,script').forEach(x=>x.remove());cl.querySelectorAll('[data-a]').forEach(x=>x.removeAttribute('data-a'));
     const res=((cl.querySelector('.eyebrow')||{}).textContent||'').trim();
-    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),v:UPDATES.v,name:c.name||'',line:careerLine(c),res,yr:G.year,win:!!UI.endWin,dy:c.daily||'',html:cl.outerHTML};
+    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),v:UPDATES.v,name:c.name||'',lover:(c.bond&&c.bond.name)||'',kids:((c.bond&&c.bond.kids)||[]).filter(k=>!k.pend).map(k=>k.n),line:careerLine(c),res,yr:G.year,win:!!UI.endWin,dy:c.daily||'',html:cl.outerHTML};
   }
   function chronAuto(){
     const e=chronSnap();if(!e)return;const o=loadChron();
     if(o.life.some(x=>x.key===e.key)||o.fame.some(x=>x.key===e.key))return;
     o.life.unshift(e);o.life=o.life.slice(0,CHRON_LIFE);saveChron(o);
   }
+  /* 손주 이름: 일대기·명예의 전당에 남은 지난 삶의 이름(나·연인·아이)을 엔진에 넘긴다. 예전에 저장한 판은 이름만 있다 */
+  E.setLegacy(()=>{const o=loadChron(),out=[];for(const e of [...o.life,...o.fame]){if(e.name)out.push({n:e.name,k:'self'});if(e.lover)out.push({n:e.lover,k:'lover'});for(const n of e.kids||[])out.push({n:n,k:'kid'})}return out});
   const chDate=t=>new Date(t).toLocaleString('ko-KR',{year:'2-digit',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
   function chBtns(tab,e,view){
     return `<div class="row" style="gap:6px;flex-wrap:wrap">${view?'':`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chview" data-i="${tab}:${e.id}">펼쳐 보기</button>`}${tab==='life'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chfame" data-i="${e.id}">명예의 전당에 올리기</button>`:''}<button class="btn quiet" data-a="chdel" data-i="${tab}:${e.id}"${UI.delAsk===tab+':'+e.id?' style="width:auto;padding:8px 12px;border-color:#c25050;color:#c25050"':' style="width:auto;padding:8px 12px"'}>${UI.delAsk===tab+':'+e.id?'정말 삭제 · 한 번 더':'삭제'}</button></div>`;
