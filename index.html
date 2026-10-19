@@ -474,7 +474,7 @@ const CFG = {
   /* 캐릭터 */
   baseHp: 60,
   /* 전투: 빛(코스트), 손패, 키워드 */
-  light: 3, lightMax: 5, hand: 4, stackCap: 10,
+  light: 3, lightMax: 5, hand: 4, stackCap: 10, bleedMax: 40 /* 플레이어가 적에게 거는 출혈의 최대 스택(파열과 같다). 받는 출혈은 stackCap */,
   /* 이름 입력 칸(특이점·E.G.O·뒤틀림·사무소·날개·특색)의 최대 글자 수 (특색은 2글자부터) */
   nameMax: 12,
   breathCritPer: 5, critMult: 1.5,
@@ -534,7 +534,7 @@ const CFG = {
   oldAge: 100,
   /* 사건 판정 주사위 최대치(플레이어): 타고난 것 등으로 아무리 커져도 이 값에서 멈춘다 */
   checkMax: 220,
-  infinite: {erodeFrom: 90, erodePer: 0.5, erodeMax: 30, enemyMax: 260, atkMax: 260 /* 균열을 닫은 뒤의 적 공격 상한 (enemyMax와 같다) */, midCut: 1 /* 중지: 무한 모드에서 맞을 때마다 받는 피해 −1%p (전투 내 누적, 상대의 몰아침 배율 대신) */, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 10000000, atkGrow: 1, evaGrow: 0.5, evaDown: 1 /* 무한 모드 해마다 양쪽 회피 −1 */, escPer: 0.03, infLvEvery: 5 /* 무한 모드에서 전투 승리 5번마다 레벨 +1 */, atkEvery: 2 /* 무한 모드 적 명중(공격) 보정 +1이 붙는 햇수 간격 */, escMax: 2 /* 한 전투에서 피해를 준 횟수마다 그 쪽 피해 +3% (최대 ×2) */},
+  infinite: {erodeFrom: 90, erodePer: 0.5, erodeMax: 30, enemyMax: 260, atkMax: 260 /* 균열을 닫은 뒤의 적 공격 상한 (enemyMax와 같다) */, midCut: 1, midCutMax: 20 /* 누적 최대 20%p */ /* 중지: 무한 모드에서 맞을 때마다 받는 피해 −1%p (전투 내 누적, 상대의 몰아침 배율 대신) */, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 10000000, atkGrow: 1, evaGrow: 0.5, evaDown: 1 /* 무한 모드 해마다 양쪽 회피 −1 */, escPerP: 0.03, escPerE: 0.03, infLvEvery: 5 /* 무한 모드에서 전투 승리 5번마다 레벨 +1 */, atkEvery: 2 /* 무한 모드 적 명중(공격) 보정 +1이 붙는 햇수 간격 */, escMaxP: 4, escMaxE: 30 /* 한 전투에서 맞을 때마다 받는 피해가 복리로 증가: 양쪽 모두 ×1.03씩, 상한은 플레이어 ×4, 적 ×30 */},
   /* 정신력: 최대 max. healEvery년마다 +yearHeal. 선택지·환상체 조우 2d3 감소, 회피 실패 시 1d evadeDie에서 1이면 1 감소(E.G.O 장비 1개당 +1).
      voiceAt 이하에서 한 번 "들리는 목소리": 1d voiceDie를 voiceRolls번, 모두 voiceDc 이상이면 개화, 실패하면 1d failLoss 감소.
      0이면 사망, 1이면 뒤틀림 판정 1d2 (1이면 개화하고 가득 회복, 2면 뒤틀림 엔딩). tiers: 전투 시작 때 호흡·회피 보정 */
@@ -2559,6 +2559,8 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   const HG=(X,h)=>{if(h>0&&X&&X.hunger!=null)X.hunger=Math.min(CFG.hunger.max,X.hunger+h)};
   const kidsOn=ch=>ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea');
   /* 무한 모드에 들어선 뒤 지난 햇수: 해마다 양쪽 회피가 evaDown씩 줄어든다 (0에서 멈춤) */
+  /* 출혈 최대 스택: 플레이어가 적에게 거는 출혈만 bleedMax, 플레이어가 받는 출혈은 stackCap */
+  const bleedCap=X=>X.isP?CFG.stackCap:CFG.bleedMax;
   const infEvaCut=ch=>Math.min(Math.max(0,ch.stats.eva),infYears(ch)*CFG.infinite.evaDown);
   const infYears=ch=>ch.infinite?Math.max(0,(ch.year||0)-(CFG.years+CFG.endless.span*CFG.endless.grades.length)):0;
   function mkCombat(ch,id,quiet){
@@ -2797,7 +2799,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.distorted&&to!=='s')continue;
       const X=to==='s'?A:D_;
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
-      const cap_=k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?CFG.burn.max:k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:CFG.stackCap,b4_=X[k]||0;
+      const cap_=k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?CFG.burn.max:k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
       X[k]=Math.min(cap_,b4_+n);
       L('kw',`  ${X.name}에게 ${D.keywords[k].n} +${n} (지금 ${X[k]}/${cap_}${b4_+n>cap_?` · 최대치라 실제 +${X[k]-b4_}`:''})`);
       if(k==='bleed'&&to!=='s'&&A.kuro)addCloud(A,L);
@@ -2972,21 +2974,21 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.kuro&&B.black&&B.synT>=3){dmg=Math.max(1,Math.floor(dmg*CFG.syn['흑운회'].half));note+=' 흑운 ×'+CFG.syn['흑운회'].half}
       if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv,Math.max(0,CFG.drCap-(B.redPct||0))),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
       if(c.verdict){const x=Math.floor((B.maxHp-B.hp)/10);dmg=Math.max(dmg,rawDmg)+x;note+=` 처형 · 방어·감소 무시 · 잃은 체력 ${B.maxHp-B.hp} → 고정 +${x}`}
-      if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const m=Math.min(CFG.infinite.escMax,1+CFG.infinite.escPer*A.escN);dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
+      if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const IF_=CFG.infinite,m=B.isP?Math.min(IF_.escMaxP,Math.pow(1+IF_.escPerP,A.escN)):Math.min(IF_.escMaxE,Math.pow(1+IF_.escPerE,A.escN));dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
-      hpLoss(C,B,dmg,L);if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=(B.infHit||0)+CFG.infinite.midCut}}
+      hpLoss(C,B,dmg,L);if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
-      if(A.wx&&A.wx.hitBleed&&B.hp>0){B.bleed=Math.min(CFG.stackCap,B.bleed+A.wx.hitBleed);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 출혈 +${A.wx.hitBleed} (지금 ${B.bleed})`)}
+      if(A.wx&&A.wx.hitBleed&&B.hp>0){B.bleed=Math.min(bleedCap(B),B.bleed+A.wx.hitBleed);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 출혈 +${A.wx.hitBleed} (지금 ${B.bleed})`)}
       if(A.inkIds&&A.inkIds.length&&!c.inkFollow&&B.hp>0){const id=A.inkIds[(A.inkI=A.inkI||0)%A.inkIds.length],K=CFG.ink;if(A.obey>0)A.obey--;A.inkI++;let x=K.follow+Math.max(0,A.inkIds.length-1)*K.followPer;if(B.shield>0){const ab=Math.min(B.shield,x);B.shield-=ab;x-=ab}hpLoss(C,B,x,L);B.ink=Math.min(K.cap+(A.wx&&A.wx.inkCap||0),(B.ink||0)+K.followInk);L('hit',`  ${A.name}의 ${D.cards[id].n.replace('흑수 · ','')} 흑수가 거든다 · ${B.name}에게 ${x} · 수흔 +${K.followInk} (지금 ${B.ink})`)}
       if(A.wx&&A.wx.hitInk&&B.hp>0){B.ink=Math.min(CFG.ink.cap+(A.wx.inkCap||0),(B.ink||0)+A.wx.hitInk);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 수흔 +${A.wx.hitInk} (지금 ${B.ink})`)}
       if(c.verdict&&B.hp<=0&&A.rv)L('kw','처리 완료. 흔적은 남지 않았다.');
-      if(c.erase&&B.hp>0){B.lightUp=0;B.lightNext=0;const ks=['bleed','rupture','burn','flame','nail','sink'].filter(k=>(B[k]||0)>0);for(const k of ks)B[k]=Math.min(CFG.stackCap,Math.floor(B[k]*1.5));L('kw',`  ${A.name} · ${c.n} · ${B.name}이(가) 아껴 둔 빛이 증발했다${ks.length?' · '+ks.map(k=>`${D.keywords[k].n} ${B[k]}`).join(' · ')+' (×1.5)':''}`)}
+      if(c.erase&&B.hp>0){B.lightUp=0;B.lightNext=0;const ks=['bleed','rupture','burn','flame','nail','sink'].filter(k=>(B[k]||0)>0);for(const k of ks)B[k]=Math.min(k==='bleed'?bleedCap(B):CFG.stackCap,Math.floor(B[k]*1.5));L('kw',`  ${A.name} · ${c.n} · ${B.name}이(가) 아껴 둔 빛이 증발했다${ks.length?' · '+ks.map(k=>`${D.keywords[k].n} ${B[k]}`).join(' · ')+' (×1.5)':''}`)}
       if(A.rv&&B.hp>0){const k=CFG.raven.buffs.find(k=>(B[k]||0)>0);if(k){const nm={shield:'보호막',breath:'호흡',charge:'충전',cloud:'구름',passHit:'명중 보정'}[k];if(k==='passHit')B.passHit=0;else B[k]--;L('kw',`  ${A.name} · 까마귀의 눈 · ${B.name}의 ${nm} 1 말소`)}}
-      if(A.kuro&&A.black&&B.hp>0){B.bleed=Math.min(CFG.stackCap,B.bleed+CFG.syn['흑운회'].bleedPlus);L('kw',`  ${A.name} · 흑운 · ${B.name}에게 출혈 +${CFG.syn['흑운회'].bleedPlus} (지금 ${B.bleed})`)}
-      if(A.awl&&A.synT>=3&&A.lead&&!A.awlUsed&&B.hp>0){A.awlUsed=true;B.bleed=Math.min(CFG.stackCap,B.bleed+1);L('kw',`  ${A.name} · 선공 첫 적중 · ${B.name}에게 출혈 +1 (지금 ${B.bleed})`);if(A.kuro)addCloud(A,L)}
+      if(A.kuro&&A.black&&B.hp>0){B.bleed=Math.min(bleedCap(B),B.bleed+CFG.syn['흑운회'].bleedPlus);L('kw',`  ${A.name} · 흑운 · ${B.name}에게 출혈 +${CFG.syn['흑운회'].bleedPlus} (지금 ${B.bleed})`)}
+      if(A.awl&&A.synT>=3&&A.lead&&!A.awlUsed&&B.hp>0){A.awlUsed=true;B.bleed=Math.min(bleedCap(B),B.bleed+1);L('kw',`  ${A.name} · 선공 첫 적중 · ${B.name}에게 출혈 +1 (지금 ${B.bleed})`);if(A.kuro)addCloud(A,L)}
       if(A.ring&&A.work<CFG.ring.max){A.work++;L('kw',`  ${A.name} · 작품 ${A.work}/${CFG.ring.max}`)}
       if(A.nailHit&&B.hp>0){const n=B.aug?CFG.nail.augHit:A.nailHit;B.nail=Math.min(CFG.nail.cap,(B.nail||0)+n);L('kw',`  ${B.name}에게 못 +${n} (지금 ${B.nail})`)}
       if(c.nailBurst&&B.hp>0&&(B.nail||0)>0){const used=B.nail;B.nail=0;L('kw',`  ${B.name} · 못 ${used}개를 흐트러짐으로`);addStagger(C,B,Math.round(used*c.nailBurst.mul)+(c.nailBurst.add||0),L)}
@@ -3005,7 +3007,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.wx&&B.hp>0){const X=A.wx;
         if(X.debuff){const {k,n}=X.debuff,nm={prescript:'지령',warp:'왜곡',shock:'감전',chain:'사슬',web:'거미줄'}[k];B[k]=Math.min(5,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${nm} ${B[k]}`)}
         if(X.mindHit&&A.isP){const g=gainMind(C.ch,X.mindHit);if(g)L('kw',`  ${A.name} · 참회 · 정신력 +${g}`)}
-        if(X.hitKw)for(const [k,n] of X.hitKw){B[k]=Math.min(k==='rupture'?CFG.rupture.max:CFG.stackCap,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}
+        if(X.hitKw)for(const [k,n] of X.hitKw){B[k]=Math.min(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):CFG.stackCap,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}
         if(X.echo){B.wecho=(B.wecho||0)+1;L('kw',`  ${B.name}에게 ${X.echo.n||'잔향'} ${B.wecho}/${X.echo.need}`);if(B.wecho>=X.echo.need){hpLoss(C,B,X.echo.dmg,L);B.wecho=0;L('dmg',`  ${X.echo.n||'잔향'}이 울린다 · ${B.name} 고정 피해 ${X.echo.dmg}`)}}
         if(X.breathHit){A.breath=Math.min(CFG.breath.cap,A.breath+X.breathHit)}
         /* ALEPH E.G.O: 미미크리 흡수, 다 카포 악장 */
@@ -3033,7 +3035,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
           L('kw',`  ${B.name}에게 ${A.laev==='open'||isBlue(B)?'푸른 화염':'붉은 화염'} +${A.burnHit} (지금 ${B.flame})`);laevCount(A,A.burnHit,L)}
         else{B.burn=Math.min(CFG.burn.max,(B.burn||0)+A.burnHit);L('kw',`  ${B.name}에게 화상 +${A.burnHit} (지금 ${B.burn})`)}}
       /* 주사위마다 무작위 디버프 1 (Furioso): 출혈 또는 파열 */
-      if(c.rngDebuff&&B.hp>0){const got={};for(let i=0;i<c.dice;i++){const k=one(c.rngDebuff);B[k]=Math.min(k==='rupture'?CFG.rupture.max:CFG.stackCap,B[k]+1);got[k]=(got[k]||0)+1}
+      if(c.rngDebuff&&B.hp>0){const got={};for(let i=0;i<c.dice;i++){const k=one(c.rngDebuff);B[k]=Math.min(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):CFG.stackCap,B[k]+1);got[k]=(got[k]||0)+1}
         L('kw',`  ${B.name}에게 ${Object.entries(got).map(([k,n])=>D.keywords[k].n+' +'+n).join(' · ')} (무작위)`)}
       if(B.passive&&B.passive.id==='ledger'&&B.hp>0){B.ledger=Math.min(B.passive.need,(B.ledger||0)+1);L('kw',`  ${B.name} · ${B.passive.n} ${B.ledger}/${B.passive.need}`)}
       if(A.passive&&A.passive.id==='echo'&&B.hp>0){
@@ -3572,7 +3574,7 @@ function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v9.4.0';
+  const VERSION='v9.4.2';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -4038,7 +4040,7 @@ function startUI(E,app){
   function kwDoc(){
     const K=D.keywords,N=CFG.nail.stages.map(g=>`${g.at}: 명중 −${g.hit}${g.dmg?` · 주는 피해 −${g.dmg}`:''}`).join(' / ');
     return [
-      [K.bleed.n,'bleed',`최대 ${CFG.stackCap}스택. 공격할 때마다(빗나가도) 스택만큼 피해를 입고, 그 뒤 1 줄어든다. 내가 방어 자세면 절반으로 지혈한다.`],
+      [K.bleed.n,'bleed',`최대 ${CFG.stackCap}스택(내가 적에게 거는 출혈은 ${CFG.bleedMax}스택). 공격할 때마다(빗나가도) 스택만큼 피해를 입고, 그 뒤 1 줄어든다. 내가 방어 자세면 절반으로 지혈한다.`],
       [K.rupture.n,'rupture',`최대 ${CFG.rupture.max}스택. 피격 시 스택만큼 추가 피해를 입고, 피격마다 1 줄어든다.`],
       [K.breath.n,'breath',`최대 ${CFG.breath.cap}, 라운드마다 ${CFG.breath.decay} 줄어든다. 4~9는 치명 ${CFG.breath.base}%에서 90%까지(×${CFG.critMult}), ${CFG.breath.sure} 이상은 확정 치명, 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}.`],
       [K.ink.n,'ink',`라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.ink.cap}스택.`],
@@ -4410,10 +4412,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const V934SEC=[['⚔ 후반 보스 · 무기',['일부 후반 히든 보스의 능력치와 그 전리품 무기를 조정했습니다.','검은 침묵의 장갑이 주는 카드 Furioso가 크게 강해졌습니다. 주사위 9개가 모두 3~14로 고정되고 명중 +30이 붙습니다.']],
     ['🔬 특이점 · 금기 설명',['특이점 강화는 최대 3번까지이고, 다 채우면 더 오르지 않습니다.','금기 실험은 강화와 따로 최대 8번까지 할 수 있습니다. 8번을 채우면 머리가 발톱과 조율자를 보내고, 둘을 이기면 보상을 한 번 받습니다. 이미 둘을 이긴 사람은 금기 실험마다 가끔 장비 없이 돈과 경험치를 주는 더 단단한 시험이 찾아오고, 8번째에는 확정입니다. 8번을 채우면 특이점이 2단계 더 강해집니다(2차 강화). 결혼 중에 금기를 저지르면 배우자가 죽을 위험이 붙습니다.']],
     ['🔧 수정',['엄지의 "상납 마감"이 상석 대부에게도 나오던 문제를 고쳤습니다. 이제 솔다토에게만 나오고, 카포 이상에게는 아랫사람의 몫을 두고 책임을 정하는 사건이 나옵니다.','홍원 가주의 자리에서 얻는 흑수 재갈이 카드와 전리품으로 지급되지 않던 문제를 고쳤습니다. 새로 잡는 판부터 적용됩니다.']]];
-  const NOTICE={id:'v9.4.0-1',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const V940SEC=[['♾ 무한 모드 · 전투 규칙',['무한 모드(73년차 이후)에서 한 해가 지날 때마다 플레이어의 기본 회피가 1씩 줄어듭니다(0에서 멈춤). 장비·정신력 등으로 얻은 회피는 줄지 않고, 스탯창의 회피에 "(무한 −N)"으로 표시됩니다.','적은 2해마다 명중 보정이 1씩 오릅니다.','한 전투에서 공격을 한 번 맞을 때마다, 맞은 쪽이 받는 피해가 3%씩 늘어납니다(최대 2배). 플레이어와 적 모두에게 똑같이 적용되고, 전투가 끝나면 처음부터 다시 쌓입니다.','중지는 이 규칙이 다르게 적용됩니다. 회피를 쓰기 어려워 맞는 일이 많으므로 받는 피해가 늘어나지 않고, 한 번 맞을 때마다 받는 피해가 1%p씩 줄어듭니다(전투 내 누적).']],
+    ['🛡 받는 피해 감소 상한',['근성·초근성, 하나 협회의 곤, 출생·전리품 효과, 호위의 막아섬 등 받는 피해 감소를 모두 합쳐 최대 70%까지만 적용됩니다. 합이 이보다 높아져도 70%입니다.']]];
+  const NOTICE={id:'v9.4.2-1',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['♾ 무한 모드 · 전투 규칙',['무한 모드(73년차 이후)에서 한 해가 지날 때마다 플레이어의 기본 회피가 1씩 줄어듭니다(0에서 멈춤). 장비·정신력 등으로 얻은 회피는 줄지 않고, 스탯창의 회피에 "(무한 −N)"으로 표시됩니다.','적은 2해마다 명중 보정이 1씩 오릅니다.','한 전투에서 공격을 한 번 맞을 때마다, 맞은 쪽이 받는 피해가 3%씩 늘어납니다(최대 2배). 플레이어와 적 모두에게 똑같이 적용되고, 전투가 끝나면 처음부터 다시 쌓입니다.','중지는 이 규칙이 다르게 적용됩니다. 회피를 쓰기 어려워 맞는 일이 많으므로 받는 피해가 늘어나지 않고, 한 번 맞을 때마다 받는 피해가 1%p씩 줄어듭니다(전투 내 누적).']],
-    ['🛡 받는 피해 감소 상한',['근성·초근성, 하나 협회의 곤, 출생·전리품 효과, 호위의 막아섬 등 받는 피해 감소를 모두 합쳐 최대 70%까지만 적용됩니다. 합이 이보다 높아져도 70%입니다.']]]};
+    sec:[['♾ 무한 모드 조정',['전투에서 맞을 때마다 받는 피해가 늘어나는 규칙이 복리로 바뀌었습니다. 맞을 때마다 직전 배율에 3%를 곱하고, 플레이어는 최대 4배, 적은 최대 30배까지 늘어납니다. 오래 끄는 싸움일수록 맞는 것이 치명적입니다.','중지는 맞을 때마다 받는 피해가 1%p씩 줄어드는 규칙이 그대로이고, 이 누적 감소는 최대 20%에서 멈춥니다.']],
+    ['🩸 출혈 상한',['플레이어가 적에게 거는 출혈의 최대 스택이 10에서 40으로 늘었습니다. 적이 플레이어에게 거는 출혈은 그대로 10입니다.']]]};
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
   const V932SEC=[['🔀 출생 변경',['이번 업데이트에 H사 루트와 R사 전용 루트가 히든 출생으로 이전됩니다. "아무것도 없는 존재"로 시작하면 100% 나오던 운명 선택이 출생으로 넘어갑니다. 이제 출생 굴림에서 직접 나오며, 재능·결점·성장기도 그 출생에 맞는 것으로 정해집니다.','"어떤 출생 보정도 없이 시작한다"를 고르면 운명 선택 없이 아무것도 없는 존재로 시작합니다. 대신 빈손 보정(히든 보스 전리품 장비 확률 +25%p, 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%)을 받습니다.','출생이 추가되었습니다.']],
     ['🔧 그 밖의 변경',['카드 보상 화면에서 카드마다 이미 가진 장수(보유 ×N)나 새 카드 표시가 나오고, 지금 덱과 카드함을 펼쳐 볼 수 있습니다.','가방의 카드 목록에서 키워드 필터를 누르면 그 색으로 채워지고 ✓가 붙어, 켜져 있는지 바로 보입니다.','2막·무한 모드에서 공방 거리의 "다음 기회"가 55년차로 잘못 나오던 문제를 고쳤습니다.','R사 밸런스 패치: R사 부화장 출생도 이제 공방을 쓸 수 있습니다. 부화장을 나온 뒤에는 R사 보급 구역, 탈주한 뒤에는 뒷골목 공방이 열립니다.']]];
@@ -4519,7 +4523,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v9.4.0',V940SEC],['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -5152,7 +5156,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
-    const showNotice=false&&s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
+    const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
     const ov=UI.help&&!UI.cfg?vHelp():UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">설정</b><button class="btn quiet" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const ovKey=UI.help&&!UI.cfg?'help':UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
     app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>':''}`;
