@@ -1368,6 +1368,42 @@
    },
    "breach": true
   },
+  "bigwolf": {
+   "n": "커다랗고 나쁠 늑대",
+   "color": "#2f4766",
+   "hp": 88,
+   "atk": 5,
+   "eva": 3,
+   "spd": 6,
+   "deck": [
+    "a_maw",
+    "a_maw",
+    "lunge",
+    "a_maw",
+    "guard"
+   ],
+   "intro": "아종이 쓰러진 자리에 훨씬 큰 그림자가 드리운다. 커다랗고, 앞으로 더 나빠질 늑대다. 배 속에서 여러 사람의 울음소리가 겹쳐 들린다.",
+   "tier": "boss",
+   "once": true,
+   "abno": true,
+   "drop": {
+    "n": "늑대의 송곳니",
+    "ego": true,
+    "fx": {
+     "atk": 6,
+     "maxHp": 10
+    },
+    "e": "공격+6 · HP+10 · E.G.O 장비 (회피 실패 시 정신력 소모 +1)"
+   },
+   "endText": "늑대가 무너졌다. 배 속에 갇혀 있던 울음이 하나둘 골목으로 흩어졌다.",
+   "hard": {
+    "hp": 1.6,
+    "atk": 3,
+    "eva": 2
+   },
+   "breach": true,
+   "after": "wolf"
+  },
   "bigbird": {
    "n": "큰 새",
    "color": "#8a7a3a",

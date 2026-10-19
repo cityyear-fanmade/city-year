@@ -827,7 +827,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 조우 =====
      "table:<이름>"이면 1d100으로 조우 표를 굴린다. 소속 전용 표(<이름>@<소속 종류>)가 있으면 그것을 쓴다 */
   /* 격리 실패: 아직 이기지 않은 환상체 보스 중 하나 */
-  const abnoLeft=ch=>Object.keys(D.enemies).filter(id=>D.enemies[id].breach&&!(ch.minis||[]).includes(id));
+  /* after: 그 환상체(아종 등)를 먼저 이겨야 나온다 (예: 크고 나쁜 늑대 → 커다랗고 나쁠 늑대) */
+  const abnoLeft=ch=>Object.keys(D.enemies).filter(id=>{const e=D.enemies[id],m=ch.minis||[];return e.breach&&!m.includes(id)&&(!e.after||m.includes(e.after))});
   function encounter(ch,s){
     if(s==='abno'){const ls=abnoLeft(ch),AP=CFG.apoc,bl=ls.filter(x=>AP.birds.includes(x)),started=AP.birds.some(x=>(ch.minis||[]).includes(x));
       /* 새 시리즈를 시작했으면 남은 새를 먼저 만난다 */
