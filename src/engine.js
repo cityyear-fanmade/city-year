@@ -292,26 +292,23 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return true;
   }
   /* ===== 카드팩 보관함 =====
-     덱이 통째로 바뀌기 전에 지금 팩(덱·카드함·고정 여부)을 보관한다. 전투 밖에서 팩을 바꿔 끼울 수 있고, 해마다 한 번만 바꾼다.
-     같은 해에 방금 떠난 팩으로 되돌릴 수는 있지만, 되돌린 뒤에는 그 해에 더 바꿀 수 없다 (실수로 바꿨을 때) */
+     덱이 통째로 바뀌기 전에 지금 팩(덱·카드함·고정 여부)을 보관한다. 전투 밖에서는 횟수 제한 없이 팩을 바꿔 끼울 수 있다 (고정 덱과 기본 덱을 견주어 보는 용도).
+     전투 중에는 가방이 열리지 않아 바꿀 수 없다 */
   const PACKMAX=8;
   const packSnap=ch=>({n:ch.packName||'기본 카드팩',deck:ch.deck.slice(),side:(ch.side||[]).slice(),extra:(ch.extra||[]).slice(),deckLocked:!!ch.deckLocked,cardMoney:!!ch.cardMoney,orgPack:ch.orgPack||null,finalGiven:!!ch.finalGiven});
-  function stashPack(ch,newName){(ch.packs=ch.packs||[]).push(packSnap(ch));if(ch.packs.length>PACKMAX)ch.packs.shift();ch.packName=newName||'전용 카드팩';ch.packSwitch=null}
-  /* 'ok' 바꿀 수 있음 · 'year' 올해는 이미 바꿨음 · 'busy' 받을 카드가 남아 있음 · 'no' 바꿀 수 없음 */
+  function stashPack(ch,newName){(ch.packs=ch.packs||[]).push(packSnap(ch));if(ch.packs.length>PACKMAX)ch.packs.shift();ch.packName=newName||'전용 카드팩'}
+  /* 'ok' 바꿀 수 있음 · 'busy' 받을 카드가 남아 있음 · 'no' 바꿀 수 없음 */
   function packCan(ch,i){
     const t=(ch.packs||[])[i];if(!t||ch.distForm)return 'no';
     if((ch.offers||[]).length||(ch.picks||[]).length||ch.packOffer||(ch.gearOffers||[]).length)return 'busy';
-    const lim=ch.packSwitch,y=ch.year||0;
-    if(lim&&lim.y===y&&(lim.lock||lim.from!==t.n))return 'year';
     return 'ok';
   }
   function switchPack(ch,i){
     if(packCan(ch,i)!=='ok')return false;
-    const ps=ch.packs,t=ps[i],y=ch.year||0,lim=ch.packSwitch,undo=!!(lim&&lim.y===y&&lim.from===t.n),cur=packSnap(ch),fx=ch.deck.filter(id=>D.cards[id].fixed);
+    const ps=ch.packs,t=ps[i],cur=packSnap(ch),fx=ch.deck.filter(id=>D.cards[id].fixed);
     ps.splice(i,1);ps.push(cur);
     ch.deck=t.deck.filter(id=>!D.cards[id].fixed).concat(fx);ch.side=t.side.filter(id=>!D.cards[id].fixed);ch.extra=t.extra.slice();
     ch.deckLocked=t.deckLocked;ch.cardMoney=t.cardMoney;ch.orgPack=t.orgPack;ch.finalGiven=t.finalGiven;ch.packName=t.n;
-    ch.packSwitch=undo?{y,from:'',lock:true}:{y,from:cur.n};
     while(ch.deck.length>deckMax(ch)){const k=ch.deck.map(id=>D.cards[id].fixed).lastIndexOf(false);if(k<0)break;(ch.side=ch.side||[]).push(ch.deck.splice(k,1)[0])}
     return true;
   }

@@ -545,8 +545,8 @@ export function startUI(E,app){
     const ch=G.ch,ps=ch.packs||[],msg=UI.packMsg;UI.packMsg='';
     const chips=ids=>{const cnt={};ids.forEach(id=>{if(D.cards[id])cnt[id]=(cnt[id]||0)+1});return `<div class="chips">${Object.keys(cnt).map(id=>`<span class="chip">${esc(D.cards[id].n)}${cnt[id]>1?' ×'+cnt[id]:''}</span>`).join('')}</div>`};
     const flag=(l,c)=>l?`<span class="mono small dim">${c?'덱 고정 · ':''}${c?'새 카드는 돈으로 받는다':'카드를 지우고 옮길 수 있다'}</span>`:'';
-    const why={year:'올해는 이미 바꿨다. 다음 해에 바꿀 수 있다.',busy:'받을 카드·장비를 먼저 고른다.',no:'지금은 바꿀 수 없다.'};
-    return `<p class="small dim">덱이 통째로 바뀌는 전용 카드팩을 받으면 이전 덱이 여기에 남는다. 전투 밖에서 해마다 한 번 바꿔 끼울 수 있다. 실수로 바꿨다면 같은 해 안에 방금 떠난 팩으로 한 번 되돌릴 수 있지만, 되돌린 뒤에는 그 해에 더 바꿀 수 없다.</p>
+    const why={busy:'받을 카드·장비를 먼저 고른다.',no:'지금은 바꿀 수 없다.'};
+    return `<p class="small dim">덱이 통째로 바뀌는 전용 카드팩을 받으면 이전 덱이 여기에 남는다. 전투 밖에서는 횟수 제한 없이 바꿔 끼울 수 있다. 전투 중에는 가방이 열리지 않아 바꿀 수 없다.</p>
       ${msg?`<p class="small bad">${esc(msg)}</p>`:''}
       <div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b style="color:var(--gold)">지금 쓰는 팩 · ${esc(ch.packName||'기본 카드팩')}</b><span class="mono small dim">덱 ${ch.deck.length}장</span></div>${flag(1,ch.deckLocked||ch.cardMoney)}${chips(ch.deck)}</div>
       ${ps.length?ps.map((t,i)=>{const can=E.packCan(ch,i),ask=UI.packSwAsk===i;return `<div class="panel stack" style="gap:6px"><div class="row between"><b>${esc(t.n)}</b><span class="mono small dim">덱 ${t.deck.length}장${t.side.length?' · 카드함 '+t.side.length+'장':''}</span></div>${flag(1,t.deckLocked||t.cardMoney)}${chips(t.deck)}
@@ -575,7 +575,7 @@ export function startUI(E,app){
     }
     if(ch.packOffer){const P=ch.packOffer,cnt={};P.cards.forEach(id=>cnt[id]=(cnt[id]||0)+1);
       return sheet(`<span class="eyebrow">전용 책장 · ${P.cards.length}장</span><h2>${esc(P.n)}으로 덱을 바꿀까</h2>
-        <div class="check" style="border-color:var(--bleed)"><b class="bad">주의 · 덱이 통째로 바뀐다</b><br>바꾸면 지금 덱 ${ch.deck.length}장과 카드함 ${(ch.side||[]).length}장이 '${esc(ch.packName||'기본 카드팩')}'으로 가방의 카드팩 보관함에 남는다. 새 팩은 덱이 고정되고 새 카드는 돈으로 받는다. 보관한 팩은 가방의 카드팩 탭에서 해마다 한 번 바꿔 끼울 수 있다.</div>
+        <div class="check" style="border-color:var(--bleed)"><b class="bad">주의 · 덱이 통째로 바뀐다</b><br>바꾸면 지금 덱 ${ch.deck.length}장과 카드함 ${(ch.side||[]).length}장이 '${esc(ch.packName||'기본 카드팩')}'으로 가방의 카드팩 보관함에 남는다. 새 팩은 덱이 고정되고 새 카드는 돈으로 받는다. 보관한 팩은 가방의 카드팩 탭에서 전투 밖이면 언제든 바꿔 끼울 수 있다.</div>
         ${P.e?`<div class="check"><b>패시브</b> · ${esc(P.e)}</div>`:''}
         <div class="invcards">${Object.keys(cnt).map(id=>cardRow(id,cnt[id]>1?`<span class="mono small dim">×${cnt[id]}</span>`:'')).join('')}</div>
         <button class="btn${UI.packAsk?' primary':''}" data-a="packyes">${UI.packAsk?'정말 바꾼다 (이전 덱은 보관된다)':'이 책장으로 바꾼다'}</button>
