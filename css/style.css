@@ -441,11 +441,5 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 
 .helpbtn{top:52px;font:600 17px/1 var(--serif,serif)}
 
-/* PC 전용 '꽉 채운 화면': 글자와 화면 폭을 키운다. 좌우 고정 칸(능력치 칸·가방 칸)과 겹치지 않도록 화면 폭 구간마다 배율과 본문 폭을 정한다 */
-@media (min-width:900px){html[data-view="wide"] body{zoom:1.15}html[data-view="wide"] .wrap{max-width:740px}html[data-view="wide"] .hand{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (min-width:1020px){html[data-view="wide"] .wrap{max-width:660px}}
-@media (min-width:1360px){html[data-view="wide"] body{zoom:1.25}}
-@media (min-width:1700px){html[data-view="wide"] body{zoom:1.45}html[data-view="wide"] .wrap{max-width:740px}}
-@media (min-width:1920px){html[data-view="wide"] body{zoom:1.55}html[data-view="wide"] .wrap{max-width:800px}}
-/* 꽉 채운 화면에서는 본문 폭이 달라져서 양옆 장식 띠가 본문 위에 겹치므로 끈다 */
-html[data-view="wide"] body::before,html[data-view="wide"] body::after{display:none}
+/* PC 전용 '꽉 채운 화면': 본문 글자만 조금 키운다. 본문의 실제 폭과 배경·양옆 칸은 일반과 같다(zoom 1.12 × 폭 700 ≈ 일반 780) */
+@media (min-width:900px){html[data-view="wide"] .wrap{zoom:1.12;max-width:700px}html[data-view="wide"] .hand{grid-template-columns:repeat(2,minmax(0,1fr))}}

@@ -53,7 +53,7 @@ export function startUI(E,app){
     BGM.setVol(typeof o.vol==='number'?o.vol:0.3);BGM.setMood(SKIN);BGM.setStyle(o.style);
     if(o.on&&BGM.supported)document.addEventListener('pointerdown',()=>{BGM.set(true);bgmSave()},{once:true})}
   document.documentElement.dataset.skin=SKIN;
-  /* PC 화면 크기: 일반 / 꽉 채운 화면(글자와 화면 폭을 키운다, 넓은 화면에서만 적용) */
+  /* PC 화면 크기: 일반 / 꽉 채운 화면(본문 글자를 조금 키운다, 넓은 화면에서만 적용) */
   let VIEW=store.get('cityYearView')==='wide'?'wide':'normal';
   document.documentElement.dataset.view=VIEW;
 
@@ -295,7 +295,7 @@ export function startUI(E,app){
   }
   function vSettings(){
     const b=(a,k,l,cur)=>`<button class="${cur===k?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`;
-    return `<div class="stack" style="gap:6px"><span class="eyebrow">화면 크기 (PC)</span><div class="seg">${b('view','normal','일반',VIEW)}${b('view','wide','꽉 채운 화면',VIEW)}</div><span class="small dim">${VIEW==='wide'?'넓은 화면에서 글자와 화면 폭을 키운다. 폭이 좁은 화면(휴대폰 등)에서는 일반과 같다':'기본 크기'}</span></div>
+    return `<div class="stack" style="gap:6px"><span class="eyebrow">화면 크기 (PC)</span><div class="seg">${b('view','normal','일반',VIEW)}${b('view','wide','꽉 채운 화면',VIEW)}</div><span class="small dim">${VIEW==='wide'?'넓은 화면에서 본문 글자를 조금 키운다. 화면 폭과 배경은 그대로이고, 폭이 좁은 화면(휴대폰 등)에서는 일반과 같다':'기본 크기'}</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">주사위 · 전투 연출</span><div class="seg">${b('mode','manual','수동',MODE)}${b('mode','slow','천천히',MODE)}${b('mode','fast','빠르게',MODE)}${b('mode','off','끔',MODE)}</div>
         <span class="small dim">${{manual:'행동마다 버튼을 눌러 직접 주사위를 굴린다',slow:'자동으로 천천히 굴린다',fast:'자동으로 빠르게 굴린다',off:'연출 없이 결과만 본다'}[MODE]}</span></div>
