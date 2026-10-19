@@ -480,3 +480,13 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 .ent.danger{animation:dangerPulse 1.1s ease-in-out infinite}
 .ent.danger .entname b,.ent.danger .row b.serif{color:#ff8a80!important}
 @media (prefers-reduced-motion:reduce){.ent.danger{animation:none;border-color:#e03c3c;box-shadow:0 0 8px rgba(224,60,60,.5)}}
+
+/* 모바일: 소리 버튼 3개와 오른쪽 둥근 버튼 3개를 위쪽 한 줄에 모은다 (예전엔 왼쪽·오른쪽에 세로로 쌓여 본문 모서리를 가렸다) */
+@media (max-width:700px){
+  .qaudio{flex-direction:row;align-items:center;gap:6px;left:10px}
+  .qaudio .qrow{display:contents}
+  .qb{padding:0 10px}
+  .cfgbtn{right:10px}
+  .helpbtn{top:10px;right:52px}
+  .volbox{top:10px;right:94px}
+}
