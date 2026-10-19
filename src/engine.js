@@ -2218,7 +2218,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.kuro&&B.black&&B.synT>=3){dmg=Math.max(1,Math.floor(dmg*CFG.syn['흑운회'].half));note+=' 흑운 ×'+CFG.syn['흑운회'].half}
       if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv,Math.max(0,CFG.drCap-(B.redPct||0))),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
       if(c.verdict){const x=Math.floor((B.maxHp-B.hp)/10);dmg=Math.max(dmg,rawDmg)+x;note+=` 처형 · 방어·감소 무시 · 잃은 체력 ${B.maxHp-B.hp} → 고정 +${x}`}
-      if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const m=1+CFG.infinite.escPer*A.escN;dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
+      if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const m=Math.min(B.isP?CFG.infinite.escMaxP:CFG.infinite.escMaxE,1+CFG.infinite.escPer*A.escN);dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
       hpLoss(C,B,dmg,L);if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=(B.infHit||0)+CFG.infinite.midCut}}
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}

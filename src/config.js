@@ -14,7 +14,7 @@ export const CFG = {
   /* 캐릭터 */
   baseHp: 60,
   /* 전투: 빛(코스트), 손패, 키워드 */
-  light: 3, lightMax: 5, hand: 4, stackCap: 10, bleedMax: 20 /* 플레이어가 적에게 거는 출혈의 최대 스택(파열과 같다). 받는 출혈은 stackCap */,
+  light: 3, lightMax: 5, hand: 4, stackCap: 10, bleedMax: 40 /* 플레이어가 적에게 거는 출혈의 최대 스택(파열과 같다). 받는 출혈은 stackCap */,
   /* 이름 입력 칸(특이점·E.G.O·뒤틀림·사무소·날개·특색)의 최대 글자 수 (특색은 2글자부터) */
   nameMax: 12,
   breathCritPer: 5, critMult: 1.5,
@@ -74,7 +74,7 @@ export const CFG = {
   oldAge: 100,
   /* 사건 판정 주사위 최대치(플레이어): 타고난 것 등으로 아무리 커져도 이 값에서 멈춘다 */
   checkMax: 220,
-  infinite: {erodeFrom: 90, erodePer: 0.5, erodeMax: 30, enemyMax: 260, atkMax: 260 /* 균열을 닫은 뒤의 적 공격 상한 (enemyMax와 같다) */, midCut: 1 /* 중지: 무한 모드에서 맞을 때마다 받는 피해 −1%p (전투 내 누적, 상대의 몰아침 배율 대신) */, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 10000000, atkGrow: 1, evaGrow: 0.5, evaDown: 1 /* 무한 모드 해마다 양쪽 회피 −1 */, escPer: 0.03, infLvEvery: 5 /* 무한 모드에서 전투 승리 5번마다 레벨 +1 */, atkEvery: 2 /* 무한 모드 적 명중(공격) 보정 +1이 붙는 햇수 간격 */ /* escPer: 한 전투에서 피해를 준 횟수마다 그 쪽 피해 +3% (상한 없음) */},
+  infinite: {erodeFrom: 90, erodePer: 0.5, erodeMax: 30, enemyMax: 260, atkMax: 260 /* 균열을 닫은 뒤의 적 공격 상한 (enemyMax와 같다) */, midCut: 1 /* 중지: 무한 모드에서 맞을 때마다 받는 피해 −1%p (전투 내 누적, 상대의 몰아침 배율 대신) */, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 10000000, atkGrow: 1, evaGrow: 0.5, evaDown: 1 /* 무한 모드 해마다 양쪽 회피 −1 */, escPer: 0.03, infLvEvery: 5 /* 무한 모드에서 전투 승리 5번마다 레벨 +1 */, atkEvery: 2 /* 무한 모드 적 명중(공격) 보정 +1이 붙는 햇수 간격 */, escMaxP: 2, escMaxE: 30 /* escPer: 한 전투에서 피해를 준 횟수마다 그 쪽 피해 +3%. 받는 쪽이 플레이어면 최대 ×escMaxP, 적이면 최대 ×escMaxE */},
   /* 정신력: 최대 max. healEvery년마다 +yearHeal. 선택지·환상체 조우 2d3 감소, 회피 실패 시 1d evadeDie에서 1이면 1 감소(E.G.O 장비 1개당 +1).
      voiceAt 이하에서 한 번 "들리는 목소리": 1d voiceDie를 voiceRolls번, 모두 voiceDc 이상이면 개화, 실패하면 1d failLoss 감소.
      0이면 사망, 1이면 뒤틀림 판정 1d2 (1이면 개화하고 가득 회복, 2면 뒤틀림 엔딩). tiers: 전투 시작 때 호흡·회피 보정 */
