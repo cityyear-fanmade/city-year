@@ -440,3 +440,28 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 @media (min-width:1180px){.chron-in{display:none}.chron-out{display:flex;position:fixed;top:18px;left:18px;width:210px;z-index:5;background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.4)}}
 
 .helpbtn{top:52px;font:600 17px/1 var(--serif,serif)}
+
+/* PC 화면: 본문 글자와 폭을 조금 키운다(능력치 칸·가방 칸·팝업은 그대로).
+   폭 900~1099는 글자 8%·폭 그대로, 1100 이상은 글자 22%·폭 780→860. 폭이 늘어난 만큼 양옆 장식 띠(body::before/after)는 좁힌다 */
+@media (min-width:900px){.wrap{zoom:1.08;max-width:722px}}
+@media (min-width:1100px){.wrap{zoom:1.22;max-width:705px}}
+/* 양옆 장식 띠: 확대한 능력치 칸·가방 칸·본문 폭과 겹치므로 넓힌 화면(1360 이상)에서는 모든 폭에서 같게 끈다 */
+@media (min-width:1360px){html body::before,html body::after{display:none}}
+/* 넓힌 화면: 양옆 칸(능력치·가방)과 설정·도움말 버튼, 팝업도 본문과 함께 키운다. 본문 옆 여백에 겹치지 않도록 폭 구간마다 배율을 다르게 둔다 */
+@media (min-width:900px){.cfgbtn{zoom:1.08}.sheet{zoom:1.08;max-height:calc(88vh / 1.08)}}
+@media (min-width:1020px){.dock{zoom:1.05}}
+@media (min-width:1100px){.cfgbtn{zoom:1.22}.sheet{zoom:1.22;max-height:calc(88vh / 1.22)}}
+@media (min-width:1360px){.side-l,.dock{zoom:1.22}}
+/* 아주 넓은 화면은 본문·양옆 칸·팝업을 한 단계 더 키운다 */
+@media (min-width:1700px){.wrap{zoom:1.35;max-width:705px}.side-l,.dock{zoom:1.35}.cfgbtn{zoom:1.35}.sheet{zoom:1.35;max-height:calc(88vh / 1.35)}}
+@media (min-width:1900px){.wrap{zoom:1.5;max-width:705px}.side-l,.dock{zoom:1.5}.cfgbtn{zoom:1.5}.sheet{zoom:1.5;max-height:calc(88vh / 1.5)}}
+/* 창 높이가 낮으면 전투 화면 등이 아래로 잘리므로 높이에 맞춰 배율을 낮춘다(본문 폭 860은 유지). 1000px 이하는 1.15배, 880px 이하는 1.05배 */
+@media (min-width:1100px) and (max-height:1000px){.wrap{zoom:1.15;max-width:748px}.cfgbtn{zoom:1.15}.sheet{zoom:1.15;max-height:calc(88vh / 1.15)}}
+@media (min-width:1360px) and (max-height:1000px){.side-l,.dock{zoom:1.15}}
+@media (min-width:1100px) and (max-height:880px){.wrap{zoom:1.05;max-width:819px}.cfgbtn{zoom:1.05}.sheet{zoom:1.05;max-height:calc(88vh / 1.05)}}
+@media (min-width:1360px) and (max-height:880px){.side-l,.dock{zoom:1.05}}
+/* 첫 화면은 확대하지 않고 원래 크기·배경 그대로 둔다 (아래 규칙이 위의 확대 규칙보다 뒤에 와야 이긴다) */
+@media (min-width:900px){html[data-scr="title"] .wrap{zoom:1;max-width:780px}}
+@media (min-width:1360px){html[data-scr="title"] body::before,html[data-scr="title"] body::after{display:block;width:calc((100vw - 780px)/2 - 230px)}}
+/* 엔딩 화면 아래 버튼: 위쪽 내용(공유 문구·이미지·히든 엔딩 안내)이 늘어나도 밀려 내려가지 않게 화면 아래에 붙여 두고, 버튼 사이에 틈을 둔다 */
+.endbar{position:sticky;bottom:0;z-index:5;display:flex;flex-direction:column;gap:12px;padding:14px 0 calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(to bottom,transparent,var(--bg) 22px)}

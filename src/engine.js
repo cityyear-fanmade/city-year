@@ -195,7 +195,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const [k,v] of Object.entries(item.fx))if(k!=='dmin'&&k in s){s[k]+=v;if(k==='maxHp')ch.hp+=v}
     ch.gear[item.slot]=item;
     /* 빼낸 장비는 버리지 않고 보관함으로 */
-    if(old)(ch.stash=ch.stash||[]).push(old);
+    /* 맨손은 쥐고 있는 물건이 아니므로 보관함에 남기지 않는다 */
+    if(old&&!(old.id==='birth'&&old.n==='맨손'))(ch.stash=ch.stash||[]).push(old);
     s.dmin=calcDmin(ch);
     /* 무기 피해 주사위 면 수 (궁니르 d10). 장비 중 가장 큰 값, 기본 d6 */
     s.pdie=Math.max(6,...Object.values(ch.gear).map(g=>g.fx.die||6));
@@ -1024,7 +1025,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function corpForb(ch,chips){
     const c=ch.corp;if(!corpYes(ch)||c.forb>=CP.forbMax)return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;bondTaboo(ch);corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
-    /* 발톱·조율자를 이미 이겼으면 장비 없이 돈과 경험치만 주는 강화체가 찾아온다: 실험마다 huntChance%, 마지막(8/8)은 둘 다 확정 */
+    /* 발톱·조율자를 이미 이겼으면 장비 없이 돈과 경험치만 주는 재시험(발톱·조율자 재시험)이 찾아온다: 실험마다 huntChance%, 마지막(8/8)은 둘 다 확정 */
     if(CP.chain.every(id=>ch.beaten.includes(id))){const last=c.forb>=CP.forbMax;
       if(last)c.hunt=CP.chain.map(id=>id+'_x');else if(d(100)<=CP.huntChance)(c.hunt=c.hunt||[]).push(one(CP.chain)+'_x');
       if((c.hunt||[]).length)chips.push('머리가 강화된 시험을 보낸다');}
@@ -1512,6 +1513,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(G.ch.flags.zenaPend&&!G.ch.beaten.includes(CFG.endless.finalNext))return {type:'fight',enemy:CFG.endless.finalNext,enc:{hidden:true,label:'연전 · 마지막 상대'}};
     /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
     if(G.infinite&&!G.ch.oldEnd&&age(G)>=CFG.oldAge){G.ch.oldEnd=true;return {type:'end',win:true,old:true}}
+    /* 무한 모드에서 overflowAge살에 닿으면 끝나는 히든 엔딩 (기록실에는 올라가지 않고, 이어갈 수 없다) */
+    if(G.infinite&&!G.ch.overflowEnd&&age(G)>=CFG.overflowAge){G.ch.overflowEnd=true;return {type:'end',win:true,overflow:true}}
     /* 무한 모드 추가 엔딩: 한 번씩, 끝낸 뒤에도 이어서 살아갈 수 있다 */
     if(G.infinite){const ch=G.ch,OE=CFG.outEnds;ch.outSeen=ch.outSeen||{};
       const baseEnd_=CFG.years+CFG.endless.span*CFG.endless.grades.length;
