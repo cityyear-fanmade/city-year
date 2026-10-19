@@ -2373,7 +2373,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 중지: 회피를 못 하는 대신 방어 자세로 받아낸 라운드는 상대가 피해를 준 것으로 치지 않는다 */
       if(P.middle&&(P.defRound===C.round||P.guarding)&&E.dealtR===C.round)E.dealtR=0;
       for(const X of [P,E]){if(X.dealtR===C.round){X.dry=0;continue}X.dry=(X.dry||0)+1;if(X.dry<F.miss)continue;
-        const r=Math.min(F.max,F.per*(X.dry-F.miss+1)),x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · ${X.dry}라운드째 피해를 주지 못했다 · 고정 피해 ${x}`)}}}
+        const r=!X.isP&&X.maxHp>=CFG.infinite.hpMax?F.capRate:Math.min(F.max,F.per*(X.dry-F.miss+1)),x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · ${X.dry}라운드째 피해를 주지 못했다 · 고정 피해 ${x}`)}}}
     ampUse(C,L);
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
   }
