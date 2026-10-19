@@ -157,7 +157,7 @@ html[data-skin="dante"] .wrap{
   background:linear-gradient(180deg,#160c09,#100806);
   border-color:var(--frame);
   box-shadow:inset 0 0 0 1px #2a120b,inset 0 0 0 4px #120806,inset 0 0 0 5px var(--frame2),0 10px 30px rgba(0,0,0,.6);
-  clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 16px,100% calc(100% - 16px),calc(100% - 16px) 100%,16px 100%,0 calc(100% - 16px),0 16px);
+  border-radius:10px;
 }
 html[data-skin="dante"] .wrap::before,html[data-skin="dante"] .wrap::after{
   content:"";position:absolute;top:8px;width:7px;height:7px;border-radius:50%;
@@ -171,11 +171,10 @@ html[data-skin="dante"] .skin-tab{
   clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,10px 100%,0 50%);
 }
 html[data-skin="dante"] .panel,html[data-skin="dante"] details,html[data-skin="dante"] .log,html[data-skin="dante"] .arena{
-  border:1px solid var(--line2);border-radius:0;
+  border:1px solid var(--line2);border-radius:5px;
   box-shadow:inset 0 0 0 1px #0c0504,inset 0 0 0 3px var(--line);
-  clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px);
 }
-html[data-skin="dante"] .btn,html[data-skin="dante"] .card{border-radius:0;clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
+html[data-skin="dante"] .btn,html[data-skin="dante"] .card{border-radius:5px}
 html[data-skin="dante"] .btn.primary{background:linear-gradient(180deg,#f3b04d,#d9822a);border-color:#ffcf7a;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
 html[data-skin="dante"] .eyebrow{color:var(--gold)}
 html[data-skin="dante"] h1,html[data-skin="dante"] h2{text-shadow:0 1px 0 #000,0 0 14px rgba(240,162,59,.18)}
@@ -198,7 +197,6 @@ html[data-skin="terminal"] .wrap{
   border-color:var(--shell);
   border-image:linear-gradient(160deg,#ffffff,var(--shell) 30%,var(--shell2) 60%,var(--shell3)) 1;
   box-shadow:0 0 0 2px #2a2f34,0 0 0 4px var(--shell2),0 14px 40px rgba(0,0,0,.8),inset 0 0 40px rgba(89,200,255,.07);
-  clip-path:polygon(22px 0,calc(100% - 22px) 0,100% 22px,100% calc(100% - 22px),calc(100% - 22px) 100%,22px 100%,0 calc(100% - 22px),0 22px);
 }
 /* 화면 주사선 */
 html[data-skin="terminal"] .wrap::after{content:"";position:absolute;inset:0;pointer-events:none;
