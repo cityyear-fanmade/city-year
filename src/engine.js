@@ -1143,6 +1143,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const grown=kids.find(k=>!k.told&&kidAge(k,y)>=KD.adult);
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
+      /* 손주: 성인이 된 아이가 30~50살 사이에 아이를 하나 낳는다. 이름은 무작위로 굴린다 */
+      {const GR=BD.grand,gk=kids.find(k=>!k.dead&&!k.pend&&!k.grand&&kidAge(k,y)>=GR.from&&kidAge(k,y)<=GR.to&&d(100)<=GR.chance);
+        if(gk){const used=[...kids.map(k=>k.n),...kids.filter(k=>k.grand).map(k=>k.grand.n)],all=[...B.kidNames,...(D.namePool||[])],pool=all.filter(n=>!used.includes(n)),gn=one(pool.length?pool:all);
+          return {t:B.grand.t,x:kf(B.grand.x,gk.n).replace(/\{g\}/g,gn),c:[{l:B.grand.a,h:`${gk.n}의 아이 · 이름은 ${gn}`,ok:{t:kf(B.grand.at,gk.n).replace(/\{g\}/g,gn),fx:{bondGrand:{k:gk.n,g:gn}}}}]}}}
       if(b.st!=='married')return null;
       if(d(1000)<=bondRisk(b,y,ch)*10)
         return {t:B.deathT,x:bondFill(R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`,ok:{t:bondFill(B.deathAT,b),fx:{bondDeath:true}}}]};
@@ -1692,6 +1696,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
     if(fx.bondDecline)ch.bond={st:'declined'};
     if(fx.bondDeath&&ch.bond&&ch.bond.st==='married')bondDeath(ch,chips);
+    if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
     if(fx.bondPropose)bondPropose(ch,chips,true);
@@ -1713,7 +1718,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(C.escort){const Z=CFG.escort,m=earn(ch,Z.money+Z.moneyPer*C.escort.lv);ch.money+=m;chips.push(`동행 의뢰 보수 · ${C.escort.name} · +${money(m)}`)}
     if(C.id==='kid_hunt'&&ch.bond){
       if(ch.kidFoeSpouse){if(ch.bond.st==='married'){ch.bond.st='lost';chips.push(kf(D.bond.hunt.winSpouse,ch.bond.name))}}
-      else{const kk=(ch.bond.kids||[]).find(k=>k.n===ch.kidFoe&&!k.dead);if(kk){kk.dead=true;chips.push(kf(D.bond.hunt.win,kk.n))}}}
+      else{const kk=(ch.bond.kids||[]).find(k=>k.n===ch.kidFoe&&!k.dead);if(kk){kk.dead=true;chips.push(kf(D.bond.hunt.win,kk.n))}}
+      /* 가족을 직접 쓰러뜨린 충격: 최대 정신력이 영구히 크게 줄고 정신력도 같이 떨어진다 (뒤틀린 동안은 정신력이 쓰이지 않지만, 기록과 안정 뒤를 위해 남긴다) */
+      {const hm=BD.hunt.mind;ch.stats.mindMax=(ch.stats.mindMax||0)-hm;ch.mind=Math.max(1,Math.min(ch.mind-hm,mindMax(ch)));chips.push(`가족을 쓰러뜨렸다 · 최대 정신력 −${hm} (영구) · 정신력 ${ch.mind}`)}}
     if(ch.flags&&ch.flags.redMist){const h=Math.min(CFG.redMist.heal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('붉은 안개 · 적을 쓰러뜨려 HP +'+h)}}
     {const f0=D.enemies[C.id];
       if(f0.rb&&ch.rb&&!f0.hidden&&!f0.rbLast){
