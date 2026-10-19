@@ -2,6 +2,7 @@
 import {CFG} from './config.js';
 import {clamp,sg,STAT} from './engine.js';
 import {createBgm} from './bgm.js';
+import {createSfx} from './sfx.js';
 
 export function startUI(E,app){
   const D=E.D,T=D.text;
@@ -48,6 +49,9 @@ export function startUI(E,app){
   if(!SKINS.some(s=>s.k===SKIN))SKIN='base';
   /* 배경음악: 기본은 꺼짐. 켜 둔 채 다시 열면 첫 터치 때 서서히 시작한다 (브라우저는 터치 전에 소리를 낼 수 없다) */
   const BGM=createBgm(),BGMK='cityYearBgm';
+  /* 주사위 효과음: 배경음악 켬/끔과 음량을 따른다. 연출 끔이거나 건너뛰는 중이면 내지 않는다 */
+  const SFX=createSfx(()=>BGM.isOn(),()=>BGM.vol());
+  const sfx=k=>{if(MODE!=='off'&&!SKIP)SFX.play(k)};
   const bgmSave=()=>store.set(BGMK,JSON.stringify({on:BGM.isOn(),vol:BGM.vol(),style:BGM.style()}));
   {let o={};try{o=JSON.parse(store.get(BGMK)||'{}')||{}}catch(e){}
     BGM.setVol(typeof o.vol==='number'?o.vol:0.3);BGM.setMood(SKIN);BGM.setStyle(o.style);
@@ -117,6 +121,7 @@ export function startUI(E,app){
       if(pv)Object.keys(D.keywords).forEach((k,i)=>{const dlt=(v[k]||0)-(pv[k]||0);if(dlt>0)setTimeout(()=>floatTxt(side,`${D.keywords[k].n} +${dlt}`,kwc(k),'kwf'),120+i*160)});
       h.textContent=`HP ${v.hp}/${X.maxHp}`;
       $('bar-'+side).firstElementChild.style.width=clamp(v.hp/X.maxHp*100,0,100)+'%';
+      {const en=$('ent-'+side);if(en)en.classList.toggle('danger',v.hp>0&&v.hp<=X.maxHp*0.1)}
       $('chips-'+side).innerHTML=stacks(v);
     }
   }
@@ -162,12 +167,12 @@ export function startUI(E,app){
       await waitTap('주사위를 굴린다')}
     const a=$('alabel');if(a)a.innerHTML=`${who(e.att)}의 <b>${esc(e.card.n)}</b> → ${who(e.def)}`;
     $('capA').innerHTML=`${who(e.att)} · 명중 1d100`;$('capD').innerHTML=`${who(e.def)} · ${e.guard?'방어':'회피'} 1d${e.rdMax||100}`;
-    dA.className='die rolling';dD.className='die rolling';
+    dA.className='die rolling';dD.className='die rolling';sfx('snap');
     dA.style.borderColor=X.color;dD.style.borderColor=Y.color;
     $('dmgw').hidden=true;$('sA').textContent='';$('sD').textContent='';$('fA').innerHTML='&nbsp;';$('fD').innerHTML='&nbsp;';$('fM').innerHTML='&nbsp;';
     await Promise.all([
-      rollNum(dA.firstElementChild,e.ra,650,100).then(()=>{dA.classList.remove('rolling');anim(dA,'settle',320)}),
-      rollNum(dD.firstElementChild,e.rd,900,e.rdMax||100).then(()=>{dD.classList.remove('rolling');anim(dD,'settle',320)})
+      rollNum(dA.firstElementChild,e.ra,650,100).then(()=>{dA.classList.remove('rolling');anim(dA,'settle',320);sfx('hit')}),
+      rollNum(dD.firstElementChild,e.rd,900,e.rdMax||100).then(()=>{dD.classList.remove('rolling');anim(dD,'settle',320);sfx('dodge')})
     ]);
     $('fA').textContent=e.sa;$('fD').textContent=e.sd;
     $('fA').className='dfinal '+(e.hit?'good':'');$('fD').className='dfinal '+(e.hit?'':'good');
@@ -221,7 +226,7 @@ export function startUI(E,app){
     if(die){
       die.classList.add('rolling');
       await rollNum(b,r.r,900,r.die||100);
-      die.classList.remove('rolling');anim(die,'settle',320);
+      die.classList.remove('rolling');anim(die,'settle',320);sfx('tick');
       await holdTap();
       await wait(350);
     }
@@ -1280,7 +1285,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const col=X.color;PREV[side]={...v};
     const head=compact?`<div class="entname"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span>`
       :`<div class="row between"><div class="row"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span></div>`;
-    return `<div class="panel stack ent${compact?' compact':''}" id="ent-${side}" style="background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
+    return `<div class="panel stack ent${compact?' compact':''}${v.hp>0&&v.hp<=X.maxHp*0.1?' danger':''}" id="ent-${side}" style="background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
       ${head}
       <div class="bar" id="bar-${side}"><i style="width:${clamp(v.hp/X.maxHp*100,0,100)}%;background:${col}"></i></div>
       <div class="chips" id="chips-${side}">${stacks(v)}</div>${side==='P'&&C&&C.ally?`<div class="small" style="color:var(--bleed)">${esc(C.ally.name)} · 함께 싸운다 <span class="dim">· 같은 공격을 함께 굴려 주사위 합 ¾씩 · 상대 명중 +${CFG.bond.allyHit}</span></div>`:''}${side==='E'&&X.passive?`<div class="small" style="color:var(--gold)">패시브 · ${esc(X.passive.n)}${X.passive.id==='recital'?` (악장 ${X.recital||0}/${X.passive.every})`:''}${X.passive.id==='stance'?` (${X.stance==='bear'?'곰 사냥':'범 사냥'} · 살 ${X.sal==null?5:X.sal}/${X.passive.salMax})`:''}${X.maskOn?' <b>(이번 라운드 발동)</b>':''} <span class="dim">· ${esc(X.passive.d)}</span></div>`:''}${side==='E'&&X.trait&&D.traits&&D.traits[X.trait]?`<div class="small" style="color:var(--gold)">특성 · ${esc(D.traits[X.trait].n)} <span class="dim">· ${esc(D.traits[X.trait].d)}</span></div>`:''}</div>`;
