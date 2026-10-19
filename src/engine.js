@@ -1016,6 +1016,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function corpForb(ch,chips){
     const c=ch.corp;if(!corpYes(ch)||c.forb>=CP.forbMax)return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;bondTaboo(ch);corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
+    /* 발톱·조율자를 이미 이겼으면 장비 없이 돈과 경험치만 주는 강화체가 찾아온다: 실험마다 huntChance%, 마지막(8/8)은 둘 다 확정 */
+    if(CP.chain.every(id=>ch.beaten.includes(id))){const last=c.forb>=CP.forbMax;
+      if(last)c.hunt=CP.chain.map(id=>id+'_x');else if(d(100)<=CP.huntChance)(c.hunt=c.hunt||[]).push(one(CP.chain)+'_x');
+      if((c.hunt||[]).length)chips.push('머리가 강화된 시험을 보낸다');}
     if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다');corpClearCheck(ch,chips)}
   }
   /* 머리의 시험 상대(발톱·조율자)를 이미 모두 이긴 몸이면 시험 없이 바로 넘은 것으로 친다 (예전에는 아무 일도 일어나지 않던 문제) */
@@ -1487,6 +1491,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.affRetry&&!mc.aff){mc.affRetry=false;return {type:'event',ev:D.affiliation}}
     if(mc.voicePend&&!mc.voiceUsed&&!mc.ego){mc.voicePend=false;mc.voiceUsed=true;return {type:'event',ev:D.mindEvents.voice}}
     /* 기업 루트 끝: 금기 실험을 forbMax번 하면 머리가 부른다. 발톱 → 조율자가 해를 넘기지 않고 연속으로 온다 */
+    if(mc.corp&&mc.corp.hunt&&mc.corp.hunt.length){const id=mc.corp.hunt.shift();(G.met=G.met||[]).push(id);return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}}}
     if(mc.corp&&mc.corp.chain&&mc.corp.chain.length){
       if(!mc.corp.headSeen){mc.corp.headSeen=true;return {type:'event',ev:D.corp.head}}
       const id=mc.corp.chain.shift();mc.corp.trial=id;(G.met=G.met||[]).push(id);
@@ -1710,7 +1715,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}}}ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
     offerPick(ch,D.rewards,chips,null);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
-    {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
+    {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.xp){gainXp(ch,BN.xp);chips.push(`${BN.n||'전리품'} · 경험치 +${BN.xp}`)}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     if(ch.egoNote){chips.push(ch.egoNote);ch.egoNote=null}
     if(ch.bloomNote){chips.push(ch.bloomNote);ch.bloomNote=null}
