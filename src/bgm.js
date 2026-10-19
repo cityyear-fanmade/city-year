@@ -108,7 +108,8 @@ export function createBgm(){
   function powerC(m,t,dur,peak,mute){
     const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.005);
     if(mute)g.gain.exponentialRampToValueAtTime(0.0001,t+dur);else{g.gain.linearRampToValueAtTime(peak*0.85,t+dur*0.8);g.gain.linearRampToValueAtTime(0.0001,t+dur)}
-    for(const [o,dt] of [[0,-6],[7,4],[12,0]]){const x=ctx.createOscillator();x.type='sawtooth';x.frequency.value=hz(m+o);x.detune.value=dt;x.connect(g);x.start(t);x.stop(t+dur+0.05)}
+    /* 근음·5음·옥타브를 순정 비율(1 · 1.5 · 2)로 맞춘다: 어긋나 있으면 찌그러진 소리에서 맥놀이(떨림)가 생긴다 */
+    for(const r of [1,1.5,2]){const x=ctx.createOscillator();x.type='sawtooth';x.frequency.value=hz(m)*r;x.connect(g);x.start(t);x.stop(t+dur+0.05)}
     g.connect(cur.d);
   }
   /* 서브 베이스: 아주 낮은 사인으로 바닥을 받친다 */
@@ -139,7 +140,7 @@ export function createBgm(){
   function padN(m,t,dur,peak){             // 패드: 살짝 어긋난 두 삼각파를 느리게 키우고 줄인다
     const g=ctx.createGain(),f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=1100;f.Q.value=0.3;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+dur*0.35);g.gain.linearRampToValueAtTime(peak*0.8,t+dur*0.8);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    for(const dt of [-6,6]){const o=ctx.createOscillator();o.type='triangle';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
+    for(const dt of [-3,3]){const o=ctx.createOscillator();o.type='triangle';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
     f.connect(g);g.connect(cur.u);
   }
   function sawN(m,t,dur,peak,cut){         // 베이스: 톱니파를 부드럽게 올렸다 내린다 (딱딱 끊기지 않게)
@@ -184,7 +185,7 @@ export function createBgm(){
   function synthN(m,t,dur,peak,cut){
     const f=ctx.createBiquadFilter(),g=ctx.createGain();f.type='lowpass';f.frequency.setValueAtTime(cut*1.4,t);f.frequency.exponentialRampToValueAtTime(cut,t+0.12);f.Q.value=1.2;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.012);g.gain.linearRampToValueAtTime(peak*0.8,t+Math.max(0.03,dur-0.05));g.gain.linearRampToValueAtTime(0.0001,t+dur);
-    for(const dt of [-9,9]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
+    for(const dt of [-3,3]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
     f.connect(g);g.connect(cur.b);
   }
   /* 퉁기는 베이스 (고요): 삼각파를 짧게 */
@@ -267,7 +268,7 @@ export function createBgm(){
   function choirN(m,t,dur,peak){
     const g=ctx.createGain(),f1=ctx.createBiquadFilter(),f2=ctx.createBiquadFilter();f1.type='bandpass';f1.frequency.value=700;f1.Q.value=2.5;f2.type='bandpass';f2.frequency.value=1150;f2.Q.value=3;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+dur*0.4);g.gain.setValueAtTime(peak,t+dur*0.75);g.gain.linearRampToValueAtTime(0.0001,t+dur);
-    for(const dt of [-8,8]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f1);o.connect(f2);o.start(t);o.stop(t+dur+0.05)}
+    for(const dt of [-4,4]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f1);o.connect(f2);o.start(t);o.stop(t+dur+0.05)}
     f1.connect(g);f2.connect(g);g.connect(cur.u);
   }
   /* 히든 보스 한 마디: 0~3 도입(느리게) · 이후 20마디 한 바퀴 — 0~7 본 구간(반박자: 킥 1·3박 반, 스네어 3박, 긴 파워 코드) · 8~15 몰아치기(킥 매 박·스네어 2·4·8분 끊어 치기·선율, 마지막 마디는 7/8) · 16~19 숨 고르기(종·합창·지속음) */
