@@ -1,28 +1,53 @@
-/* 효과음: 외부 음원 없이 Web Audio로 합성한다. 주사위가 멈출 때의 '탁' 소리만 쓴다 */
+/* 효과음: 외부 음원 없이 Web Audio로 합성한다. 주사위가 멈출 때의 '탁' 소리만 쓴다.
+   삑 소리가 나는 순음을 쓰지 않고, 부딪히는 순간의 잡음 + 나무 몸통이 울리는 낮은 공명 + 방에 남는 짧은 잔향으로 만든다 */
 export function createSfx(isOn,getVol){
   const AC=typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext);
-  let ctx=null,nb=null;
+  let ctx=null,nb=null,room=null;
   const ensure=()=>{
     if(!AC)return false;
-    if(!ctx){ctx=new AC();nb=ctx.createBuffer(1,ctx.sampleRate*0.3,ctx.sampleRate);const d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+    if(!ctx){
+      ctx=new AC();
+      nb=ctx.createBuffer(1,ctx.sampleRate*0.5,ctx.sampleRate);const d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      /* 짧은 방 울림: 감쇠하는 잡음으로 만든 잔향 */
+      const len=Math.floor(ctx.sampleRate*0.35),ib=ctx.createBuffer(2,len,ctx.sampleRate);
+      for(let c=0;c<2;c++){const x=ib.getChannelData(c);for(let i=0;i<len;i++)x[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.2)}
+      room=ctx.createConvolver();room.buffer=ib;room.connect(ctx.destination);
+    }
     if(ctx.state==='suspended')ctx.resume();
     return true;
   };
-  /* kind: snap(합 시작, 손가락 튕기는 소리) · hit(명중 주사위 멈춤, 높고 단단하게) · dodge(회피 주사위 멈춤, 조금 낮게) · tick(사건 판정) */
-  const P={snap:{f:2600,q:1.4,len:0.07,thump:190,g:1.0},hit:{f:2100,q:1.1,len:0.05,thump:150,g:0.8},dodge:{f:1500,q:1.0,len:0.05,thump:120,g:0.75},tick:{f:1800,q:1.0,len:0.045,thump:140,g:0.7}};
+  /* crack: 부딪히는 순간의 높은 잡음 · body: 몸통 공명(Hz 두 개와 길이) · room: 잔향 양 */
+  const P={
+    snap:{crack:[3800,1.6,0.028,0.9],body:[[520,0.085,0.55],[1180,0.05,0.25]],room:0.45,g:1.0},
+    hit: {crack:[2600,1.2,0.03,0.8], body:[[340,0.09,0.7],[760,0.055,0.3]],room:0.35,g:0.95},
+    dodge:{crack:[1900,1.0,0.034,0.65],body:[[260,0.1,0.75],[590,0.06,0.3]],room:0.35,g:0.95},
+    tick:{crack:[2200,1.0,0.025,0.6],body:[[300,0.07,0.6],[690,0.045,0.25]],room:0.25,g:0.85}
+  };
   function play(kind){
     if(!isOn()||!ensure())return;
     const v=getVol();if(!(v>0))return;
-    const p=P[kind]||P.tick,t=ctx.currentTime,out=ctx.createGain();
-    out.gain.value=Math.min(1,0.9*p.g*(0.35+v*0.9));out.connect(ctx.destination);
-    const n=ctx.createBufferSource();n.buffer=nb;
-    const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=p.f;bp.Q.value=p.q;
-    const ng=ctx.createGain();ng.gain.setValueAtTime(1,t);ng.gain.exponentialRampToValueAtTime(0.001,t+p.len);
-    n.connect(bp);bp.connect(ng);ng.connect(out);n.start(t);n.stop(t+p.len+0.02);
-    const o=ctx.createOscillator(),og=ctx.createGain();o.type='sine';
-    o.frequency.setValueAtTime(p.thump*1.6,t);o.frequency.exponentialRampToValueAtTime(p.thump*0.6,t+0.08);
-    og.gain.setValueAtTime(0.9,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.1);
-    o.connect(og);og.connect(out);o.start(t);o.stop(t+0.12);
+    const p=P[kind]||P.tick,t=ctx.currentTime+0.005,det=1+(Math.random()-0.5)*0.12;
+    const out=ctx.createGain();out.gain.value=Math.min(1,p.g*(0.25+v*0.85));
+    out.connect(ctx.destination);
+    const wet=ctx.createGain();wet.gain.value=p.room;out.connect(wet);wet.connect(room);
+    /* 부딪히는 순간 */
+    {const [f,q,len,gn]=p.crack;
+      const n=ctx.createBufferSource();n.buffer=nb;n.playbackRate.value=det;
+      const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=900;
+      const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f*det;bp.Q.value=q;
+      const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gn,t+0.0015);g.gain.exponentialRampToValueAtTime(0.0008,t+len);
+      n.connect(hp);hp.connect(bp);bp.connect(g);g.connect(out);n.start(t);n.stop(t+len+0.03)}
+    /* 몸통 공명: 부딪힌 나무가 울리는 소리. 피치를 내리지 않고 그대로 줄어들게 해서 '뚝'하고 꺾이지 않게 한다 */
+    for(const [f,len,gn] of p.body){
+      const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.value=f*det;
+      g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gn*0.5,t+0.002);g.gain.exponentialRampToValueAtTime(0.0008,t+len);
+      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=f*3;
+      o.connect(g);g.connect(lp);lp.connect(out);o.start(t);o.stop(t+len+0.03)}
+    /* 낮은 둔탁함 */
+    {const n=ctx.createBufferSource();n.buffer=nb;n.playbackRate.value=0.5*det;
+      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=420;
+      const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.5,t+0.003);g.gain.exponentialRampToValueAtTime(0.0008,t+0.07);
+      n.connect(lp);lp.connect(g);g.connect(out);n.start(t);n.stop(t+0.1)}
   }
   return {play,supported:!!AC};
 }

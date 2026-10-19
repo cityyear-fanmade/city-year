@@ -302,7 +302,7 @@ export function startUI(E,app){
   function quickAudio(){
     if(!BGM.supported)return '';
     const on=BGM.isOn(),v=Math.round(BGM.vol()*100),ic=v===0?'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="none"/>':'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none"/>';
-    return `<div class="qaudio"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><button class="qb" data-a="qstyle" aria-label="배경음악 스타일 바꾸기" title="스타일">${BGM.style()==='passion'?'불길':'고요'}</button></div>
+    return `<div class="qaudio"><div class="qrow"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><button class="qb" data-a="qstyle" aria-label="배경음악 스타일 바꾸기" title="스타일">${BGM.style()==='passion'?'불길':'고요'}</button></div>${SFX.supported?`<div class="qrow"><button class="qb${SFXS.on?' on':''}" data-a="qsfx" aria-label="효과음 ${SFXS.on?'끄기':'켜기'}" title="효과음">${SFXS.on?'탁 켬':'탁 끔'}</button></div>`:''}</div>
       <div class="volbox"><button class="qb${UI.volOpen?' on':''}" data-a="qvol" aria-label="음량 조절" title="음량"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ic}</svg></button>${UI.volOpen?`<div class="volpop"><input type="range" id="bgmQuick" min="0" max="100" step="1" value="${v}" aria-label="배경음악 음량"><b class="mono" id="bgmQuickPct">${v}%</b></div>`:''}</div>`;
   }
   function vSettings(){
@@ -1836,6 +1836,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     autogap(i){AUTOGAP=i;store.set('cityYearAutoGap',i);if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     dice(i){DICE=i;store.set('cityYearDice',i);render()},
     bgm(i){BGM.set(i==='on');bgmSave();render()},
+    qsfx(){SFXS.on=!SFXS.on;sfxSave();if(SFXS.on)SFX.play('snap');render()},
     sfx(i){SFXS.on=i==='on';sfxSave();if(SFXS.on)SFX.play('snap');render()},
     sfxstep(i){const p=Math.round(SFXS.vol*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;SFXS.vol=clamp(n,0,100)/100;sfxSave();SFX.play('hit');render()},
     qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
@@ -2025,7 +2026,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.bag){UI.bag=null;render()}});
   app.addEventListener('click',e=>{
     const b=e.target.closest('[data-a]');
-    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qvol'].includes(b.dataset.a))return;
+    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qvol','qsfx'].includes(b.dataset.a))return;
     ACT[b.dataset.a](b.dataset.i,b);
   });
   /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */

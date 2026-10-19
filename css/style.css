@@ -464,7 +464,8 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 /* 엔딩 화면 아래 버튼: 위쪽 내용(공유 문구·이미지·히든 엔딩 안내)이 늘어나도 밀려 내려가지 않게 화면 아래에 붙여 두고, 버튼 사이에 틈을 둔다 */
 .endbar{position:sticky;bottom:0;z-index:5;display:flex;flex-direction:column;gap:12px;padding:14px 0 calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(to bottom,transparent,var(--bg) 22px)}
 /* 게임 중 음악 간단 조절: 왼쪽 위 켬·스타일, 오른쪽 음량(세로 막대) */
-.qaudio{position:fixed;left:12px;top:10px;z-index:30;display:flex;gap:6px}
+.qaudio{position:fixed;left:12px;top:10px;z-index:30;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.qrow{display:flex;gap:6px}
 .qb{height:36px;min-width:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--dim);font:600 13px/1 var(--mono);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 .qb:hover{color:var(--gold);border-color:var(--gold)}
 .qb.on{color:var(--gold);border-color:var(--gold)}
