@@ -87,12 +87,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 캐릭터 ===== */
   function addStats(s,fx){for(const k in fx){if(k==='dmin')s.dmin=Math.max(s.dmin,fx[k]);else if(k in s)s[k]+=fx[k]}}
   /* 성장기: 단계마다 1d100으로 표를 굴려 능력치 하나가 오른다 */
-  function childhood(s){
-    return D.childhood.stages.map(st=>{const r=d(100),x=pick(D.childhood.table,r);addStats(s,x.fx);return {age:st.age,r,x}});
+  /* tbl: 숨은 출생이 자기 성장기 표(kidTable)를 가지면 그 표에서 고른다. 단, 특별한 굴림(CFG.kidKeep: 목소리가 들림 · 무너진 유적 탐험 · 장비의 형상이 보임)은 어느 출생이든 그대로
+     출생이 kidSpecial[굴림]을 가지면 그 특별한 굴림은 출생 전용 결과로 바꾼다 (예: 홍원은 유물 사건이 없어 무너진 유적 탐험 대신 다른 결과) */
+  function childhood(s,o){
+    const tbl=o&&o.kidTable,sp=(o&&o.kidSpecial)||{};
+    return D.childhood.stages.map(st=>{const r=d(100),x=sp[r]||pick(tbl&&!CFG.kidKeep.includes(r)?tbl:D.childhood.table,r);addStats(s,x.fx);return {age:st.age,r,x}});
   }
   /* job: 히든 직업으로 태어나면 출신 칸이 그 직업으로 바뀐다 (발톱 1, 조율자 100). 나머지 굴림은 같은 시드 그대로 */
   /* 출생 보정 없이 시작: 출신·재능·결점·무기·타고난 것이 없고, 성장기 보정과 색만 남는다. keep = {r, kid} (이미 굴린 출생에서 가져온다) */
-  const BLANK={o:{n:'아무것도 없는 존재',t:'이름도 내력도 쥐여 주지 않은 채 태어났다.',e:'출생 보정 없음 · 성장기 보정만 가진다',fx:{},paths:{},flags:{},deck:['slash','thrust','smash','guard']},
+  /* 빈손의 보정: 아무것도 쥐지 않았기에 쥘 수 있는 것이 많다 (히든 보스 전리품 장비 확률 +gearUp%p, 마음이 꺾일 때 E.G.O 형상이 보일 확률 egoSight%) */
+  const BLANK={o:{n:'아무것도 없는 존재',t:'이름도 내력도 쥐여 주지 않은 채 태어났다.',e:'출생 보정 없음 · 빈손: 히든 보스 전리품 장비 확률 +25%p · 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%',fx:{gearUp:25,egoSight:25},paths:{},flags:{},deck:['slash','thrust','smash','guard']},
     t:{n:'재능 없음',t:'',e:'',fx:{}},f:{n:'결점 없음',t:'',e:'',fx:{}},w:{n:'맨손',e:'아무것도 쥐지 않았다',fx:{}}};
   /* 아무것도 없는 출발의 운명: chance% 확률로 히든 출신 n개 중 하나를 고르게 강요한다 (고를 수 있는 건 히든 출신 굴림 값) */
   function blankFate(){
@@ -129,12 +133,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const r=keep?Object.assign({},keep.r):{o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=!keep&&job&&D.hiddenJobs[job];
     if(J)r.o=J.roll;
     else if(fixO)r.o=fixO;
-    /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문). 운명 후보(blankFate.pool: R사·H사)는 출신 없이 시작할 때의 운명 선택으로만 나온다 */
+    /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문). 숨은 출생이 talents·flaws·kidTable·noWeapon을 가지면 재능·결점·성장기는 그 표에서, 무기는 맨손(전용 무기)으로 */
     const HO=!J&&(!keep||keep.fate)&&(D.hiddenOrigins||[]).find(x=>x.roll===(keep&&keep.fate?keep.fate:r.o)&&(keep||!(CFG.blankFate.pool||[]).includes(x.roll)));
-    const o=keep?(keep.fate&&HO?HO:BLANK.o):J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(D.talents,r.t),f=keep?BLANK.f:pick(D.flaws,r.f),w=keep?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
-    const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,dr:0,regen:0,defUp:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,egoSight:0,relicApt:0};
+    const o=keep?(keep.fate&&HO?HO:BLANK.o):J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(o.talents||D.talents,r.t),f=keep?BLANK.f:pick(o.flaws||D.flaws,r.f),w=keep||o.noWeapon?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
+    const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,dr:0,regen:0,defUp:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,gearUp:0,egoSight:0,relicApt:0};
     for(const x of [o,t,f])addStats(s,x.fx);
-    const kid=keep?keep.kid.map(k=>{addStats(s,k.x.fx);return k}):childhood(s);
+    const kid=keep?keep.kid.map(k=>{addStats(s,k.x.fx);return k}):childhood(s,o);
     const ch={r,o,t,f,w,kid,ci,blank:!!keep&&!(keep.fate&&HO),fated:!!(keep&&keep.fate&&HO),color:D.colors[ci].hex,licensed:false,title:null,aff:null,paths:Object.assign({},o.paths),
       flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0)),stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||o.money||0,
       deck:o.deck?o.deck.slice():['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
@@ -158,11 +162,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 히든 직업 전용 무기: 출생 무기는 보관함으로 */
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
+    if(o.weapon==='star'){equip(ch,starItem(0,''));ch.starPick=true}
     if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e}}
     /* E.G.O 발현자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
-    ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;ch.packKind=ch.deckLocked||ch.cardMoney?'special':'origin';ch.packName=ch.packName||(ch.packKind==='special'?(ch.o&&ch.o.n?ch.o.n+' 전용 카드팩':'전용 카드팩'):(ch.o&&ch.o.n?ch.o.n+' 출신 카드팩':'출신 카드팩'));ch.birthPack=ch.packName;ch.packs=newBasicPacks();
+    ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;ch.packKind=ch.deckLocked||ch.cardMoney?'special':'origin';ch.packName=ch.packName||(ch.o&&ch.o.packName)||(ch.packKind==='special'?(ch.o&&ch.o.n?ch.o.n+' 전용 카드팩':'전용 카드팩'):(ch.o&&ch.o.n?ch.o.n+' 출신 카드팩':'출신 카드팩'));ch.birthPack=ch.packName;ch.packs=newBasicPacks();
     return ch;
   }
   /* 유물 적성자: 출생 때 고른 유물 지급 */
@@ -218,6 +223,30 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {id:'bonatelli',slot:'weapon',grade:5,lvl:L,n:'보냐텔리의 검'+(L?' +'+L:''),
       e:`공+${fx.atk} · 회피+${fx.eva}${fx.dmgB?' · 피해+'+fx.dmgB:''} · 가속(공격한 라운드마다 명중·회피 +5, 최대 ${L>=B.max?B.accel.max+1:B.accel.max})`,fx,wx:{accel:L>=B.max?Object.assign({},B.accel,{max:B.accel.max+1}):B.accel}};
   }
+  /* ===== 별에 선택받은 자: 이름을 붙인 성도 (무기) =====
+     별 잇기: 적중할 때마다 별 하나, need개를 이으면 그 적중 피해 ×2. 강화는 보냐텔리의 검과 같은 재료 규칙(보관함 장비를 녹여 최대 +5) */
+  /* virt: 소지 루트로 이은 별(인·의·예·지). 재료 강화(+1~+5)와 따로 더해지는 추가 강화 */
+  function starItem(L,name,virt){
+    const S=CFG.star,V=(virt||[]).filter(k=>S.virt[k]),fx={atk:S.atk[L],eva:S.eva[L]};if(S.dmgB[L])fx.dmgB=S.dmgB[L];
+    for(const k of V)for(const [a,v] of Object.entries(S.virt[k].fx))fx[a]=(fx[a]||0)+v;
+    const need=L>=S.fastFrom||V.includes('지')?3:4,nm=((name||'').trim()||'이름 없는')+'성도';
+    return {id:'star',slot:'weapon',grade:5,lvl:L,base:nm,virt:V,n:nm+(L?' +'+L:'')+(V.length?' ['+V.join('·')+']':''),
+      e:`공+${fx.atk} · 회피+${fx.eva}${fx.maxHp?' · HP+'+fx.maxHp:''}${fx.dmgB?' · 피해+'+fx.dmgB:''} · 별 잇기(적중 ${need}번째마다 피해 ×2)${L>=S.max?' · 전투마다 빛 +1':''}`,fx,wx:Object.assign({mark:{need,n:'별 잇기'}},L>=S.max?{lightUp:1}:{})};
+  }
+  /* 소지 루트: 이은 별(인·의·예·지)을 성도에 새긴다 (재료 강화 단계와 따로 더해지는 추가 강화, 장착 중이든 보관함이든) */
+  function starUp(ch,k){
+    const w=ch.gear.weapon,st=ch.stash||[],own=w&&w.id==='star'?w:st.find(x=>x.id==='star');if(!own||(own.virt||[]).includes(k))return null;
+    const nw=carryTune(own,starItem(own.lvl||0,own.base.replace(/성도$/,''),[...(own.virt||[]),k]));
+    if(own===w){equip(ch,nw);ch.stash=(ch.stash||[]).filter(x=>x!==own)}else st[st.indexOf(own)]=nw;
+    return nw.n;
+  }
+  function setStar(ch,name,force){
+    if(!ch.starPick||(!force&&nameErr(name)))return false;
+    const w=ch.gear.weapon;ch.starPick=false;
+    const it=carryTune(w&&w.id==='star'?w:null,starItem(w&&w.id==='star'?w.lvl||0:0,name));
+    if(w&&w.id==='star'){ch.gear.weapon=it}else{const st=ch.stash||[],i=st.findIndex(x=>x.id==='star');if(i>=0)st[i]=it}
+    (ch.relics=ch.relics||[]).push('별의 선택 · '+it.base);return it;
+  }
   /* ===== 6시즌: E.G.O 발현자의 무기 성장 =====
      전용 카드 '발현'을 낸 누적 횟수가 CFG.egoGrow.need에 닿는 순간 TETH → HE → WAW → ALEPH. 수치는 egoWeapons[].grow[등급-1] */
   const egoBase=id=>{for(const o of D.hiddenOrigins||[])for(const g of o.egoWeapons||[])if(g.id===id)return g;return null};
@@ -238,10 +267,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.egoNote=`E.G.O ${CFG.egoGrow.tier[L]} · ${nw.n} (${nw.e})`;
     return {old:own,nw,worn:own===w};
   }
-  const bonNeed=ch=>{const w=ch.gear.weapon;return w&&w.id==='bonatelli'&&w.lvl<CFG.bon.max?CFG.bon.need[w.lvl]:null};
+  const bonNeed=ch=>{const w=ch.gear.weapon;return w&&(w.id==='bonatelli'&&w.lvl<CFG.bon.max||w.id==='star'&&w.lvl<CFG.star.max)?CFG.bon.need[w.lvl]:null};
+  /* 강화할 수 있는 전용 무기의 다음 단계 */
+  const upItem=(w,L)=>w.id==='star'?starItem(L,w.base.replace(/성도$/,''),w.virt):bonItem(L);
   function bonUpgrade(ch,i){
     const need=bonNeed(ch),st=ch.stash||[],m=st[i];if(need==null||!m||(m.grade||0)<need)return false;
-    st.splice(i,1);const old=ch.gear.weapon;equip(ch,carryTune(old,bonItem(old.lvl+1)));ch.stash=ch.stash.filter(x=>x!==old);return true;
+    st.splice(i,1);const old=ch.gear.weapon;equip(ch,carryTune(old,upItem(old,old.lvl+1)));ch.stash=ch.stash.filter(x=>x!==old);return true;
   }
   function equipStash(ch,i){const st=ch.stash||[];if(!st[i]||(st[i].slot==='aug'&&isN(ch)))return false;equip(ch,st.splice(i,1)[0]);return true}
   const inStash=(ch,id)=>(ch.stash||[]).some(x=>x.id===id)||(ch.gearOffers||[]).some(x=>x.id===id);
@@ -669,7 +700,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const chips=[];joinAff(ch,t==='syn'?{type:'finger',from:'syn'}:{type:t,from:t},name,chips);return chips;
   }
   function chooseFinger(ch,name){
-    if(!ch.fingerPick||!D.orgs.finger.includes(name))return null;
+    if(!ch.fingerPick)return null;
+    /* 별에 선택받은 자만: 소지 루트 (손가락 서열 대신 인의예지 별을 이을 때마다 성도가 강해진다) */
+    if(name==='소지'&&ch.flags.starborn&&!ch.pinky){ch.fingerPick=false;ch.pinky=true;ch.pinkyYear=ch.year||0;addStats(ch.stats,D.pinky.fx);return [D.pinky.n+' 표식 · '+D.pinky.e,'인의예지 별을 이을 때마다 그 별이 성도에 새겨진다 (추가 강화)']}
+    if(!D.orgs.finger.includes(name))return null;
     const chips=[];ch.fingerPick=false;joinAff(ch,{type:'finger',from:'finger'},name,chips);return chips;
   }
   function applyFx(ch,fx){
@@ -696,7 +730,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 사건으로 승급 (해결사만, 최고 급수 미만일 때) */
     if(fx.promote)addPts(ch,CFG.promo.gain.mid,chips);
     if(fx.pts)addPts(ch,fx.pts*CFG.promo.gain.check,chips);
-    if(fx.pinkyKey){const ks=ch.pinkyKeys=ch.pinkyKeys||[],K=D.pinky.keys[ks.length];if(K){ks.push(K.k);chips.push(`소지의 별 · ${K.k} (${ks.length}/${D.pinky.keys.length})`);if(ks.length>=D.pinky.keys.length){ch.seongPick=true;chips.push('성도 · 이름을 정한다')}}}
+    if(fx.pinkyKey){const ks=ch.pinkyKeys=ch.pinkyKeys||[],K=D.pinky.keys[ks.length];if(K){ks.push(K.k);chips.push(`소지의 별 · ${K.k} (${ks.length}/${D.pinky.keys.length})`);if(ch.flags.starborn){const u=starUp(ch,K.k);if(u)chips.push(`${u} · 「${K.k}」의 별이 성도에 새겨졌다 (${CFG.star.virt[K.k].e})`);if(ks.length>=D.pinky.keys.length){(ch.deck.length<deckMax(ch)?ch.deck:(ch.side=ch.side||[])).push('st_link');chips.push('네 별을 모두 이었다 · 별을 잇다 카드 한 장 더')}}else if(ks.length>=D.pinky.keys.length){ch.seongPick=true;chips.push('성도 · 이름을 정한다')}}}
     if(fx.oracle&&!ch.oracle){ch.oracle=true;(ch.relics=ch.relics||[]).push('히든 직업 · 신탁대행자','전리품 · 신의 단말기');addStats(s,D.oracle.loot.fx);chips.push('히든 직업 · 신탁대행자 · 지령 독촉',`전리품 · 신의 단말기 · ${D.oracle.loot.e}`)}
     if(fx.officeJoin){chips.push(...joinOffice(ch,one(fx.officeJoin)))}
     if(fx.rb){const r=ch.rb,k=fx.rb,Z=CFG.rb,y=ch.year||0;
@@ -829,6 +863,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!req)return true;
     if(Array.isArray(req))return req.every(r=>meets(ch,r));
     if(req.any)return req.any.some(r=>meets(ch,r));
+    if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
     if(req.startsWith('flag:')){const [k,n]=req.slice(5).split('>=');return (ch.flags[k]||0)>=(+n||1)}
     if(req==='fingerup')return canFingerUp(ch);
     if(req.startsWith('corpup<'))return ((ch.corp&&ch.corp.up)||0)<+req.slice(7);
@@ -1284,7 +1319,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!ch.pinky||ch.distForm||ch.seongPick||(ch.pinkyKeys||[]).length>=D.pinky.keys.length||y<(ch.pinkyNext??((ch.pinkyYear||0)+P_.every)))return null;
     ch.pinkyNext=y+P_.every;
     const n=(ch.pinkyKeys||[]).length,K=D.pinky.keys[n];
-    return {t:K.t,x:K.x,c:[{l:K.l,h:`1d100 · ${P_.dc} 이상이면 ${K.k}를 얻는다 (${n}/${D.pinky.keys.length})`,check:{s:null,dc:P_.dc,pure:true},ok:{t:K.ok,fx:{pinkyKey:true}},fail:{t:K.fail,fx:{}}}]};
+    return {t:K.t,x:K.x,c:[{l:K.l,h:`1d100 · ${P_.dc} 이상이면 ${K.k}를 얻는다 (${n}/${D.pinky.keys.length})${ch.flags.starborn?' · 성도에 「'+K.k+'」의 별을 새긴다 ('+CFG.star.virt[K.k].e+')':''}`,check:{s:null,dc:P_.dc,pure:true},ok:{t:K.ok,fx:{pinkyKey:true}},fail:{t:K.fail,fx:{}}}]};
   }
   /* 성도: 인의예지를 모두 모으면 이름을 붙인 전리품(무기가 아닌 패시브). 공격·회피·추가 피해를 각각 굴려 능력치에 영구히 더한다 */
   function setSeongdo(ch,name,force){
@@ -1424,6 +1459,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.bondPick)setBondName(mc,'동반자',true);
     if(mc.kidPick)setKidName(mc,'',true);
     if(mc.seongPick)setSeongdo(mc,'무명',true);
+    if(mc.starPick)setStar(mc,'',true);
     if(mc.orgPick)chooseOrg(mc,one(D.orgs[mc.orgPick]));
     if(mc.fingerPick)chooseFinger(mc,mc.thumbBias&&d(100)<=mc.thumbBias?'엄지':one(D.orgs.finger));
     if(mc.pillPick)setPill(mc,'atk');
@@ -1698,7 +1734,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(dr.title){ch.titles=ch.titles||[];if(!ch.titles.includes(dr.title)){ch.titles.push(dr.title);(ch.titleLog=ch.titleLog||[]).push(dr.title)}chips.push('칭호 · '+dr.title)}
         for(const x of dr.extra||[]){addStats(ch.stats,x.fx);if(x.fx.maxHp)ch.hp+=x.fx.maxHp;ch.relics.push(x.n);if(x.flag)ch.flags[x.flag]=1;chips.push(`전리품 · ${x.n} (${x.e}, 영구)`)}
         if(dr.gear&&!(dr.ego&&ch.distForm)){offerGear(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 · ${dr.gear.n} (${dr.gear.e}) · 장착할지 고른다`)}
-        for(const g of dr.gears||[]){if(dr.ego&&ch.distForm)continue;if(dr.gear&&dr.gearChance!=null&&d(100)>dr.gearChance)continue;offerGear(ch,Object.assign({grade:5},g));chips.push(`전리품 ${g.slot==='armor'?'방어구':'장비'} · ${g.n} (${g.e}) · 장착할지 고른다`)}
+        for(const g of dr.gears||[]){if(dr.ego&&ch.distForm)continue;if(dr.gear&&dr.gearChance!=null&&d(100)>dr.gearChance+(ch.stats.gearUp||0))continue;offerGear(ch,Object.assign({grade:5},g));chips.push(`전리품 ${g.slot==='armor'?'방어구':'장비'} · ${g.n} (${g.e}) · 장착할지 고른다`)}
         chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
         else for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
       if(foe.quest){ch.flags[foe.quest.flag]=1;ch.bookNext=G.year+CFG.redBook.every;(ch.relics=ch.relics||[]).push(foe.quest.relic);chips.push(foe.quest.text)}
@@ -2123,7 +2159,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {const g2=staggerStage(B);if(g2&&g2.take){dmg+=g2.take;note+=` 흐트러짐 취약+${g2.take}`}}
       {const g_=staggerStage(A);if(g_&&g_.dmg){dmg=Math.max(1,dmg-g_.dmg);note+=` 흐트러짐−${g_.dmg}`}}
       if((A.sink||0)>=CFG.sink.per){const x=Math.floor(A.sink/CFG.sink.per)*CFG.sink.dmg;dmg=Math.max(1,dmg-x);note+=` 침잠−${x}`}
-      if(A.wx&&A.wx.mark){B.mk=(B.mk||0)+1;if(B.mk>=A.wx.mark.need){dmg*=2;B.mk=0;note+=' 표적×2'}}
+      if(A.wx&&A.wx.mark){B.mk=(B.mk||0)+1;if(B.mk>=A.wx.mark.need){dmg*=2;B.mk=0;note+=` ${A.wx.mark.n||'표적'}×2`}}
       /* 중지 패시브 되갚음: 맞을 때마다 1 (최대 5), 다음 적중 피해 +2×스택 */
       if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
       if(A.isP&&A.angry>0&&dmg>0){dmg+=A.angry;note+=` 분노+${A.angry}`;A.angry=0}
@@ -2363,6 +2399,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    setInnateOpen,setStable,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setInnateOpen,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

@@ -6164,7 +6164,22 @@
   {
    "id": "hongwon",
    "req": [
-    "pinky"
+    "flag:starborn"
+   ],
+   "chance": 100,
+   "from": 65,
+   "omen": {
+    "x": "밤하늘의 네 별이 한 줄로 늘어섰다. 그 끝에 붉은 붕대 한 자락이 걸려 있다. 열두 번의 발소리가 차례로 다가온다.",
+    "go": "별이 가리키는 쪽으로 간다",
+    "away": "고개를 돌린다",
+    "awayT": "별은 지지 않았다. 발소리는 멀어졌지만, 끝난 것 같지는 않다."
+   }
+  },
+  {
+   "id": "hongwon",
+   "req": [
+    "pinky",
+    "noflag:starborn"
    ],
    "chance": 70,
    "from": 40,

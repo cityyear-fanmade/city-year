@@ -18,7 +18,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v9.1.0';
+  const VERSION='v9.3.2';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -421,7 +421,7 @@ export function startUI(E,app){
     const kinds=[['all','전체'],['atk','공격'],['debuff','디버프'],['buff','버프'],['eva','회피'],['def','방어']];
     return `<p class="small dim">덱에는 최대 ${E.deckMax(G.ch)}장을 넣는다. 전투 밖이면 언제든 덱과 카드함 사이에서 카드를 옮길 수 있고, 덱은 ${CFG.shop.minDeck}장보다 줄일 수 없다.</p>
       <div class="seg kinds">${kinds.map(([k,n])=>`<button class="${(f.k||'all')===k?'on':''}" data-a="cfk" data-i="${k}"${KIND[k]?` style="--kc:${KIND[k][1]}"`:''}>${n}</button>`).join('')}</div>
-      <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(D.keywords).map(k=>`<button class="chip${f.kw===k?' on':''}" data-a="cfw" data-i="${k}" style="color:${kwc(k)};border-color:${kwc(k)}">${D.keywords[k].n}</button>`).join('')}
+      <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(D.keywords).map(k=>`<button class="chip${f.kw===k?' on':''}" data-a="cfw" data-i="${k}" aria-pressed="${f.kw===k}" style="${f.kw===k?`background:${kwc(k)};color:var(--bg);font-weight:700;`:`color:${kwc(k)};`}border-color:${kwc(k)}">${f.kw===k?'✓ ':''}${D.keywords[k].n}</button>`).join('')}
         <input id="cardq" value="${esc(f.q||'')}" placeholder="카드 이름 찾기" autocomplete="off" style="flex:1;min-width:8em"></div>
       <div class="stack" style="gap:8px" id="cardlist">${cardListHtml()}</div>`;
   }
@@ -438,9 +438,9 @@ export function startUI(E,app){
       return `<div class="invr stash"><span>${D.slots[g.slot]}</span><div class="stack" style="gap:2px;min-width:0"><b>${esc(g.n)}</b><span class="mono small" style="color:var(--gold)">${esc(g.e||'')}</span>${df?`<span class="mono small">지금 장비보다 · ${df}</span>`:''}</div>
         ${cbt?'<span class="small dim">전투 중 교체 불가</span>':`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}</div>`}).join('');
     const w=ch.gear.weapon,need=E.bonNeed(ch);
-    const up=w&&w.id==='bonatelli'?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b class="serif">${esc(w.n)}</b><span class="mono" style="color:var(--gold)">강화 ${w.lvl}/${CFG.bon.max}</span></div>
+    const up=w&&(w.id==='bonatelli'||w.id==='star')?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b class="serif">${esc(w.n)}</b><span class="mono" style="color:var(--gold)">강화 ${w.lvl}/${w.id==='star'?CFG.star.max:CFG.bon.max}</span></div>
       ${need==null?'<p class="small dim">최대로 강화했다.</p>':`<p class="small">보관함의 장비 하나를 녹여 한 단계 강화한다. 다음 단계 재료 · ${need?need+'등급 이상':'아무 장비'}${need>=5?' (유물·히든 장비)':''}</p>
-        <p class="mono small">다음 단계 · ${esc(E.bonItem(w.lvl+1).e)}</p>
+        <p class="mono small">다음 단계 · ${esc(E.upItem(w,w.lvl+1).e)}</p>
         ${cbt?'<p class="small dim">전투 중에는 강화할 수 없다.</p>':st.map((g,i)=>(g.grade||0)>=need?`<button class="chip${UI.bonAsk===i?' warn':''}" data-a="bonup" data-i="${i}">${UI.bonAsk===i?'정말 '+esc(g.n)+'을(를) 녹인다':esc(g.n)+' 재료로 쓰기'}</button>`:'').join(' ')||'<p class="small dim">재료로 쓸 수 있는 장비가 보관함에 없다.</p>'}`}</div>`:'';
     return `<div><span class="eyebrow">장착 중</span>${eq}</div>${up}
       <div><span class="eyebrow">보관함 ${st.length}</span>${sl||'<p class="small dim">보관함이 비어 있다. 새 장비를 얻으면 장착할지 보관할지 고를 수 있고, 장착하면 이전 장비가 여기로 온다.</p>'}</div>
@@ -453,7 +453,7 @@ export function startUI(E,app){
     const kid=(ch.kid||[]).map(k=>row(k.age+'세',k.x)).join('');
     const base=s0?[['최대 HP',s0.maxHp],['공격',sgn(s0.atk)],['회피',sgn(s0.eva)],['속도',sgn(s0.spd)],['사건 판정',sgn(s0.check)]].map(([a,b])=>`<div class="invr"><span>${a}</span><b class="mono">${b}</b></div>`).join(''):'';
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
-      ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${row('무기',ch.w)}</div>`}
+      ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다. 빈손이라 히든 보스 전리품 장비를 더 자주 쥐고(+25%p), 정신이 꺾일 때 E.G.O 형상이 보일 확률이 25%다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${row('무기',ch.w)}</div>`}
       ${kid?`<div class="eyebrow">성장기</div><div class="panel">${kid}</div>`:''}
       ${base?`<div class="eyebrow">태어났을 때의 능력치 (변하지 않음)</div><div class="panel">${base}</div>`:''}
       <div class="eyebrow">지금 · 장비 보정과 특수 상태</div>${vStatNow()}</div>`;
@@ -561,6 +561,12 @@ export function startUI(E,app){
       <div class="bagtabs">${bagTabs(ch).map(([k,n,b])=>`<button class="tile sm${t===k?' on':''}" data-a="bag" data-i="${k}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>
       <div class="stack" style="gap:10px">${body}</div>`,'bag',true);
   }
+  /* 카드 보상: 이미 가진 장수(덱+카드함)와 지금 덱을 같이 보여 준다 */
+  const ownN=(ch,id)=>ch.deck.filter(x=>x===id).length+(ch.side||[]).filter(x=>x===id).length;
+  const ownTag=(ch,id)=>{const n=ownN(ch,id);return n?`<span class="mono small" style="color:var(--gold)">보유 ×${n}</span>`:'<span class="mono small dim">새 카드</span>'};
+  const myDeck=ch=>{const cnt={};ch.deck.forEach(id=>cnt[id]=(cnt[id]||0)+1);const sd={};(ch.side||[]).forEach(id=>sd[id]=(sd[id]||0)+1);
+    const ch_=o=>Object.keys(o).map(id=>`<span class="chip">${esc(D.cards[id].n)}${o[id]>1?' ×'+o[id]:''}</span>`).join('');
+    return `<details class="panel"><summary class="small">지금 덱 ${ch.deck.length}/${E.deckMax(ch)}장${(ch.side||[]).length?` · 카드함 ${ch.side.length}장`:''} 보기</summary><div class="chips" style="margin-top:6px">${ch_(cnt)}</div>${(ch.side||[]).length?`<span class="eyebrow" style="margin-top:6px">카드함</span><div class="chips">${ch_(sd)}</div>`:''}</details>`};
   /* 새 장비·새 카드: 받기 전에 고른다 (장비가 몰래 바뀌지 않게) */
   function vOffer(){
     const ch=G.ch;
@@ -585,14 +591,15 @@ export function startUI(E,app){
         <p class="small dim">지금 덱을 지키면 이 책장은 사라진다. 다른 전리품은 그대로 받는다.</p>`,'offer',false)}
     if((ch.picks||[]).length&&!(ch.offers||[]).length){const g=ch.picks[0];
       return sheet(`<span class="eyebrow">카드 발견 · ${g.length}장 가운데 하나${ch.picks.length>1?` · 남은 묶음 ${ch.picks.length}`:''}</span><h2>하나를 고른다</h2>
-        <div class="invcards">${g.map((id,j)=>cardRow(id,`<button class="chip" data-a="pkpick" data-i="${j}">이 카드를 고른다</button>`)).join('')}</div>
+        <div class="invcards">${g.map((id,j)=>cardRow(id,`${ownTag(ch,id)}<button class="chip" data-a="pkpick" data-i="${j}">이 카드를 고른다</button>`)).join('')}</div>
+        ${myDeck(ch)}
         <button class="btn quiet" data-a="pkskip">모두 버린다</button>
         <p class="small dim">고른 카드는 다음 화면에서 덱에 넣거나 카드함에 둘 수 있다.</p>`,'offer',false)}
     const cid=ch.offers[0],room=E.deckRoom(ch),many=ch.offers.length>1?` · 남은 ${ch.offers.length}장`:'';
     if(UI.swap)return sheet(`<span class="eyebrow">덱의 카드와 바꾸기 · 빠진 카드는 카드함으로</span>${cardRow(cid)}
       <div class="invcards">${ch.deck.map((id,j)=>cardRow(id,D.cards[id].fixed?'<span class="small dim">전용 · 바꿀 수 없다</span>':`<button class="chip" data-a="oswap" data-i="${j}">이 카드와 바꾼다</button>`)).join('')}</div>
       <button class="btn" data-a="oswapmode">돌아가기</button>`,'offer',false);
-    return sheet(`<span class="eyebrow">카드 발견 · 덱 ${ch.deck.length}/${E.deckMax(ch)}${many}</span><h2>받을까, 버릴까</h2>${cardRow(cid)}
+    return sheet(`<span class="eyebrow">카드 발견 · 덱 ${ch.deck.length}/${E.deckMax(ch)}${many}</span><h2>받을까, 버릴까</h2>${cardRow(cid,ownTag(ch,cid))}${myDeck(ch)}
       ${room?'<button class="btn primary" data-a="otake" data-i="deck">덱에 넣는다</button>':`<button class="btn primary" data-a="oswapmode">덱의 카드와 바꾼다</button><p class="small dim">덱이 가득 찼다 (최대 ${E.deckMax(ch)}장).</p>`}
       <button class="btn" data-a="otake" data-i="side">카드함에 넣어 둔다</button>
       <button class="btn quiet" data-a="odrop">버린다</button>`,'offer',false);
@@ -844,10 +851,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🩹 K사 엠플 조정',['전투 중 자동으로 HP를 크게 회복하는 효과가 너무 강하다는 의견이 있어 조정했습니다.','가격은 5,000안으로 통일했습니다. 무한 모드 이후에도 같은 값입니다.','지닐 수 있는 수는 그대로 최대 3개입니다. 한 판에 살 수 있는 수는 모두 5개로 제한됩니다.','자동으로 회복하는 양이 60에서 50으로 줄었습니다.']],
       ['🔧 버그 수정',['날개에서 해고되어도 날개를 세우는 길(특이점 개발)이 이어지던 문제를 고쳤습니다. 날개를 잃으면 개발이 중단됩니다.','직접 세운 날개의 대표가 소속이 비어 있으면 공방이 1등급으로 잠기고 해결사로 등록되던 문제를 고쳤습니다. 대표는 날개 임원과 같은 공방 등급을 받고 해결사를 겸할 수 없습니다. 이미 등록된 저장본은 다음 해로 넘어갈 때 정리됩니다.','일부 숨은 길에서 직급과 해결사 급수가 맞지 않던 문제를 고쳤습니다.']],
       ['🙏 감사합니다',['의견과 제보를 주신 모든 분들께 감사드립니다.']]];
-  const NOTICE={id:'v9.1.0',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v9.3.2',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🌀 뒤틀림 안정화',['뒤틀리면 장비는 보관함으로 가고 카드팩은 뒤틀린 카드팩으로 고정됩니다. 정신력은 "???"로 바뀌어 이점도 불이익도 없고, E.G.O 장비는 얻을 수 없습니다.','뒤틀린 뒤 2년마다 40% 확률로 "뒤틀림이 가라앉는다"가 나옵니다. 안정화되면 장비와 카드팩을 다시 쓸 수 있고, 뒤틀림을 다루는 더 강한 카드로 이루어진 "더 강해진 뒤틀린 카드팩"을 얻습니다. 부풀려진 능력치는 그대로입니다.','선택지 이름이 "정신을 붙잡는다" · "나는 나로서 새로운 모습을 받아들인다"로 바뀌었습니다.']],
-    ['🔧 그 밖의 변경',['엄지의 서열 이름 "소토카포"를 "언더보스"로 바꿨습니다. 솔다토 → 카포 → 언더보스 → 대부 순서입니다. 카포의 바로 윗서열입니다.','후반의 어떤 보스를 쓰러뜨린 뒤에는 공방 장비 정비 횟수가 장비마다 10번 늘어납니다. 그 보스들이 주는 장비는 기본 횟수만 정비할 수 있습니다. 일부 후반 보스의 능력치를 올렸습니다.']]]};
+    sec:[['🔀 출생 변경',['이번 업데이트에 H사 루트와 R사 전용 루트가 히든 출생으로 이전됩니다. "아무것도 없는 존재"로 시작하면 100% 나오던 운명 선택이 출생으로 넘어갑니다. 이제 출생 굴림에서 직접 나오며, 재능·결점·성장기도 그 출생에 맞는 것으로 정해집니다.','"어떤 출생 보정도 없이 시작한다"를 고르면 운명 선택 없이 아무것도 없는 존재로 시작합니다. 대신 빈손 보정(히든 보스 전리품 장비 확률 +25%p, 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%)을 받습니다.','출생이 추가되었습니다.']],
+    ['🔧 그 밖의 변경',['카드 보상 화면에서 카드마다 이미 가진 장수(보유 ×N)나 새 카드 표시가 나오고, 지금 덱과 카드함을 펼쳐 볼 수 있습니다.','가방의 카드 목록에서 키워드 필터를 누르면 그 색으로 채워지고 ✓가 붙어, 켜져 있는지 바로 보입니다.','2막·무한 모드에서 공방 거리의 "다음 기회"가 55년차로 잘못 나오던 문제를 고쳤습니다.']]]};
+  const V910SEC=[['🌀 뒤틀림 안정화',['뒤틀리면 장비는 보관함으로 가고 카드팩은 뒤틀린 카드팩으로 고정됩니다. 정신력은 "???"로 바뀌어 이점도 불이익도 없고, E.G.O 장비는 얻을 수 없습니다.','뒤틀린 뒤 2년마다 40% 확률로 "뒤틀림이 가라앉는다"가 나옵니다. 안정화되면 장비와 카드팩을 다시 쓸 수 있고, 뒤틀림을 다루는 더 강한 카드로 이루어진 "더 강해진 뒤틀린 카드팩"을 얻습니다. 부풀려진 능력치는 그대로입니다.','선택지 이름이 "정신을 붙잡는다" · "나는 나로서 새로운 모습을 받아들인다"로 바뀌었습니다.']],
+    ['🔧 그 밖의 변경',['엄지의 서열 이름 "소토카포"를 "언더보스"로 바꿨습니다. 솔다토 → 카포 → 언더보스 → 대부 순서입니다. 카포의 바로 윗서열입니다.','후반의 어떤 보스를 쓰러뜨린 뒤에는 공방 장비 정비 횟수가 장비마다 10번 늘어납니다. 그 보스들이 주는 장비는 기본 횟수만 정비할 수 있습니다. 일부 후반 보스의 능력치를 올렸습니다.']]];
   const V900SEC=[['🆕 v9.0.0 카드팩 시스템',['가방에 "카드팩" 탭이 생겼습니다. 기본 4장으로 시작하는 기본 카드팩 3개(이름을 바꿀 수 있습니다)와 출신 카드팩이 보관됩니다. 전투 밖에서는 횟수 제한 없이 바꿔 끼울 수 있고, 전투 중에는 바꿀 수 없습니다.','전용 카드팩을 받아 덱이 통째로 바뀌어도 이전 덱이 보관함에 남아, 실수로 바꿨어도 되돌릴 수 있습니다.','출신 보정 카드는 출신 카드팩에만, 의수·승진·궁니르 같은 소속 카드는 그 소속의 팩에만 들어갑니다. E.G.O 같은 고정 카드는 모든 팩에 따라갑니다.','보상 카드는 편집할 수 있는 모든 팩(기본 카드팩 3개, 고정 없는 출신 팩)에 복사됩니다. 전용 카드팩이나 덱 고정 중에는 돈과 함께 카드도 받아 기본 카드팩에 보관합니다.']],
     ['🆕 그 밖에 새로 들어온 것',['"?" 설명 창: 전투 중에도 카드 읽는 법, 키워드(최대 스택 포함), 규칙을 볼 수 있습니다.','일대기·명예의 전당, 기록실 판 통계, 오늘의 시드 도전 기록, 첫 화면으로 가는 버튼이 생겼습니다.','홍원: 재갈로 얻은 흑수도 카드를 주고, 흑수 카드가 크게 강해졌습니다. 소지의 도 "성도"는 무기가 아닌 전리품(패시브)입니다. 개화 · 일격의 주사위가 6개로 늘었습니다.']],
     ['🔧 수정',['같은 시드면 해금 상태와 상관없이 같은 타고난 것이 나옵니다. 지난 날 오늘의 시드를 번호로 입력해도 그날 지정이 적용됩니다.','"균열이 닫혔다" 엔딩 뒤에는 균열 고정 피해가 없고 적 공격 상한이 높아집니다. 최고 서열 엄지에게 "윗선의 시험"이 나오지 않고, 하인의 방패 보호막은 6에서 3으로 낮췄습니다.']]];
@@ -948,7 +957,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -974,8 +983,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
         <div class="row" style="flex-wrap:nowrap"><input id="seedIn" inputmode="numeric" enterkeyhint="go" maxlength="12" placeholder="시드 번호로 다시 태어나기" autocomplete="off" style="flex:1;min-width:0">
           <button class="chip" data-a="seed">이 시드로</button></div>
       </div>
-      ${b.o.hidden?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">${b.fated?'운명이 강제된 출생':'숨은 출생 · 출신 '+b.r.o}</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">${esc(b.o.e)}</span></div>`:''}
-      ${b.fated?`<div class="panel stack" style="gap:6px"><span class="mono small" style="color:var(--gold)">재능 · 결점 · 무기 · 타고난 것 없음 · 출신과 성장기 보정만 가진다</span></div>`:b.blank?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">출생 보정 없음</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">출신 · 재능 · 결점 · 무기 · 타고난 것 없음 · 맨손 · 성장기 보정만 가진다</span></div>`:`<div class="panel">${row('출신',b.r.o,b.o,UI.job?null:D.origins)}${row('재능',b.r.t,b.t,D.talents)}${row('결점',b.r.f,b.f,D.flaws)}${row('무기',b.r.w,b.w,D.weapons)}</div>`}
+      ${b.o.hidden?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">${b.fated?'운명이 강제된 출생':'숨은 출생 · 출신 '+b.r.o}</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">${esc(b.o.e)}</span>${b.starPick?`<div class="row"><span class="small">성도의 이름</span><input id="starname" maxlength="12" value="${esc(UI.starName||'')}" autocomplete="off" placeholder="1~12글자 · 뒤에 '성도'가 붙는다" style="width:min(14em,60vw)"></div><span class="small bad">${UI.starErr||''}</span>`:''}</div>`:''}
+      ${b.fated?`<div class="panel stack" style="gap:6px"><span class="mono small" style="color:var(--gold)">재능 · 결점 · 무기 · 타고난 것 없음 · 출신과 성장기 보정만 가진다</span></div>`:b.blank?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">출생 보정 없음</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">출신 · 재능 · 결점 · 무기 · 타고난 것 없음 · 맨손 · 성장기 보정만 가진다</span><span class="mono small">빈손 · 히든 보스 전리품 장비 확률 +25%p · 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%</span></div>`:`<div class="panel">${row('출신',b.r.o,b.o,UI.job?null:D.origins)}${row('재능',b.r.t,b.t,D.talents)}${row('결점',b.r.f,b.f,D.flaws)}${row('무기',b.r.w,b.w,D.weapons)}</div>`}
       ${b.innate?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">타고난 것 · 1%${b.innate2?' · 둘이 함께':''}</span>${[b.innate,b.innate2].filter(Boolean).map(k=>`<b class="serif">${esc(D.innate[k].n)}</b><span class="mono small" style="color:var(--gold)">${esc(D.innate[k].e)}</span>`).join('')}</div>`:''}
       <button class="btn quiet" data-a="reroll">다시 태어난다</button>
       ${kid}
@@ -1059,7 +1068,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
@@ -1181,7 +1190,15 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function vFingerPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">손가락 가입</span>
       <p class="small">어느 손가락에 설지 고른다. 정하면 그 손가락의 서열표를 따른다.</p>
+      ${G.ch.flags&&G.ch.flags.starborn&&!G.ch.pinky?`<button class="btn" data-a="fingerset" data-i="소지"><b>소지</b><span class="small">${esc(D.pinky.t)}</span><span class="mono small" style="color:var(--gold)">서열 없음 · 인 → 의 → 예 → 지 (5년마다 별을 잇는다)</span><span class="small dim">${esc(D.pinky.e)} · 별을 하나 이을 때마다 성도에 그 별을 새긴다 (재료 강화와 별개인 추가 강화: 인 HP · 의 공격 · 예 회피 · 지 피해와 별 잇기) · 네 별을 모두 이으면 '별을 잇다' 한 장 더</span></button>`:''}
       ${D.orgs.finger.map(n=>{const F=D.fingers[n];return `<button class="btn" data-a="fingerset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small">${esc(F.trait)}</span><span class="mono small" style="color:var(--gold)">${F.ranks.map(r=>esc(r.n||(r.branch||[]).map(b=>b.n).join(' / '))).join(' → ')}</span><span class="small dim">${esc(fingerPassive(n,0)||'')}</span></button>`}).join('')}</div>`;
+  }
+  function vStarPick(){
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">별에 선택받은 칼</span>
+      <p class="small">태어날 때부터 손에 있던 칼이다. 네 개의 별이 이어진 밤을 기억하는 이름을 붙인다. 이름 뒤에 '성도'가 붙는다.</p>
+      <div class="row"><span class="small">이름</span><input id="starname" maxlength="12" value="${esc(UI.starName||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
+      <span class="small bad">${UI.starErr||''}</span>
+      <button class="btn primary" data-a="starset">이 이름으로 부른다</button></div>`;
   }
   function vSeongPick(){
     const N=D.pinky.named;
@@ -1624,7 +1641,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const nb=(G.year-1)+CFG.shop.every+1,hh=hwHome();
     return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · ${hh?'홍원의 저잣거리':'공방 거리'}</div><h2>${hh?'홍원의 저잣거리를 지난다':'공방 거리를 지난다'}</h2>
       <p class="lead">${hh?'붉은 대문 안쪽에 가문의 저잣거리가 있다. 장인과 상인은 모두 가문의 이름 아래 있다. 들러도 한 해가 지나가지는 않는다.':'장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.'}${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
-      <p class="small dim">다음 기회는 ${Math.min(nb,CFG.years)}년차.</p>
+      <p class="small dim">${nb<=E.lastYear(G)?`다음 기회는 ${nb}년차.`:'이번이 마지막 기회다.'}</p>
       ${UI.broker?`<div class="check" style="border-color:var(--gold)"><b>${esc(G.ch.office.name)}</b> · 일감을 알선했다 · ${UI.broker.kind==='gear'?'의수 ':'카드 '}<b>${esc(UI.broker.n)}</b>${UI.broker.locked?' (덱 고정이라 돈으로 받았다)':''}</div>`:''}</div>
       ${UI.rested?`<p class="good small">${UI.rested}</p>`:''}
       <div class="stack">${UI.rested?'':'<button class="btn primary" data-a="shop">들른다</button>'}
@@ -1708,6 +1725,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     fingerset(i){
       const chips=E.chooseFinger(G.ch,i);if(!chips)return;
       syncAffs();resave();UI.res.chips=[...UI.res.chips,...chips];render();
+    },
+    starset(){
+      const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);
+      if(err){UI.starErr=err;UI.starName=n;render();return}
+      const it=E.setStar(G.ch,n);UI.starErr='';UI.starName='';resave();
+      if(UI.res&&UI.res.chips)UI.res.chips=[...UI.res.chips,`전용 무기 · ${it.n} · ${it.e}`];render();
     },
     seongset(){
       const n=(($('seongname')||{}).value||'').trim(),err=E.nameErr(n);
@@ -1813,7 +1836,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     relic(k){UI.relic=k;render()},
     job(k){UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(BC&&BC.fateChoices&&!BC.fated)return;{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
+    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.showIncome=false;UI.screen='shop';render()},
