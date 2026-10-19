@@ -74,7 +74,7 @@ export const CFG = {
   oldAge: 100, overflowAge: 1000 /* 무한 모드 오버플로우 엔딩 나이 */,
   /* 사건 판정 주사위 최대치(플레이어): 타고난 것 등으로 아무리 커져도 이 값에서 멈춘다 */
   checkMax: 220,
-  infinite: {erodeFrom: 90, erodePer: 0.5, erodeMax: 30, enemyMax: 260, atkMax: 260 /* 균열을 닫은 뒤의 적 공격 상한 (enemyMax와 같다) */, midCut: 1, midCutMax: 20 /* 누적 최대 20%p */ /* 중지: 무한 모드에서 맞을 때마다 받는 피해 −1%p (전투 내 누적, 상대의 몰아침 배율 대신) */, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 15000000, atkGrow: 1, evaGrow: 0.5, evaDown: 1 /* 무한 모드 해마다 양쪽 회피 −1 */, escPerP: 0.03, escPerE: 0.03, infLvEvery: 5 /* 무한 모드에서 전투 승리 5번마다 레벨 +1 */, atkEvery: 2 /* 무한 모드 적 명중(공격) 보정 +1이 붙는 햇수 간격 */, escMaxP: 4, escMaxE: 30 /* 한 전투에서 맞을 때마다 받는 피해가 복리로 증가: 양쪽 모두 ×1.03씩, 상한은 플레이어 ×4, 적 ×30 */},
+  infinite: {erodeFrom: 90, erodePer: 0.5, erodeMax: 30, enemyMax: 260, atkMax: 260 /* 균열을 닫은 뒤의 적 공격 상한 (enemyMax와 같다) */, midCut: 1, midCutMax: 20 /* 누적 최대 20%p */ /* 중지: 무한 모드에서 맞을 때마다 받는 피해 −1%p (전투 내 누적, 상대의 몰아침 배율 대신) */, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 15000000, legacyNeed: 40 /* 최고 직위 뒤: 포인트 40마다 계승 1단계(능력치 +1) */, legacyMax: 40, atkGrow: 1, evaGrow: 0.5, evaDown: 1 /* 무한 모드 해마다 양쪽 회피 −1 */, escPerP: 0.03, escPerE: 0.03, infLvEvery: 5 /* 무한 모드에서 전투 승리 5번마다 레벨 +1 */, atkEvery: 2 /* 무한 모드 적 명중(공격) 보정 +1이 붙는 햇수 간격 */, escMaxP: 4, escMaxE: 30 /* 한 전투에서 맞을 때마다 받는 피해가 복리로 증가: 양쪽 모두 ×1.03씩, 상한은 플레이어 ×4, 적 ×30 */},
   /* 정신력: 최대 max. healEvery년마다 +yearHeal. 선택지·환상체 조우 2d3 감소, 회피 실패 시 1d evadeDie에서 1이면 1 감소(E.G.O 장비 1개당 +1).
      voiceAt 이하에서 한 번 "들리는 목소리": 1d voiceDie를 voiceRolls번, 모두 voiceDc 이상이면 개화, 실패하면 1d failLoss 감소.
      0이면 사망, 1이면 뒤틀림 판정 1d2 (1이면 개화하고 가득 회복, 2면 뒤틀림 엔딩). tiers: 전투 시작 때 호흡·회피 보정 */

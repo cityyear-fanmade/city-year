@@ -579,6 +579,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const k=career(ch);if(!n||!k)return;
     n=Math.round(n*((CR[k]&&CR[k].gainMul)||1));ch.pp=(ch.pp||0)+n;
     if(canPromote(ch))chips.push(`${ptsName(ch)} +${n} (${ch.pp}/${promoNeed(ch)})`);
+    /* 무한 모드: 도시가 모두 적대적이라 격식을 차린 심사는 열리지 않는다. 포인트가 차면 전공으로 바로 승급하고,
+       최고 직위에 오른 뒤에는 포인트가 계승 단계로 바뀐다 (단계마다 능력치 +1, 최대 legacyMax) */
+    if(ch.infinite){
+      let g=0;
+      while(canPromote(ch)&&(ch.pp||0)>=promoNeed(ch)&&g++<4){const need=promoNeed(ch),p=promoteAny(ch);if(!p)break;
+        chips.push('전공 승급 · 적대적인 도시에서는 심사 대신 싸워 이긴 만큼이 직위가 된다');chips.push(...p.chips);ch.pp=Math.max(0,(ch.pp||0)-need);ch.promos=(ch.promos||0)+1;ch.strikes=0}
+      const IL=CFG.infinite;
+      if(!canPromote(ch)&&IL.legacyNeed){
+        ch.legacyPts=(ch.legacyPts||0)+n;
+        while(ch.legacyPts>=IL.legacyNeed&&(ch.legacyTier||0)<IL.legacyMax){
+          ch.legacyPts-=IL.legacyNeed;ch.legacyTier=(ch.legacyTier||0)+1;const s_=ch.stats,dm=ch.dom;
+          if(dm==='hp'||!dm){s_.maxHp+=4;ch.hp+=4;chips.push(`계승 ${ch.legacyTier}단계 · 최대 HP +4`)}else{s_[dm]+=1;chips.push(`계승 ${ch.legacyTier}단계 · ${STAT[dm]} +1`)}}
+        if((ch.legacyTier||0)>=IL.legacyMax)ch.legacyPts=0;
+      }
+    }
   }
   /* 협회·날개 직급: 단계마다 그 직급의 보정을 더한다 (손가락 fingerStep과 같은 방식) */
   function careerStep(ch){
@@ -652,7 +667,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return null;
   }
   /* 날개·손가락 진로면 해결사 급수 대신 그 진로의 직급을 보여 준다 (해결사 급수는 그 진로에서 오르지 않는다) */
-  const rankLabel=ch=>{if(isFounder(ch)&&!ch.job)return ch.title?`${ch.title} · 날개 대표`:'날개 대표';if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr){const fx_=eastN(ch)&&ch.licensed?` · ${ch.rank}${T.rankUnit} 해결사`:'';return (ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n)+fx_}return rankLabel0(ch)};
+  const rankLabelBase=ch=>{if(isFounder(ch)&&!ch.job)return ch.title?`${ch.title} · 날개 대표`:'날개 대표';if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr){const fx_=eastN(ch)&&ch.licensed?` · ${ch.rank}${T.rankUnit} 해결사`:'';return (ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n)+fx_}return rankLabel0(ch)};
+  const rankLabel=ch=>rankLabelBase(ch)+(ch.legacyTier?` · 계승 ${ch.legacyTier}단계`:'');
   const rankLabel0=ch=>!ch.licensed?T.unranked:ch.title?`${ch.title} · ${ch.rank}${T.rankUnit}`:`${ch.rank}${T.rankUnit} ${T.licensed}`;
   /* 카드 얻기: 덱이 고정(엄지 검술)이면 카드 대신 돈 */
   /* offer: 바로 넣지 않고 받을지 고르게 한다 (일반 전투 보상) */
@@ -886,6 +902,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.startsWith('memoyears:')){const [k,n]=req.slice(10).split('>='),m=ch.memo&&ch.memo[k];return !!m&&(ch.year||0)-m.y>=+n}
     if(req.startsWith('year>='))return (ch.year||0)>=+req.slice(6);
     if(req.startsWith('ledger:')){const [k,n]=req.slice(7).split('>=');return ((ch.ledger||{})[k]||0)>=+n}
+    if(req==='inf')return !!ch.infinite;
     if(req==='licensed')return ch.licensed;
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
@@ -1609,17 +1626,22 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(D.officeFound&&canFound(ch)&&G.year>=(ch.officeNext||0)){ch.officeNext=G.year+CFG.office.foundEvery;return {type:'event',ev:D.officeFound}}
     if(D.officeKnock&&ch.licensed&&!ch.aff&&!ch.job&&!noFixer(ch)&&G.year>CFG.affiliationYear&&G.year>=(ch.knockNext||0)){ch.knockNext=G.year+CFG.office.knockEvery;return {type:'event',ev:D.officeKnock}}
     /* 사건을 다 쓰면 다시 섞는다 */
-    if(!G.pool.length)G.pool=sample(D.events.map((_,i)=>i),D.events.length);
+    if(!G.pool.length){G.pool=sample(D.events.map((_,i)=>i),D.events.length);
+      /* 무한 모드처럼 풀을 여러 번 돌 때는 많이 본 사건이 뒤로 가서 덜 본 사건부터 나온다 (풀은 끝에서부터 뽑는다) */
+      if(G.seenCnt){const sc=G.seenCnt;G.pool.sort((a,b)=>(sc[b]||0)-(sc[a]||0))}}
+    /* 이미 본 사건이 다시 나오면, 무한 모드에서는 '이 일은 처음이 아니다'는 한 줄이 앞에 붙는다 */
+    const evOut=i=>{const sc=G.seenCnt||(G.seenCnt={}),n=sc[i]=(sc[i]||0)+1,ev=evForJob(D.events[i],G.ch),RN=D.repeatNotes;
+      return {type:'event',ev:G.infinite&&n>1&&RN&&RN.length&&ev&&ev.x?Object.assign({},ev,{x:RN[(n-2+i)%RN.length]+' '+ev.x}):ev}};
     /* first 표시가 있는 사건(소속 전용 등)은 조건이 맞으면 먼저 나온다 */
     const fi=G.pool.findIndex(i=>D.events[i].first&&meets(G.ch,D.events[i].req));
-    if(fi>=0)return {type:'event',ev:evForJob(D.events[G.pool.splice(fi,1)[0]],G.ch)};
+    if(fi>=0)return evOut(G.pool.splice(fi,1)[0]);
     /* 출신 진로 보정이 있으면 그 진로의 권유 사건(tag)이 보정값 × pathEventMul % 확률로 먼저 나온다 */
     const tagged=G.pool.filter(i=>{const e=D.events[i];return e.tag&&(G.ch.paths[e.tag]||0)>0&&meets(G.ch,e.req)});
     if(tagged.length){
       const ti=one(tagged);
-      if(d(100)<=(G.ch.paths[D.events[ti].tag]||0)*CFG.pathEventMul){G.pool.splice(G.pool.indexOf(ti),1);return {type:'event',ev:evForJob(D.events[ti],G.ch)}}
+      if(d(100)<=(G.ch.paths[D.events[ti].tag]||0)*CFG.pathEventMul){G.pool.splice(G.pool.indexOf(ti),1);return evOut(ti)}
     }
-    while(G.pool.length){const ev=D.events[G.pool.pop()];if(meets(G.ch,ev.req)&&(!ev.chance||d(100)<=ev.chance))return {type:'event',ev:evForJob(ev,G.ch)}}
+    while(G.pool.length){const pi=G.pool.pop(),ev=D.events[pi];if(meets(G.ch,ev.req)&&(!ev.chance||d(100)<=ev.chance))return evOut(pi)}
     return {type:'event',ev:D.events.find(e=>e.fallback)||D.events[0]};
   }
   /* 불길한 예감에 대한 답: go면 히든 보스, 아니면 원래 고정 전투 지정대로 조우 */
