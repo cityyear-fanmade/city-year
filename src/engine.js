@@ -1192,6 +1192,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         {l:S.a,h:`인연 +1 · 정신력 +${BD.loveMind}`,ok:{t:resT(S.at,B.stepATs,B.stepAT),fx:{bondLove:1}}},
         {l:S.b,h:'변화 없음',ok:{t:resT(S.bt,B.stepBTs,B.stepBT),fx:{}}}]};
     }
+    /* 인연 이벤트를 하나도 쌓지 않았다면 상대는 관심이 없다: 청혼 자리가 열리지 않고 조용히 떠난다 */
+    if(!(b.love||0)&&!(b.extra||0))return {t:'말없이 떠난 사람',x:bondFill(R.left,b)+' 함께한 시간은 있었지만 쌓인 것은 없었다.',c:[{l:'떠나는 뒷모습을 본다',h:`최대 정신력 −${BD.leaveMind} (영구)`,ok:{t:bondFill('{n}의 이름을 한 번 불러 보았다. 대답은 돌아오지 않았다.',b),fx:{bondLeave:true}}}]};
     const left=BD.tries-(b.tries||0);
     return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[
       {l:B.proposeYes,h:`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps}${b.extra?` · 더 쌓은 인연 ${b.extra}`:''} · 1d${BD.die} + 인연이 ${BD.marryNeed} 이상이면 결혼 · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
@@ -1730,6 +1732,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
+    if(fx.bondLeave&&ch.bond&&ch.bond.st==='met')bondLeft(ch,chips);
     if(fx.bondPropose)bondPropose(ch,chips,true);
     if(fx.bondSlip)bondPropose(ch,chips,false);
     if(fx.bondWait&&ch.bond){ch.bond.extra=(ch.bond.extra||0)+1;chips.push('인연을 더 쌓았다 · 청혼 기회는 그대로다')}
