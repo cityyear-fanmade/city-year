@@ -222,16 +222,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* ===== 별에 선택받은 자: 이름을 붙인 성도 (무기) =====
      별 잇기: 적중할 때마다 별 하나, need개를 이으면 그 적중 피해 ×2. 강화는 보냐텔리의 검과 같은 재료 규칙(보관함 장비를 녹여 최대 +5) */
-  function starItem(L,name){
-    const S=CFG.star,fx={atk:S.atk[L],eva:S.eva[L]};if(S.dmgB[L])fx.dmgB=S.dmgB[L];const need=L>=S.fastFrom?3:4;
-    const nm=((name||'').trim()||'이름 없는')+'성도';
-    return {id:'star',slot:'weapon',grade:5,lvl:L,base:nm,n:nm+(L?' +'+L:''),
-      e:`공+${fx.atk} · 회피+${fx.eva}${fx.dmgB?' · 피해+'+fx.dmgB:''} · 별 잇기(적중 ${need}번째마다 피해 ×2)${L>=S.max?' · 전투마다 빛 +1':''}`,fx,wx:Object.assign({mark:{need,n:'별 잇기'}},L>=S.max?{lightUp:1}:{})};
+  /* virt: 소지 루트로 이은 별(인·의·예·지). 재료 강화(+1~+5)와 따로 더해지는 추가 강화 */
+  function starItem(L,name,virt){
+    const S=CFG.star,V=(virt||[]).filter(k=>S.virt[k]),fx={atk:S.atk[L],eva:S.eva[L]};if(S.dmgB[L])fx.dmgB=S.dmgB[L];
+    for(const k of V)for(const [a,v] of Object.entries(S.virt[k].fx))fx[a]=(fx[a]||0)+v;
+    const need=L>=S.fastFrom||V.includes('지')?3:4,nm=((name||'').trim()||'이름 없는')+'성도';
+    return {id:'star',slot:'weapon',grade:5,lvl:L,base:nm,virt:V,n:nm+(L?' +'+L:'')+(V.length?' ['+V.join('·')+']':''),
+      e:`공+${fx.atk} · 회피+${fx.eva}${fx.maxHp?' · HP+'+fx.maxHp:''}${fx.dmgB?' · 피해+'+fx.dmgB:''} · 별 잇기(적중 ${need}번째마다 피해 ×2)${L>=S.max?' · 전투마다 빛 +1':''}`,fx,wx:Object.assign({mark:{need,n:'별 잇기'}},L>=S.max?{lightUp:1}:{})};
   }
-  /* 소지 루트: 재료 없이 성도 한 단계 강화 (장착 중이든 보관함이든). 강화했으면 새 이름 */
-  function starUp(ch){
-    const w=ch.gear.weapon,st=ch.stash||[],own=w&&w.id==='star'?w:st.find(x=>x.id==='star');if(!own||(own.lvl||0)>=CFG.star.max)return null;
-    const nw=carryTune(own,upItem(own,(own.lvl||0)+1));
+  /* 소지 루트: 이은 별(인·의·예·지)을 성도에 새긴다 (재료 강화 단계와 따로 더해지는 추가 강화, 장착 중이든 보관함이든) */
+  function starUp(ch,k){
+    const w=ch.gear.weapon,st=ch.stash||[],own=w&&w.id==='star'?w:st.find(x=>x.id==='star');if(!own||(own.virt||[]).includes(k))return null;
+    const nw=carryTune(own,starItem(own.lvl||0,own.base.replace(/성도$/,''),[...(own.virt||[]),k]));
     if(own===w){equip(ch,nw);ch.stash=(ch.stash||[]).filter(x=>x!==own)}else st[st.indexOf(own)]=nw;
     return nw.n;
   }
@@ -264,7 +266,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   const bonNeed=ch=>{const w=ch.gear.weapon;return w&&(w.id==='bonatelli'&&w.lvl<CFG.bon.max||w.id==='star'&&w.lvl<CFG.star.max)?CFG.bon.need[w.lvl]:null};
   /* 강화할 수 있는 전용 무기의 다음 단계 */
-  const upItem=(w,L)=>w.id==='star'?starItem(L,w.base.replace(/성도$/,'')):bonItem(L);
+  const upItem=(w,L)=>w.id==='star'?starItem(L,w.base.replace(/성도$/,''),w.virt):bonItem(L);
   function bonUpgrade(ch,i){
     const need=bonNeed(ch),st=ch.stash||[],m=st[i];if(need==null||!m||(m.grade||0)<need)return false;
     st.splice(i,1);const old=ch.gear.weapon;equip(ch,carryTune(old,upItem(old,old.lvl+1)));ch.stash=ch.stash.filter(x=>x!==old);return true;
@@ -697,7 +699,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function chooseFinger(ch,name){
     if(!ch.fingerPick)return null;
     /* 별에 선택받은 자만: 소지 루트 (손가락 서열 대신 인의예지 별을 이을 때마다 성도가 강해진다) */
-    if(name==='소지'&&ch.flags.starborn&&!ch.pinky){ch.fingerPick=false;ch.pinky=true;ch.pinkyYear=ch.year||0;addStats(ch.stats,D.pinky.fx);return [D.pinky.n+' 표식 · '+D.pinky.e,'인의예지 별을 이을 때마다 성도가 한 단계 강해진다']}
+    if(name==='소지'&&ch.flags.starborn&&!ch.pinky){ch.fingerPick=false;ch.pinky=true;ch.pinkyYear=ch.year||0;addStats(ch.stats,D.pinky.fx);return [D.pinky.n+' 표식 · '+D.pinky.e,'인의예지 별을 이을 때마다 그 별이 성도에 새겨진다 (추가 강화)']}
     if(!D.orgs.finger.includes(name))return null;
     const chips=[];ch.fingerPick=false;joinAff(ch,{type:'finger',from:'finger'},name,chips);return chips;
   }
@@ -725,7 +727,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 사건으로 승급 (해결사만, 최고 급수 미만일 때) */
     if(fx.promote)addPts(ch,CFG.promo.gain.mid,chips);
     if(fx.pts)addPts(ch,fx.pts*CFG.promo.gain.check,chips);
-    if(fx.pinkyKey){const ks=ch.pinkyKeys=ch.pinkyKeys||[],K=D.pinky.keys[ks.length];if(K){ks.push(K.k);chips.push(`소지의 별 · ${K.k} (${ks.length}/${D.pinky.keys.length})`);if(ch.flags.starborn){const u=starUp(ch);if(u)chips.push(`${u} · 별이 이어져 한 단계 강해졌다`);if(ks.length>=D.pinky.keys.length){(ch.deck.length<deckMax(ch)?ch.deck:(ch.side=ch.side||[])).push('st_link');chips.push('네 별을 모두 이었다 · 별을 잇다 카드 한 장 더')}}else if(ks.length>=D.pinky.keys.length){ch.seongPick=true;chips.push('성도 · 이름을 정한다')}}}
+    if(fx.pinkyKey){const ks=ch.pinkyKeys=ch.pinkyKeys||[],K=D.pinky.keys[ks.length];if(K){ks.push(K.k);chips.push(`소지의 별 · ${K.k} (${ks.length}/${D.pinky.keys.length})`);if(ch.flags.starborn){const u=starUp(ch,K.k);if(u)chips.push(`${u} · 「${K.k}」의 별이 성도에 새겨졌다 (${CFG.star.virt[K.k].e})`);if(ks.length>=D.pinky.keys.length){(ch.deck.length<deckMax(ch)?ch.deck:(ch.side=ch.side||[])).push('st_link');chips.push('네 별을 모두 이었다 · 별을 잇다 카드 한 장 더')}}else if(ks.length>=D.pinky.keys.length){ch.seongPick=true;chips.push('성도 · 이름을 정한다')}}}
     if(fx.oracle&&!ch.oracle){ch.oracle=true;(ch.relics=ch.relics||[]).push('히든 직업 · 신탁대행자','전리품 · 신의 단말기');addStats(s,D.oracle.loot.fx);chips.push('히든 직업 · 신탁대행자 · 지령 독촉',`전리품 · 신의 단말기 · ${D.oracle.loot.e}`)}
     if(fx.officeJoin){chips.push(...joinOffice(ch,one(fx.officeJoin)))}
     if(fx.rb){const r=ch.rb,k=fx.rb,Z=CFG.rb,y=ch.year||0;
@@ -1314,7 +1316,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!ch.pinky||ch.distForm||ch.seongPick||(ch.pinkyKeys||[]).length>=D.pinky.keys.length||y<(ch.pinkyNext??((ch.pinkyYear||0)+P_.every)))return null;
     ch.pinkyNext=y+P_.every;
     const n=(ch.pinkyKeys||[]).length,K=D.pinky.keys[n];
-    return {t:K.t,x:K.x,c:[{l:K.l,h:`1d100 · ${P_.dc} 이상이면 ${K.k}를 얻는다 (${n}/${D.pinky.keys.length})${ch.flags.starborn?' · 성도 한 단계 강화':''}`,check:{s:null,dc:P_.dc,pure:true},ok:{t:K.ok,fx:{pinkyKey:true}},fail:{t:K.fail,fx:{}}}]};
+    return {t:K.t,x:K.x,c:[{l:K.l,h:`1d100 · ${P_.dc} 이상이면 ${K.k}를 얻는다 (${n}/${D.pinky.keys.length})${ch.flags.starborn?' · 성도에 「'+K.k+'」의 별을 새긴다 ('+CFG.star.virt[K.k].e+')':''}`,check:{s:null,dc:P_.dc,pure:true},ok:{t:K.ok,fx:{pinkyKey:true}},fail:{t:K.fail,fx:{}}}]};
   }
   /* 성도: 인의예지를 모두 모으면 이름을 붙인 전리품(무기가 아닌 패시브). 공격·회피·추가 피해를 각각 굴려 능력치에 영구히 더한다 */
   function setSeongdo(ch,name,force){
