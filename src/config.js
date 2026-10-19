@@ -129,7 +129,7 @@ export const CFG = {
   /* 오늘의 시드로 시작하면 출신 굴림을 이 숫자로 고정한다 (null이면 시드 그대로). 1 = 혈귀 */
   dailyOrigin: 1,
   /* 날짜별 오늘의 시드 지정 (한국 시간 기준 날짜): origin = 출신 굴림(80 = 동부 출신 외곽 생존자), innate = 타고난 것 */
-  dailyPlan: {'2026-10-15': {origin: 80, innate: 'mark'}, '2026-10-16': {origin: 20, innate: 'growth'}, '2026-10-17': {origin: 1, innate: 'psycho'}, '2026-10-18': {origin: 90, innate: 'mark'}},
+  dailyPlan: {'2026-10-19': {origin: 50}, '2026-10-15': {origin: 80, innate: 'mark'}, '2026-10-16': {origin: 20, innate: 'growth'}, '2026-10-17': {origin: 1, innate: 'psycho'}, '2026-10-18': {origin: 90, innate: 'mark'}},
   /* 혈귀 1권속 카드팩 패시브 '오랜 굶주림': HP를 회복할 때마다 HP 1당 스택 +1(최대 max). 공격 카드를 내면 스택을 모두 써서 그 카드의 첫 적중 피해가 스택만큼 늘고, 스택은 비운다 */
   hunger: {max: 15},
   /* 일상 사건: from년차부터 사건이 있는 해에 chance% 확률로 일상이 온다 (선택지 3개 중 능력치 +1~3 하나, 판당 max번). 인연이 없는 소속 캐릭터는 일상 중 meetChance%가 인연(조우자)을 만나는 사건이 된다 */
@@ -227,7 +227,7 @@ export const CFG = {
   /* 개화한 E.G.O: 개화 카드(공세·수호)를 every번 쓸 때마다(전투마다 세어) 방금 낸 카드에 맞는 1회용 스킬이 다음 라운드 손패에 들어온다 */
   bloom: {every: 3},
   /* 아무것도 없는 출발: chance% 확률로 운명이 강제되어 히든 출신 n개 중 하나를 고르게 된다 */
-  blankFate: {chance: 100, n: 2, pool: [10, 30]},
+  blankFate: {chance: 0, n: 2, pool: []},
   /* R사 부화장 복제체 루트: 0년차 13연전 → 일과 생활(전용 인연) → 1막 후반(fleeAt~) R사 추격대 4번(chaseGap년 간격) → 2막 초 숙청 집행관(R사의 끝) → 2막 중반(headFrom년차~) 정비 한 번 → 금기 위반 확인 즉시 발톱 바랄 → 조율자 제나 → 엔딩 */
   /* 까마귀팀 패시브 '까마귀의 눈'(전용 카드 rv_*): 적중마다 상대의 버프 1개를 지운다 · 6장: 버프 없는 상대에게 명중 +10 · 8장: 상대 HP 50% 이하면 주사위마다 +1 · 10장: 상대 HP 30% 이하면 방어 자세·회피 봉쇄 */
   raven: {tiers: [6, 8, 10], hit: 10, low: 0.5, exec: 0.3, buffs: ['shield', 'breath', 'charge', 'cloud', 'passHit']},

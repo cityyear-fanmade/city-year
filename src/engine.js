@@ -87,8 +87,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 캐릭터 ===== */
   function addStats(s,fx){for(const k in fx){if(k==='dmin')s.dmin=Math.max(s.dmin,fx[k]);else if(k in s)s[k]+=fx[k]}}
   /* 성장기: 단계마다 1d100으로 표를 굴려 능력치 하나가 오른다 */
-  function childhood(s){
-    return D.childhood.stages.map(st=>{const r=d(100),x=pick(D.childhood.table,r);addStats(s,x.fx);return {age:st.age,r,x}});
+  /* tbl: 숨은 출생이 자기 성장기 표(kidTable)를 가지면 그 표에서 고른다 */
+  function childhood(s,tbl){
+    return D.childhood.stages.map(st=>{const r=d(100),x=pick(tbl||D.childhood.table,r);addStats(s,x.fx);return {age:st.age,r,x}});
   }
   /* job: 히든 직업으로 태어나면 출신 칸이 그 직업으로 바뀐다 (발톱 1, 조율자 100). 나머지 굴림은 같은 시드 그대로 */
   /* 출생 보정 없이 시작: 출신·재능·결점·무기·타고난 것이 없고, 성장기 보정과 색만 남는다. keep = {r, kid} (이미 굴린 출생에서 가져온다) */
@@ -129,12 +130,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const r=keep?Object.assign({},keep.r):{o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=!keep&&job&&D.hiddenJobs[job];
     if(J)r.o=J.roll;
     else if(fixO)r.o=fixO;
-    /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문). 운명 후보(blankFate.pool: R사·H사)는 출신 없이 시작할 때의 운명 선택으로만 나온다 */
+    /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문). 숨은 출생이 talents·flaws·kidTable·noWeapon을 가지면 재능·결점·성장기는 그 표에서, 무기는 맨손(전용 무기)으로 */
     const HO=!J&&(!keep||keep.fate)&&(D.hiddenOrigins||[]).find(x=>x.roll===(keep&&keep.fate?keep.fate:r.o)&&(keep||!(CFG.blankFate.pool||[]).includes(x.roll)));
-    const o=keep?(keep.fate&&HO?HO:BLANK.o):J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(D.talents,r.t),f=keep?BLANK.f:pick(D.flaws,r.f),w=keep?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
+    const o=keep?(keep.fate&&HO?HO:BLANK.o):J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(o.talents||D.talents,r.t),f=keep?BLANK.f:pick(o.flaws||D.flaws,r.f),w=keep||o.noWeapon?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
     const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,dr:0,regen:0,defUp:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,egoSight:0,relicApt:0};
     for(const x of [o,t,f])addStats(s,x.fx);
-    const kid=keep?keep.kid.map(k=>{addStats(s,k.x.fx);return k}):childhood(s);
+    const kid=keep?keep.kid.map(k=>{addStats(s,k.x.fx);return k}):childhood(s,o.kidTable);
     const ch={r,o,t,f,w,kid,ci,blank:!!keep&&!(keep.fate&&HO),fated:!!(keep&&keep.fate&&HO),color:D.colors[ci].hex,licensed:false,title:null,aff:null,paths:Object.assign({},o.paths),
       flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0)),stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||o.money||0,
       deck:o.deck?o.deck.slice():['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
