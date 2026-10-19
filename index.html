@@ -3223,8 +3223,12 @@ function createBgm(){
   function newEpoch(){
     const now=ctx.currentTime;
     if(cur){const o=cur;for(const g of [o.b,o.u,o.m]){g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+0.28)}setTimeout(()=>{try{for(const g of [o.b,o.u,o.m])g.disconnect()}catch(e){}},1200)}
-    const mk=dest=>{const g=ctx.createGain();g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(P.styleGain[style],now+0.3);g.connect(dest);return g};
+    const mk=dest=>{const g=ctx.createGain();g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(scene==='boss'?P.bossGain:P.styleGain[style],now+0.3);g.connect(dest);return g};
     cur={b:mk(bright),u:mk(bus),m:mk(master)};
+    /* 일그러진 기타 묶음 (불길): 소리를 찌그러뜨린 뒤 높은 쇳소리를 걸러 묵직하게 */
+    {const sh=ctx.createWaveShaper(),n=1024,cv=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;cv[i]=Math.tanh(x*6)}sh.curve=cv;sh.oversample='2x';
+      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;lp.Q.value=0.7;const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=70;
+      const og=ctx.createGain();og.gain.value=0.22;sh.connect(hp);hp.connect(lp);lp.connect(og);og.connect(cur.b);cur.d=sh}
     /* 장면이 바뀔 때 되울림(꼬리)도 잠깐 끊어 이전 소리가 길게 남지 않게 한다 */
     const w=bus._wet,fb=bus._fb;duckUntil=now+0.9;
     w.gain.cancelScheduledValues(now);w.gain.setValueAtTime(w.gain.value,now);w.gain.linearRampToValueAtTime(0,now+0.08);
@@ -3250,6 +3254,25 @@ function createBgm(){
     const n=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=noiseBuf;f.type='highpass';f.frequency.value=hp;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     n.connect(f);if(lpf){const l=ctx.createBiquadFilter();l.type='lowpass';l.frequency.value=lpf;f.connect(l);l.connect(g)}else f.connect(g);g.connect(cur.m);n.start(t,rnd()*0.9);n.stop(t+dur+0.02);
+  }
+  /* 파워 코드 (불길): 근음 · 5음 · 옥타브를 일그러뜨린다. mute=짧게 끊어 치기 */
+  function powerC(m,t,dur,peak,mute){
+    const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.005);
+    if(mute)g.gain.exponentialRampToValueAtTime(0.0001,t+dur);else{g.gain.setValueAtTime(peak*0.85,t+dur*0.8);g.gain.linearRampToValueAtTime(0.0001,t+dur)}
+    for(const [o,dt] of [[0,-6],[7,4],[12,0]]){const x=ctx.createOscillator();x.type='sawtooth';x.frequency.value=hz(m+o);x.detune.value=dt;x.connect(g);x.start(t);x.stop(t+dur+0.05)}
+    g.connect(cur.d);
+  }
+  /* 서브 베이스: 아주 낮은 사인으로 바닥을 받친다 */
+  function subB(m,t,dur,peak){
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=hz(m);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.01);g.gain.setValueAtTime(peak*0.8,t+dur*0.7);g.gain.linearRampToValueAtTime(0.0001,t+dur);
+    o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+dur+0.05);
+  }
+  /* 무거운 킥: 높은 데서 낮게 떨어지는 사인 + 짧은 딸깍 */
+  function kickH(t,peak){
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+0.13);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.setValueAtTime(peak*0.8,t+0.06);g.gain.exponentialRampToValueAtTime(0.0001,t+0.32);
+    o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.36);
   }
   function feather(t,peak,soft){           // 킥: 부드러운 박동 (soft=잔잔)
     const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(soft?90:120,t);o.frequency.exponentialRampToValueAtTime(46,t+0.11);
@@ -3373,12 +3396,93 @@ function createBgm(){
       for(const x of mel(L[ci])){const d=x.n*bd/2*0.9;synthN(R+x.m-12,at(x.k/2),d,0.035,cut);if(sec==='A2')synthN(R+x.m,at(x.k/2),d,0.016,cut)}}
     barT=T+4*bd;barN++;
   }
+  /* 불길 한 마디(4/4): 32마디 한 바퀴 — 0~3 도입(리프·베이스) · 4~11 훅 A · 12~19 훅 B · 20~23 숨 고르기(킥 없이, 끝에 스네어 몰아치기) · 24~31 훅 A(옥타브 겹침)
+     8분 질주 베이스, 16분 피아노 리프, 록 드럼(킥 1·2박 반·3 · 스네어 2·4 · 8분 하이햇), 구간 시작마다 심벌, 8마디 끝마다 스네어 필 */
+  function barPassion(T,M){
+    const fight=scene==='fight',bd=60/P.bpm.passion[scene],ci=barN%8,C=P.pChords[ci],R=M.root,at=k=>T+k*bd,pos=barN%32,lb=R-24+C.b;
+    const sec=pos<4?'intro':pos<12?'A':pos<20?'B':pos<24?'break':'A2',start=pos===4||pos===12||pos===24,phraseEnd=pos%8===3||pos===23;
+    /* 베이스: 8분으로 몰아친다 (숨 고르기에서는 2분음표) */
+    if(sec==='break'){sawN(lb,at(0),bd*2,0.07,700);sawN(lb,at(2),bd*2,0.07,700);subB(lb-12,at(0),bd*4,0.12)}
+    else{[0,0,12,0,0,C.f,12,0].forEach((o,n)=>sawN(lb+o,at(n/2),bd*0.45,n%2?0.06:0.08,fight?1300:1000));
+      for(const k of [0,1.5,2,3])subB(lb-12,at(k),bd*(k===1.5?0.5:0.95),0.13)}
+    /* 일그러진 기타: 도입·훅 A는 8분 끊어 치기(첫 박은 길게), 훅 B는 길게 울리는 파워 코드 */
+    {const gm=R-24+12+C.b;
+      if(sec==='B'){powerC(gm,at(0),bd*2,0.05,false);powerC(gm,at(2),bd*1.5,0.05,false);powerC(gm,at(3.5),bd*0.5,0.045,true)}
+      else if(sec!=='break')[0,0.5,1,1.5,2,2.5,3,3.5].forEach((k,n)=>powerC(gm,at(k),n===0?bd*0.9:bd*0.32,n===0?0.05:0.035,n!==0))}
+    /* 피아노 리프: 16분 되풀이 */
+    /* 피아노 리프: 숨 고르기·도입은 16분, 기타가 들어오는 구간은 8분으로 줄여 소리가 뭉개지지 않게 */
+    const pat=[0,1,2,1, 3,1,2,1, 0,1,2,3, 2,1,2,1],dense=sec==='break'||sec==='intro';
+    pat.forEach((ix,n)=>{if(!dense&&n%2)return;pianoN(R+C.t[ix],at(n/4),(n%4===0?0.042:0.03)*(sec==='break'?0.8:1),bd*0.5)});
+    /* 현: 숨 고르기와 훅 B에서 길게 */
+    if(sec==='break'||sec==='B')C.t.slice(0,3).forEach((o,i)=>strN(R+o-12,T+i*0.02,bd*4,0.012));
+    /* 드럼 */
+    if(sec!=='break'){
+      if(fight||sec==='B')for(let k=0;k<4;k++)kickH(at(k),0.2);else for(const k of [0,1.5,2,2.75])kickH(at(k),0.2);
+      if(sec!=='intro')for(const k of [1,3])snare(at(k),0.065);
+      for(let n=0;n<8;n++)hat(at(n/2),n%2?0.016:0.01,n===7&&sec==='B');
+    }else if(pos===23){for(let n=0;n<16;n++)snare(at(n/4),0.012+0.003*n)}
+    else kickH(at(0),0.14);
+    if(start){crash(T,0.05);boom(T,0.22)}
+    if(phraseEnd&&sec!=='break'&&pos!==23)for(let n=1;n<4;n++)snare(at(3+n*0.25),0.03+0.008*n);
+    if(pos%8===0&&sec!=='break')boom(T,0.18);
+    /* 훅 */
+    if(sec==='A'||sec==='B'||sec==='A2'){const L=sec==='B'?P.fireB:P.fireA,cut=fight?3600:3000;
+      for(const x of mel(L[ci])){const d=x.n*bd/2*0.9;synthN(R+x.m-12,at(x.k/2),d,0.035,cut);if(sec==='A2')synthN(R+x.m,at(x.k/2),d,0.016,cut)}}
+    barT=T+4*bd;barN++;
+  }
+  /* 종: 사인에 어긋난 배음(2.76배 · 5.4배)을 섞어 길게 울린다 */
+  function bellN(m,t,peak,dur){
+    const f=hz(m),g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    for(const [r,a,d] of [[1,1,1],[2.76,0.35,0.5],[5.4,0.15,0.25]]){const o=ctx.createOscillator(),og=ctx.createGain();o.type='sine';o.frequency.value=f*r;og.gain.setValueAtTime(a,t);og.gain.exponentialRampToValueAtTime(0.0001,t+dur*d);o.connect(og);og.connect(g);o.start(t);o.stop(t+dur*d+0.05)}
+    g.connect(cur.u);
+  }
+  /* 합창 같은 소리: 톱니 둘을 '아' 모음 대역(700·1150Hz)으로 걸러 천천히 키운다 */
+  function choirN(m,t,dur,peak){
+    const g=ctx.createGain(),f1=ctx.createBiquadFilter(),f2=ctx.createBiquadFilter();f1.type='bandpass';f1.frequency.value=700;f1.Q.value=2.5;f2.type='bandpass';f2.frequency.value=1150;f2.Q.value=3;
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+dur*0.4);g.gain.setValueAtTime(peak,t+dur*0.75);g.gain.linearRampToValueAtTime(0.0001,t+dur);
+    for(const dt of [-8,8]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f1);o.connect(f2);o.start(t);o.stop(t+dur+0.05)}
+    f1.connect(g);f2.connect(g);g.connect(cur.u);
+  }
+  /* 히든 보스 한 마디: 0~3 도입(느리게) · 이후 20마디 한 바퀴 — 0~7 본 구간(반박자: 킥 1·3박 반, 스네어 3박, 긴 파워 코드) · 8~15 몰아치기(킥 매 박·스네어 2·4·8분 끊어 치기·선율, 마지막 마디는 7/8) · 16~19 숨 고르기(종·합창·지속음) */
+  function barBoss(T,M){
+    const R=M.root,intro=barN<4,pos=intro?-1:(barN-4)%20,ci=intro?barN%4:pos%8,C=P.bChords[intro?[0,1,2,3][barN]:ci];
+    const bd=60/(intro?P.bossBpm.intro:P.bossBpm.main),at=k=>T+k*bd,lb=R-24+C.b;
+    const sec=intro?'intro':pos<8?'A':pos<16?'B':'break',beats=pos===15?3.5:4;
+    if(sec==='intro'||sec==='break'){
+      subB(lb-12,at(0),bd*4,0.14);
+      C.t.slice(0,3).forEach((o,i)=>choirN(R+o-12,T+i*0.03,bd*4,0.02));
+      bellN(R+P.bossBell[(barN*2)%8],at(0),0.07,bd*3);bellN(R+P.bossBell[(barN*2+1)%8],at(2),0.055,bd*2.2);
+      boom(T,0.24);if(sec==='break'&&pos===19)for(let n=0;n<8;n++)snare(at(2+n/4),0.012+0.005*n);
+      if(barN===3)for(let n=0;n<6;n++)boom(at(2.5+n*0.25),0.06+0.025*n);
+    }else{
+      const gm=R-24+12+C.b;
+      if(sec==='A'){
+        powerC(gm,at(0),bd*2.5,0.055,false);powerC(gm,at(2.5),bd*1.5,0.05,false);
+        for(const k of [0,1.5,2.5])subB(lb-12,at(k),bd*(k===0?1.4:0.9),0.14);
+        sawN(lb,at(0),bd*1.4,0.07,700);sawN(lb,at(2.5),bd*1.4,0.07,700);
+        kickH(at(0),0.22);kickH(at(2.5),0.2);snare(at(2),0.07);
+        for(let n=0;n<4;n++)hat(at(n),n%2?0.012:0.008,false);
+        C.t.slice(0,3).forEach((o,i)=>choirN(R+o-12,T+i*0.03,bd*4,0.012));
+        if(pos%2===0)bellN(R+P.bossBell[pos%8],at(0),0.04,bd*3);
+      }else{
+        for(let n=0;n<beats*2;n++){powerC(gm,at(n/2),n===0?bd*0.9:bd*0.32,n===0?0.05:0.036,n!==0);sawN(lb+(n%4===3?12:0),at(n/2),bd*0.45,n%2?0.06:0.08,1100)}
+        for(let k=0;k<beats;k++){kickH(at(k),0.2);subB(lb-12,at(k),bd*0.9,0.12)}
+        for(const k of [1,3])if(k<beats)snare(at(k),0.065);
+        for(let n=0;n<beats*2;n++)hat(at(n/2),n%2?0.015:0.009,false);
+        for(const x of mel(P.bossLead[ci])){if(x.k>=beats*2)continue;synthN(R+x.m-12,at(x.k/2),x.n*bd/2*0.9,0.035,2600)}
+        if(pos===8)crash(T,0.055);
+        if(pos===15)for(let n=1;n<4;n++)snare(at(2.5+n*0.25),0.03+0.01*n);
+      }
+      if(pos===0)crash(T,0.05),boom(T,0.24);
+    }
+    barT=T+beats*bd;barN++;
+  }
   function schedule(now,M){
-    if(lastScene!==scene||lastStyle!==style){if(lastStyle!==style)barN=0;lastScene=scene;lastStyle=style;newEpoch();barT=now+0.32}
+    if(lastScene!==scene||lastStyle!==style){if(lastStyle!==style||lastScene==='boss'||scene==='boss')barN=0;lastScene=scene;lastStyle=style;newEpoch();barT=now+0.32}
     if(barT<now)barT=now+0.05;
     const wet=bus._wet;if(wet&&now>duckUntil)wet.gain.setTargetAtTime(M.wet*(scene==='fight'?0.7:1)*(style==='passion'?0.7:1),now,0.6);
-    bright.frequency.setTargetAtTime(M.cut*P.cutMul[style][scene],now,2);
-    let g=0;while(barT<now+2.2&&g++<1)(style==='passion'?barPassion:barLobby)(barT,M);
+    bright.frequency.setTargetAtTime(scene==='boss'?Math.min(M.cut,P.bossCut)*1.2:M.cut*P.cutMul[style][scene],now,2);
+    let g=0;while(barT<now+2.2&&g++<1)(scene==='boss'?barBoss:style==='passion'?barPassion:barLobby)(barT,M);
   }
   function tick(){
     if(!ctx||!on||hidden)return;
@@ -3410,7 +3514,7 @@ function createBgm(){
     set(v){if(v===on)return on;on=!!v;if(on)start();else stop();return on},
     setVol(v){vol=Math.max(0,Math.min(1,+v||0));if(on&&ctx)ramp(gainOf(vol),0.3)},
     setMood(k){if(P.moods[k])mood=k},
-    setScene(k){scene=k==='fight'?'fight':'calm'},
+    setScene(k){scene=k==='boss'?'boss':k==='fight'?'fight':'calm'},
     style:()=>style,
     setStyle(k){if(k==='calm'||k==='passion')style=k}
   };
@@ -5002,7 +5106,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   }
   function render(){
     const s=UI.screen;
-    BGM.setScene(s==='combat'?'fight':'calm');
+    BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
     const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
