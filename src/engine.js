@@ -162,7 +162,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* E.G.O 발현자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
-    ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;
+    ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;ch.birthPack=ch.packName||'기본 카드팩';
     return ch;
   }
   /* 유물 적성자: 출생 때 고른 유물 지급 */
@@ -171,7 +171,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     (ch.relics=ch.relics||[]).push(R.n);(ch.relicIds=ch.relicIds||[]).push(id);ch.relicPick=false;ch.relicPickLate=false;
     if(R.odin){ch.odin=true;if(ch.o&&ch.o.n==='보냐텔리 가문')ch.yeji=true}
     /* 환도 + 궁니르: 공명 패시브와 전용 카드 2장 */
-    if(id==='gungnir'&&ch.hwando&&!ch.resonance){ch.resonance=true;ch.relics.push('궁니르 공명');forceAdd(ch,'g_gungnir','g_gungnir')}
+    if(id==='gungnir'&&ch.hwando&&!ch.resonance){ch.resonance=true;ch.relics.push('궁니르 공명');for(const gid of ['g_gungnir','g_gungnir'])if(!routeBirthCard(ch,gid))forceAdd(ch,gid)}
     if(R.gear){const g=Object.assign({id:R.gear.id||id,grade:5},R.gear);if(late)offerGear(ch,g);else{equip(ch,g);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth')}}
   }
   /* 이미 가진 유물은 다시 고를 수 없다 */
@@ -282,6 +282,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if((ch.packs||[]).some(p=>p.deck.includes(cid)||p.side.includes(cid)))return true;
     (t.deck.length<deckMax(ch)?t.deck:t.side).push(cid);
     chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → ${t.n}에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);
+    return true;
+  }
+  /* 출생 때 받은 팩에 속하는 카드(궁니르 공명 등): 지금 쓰는 팩이 출생팩이면 덱에, 출생팩을 보관함에 두고 다른 팩을 쓰는 중이면 그 보관함에 넣는다. 보냈으면 true */
+  function routeBirthCard(ch,cid){
+    const bp=ch.birthPack;if(!bp||(ch.packName||'기본 카드팩')===bp)return false;
+    const t=packByName(ch,bp);if(!t)return false;
+    (t.deck.length<deckMax(ch)?t.deck:t.side).push(cid);
     return true;
   }
   /* ===== 카드팩 보관함 =====
