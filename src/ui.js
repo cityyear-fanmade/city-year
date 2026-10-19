@@ -704,6 +704,8 @@ export function startUI(E,app){
       <li><b>성장</b> 판정 성공 ${CFG.xp.ok}, 실패 ${CFG.xp.fail}, 판정 없는 선택 ${CFG.xp.plain}, 전투 승리 ${CFG.xp.win} 경험치. 레벨이 오르면 성장표를 1d100으로 세 번 굴려 하나를 고른다.</li>
       <li><b>${T.licensed}</b> 자격 시험, 계약, 견습으로 ${T.rankStart}${T.rankUnit}에 등록된다. 소속이 없거나 ${T.affTypes.office} 소속이면 전투에서 이긴 뒤 소문 판정(1d100 + ${T.paths.fixer} 진로 보정 ≥ ${CFG.winLicenseDc})으로도 등록된다. 고정 전투(${Object.keys(D.fixedFights).join('·')}년차)에서 이기면 2${T.rankUnit}씩 ${T.promote}한다.</li>
       <li><b>손가락 서열</b> ${Object.entries(D.fingers).map(([n,F])=>`${n}: ${F.ranks.map(r=>r.branch?r.branch.map(b=>b.n).join('/'):r.n).join(' → ')}`).join(' · ')}. 고정 전투 승리나 승급 사건으로 오르고, 오를 때마다 보정을 받는다. 서열 ${D.fingerRules.shopTier}단계 이상이면 공방 등급 +1.</li>
+      <li><b>인연 · 가족</b> ${CFG.bond.from}년차부터 일상 속에서 인연을 만난다. 결혼하면 최대 HP·정신력·판정이 오르고 아이가 생길 수 있다. 결혼한 뒤에는 <b>금기 실험이나 금기 사건을 한 번이라도 저지르면</b> 그 다음 해부터 해마다 ${CFG.bond.dieChance}% 확률로 배우자가 세상을 떠난다(최대 정신력 −${CFG.bond.lossMind}, 영구). 결혼한 채 히든 보스를 이길 때마다 이 확률이 +${CFG.bond.riskStep}%p 쌓인다. 배우자가 죽어도 아이는 남는다. 히든 보스의 전리품 「엘레나의 처방전」을 가지면 이 확률이 절반이 된다.</li>
+      <li><b>금기</b> 특이점 루트의 금기 실험, 일부 사건의 금기 선택. 큰 강화를 주는 대신 정신력이 깎이고, 결혼 중이면 위의 배우자 사망 위험이 붙는다. 금기 실험을 ${CFG.corp.forbMax}번 채우면 머리가 발톱과 조율자를 보낸다.</li>
       <li><b>${D.pinky.n}</b> 어느 소속에도 겹쳐 붙는 표식. ${D.pinky.e}.</li>
       <li><b>돈과 공방</b> 해마다 소속 봉급(${T.licensed}는 급수 수당 추가), 전투 현상금, 일부 사건으로 ${D.money.unit}을 번다. 공방은 ${D.workshops.map(w=>w.n).join(' · ')} 3등급이고, 소속과 급수에 따라 들어갈 수 있는 등급이 정해진다. 무기·방어구·의수 칸마다 하나씩 맞춘다.</li>
       <li><b>장비 표기</b> 공+N 공격(명중 보정) · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · D6≥N 피해 주사위 d6을 굴려 N보다 작게 나오면 N으로 친다 · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
