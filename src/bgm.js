@@ -4,7 +4,7 @@
    - 두 가지 스타일을 사용자가 고른다. 둘 다 32마디를 한 바퀴로 도는 곡이고, 구간(도입 → 선율 A → 선율 B → 되풀이)이 바뀌며 흐름이 생긴다
      · 고요(calm): 마을 곡처럼 적당히 들뜨는 잔잔함. 4/4박 · 템포 100(전투 132) · G 장조, 통통 튀는 베이스(근음·5음), 엇박 건반 반주, 가벼운 셰이커·림, 피리 같은 선율
        진행: Cmaj7 → D → Bm7 → Em7 → Am7 → D → G → G (IV-V-iii-vi 흐름)
-     · 불길(passion): 신나는 전투 곡. 4/4박 · 템포 150(전투 168) · D 단조, 8분 질주 베이스, 록 드럼(킥·스네어·하이햇), 16분 피아노 리프, 신스 선율 훅
+     · 불길(passion): 묵직하고 신나는 전투 곡. 4/4박 · 템포 150(전투 168) · D 단조, 일그러진 파워 코드(끊어 치기/길게), 8분 질주 베이스 + 서브 베이스, 무거운 킥의 록 드럼, 16분 피아노 리프, 신스 선율 훅
        진행: Dm → Bb → F → C → Dm → Bb → Gm → A (i-VI-III-VII, 끝에 딸림화음으로 다시 당긴다) · 구간마다 심벌, 8마디 끝마다 스네어 필, 쉬어 가는 구간 뒤 다시 터진다
    - 참고한 것은 장르의 흐름(템포·박자·구간 구성·악기 역할)뿐이고, 선율과 화성 진행은 직접 만들었다 */
 export function createBgm(){
@@ -14,7 +14,7 @@ export function createBgm(){
     fadeIn:3,           // 켤 때 서서히 커지는 시간(초)
     fadeOut:0.8,        // 끌 때 서서히 줄어드는 시간(초)
     bpm:{calm:{calm:100,fight:132},passion:{calm:150,fight:168}},   // [스타일][장면]
-    styleGain:{calm:0.7,passion:0.85},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
+    styleGain:{calm:0.7,passion:0.6},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
     cutMul:{calm:{calm:0.8,fight:1},passion:{calm:1.1,fight:1.3}}, // 장면별 밝기
     /* 코드(C=0 기준 반음): b=베이스 근음, t=구성음(피아노 · 현), sc=선율 음계 */
     /* 코드(C=0 기준 반음): b=베이스 근음, f=베이스 5음(근음 기준), t=반주 구성음 (가운데 도=0) */
@@ -67,6 +67,10 @@ export function createBgm(){
     if(cur){const o=cur;for(const g of [o.b,o.u,o.m]){g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+0.28)}setTimeout(()=>{try{for(const g of [o.b,o.u,o.m])g.disconnect()}catch(e){}},1200)}
     const mk=dest=>{const g=ctx.createGain();g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(P.styleGain[style],now+0.3);g.connect(dest);return g};
     cur={b:mk(bright),u:mk(bus),m:mk(master)};
+    /* 일그러진 기타 묶음 (불길): 소리를 찌그러뜨린 뒤 높은 쇳소리를 걸러 묵직하게 */
+    {const sh=ctx.createWaveShaper(),n=1024,cv=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;cv[i]=Math.tanh(x*6)}sh.curve=cv;sh.oversample='2x';
+      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;lp.Q.value=0.7;const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=70;
+      const og=ctx.createGain();og.gain.value=0.22;sh.connect(hp);hp.connect(lp);lp.connect(og);og.connect(cur.b);cur.d=sh}
     /* 장면이 바뀔 때 되울림(꼬리)도 잠깐 끊어 이전 소리가 길게 남지 않게 한다 */
     const w=bus._wet,fb=bus._fb;duckUntil=now+0.9;
     w.gain.cancelScheduledValues(now);w.gain.setValueAtTime(w.gain.value,now);w.gain.linearRampToValueAtTime(0,now+0.08);
@@ -92,6 +96,26 @@ export function createBgm(){
     const n=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=noiseBuf;f.type='highpass';f.frequency.value=hp;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     n.connect(f);if(lpf){const l=ctx.createBiquadFilter();l.type='lowpass';l.frequency.value=lpf;f.connect(l);l.connect(g)}else f.connect(g);g.connect(cur.m);n.start(t,rnd()*0.9);n.stop(t+dur+0.02);
+  }
+  /* 파워 코드 (불길): 근음 · 5음 · 옥타브를 일그러뜨린다. mute=짧게 끊어 치기 */
+  function powerC(m,t,dur,peak,mute){
+    const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.005);
+    if(mute)g.gain.exponentialRampToValueAtTime(0.0001,t+dur);else{g.gain.setValueAtTime(peak*0.85,t+dur*0.8);g.gain.linearRampToValueAtTime(0.0001,t+dur)}
+    for(const [o,dt] of [[0,-7],[0,7],[7,0],[12,3]]){const x=ctx.createOscillator();x.type='sawtooth';x.frequency.value=hz(m+o);x.detune.value=dt;x.connect(g);x.start(t);x.stop(t+dur+0.05)}
+    g.connect(cur.d);
+  }
+  /* 서브 베이스: 아주 낮은 사인으로 바닥을 받친다 */
+  function subB(m,t,dur,peak){
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=hz(m);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.01);g.gain.setValueAtTime(peak*0.8,t+dur*0.7);g.gain.linearRampToValueAtTime(0.0001,t+dur);
+    o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+dur+0.05);
+  }
+  /* 무거운 킥: 높은 데서 낮게 떨어지는 사인 + 짧은 딸깍 */
+  function kickH(t,peak){
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+0.13);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.setValueAtTime(peak*0.8,t+0.06);g.gain.exponentialRampToValueAtTime(0.0001,t+0.32);
+    o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.36);
+    noiseHit(t,peak*0.12,0.012,2500,7000);
   }
   function feather(t,peak,soft){           // 킥: 부드러운 박동 (soft=잔잔)
     const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(soft?90:120,t);o.frequency.exponentialRampToValueAtTime(46,t+0.11);
@@ -192,8 +216,13 @@ export function createBgm(){
     const fight=scene==='fight',bd=60/P.bpm.passion[scene],ci=barN%8,C=P.pChords[ci],R=M.root,at=k=>T+k*bd,pos=barN%32,lb=R-24+C.b;
     const sec=pos<4?'intro':pos<12?'A':pos<20?'B':pos<24?'break':'A2',start=pos===4||pos===12||pos===24,phraseEnd=pos%8===3||pos===23;
     /* 베이스: 8분으로 몰아친다 (숨 고르기에서는 2분음표) */
-    if(sec==='break'){sawN(lb,at(0),bd*2,0.07,700);sawN(lb,at(2),bd*2,0.07,700)}
-    else [0,0,12,0,0,C.f,12,0].forEach((o,n)=>sawN(lb+o,at(n/2),bd*0.45,n%2?0.06:0.08,fight?1300:1000));
+    if(sec==='break'){sawN(lb,at(0),bd*2,0.07,700);sawN(lb,at(2),bd*2,0.07,700);subB(lb-12,at(0),bd*4,0.12)}
+    else{[0,0,12,0,0,C.f,12,0].forEach((o,n)=>sawN(lb+o,at(n/2),bd*0.45,n%2?0.06:0.08,fight?1300:1000));
+      for(const k of [0,1.5,2,3])subB(lb-12,at(k),bd*(k===1.5?0.5:0.95),0.13)}
+    /* 일그러진 기타: 도입·훅 A는 8분 끊어 치기(첫 박은 길게), 훅 B는 길게 울리는 파워 코드 */
+    {const gm=R-24+12+C.b;
+      if(sec==='B'){powerC(gm,at(0),bd*2,0.05,false);powerC(gm,at(2),bd*1.5,0.05,false);powerC(gm,at(3.5),bd*0.5,0.045,true)}
+      else if(sec!=='break')[0,0.5,1,1.5,2,2.5,3,3.5].forEach((k,n)=>powerC(gm,at(k),n===0?bd*0.9:bd*0.32,n===0?0.05:0.035,n!==0))}
     /* 피아노 리프: 16분 되풀이 */
     const pat=[0,1,2,1, 3,1,2,1, 0,1,2,3, 2,1,2,1];
     pat.forEach((ix,n)=>pianoN(R+C.t[ix],at(n/4),(n%4===0?0.042:0.026)*(sec==='break'?0.8:1),bd*0.5));
@@ -201,13 +230,13 @@ export function createBgm(){
     if(sec==='break'||sec==='B')C.t.slice(0,3).forEach((o,i)=>strN(R+o-12,T+i*0.02,bd*4,0.012));
     /* 드럼 */
     if(sec!=='break'){
-      if(fight||sec==='B')for(let k=0;k<4;k++)feather(at(k),0.12);else for(const k of [0,1.5,2])feather(at(k),0.12);
-      if(sec!=='intro')for(const k of [1,3])snare(at(k),0.055);
+      if(fight||sec==='B')for(let k=0;k<4;k++)kickH(at(k),0.2);else for(const k of [0,1.5,2,2.75])kickH(at(k),0.2);
+      if(sec!=='intro')for(const k of [1,3])snare(at(k),0.065);
       for(let n=0;n<8;n++)hat(at(n/2),n%2?0.016:0.01,n===7&&sec==='B');
       if(fight)for(let n=0;n<8;n++)hat(at(n/2+0.25),0.007,false);
     }else if(pos===23){for(let n=0;n<16;n++)snare(at(n/4),0.012+0.003*n)}
-    else feather(at(0),0.08);
-    if(start)crash(T,0.05);
+    else kickH(at(0),0.14);
+    if(start){crash(T,0.05);boom(T,0.22)}
     if(phraseEnd&&sec!=='break'&&pos!==23)for(let n=1;n<4;n++)snare(at(3+n*0.25),0.03+0.008*n);
     if(pos%8===0&&sec!=='break')boom(T,0.18);
     /* 훅 */
