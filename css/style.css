@@ -441,5 +441,5 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 
 .helpbtn{top:52px;font:600 17px/1 var(--serif,serif)}
 
-/* PC 전용 '꽉 채운 화면': 본문 글자만 조금 키운다. 본문의 실제 폭과 배경·양옆 칸은 일반과 같다(zoom 1.12 × 폭 700 ≈ 일반 780) */
-@media (min-width:900px){html[data-view="wide"] .wrap{zoom:1.12;max-width:700px}html[data-view="wide"] .hand{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* PC 전용 '꽉 채운 화면': 본문 글자만 조금 키운다. 본문의 실제 폭과 배경·양옆 칸·손패 열 수는 일반과 같다(zoom 1.08 × 폭 722 ≈ 일반 780) */
+@media (min-width:900px){html[data-view="wide"] .wrap{zoom:1.08;max-width:722px}}
