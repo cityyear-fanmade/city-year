@@ -952,7 +952,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const xEncode=()=>{const d={};for(const k of XKEYS){const v=store.get(k);if(v)d[k]=v}return 'CY1:'+btoa(unescape(encodeURIComponent(JSON.stringify({cy:1,v:UPDATES.v,t:Date.now(),d}))))};
   function xDecode(txt){
     let t=String(txt||'').trim();if(!t)throw new Error('코드가 비어 있다');
-    if(t.startsWith('CY1:'))t=decodeURIComponent(escape(atob(t.slice(4).replace(/\s+/g,''))));
+    t=t.replace(/[\u200b-\u200f\u2060\ufeff]/g,'').replace(/[“”]/g,'"');
+    const i=t.search(/CY1\s*[:：]/);
+    if(i>=0){const b=t.slice(i).replace(/^CY1\s*[:：]/,'').replace(/[^A-Za-z0-9+/=_-]/g,'').replace(/-/g,'+').replace(/_/g,'/');
+      try{t=decodeURIComponent(escape(atob(b)))}catch(e){throw new Error('코드가 중간에 잘렸거나 바뀌었다 · 내보내기를 다시 하고 "코드 복사"나 "파일로 저장"을 써 보세요')}}
+    else if(!/^[\[{]/.test(t)&&/^[A-Za-z0-9+/=\s]{40,}$/.test(t)){try{t=decodeURIComponent(escape(atob(t.replace(/\s+/g,''))))}catch(e){}}
     let o;try{o=JSON.parse(t)}catch(e){throw new Error('이 게임의 세이브 코드가 아니다 · 코드를 끝까지 복사했는지 확인해 주세요')}
     if(!o||o.cy!==1||!o.d||typeof o.d!=='object')throw new Error('이 게임의 세이브 코드가 아니다');
     const out={};for(const k of XKEYS)if(typeof o.d[k]==='string'){JSON.parse(o.d[k]);out[k]=o.d[k]}
