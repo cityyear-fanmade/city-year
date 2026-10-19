@@ -290,6 +290,13 @@ export function startUI(E,app){
     if(g&&g.n){const dc=c.dice+(c.die?0:g.dice),b=(c.b||0)+g.b;return `${c.hits>1?c.hits+'타 · ':''}${dc}d${c.die||6}${b?sg(b):''} · 명중 ${sg(c.hit+g.hit)} · 등급 ${g.n}${ex}`}
     return `${c.hits>1?c.hits+'타 · ':''}${c.dice}d${c.die||6}${c.b?sg(c.b):''} · 명중 ${sg(c.hit)}${x.length?' · '+x.join(' · '):''}`;
   }
+  /* 게임 중 화면 구석의 간단한 음악 조절: 왼쪽 위에 켬/끔·스타일(고요/불길), 오른쪽에 음량 버튼(누르면 작은 세로 막대가 열린다) */
+  function quickAudio(){
+    if(!BGM.supported)return '';
+    const on=BGM.isOn(),v=Math.round(BGM.vol()*100),ic=v===0?'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="none"/>':'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none"/>';
+    return `<div class="qaudio"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><button class="qb" data-a="qstyle" aria-label="배경음악 스타일 바꾸기" title="스타일">${BGM.style()==='passion'?'불길':'고요'}</button></div>
+      <div class="volbox"><button class="qb${UI.volOpen?' on':''}" data-a="qvol" aria-label="음량 조절" title="음량"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ic}</svg></button>${UI.volOpen?`<div class="volpop"><input type="range" id="bgmQuick" min="0" max="100" step="1" value="${v}" aria-label="배경음악 음량"><b class="mono" id="bgmQuickPct">${v}%</b></div>`:''}</div>`;
+  }
   function vSettings(){
     const b=(a,k,l,cur)=>`<button class="${cur===k?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`;
     return `<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
@@ -864,7 +871,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     ['⚖ 조정',['혈귀의 혈찬 회복량을 줄였습니다. 상대 출혈이 5번 발동할 때마다 HP 15를 회복하던 것이 HP 8을 회복합니다. 출혈 최대 스택이 늘어난 데 맞춘 조정입니다.']]];
   const NOTICE={id:'v9.4.4-1',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🔧 버그 수정',['별에 선택받은 자가 무기를 강화할 때 처음 가진 "맨손"이 재료로 뜨던 문제를 고쳤습니다. 맨손은 더 이상 보관함에 남지 않습니다.','엔딩 화면의 "다시 태어난다"와 출생 화면의 "다시 태어난다"가 위쪽 내용이 바뀔 때마다 움직여서 잘못 눌리던 문제를 고쳤습니다. 이제 제자리에 있습니다.','제 1막 종료 화면에 "여기서 끝낸다" 버튼을 넣었습니다. 제 2막으로 가지 않고 끝낼 수 있고, 이 판의 저장이 지워집니다. "다시 태어난다"를 눌러도 이전 판 저장이 바로 지워집니다.','설정 팝업의 제목이 세로로 쪼개져 보이던 문제를 고쳤습니다.']],
+    sec:[['🔧 버그 수정',['별에 선택받은 자가 무기를 강화할 때 처음 가진 "맨손"이 재료로 뜨던 문제를 고쳤습니다. 맨손은 더 이상 보관함에 남지 않습니다.','출생 화면의 "다시 태어난다"가 다시 굴릴 때마다 위쪽 내용 높이가 달라져 움직이던 문제를 고쳤습니다. 이제 제자리에 있습니다.','제 1막 종료 화면에 "여기서 끝낸다" 버튼을 넣었습니다. 제 2막으로 가지 않고 끝낼 수 있고, 이 판의 저장이 지워집니다. "다시 태어난다"를 눌러도 이전 판 저장이 바로 지워집니다.','설정 팝업의 제목이 세로로 쪼개져 보이던 문제를 고쳤습니다.']],
     ['⚖ 조정',['PC 화면(폭 900px 이상)에서 본문, 왼쪽 능력치 칸, 오른쪽 가방 칸, 버튼, 팝업을 함께 키웠습니다. 창이 넓을수록 더 커지고, 창 높이가 낮으면 잘리지 않도록 배율을 낮춥니다. 첫 화면과 휴대폰 화면은 그대로입니다.','금기 실험으로 찾아오는 "강화체"의 이름을 "발톱 · 재시험", "조율자 · 재시험"으로 바꿨습니다.','무한 모드 불순물의 최대 HP 상한을 1000만에서 1500만으로 늘렸습니다.']]]};
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
   const V932SEC=[['🔀 출생 변경',['이번 업데이트에 H사 루트와 R사 전용 루트가 히든 출생으로 이전됩니다. "아무것도 없는 존재"로 시작하면 100% 나오던 운명 선택이 출생으로 넘어갑니다. 이제 출생 굴림에서 직접 나오며, 재능·결점·성장기도 그 출생에 맞는 것으로 정해집니다.','"어떤 출생 보정도 없이 시작한다"를 고르면 운명 선택 없이 아무것도 없는 존재로 시작합니다. 대신 빈손 보정(히든 보스 전리품 장비 확률 +25%p, 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%)을 받습니다.','출생이 추가되었습니다.']],
@@ -1625,7 +1632,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
     const ov=UI.help&&!UI.cfg?vHelp():UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif" style="white-space:nowrap">설정</b><button class="btn quiet" style="width:auto;flex:none;padding:8px 16px" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const ovKey=UI.help&&!UI.cfg?'help':UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
-    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>':''}`;
+    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+quickAudio():''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     if(s==='end'){if(!UI.chronDone&&$('endShot')){UI.chronDone=true;try{chronAuto()}catch(e){}}}else UI.chronDone=false;
     document.documentElement.dataset.scr=s;
@@ -1808,6 +1815,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     autogap(i){AUTOGAP=i;store.set('cityYearAutoGap',i);if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     dice(i){DICE=i;store.set('cityYearDice',i);render()},
     bgm(i){BGM.set(i==='on');bgmSave();render()},
+    qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
+    qstyle(){BGM.setStyle(BGM.style()==='passion'?'calm':'passion');bgmSave();render()},
+    qvol(){UI.volOpen=!UI.volOpen;render()},
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
@@ -1981,15 +1991,16 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(t.classList.contains('bhelp'))UI.helpOpen=t.open},true);
   /* 휴대폰 키보드의 이동·완료(Enter)로도 시드 적용 */
   app.addEventListener('change',e=>{if(e.target.id!=='xfileIn')return;const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{UI.xask=null;xApply(String(r.result||''))};r.readAsText(f)});
-  app.addEventListener('input',e=>{if(e.target.id!=='bgmRange')return;const v=Math.max(0,Math.min(100,+e.target.value||0));BGM.setVol(v/100);const l=document.getElementById('bgmPct');if(l)l.textContent=v+'%'});
-  app.addEventListener('change',e=>{if(e.target.id==='bgmRange')bgmSave()});
+  app.addEventListener('input',e=>{if(e.target.id!=='bgmRange'&&e.target.id!=='bgmQuick')return;const v=Math.max(0,Math.min(100,+e.target.value||0));BGM.setVol(v/100);for(const id of ['bgmPct','bgmQuickPct']){const l=document.getElementById(id);if(l)l.textContent=v+'%'}});
+  app.addEventListener('change',e=>{if(e.target.id==='bgmRange'||e.target.id==='bgmQuick'){bgmSave();if(e.target.id==='bgmQuick')render()}});
+  document.addEventListener('pointerdown',e=>{if(UI.volOpen&&!e.target.closest('.volbox')){UI.volOpen=false;const p=document.querySelector('.volpop');if(p)p.remove()}});
   app.addEventListener('keydown',e=>{if(e.target.id==='seedIn'&&e.key==='Enter'){e.preventDefault();e.target.blur();ACT.seed()}});
   app.addEventListener('input',e=>{if(e.target.id==='nm'&&BC)BC.name=e.target.value.trim().slice(0,12);
     if(e.target.id==='cardq'){(UI.cf=UI.cf||{}).q=e.target.value.trim();const l=$('cardlist');if(l)l.innerHTML=cardListHtml()}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.bag){UI.bag=null;render()}});
   app.addEventListener('click',e=>{
     const b=e.target.closest('[data-a]');
-    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode'].includes(b.dataset.a))return;
+    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qvol'].includes(b.dataset.a))return;
     ACT[b.dataset.a](b.dataset.i,b);
   });
   /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */
