@@ -561,6 +561,8 @@ const CFG = {
   /* 잊힌 유물: year년차가 시작될 때 반드시 나오는 사건. 1d100에서 chance 이하면 유물 선택 */
   /* 6시즌: 덱 최대 장수, 암시장 카드 상자(확률·가격) */
   /* 덱 보정: from장 이상부터 per장마다 공격 +atk (6장 +2, 8장 +4, 10장 +6, 12장 +8). 덱을 압축한 쪽과 꽉 채운 쪽의 격차를 줄인다 */
+  /* 지구전 압박: 50라운드부터 라운드마다 양쪽이 최대 HP의 1%×(지난 라운드) 고정 피해 (최대 25%) */
+  fatigue: {from: 50, per: 0.01, max: 0.25},
   deck: {max: 12, bonus: {from: 6, per: 2, atk: 2}},
   blackCard: {chance: 50, price: 250},
   /* 6시즌 사무소: 개설 가능 급수(이상), 개설 사건을 다시 묻는 간격, 소속 없는 해결사가 사무소 문을 두드리는 간격 */
@@ -1626,6 +1628,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     /* beat:any = 히든 보스를 하나라도 이김, beat:a|b = 그중 하나를 이김 */
     if(req==='beat:any')return ch.beaten.length>0;
     if(req.startsWith('beat:'))return req.slice(5).split('|').some(id=>ch.beaten.includes(id));
+    if(req.startsWith('fi<'))return isFinger(ch)&&(ch.fi||0)<+req.slice(3);
     if(req.startsWith('fi>='))return isFinger(ch)&&(ch.fi||0)>=+req.slice(4);
     if(req.startsWith('notaffname:'))return !(ch.aff&&ch.aff.name===req.slice(11));
     if(req.startsWith('affname:'))return !!ch.aff&&ch.aff.name===req.slice(8);
@@ -2455,7 +2458,10 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.id===CFG.endless.finalNext&&ch.rb&&ch.rb.headSeen){ch.rb.done=1;chips.push('금기의 끝')}
       if(f0.hwClue&&ch.hw){const h_=CFG.hw.clueHp;ch.hw.clues=(ch.hw.clues||0)+1;ch.hw.sNext=(ch.year||0)+1;s_(ch,h_);chips.push(`영생의 단서 ${ch.hw.clues}/4 · 최대 HP +${h_}`)}
       if(f0.hwElder&&ch.hw){ch.hw.elderDone=1;ch.hw.fnext=(ch.year||0)+CFG.hw.finalGap}
-      if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리');{const cw=CFG.hw.crown.filter(k=>!hwHave(ch).includes(k));if(cw.length){(ch.hw.have=ch.hw.have||[]).push(...cw);chips.push(`가주의 재갈 · ${cw.map(k=>aniOf(k).nm).join(' · ')} · 영구히 당신의 것이 되었다`)}}ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
+      if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리');{const cw=CFG.hw.crown.filter(k=>!hwHave(ch).includes(k));if(cw.length){(ch.hw.have=ch.hw.have||[]).push(...cw);chips.push(`가주의 재갈 · ${cw.map(k=>aniOf(k).nm).join(' · ')} · 영구히 당신의 것이 되었다`);
+        /* 재갈마다 흑수 카드와 전리품(흑수 · ○○)을 준다. 덱이 넘치면 일반 카드가 카드함으로 간다 */
+        for(const k of cw){const cid='zp_'+k;if(!D.cards[cid])continue;forceAdd(ch,cid);chips.push('흑수 카드 · '+D.cards[cid].n);(ch.relics=ch.relics||[]).push('흑수 · '+D.cards[cid].n.replace('흑수 · ',''))}
+        while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}}}ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
     offerPick(ch,D.rewards,chips,null);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
@@ -2551,7 +2557,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     const ehhCap=ch.infinite?Math.min(ehh0_,CFG.infinite.hpMax):ehh0_;
     const ehh0=ehhCap,ehh=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0;
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
-    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:Math.max(1,e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
+    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:Math.max(1,e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,kali:e.kali||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 무한 모드에서도 적의 회피는 enemyMax에서 멈춘다. 공격(명중)도 enemyMax에서 멈추지만, 균열을 닫은(균열 엔딩을 본) 뒤에는 균열 피해가 없어지므로 atkMax까지 올라 플레이어 회피가 아무리 높아도 결국 맞게 한다 */
     E.atk=Math.min(E.atk,ch.outSeen&&ch.outSeen.seal?(CFG.infinite.atkMax||CFG.infinite.enemyMax):CFG.infinite.enemyMax);E.eva=Math.min(E.eva,CFG.infinite.enemyMax);
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
@@ -2638,6 +2644,9 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     const pv=E.passive&&E.passive.id;
     if(pv==='obey'){P.obey=Math.min(CFG.hw.obey.cap,(P.obey||0)+CFG.hw.obey.gain);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 공허한 순종 ${P.obey}`}
     E.maskOn=pv==='mask'&&C.round%E.passive.every===0;
+    /* 에고 개방(붉은 안개 · 칼리): HP가 at 이하가 되면 공격 +atk · 회피 −eva · 피해 +dmgB · 받는 피해 −dr%, 이름이 바뀐다 (보스 전용, 전투당 한 번) */
+    {const K=E.kali;if(K&&!E.kaliOn&&E.hp>0&&E.hp<=E.maxHp*K.at){E.kaliOn=true;E.atk+=K.atk;E.eva-=K.eva;E.name=K.name;
+      const m={t:'kw',s:`${K.name} · 에고 개방 · 공격 +${K.atk} · 회피 −${K.eva} · 피해 +${K.dmgB} · 받는 피해 −${K.dr}%`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}
     if(pv==='kin'&&C.round>1&&d(100)<=E.passive.chance){P.angry=E.passive.anger;{const m={t:'kw',s:`중지의 아우가 얻어맞았다 · 분노 · 다음 적중 +${E.passive.anger}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}
     if(pv==='stance'){const st=Math.floor((C.round-1)/E.passive.every)%2===0?'bear':'tiger';if(E.sal==null)E.sal=5;
       if(E.stance!==st){E.stance=st;E.deck=E.passive.decks[st];if(!C.quiet){const m={t:'kw',s:`${E.name} · 본국태세 · ${st==='bear'?'곰 사냥 (강한 일격 · 살이 높을수록 강하다)':'범 사냥 (연격 · 살이 낮을수록 강하다)'}`};C.log.push(m);C.cur.push(m)}}}
@@ -2929,6 +2938,8 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.swift){const x=Math.floor(A.spd/CFG.innate.swiftPer);if(x>0){dmg+=x;note+=` 질풍 속도 ${A.spd}→+${x}`}}
       if(A.psycho||B.psycho){const m=(A.psycho?CFG.innate.psycho:1)*(B.psycho?CFG.innate.psycho:1);dmg*=m;note+=` 사이코패스×${m}`}
       if(A.trait==='enrage'&&A.hp<=A.maxHp/2){dmg+=2;note+=' 분노+2'}
+      if(A.kaliOn){dmg+=A.kali.dmgB;note+=` 칼리+${A.kali.dmgB}`}
+      if(B.kaliOn){const r=Math.floor(dmg*B.kali.dr/100);if(r>0){dmg-=r;note+=` 칼리−${r}`}}
       if(B.trait==='callus'){const r=Math.min(2,dmg-1);if(r>0){dmg-=r;note+=` 굳은살−${r}`}}
       if(B.presc>0){const r=Math.floor(dmg*B.presc*0.05);if(r>0){dmg-=r;note+=` 지령 수행−${r}`}}
       if(B.drRound===C.round){const r=dmg-Math.floor(dmg*0.4);dmg-=r;note+=` 공명−${r}`}
@@ -3098,6 +3109,10 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
     if(C.ch.infinite&&!(C.ch.outSeen&&C.ch.outSeen.seal)&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.min(IN.erodeMax,Math.floor(e_*IN.erodePer));
       if(e_>0&&x>0){hpLoss(C,P,x,L);L('dmg',`${P.name} · 세계의 균열이 몸을 갉는다 · 고정 피해 ${x}`)}}
+    /* 지구전 압박: from라운드부터 라운드마다 양쪽이 최대 HP의 per%×(지난 라운드) 고정 피해를 받는다(상한 max%). 회피·방어만으로 끝없이 버티는 싸움을 끝낸다 */
+    {const F=CFG.fatigue,n=C.round-F.from+1;if(n>0&&P.hp>0&&E.hp>0&&!(E.passive&&E.passive.id==='trial')){const r=Math.min(F.max,F.per*n);
+      if(n===1)L('sys','싸움이 길어진다 · 지친 숨이 거칠어진다 · 이제 라운드마다 양쪽 모두 최대 HP의 일부를 잃는다');
+      for(const X of [P,E]){const x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · 고정 피해 ${x}`)}}}
     ampUse(C,L);
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
   }
@@ -3550,7 +3565,7 @@ function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v9.3.3';
+  const VERSION='v9.3.4';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -4236,6 +4251,8 @@ function startUI(E,app){
       <li><b>성장</b> 판정 성공 ${CFG.xp.ok}, 실패 ${CFG.xp.fail}, 판정 없는 선택 ${CFG.xp.plain}, 전투 승리 ${CFG.xp.win} 경험치. 레벨이 오르면 성장표를 1d100으로 세 번 굴려 하나를 고른다.</li>
       <li><b>${T.licensed}</b> 자격 시험, 계약, 견습으로 ${T.rankStart}${T.rankUnit}에 등록된다. 소속이 없거나 ${T.affTypes.office} 소속이면 전투에서 이긴 뒤 소문 판정(1d100 + ${T.paths.fixer} 진로 보정 ≥ ${CFG.winLicenseDc})으로도 등록된다. 고정 전투(${Object.keys(D.fixedFights).join('·')}년차)에서 이기면 2${T.rankUnit}씩 ${T.promote}한다.</li>
       <li><b>손가락 서열</b> ${Object.entries(D.fingers).map(([n,F])=>`${n}: ${F.ranks.map(r=>r.branch?r.branch.map(b=>b.n).join('/'):r.n).join(' → ')}`).join(' · ')}. 고정 전투 승리나 승급 사건으로 오르고, 오를 때마다 보정을 받는다. 서열 ${D.fingerRules.shopTier}단계 이상이면 공방 등급 +1.</li>
+      <li><b>인연 · 가족</b> ${CFG.bond.from}년차부터 일상 속에서 인연을 만난다. 결혼하면 최대 HP·정신력·판정이 오르고 아이가 생길 수 있다. 결혼한 뒤에는 <b>금기 실험이나 금기 사건을 한 번이라도 저지르면</b> 그 다음 해부터 해마다 ${CFG.bond.dieChance}% 확률로 배우자가 세상을 떠난다(최대 정신력 −${CFG.bond.lossMind}, 영구). 결혼한 채 히든 보스를 이길 때마다 이 확률이 +${CFG.bond.riskStep}%p 쌓인다. 배우자가 죽어도 아이는 남는다. 히든 보스의 전리품 「엘레나의 처방전」을 가지면 이 확률이 절반이 된다.</li>
+      <li><b>금기</b> 특이점 루트의 금기 실험, 일부 사건의 금기 선택. 큰 강화를 주는 대신 정신력이 깎이고, 결혼 중이면 위의 배우자 사망 위험이 붙는다. 금기 실험을 ${CFG.corp.forbMax}번 채우면 머리가 발톱과 조율자를 보낸다.</li>
       <li><b>${D.pinky.n}</b> 어느 소속에도 겹쳐 붙는 표식. ${D.pinky.e}.</li>
       <li><b>돈과 공방</b> 해마다 소속 봉급(${T.licensed}는 급수 수당 추가), 전투 현상금, 일부 사건으로 ${D.money.unit}을 번다. 공방은 ${D.workshops.map(w=>w.n).join(' · ')} 3등급이고, 소속과 급수에 따라 들어갈 수 있는 등급이 정해진다. 무기·방어구·의수 칸마다 하나씩 맞춘다.</li>
       <li><b>장비 표기</b> 공+N 공격(명중 보정) · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · D6≥N 피해 주사위 d6을 굴려 N보다 작게 나오면 N으로 친다 · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
@@ -4383,9 +4400,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🩹 K사 엠플 조정',['전투 중 자동으로 HP를 크게 회복하는 효과가 너무 강하다는 의견이 있어 조정했습니다.','가격은 5,000안으로 통일했습니다. 무한 모드 이후에도 같은 값입니다.','지닐 수 있는 수는 그대로 최대 3개입니다. 한 판에 살 수 있는 수는 모두 5개로 제한됩니다.','자동으로 회복하는 양이 60에서 50으로 줄었습니다.']],
       ['🔧 버그 수정',['날개에서 해고되어도 날개를 세우는 길(특이점 개발)이 이어지던 문제를 고쳤습니다. 날개를 잃으면 개발이 중단됩니다.','직접 세운 날개의 대표가 소속이 비어 있으면 공방이 1등급으로 잠기고 해결사로 등록되던 문제를 고쳤습니다. 대표는 날개 임원과 같은 공방 등급을 받고 해결사를 겸할 수 없습니다. 이미 등록된 저장본은 다음 해로 넘어갈 때 정리됩니다.','일부 숨은 길에서 직급과 해결사 급수가 맞지 않던 문제를 고쳤습니다.']],
       ['🙏 감사합니다',['의견과 제보를 주신 모든 분들께 감사드립니다.']]];
-  const NOTICE={id:'v9.3.3',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v9.3.4',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]]};
+    sec:[['⚔ 전투',['오래 끄는 싸움에 지구전 압박이 생겼습니다. 50라운드부터 양쪽이 라운드마다 최대 HP의 일부를 고정 피해로 잃어, 서로 못 쓰러뜨리는 싸움이 끝납니다.','일부 후반 히든 보스와 그 전리품 무기를 조정했습니다.']],
+    ['🔧 수정',['엄지의 "상납 마감"이 상석 대부에게도 나오던 문제를 고쳤습니다. 이제 솔다토에게만 나오고, 카포 이상에게는 아랫사람의 몫을 두고 책임을 정하는 사건이 나옵니다.','홍원 가주의 자리에서 얻는 흑수 재갈이 카드와 전리품으로 지급되지 않던 문제를 고쳤습니다. 새로 잡는 판부터 적용됩니다.']]]};
+  const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
   const V932SEC=[['🔀 출생 변경',['이번 업데이트에 H사 루트와 R사 전용 루트가 히든 출생으로 이전됩니다. "아무것도 없는 존재"로 시작하면 100% 나오던 운명 선택이 출생으로 넘어갑니다. 이제 출생 굴림에서 직접 나오며, 재능·결점·성장기도 그 출생에 맞는 것으로 정해집니다.','"어떤 출생 보정도 없이 시작한다"를 고르면 운명 선택 없이 아무것도 없는 존재로 시작합니다. 대신 빈손 보정(히든 보스 전리품 장비 확률 +25%p, 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%)을 받습니다.','출생이 추가되었습니다.']],
     ['🔧 그 밖의 변경',['카드 보상 화면에서 카드마다 이미 가진 장수(보유 ×N)나 새 카드 표시가 나오고, 지금 덱과 카드함을 펼쳐 볼 수 있습니다.','가방의 카드 목록에서 키워드 필터를 누르면 그 색으로 채워지고 ✓가 붙어, 켜져 있는지 바로 보입니다.','2막·무한 모드에서 공방 거리의 "다음 기회"가 55년차로 잘못 나오던 문제를 고쳤습니다.','R사 밸런스 패치: R사 부화장 출생도 이제 공방을 쓸 수 있습니다. 부화장을 나온 뒤에는 R사 보급 구역, 탈주한 뒤에는 뒷골목 공방이 열립니다.']]];
   const V910SEC=[['🌀 뒤틀림 안정화',['뒤틀리면 장비는 보관함으로 가고 카드팩은 뒤틀린 카드팩으로 고정됩니다. 정신력은 "???"로 바뀌어 이점도 불이익도 없고, E.G.O 장비는 얻을 수 없습니다.','뒤틀린 뒤 2년마다 40% 확률로 "뒤틀림이 가라앉는다"가 나옵니다. 안정화되면 장비와 카드팩을 다시 쓸 수 있고, 뒤틀림을 다루는 더 강한 카드로 이루어진 "더 강해진 뒤틀린 카드팩"을 얻습니다. 부풀려진 능력치는 그대로입니다.','선택지 이름이 "정신을 붙잡는다" · "나는 나로서 새로운 모습을 받아들인다"로 바뀌었습니다.']],
@@ -4490,7 +4509,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
