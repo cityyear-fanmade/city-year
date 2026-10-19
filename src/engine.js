@@ -87,9 +87,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 캐릭터 ===== */
   function addStats(s,fx){for(const k in fx){if(k==='dmin')s.dmin=Math.max(s.dmin,fx[k]);else if(k in s)s[k]+=fx[k]}}
   /* 성장기: 단계마다 1d100으로 표를 굴려 능력치 하나가 오른다 */
-  /* tbl: 숨은 출생이 자기 성장기 표(kidTable)를 가지면 그 표에서 고른다 */
+  /* tbl: 숨은 출생이 자기 성장기 표(kidTable)를 가지면 그 표에서 고른다. 단, 특별한 굴림(CFG.kidKeep: 목소리가 들림 · 무너진 유적 탐험 · 장비의 형상이 보임)은 어느 출생이든 그대로 */
   function childhood(s,tbl){
-    return D.childhood.stages.map(st=>{const r=d(100),x=pick(tbl||D.childhood.table,r);addStats(s,x.fx);return {age:st.age,r,x}});
+    return D.childhood.stages.map(st=>{const r=d(100),x=pick(tbl&&!CFG.kidKeep.includes(r)?tbl:D.childhood.table,r);addStats(s,x.fx);return {age:st.age,r,x}});
   }
   /* job: 히든 직업으로 태어나면 출신 칸이 그 직업으로 바뀐다 (발톱 1, 조율자 100). 나머지 굴림은 같은 시드 그대로 */
   /* 출생 보정 없이 시작: 출신·재능·결점·무기·타고난 것이 없고, 성장기 보정과 색만 남는다. keep = {r, kid} (이미 굴린 출생에서 가져온다) */
