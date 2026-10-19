@@ -1513,6 +1513,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(G.ch.flags.zenaPend&&!G.ch.beaten.includes(CFG.endless.finalNext))return {type:'fight',enemy:CFG.endless.finalNext,enc:{hidden:true,label:'연전 · 마지막 상대'}};
     /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
     if(G.infinite&&!G.ch.oldEnd&&age(G)>=CFG.oldAge){G.ch.oldEnd=true;return {type:'end',win:true,old:true}}
+    /* 무한 모드에서 overflowAge살에 닿으면 끝나는 히든 엔딩 (기록실에는 올라가지 않고, 이어갈 수 없다) */
+    if(G.infinite&&!G.ch.overflowEnd&&age(G)>=CFG.overflowAge){G.ch.overflowEnd=true;return {type:'end',win:true,overflow:true}}
     /* 무한 모드 추가 엔딩: 한 번씩, 끝낸 뒤에도 이어서 살아갈 수 있다 */
     if(G.infinite){const ch=G.ch,OE=CFG.outEnds;ch.outSeen=ch.outSeen||{};
       const baseEnd_=CFG.years+CFG.endless.span*CFG.endless.grades.length;
