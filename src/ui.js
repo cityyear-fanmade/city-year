@@ -18,7 +18,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v9.3.4';
+  const VERSION='v9.4.0';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -323,7 +323,7 @@ export function startUI(E,app){
       <div class="bar" style="height:4px"><span style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></span></div>`;
   }
   /* 손가락별 지속 패시브 한 줄 (HUD와 가입 선택 화면이 같이 쓴다) */
-  const fingerPassive=(af,fi)=>af==='엄지'?`탄환 · 전투마다 ${CFG.thumbAmmo.base+CFG.thumbAmmo.per*fi}발 (서열마다 +${CFG.thumbAmmo.per}) · 공격마다 1발 소모 · 상대에게 예의를 지킬 것 1 (상대 명중 −${CFG.thumbManner}×스택) · 탄환이 바닥나도 라운드마다 처음 공격에 ${CFG.thumbRefund}발이 돌아온다`
+  const fingerPassive=(af,fi)=>af==='엄지'?`탄환 · 전투마다 ${CFG.thumbAmmo.base+CFG.thumbAmmo.per*fi}발 (서열마다 +${CFG.thumbAmmo.per}) · 공격마다 1발 소모 · 상대에게 예의를 지킬 것 1 (상대 명중 −${CFG.thumbManner}×스택, 최대 ${CFG.thumbMannerMax}스택) · 탄환이 바닥나도 라운드마다 처음 공격에 ${CFG.thumbRefund}발이 돌아온다`
     :af==='검지'?'지령 수행 · ☆ 칸 카드를 내면 1(최대 5) · 호흡 +4 · 받는 피해 −5%×스택'
     :af==='중지'?'되갚음 · 맞을 때마다 1(최대 10) · 스택 1당 받는 피해 −2 · 다음 적중에서 스택을 모두 써 피해 +스택 · 소모한 스택 1당 HP 1 회복 · 방어 카드를 낸 라운드에 맞으면 스택 × 3의 고정 피해로 반격'
     :af==='약지'?`작품 · 적중할 때마다 +1(전투 한정, 최대 ${CFG.ring.max}) · 스택당 명중 +${CFG.ring.hit} · 최대면 다음 적중 피해 ×${CFG.ring.finish} 후 ${CFG.ring.after}로`
@@ -797,7 +797,7 @@ export function startUI(E,app){
   const TITLE_REC=['본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','의리를 지킨 자','의리를 찢은 자','끝내 갚지 않은 자','배신자를 갚은 자','허무를 넘어선 자','특색'];
   /* 기록실 힌트: 아직 열리지 않은 칭호와 엔딩이 어떤 길 끝에 있는지 짐작만 하게 한다 */
   const TITLE_HINT={'본부 직속':'협회 최고 자리에 올라 본부의 부름을 넘긴다','특이점 부서':'날개 임원에 오른 뒤 핵심 부서의 심사를 통과한다','상석':'손가락의 서열 맨 위에서 마지막 부름을 통과한다',[CFG.nWing.eastTitle]:'동쪽 외곽 출신으로 N사 날개에 들어가 끝까지 오른다','피의 왈츠':'인연과 함께 핏빛 존재와 맞선다','엄지를 넘어선 자':'엄지의 아랫 조직 끝에서 엄지에게 칼을 뽑는다','정해진 운명':'엄지의 가장 높은 이에게 맞섰다가 쓰러진다','곰과 범을 넘어선 자':'검계의 끝에서 본국의 칼을 마주한다','의리를 지킨 자':'중지의 동생이 되어 받은 장부를 갚고 큰누님의 여섯 대를 버틴다','배신자를 갚은 자':'큰형님이 되어 큰누님을 쓰러뜨린 뒤, 달아난 마티아스를 쫓는다','허무를 넘어선 자':'격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤, 하나가 된 무언가를 마주한다','의리를 찢은 자':'중지의 마지막 장부를 받아들이지 않고 찢는다','끝내 갚지 않은 자':'의리를 찢은 뒤 쫓아오는 중지의 사슬을 끊어낸다','특색':'해결사 1급에서 도시가 색을 불러 줄지 심사를 받는다'};
-  const END_HINT={hwlose:'붉은 누각의 등이 켜진다',hwhost:'가주의 자리에 앉는다',hwfree:'가주의 자리에 앉는다',hwbreak:'철함사를 친다',rcorp:'존재를 끝까지 증명한다',death:'어딘가에서 쓰러진다',mind:'정신력이 0이 된다',distort:'정신력이 한계에 닿아 몸이 뒤틀린다',win:CFG.years+'년을 끝까지 산다',true:'제 2막 마지막 등급을 넘는다',outer:'무한 모드에서 스스로 외곽에서 끝낸다',out_seal:'무한 모드에서 외곽의 괴수를 여러 번 쓰러뜨린다',out_star:'무한 모드에서 이름난 상대를 아주 많이 이긴다',out_settle:'무한 모드에서 가족과 오래 산다',distwin:'뒤틀린 채로 '+CFG.years+'년을 넘긴다',old:'무한 모드에서 백 살을 넘겨 산다',blank:'어떤 보정도 없이 시작해, 결혼하지 않은 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',blankwed:'그렇게 시작해 결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',wed:'결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',lovekill:'뒤틀린 채 사랑하던 이에게 쓰러진다'};
+  const END_HINT={hwlose:'붉은 누각의 등이 켜진다',hwhost:'선황충을 받아들이고 가주의 자리에 앉는다',hwfree:'선황충을 받아들이지 않고 가주의 자리에 앉는다',hwbreak:'철함사를 친다',rcorp:'존재를 끝까지 증명한다',death:'어딘가에서 쓰러진다',mind:'정신력이 0이 된다',distort:'정신력이 한계에 닿아 몸이 뒤틀린다',win:CFG.years+'년을 끝까지 산다',true:'제 2막 마지막 등급을 넘는다',outer:'무한 모드에서 스스로 외곽에서 끝낸다',out_seal:'무한 모드에서 외곽의 괴수를 여러 번 쓰러뜨린다',out_star:'무한 모드에서 이름난 상대를 아주 많이 이긴다',out_settle:'무한 모드에서 가족과 오래 산다',distwin:'뒤틀린 채로 '+CFG.years+'년을 넘긴다',old:'무한 모드에서 백 살을 넘겨 산다',blank:'어떤 보정도 없이 시작해, 결혼하지 않은 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',blankwed:'그렇게 시작해 결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',wed:'결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',lovekill:'뒤틀린 채 사랑하던 이에게 쓰러진다'};
   const hintRow=(open,label,hint)=>`<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${open?'':' dim'}" style="justify-self:start">${open?label:'???'}</span>${open?'':`<span class="small dim">${esc(hint||'')}</span>`}</div>`;
   function vRecords(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
@@ -853,11 +853,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🩹 K사 엠플 조정',['전투 중 자동으로 HP를 크게 회복하는 효과가 너무 강하다는 의견이 있어 조정했습니다.','가격은 5,000안으로 통일했습니다. 무한 모드 이후에도 같은 값입니다.','지닐 수 있는 수는 그대로 최대 3개입니다. 한 판에 살 수 있는 수는 모두 5개로 제한됩니다.','자동으로 회복하는 양이 60에서 50으로 줄었습니다.']],
       ['🔧 버그 수정',['날개에서 해고되어도 날개를 세우는 길(특이점 개발)이 이어지던 문제를 고쳤습니다. 날개를 잃으면 개발이 중단됩니다.','직접 세운 날개의 대표가 소속이 비어 있으면 공방이 1등급으로 잠기고 해결사로 등록되던 문제를 고쳤습니다. 대표는 날개 임원과 같은 공방 등급을 받고 해결사를 겸할 수 없습니다. 이미 등록된 저장본은 다음 해로 넘어갈 때 정리됩니다.','일부 숨은 길에서 직급과 해결사 급수가 맞지 않던 문제를 고쳤습니다.']],
       ['🙏 감사합니다',['의견과 제보를 주신 모든 분들께 감사드립니다.']]];
-  const NOTICE={id:'v9.3.4-4',t:'도시의 한 해 '+VERSION+' · 새 소식',
-    note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['⚔ 후반 보스 · 무기',['일부 후반 히든 보스의 능력치와 그 전리품 무기를 조정했습니다.','검은 침묵의 장갑이 주는 카드 Furioso가 크게 강해졌습니다. 주사위 9개가 모두 3~14로 고정되고 명중 +30이 붙습니다.']],
+  const V934SEC=[['⚔ 후반 보스 · 무기',['일부 후반 히든 보스의 능력치와 그 전리품 무기를 조정했습니다.','검은 침묵의 장갑이 주는 카드 Furioso가 크게 강해졌습니다. 주사위 9개가 모두 3~14로 고정되고 명중 +30이 붙습니다.']],
     ['🔬 특이점 · 금기 설명',['특이점 강화는 최대 3번까지이고, 다 채우면 더 오르지 않습니다.','금기 실험은 강화와 따로 최대 8번까지 할 수 있습니다. 8번을 채우면 머리가 발톱과 조율자를 보내고, 둘을 이기면 보상을 한 번 받습니다. 이미 둘을 이긴 사람은 금기 실험마다 가끔 장비 없이 돈과 경험치를 주는 더 단단한 시험이 찾아오고, 8번째에는 확정입니다. 8번을 채우면 특이점이 2단계 더 강해집니다(2차 강화). 결혼 중에 금기를 저지르면 배우자가 죽을 위험이 붙습니다.']],
-    ['🔧 수정',['엄지의 "상납 마감"이 상석 대부에게도 나오던 문제를 고쳤습니다. 이제 솔다토에게만 나오고, 카포 이상에게는 아랫사람의 몫을 두고 책임을 정하는 사건이 나옵니다.','홍원 가주의 자리에서 얻는 흑수 재갈이 카드와 전리품으로 지급되지 않던 문제를 고쳤습니다. 새로 잡는 판부터 적용됩니다.']]]};
+    ['🔧 수정',['엄지의 "상납 마감"이 상석 대부에게도 나오던 문제를 고쳤습니다. 이제 솔다토에게만 나오고, 카포 이상에게는 아랫사람의 몫을 두고 책임을 정하는 사건이 나옵니다.','홍원 가주의 자리에서 얻는 흑수 재갈이 카드와 전리품으로 지급되지 않던 문제를 고쳤습니다. 새로 잡는 판부터 적용됩니다.']]];
+  const NOTICE={id:'v9.4.0-1',t:'도시의 한 해 '+VERSION+' · 새 소식',
+    note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
+    sec:[['♾ 무한 모드 · 전투 규칙',['무한 모드(73년차 이후)에서 한 해가 지날 때마다 플레이어의 기본 회피가 1씩 줄어듭니다(0에서 멈춤). 장비·정신력 등으로 얻은 회피는 줄지 않고, 스탯창의 회피에 "(무한 −N)"으로 표시됩니다.','적은 2해마다 명중 보정이 1씩 오릅니다.','한 전투에서 공격을 한 번 맞을 때마다, 맞은 쪽이 받는 피해가 3%씩 늘어납니다(최대 2배). 플레이어와 적 모두에게 똑같이 적용되고, 전투가 끝나면 처음부터 다시 쌓입니다.','중지는 이 규칙이 다르게 적용됩니다. 회피를 쓰기 어려워 맞는 일이 많으므로 받는 피해가 늘어나지 않고, 한 번 맞을 때마다 받는 피해가 1%p씩 줄어듭니다(전투 내 누적).']],
+    ['🛡 받는 피해 감소 상한',['근성·초근성, 하나 협회의 곤, 출생·전리품 효과, 호위의 막아섬 등 받는 피해 감소를 모두 합쳐 최대 70%까지만 적용됩니다. 합이 이보다 높아져도 70%입니다.']]]};
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
   const V932SEC=[['🔀 출생 변경',['이번 업데이트에 H사 루트와 R사 전용 루트가 히든 출생으로 이전됩니다. "아무것도 없는 존재"로 시작하면 100% 나오던 운명 선택이 출생으로 넘어갑니다. 이제 출생 굴림에서 직접 나오며, 재능·결점·성장기도 그 출생에 맞는 것으로 정해집니다.','"어떤 출생 보정도 없이 시작한다"를 고르면 운명 선택 없이 아무것도 없는 존재로 시작합니다. 대신 빈손 보정(히든 보스 전리품 장비 확률 +25%p, 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%)을 받습니다.','출생이 추가되었습니다.']],
     ['🔧 그 밖의 변경',['카드 보상 화면에서 카드마다 이미 가진 장수(보유 ×N)나 새 카드 표시가 나오고, 지금 덱과 카드함을 펼쳐 볼 수 있습니다.','가방의 카드 목록에서 키워드 필터를 누르면 그 색으로 채워지고 ✓가 붙어, 켜져 있는지 바로 보입니다.','2막·무한 모드에서 공방 거리의 "다음 기회"가 55년차로 잘못 나오던 문제를 고쳤습니다.','R사 밸런스 패치: R사 부화장 출생도 이제 공방을 쓸 수 있습니다. 부화장을 나온 뒤에는 R사 보급 구역, 탈주한 뒤에는 뒷골목 공방이 열립니다.']]];
@@ -963,7 +965,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -1441,7 +1443,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${w?`<div class="panel stack" style="gap:8px"><span class="eyebrow">행적</span>${epilogue(c,w,tr).map(t=>`<p class="small" style="line-height:1.65">${t}</p>`).join('')}</div>`:''}
       ${vRecord(c,w,gi)}
       ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${c.beaten.map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
-      <div class="panel stack"><div class="stat"><div><b>${c.lv}</b><span>레벨</span></div><div><b>${sg(c.stats.atk)}</b><span>공격</span></div><div><b>${sg(c.stats.eva)}</b><span>회피</span></div><div><b>${sg(c.stats.spd)}</b><span>속도</span></div></div>
+      <div class="panel stack"><div class="stat"><div><b>${c.lv}</b><span>레벨</span></div><div><b>${sg(c.stats.atk)}</b><span>공격</span></div><div><b>${sg(c.stats.eva-E.infEvaCut(c))}</b><span>회피${c.infinite&&E.infEvaCut(c)>0?` (무한 −${E.infEvaCut(c)})`:''}</span></div><div><b>${sg(c.stats.spd)}</b><span>속도</span></div></div>
       ${endDeck(c)}
       <div class="mono small dim">${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(affName(c)):c.licensed?' · '+T.licensed:''}</div></div>
       <div class="mono small dim" style="text-align:center">도시의 한 해 · cityyear-fanmade.github.io/city-year · Project Moon 팬메이드</div></div>
