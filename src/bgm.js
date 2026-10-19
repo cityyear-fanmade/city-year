@@ -89,7 +89,7 @@ export function createBgm(){
   }
   /* 악기들 */
   function ep(m,t,peak,dur){               // 전기 피아노: 부드러운 사인 + 짧게 울리는 윗배음
-    const f=hz(m),o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain();o.type='sine';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2.01;
+    const f=hz(m),o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain();o.type='sine';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     g2.gain.setValueAtTime(peak*0.35,t);g2.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
     o.connect(g);o2.connect(g2);g2.connect(g);g.connect(cur.b);o.start(t);o.stop(t+dur+0.05);o2.start(t);o2.stop(t+0.25);
@@ -175,7 +175,7 @@ export function createBgm(){
   /* 피리 같은 선율 (고요): 사인 + 삼각파, 살짝 떨림(비브라토) */
   function fluteN(m,t,dur,peak){
     const f=hz(m),g=ctx.createGain(),o=ctx.createOscillator(),o2=ctx.createOscillator(),lfo=ctx.createOscillator(),lg=ctx.createGain();
-    o.type='sine';o2.type='triangle';o.frequency.value=f;o2.frequency.value=f;o2.detune.value=4;lfo.frequency.value=5.2;lg.gain.value=f*0.006;
+    o.type='sine';o2.type='triangle';o.frequency.value=f;o2.frequency.value=f;lfo.frequency.value=5;lg.gain.value=f*0.0025;
     lfo.connect(lg);lg.connect(o.frequency);lg.connect(o2.frequency);
     const g2=ctx.createGain();g2.gain.value=0.45;o2.connect(g2);g2.connect(g);o.connect(g);
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.04);g.gain.linearRampToValueAtTime(peak*0.9,t+Math.max(0.05,dur-0.08));g.gain.linearRampToValueAtTime(0.0001,t+dur);
