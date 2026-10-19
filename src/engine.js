@@ -745,7 +745,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='fight'){ch.purge=r.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
-    if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push('혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP 15 회복)');
+    if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push('혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)');
       if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
     if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
       if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}
@@ -1806,6 +1806,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 무한 모드에 들어선 뒤 지난 햇수: 해마다 양쪽 회피가 evaDown씩 줄어든다 (0에서 멈춤) */
   /* 출혈 최대 스택: 플레이어가 적에게 거는 출혈만 bleedMax, 플레이어가 받는 출혈은 stackCap */
   const bleedCap=X=>X.isP?CFG.stackCap:CFG.bleedMax;
+  /* 혈찬 회복: 5스택마다 hcHeal, 한 전투에서 최대 HP의 hcCap배까지만 회복한다 */
+  const hcHeal=X=>{const h=Math.max(0,Math.min(CFG.hyeolchan.heal,X.maxHp-X.hp,Math.floor(X.maxHp*CFG.hyeolchan.cap)-(X.hcTot||0)));X.hcTot=(X.hcTot||0)+h;return h};
   const infEvaCut=ch=>Math.min(Math.max(0,ch.stats.eva),infYears(ch)*CFG.infinite.evaDown);
   const infYears=ch=>ch.infinite?Math.max(0,(ch.year||0)-(CFG.years+CFG.endless.span*CFG.endless.grades.length)):0;
   function mkCombat(ch,id,quiet){
@@ -1897,7 +1899,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     /* 피의 각인된 갈망: 자식 1명당 라운드마다 혈찬 스택 per를 바로 얻는다 */
     {const kn=kidsOn(C.ch)&&P.hyeolchan?C.ch.kids||0:0;
-      if(kn>0&&P.hp>0){P.hc=(P.hc||0)+CFG.kids.per*kn;let h=0;while(P.hc>=5){P.hc-=5;const x=Math.min(15,P.maxHp-P.hp);P.hp+=x;h+=x}HG(P,h);
+      if(kn>0&&P.hp>0){P.hc=(P.hc||0)+CFG.kids.per*kn;let h=0;while(P.hc>=5){P.hc-=5;const x=hcHeal(P);P.hp+=x;h+=x}HG(P,h);
         C.kidNote=`${P.name} · 피의 각인된 갈망 · 자식 ${kn}명 · 혈찬 +${CFG.kids.per*kn}${h?` · HP +${h}`:''}`}}
     if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-(X.blade?(X.bladeBoost&&X.synT>=2?0:CFG.syn['검계'].decay[X.synT]):CFG.breath.decay));
     if(P.blade){const g=P.synT>=2?2:1;P.breath=Math.min(CFG.breath.cap,P.breath+g);if(!C.quiet){const m={t:'kw',s:`${P.name} · 호흡결 · 호흡 +${g} (지금 ${P.breath})`};C.log.push(m);C.cur.push(m)}}
@@ -2081,7 +2083,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         L('dmg',`${A.name} ${D.keywords.bleed.n} ${bd} 피해 (공격하며 상처가 벌어진다)`);
         push({k:'bleed',side:A.uid,dmg:bd});
         /* 혈귀 패시브 혈찬: 상대의 출혈이 5번 발동할 때마다 HP 15 회복 */
-        if(B.hyeolchan){B.hc=(B.hc||0)+1;if(B.hc>=5){B.hc-=5;if(B.hp>0){const h=Math.min(15,B.maxHp-B.hp);B.hp+=h;HG(B,h);L('kw',`  ${B.name} · 혈찬 · HP +${h}`)}}}
+        if(B.hyeolchan){B.hc=(B.hc||0)+1;if(B.hc>=5){B.hc-=5;if(B.hp>0){const h=hcHeal(B);B.hp+=h;HG(B,h);L('kw',`  ${B.name} · 혈찬 · HP +${h}`)}}}
         if(A.hp<=0)return;
       }
       /* 명중: 1d100 + 공격 + 카드 보정 > 상대 1d100 + 회피 (동점은 방어 성공). 두 번 굴림이면 높은 값 */
