@@ -1195,7 +1195,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const left=BD.tries-(b.tries||0);
     return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[
       {l:B.proposeYes,h:`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps} · 결혼 성공 ${marryPct(b)}% · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
-      {l:B.proposeWait,h:`1d100 · ${BD.waitDc} 이상이면 기회를 쓰지 않고 넘어간다`,check:{s:null,dc:BD.waitDc},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]};
+      {l:B.proposeWait,h:`1d${BD.waitDie} · ${BD.waitDc} 이상이면 기회를 쓰지 않고 넘어간다 (보정 없음)`,check:{s:null,dc:BD.waitDc,pure:true,die:BD.waitDie},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]};
   }
   /* 일상: 사건이 있는 해 일부에 온다. 안정적으로 능력치를 조금 올려 주는 사건이고, 인연이 없는 캐릭터는 일부가 인연(조우자)을 만나는 사건이 된다 */
   const DL=CFG.daily;
@@ -1673,7 +1673,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch,c=ev.c[i];let res=c.ok,roll=null,xp=CFG.xp.plain,xpNote=null;
     if(c.check){
       const ib=hasInn(ch,'intuition')&&!c.check.pure?d(CFG.innate.intuitionDie):0;
-      const dc=checkDc(ch,c.check),mod=checkMod(ch,c.check)+ib,cd=c.check.pure?100:checkDie(ch),r=d(cd),tot=r+mod,ok=tot>=dc;
+      const dc=checkDc(ch,c.check),mod=checkMod(ch,c.check)+ib,cd=c.check.die||(c.check.pure?100:checkDie(ch)),r=d(cd),tot=r+mod,ok=tot>=dc;
       if(ib)xpNote=`타고난 직감 +${ib}`;
       roll={r,mod,tot,dc,ok,die:cd};res=ok?c.ok:c.fail;xp=ok?CFG.xp.ok:CFG.xp.fail;
     }

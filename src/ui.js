@@ -1122,7 +1122,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const btns=E.options(G,ev).map(({c,i})=>{
       let hint=c.h||'판정 없음 · 결과 확정';
       if(c.ok&&c.ok.fx&&c.ok.fx.relicRoll)hint=`1d100 · ${E.relicChance(ch)} 이하가 나오면 유물을 고른다${ch.relicBase?' (출신 보정 '+ch.relicBase+'%)':''}${(ch.stats.relicApt||0)>0?' (유물 적성 +'+ch.stats.relicApt+')':''}`;
-      if(c.check){const pm=E.pathMod(ch,c.check);hint=`${c.check.s?STAT[c.check.s]+' 판정':'운 판정'} · 1d${c.check.pure?100:E.checkDie(ch)} ${sg(E.checkMod(ch,c.check))} ≥ ${E.checkDc(ch,c.check)}${pm?` (출신 ${T.paths[c.check.path]} 보정 +${pm})`:''}${c.h?' · '+c.h:''}`}
+      if(c.check){const pm=E.pathMod(ch,c.check);hint=`${c.check.s?STAT[c.check.s]+' 판정':'운 판정'} · 1d${c.check.die||(c.check.pure?100:E.checkDie(ch))} ${sg(E.checkMod(ch,c.check))} ≥ ${E.checkDc(ch,c.check)}${pm?` (출신 ${T.paths[c.check.path]} 보정 +${pm})`:''}${c.h?' · '+c.h:''}`}
       return {i,html:`<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`};
     }).concat(lockBtns).sort((a,b)=>a.i-b.i).map(x=>x.html).join('');
     return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead">${ev.x}</p></div><div class="stack">${btns}</div>`;
