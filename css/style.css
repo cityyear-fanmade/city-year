@@ -445,4 +445,13 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
    폭 900~1099는 글자 8%·폭 그대로, 1100 이상은 글자 22%·폭 780→860. 폭이 늘어난 만큼 양옆 장식 띠(body::before/after)는 좁힌다 */
 @media (min-width:900px){.wrap{zoom:1.08;max-width:722px}}
 @media (min-width:1100px){.wrap{zoom:1.22;max-width:705px}}
-@media (min-width:1360px){html body::before,html body::after{width:calc((100vw - 860px)/2 - 230px)}}
+/* 양옆 장식 띠: 확대한 능력치 칸·가방 칸·본문 폭과 겹치므로 넓힌 화면(1360 이상)에서는 모든 폭에서 같게 끈다 */
+@media (min-width:1360px){html body::before,html body::after{display:none}}
+/* 넓힌 화면: 양옆 칸(능력치·가방)과 설정·도움말 버튼, 팝업도 본문과 함께 키운다. 본문 옆 여백에 겹치지 않도록 폭 구간마다 배율을 다르게 둔다 */
+@media (min-width:900px){.cfgbtn{zoom:1.08}.sheet{zoom:1.08;max-height:calc(88vh / 1.08)}}
+@media (min-width:1020px){.dock{zoom:1.05}}
+@media (min-width:1100px){.cfgbtn{zoom:1.22}.sheet{zoom:1.22;max-height:calc(88vh / 1.22)}}
+@media (min-width:1360px){.side-l,.dock{zoom:1.22}}
+/* 아주 넓은 화면은 본문·양옆 칸·팝업을 한 단계 더 키운다 */
+@media (min-width:1700px){.wrap{zoom:1.35;max-width:705px}.side-l,.dock{zoom:1.35}.cfgbtn{zoom:1.35}.sheet{zoom:1.35;max-height:calc(88vh / 1.35)}}
+@media (min-width:1900px){.wrap{zoom:1.5;max-width:705px}.side-l,.dock{zoom:1.5}.cfgbtn{zoom:1.5}.sheet{zoom:1.5;max-height:calc(88vh / 1.5)}}
