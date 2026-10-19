@@ -421,7 +421,7 @@ export function startUI(E,app){
     const kinds=[['all','전체'],['atk','공격'],['debuff','디버프'],['buff','버프'],['eva','회피'],['def','방어']];
     return `<p class="small dim">덱에는 최대 ${E.deckMax(G.ch)}장을 넣는다. 전투 밖이면 언제든 덱과 카드함 사이에서 카드를 옮길 수 있고, 덱은 ${CFG.shop.minDeck}장보다 줄일 수 없다.</p>
       <div class="seg kinds">${kinds.map(([k,n])=>`<button class="${(f.k||'all')===k?'on':''}" data-a="cfk" data-i="${k}"${KIND[k]?` style="--kc:${KIND[k][1]}"`:''}>${n}</button>`).join('')}</div>
-      <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(D.keywords).map(k=>`<button class="chip${f.kw===k?' on':''}" data-a="cfw" data-i="${k}" style="color:${kwc(k)};border-color:${kwc(k)}">${D.keywords[k].n}</button>`).join('')}
+      <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(D.keywords).map(k=>`<button class="chip${f.kw===k?' on':''}" data-a="cfw" data-i="${k}" aria-pressed="${f.kw===k}" style="${f.kw===k?`background:${kwc(k)};color:var(--bg);font-weight:700;`:`color:${kwc(k)};`}border-color:${kwc(k)}">${f.kw===k?'✓ ':''}${D.keywords[k].n}</button>`).join('')}
         <input id="cardq" value="${esc(f.q||'')}" placeholder="카드 이름 찾기" autocomplete="off" style="flex:1;min-width:8em"></div>
       <div class="stack" style="gap:8px" id="cardlist">${cardListHtml()}</div>`;
   }
@@ -561,6 +561,12 @@ export function startUI(E,app){
       <div class="bagtabs">${bagTabs(ch).map(([k,n,b])=>`<button class="tile sm${t===k?' on':''}" data-a="bag" data-i="${k}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>
       <div class="stack" style="gap:10px">${body}</div>`,'bag',true);
   }
+  /* 카드 보상: 이미 가진 장수(덱+카드함)와 지금 덱을 같이 보여 준다 */
+  const ownN=(ch,id)=>ch.deck.filter(x=>x===id).length+(ch.side||[]).filter(x=>x===id).length;
+  const ownTag=(ch,id)=>{const n=ownN(ch,id);return n?`<span class="mono small" style="color:var(--gold)">보유 ×${n}</span>`:'<span class="mono small dim">새 카드</span>'};
+  const myDeck=ch=>{const cnt={};ch.deck.forEach(id=>cnt[id]=(cnt[id]||0)+1);const sd={};(ch.side||[]).forEach(id=>sd[id]=(sd[id]||0)+1);
+    const ch_=o=>Object.keys(o).map(id=>`<span class="chip">${esc(D.cards[id].n)}${o[id]>1?' ×'+o[id]:''}</span>`).join('');
+    return `<details class="panel"><summary class="small">지금 덱 ${ch.deck.length}/${E.deckMax(ch)}장${(ch.side||[]).length?` · 카드함 ${ch.side.length}장`:''} 보기</summary><div class="chips" style="margin-top:6px">${ch_(cnt)}</div>${(ch.side||[]).length?`<span class="eyebrow" style="margin-top:6px">카드함</span><div class="chips">${ch_(sd)}</div>`:''}</details>`};
   /* 새 장비·새 카드: 받기 전에 고른다 (장비가 몰래 바뀌지 않게) */
   function vOffer(){
     const ch=G.ch;
@@ -585,14 +591,15 @@ export function startUI(E,app){
         <p class="small dim">지금 덱을 지키면 이 책장은 사라진다. 다른 전리품은 그대로 받는다.</p>`,'offer',false)}
     if((ch.picks||[]).length&&!(ch.offers||[]).length){const g=ch.picks[0];
       return sheet(`<span class="eyebrow">카드 발견 · ${g.length}장 가운데 하나${ch.picks.length>1?` · 남은 묶음 ${ch.picks.length}`:''}</span><h2>하나를 고른다</h2>
-        <div class="invcards">${g.map((id,j)=>cardRow(id,`<button class="chip" data-a="pkpick" data-i="${j}">이 카드를 고른다</button>`)).join('')}</div>
+        <div class="invcards">${g.map((id,j)=>cardRow(id,`${ownTag(ch,id)}<button class="chip" data-a="pkpick" data-i="${j}">이 카드를 고른다</button>`)).join('')}</div>
+        ${myDeck(ch)}
         <button class="btn quiet" data-a="pkskip">모두 버린다</button>
         <p class="small dim">고른 카드는 다음 화면에서 덱에 넣거나 카드함에 둘 수 있다.</p>`,'offer',false)}
     const cid=ch.offers[0],room=E.deckRoom(ch),many=ch.offers.length>1?` · 남은 ${ch.offers.length}장`:'';
     if(UI.swap)return sheet(`<span class="eyebrow">덱의 카드와 바꾸기 · 빠진 카드는 카드함으로</span>${cardRow(cid)}
       <div class="invcards">${ch.deck.map((id,j)=>cardRow(id,D.cards[id].fixed?'<span class="small dim">전용 · 바꿀 수 없다</span>':`<button class="chip" data-a="oswap" data-i="${j}">이 카드와 바꾼다</button>`)).join('')}</div>
       <button class="btn" data-a="oswapmode">돌아가기</button>`,'offer',false);
-    return sheet(`<span class="eyebrow">카드 발견 · 덱 ${ch.deck.length}/${E.deckMax(ch)}${many}</span><h2>받을까, 버릴까</h2>${cardRow(cid)}
+    return sheet(`<span class="eyebrow">카드 발견 · 덱 ${ch.deck.length}/${E.deckMax(ch)}${many}</span><h2>받을까, 버릴까</h2>${cardRow(cid,ownTag(ch,cid))}${myDeck(ch)}
       ${room?'<button class="btn primary" data-a="otake" data-i="deck">덱에 넣는다</button>':`<button class="btn primary" data-a="oswapmode">덱의 카드와 바꾼다</button><p class="small dim">덱이 가득 찼다 (최대 ${E.deckMax(ch)}장).</p>`}
       <button class="btn" data-a="otake" data-i="side">카드함에 넣어 둔다</button>
       <button class="btn quiet" data-a="odrop">버린다</button>`,'offer',false);
@@ -1633,7 +1640,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const nb=(G.year-1)+CFG.shop.every+1,hh=hwHome();
     return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · ${hh?'홍원의 저잣거리':'공방 거리'}</div><h2>${hh?'홍원의 저잣거리를 지난다':'공방 거리를 지난다'}</h2>
       <p class="lead">${hh?'붉은 대문 안쪽에 가문의 저잣거리가 있다. 장인과 상인은 모두 가문의 이름 아래 있다. 들러도 한 해가 지나가지는 않는다.':'장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.'}${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
-      <p class="small dim">다음 기회는 ${Math.min(nb,CFG.years)}년차.</p>
+      <p class="small dim">${nb<=E.lastYear(G)?`다음 기회는 ${nb}년차.`:'이번이 마지막 기회다.'}</p>
       ${UI.broker?`<div class="check" style="border-color:var(--gold)"><b>${esc(G.ch.office.name)}</b> · 일감을 알선했다 · ${UI.broker.kind==='gear'?'의수 ':'카드 '}<b>${esc(UI.broker.n)}</b>${UI.broker.locked?' (덱 고정이라 돈으로 받았다)':''}</div>`:''}</div>
       ${UI.rested?`<p class="good small">${UI.rested}</p>`:''}
       <div class="stack">${UI.rested?'':'<button class="btn primary" data-a="shop">들른다</button>'}
