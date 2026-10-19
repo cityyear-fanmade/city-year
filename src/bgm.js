@@ -128,10 +128,12 @@ export function createBgm(){
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
     o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.24);
   }
-  function snare(t,peak){                  // 스네어: 노이즈 + 짧은 몸통음
-    noiseHit(t,peak,0.12,1200,3800);
-    const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(210,t);o.frequency.exponentialRampToValueAtTime(120,t+0.09);
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak*0.9,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
+  function snare(t,peak){                  // 스네어: 부드럽게 거른 노이즈 + 몸통음 (날카로운 '타탁'이 나지 않게 고음을 줄이고 시작을 조금 무르게)
+    {const n=ctx.createBufferSource(),f=ctx.createBiquadFilter(),l=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=noiseBuf;f.type='highpass';f.frequency.value=700;l.type='lowpass';l.frequency.value=2400;
+      g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak*0.8,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+      n.connect(f);f.connect(l);l.connect(g);g.connect(cur.m);n.start(t,rnd()*0.9);n.stop(t+0.18)}
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(190,t);o.frequency.exponentialRampToValueAtTime(110,t+0.1);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
     o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.14);
   }
   function padN(m,t,dur,peak){             // 패드: 살짝 어긋난 두 삼각파를 느리게 키우고 줄인다
@@ -243,12 +245,12 @@ export function createBgm(){
     /* 드럼 */
     if(sec!=='break'){
       if(fight||sec==='B')for(let k=0;k<4;k++)kickH(at(k),0.2);else for(const k of [0,1.5,2,2.75])kickH(at(k),0.2);
-      if(sec!=='intro')for(const k of [1,3])snare(at(k),0.065);
+      if(sec!=='intro')for(const k of [1,3])snare(at(k),0.045);
       for(let n=0;n<8;n++)hat(at(n/2),n%2?0.016:0.01,n===7&&sec==='B');
-    }else if(pos===23){for(let n=0;n<16;n++)snare(at(n/4),0.012+0.003*n)}
+    }else if(pos===23){for(let n=0;n<16;n+=2)snare(at(n/4),0.012+0.003*n)}
     else kickH(at(0),0.14);
     if(start){crash(T,0.05);boom(T,0.22)}
-    if(phraseEnd&&sec!=='break'&&pos!==23)for(let n=1;n<4;n++)snare(at(3+n*0.25),0.03+0.008*n);
+    if(phraseEnd&&sec!=='break'&&pos!==23)for(let n=1;n<4;n+=2)snare(at(3+n*0.25),0.022+0.006*n);
     if(pos%8===0&&sec!=='break')boom(T,0.18);
     /* 훅 */
     if(sec==='A'||sec==='B'||sec==='A2'){const L=sec==='B'?P.fireB:P.fireA,cut=fight?3600:3000;
@@ -285,18 +287,18 @@ export function createBgm(){
         powerC(gm,at(0),bd*2.5,0.055,false);powerC(gm,at(2.5),bd*1.5,0.05,false);
         for(const k of [0,1.5,2.5])subB(lb-12,at(k),bd*(k===0?1.4:0.9),0.14);
         sawN(lb,at(0),bd*1.4,0.07,700);sawN(lb,at(2.5),bd*1.4,0.07,700);
-        kickH(at(0),0.22);kickH(at(2.5),0.2);snare(at(2),0.07);
+        kickH(at(0),0.22);kickH(at(2.5),0.2);snare(at(2),0.05);
         for(let n=0;n<4;n++)hat(at(n),n%2?0.012:0.008,false);
         C.t.slice(0,3).forEach((o,i)=>choirN(R+o-12,T+i*0.03,bd*4,0.012));
         if(pos%2===0)bellN(R+P.bossBell[pos%8],at(0),0.04,bd*3);
       }else{
         for(let n=0;n<beats*2;n++){powerC(gm,at(n/2),n===0?bd*0.9:bd*0.32,n===0?0.05:0.036,n!==0);sawN(lb+(n%4===3?12:0),at(n/2),bd*0.45,n%2?0.06:0.08,1100)}
         for(let k=0;k<beats;k++){kickH(at(k),0.2);subB(lb-12,at(k),bd*0.9,0.12)}
-        for(const k of [1,3])if(k<beats)snare(at(k),0.065);
+        for(const k of [1,3])if(k<beats)snare(at(k),0.045);
         for(let n=0;n<beats*2;n++)hat(at(n/2),n%2?0.015:0.009,false);
         for(const x of mel(P.bossLead[ci])){if(x.k>=beats*2)continue;synthN(R+x.m-12,at(x.k/2),x.n*bd/2*0.9,0.035,2600)}
         if(pos===8)crash(T,0.055);
-        if(pos===15)for(let n=1;n<4;n++)snare(at(2.5+n*0.25),0.03+0.01*n);
+        if(pos===15)for(let n=1;n<4;n+=2)snare(at(2.5+n*0.25),0.022+0.008*n);
       }
       if(pos===0)crash(T,0.05),boom(T,0.24);
     }
