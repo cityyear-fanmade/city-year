@@ -313,7 +313,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 얻은 카드(보상·사건 카드)를 편집할 수 있는 다른 팩(기본 3개·고정 없는 출신 팩)에도 복사한다. 덱이 가득 차면 그 팩의 카드함으로 */
   function copyToPacks(ch,cid){
-    for(const p of ch.packs||[]){if(p.deckLocked||p.cardMoney||p.deck.includes(cid)||p.side.includes(cid))continue;(p.deck.length<deckMax(ch)?p.deck:p.side).push(cid)}
+    let n=0;for(const p of ch.packs||[]){if(p.deckLocked||p.cardMoney||p.deck.includes(cid)||p.side.includes(cid))continue;(p.deck.length<deckMax(ch)?p.deck:p.side).push(cid);n++}
+    return n;
   }
   /* 기본 카드팩의 이름 바꾸기: i는 보관 팩 번호, -1이면 지금 쓰는 팩. 성공하면 true, 실패하면 이유 문장 */
   function renamePack(ch,i,name){
@@ -626,7 +627,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function addCard(ch,cid,chips,label,offer){
     if(!cid)return;
     /* 덱 고정(엄지 검술·책장) 또는 전용 카드팩(숨은 출생)이면 카드 대신 돈 */
-    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} 대신 +${money(m)}`);return}
+    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;const cp=copyToPacks(ch,cid);chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} +${money(m)}${cp?` · 카드는 기본 카드팩 ${cp}곳에 보관`:' · 카드는 보관할 팩이 없어 돈만 받는다'}`);return}
     if(offer){(ch.offers=ch.offers||[]).push(cid);chips&&chips.push(`${label||'카드'} 발견 · ${D.cards[cid].n} (받을지 고른다)`);return}
     putCard(ch,cid,chips,label);
     /* 보상 카드는 다른 편집 가능한 팩에도 복사하고, 전용 카드(보스·책장·집행 카드)는 지금 팩에만 둔다 */
