@@ -105,6 +105,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 해금해야 나오는 타고난 것(D.innate[k].unlock): 열린 목록 (UI가 기록실에서 읽어 넣는다). null이면 전부 열려 있다 (시뮬·검사용) */
   let innateOpen=null;
   const setInnateOpen=a=>{innateOpen=Array.isArray(a)?a.slice():null};
+  /* 같은 시드면 같은 타고난 것이 나오게: 기본 타고난 것은 해금과 상관없이 항상 같은 순서로 고르고,
+     해금한 타고난 것은 별도 해시(r<해금 목록 길이)가 걸릴 때만 그 자리를 대신한다. 해금 상태가 달라도 대부분의 시드는 같은 결과다 */
+  function pickInnate(n,div,exclude){
+    const all=Object.keys(D.innate||{}),isU=k=>!!(D.innate[k]&&D.innate[k].unlock),B=all.filter(k=>!isU(k)&&k!==exclude),U=all.filter(isU);
+    if(!B.length)return null;
+    const q=Math.floor(n/div);let k=B[q%B.length];
+    const r=Math.floor(q/B.length)%10;
+    if(r<U.length&&U[r]!==exclude&&(!innateOpen||innateOpen.includes(U[r])))k=U[r];
+    return k;
+  }
   const innatePool=()=>Object.keys(D.innate||{}).filter(k=>!(D.innate[k]&&D.innate[k].unlock)||!innateOpen||innateOpen.includes(k));
   /* 이번 판 기록으로 새로 열린 타고난 것: 강철 체질(한 전투에서 20번 피격) · 질풍(속도가 기본보다 크게 오름) · 타고난 학자(최고 레벨 기록) · 굳은 정신(E.G.O 개화 1회) */
   function innateUnlocks(ch,bestLv){
@@ -136,10 +146,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       ch.rteam=tm;ch.rb={n:0,chase:0,hides:0,chasers:['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==tm).map(t=>Z.foes[t]))};(ch.relics=ch.relics||[]).push('R사 부화장 · '+tm+' 개체')}
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
     const IN=CFG.innate,h=(r.o*7919+r.t*104729+r.f*1299709+r.w*15485863+r.n*32452843+ch.kid.reduce((a,k)=>a*31+k.r,7))%1000003;
-    if(!keep&&h%IN.chanceDiv===0){const ks=innatePool();if(ks.length)ch.innate=ks[Math.floor(h/IN.chanceDiv)%ks.length]}
+    if(!keep&&h%IN.chanceDiv===0){const k=pickInnate(h,IN.chanceDiv,null);if(k)ch.innate=k}
     /* 타고난 것은 최대 2개까지 같이 뜰 수 있다: 첫 번째가 뜬 사람에게만 다른 해시로 두 번째를 굴린다 (secondDiv분의 1, 첫 번째와 다른 것) */
     {const h2=(r.o*104729+r.t*7919+r.f*15485863+r.w*1299709+r.n*49979687+ch.kid.reduce((a,k)=>a*37+k.r,11))%1000003;
-      if(!keep&&ch.innate&&h2%IN.secondDiv===0){const ks=innatePool().filter(k=>k!==ch.innate);if(ks.length)ch.innate2=ks[Math.floor(h2/IN.secondDiv)%ks.length]}}
+      if(!keep&&ch.innate&&h2%IN.secondDiv===0){const k=pickInnate(h2,IN.secondDiv,ch.innate);if(k)ch.innate2=k}}
     /* 출생 때 한 번 적용되는 타고난 것 (강철 체질 · 질풍 · 굳은 정신) */
     for(const k of [ch.innate,ch.innate2]){const E_=k&&D.innate[k]&&D.innate[k].fx;if(!E_)continue;const s_=ch.stats;for(const [sk,v] of Object.entries(E_))s_[sk]=(s_[sk]||0)+v;if(E_.maxHp)ch.hp+=E_.maxHp;if(E_.mindMax)ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s_.mindMax||0))}
     if(J){ch.job=job;ch.aff={type:'head',name:'머리'};if(J.deck){ch.deck=J.deck.slice();ch.cardMoney=true;ch.packName=J.n+' 전용 카드팩'}else for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
