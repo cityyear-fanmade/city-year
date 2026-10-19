@@ -545,11 +545,12 @@ export function startUI(E,app){
     const ch=G.ch,ps=ch.packs||[],msg=UI.packMsg;UI.packMsg='';
     const chips=ids=>{const cnt={};ids.forEach(id=>{if(D.cards[id])cnt[id]=(cnt[id]||0)+1});return `<div class="chips">${Object.keys(cnt).map(id=>`<span class="chip">${esc(D.cards[id].n)}${cnt[id]>1?' ×'+cnt[id]:''}</span>`).join('')}</div>`};
     const flag=(l,c)=>l?`<span class="mono small dim">${c?'덱 고정 · ':''}${c?'새 카드는 돈으로 받는다':'카드를 지우고 옮길 수 있다'}</span>`:'';
+    const rn=(i,nm)=>`<div class="row" style="gap:6px;flex-wrap:nowrap"><input id="pkn${i<0?'a':i}" value="${esc(nm)}" maxlength="10" autocomplete="off" aria-label="카드팩 이름" style="flex:1;min-width:0;background:var(--panel2);color:var(--fg);border:1px solid var(--line2);border-radius:5px;padding:8px 10px;font:inherit"><button class="chip" data-a="packrn" data-i="${i}">이름 저장</button></div>`;
     const why={busy:'받을 카드·장비를 먼저 고른다.',no:'지금은 바꿀 수 없다.'};
-    return `<p class="small dim">덱이 통째로 바뀌는 전용 카드팩을 받으면 이전 덱이 여기에 남는다. 전투 밖에서는 횟수 제한 없이 바꿔 끼울 수 있다. 전투 중에는 가방이 열리지 않아 바꿀 수 없다.</p>
+    return `<p class="small dim">기본 카드팩 3개(기본 4장으로 시작, 이름을 바꿀 수 있다)와 출신 카드팩이 여기 보관된다. 덱이 통째로 바뀌는 전용 카드팩을 받으면 이전 덱도 여기에 남는다. 보상으로 얻은 카드는 편집할 수 있는 모든 팩에 복사되고, 출신·소속 전용 카드는 그 전용 팩에만 들어간다. E.G.O 같은 고정 카드는 모든 팩에 자동으로 들어간다. 전투 밖에서는 횟수 제한 없이 바꿔 끼울 수 있다. 전투 중에는 가방이 열리지 않아 바꿀 수 없다.</p>
       ${msg?`<p class="small bad">${esc(msg)}</p>`:''}
-      <div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b style="color:var(--gold)">지금 쓰는 팩 · ${esc(ch.packName||'기본 카드팩')}</b><span class="mono small dim">덱 ${ch.deck.length}장</span></div>${flag(1,ch.deckLocked||ch.cardMoney)}${chips(ch.deck)}</div>
-      ${ps.length?ps.map((t,i)=>{const can=E.packCan(ch,i),ask=UI.packSwAsk===i;return `<div class="panel stack" style="gap:6px"><div class="row between"><b>${esc(t.n)}</b><span class="mono small dim">덱 ${t.deck.length}장${t.side.length?' · 카드함 '+t.side.length+'장':''}</span></div>${flag(1,t.deckLocked||t.cardMoney)}${chips(t.deck)}
+      <div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b style="color:var(--gold)">지금 쓰는 팩 · ${esc(ch.packName||'출신 카드팩')}</b><span class="mono small dim">덱 ${ch.deck.length}장</span></div>${flag(1,ch.deckLocked||ch.cardMoney)}${chips(ch.deck)}${ch.packKind==='basic'?rn(-1,ch.packName):''}</div>
+      ${ps.length?ps.map((t,i)=>{const can=E.packCan(ch,i),ask=UI.packSwAsk===i;return `<div class="panel stack" style="gap:6px"><div class="row between"><b>${esc(t.n)}</b><span class="mono small dim">덱 ${t.deck.length}장${t.side.length?' · 카드함 '+t.side.length+'장':''}</span></div>${flag(1,t.deckLocked||t.cardMoney)}${chips(t.deck)}${t.k==='basic'?rn(i,t.n):''}
         ${can==='ok'?`<button class="btn${ask?' primary':''}" data-a="packsw" data-i="${i}"><b>${ask?'정말 바꾼다 · 한 번 더 누른다':'이 팩으로 바꾼다'}</b><span class="dim small">지금 팩은 보관함으로 간다</span></button>`:`<p class="small dim">${why[can]||''}</p>`}</div>`}).join(''):'<div class="panel"><p class="small dim">보관한 팩이 없다. 전용 카드팩을 받아 덱이 통째로 바뀌면 이전 덱이 여기에 남는다.</p></div>'}`;
   }
   function vBag(){
@@ -1792,7 +1793,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     ximport(){const a=$('xin');xApply((a&&a.value.trim())||UI.xask||'')},
     diff(i){if(['easy','normal','hard'].includes(i)){store.set(DIFFK,i);render()}},
     start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='title')store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
-    cont(){const o=loadSave();if(!o)return;G=o.G;C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
+    cont(){const o=loadSave();if(!o)return;G=o.G;E.ensurePacks(G.ch);C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
     async chimg(v){
       const [tab,id]=String(v).split(':'),e=(loadChron()[tab]||[]).find(x=>x.id===id);if(!e)return;
@@ -1836,6 +1837,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bspecial(id){if(E.buySpecial(G.ch,id,true)){UI.bought=D.special[id].n;render()}},
     noticeok(){store.set('cityYearNotice',NOTICE.id);render()},
     titleeq(i){const L=titleList(G.ch),t=L[+i];if(!t)return;G.ch.equipTitle=G.ch.equipTitle===t[0]?'':t[0];resave();render()},
+    packrn(i){
+      i=+i;const el=$('pkn'+(i<0?'a':i)),r=E.renamePack(G.ch,i,el?el.value:'');
+      UI.packMsg=r===true?'이름을 바꿨다.':r;if(r===true)resave();render();
+    },
     packsw(i){
       i=+i;if(UI.packSwAsk!==i){UI.packSwAsk=i;render();return}UI.packSwAsk=null;
       if(E.switchPack(G.ch,i)){UI.packMsg='카드팩을 바꿨다 · 지금 쓰는 팩: '+(G.ch.packName||'기본 카드팩');resave()}else UI.packMsg='지금은 바꿀 수 없다.';
