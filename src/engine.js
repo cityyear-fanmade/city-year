@@ -184,7 +184,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const calcDmin=ch=>Math.min(CFG.dminCap,Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1))+(ch.stats.dminUp||0));
   function equip(ch,item){
     /* 육신 뒤틀림: 장비를 낄 수 없다 (보관함으로) · N사 날개: 의수를 끼지 않는다 (보관함으로) */
-    if(ch.distForm||(item.slot==='aug'&&isN(ch))){(ch.stash=ch.stash||[]).push(item);return}
+    if(item.slot==='aug'&&isN(ch)){(ch.stash=ch.stash||[]).push(item);return}
     const s=ch.stats,old=ch.gear[item.slot];
     if(old)for(const [k,v] of Object.entries(old.fx))if(k!=='dmin'&&k in s){s[k]-=v;if(k==='maxHp')ch.hp=Math.min(ch.hp,s.maxHp)}
     for(const [k,v] of Object.entries(item.fx))if(k!=='dmin'&&k in s){s[k]+=v;if(k==='maxHp')ch.hp+=v}
@@ -330,7 +330,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 'ok' 바꿀 수 있음 · 'busy' 받을 카드가 남아 있음 · 'no' 바꿀 수 없음 */
   function packCan(ch,i){
-    const t=(ch.packs||[])[i];if(!t||ch.distForm)return 'no';
+    const t=(ch.packs||[])[i];if(!t)return 'no';
     if((ch.offers||[]).length||(ch.picks||[]).length||ch.packOffer||(ch.gearOffers||[]).length)return 'busy';
     return 'ok';
   }
@@ -436,7 +436,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function canBuy(ch,id){
     const it=D.items[id];
     if(ch.gear[it.slot]&&ch.gear[it.slot].id===id)return 'owned';
-    if(ch.distForm)return 'distort';
     if(it.slot==='aug'&&isN(ch))return 'nwing';
     if(inStash(ch,id))return 'stash';
     if(it.grade>shopAccess(ch))return 'locked';
@@ -453,8 +452,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function canBuySpecial(ch,id){
     const it=D.special[id];
     if(it.perm?(ch.perms||[]).includes(id):(ch.gear[it.slot]&&ch.gear[it.slot].id===id))return 'owned';
-    if(!it.perm&&ch.distForm)return 'distort';
-    if(it.slot==='aug'&&isN(ch))return 'nwing';
+        if(it.slot==='aug'&&isN(ch))return 'nwing';
     if(!it.perm&&inStash(ch,id))return 'stash';
     if(ch.money<it.price)return 'money';
     return 'ok';
@@ -886,7 +884,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       setDistort(ch,'');ch.namePend='dist';
       P.distorted=true;P.wx=null;P.laev=null;P.hwando=false;P.resonance=false;P.thumb=false;P.deck=ch.deck;P.dmin=s.dmin;P.pdie=s.pdie;P.dmgB=s.dmgB||0;P.burnHit=s.burnHit||0;
       ch.bloomNote='전투 중 정신력 0 · 육신이 뒤틀렸다 · 이름을 정한다';
-      L('kw',`  육신이 뒤틀린다 · 장비는 보관함으로 · 능력치가 크게 오른다 · 손패는 다음 라운드부터 뒤틀린 책장`);
+      L('kw',`  육신이 뒤틀린다 · 능력치가 크게 오른다 · 뒤틀림 전용 카드를 얻는다 · 손패는 다음 라운드부터 뒤틀린 책장`);
     }
     for(const k of ['atk','eva','spd'])P[k]+=s[k]-b[k];
     P.maxHp+=s.maxHp-b.maxHp;P.hp=clampN(P.hp+(s.maxHp-b.maxHp),1,P.maxHp);
@@ -1305,14 +1303,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(c.st==='wing'&&!(c.chain&&c.chain.length)&&!(c.up>=CP.upMax&&c.forb>=CP.forbMax)&&y>=c.next&&d(100)<=CP.labChance){c.next=y+CP.labGap;return D.corp.lab}
     return null;
   }
-  /* 육신 뒤틀림: 장비를 모두 벗고(보관함), 깡 능력치 상승, 덱은 뒤틀린 책장으로 고정, 정신력은 더 깎이지 않는다 */
+  /* 육신 뒤틀림: 깡 능력치가 크게 오른 채 안정화된다. 장비는 그대로 두고, 뒤틀림 전용 카드팩(뒤틀린 책장)을 얻는다 — 전용 카드팩이라 안의 카드는 바꿀 수 없지만, 카드팩 보관함에서 다른 카드팩으로 돌아갈 수 있다 */
   function setDistort(ch,name){
     const X=CFG.distort,s=ch.stats;
-    for(const it of Object.values(ch.gear)){if(!it)continue;for(const [k,v] of Object.entries(it.fx||{}))if(k!=='dmin'&&k in s)s[k]-=v;(ch.stash=ch.stash||[]).push(it)}
-    ch.gear={};s.dmin=calcDmin(ch);addStats(s,X.fx);ch.hp=clamp(ch.hp+(X.fx.maxHp||0),1,s.maxHp);
+    addStats(s,X.fx);ch.hp=clamp(ch.hp+(X.fx.maxHp||0),1,s.maxHp);
     ch.distForm={n:(name||'').trim()||'이름 없는 뒤틀림'};ch.huntNext=(ch.year||0)+(BD.hunt?BD.hunt.gap:3);ch.distPick=false;ch.distortPend=false;ch.distortDone=true;ch.voiceUsed=true;ch.mind=mindMax(ch);
-    ch.deck=X.deck.slice();ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;
-    for(const g of ch.gearOffers||[])(ch.stash=ch.stash||[]).push(g);ch.gearOffers=[];
+    ensurePacks(ch);
+    const fx=ch.deck.filter(id=>D.cards[id].fixed);
+    stashPack(ch,'뒤틀림 전용 카드팩');
+    ch.deck=X.deck.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false;ch.offers=[];ch.picks=[];ch.packOffer=null;
     (ch.relics=ch.relics||[]).push('뒤틀림 · '+ch.distForm.n);
   }
   /* 무한런: 마지막 해, 지금 위협 등급(-1이면 아직 기본 연차) */
@@ -1329,10 +1328,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 공방 장비 정비: 장착 중인 장비 1개에 공격 또는 회피 +1을 시도한다 (성공 chance%, 시도는 성패와 상관없이 소모) */
   const tuneCost=g=>CFG.shop.tune.base+CFG.shop.tune.step*(g.tries||0);
   /* 정비 최대 횟수: 공방 해결사는 더 많이 할 수 있다 */
-  const tuneMax=ch=>isWs(ch)?CFG.shop.tune.maxWs:CFG.shop.tune.max;
+  /* 제나를 쓰러뜨린 뒤에는 장비마다 정비를 zenaPlus번 더 할 수 있다 (바랄·제나의 장비는 제외 — 후반 장비가 한 가지로 굳지 않게) */
+  const tuneMax=(ch,g)=>(isWs(ch)?CFG.shop.tune.maxWs:CFG.shop.tune.max)+(ch.flags&&ch.flags.beatZena&&g&&!CFG.shop.tune.noPlus.includes(g.id)?CFG.shop.tune.zenaPlus:0);
   function tuneGear(ch,slot,stat){
     const T=CFG.shop.tune,g=ch.gear[slot];
-    if(!g||ch.distForm||!['atk','eva'].includes(stat)||(g.tries||0)>=tuneMax(ch)||ch.money<tuneCost(g))return null;
+    if(!g||!['atk','eva'].includes(stat)||(g.tries||0)>=tuneMax(ch,g)||ch.money<tuneCost(g))return null;
     const cost=tuneCost(g);ch.money-=cost;
     const ng=structuredClone(g);ng.tries=(g.tries||0)+1;
     const ok=d(100)<=T.chance;
@@ -1720,7 +1720,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',hunger:ch.flags&&ch.flags.hunger?0:null,name:(eqT(ch)?`[${eqT(ch)}] `:'')+(ch.name||T.you),tt:eqT(ch)||'',color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min(corpType(ch).healMax||999,corpType(ch).heal+(ch.corp.up||0)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+(ch.corp.up||0)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!ch.distForm,laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min(corpType(ch).healMax||999,corpType(ch).heal+(ch.corp.up||0)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+(ch.corp.up||0)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&ch.packName==='뒤틀림 전용 카드팩'),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     P.ample=ch.ample||0;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;

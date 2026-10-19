@@ -672,13 +672,13 @@ export function startUI(E,app){
   /* 공방: 장비 정비 (장착 장비마다 최대 tune.max번, chance% 확률로 공격 또는 회피 +1) */
   function vTune(){
     const ch=G.ch,T=Object.assign({},CFG.shop.tune,{max:E.tuneMax(G.ch)}),slots=Object.keys(ch.gear).filter(k=>ch.gear[k]);
-    const rows=slots.map(k=>{const g=ch.gear[k],n=g.tries||0,full=n>=T.max,cost=E.tuneCost(g),tn=g.tune||{},ok=!full&&ch.money>=cost&&!ch.distForm;
-      return `<div class="stack" style="gap:4px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>${esc(g.n)}</b><span class="mono small dim">정비 ${n}/${T.max}${tn.atk||tn.eva?` · 공격+${tn.atk||0} 회피+${tn.eva||0}`:''}</span></div>
+    const rows=slots.map(k=>{const g=ch.gear[k],n=g.tries||0,mx=E.tuneMax(ch,g),full=n>=mx,cost=E.tuneCost(g),tn=g.tune||{},ok=!full&&ch.money>=cost;
+      return `<div class="stack" style="gap:4px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>${esc(g.n)}</b><span class="mono small dim">정비 ${n}/${mx}${tn.atk||tn.eva?` · 공격+${tn.atk||0} 회피+${tn.eva||0}`:''}</span></div>
         ${full?'<p class="small dim">더는 정비할 수 없다.</p>':`<div class="row" style="gap:8px"><button class="btn" style="flex:1" data-a="tune" data-i="${k}" data-s="atk" ${ok?'':'disabled'}><b>공격 +1 시도</b><span class="mono small" style="color:var(--gold)">${E.money(cost)}</span></button><button class="btn" style="flex:1" data-a="tune" data-i="${k}" data-s="eva" ${ok?'':'disabled'}><b>회피 +1 시도</b><span class="mono small" style="color:var(--gold)">${E.money(cost)}</span></button></div>`}</div>`}).join('');
     return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">장비 정비</b><span class="chip">${T.chance}% 성공</span></div>
-      <p class="small dim">장착한 장비 하나에 공격 또는 회피 +1을 시도한다. 성공하면 고른 쪽만 오르고, 실패해도 시도 횟수는 소모된다. 장비마다 ${T.max}번까지.</p>
+      <p class="small dim">장착한 장비 하나에 공격 또는 회피 +1을 시도한다. 성공하면 고른 쪽만 오르고, 실패해도 시도 횟수는 소모된다. 장비마다 ${T.max}번까지.${ch.flags&&ch.flags.beatZena?` 제나를 쓰러뜨린 뒤로는 바랄·제나의 장비를 뺀 장비가 ${CFG.shop.tune.zenaPlus}번씩 더 늘어난다.`:''}</p>
       ${UI.tuneMsg?`<p class="${UI.tuneMsg.ok?'good':'bad'} small">${esc(UI.tuneMsg.t)}</p>`:''}
-      ${ch.distForm?'<p class="small dim">뒤틀린 몸은 장비를 쥘 수 없다.</p>':rows||'<p class="small dim">장착한 장비가 없다.</p>'}</div>`;
+      ${rows||'<p class="small dim">장착한 장비가 없다.</p>'}</div>`;
   }
   function vRules(){
     return `<details><summary>규칙 요약</summary><ul>
@@ -1078,8 +1078,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   }
   function vDistPick(){
     return `<div class="panel stack" style="gap:8px;border-color:#8a2a2a"><span class="eyebrow" style="color:#c25050">육신 뒤틀림</span>
-      <p class="small">몸이 마음의 모양을 따라 비틀렸다. 이제 장비를 쥘 수 없고, 상대에게 디버프를 걸 수 없다. 대신 몸 자체가 무기가 된다.</p>
-      <p class="small mono" style="color:#c25050">최대 HP +${CFG.distort.fx.maxHp} · 공격 +${CFG.distort.fx.atk} · 장비 전부 보관함으로 · 덱이 뒤틀린 책장 ${CFG.distort.deck.length}장으로 고정 (빛 없음) · 정신력이 더 깎이지 않는다</p>
+      <p class="small">몸이 마음의 모양을 따라 비틀렸다. 뒤틀린 모습이 그대로 안정되어, 이 모습이 새로운 나가 된다. 장비와 카드는 그대로 쓸 수 있고, 뒤틀림 전용 카드를 얻는다.</p>
+      <p class="small mono" style="color:#c25050">최대 HP +${CFG.distort.fx.maxHp} · 공격 +${CFG.distort.fx.atk} · 뒤틀림 전용 카드팩 ${CFG.distort.deck.length}장 (빛 없음 · 카드팩 보관함에서 다른 카드팩으로 바꿀 수 있다) · 정신력이 더 깎이지 않는다</p>
       <div class="row"><span class="small">뒤틀림의 이름</span><input id="distname" maxlength="12" value="${esc(UI.distName||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
       <span class="small bad">${UI.distErr||''}</span>
       <button class="btn primary" data-a="distset">이 이름으로 뒤틀린다</button></div>`;

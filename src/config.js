@@ -85,11 +85,11 @@ export const CFG = {
     /* 개화한 E.G.O를 가지면: 덱 최대 장수 +deckPlus (고정 전용 카드가 그 자리), 전투 처음 lightRounds라운드 동안 빛 +light */
     deckPlus: 2, light: 1, lightRounds: 3},
   /* 공방 거리: 1년차부터 every년마다 들를지 묻는다(해는 넘어가지 않음). blackFrom년차부터 암시장 물건 blackStock개 진열 */
-  /* 육신 뒤틀림: 장비를 쓸 수 없고(전부 보관함), 상대에게 디버프를 걸 수 없다. 깡 능력치가 크게 오르고 덱은 뒤틀린 책장(도박 카드 12장, 빛 없음)으로 고정 */
+  /* 육신 뒤틀림: 깡 능력치가 크게 오르고 장비는 그대로, 뒤틀림 전용 카드팩(도박 카드 12장, 빛 없음)을 얻는다 */
   distort: {fx: {maxHp: 40, atk: 6, eva: 0, spd: 0}, deck: ['d_jackpot', 'd_jackpot', 'd_jackpot', 'd_rend', 'd_rend', 'd_rend', 'd_maw', 'd_maw', 'd_thrash', 'd_thrash', 'd_coin', 'd_curl']},
   shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4, restMind: 5,
     /* v6.1: 카드 교환(덱 카드 1장을 일반 보상 카드 무작위 1장으로, 방문마다 swapMax장까지) · 장비 정비(장착 장비마다 최대 tune.max번 시도, chance% 확률로 공격 또는 회피 +1, 시도 비용 base+step×지금까지 시도) */
-    swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150}},
+    swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150, zenaPlus: 10, noPlus: ['w_baralclaw', 'a_baralcoat', 'w_zenafairy', 'a_zenaarmor']}},
   /* 타고난 것: 출생 굴림과 별개로 1/chanceDiv 확률. 시드 재현을 위해 출생 굴림 값에서 파생 (새 주사위를 쓰지 않는다) */
   /* 해금 조건이 있는 타고난 것: hits=한 전투에서 맞은 횟수(회피 제외) · spdUp=출생 때보다 오른 속도 · lv=최고 레벨 기록 */
   innateUnlock: {hits: 20, spdUp: 30, lv: 20},
