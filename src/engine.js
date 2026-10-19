@@ -1806,8 +1806,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 무한 모드에 들어선 뒤 지난 햇수: 해마다 양쪽 회피가 evaDown씩 줄어든다 (0에서 멈춤) */
   /* 출혈 최대 스택: 플레이어가 적에게 거는 출혈만 bleedMax, 플레이어가 받는 출혈은 stackCap */
   const bleedCap=X=>X.isP?CFG.stackCap:CFG.bleedMax;
-  /* 혈찬 회복: 5스택마다 hcHeal, 한 전투에서 최대 HP의 hcCap배까지만 회복한다 */
-  const hcHeal=X=>{const h=Math.max(0,Math.min(CFG.hyeolchan.heal,X.maxHp-X.hp,Math.floor(X.maxHp*CFG.hyeolchan.cap)-(X.hcTot||0)));X.hcTot=(X.hcTot||0)+h;return h};
+  /* 혈찬 회복: 5스택마다 CFG.hyeolchan.heal (총량 제한 없음) */
+  const hcHeal=X=>Math.max(0,Math.min(CFG.hyeolchan.heal,X.maxHp-X.hp));
   const infEvaCut=ch=>Math.min(Math.max(0,ch.stats.eva),infYears(ch)*CFG.infinite.evaDown);
   const infYears=ch=>ch.infinite?Math.max(0,(ch.year||0)-(CFG.years+CFG.endless.span*CFG.endless.grades.length)):0;
   function mkCombat(ch,id,quiet){
