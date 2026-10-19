@@ -1,38 +1,34 @@
 /* 배경음악: 외부 음원 없이 Web Audio로 합성한다 (저작권 문제 없음). 직접 만든 곡이다.
    - 기본은 꺼져 있고, 사용자가 설정에서 켠 뒤에만 소리가 난다 (브라우저 정책상 한 번 눌러야 시작)
    - 켤 때 마스터 음량을 0에서 서서히 올리고, 전체 출력은 컴프레서를 거친다
-   - 두 가지 스타일을 사용자가 고른다. 둘 다 32마디를 한 바퀴로 도는 곡이고, 구간(도입 → 선율 A → 선율 B → 되풀이)이 바뀌며 흐름이 생긴다
-     · 고요(calm): 마을 곡처럼 적당히 들뜨는 잔잔함. 4/4박 · 템포 100(전투 118) · G 장조, 통통 튀는 베이스(근음·5음), 엇박 건반 반주, 가벼운 셰이커·림, 피리 같은 선율
-       진행: Cmaj7 → D → Bm7 → Em7 → Am7 → D → G → G (IV-V-iii-vi 흐름)
-     · 불길(passion): 신나는 전투 곡. 4/4박 · 템포 150(전투 168) · D 단조, 8분 질주 베이스, 록 드럼(킥·스네어·하이햇), 16분 피아노 리프, 신스 선율 훅
-       진행: Dm → Bb → F → C → Dm → Bb → Gm → A (i-VI-III-VII, 끝에 딸림화음으로 다시 당긴다) · 구간마다 심벌, 8마디 끝마다 스네어 필, 쉬어 가는 구간 뒤 다시 터진다
-   - 참고한 것은 장르의 흐름(템포·박자·구간 구성·악기 역할)뿐이고, 선율과 화성 진행은 직접 만들었다 */
+   - 두 가지 스타일을 사용자가 고른다
+     · 고요(calm): 로비 같은 곡. 3/4박 · 템포 60 · 마디마다 16분 아르페지오가 쉬지 않고 이어지고, 소리 크기는 거의 일정하다. 낮은 음역(건반 40~70)의 긴 베이스와 길게 깔리는 현, 가끔 얹히는 느린 선율. 코드는 장7·단7·서스 색 (G 장조: Gmaj7 · Em7 · Cmaj7 · Dsus). 전투에 들어가면 템포가 오르고 박동이 붙는다
+     · 불길(passion): 전투 같은 곡. 4/4박 · 평소부터 빠르고(132) 소리 크기가 일정하다. 16분 되풀이 음형과 어긋난 박의 옥타브 베이스, 낮게 깔리는 현, 큰북·스네어. 코드는 7화음 색 (D 단조: Dm7 · Bbmaj7 · Fmaj7 · Csus). 전투에 들어가면 더 빨라지고 킥이 4박으로 늘며 스네어 연타가 붙는다
+   - 참고 곡들을 분석해 템포·박자·음역·소리 크기의 변화·리듬 밀도를 맞췄고, 선율과 화성 진행은 직접 만들었다 (소리를 끊는 잡음 악기는 쓰지 않는다) */
 export function createBgm(){
   /* 모든 값은 여기서 조절한다 */
   const P={
     maxGain:2,          // 음량 100%일 때 마스터 음량 (컴프레서가 최고점을 눌러 준다)
     fadeIn:3,           // 켤 때 서서히 커지는 시간(초)
     fadeOut:0.8,        // 끌 때 서서히 줄어드는 시간(초)
-    bpm:{calm:{calm:100,fight:118},passion:{calm:150,fight:168}},   // [스타일][장면]
-    styleGain:{calm:0.7,passion:0.85},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
+    bpm:{calm:{calm:60,fight:92},passion:{calm:132,fight:152}},   // [스타일][장면]
+    styleGain:{calm:0.65,passion:0.95},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
     cutMul:{calm:{calm:0.8,fight:1},passion:{calm:1.1,fight:1.3}}, // 장면별 밝기
     /* 코드(C=0 기준 반음): b=베이스 근음, t=구성음(피아노 · 현), sc=선율 음계 */
-    /* 코드(C=0 기준 반음): b=베이스 근음, f=베이스 5음(근음 기준), t=반주 구성음 (가운데 도=0) */
-    /* 불길(D 단조): Dm → Bb → F → C → Dm → Bb → Gm → A */
+    /* 격정(D 단조, 7화음 색): Dm7 → Bbmaj7 → Fmaj7 → Csus */
     pChords:[
-      {b:2,f:7,t:[2,5,9,14]},{b:10,f:7,t:[-2,2,5,10]},{b:5,f:7,t:[0,5,9,12]},{b:0,f:7,t:[0,4,7,12]},
-      {b:2,f:7,t:[2,5,9,14]},{b:10,f:7,t:[-2,2,5,10]},{b:7,f:7,t:[-5,-2,2,7]},{b:9,f:7,t:[-3,1,4,9]}
+      {b:2,t:[-10,-7,-3,0],sc:[2,4,5,7,9,10,12]},     // Dm7
+      {b:10,t:[-2,2,5,9],sc:[2,4,5,7,9,10,12]},       // Bbmaj7
+      {b:5,t:[-7,-3,0,4],sc:[2,4,5,7,9,10,12]},       // Fmaj7
+      {b:0,t:[0,5,7,12],sc:[2,4,5,7,9,11,12]}         // Csus
     ],
-    /* 고요(G 장조): Cmaj7 → D → Bm7 → Em7 → Am7 → D → G → G */
+    /* 잔잔(G 장조, 장7·단7·서스 색): Gmaj7 → Em7 → Cmaj7 → Dsus. t=낮은 음역부터 오르는 5음 */
     lobby:[
-      {b:0,f:7,t:[4,7,11,12]},{b:2,f:7,t:[2,6,9,14]},{b:-1,f:7,t:[-1,2,6,9]},{b:4,f:7,t:[4,7,11,14]},
-      {b:-3,f:7,t:[-3,0,4,7]},{b:2,f:7,t:[2,6,9,12]},{b:7,f:7,t:[-1,2,7,11]},{b:7,f:5,t:[0,2,7,12]}
+      {b:7,t:[-5,-1,2,6,7],sc:[7,9,11,12,14,16,18]},     // Gmaj7
+      {b:4,t:[-8,-5,-1,2,4],sc:[7,9,11,12,14,16,18]},    // Em7
+      {b:0,t:[-12,-8,-5,-1,0],sc:[7,9,11,12,14,16,17]},  // Cmaj7
+      {b:2,t:[-10,-5,-3,0,2],sc:[7,9,11,12,14,16,18]}    // Dsus
     ],
-    /* 선율: 마디마다 8칸(8분음표). 숫자=가운데 도 기준 반음 · '.'=앞 음을 잇는다 · '_'=쉰다 */
-    calmA:['16 . 19 . 23 . 21 19','18 . . 16 18 . 21 .','18 . 14 . 11 . 14 18','19 . . . 16 . _ _','16 . 19 . 24 . 23 21','21 . 18 . 16 . 18 21','23 . 21 19 . . 18 19','19 . . . _ _ 14 16'],
-    calmB:['_ _ 23 . 24 . 23 21','18 . . . 14 . 16 18','_ _ 18 . 21 . 18 14','16 . . . . . _ _','_ _ 16 . 19 . 21 23','21 . . 18 . . 16 .','14 . 16 . 18 . 21 .','19 . . . . . _ _'],
-    fireA:['21 . 21 19 21 . 24 .','22 . 21 . 19 . 17 .','17 . 19 21 . . 24 .','19 . . . 16 . 17 19','21 . 21 19 21 . 26 .','24 . 22 . 21 . 22 .','19 . 17 . 19 . 22 .','21 . . . _ _ 25 .'],
-    fireB:['26 . 24 . 26 . 29 .','29 . 26 . 22 . . .','24 . 21 . 24 . 26 .','28 . . . 24 . . .','26 . 24 . 26 . 29 .','31 . 29 . 26 . 22 .','26 . 24 . 22 . 19 .','25 . . . . . _ _'],
     moods:{
       base:    {root:60,cut:2600,room:1,wet:0.22},
       dante:   {root:55,cut:1800,room:1.2,wet:0.26},
@@ -139,80 +135,37 @@ export function createBgm(){
     for(const dt of [-5,5]){const o=ctx.createOscillator();o.type='triangle';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
     f.connect(g);g.connect(cur.u);
   }
-  /* 피리 같은 선율 (고요): 사인 + 삼각파, 살짝 떨림(비브라토) */
-  function fluteN(m,t,dur,peak){
-    const f=hz(m),g=ctx.createGain(),o=ctx.createOscillator(),o2=ctx.createOscillator(),lfo=ctx.createOscillator(),lg=ctx.createGain();
-    o.type='sine';o2.type='triangle';o.frequency.value=f;o2.frequency.value=f;o2.detune.value=4;lfo.frequency.value=5.2;lg.gain.value=f*0.006;
-    lfo.connect(lg);lg.connect(o.frequency);lg.connect(o2.frequency);
-    const g2=ctx.createGain();g2.gain.value=0.45;o2.connect(g2);g2.connect(g);o.connect(g);
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.04);g.gain.setValueAtTime(peak*0.9,t+Math.max(0.05,dur-0.08));g.gain.linearRampToValueAtTime(0.0001,t+dur);
-    g.connect(cur.u);for(const x of [o,o2,lfo]){x.start(t);x.stop(t+dur+0.05)}
-  }
-  /* 신스 선율 (불길): 살짝 어긋난 톱니 둘을 걸러 또렷하게 */
-  function synthN(m,t,dur,peak,cut){
-    const f=ctx.createBiquadFilter(),g=ctx.createGain();f.type='lowpass';f.frequency.setValueAtTime(cut*1.4,t);f.frequency.exponentialRampToValueAtTime(cut,t+0.12);f.Q.value=1.2;
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.012);g.gain.setValueAtTime(peak*0.8,t+Math.max(0.03,dur-0.05));g.gain.linearRampToValueAtTime(0.0001,t+dur);
-    for(const dt of [-9,9]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
-    f.connect(g);g.connect(cur.b);
-  }
-  /* 퉁기는 베이스 (고요): 삼각파를 짧게 */
-  function pluckB(m,t,dur,peak){
-    const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();o.type='triangle';o.frequency.value=hz(m);f.type='lowpass';f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(300,t+dur);
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f);f.connect(g);g.connect(cur.m);o.start(t);o.stop(t+dur+0.05);
-  }
-  const hat=(t,peak,open)=>noiseHit(t,peak,open?0.16:0.035,7000,13000);        // 하이햇·셰이커 (작게)
-  const crash=(t,peak)=>noiseHit(t,peak,1.4,4000,12000);                         // 심벌 (구간 시작)
-  /* 선율 한 마디 읽기: '16 . 19 _' → [{k:칸,m:음,n:길이(칸)}] */
-  function mel(str){const tk=str.split(/\s+/),out=[];let last=null;tk.forEach((x,k)=>{if(x==='.'){if(last)last.n++}else if(x==='_')last=null;else{last={k,m:+x,n:1};out.push(last)}});return out}
-  /* 고요 한 마디(4/4): 32마디 한 바퀴 — 0~7 도입(반주만) · 8~15 선율 A · 16~23 선율 B · 24~31 선율 A(옥타브 겹침)
-     통통 튀는 베이스(1박 근음 · 2박 반 옥타브 · 3박 5음 · 4박 반 근음), 엇박 건반, 가벼운 킥·림·셰이커 */
+  /* 잔잔 한 마디(3/4박): 16분 아르페지오가 12칸 내내 오르내리고 소리 크기는 거의 일정하다. 낮은 베이스, 길게 깔리는 현, 가끔 느린 선율. 전투에서는 템포가 오르고 부드러운 박동이 붙는다 */
   function barLobby(T,M){
-    const fight=scene==='fight',bd=60/P.bpm.calm[scene],ci=barN%8,C=P.lobby[ci],R=M.root,at=k=>T+k*bd,sec=Math.floor((barN%32)/8),lb=R-24+C.b;
-    /* 베이스 */
-    [[0,0,0.11],[1.5,12,0.07],[2,C.f,0.09],[3.5,0,0.07]].forEach(([k,o,p])=>pluckB(lb+o,at(k),bd*0.9,p));
-    if(ci===7)pluckB(lb+C.f-12+12,at(3),bd*0.4,0.06);
-    /* 건반: 엇박 짧은 화음 */
-    for(const k of [0.5,1.5,2.5,3.5]){const acc=k===1.5||k===3.5;C.t.forEach(o=>ep(R+o,at(k),acc?0.03:0.022,bd*0.7))}
-    /* 길게 깔리는 소리 */
-    C.t.slice(0,3).forEach((o,i)=>padN(R+o-12,T+i*0.02,bd*4,0.012));
-    /* 타악 */
-    feather(at(0),0.08,true);feather(at(2),0.06,true);if(fight){feather(at(1),0.05,true);feather(at(3),0.05,true)}
-    if(sec>0)for(const k of [1,3])snare(at(k),0.018);
-    for(let n=0;n<8;n++)hat(at(n/2),n%2?0.012:0.007,false);
-    if(fight)for(let n=0;n<16;n+=2)hat(at(n/4+0.25),0.006,false);
-    /* 선율 */
-    if(sec>0){const L=sec===2?P.calmB:P.calmA;
-      for(const x of mel(L[ci])){const d=x.n*bd/2*0.95;fluteN(R+x.m,at(x.k/2),d,fight?0.05:0.042);if(sec===3)fluteN(R+x.m-12,at(x.k/2),d,0.02)}}
-    barT=T+4*bd;barN++;
+    const fight=scene==='fight',bd=60/P.bpm.calm[scene],C=P.lobby[barN%P.lobby.length],R=M.root,at=k=>T+k*bd,lb=R-24+C.b;
+    pianoN(lb,at(0),0.1,bd*2.9);pianoN(lb+12,at(0),0.045,bd*2.4);if(fight||barN%2===1)pianoN(lb+7,at(1.5),0.05,bd*1.4);
+    C.t.slice(0,4).forEach((o,i)=>{strN(R+o-12,T+i*0.02,bd*3,fight?0.012:0.009)});
+    const seq=[0,1,2,3,4,3,2,1,2,3,4,3];
+    seq.forEach((ix,k)=>{const m=R+C.t[ix];pianoN(m,at(k*0.25),k%4===0?0.026:0.02,bd*1.25)});
+    if(fight){feather(at(0),0.07,true);feather(at(1.5),0.04,true)}
+    if(rnd()<0.6){const m=3,k0=pick([0,0.5,1]);let ix=Math.floor(rnd()*C.sc.length);
+      for(let i=0;i<m;i++){const k=k0+i;if(k>=3)break;pianoN(R-12+C.sc[ix],at(k),fight?0.04:0.034,bd*1.6);ix=Math.max(0,Math.min(C.sc.length-1,ix+pick([-2,-1,-1,1,1,2])))}}
+    barT=T+3*bd;barN++;
   }
-  /* 불길 한 마디(4/4): 32마디 한 바퀴 — 0~3 도입(리프·베이스) · 4~11 훅 A · 12~19 훅 B · 20~23 숨 고르기(킥 없이, 끝에 스네어 몰아치기) · 24~31 훅 A(옥타브 겹침)
-     8분 질주 베이스, 16분 피아노 리프, 록 드럼(킥 1·2박 반·3 · 스네어 2·4 · 8분 하이햇), 구간 시작마다 심벌, 8마디 끝마다 스네어 필 */
+  /* 격정 한 마디: 피아노가 끌고 간다. 오른손은 16분 되풀이 음형, 왼손은 옥타브 베이스 · 현이 낮게 깔리고 큰북과 스네어가 조여 든다.
+     전투에서는 템포가 오르고 킥이 4박으로 늘며 4번째 박에 스네어 연타가 붙는다. 음역은 가운데 도 근처 아래쪽에 머문다 */
   function barPassion(T,M){
-    const fight=scene==='fight',bd=60/P.bpm.passion[scene],ci=barN%8,C=P.pChords[ci],R=M.root,at=k=>T+k*bd,pos=barN%32,lb=R-24+C.b;
-    const sec=pos<4?'intro':pos<12?'A':pos<20?'B':pos<24?'break':'A2',start=pos===4||pos===12||pos===24,phraseEnd=pos%8===3||pos===23;
-    /* 베이스: 8분으로 몰아친다 (숨 고르기에서는 2분음표) */
-    if(sec==='break'){sawN(lb,at(0),bd*2,0.07,700);sawN(lb,at(2),bd*2,0.07,700)}
-    else [0,0,12,0,0,C.f,12,0].forEach((o,n)=>sawN(lb+o,at(n/2),bd*0.45,n%2?0.06:0.08,fight?1300:1000));
-    /* 피아노 리프: 16분 되풀이 */
-    const pat=[0,1,2,1, 3,1,2,1, 0,1,2,3, 2,1,2,1];
-    pat.forEach((ix,n)=>pianoN(R+C.t[ix],at(n/4),(n%4===0?0.042:0.026)*(sec==='break'?0.8:1),bd*0.5));
-    /* 현: 숨 고르기와 훅 B에서 길게 */
-    if(sec==='break'||sec==='B')C.t.slice(0,3).forEach((o,i)=>strN(R+o-12,T+i*0.02,bd*4,0.012));
-    /* 드럼 */
-    if(sec!=='break'){
-      if(fight||sec==='B')for(let k=0;k<4;k++)feather(at(k),0.12);else for(const k of [0,1.5,2])feather(at(k),0.12);
-      if(sec!=='intro')for(const k of [1,3])snare(at(k),0.055);
-      for(let n=0;n<8;n++)hat(at(n/2),n%2?0.016:0.01,n===7&&sec==='B');
-      if(fight)for(let n=0;n<8;n++)hat(at(n/2+0.25),0.007,false);
-    }else if(pos===23){for(let n=0;n<16;n++)snare(at(n/4),0.012+0.003*n)}
-    else feather(at(0),0.08);
-    if(start)crash(T,0.05);
-    if(phraseEnd&&sec!=='break'&&pos!==23)for(let n=1;n<4;n++)snare(at(3+n*0.25),0.03+0.008*n);
-    if(pos%8===0&&sec!=='break')boom(T,0.18);
-    /* 훅 */
-    if(sec==='A'||sec==='B'||sec==='A2'){const L=sec==='B'?P.fireB:P.fireA,cut=fight?3600:3000;
-      for(const x of mel(L[ci])){const d=x.n*bd/2*0.9;synthN(R+x.m-12,at(x.k/2),d,0.035,cut);if(sec==='A2')synthN(R+x.m,at(x.k/2),d,0.016,cut)}}
+    const fight=scene==='fight',bd=60/P.bpm.passion[scene],C=P.pChords[barN%P.pChords.length],R=M.root,at=k=>T+k*bd,last=barN%4===3;
+    /* 왼손: 옥타브 베이스 */
+    const lb=R-24+C.b;
+    for(const k of fight?[0,0.75,1.5,2,2.75,3.5]:[0,0.75,1.5,2.5]){pianoN(lb,at(k),k===0?0.1:0.07,bd*1.1);pianoN(lb+12,at(k),k===0?0.07:0.05,bd*0.9)}
+    /* 현: 구성음을 한 마디 내내 낮게 */
+    C.t.forEach((o,i)=>strN(R+o-12,T+i*0.02,bd*4,fight?0.014:0.011));
+    /* 오른손: 16분 되풀이 음형 (낮은 음 → 가운데 → 높은 음 → 가운데), 박 머리에 힘을 준다 */
+    const pat=[0,1,2,1, 0,1,3,1, 0,2,3,2, 1,2,3,2];
+    pat.forEach((ix,n)=>{const m=R+C.t[ix];pianoN(m,at(n/4),(n%4===0?0.05:0.032)*(fight?1.15:1),bd*0.55)});
+    /* 선율: 박 머리마다 눌러 내리는 음 (가운데 음역에 머무르고, 전투에서만 옥타브 위가 작게 겹친다) */
+    {const ix0=Math.floor(rnd()*C.sc.length);[0,1,2,3].forEach((k,i)=>{const m=R-12+C.sc[(ix0+i*2)%C.sc.length];if(rnd()<(fight?0.9:0.55)){pianoN(m,at(k+0.5),fight?0.045:0.035,bd*1.2);if(fight)pianoN(m+12,at(k+0.5),0.014,bd*0.9)}})}
+    /* 타악 */
+    if(fight){for(let k=0;k<4;k++)feather(at(k),0.11)}else{feather(at(0),0.1);feather(at(2),0.09)}
+    for(const k of [1,3])snare(at(k),fight?0.05:0.04);
+    if(fight&&last)for(let n=1;n<4;n++)snare(at(3+n*0.25),0.025+0.008*n);
+    if(barN%2===0)boom(T,fight?0.2:0.15);
     barT=T+4*bd;barN++;
   }
   function schedule(now,M){
