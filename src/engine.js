@@ -580,7 +580,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     n=Math.round(n*((CR[k]&&CR[k].gainMul)||1));ch.pp=(ch.pp||0)+n;
     if(canPromote(ch))chips.push(`${ptsName(ch)} +${n} (${ch.pp}/${promoNeed(ch)})`);
     /* 무한 모드: 도시가 모두 적대적이라 격식을 차린 심사는 열리지 않는다. 포인트가 차면 전공으로 바로 승급하고,
-       최고 직위에 오른 뒤에는 포인트가 계승 단계로 바뀐다 (단계마다 능력치 +1, 최대 legacyMax) */
+       최고 직위에 오른 뒤에는 포인트가 연륜 단계로 바뀐다 (단계마다 능력치 +1, 최대 legacyMax) */
     if(ch.infinite){
       let g=0;
       while(canPromote(ch)&&(ch.pp||0)>=promoNeed(ch)&&g++<4){const need=promoNeed(ch),p=promoteAny(ch);if(!p)break;
@@ -590,7 +590,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         ch.legacyPts=(ch.legacyPts||0)+n;
         while(ch.legacyPts>=IL.legacyNeed&&(ch.legacyTier||0)<IL.legacyMax){
           ch.legacyPts-=IL.legacyNeed;ch.legacyTier=(ch.legacyTier||0)+1;const s_=ch.stats,dm=ch.dom;
-          if(dm==='hp'||!dm){s_.maxHp+=4;ch.hp+=4;chips.push(`계승 ${ch.legacyTier}단계 · 최대 HP +4`)}else{s_[dm]+=1;chips.push(`계승 ${ch.legacyTier}단계 · ${STAT[dm]} +1`)}}
+          if(dm==='hp'||!dm){s_.maxHp+=4;ch.hp+=4;chips.push(`연륜 ${ch.legacyTier}단계 · 최대 HP +4`)}else{s_[dm]+=1;chips.push(`연륜 ${ch.legacyTier}단계 · ${STAT[dm]} +1`)}}
         if((ch.legacyTier||0)>=IL.legacyMax)ch.legacyPts=0;
       }
     }
@@ -668,7 +668,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 날개·손가락 진로면 해결사 급수 대신 그 진로의 직급을 보여 준다 (해결사 급수는 그 진로에서 오르지 않는다) */
   const rankLabelBase=ch=>{if(isFounder(ch)&&!ch.job)return ch.title?`${ch.title} · 날개 대표`:'날개 대표';if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr){const fx_=eastN(ch)&&ch.licensed?` · ${ch.rank}${T.rankUnit} 해결사`:'';return (ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n)+fx_}return rankLabel0(ch)};
-  const rankLabel=ch=>rankLabelBase(ch)+(ch.legacyTier?` · 계승 ${ch.legacyTier}단계`:'');
+  const rankLabel=ch=>rankLabelBase(ch)+(ch.legacyTier?` · 연륜 ${ch.legacyTier}단계`:'');
   const rankLabel0=ch=>!ch.licensed?T.unranked:ch.title?`${ch.title} · ${ch.rank}${T.rankUnit}`:`${ch.rank}${T.rankUnit} ${T.licensed}`;
   /* 카드 얻기: 덱이 고정(엄지 검술)이면 카드 대신 돈 */
   /* offer: 바로 넣지 않고 받을지 고르게 한다 (일반 전투 보상) */
@@ -1125,10 +1125,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {type:'fight',enemy:'kid_hunt',enc:{id:'kid_hunt',roll:null,table:null,label:'토벌 의뢰'}};
   }
   /* 청혼: roll이면 1dN을 굴려 성공 범위면 결혼, 아니면 기회 1회 소모 (기회를 다 쓰면 인연이 끝난다) */
+  /* 결혼 확률: 인연 이벤트에서 인연을 쌓은 만큼 오른다 (끝까지 쌓았으면 100%) */
+  const marryPct=b=>BD.marryPct[Math.max(0,Math.min(b.love||0,BD.steps))];
   function bondPropose(ch,chips,roll){
     const b=ch.bond;if(!b||b.st!=='met')return;
     let ok=false;
-    if(roll){const r=d(BD.die);ok=r>=BD.ok[0]&&r<=BD.ok[1];chips.push(`1d${BD.die} · ${r} (${BD.ok[0]}~${BD.ok[1]} 성공)`)}
+    if(roll){const pc=marryPct(b),r=d(100);ok=r<=pc;chips.push(`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps} · 1d100 · ${r} (${pc} 이하면 성공)`)}
     if(ok){bondMarry(ch,chips);return}
     b.tries=(b.tries||0)+1;chips.push(bondFill(roll?D.bond.proposeNo:D.bond.proposeWaitFail,b)+` · 남은 기회 ${Math.max(0,BD.tries-b.tries)}/${BD.tries}`);
     if(b.tries>=BD.tries)bondLeft(ch,chips);else b.next=(ch.year||0)+bondGap();
@@ -1192,7 +1194,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     const left=BD.tries-(b.tries||0);
     return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[
-      {l:B.proposeYes,h:`1d${BD.die} · ${BD.ok[0]}~${BD.ok[1]}이면 결혼 · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
+      {l:B.proposeYes,h:`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps} · 결혼 성공 ${marryPct(b)}% · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
       {l:B.proposeWait,h:`1d100 · ${BD.waitDc} 이상이면 기회를 쓰지 않고 넘어간다`,check:{s:null,dc:BD.waitDc},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]};
   }
   /* 일상: 사건이 있는 해 일부에 온다. 안정적으로 능력치를 조금 올려 주는 사건이고, 인연이 없는 캐릭터는 일부가 인연(조우자)을 만나는 사건이 된다 */
@@ -2080,6 +2082,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     let k=-1;for(let i=0;i<S.length;i++)if(ch.laevN>=S[i].at)k=i;
     const cur=A.laevF>=0.5?1:A.laevF>=0.25?0:-1;
     if(k>cur){const st=S[k],g=st.f>=1?Object.assign({id:'laev',grade:5},D.relics.laev.open):laevGear(st),old=ch.gear.weapon;
+      /* 단계가 올라 새 무기로 바뀌어도 공방 정비(공격·회피 강화)와 정비 횟수는 이어진다 */
+      if(old&&(old.tune||old.tries)){g.fx=Object.assign({},g.fx);for(const [k,v] of Object.entries(old.tune||{}))g.fx[k]=(g.fx[k]||0)+v;g.tune=Object.assign({},old.tune);g.tries=old.tries||0}
       A.atk+=g.fx.atk-((old&&old.fx.atk)||0);A.wx=g.wx;A.laev=st.f>=0.5?'open':'sealed';A.laevF=st.f;
       equip(ch,g);ch.stash=(ch.stash||[]).filter(x=>!['laev_sealed','laev_s1','laev_s2'].includes(x.id));
       L('sys',`  봉인이 풀린다 · 레바테인 ${st.n} (공+${g.fx.atk}, 피해 1d${g.wx.dice[1]}${st.f>=0.5?', 상대의 붉은 화염은 푸른 화염으로':''})`)}
