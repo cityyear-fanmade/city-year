@@ -1626,7 +1626,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(st.type==='omen')UI.omen=st;
     else if(st.type==='fight'){UI.fight=st.enemy;UI.enc=st.enc}else UI.ev=st.ev;
     /* 공방 거리: 1년차부터 3년마다 들를지 묻는다. 들러도 해는 넘어가지 않는다 */
-    if((G.year-1)%CFG.shop.every===0&&!shopDone&&!G.ch.rb){
+    if((G.year-1)%CFG.shop.every===0&&!shopDone&&!(G.ch.rb&&!G.ch.rb.out)){
       UI.stock=hwHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
@@ -1638,9 +1638,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const hwHome=()=>!!(G&&G.ch&&G.ch.hw&&!G.ch.hw.out&&!G.ch.hw.done);
   const HWSHOP=[['저잣거리 대장간','홍원 성문 안쪽 골목의 대장간이다. 가문 이름을 대면 값을 속이지 않는다.'],['홍원 장인방','가문에 칼을 대는 장인들이 모여 사는 방이다. 후보라는 이름이 문을 연다.'],['가문의 보물고','선대가 모아 둔 물건을 푸는 방이다. 가주의 허락 없이는 열리지 않는다.']];
   function vShopAsk(){
-    const nb=(G.year-1)+CFG.shop.every+1,hh=hwHome();
-    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · ${hh?'홍원의 저잣거리':'공방 거리'}</div><h2>${hh?'홍원의 저잣거리를 지난다':'공방 거리를 지난다'}</h2>
-      <p class="lead">${hh?'붉은 대문 안쪽에 가문의 저잣거리가 있다. 장인과 상인은 모두 가문의 이름 아래 있다. 들러도 한 해가 지나가지는 않는다.':'장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.'}${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
+    const nb=(G.year-1)+CFG.shop.every+1,hh=hwHome(),rb=G.ch.rb&&G.ch.rb.out?(G.ch.rb.fled?'alley':'supply'):null;
+    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · ${hh?'홍원의 저잣거리':rb==='supply'?'R사 보급 구역':rb==='alley'?'뒷골목 공방':'공방 거리'}</div><h2>${hh?'홍원의 저잣거리를 지난다':rb==='supply'?'R사 보급 구역을 지난다':rb==='alley'?'뒷골목 공방을 찾는다':'공방 거리를 지난다'}</h2>
+      <p class="lead">${rb==='supply'?'R사 날개 직원에게 열린 보급 구역이다. 손등의 번호표를 보여 주면 장비를 내준다. 들러도 한 해가 지나가지는 않는다. ':rb==='alley'?'번호표를 가리고 뒷골목 공방을 찾았다. 쫓기는 몸이라 아무것도 묻지 않는 곳만 골랐다. 들러도 한 해가 지나가지는 않는다. ':''}${rb?'':hh?'붉은 대문 안쪽에 가문의 저잣거리가 있다. 장인과 상인은 모두 가문의 이름 아래 있다. 들러도 한 해가 지나가지는 않는다.':'장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.'}${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
       <p class="small dim">${nb<=E.lastYear(G)?`다음 기회는 ${nb}년차.`:'이번이 마지막 기회다.'}</p>
       ${UI.broker?`<div class="check" style="border-color:var(--gold)"><b>${esc(G.ch.office.name)}</b> · 일감을 알선했다 · ${UI.broker.kind==='gear'?'의수 ':'카드 '}<b>${esc(UI.broker.n)}</b>${UI.broker.locked?' (덱 고정이라 돈으로 받았다)':''}</div>`:''}</div>
       ${UI.rested?`<p class="good small">${UI.rested}</p>`:''}
