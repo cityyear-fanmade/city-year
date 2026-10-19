@@ -463,3 +463,5 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 /* 첫 화면은 확대하지 않고 원래 크기·배경 그대로 둔다 (아래 규칙이 위의 확대 규칙보다 뒤에 와야 이긴다) */
 @media (min-width:900px){html[data-scr="title"] .wrap{zoom:1;max-width:780px}}
 @media (min-width:1360px){html[data-scr="title"] body::before,html[data-scr="title"] body::after{display:block;width:calc((100vw - 780px)/2 - 230px)}}
+/* 엔딩 화면 아래 버튼: 위쪽 내용(공유 문구·이미지·히든 엔딩 안내)이 늘어나도 밀려 내려가지 않게 화면 아래에 붙여 두고, 버튼 사이에 틈을 둔다 */
+.endbar{position:sticky;bottom:0;z-index:5;display:flex;flex-direction:column;gap:12px;padding:14px 0 calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(to bottom,transparent,var(--bg) 22px)}

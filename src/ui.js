@@ -1461,7 +1461,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${UI.imgUrl?`<p class="small dim">저장이 막힌 환경이다. 아래 이미지를 길게 눌러 저장한다.</p><img src="${UI.imgUrl}" alt="엔딩 기록 이미지" style="width:100%;border-radius:8px">`:''}
       ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<input id="shareBox" readonly value="${esc(UI.shareText)}" onclick="this.select()" style="width:100%;font:inherit;font-size:13px">`:''}
       ${w&&((!G.endless)||UI.outEnd||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite))?'<button class="btn quiet" data-a="finish">여기서 끝낸다 (이 판의 저장 삭제)</button>':''}
-      <button class="btn ${w&&!G.endless?'quiet':'primary'}" data-a="start">다시 태어난다</button><button class="btn quiet" data-a="title">처음 화면</button>`;
+      <div class="endbar"><button class="btn ${w&&!G.endless?'quiet':'primary'}" data-a="start">다시 태어난다</button><button class="btn quiet" data-a="title">처음 화면</button></div>`;
   }
   /* 기록 링크: 기록을 주소(#r=...) 안에 담는다. 서버 없이 열린다 */
   const PAGES='https://cityyear-fanmade.github.io/city-year/';
