@@ -455,3 +455,11 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 /* 아주 넓은 화면은 본문·양옆 칸·팝업을 한 단계 더 키운다 */
 @media (min-width:1700px){.wrap{zoom:1.35;max-width:705px}.side-l,.dock{zoom:1.35}.cfgbtn{zoom:1.35}.sheet{zoom:1.35;max-height:calc(88vh / 1.35)}}
 @media (min-width:1900px){.wrap{zoom:1.5;max-width:705px}.side-l,.dock{zoom:1.5}.cfgbtn{zoom:1.5}.sheet{zoom:1.5;max-height:calc(88vh / 1.5)}}
+/* 창 높이가 낮으면 전투 화면 등이 아래로 잘리므로 높이에 맞춰 배율을 낮춘다(본문 폭 860은 유지). 1000px 이하는 1.15배, 880px 이하는 1.05배 */
+@media (min-width:1100px) and (max-height:1000px){.wrap{zoom:1.15;max-width:748px}.cfgbtn{zoom:1.15}.sheet{zoom:1.15;max-height:calc(88vh / 1.15)}}
+@media (min-width:1360px) and (max-height:1000px){.side-l,.dock{zoom:1.15}}
+@media (min-width:1100px) and (max-height:880px){.wrap{zoom:1.05;max-width:819px}.cfgbtn{zoom:1.05}.sheet{zoom:1.05;max-height:calc(88vh / 1.05)}}
+@media (min-width:1360px) and (max-height:880px){.side-l,.dock{zoom:1.05}}
+/* 첫 화면은 확대하지 않고 원래 크기·배경 그대로 둔다 (아래 규칙이 위의 확대 규칙보다 뒤에 와야 이긴다) */
+@media (min-width:900px){html[data-scr="title"] .wrap{zoom:1;max-width:780px}}
+@media (min-width:1360px){html[data-scr="title"] body::before,html[data-scr="title"] body::after{display:block;width:calc((100vw - 780px)/2 - 230px)}}
