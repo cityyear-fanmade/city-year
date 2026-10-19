@@ -187,7 +187,7 @@ export function startUI(E,app){
     anim($('ent-'+e.att),e.att==='P'?'lunge-up':'lunge-down',500);
     await wait(200);
     if(e.hit){
-      anim($('ent-'+e.def),'hurt',520);
+      anim($('ent-'+e.def),'hurt',520);sfx(e.dmg>=(C[e.def].maxHp||100)*0.15?'hard':'impact');
       const box=$('dmgd'),fc=(e.card&&e.card.die)||6;$('dmgw').hidden=false;$('dmgw').querySelector('.dcap').textContent='피해 d'+fc;
       const dm=()=>'<div class="d6"><b>–</b></div>',sp=e.rolls2||[];
       box.innerHTML=e.rolls.map(dm).join('')+(sp.length?`<span class="small dim" style="align-self:center;padding:0 6px">${esc(e.ally2||'')}</span>`+sp.map(()=>'<div class="d6 sp" style="border-color:var(--bleed)"><b>–</b></div>').join(''):'');
@@ -201,13 +201,13 @@ export function startUI(E,app){
       await wait(600);
     }else if(e.blocked){
       setVerdict(`막았다 · ${C[e.def].name} 피해 ${e.dmg}`,'miss');
-      anim($('ent-'+e.def),'guard',600);floatTxt(e.def,'−'+e.dmg,'var(--rupture)');
+      anim($('ent-'+e.def),'guard',600);sfx('block');floatTxt(e.def,'−'+e.dmg,'var(--rupture)');
       appendLog(e.lines);applySnap(e.snap);
       await holdTap();
       await wait(500);
     }else{
       setVerdict(`빗나감 · ${C[e.def].name}이(가) 피했다`,'miss');
-      anim($('ent-'+e.def),'dodge',600);floatTxt(e.def,'회피','var(--rupture)');
+      anim($('ent-'+e.def),'dodge',600);sfx('whoosh');floatTxt(e.def,'회피','var(--rupture)');
       appendLog(e.lines);applySnap(e.snap);
       await holdTap();
       await wait(500);
