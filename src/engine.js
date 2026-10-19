@@ -1612,7 +1612,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(r===1){ch.egoPick=true;ch.mind=mindMax(ch);chips.push('뒤틀리기 직전, E.G.O 개화 · 정신력 회복')}else{ch.distPick=true;chips.push('육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
     }
     if(fx.distStable&&setStable(ch))chips.push('뒤틀림이 안정되었다 · 장비와 카드팩을 다시 쓸 수 있다 · 더 강해진 뒤틀린 카드팩을 얻었다');
-    if(fx.distortAccept){ch.distPick=true;chips.push('뒤틀림을 받아들였다 · 뒤틀림의 이름을 정한다')
+    if(fx.distortAccept){ch.distPick=true;chips.push('목소리를 받아들였다 · 뒤틀림의 이름을 정한다')
     }
     if(fx.singPick){ch.singPick=true;chips.push('특이점 개발 · 효과와 이름을 정한다')}
     if(fx.corpDecline&&ch.corp)ch.corp.st='declined';
