@@ -2346,6 +2346,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
     if(C.ch.infinite&&!(C.ch.outSeen&&C.ch.outSeen.seal)&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.min(IN.erodeMax,Math.floor(e_*IN.erodePer));
       if(e_>0&&x>0){hpLoss(C,P,x,L);L('dmg',`${P.name} · 세계의 균열이 몸을 갉는다 · 고정 피해 ${x}`)}}
+    /* 지구전 압박: from라운드부터 라운드마다 양쪽이 최대 HP의 per%×(지난 라운드) 고정 피해를 받는다(상한 max%). 회피·방어만으로 끝없이 버티는 싸움을 끝낸다 */
+    {const F=CFG.fatigue,n=C.round-F.from+1;if(n>0&&P.hp>0&&E.hp>0&&!(E.passive&&E.passive.id==='trial')){const r=Math.min(F.max,F.per*n);
+      if(n===1)L('sys','싸움이 길어진다 · 지친 숨이 거칠어진다 · 이제 라운드마다 양쪽 모두 최대 HP의 일부를 잃는다');
+      for(const X of [P,E]){const x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · 고정 피해 ${x}`)}}}
     ampUse(C,L);
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
   }
