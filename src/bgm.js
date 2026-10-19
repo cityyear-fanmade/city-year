@@ -115,7 +115,6 @@ export function createBgm(){
     const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+0.13);
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.setValueAtTime(peak*0.8,t+0.06);g.gain.exponentialRampToValueAtTime(0.0001,t+0.32);
     o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.36);
-    noiseHit(t,peak*0.12,0.012,2500,7000);
   }
   function feather(t,peak,soft){           // 킥: 부드러운 박동 (soft=잔잔)
     const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(soft?90:120,t);o.frequency.exponentialRampToValueAtTime(46,t+0.11);
@@ -185,7 +184,13 @@ export function createBgm(){
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     o.connect(f);f.connect(g);g.connect(cur.m);o.start(t);o.stop(t+dur+0.05);
   }
-  const hat=(t,peak,open)=>noiseHit(t,peak,open?0.16:0.035,7000,13000);        // 하이햇·셰이커 (작게)
+  /* 하이햇·셰이커: 띠 모양으로 거른 노이즈를 살짝 부풀렸다 길게 꼬리를 남긴다 ("틱" 대신 "츠—") */
+  function hat(t,peak,open){
+    const n=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),hp=ctx.createBiquadFilter(),g=ctx.createGain(),dur=open?0.32:0.11;n.buffer=noiseBuf;
+    bp.type='bandpass';bp.frequency.value=9000;bp.Q.value=0.8;hp.type='highpass';hp.frequency.value=5500;
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.012);g.gain.exponentialRampToValueAtTime(peak*0.3,t+dur*0.4);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    n.connect(bp);bp.connect(hp);hp.connect(g);g.connect(cur.m);n.start(t,rnd()*0.9);n.stop(t+dur+0.02);
+  }
   const crash=(t,peak)=>noiseHit(t,peak,1.4,4000,12000);                         // 심벌 (구간 시작)
   /* 선율 한 마디 읽기: '16 . 19 _' → [{k:칸,m:음,n:길이(칸)}] */
   function mel(str){const tk=str.split(/\s+/),out=[];let last=null;tk.forEach((x,k)=>{if(x==='.'){if(last)last.n++}else if(x==='_')last=null;else{last={k,m:+x,n:1};out.push(last)}});return out}
