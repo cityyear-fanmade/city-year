@@ -577,10 +577,10 @@ const CFG = {
      개발(devMax번 진척) → 날개 설립(이름) → 특이점 실험(강화 upMax번)·금기 실험. 금기 실험을 forbMax번 하면 머리의 시험(chain: 발톱 → 조율자 연속 전투).
      types: 특이점 효과. base는 고를 때, per는 강화 한 번마다 (warp.lead: 전투 처음 N라운드 항상 선공, serum.heal: 라운드마다 회복, moon.tier: 정신력 구간 보정 배수)
      trial: 머리의 시험 전투(상대별)에서 체력 배수·공격 가산. grow/up/forb/clear: 개발 진척·강화·금기 실험·시험 통과 때 얻는 능력치 */
-  corp: {from: 20, chance: 20, devMax: 2, devGap: 2, devChance: 60, labGap: 1, labChance: 80, upMax: 3, forbMax: 8, chain: ['claw', 'arbiter'],
+  corp: {from: 20, chance: 20, devMax: 2, devGap: 2, devChance: 60, labGap: 1, labChance: 80, upMax: 3, up2: 2, forbMax: 8, huntChance: 20, chain: ['claw', 'arbiter'],
     types: {
       warp: {n: '워프', e: '속도 +4 · 사건 판정 +3 · 전투 처음 3라운드 항상 선공 (강화마다 속도 +2 · 판정 +2 · 선공 1라운드 더)', base: {spd: 4, check: 3}, per: {spd: 2, check: 2}, lead: 3, leadPer: 1},
-      serum: {n: '혈청', e: '전투 중 매 라운드 시작에 HP 5 회복 (강화마다 +2, 최대 10)', heal: 5, per: 2, healMax: 10},
+      serum: {n: '혈청', e: '전투 중 매 라운드 시작에 HP 5 회복 (강화마다 +2, 최대 10 · 금기 실험 8회 뒤 2차 강화로 최대 15)', heal: 5, per: 2, healMax: 10, heal2Max: 15},
       moon: {n: '월광석', e: '최대 정신력 +8 · 해마다 정신력 +2 · 회피 실패로 정신력이 깎이지 않는다 · 정신력 구간 보정 ×1.6 (강화마다 최대 정신력 +2 · 해마다 +1 · 보정 +0.2배)', base: {mindMax: 8}, per: {mindMax: 2}, year: 2, yearPer: 1, tier: 1.6, tierPer: 0.2}
     },
     trial: {claw: {hp: 1, atk: 0}, arbiter: {hp: 1, atk: 0}}, grow: {maxHp: 3}, up: {maxHp: 8, atk: 2}, forb: {maxHp: 5, atk: 2, eva: 1}, clear: {maxHp: 15, atk: 3, eva: 2}},
@@ -1764,13 +1764,24 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     return true;
   }
   function corpGrow(ch,chips){const c=ch.corp;if(!corpYes(ch)||c.st!=='dev')return;c.stack++;corpBump(ch,CP.grow,chips);chips.push(`특이점 개발 ${c.stack}/${CP.devMax}`)}
+  /* 특이점 실효 강화 단계: 강화(최대 3) + 금기 실험을 끝까지 했을 때의 2차 강화(+2) */
+  const corpLv=ch=>((ch.corp&&ch.corp.up)||0)+((ch.corp&&ch.corp.up2)||0);
+  function corpUp2(ch,chips){
+    const c=ch.corp;if(!corpYes(ch)||c.up2||c.forb<CP.forbMax)return;c.up2=CP.up2;const T_=CP.types[c.type];
+    for(let i=0;i<CP.up2;i++){corpBump(ch,CP.up,chips);corpBump(ch,T_.per||{},chips)}
+    chips.push(`특이점 ${c.n} 2차 강화 · 강화 +${CP.up2} (효과가 더 강해진다)`);
+  }
   function corpUp(ch,chips){
     const c=ch.corp;if(!corpYes(ch)||c.up>=CP.upMax)return;c.up++;const T_=CP.types[c.type];
     corpBump(ch,CP.up,chips);corpBump(ch,T_.per||{},chips);chips.push(`특이점 ${c.n} 강화 ${c.up}/${CP.upMax}`);
   }
   function corpForb(ch,chips){
     const c=ch.corp;if(!corpYes(ch)||c.forb>=CP.forbMax)return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;bondTaboo(ch);corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
-    if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다');corpClearCheck(ch,chips)}
+    /* 발톱·조율자를 이미 이겼으면 장비 없이 돈과 경험치만 주는 강화체가 찾아온다: 실험마다 huntChance%, 마지막(8/8)은 둘 다 확정 */
+    if(CP.chain.every(id=>ch.beaten.includes(id))){const last=c.forb>=CP.forbMax;
+      if(last)c.hunt=CP.chain.map(id=>id+'_x');else if(d(100)<=CP.huntChance)(c.hunt=c.hunt||[]).push(one(CP.chain)+'_x');
+      if((c.hunt||[]).length)chips.push('머리가 강화된 시험을 보낸다');}
+    if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다');corpUp2(ch,chips);corpClearCheck(ch,chips)}
   }
   /* 머리의 시험 상대(발톱·조율자)를 이미 모두 이긴 몸이면 시험 없이 바로 넘은 것으로 친다 (예전에는 아무 일도 일어나지 않던 문제) */
   function corpClearCheck(ch,chips){
@@ -2213,7 +2224,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function advanceYear(G){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
-    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');
+    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
     if(mc.distPick)setDistort(mc,'');
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
@@ -2241,6 +2252,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.affRetry&&!mc.aff){mc.affRetry=false;return {type:'event',ev:D.affiliation}}
     if(mc.voicePend&&!mc.voiceUsed&&!mc.ego){mc.voicePend=false;mc.voiceUsed=true;return {type:'event',ev:D.mindEvents.voice}}
     /* 기업 루트 끝: 금기 실험을 forbMax번 하면 머리가 부른다. 발톱 → 조율자가 해를 넘기지 않고 연속으로 온다 */
+    if(mc.corp&&mc.corp.hunt&&mc.corp.hunt.length){const id=mc.corp.hunt.shift();(G.met=G.met||[]).push(id);return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}}}
     if(mc.corp&&mc.corp.chain&&mc.corp.chain.length){
       if(!mc.corp.headSeen){mc.corp.headSeen=true;return {type:'event',ev:D.corp.head}}
       const id=mc.corp.chain.shift();mc.corp.trial=id;(G.met=G.met||[]).push(id);
@@ -2263,7 +2275,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);if(hasInn(G.ch,'will'))gainMind(G.ch,CFG.innate.willHeal);
-      {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+(G.ch.corp.up||0)*(mt.yearPer||0))}
+      {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+corpLv(G.ch)*(mt.yearPer||0))}
       if(bondMarried(G.ch))gainMind(G.ch,BD.yearMind);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
     if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year;
@@ -2464,7 +2476,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
         while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}}}ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
     offerPick(ch,D.rewards,chips,null);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
-    {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
+    {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.xp){gainXp(ch,BN.xp);chips.push(`${BN.n||'전리품'} · 경험치 +${BN.xp}`)}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
     const up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     if(ch.egoNote){chips.push(ch.egoNote);ch.egoNote=null}
     if(ch.bloomNote){chips.push(ch.bloomNote);ch.bloomNote=null}
@@ -2544,7 +2556,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   function mkCombat(ch,id,quiet){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',hunger:ch.flags&&ch.flags.hunger?0:null,name:(eqT(ch)?`[${eqT(ch)}] `:'')+(ch.name||T.you),tt:eqT(ch)||'',color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,
-      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min(corpType(ch).healMax||999,corpType(ch).heal+(ch.corp.up||0)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+(ch.corp.up||0)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
+      bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     P.ample=ch.ample||0;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;
@@ -2575,7 +2587,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     /* 정신력: 환상체와 마주치면 2d3 감소, 그다음 정신력 구간 보정(호흡·회피) */
     let mindNote=hpNote?[hpNote]:[];
     if(e.abno)loseMind(ch,d(3)+d(3),t=>mindNote.push(`환상체와 마주쳤다 · ${t} · 2d3`));
-    const mt=mindTier(ch),ct=corpType(ch),tm=ct&&ct.tier?ct.tier+(ch.corp.up||0)*(ct.tierPer||0):1;
+    const mt=mindTier(ch),ct=corpType(ch),tm=ct&&ct.tier?ct.tier+corpLv(ch)*(ct.tierPer||0):1;
     {const dn=(ch.deck||[]).length,DB=CFG.deck.bonus,db=dn>=DB.from?(Math.floor((dn-DB.from)/DB.per)+1)*DB.atk:0;if(db){P.atk+=db;mindNote.push(`덱 ${dn}장 · 공격 +${db}`)}}
     if(P.kuro){const k=CFG.syn['흑운회'];P.cloud=k.start[P.synT];mindNote.push(`암운 · 구름 ${P.cloud} (덱 ${ch.deck.length}장)`)}
     if(P.blade)mindNote.push(`호흡결 · 매 라운드 호흡 +${P.synT>=2?2:1} · 자연 감소 ${CFG.syn['검계'].decay[P.synT]} (덱 ${ch.deck.length}장)`);
@@ -2953,7 +2965,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
       if(c.verdict){const x=Math.floor((B.maxHp-B.hp)/10);dmg=Math.max(dmg,rawDmg)+x;note+=` 처형 · 방어·감소 무시 · 잃은 체력 ${B.maxHp-B.hp} → 고정 +${x}`}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
-      hpLoss(C,B,dmg,L);
+      hpLoss(C,B,dmg,L);if(dmg>0)A.dealtR=C.round;
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
@@ -3109,10 +3121,10 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
     if(C.ch.infinite&&!(C.ch.outSeen&&C.ch.outSeen.seal)&&P.hp>0&&E.hp>0){const IN=CFG.infinite,e_=(C.ch.year||0)-IN.erodeFrom,x=Math.min(IN.erodeMax,Math.floor(e_*IN.erodePer));
       if(e_>0&&x>0){hpLoss(C,P,x,L);L('dmg',`${P.name} · 세계의 균열이 몸을 갉는다 · 고정 피해 ${x}`)}}
-    /* 지구전 압박: from라운드부터 라운드마다 양쪽이 최대 HP의 per%×(지난 라운드) 고정 피해를 받는다(상한 max%). 회피·방어만으로 끝없이 버티는 싸움을 끝낸다 */
+    /* 지구전 압박: from라운드부터 라운드마다 최대 HP의 per%×(지난 라운드) 고정 피해(상한 max%)를 받는다. 그 라운드에 상대에게 피해를 주지 못한 쪽만 받으므로 회피·방어·회복만으로 버티는 싸움이 끝난다 */
     {const F=CFG.fatigue,n=C.round-F.from+1;if(n>0&&P.hp>0&&E.hp>0&&!(E.passive&&E.passive.id==='trial')){const r=Math.min(F.max,F.per*n);
-      if(n===1)L('sys','싸움이 길어진다 · 지친 숨이 거칠어진다 · 이제 라운드마다 양쪽 모두 최대 HP의 일부를 잃는다');
-      for(const X of [P,E]){const x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · 고정 피해 ${x}`)}}}
+      if(n===1)L('sys','싸움이 길어진다 · 지친 숨이 거칠어진다 · 이제 라운드마다 상대에게 피해를 주지 못한 쪽이 최대 HP의 일부를 잃는다');
+      for(const X of [P,E]){if(X.dealtR===C.round)continue;const x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · 이번 라운드 피해를 주지 못했다 · 고정 피해 ${x}`)}}}
     ampUse(C,L);
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
   }
@@ -4252,7 +4264,7 @@ function startUI(E,app){
       <li><b>${T.licensed}</b> 자격 시험, 계약, 견습으로 ${T.rankStart}${T.rankUnit}에 등록된다. 소속이 없거나 ${T.affTypes.office} 소속이면 전투에서 이긴 뒤 소문 판정(1d100 + ${T.paths.fixer} 진로 보정 ≥ ${CFG.winLicenseDc})으로도 등록된다. 고정 전투(${Object.keys(D.fixedFights).join('·')}년차)에서 이기면 2${T.rankUnit}씩 ${T.promote}한다.</li>
       <li><b>손가락 서열</b> ${Object.entries(D.fingers).map(([n,F])=>`${n}: ${F.ranks.map(r=>r.branch?r.branch.map(b=>b.n).join('/'):r.n).join(' → ')}`).join(' · ')}. 고정 전투 승리나 승급 사건으로 오르고, 오를 때마다 보정을 받는다. 서열 ${D.fingerRules.shopTier}단계 이상이면 공방 등급 +1.</li>
       <li><b>인연 · 가족</b> ${CFG.bond.from}년차부터 일상 속에서 인연을 만난다. 결혼하면 최대 HP·정신력·판정이 오르고 아이가 생길 수 있다. 결혼한 뒤에는 <b>금기 실험이나 금기 사건을 한 번이라도 저지르면</b> 그 다음 해부터 해마다 ${CFG.bond.dieChance}% 확률로 배우자가 세상을 떠난다(최대 정신력 −${CFG.bond.lossMind}, 영구). 결혼한 채 히든 보스를 이길 때마다 이 확률이 +${CFG.bond.riskStep}%p 쌓인다. 배우자가 죽어도 아이는 남는다. 히든 보스의 전리품 「엘레나의 처방전」을 가지면 이 확률이 절반이 된다.</li>
-      <li><b>금기</b> 특이점 루트의 금기 실험, 일부 사건의 금기 선택. 큰 강화를 주는 대신 정신력이 깎이고, 결혼 중이면 위의 배우자 사망 위험이 붙는다. 금기 실험을 ${CFG.corp.forbMax}번 채우면 머리가 발톱과 조율자를 보낸다.</li>
+      <li><b>특이점 강화 · 금기 실험</b> 특이점은 강화를 ${CFG.corp.upMax}번까지만 할 수 있다. 그보다 더 오르지 않는다. 금기 실험은 별개로 ${CFG.corp.forbMax}번까지 할 수 있고, 큰 강화를 주는 대신 정신력이 깎이고 결혼 중이면 위의 배우자 사망 위험이 붙는다. 금기 실험을 ${CFG.corp.forbMax}번 채우면 머리가 ${D.enemies.claw.n}과 ${D.enemies.arbiter.n}를 보낸다. 둘을 이기면 보상을 한 번 받고, 그 뒤로 더 일어나는 일은 없다.</li>
       <li><b>${D.pinky.n}</b> 어느 소속에도 겹쳐 붙는 표식. ${D.pinky.e}.</li>
       <li><b>돈과 공방</b> 해마다 소속 봉급(${T.licensed}는 급수 수당 추가), 전투 현상금, 일부 사건으로 ${D.money.unit}을 번다. 공방은 ${D.workshops.map(w=>w.n).join(' · ')} 3등급이고, 소속과 급수에 따라 들어갈 수 있는 등급이 정해진다. 무기·방어구·의수 칸마다 하나씩 맞춘다.</li>
       <li><b>장비 표기</b> 공+N 공격(명중 보정) · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · D6≥N 피해 주사위 d6을 굴려 N보다 작게 나오면 N으로 친다 · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
@@ -4400,10 +4412,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🩹 K사 엠플 조정',['전투 중 자동으로 HP를 크게 회복하는 효과가 너무 강하다는 의견이 있어 조정했습니다.','가격은 5,000안으로 통일했습니다. 무한 모드 이후에도 같은 값입니다.','지닐 수 있는 수는 그대로 최대 3개입니다. 한 판에 살 수 있는 수는 모두 5개로 제한됩니다.','자동으로 회복하는 양이 60에서 50으로 줄었습니다.']],
       ['🔧 버그 수정',['날개에서 해고되어도 날개를 세우는 길(특이점 개발)이 이어지던 문제를 고쳤습니다. 날개를 잃으면 개발이 중단됩니다.','직접 세운 날개의 대표가 소속이 비어 있으면 공방이 1등급으로 잠기고 해결사로 등록되던 문제를 고쳤습니다. 대표는 날개 임원과 같은 공방 등급을 받고 해결사를 겸할 수 없습니다. 이미 등록된 저장본은 다음 해로 넘어갈 때 정리됩니다.','일부 숨은 길에서 직급과 해결사 급수가 맞지 않던 문제를 고쳤습니다.']],
       ['🙏 감사합니다',['의견과 제보를 주신 모든 분들께 감사드립니다.']]];
-  const NOTICE={id:'v9.3.4-1',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v9.3.4-4',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['⚔ 지구전 압박',['서로 못 쓰러뜨려 싸움이 끝없이 이어지던 문제를 막기 위해 생겼습니다. 모든 전투에 적용됩니다.','전투가 50라운드째에 들어서면 "싸움이 길어진다"는 안내가 뜨고, 그 라운드부터 라운드가 끝날 때마다 나와 상대 모두 최대 HP의 일부를 고정 피해로 잃습니다.','피해는 50라운드째 최대 HP의 1%, 51라운드째 2%, 52라운드째 3%처럼 한 라운드마다 1%p씩 늘고 최대 25%에서 멈춥니다. 회피·방어·보호막으로 막을 수 없습니다.','양쪽이 같은 비율로 닳으므로 HP 비율이 낮은 쪽이 먼저 쓰러집니다. 동시에 쓰러지면 패배로 칩니다. 평소 전투는 50라운드 근처까지 가지 않아 영향이 없고, 6라운드를 버티면 이기는 시험 전투는 제외입니다.']],
+    sec:[['⚔ 지구전 압박',['서로 못 쓰러뜨려 싸움이 끝없이 이어지던 문제를 막기 위해 생겼습니다. 모든 전투에 적용됩니다.','전투가 50라운드째에 들어서면 "싸움이 길어진다"는 안내가 뜹니다. 그 라운드부터 라운드가 끝날 때마다, 그 라운드에 상대에게 피해를 한 번도 주지 못한 쪽이 최대 HP의 일부를 고정 피해로 잃습니다.','피해는 50라운드째 최대 HP의 1%, 51라운드째 2%, 52라운드째 3%처럼 한 라운드마다 1%p씩 늘고 최대 25%에서 멈춥니다. 회피·방어·보호막으로 막을 수 없습니다.','그래서 회피와 방어, 회복만 쌓고 때리지 않는 쪽은 버틸 수 없고, 매 라운드 한 번이라도 맞히는 쪽이 이깁니다. 양쪽 모두 못 맞히면 둘 다 잃고, 동시에 쓰러지면 패배로 칩니다. 평소 전투는 50라운드 근처까지 가지 않아 영향이 없고, 6라운드를 버티면 이기는 시험 전투는 제외입니다.']],
     ['⚔ 후반 보스 · 무기',['일부 후반 히든 보스의 능력치와 그 전리품 무기를 조정했습니다.','검은 침묵의 장갑이 주는 카드 Furioso가 크게 강해졌습니다. 주사위 9개가 모두 3~14로 고정되고 명중 +30이 붙습니다.']],
+    ['🔬 특이점 · 금기 설명',['특이점 강화는 최대 3번까지이고, 다 채우면 더 오르지 않습니다.','금기 실험은 강화와 따로 최대 8번까지 할 수 있습니다. 8번을 채우면 머리가 발톱과 조율자를 보내고, 둘을 이기면 보상을 한 번 받습니다. 이미 둘을 이긴 사람은 금기 실험마다 가끔 장비 없이 돈과 경험치를 주는 더 단단한 시험이 찾아오고, 8번째에는 확정입니다. 8번을 채우면 특이점이 2단계 더 강해집니다(2차 강화). 결혼 중에 금기를 저지르면 배우자가 죽을 위험이 붙습니다.']],
     ['🔧 수정',['엄지의 "상납 마감"이 상석 대부에게도 나오던 문제를 고쳤습니다. 이제 솔다토에게만 나오고, 카포 이상에게는 아랫사람의 몫을 두고 책임을 정하는 사건이 나옵니다.','홍원 가주의 자리에서 얻는 흑수 재갈이 카드와 전리품으로 지급되지 않던 문제를 고쳤습니다. 새로 잡는 판부터 적용됩니다.']]]};
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
   const V932SEC=[['🔀 출생 변경',['이번 업데이트에 H사 루트와 R사 전용 루트가 히든 출생으로 이전됩니다. "아무것도 없는 존재"로 시작하면 100% 나오던 운명 선택이 출생으로 넘어갑니다. 이제 출생 굴림에서 직접 나오며, 재능·결점·성장기도 그 출생에 맞는 것으로 정해집니다.','"어떤 출생 보정도 없이 시작한다"를 고르면 운명 선택 없이 아무것도 없는 존재로 시작합니다. 대신 빈손 보정(히든 보스 전리품 장비 확률 +25%p, 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%)을 받습니다.','출생이 추가되었습니다.']],
