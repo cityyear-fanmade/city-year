@@ -1,5 +1,5 @@
-/* 효과음: 외부 음원 없이 Web Audio로 합성한다. 주사위가 멈출 때의 '탁' 소리만 쓴다.
-   삑 소리가 나는 순음을 쓰지 않고, 부딪히는 순간의 잡음 + 나무 몸통이 울리는 낮은 공명 + 방에 남는 짧은 잔향으로 만든다 */
+/* 효과음: 외부 음원 없이 Web Audio로 합성한다. 주사위가 멈출 때의 둔탁한 '뚝' 소리만 쓴다.
+   높고 날카로운 '딱' 잡음은 빼고, 나무 몸통이 울리는 낮은 공명 + 낮은 둔탁함 + 방에 남는 짧은 잔향으로 만든다 */
 export function createSfx(isOn,getVol){
   const AC=typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext);
   let ctx=null,nb=null,room=null;
@@ -16,7 +16,7 @@ export function createSfx(isOn,getVol){
     if(ctx.state==='suspended')ctx.resume();
     return true;
   };
-  /* crack: 부딪히는 순간의 높은 잡음 · body: 몸통 공명(Hz 두 개와 길이) · room: 잔향 양 */
+  /* crack은 쓰지 않는다(날카로운 '딱' 제거) · body: 몸통 공명(Hz 두 개와 길이) · room: 잔향 양 */
   const P={
     snap:{crack:[3800,1.6,0.028,0.9],body:[[520,0.085,0.55],[1180,0.05,0.25]],room:0.45,g:1.0},
     hit: {crack:[2600,1.2,0.03,0.8], body:[[340,0.09,0.7],[760,0.055,0.3]],room:0.35,g:0.95},
@@ -30,13 +30,6 @@ export function createSfx(isOn,getVol){
     const out=ctx.createGain();out.gain.value=Math.min(1,p.g*(0.25+v*0.85));
     out.connect(ctx.destination);
     const wet=ctx.createGain();wet.gain.value=p.room;out.connect(wet);wet.connect(room);
-    /* 부딪히는 순간 */
-    {const [f,q,len,gn]=p.crack;
-      const n=ctx.createBufferSource();n.buffer=nb;n.playbackRate.value=det;
-      const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=900;
-      const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f*det;bp.Q.value=q;
-      const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gn,t+0.0015);g.gain.exponentialRampToValueAtTime(0.0008,t+len);
-      n.connect(hp);hp.connect(bp);bp.connect(g);g.connect(out);n.start(t);n.stop(t+len+0.03)}
     /* 몸통 공명: 부딪힌 나무가 울리는 소리. 피치를 내리지 않고 그대로 줄어들게 해서 '뚝'하고 꺾이지 않게 한다 */
     for(const [f,len,gn] of p.body){
       const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.value=f*det;
