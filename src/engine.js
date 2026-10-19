@@ -1347,8 +1347,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 공방 장비 정비: 장착 중인 장비 1개에 공격 또는 회피 +1을 시도한다 (성공 chance%, 시도는 성패와 상관없이 소모) */
   const tuneCost=g=>CFG.shop.tune.base+CFG.shop.tune.step*(g.tries||0);
   /* 정비 최대 횟수: 공방 해결사는 더 많이 할 수 있다 */
-  /* 제나를 쓰러뜨린 뒤에는 장비마다 정비를 zenaPlus번 더 할 수 있다 (바랄·제나의 장비는 정비 대상에서 제외 — 후반 장비가 한 가지로 굳지 않게) */
-  const tuneMax=(ch,g)=>g&&CFG.shop.tune.noPlus.includes(g.id)?0:(isWs(ch)?CFG.shop.tune.maxWs:CFG.shop.tune.max)+(ch.flags&&ch.flags.beatZena&&g?CFG.shop.tune.zenaPlus:0);
+  /* 제나를 쓰러뜨린 뒤에는 장비마다 정비를 zenaPlus번 더 할 수 있다 (바랄·제나의 장비는 기본 횟수만 — 후반 장비가 한 가지로 굳지 않게) */
+  const tuneMax=(ch,g)=>(isWs(ch)?CFG.shop.tune.maxWs:CFG.shop.tune.max)+(ch.flags&&ch.flags.beatZena&&g&&!CFG.shop.tune.noPlus.includes(g.id)?CFG.shop.tune.zenaPlus:0);
   function tuneGear(ch,slot,stat){
     const T=CFG.shop.tune,g=ch.gear[slot];
     if(!g||(ch.distForm&&!ch.distStable)||!['atk','eva'].includes(stat)||(g.tries||0)>=tuneMax(ch,g)||ch.money<tuneCost(g))return null;
