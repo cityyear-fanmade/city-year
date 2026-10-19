@@ -1240,7 +1240,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* ===== R사 부화장 복제체 루트 =====
      ch.rb = {n(쓰러뜨린 부화장 개체), out(부화장을 나옴), next(추격 시작 해), fled, chase(만난 추격대), hides, cnext(다음 추격 해), bossSeen, done}
-     부화장 연전은 해를 넘기지 않고 이어진다. 공방거리는 쓰지 않는다 */
+     부화장 연전은 해를 넘기지 않고 이어진다. 부화장 안에서는 공방이 없고, 나온 뒤에는 R사 보급 구역, 탈주 뒤에는 뒷골목 공방으로 열린다 */
   function rbFree(G){
     const ch=G.ch,r=ch.rb,Z=CFG.rb;if(!r||!D.rbRoute)return null;
     /* 금기 위반이 확인되면 머리가 바로 보낸다: 발톱 → 조율자 (쉬지 않고 이어진다) */
