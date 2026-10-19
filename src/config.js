@@ -163,7 +163,7 @@ export const CFG = {
      검계: 라운드 시작 호흡 +1(8장부터 +2) · 호흡 자연 감소 decay[단계] · 호흡 2당 모든 카드 +1. 밤의 송곳: 속도 굴림 +init[단계] · 출혈 걸린 적에게 명중 +bleedHit · 선공이면 상대 회피 절반 */
   /* 조직 루트: 엄지 전향 제안(흑운회·밤의 송곳의 최고 서열) → 몇 해 뒤 숙청 소문 → 반역하면 엄지의 대모 · 검계 최고 서열 → 뒤틀린 쥰 → 역적 → S사 절도사 */
   synRoute: {offerChance: 55, purgeGap: 3, fleeHp: 6},
-  /* 무한 모드 추가 엔딩(죽는 것 말고): 외곽 괴수 sealBeasts마리를 쓰러뜨리면 균열이 닫힌다 · 히든 보스 starHidden마리를 이기면 별 · 가족이 있고 무한 모드 settleYears년이 지나면 정착. 각각 한 번, 끝낸 뒤에도 이어서 살 수 있다 */
+  /* 무한 모드 추가 엔딩(죽는 것 말고): 균열로 흘러드는 히든 보스를 모두 쓰러뜨리면 균열이 닫힌다(sealBeasts는 더 쓰지 않음) · 히든 보스 starHidden마리를 이기면 별 · 가족이 있고 무한 모드 settleYears년이 지나면 정착. 각각 한 번, 끝낸 뒤에도 이어서 살 수 있다 */
   outEnds: {sealBeasts: 3, starHidden: 16, settleYears: 12},
   syn: {at: [8, 10],
     '흑운회': {key: 'kuro', start: [1, 2, 3, 4], max: 5, reset: 2, die: 2, bleedPlus: 1, half: 0.5},

@@ -1522,7 +1522,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 무한 모드 추가 엔딩: 한 번씩, 끝낸 뒤에도 이어서 살아갈 수 있다 */
     if(G.infinite){const ch=G.ch,OE=CFG.outEnds;ch.outSeen=ch.outSeen||{};
       const baseEnd_=CFG.years+CFG.endless.span*CFG.endless.grades.length;
-      if(!ch.outSeen.seal&&(ch.infImp||1)-1>=OE.sealBeasts){ch.outSeen.seal=1;return {type:'end',win:true,out:'seal'}}
+      /* 균열은 균열로 흘러드는 히든 보스를 모두 쓰러뜨리면 닫힌다 */
+      if(!ch.outSeen.seal&&G.year>baseEnd_&&riftBosses().every(h=>ch.beaten.includes(h.id))){ch.outSeen.seal=1;return {type:'end',win:true,out:'seal'}}
       if(!ch.outSeen.star&&ch.beaten.length>=OE.starHidden){ch.outSeen.star=1;return {type:'end',win:true,out:'star'}}
       if(!ch.outSeen.settle&&bondMarried(ch)&&(ch.bond.kids||[]).some(k=>G.year-k.born>=BD.kid.adult)&&G.year>=baseEnd_+OE.settleYears){ch.outSeen.settle=1;return {type:'end',win:true,out:'settle'}}}
     G.free=false;G.year++;
@@ -1549,7 +1550,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
          맞서면 그 보스와 싸우고(다시 나오지 않음), 돌아서면 평소 조우로 넘어간다(조건이 맞으면 다음에 또 나올 수 있다) */
       /* 제 2막 무한 모드의 세계의 균열: 조건과 상관없이 아직 이기지 못한 히든 보스 중 무엇이든 나타난다 */
       if(G.infinite&&G.year>baseEnd&&d(100)<=INF.crack){
-        const pool=(D.hiddenBosses||[]).filter(h=>D.enemies[h.id]&&!G.ch.beaten.includes(h.id)&&!(G.met||[]).includes(h.id));
+        const pool=riftBosses().filter(h=>!G.ch.beaten.includes(h.id)&&!(G.met||[]).includes(h.id));
         if(pool.length){const h=one(pool),nm=D.enemies[h.id].n;
           return {type:'omen',boss:h.id,omen:riftOmen(nm),rift:true,escape:true,spec:f}}
       }
@@ -1819,6 +1820,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const bleedCap=X=>X.isP?CFG.stackCap:CFG.bleedMax;
   /* 혈찬 회복: 5스택마다 CFG.hyeolchan.heal (총량 제한 없음) */
   const hcHeal=X=>Math.max(0,Math.min(CFG.hyeolchan.heal,X.maxHp-X.hp));
+  /* 균열에 나타날 수 있는 히든 보스: 조건과 상관없이 나타나지만, 이기는 것이 아니라 버티는 시험(trial)이나 noRift 표시가 있는 보스는 뺀다 */
+  const riftBosses=()=>{const seen=new Set();return (D.hiddenBosses||[]).filter(h=>{const e=D.enemies[h.id];if(!e||h.noRift||(e.passive&&e.passive.id==='trial')||seen.has(h.id))return false;seen.add(h.id);return true})};
   const infEvaCut=ch=>Math.min(Math.max(0,ch.stats.eva),infYears(ch)*CFG.infinite.evaDown);
   const infYears=ch=>ch.infinite?Math.max(0,(ch.year||0)-(CFG.years+CFG.endless.span*CFG.endless.grades.length)):0;
   function mkCombat(ch,id,quiet){
