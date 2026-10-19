@@ -1579,7 +1579,8 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 조우 =====
      "table:<이름>"이면 1d100으로 조우 표를 굴린다. 소속 전용 표(<이름>@<소속 종류>)가 있으면 그것을 쓴다 */
   /* 격리 실패: 아직 이기지 않은 환상체 보스 중 하나 */
-  const abnoLeft=ch=>Object.keys(D.enemies).filter(id=>D.enemies[id].breach&&!(ch.minis||[]).includes(id));
+  /* after: 그 환상체(아종 등)를 먼저 이겨야 나온다 (예: 크고 나쁜 늑대 → 커다랗고 나쁠 늑대) */
+  const abnoLeft=ch=>Object.keys(D.enemies).filter(id=>{const e=D.enemies[id],m=ch.minis||[];return e.breach&&!m.includes(id)&&(!e.after||m.includes(e.after))});
   function encounter(ch,s){
     if(s==='abno'){const ls=abnoLeft(ch),AP=CFG.apoc,bl=ls.filter(x=>AP.birds.includes(x)),started=AP.birds.some(x=>(ch.minis||[]).includes(x));
       /* 새 시리즈를 시작했으면 남은 새를 먼저 만난다 */
@@ -1766,7 +1767,13 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function corpForb(ch,chips){
     const c=ch.corp;if(!corpYes(ch)||c.forb>=CP.forbMax)return;c.forb++;ch.flags.taboo=(ch.flags.taboo||0)+1;bondTaboo(ch);corpBump(ch,CP.forb,chips);chips.push(`금기 실험 ${c.forb}/${CP.forbMax}`);
-    if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다')}
+    if(c.forb>=CP.forbMax){c.chain=CP.chain.filter(id=>!ch.beaten.includes(id));chips.push('머리가 당신을 주시한다');corpClearCheck(ch,chips)}
+  }
+  /* 머리의 시험 상대(발톱·조율자)를 이미 모두 이긴 몸이면 시험 없이 바로 넘은 것으로 친다 (예전에는 아무 일도 일어나지 않던 문제) */
+  function corpClearCheck(ch,chips){
+    const c=ch.corp;if(!c||c.cleared||c.forb<CP.forbMax||(c.chain||[]).length||c.trial)return false;
+    if(!CP.chain.every(id=>ch.beaten.includes(id)))return false;
+    c.headSeen=true;c.cleared=true;chips&&chips.push('머리의 시험 상대는 이미 쓰러뜨렸다 · 머리의 시험을 넘었다');corpBump(ch,CP.clear,chips||[]);return true;
   }
   /* ===== 인연(동반자) =====
      ch.bond = {st: 'pick'(이름 정하는 중)|'met'|'married'|'lost'(배우자의 죽음)|'left'(결혼 전에 떠남)|'declined', kids[{n,born,job,told}], route, name, step, tries, love, since, next, saved} */
@@ -2203,7 +2210,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function advanceYear(G){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
-    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);autoOffers(mc);
+    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');
     if(mc.distPick)setDistort(mc,'');
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
@@ -3151,7 +3158,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    setInnateOpen,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
 
@@ -3240,7 +3247,7 @@ function createBgm(){
   }
   /* 악기들 */
   function ep(m,t,peak,dur){               // 전기 피아노: 부드러운 사인 + 짧게 울리는 윗배음
-    const f=hz(m),o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain();o.type='sine';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2.01;
+    const f=hz(m),o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),g2=ctx.createGain();o.type='sine';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
     g2.gain.setValueAtTime(peak*0.35,t);g2.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
     o.connect(g);o2.connect(g2);g2.connect(g);g.connect(cur.b);o.start(t);o.stop(t+dur+0.05);o2.start(t);o2.stop(t+0.25);
@@ -3258,20 +3265,21 @@ function createBgm(){
   /* 파워 코드 (불길): 근음 · 5음 · 옥타브를 일그러뜨린다. mute=짧게 끊어 치기 */
   function powerC(m,t,dur,peak,mute){
     const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.005);
-    if(mute)g.gain.exponentialRampToValueAtTime(0.0001,t+dur);else{g.gain.setValueAtTime(peak*0.85,t+dur*0.8);g.gain.linearRampToValueAtTime(0.0001,t+dur)}
-    for(const [o,dt] of [[0,-6],[7,4],[12,0]]){const x=ctx.createOscillator();x.type='sawtooth';x.frequency.value=hz(m+o);x.detune.value=dt;x.connect(g);x.start(t);x.stop(t+dur+0.05)}
+    if(mute)g.gain.exponentialRampToValueAtTime(0.0001,t+dur);else{g.gain.linearRampToValueAtTime(peak*0.85,t+dur*0.8);g.gain.linearRampToValueAtTime(0.0001,t+dur)}
+    /* 근음·5음·옥타브를 순정 비율(1 · 1.5 · 2)로 맞춘다: 어긋나 있으면 찌그러진 소리에서 맥놀이(떨림)가 생긴다 */
+    for(const r of [1,1.5,2]){const x=ctx.createOscillator();x.type='sawtooth';x.frequency.value=hz(m)*r;x.connect(g);x.start(t);x.stop(t+dur+0.05)}
     g.connect(cur.d);
   }
   /* 서브 베이스: 아주 낮은 사인으로 바닥을 받친다 */
   function subB(m,t,dur,peak){
     const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=hz(m);
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.01);g.gain.setValueAtTime(peak*0.8,t+dur*0.7);g.gain.linearRampToValueAtTime(0.0001,t+dur);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.01);g.gain.linearRampToValueAtTime(peak*0.8,t+dur*0.7);g.gain.linearRampToValueAtTime(0.0001,t+dur);
     o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+dur+0.05);
   }
   /* 무거운 킥: 높은 데서 낮게 떨어지는 사인 + 짧은 딸깍 */
   function kickH(t,peak){
-    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+0.13);
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.004);g.gain.setValueAtTime(peak*0.8,t+0.06);g.gain.exponentialRampToValueAtTime(0.0001,t+0.32);
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(115,t);o.frequency.exponentialRampToValueAtTime(42,t+0.13);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.009);g.gain.linearRampToValueAtTime(peak*0.8,t+0.06);g.gain.exponentialRampToValueAtTime(0.0001,t+0.32);
     o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.36);
   }
   function feather(t,peak,soft){           // 킥: 부드러운 박동 (soft=잔잔)
@@ -3279,16 +3287,18 @@ function createBgm(){
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
     o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.24);
   }
-  function snare(t,peak){                  // 스네어: 노이즈 + 짧은 몸통음
-    noiseHit(t,peak,0.12,1200,3800);
-    const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(210,t);o.frequency.exponentialRampToValueAtTime(120,t+0.09);
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak*0.9,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
+  function snare(t,peak){                  // 스네어: 부드럽게 거른 노이즈 + 몸통음 (날카로운 '타탁'이 나지 않게 고음을 줄이고 시작을 조금 무르게)
+    {const n=ctx.createBufferSource(),f=ctx.createBiquadFilter(),l=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=noiseBuf;f.type='highpass';f.frequency.value=1800;l.type='lowpass';l.frequency.value=7000;
+      g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak*0.55,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+0.14);
+      n.connect(f);f.connect(l);l.connect(g);g.connect(cur.m);n.start(t,rnd()*0.9);n.stop(t+0.18)}
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(190,t);o.frequency.exponentialRampToValueAtTime(110,t+0.1);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak*0.6,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
     o.connect(g);g.connect(cur.m);o.start(t);o.stop(t+0.14);
   }
   function padN(m,t,dur,peak){             // 패드: 살짝 어긋난 두 삼각파를 느리게 키우고 줄인다
     const g=ctx.createGain(),f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=1100;f.Q.value=0.3;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+dur*0.35);g.gain.linearRampToValueAtTime(peak*0.8,t+dur*0.8);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    for(const dt of [-6,6]){const o=ctx.createOscillator();o.type='triangle';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
+    for(const dt of [-3,3]){const o=ctx.createOscillator();o.type='triangle';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
     f.connect(g);g.connect(cur.u);
   }
   function sawN(m,t,dur,peak,cut){         // 베이스: 톱니파를 부드럽게 올렸다 내린다 (딱딱 끊기지 않게)
@@ -3323,17 +3333,17 @@ function createBgm(){
   /* 피리 같은 선율 (고요): 사인 + 삼각파, 살짝 떨림(비브라토) */
   function fluteN(m,t,dur,peak){
     const f=hz(m),g=ctx.createGain(),o=ctx.createOscillator(),o2=ctx.createOscillator(),lfo=ctx.createOscillator(),lg=ctx.createGain();
-    o.type='sine';o2.type='triangle';o.frequency.value=f;o2.frequency.value=f;o2.detune.value=4;lfo.frequency.value=5.2;lg.gain.value=f*0.006;
+    o.type='sine';o2.type='triangle';o.frequency.value=f;o2.frequency.value=f;lfo.frequency.value=5;lg.gain.value=f*0.0025;
     lfo.connect(lg);lg.connect(o.frequency);lg.connect(o2.frequency);
     const g2=ctx.createGain();g2.gain.value=0.45;o2.connect(g2);g2.connect(g);o.connect(g);
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.04);g.gain.setValueAtTime(peak*0.9,t+Math.max(0.05,dur-0.08));g.gain.linearRampToValueAtTime(0.0001,t+dur);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.04);g.gain.linearRampToValueAtTime(peak*0.9,t+Math.max(0.05,dur-0.08));g.gain.linearRampToValueAtTime(0.0001,t+dur);
     g.connect(cur.u);for(const x of [o,o2,lfo]){x.start(t);x.stop(t+dur+0.05)}
   }
   /* 신스 선율 (불길): 살짝 어긋난 톱니 둘을 걸러 또렷하게 */
   function synthN(m,t,dur,peak,cut){
     const f=ctx.createBiquadFilter(),g=ctx.createGain();f.type='lowpass';f.frequency.setValueAtTime(cut*1.4,t);f.frequency.exponentialRampToValueAtTime(cut,t+0.12);f.Q.value=1.2;
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.012);g.gain.setValueAtTime(peak*0.8,t+Math.max(0.03,dur-0.05));g.gain.linearRampToValueAtTime(0.0001,t+dur);
-    for(const dt of [-9,9]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+0.012);g.gain.linearRampToValueAtTime(peak*0.8,t+Math.max(0.03,dur-0.05));g.gain.linearRampToValueAtTime(0.0001,t+dur);
+    for(const dt of [-3,3]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+0.05)}
     f.connect(g);g.connect(cur.b);
   }
   /* 퉁기는 베이스 (고요): 삼각파를 짧게 */
@@ -3418,12 +3428,12 @@ function createBgm(){
     /* 드럼 */
     if(sec!=='break'){
       if(fight||sec==='B')for(let k=0;k<4;k++)kickH(at(k),0.2);else for(const k of [0,1.5,2,2.75])kickH(at(k),0.2);
-      if(sec!=='intro')for(const k of [1,3])snare(at(k),0.065);
+      if(sec!=='intro')for(const k of [1,3])snare(at(k),0.045);
       for(let n=0;n<8;n++)hat(at(n/2),n%2?0.016:0.01,n===7&&sec==='B');
-    }else if(pos===23){for(let n=0;n<16;n++)snare(at(n/4),0.012+0.003*n)}
+    }else if(pos===23){for(let n=0;n<16;n+=2)snare(at(n/4),0.012+0.003*n)}
     else kickH(at(0),0.14);
     if(start){crash(T,0.05);boom(T,0.22)}
-    if(phraseEnd&&sec!=='break'&&pos!==23)for(let n=1;n<4;n++)snare(at(3+n*0.25),0.03+0.008*n);
+    if(phraseEnd&&sec!=='break'&&pos!==23)for(let n=1;n<4;n+=2)snare(at(3+n*0.25),0.022+0.006*n);
     if(pos%8===0&&sec!=='break')boom(T,0.18);
     /* 훅 */
     if(sec==='A'||sec==='B'||sec==='A2'){const L=sec==='B'?P.fireB:P.fireA,cut=fight?3600:3000;
@@ -3440,7 +3450,7 @@ function createBgm(){
   function choirN(m,t,dur,peak){
     const g=ctx.createGain(),f1=ctx.createBiquadFilter(),f2=ctx.createBiquadFilter();f1.type='bandpass';f1.frequency.value=700;f1.Q.value=2.5;f2.type='bandpass';f2.frequency.value=1150;f2.Q.value=3;
     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+dur*0.4);g.gain.setValueAtTime(peak,t+dur*0.75);g.gain.linearRampToValueAtTime(0.0001,t+dur);
-    for(const dt of [-8,8]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f1);o.connect(f2);o.start(t);o.stop(t+dur+0.05)}
+    for(const dt of [-4,4]){const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=hz(m);o.detune.value=dt;o.connect(f1);o.connect(f2);o.start(t);o.stop(t+dur+0.05)}
     f1.connect(g);f2.connect(g);g.connect(cur.u);
   }
   /* 히든 보스 한 마디: 0~3 도입(느리게) · 이후 20마디 한 바퀴 — 0~7 본 구간(반박자: 킥 1·3박 반, 스네어 3박, 긴 파워 코드) · 8~15 몰아치기(킥 매 박·스네어 2·4·8분 끊어 치기·선율, 마지막 마디는 7/8) · 16~19 숨 고르기(종·합창·지속음) */
@@ -3460,18 +3470,18 @@ function createBgm(){
         powerC(gm,at(0),bd*2.5,0.055,false);powerC(gm,at(2.5),bd*1.5,0.05,false);
         for(const k of [0,1.5,2.5])subB(lb-12,at(k),bd*(k===0?1.4:0.9),0.14);
         sawN(lb,at(0),bd*1.4,0.07,700);sawN(lb,at(2.5),bd*1.4,0.07,700);
-        kickH(at(0),0.22);kickH(at(2.5),0.2);snare(at(2),0.07);
+        kickH(at(0),0.22);kickH(at(2.5),0.2);snare(at(2),0.05);
         for(let n=0;n<4;n++)hat(at(n),n%2?0.012:0.008,false);
         C.t.slice(0,3).forEach((o,i)=>choirN(R+o-12,T+i*0.03,bd*4,0.012));
         if(pos%2===0)bellN(R+P.bossBell[pos%8],at(0),0.04,bd*3);
       }else{
         for(let n=0;n<beats*2;n++){powerC(gm,at(n/2),n===0?bd*0.9:bd*0.32,n===0?0.05:0.036,n!==0);sawN(lb+(n%4===3?12:0),at(n/2),bd*0.45,n%2?0.06:0.08,1100)}
         for(let k=0;k<beats;k++){kickH(at(k),0.2);subB(lb-12,at(k),bd*0.9,0.12)}
-        for(const k of [1,3])if(k<beats)snare(at(k),0.065);
+        for(const k of [1,3])if(k<beats)snare(at(k),0.045);
         for(let n=0;n<beats*2;n++)hat(at(n/2),n%2?0.015:0.009,false);
         for(const x of mel(P.bossLead[ci])){if(x.k>=beats*2)continue;synthN(R+x.m-12,at(x.k/2),x.n*bd/2*0.9,0.035,2600)}
         if(pos===8)crash(T,0.055);
-        if(pos===15)for(let n=1;n<4;n++)snare(at(2.5+n*0.25),0.03+0.01*n);
+        if(pos===15)for(let n=1;n<4;n+=2)snare(at(2.5+n*0.25),0.022+0.008*n);
       }
       if(pos===0)crash(T,0.05),boom(T,0.24);
     }
