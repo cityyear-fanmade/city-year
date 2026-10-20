@@ -340,7 +340,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 기본 카드팩 3개: 기본 4장으로 시작하는 이름을 바꿀 수 있는 프리셋. 출신 카드·소속 카드는 들어 있지 않고, 얻은 카드는 편집 가능한 모든 팩에 복사된다 */
   const newBasicPacks=()=>[1,2,3].map(i=>({n:'기본 카드팩 '+i,k:'basic',deck:BASE4.slice(),side:[],extra:[],deckLocked:false,cardMoney:false,orgPack:null,finalGiven:false}));
   /* 예전 판·새 판 공통: 기본 카드팩이 없으면 만들고, 지금 팩의 이름·종류를 채운다 */
+  /* 망가진 세이브 복구: 능력치나 HP가 NaN(저장하면 null)이 된 판은 기본값과 장비의 HP로 다시 맞춘다 */
+  function repairStats(ch){
+    const st=ch.stats;if(!st)return false;let fixed=false;
+    for(const k in st){if(typeof st[k]!=='number'&&st[k]!==null)continue;if(!Number.isFinite(st[k])){st[k]=k==='maxHp'?NaN:0;fixed=true}}
+    if(!Number.isFinite(st.maxHp)||st.maxHp<20){const gh=Object.values(ch.gear||{}).reduce((a,g)=>a+((g&&g.fx&&g.fx.maxHp)||0),0);st.maxHp=CFG.baseHp+gh;ch.hp=st.maxHp;fixed=true}
+    if(!Number.isFinite(ch.hp)||ch.hp<1||ch.hp>st.maxHp){ch.hp=st.maxHp;fixed=true}
+    return fixed;
+  }
   function ensurePacks(ch){
+    repairStats(ch);
     if(ch.packKind==='basic'||(ch.packs||[]).some(p=>p.k==='basic'))return;
     ch.packKind=ch.packKind||(ch.deckLocked||ch.cardMoney?'special':'origin');
     ch.packName=ch.packName||(ch.packKind==='special'?'전용 카드팩':'출신 카드팩');
@@ -2079,7 +2088,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         ch.packOffer={n:'엄지 검술',cards:td.deck.slice(),relic:'엄지 검술'};chips.push(`전리품 · ${td.n} (${td.gear.e}) · 장착할지 고른다`);chips.push('엄지 검술 · 덱을 바꿀지 고른다')}
       /* 특수환: 승리하면 능력치 하나를 골라 영구 증가 (전리품보다 먼저, 전리품이 맨 끝) */
       if(foe.pill){ch.pillPick=true;chips.push(`${foe.pill.n} · 능력치 하나를 골라 +${foe.pill.v} (영구)`)}
-      if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;if(C.id==='redmist'&&(ch.redPost||0)>0){const x=ch.redPost*CFG.redBook.coatPer;ch.stats.maxHp+=x;ch.hp+=x;chips.push(`미뤄 온 값 · 최대 HP +${x} (영구)`)}(ch.relics=ch.relics||[]).push(dr.n);
+      if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
         if(dr.flag)ch.flags[dr.flag]=1;
         if(dr.promote&&ch.fi===(dr.promoteFrom||1)&&canFingerUp(ch))chips.push(...fingerStep(ch))
         if(dr.title){ch.titles=ch.titles||[];if(!ch.titles.includes(dr.title)){ch.titles.push(dr.title);(ch.titleLog=ch.titleLog||[]).push(dr.title)}chips.push('칭호 · '+dr.title)}
@@ -2863,6 +2872,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
-    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
