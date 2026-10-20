@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v9.8.3';
+  const VERSION='v9.8.4';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -973,7 +973,7 @@ export function startUI(E,app){
       ${(()=>{const H=D.hiddenOrigins||[],got=r.births||[];return H.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 출생 ${H.filter(x=>got.includes(x.n)).length}/${H.length}</span><div class="stack" style="gap:6px">${H.map(x=>{const o=got.includes(x.n);return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${o?'':' dim'}" style="justify-self:start">${o?esc(x.n):'???'}</span><span class="small dim">${o?esc(String(x.t||'').split(/(?<=[.다])\s/)[0]):'아직 태어나 보지 못했다'}</span></div>`}).join('')}</div><p class="small dim">그 출생으로 한 번이라도 시작하면 열린다.</p></div>`:''})()}
       ${(()=>{const GR=[['날개','wing'],['협회','assoc'],['사무소','office'],['손가락','finger'],['조직','syn']],all=GR.flatMap(([,k])=>D.orgs[k]||[]),got=(r.affs||[]).filter(n=>all.includes(n));
         return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소속 ${got.length}/${all.length}</span>${GR.map(([n,k])=>`<div><span class="small dim">${n}</span><div class="chips">${(D.orgs[k]||[]).map(o=>`<span class="chip${(r.affs||[]).includes(o)?'':' dim'}">${(r.affs||[]).includes(o)?esc(o):'???'}</span>`).join('')}</div></div>`).join('')}<p class="small dim">한 번이라도 들어간 소속이 열린다.</p></div>`})()}
-      <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span><div class="stack" style="gap:6px">${ends.map(([k,n])=>{const op=r.endings.includes(k),pass=!!(r.hints&&r.hints[k])&&END_EXACT[k];return hintRow(op,esc(n),(op||pass)&&END_EXACT[k]?(pass&&!op?'[지나친 갈림길] ':'')+END_EXACT[k]:END_HINT[k])}).join('')}</div></div>
+      <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span><div class="stack" style="gap:6px">${ends.map(([k,n])=>{const op=r.endings.includes(k),pass=!!(r.hints&&r.hints[k])&&END_EXACT[k];return hintRow(op,esc(n),(op||pass)&&END_EXACT[k]?(pass&&!op?'[갈림길을 지나쳤다] ':'')+END_EXACT[k]:END_HINT[k])}).join('')}</div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">타고난 것 ${r.innate.length}/${Object.keys(D.innate).length}</span><div class="chips">${Object.entries(D.innate).map(([k,v])=>`<span class="chip${r.innate.includes(k)?'':' dim'}">${r.innate.includes(k)?esc(v.n):'???'}</span>`).join('')}</div>${Object.entries(D.innate).filter(([k,v])=>v.unlock&&!(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small dim">잠김 · ${r.innate.includes(k)?esc(v.n):'???'} — 해금: ${esc(v.unlock)}</span>`).join('')}${Object.entries(D.innate).filter(([k,v])=>v.unlock&&(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small" style="color:var(--gold)">해금됨 · ${r.innate.includes(k)?esc(v.n):'???'} — 이제 태어날 때 1%로 나올 수 있다${r.innate.includes(k)?'':' (만나면 이름이 열린다)'}</span>`).join('')}</div>
 ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px"><span class="eyebrow">판 통계</span><p class="small dim">v8.2.0부터 집계한다. 이야기가 끝나면 여기에 쌓인다.</p></div>`;
         const top=(m,n)=>Object.entries(m||{}).sort((a,b)=>b[1]-a[1]).slice(0,n),line=(l,arr)=>arr.length?`<div class="row between" style="align-items:flex-start;gap:10px"><span>${l}</span><span class="small" style="text-align:right">${arr.map(([k,v])=>`${esc(k)} ×${v}`).join(' · ')}</span></div>`:'',en=Object.fromEntries(ends);
@@ -1020,7 +1020,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     ['🩸 출혈 상한',['플레이어가 적에게 거는 출혈의 최대 스택이 10에서 40으로 늘었습니다. 적이 플레이어에게 거는 출혈은 그대로 10입니다.']]];
   const V943SEC=[['🔧 버그 수정',['날개 대표에게 "날개 채용 공고", "조직의 손짓", "협회 추천서"가 나오던 문제를 고쳤습니다. 날개 대표는 이제 이 사건들이 나오지 않습니다.','이미 1급인 해결사에게 "급수 심사"와 "승급 추천"이 나오던 문제를 고쳤습니다. 2급 이하일 때만 나옵니다.','도서관을 이미 잡았거나 두 번째 초대장에 이미 답한 뒤에도 "두 번째 초대장"이 계속 나오고, 해의 마지막 날 이벤트를 예고하고도 아무것도 일어나지 않던 문제를 고쳤습니다.']],
     ['⚖ 조정',['혈귀의 혈찬 회복량을 줄였습니다. 상대 출혈이 5번 발동할 때마다 HP 15를 회복하던 것이 HP 8을 회복합니다. 출혈 최대 스택이 늘어난 데 맞춘 조정입니다.']]];
-  const NOTICE={id:'v9.8.3-2',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v9.8.4',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
     top:['⚠ 먼저 읽어 주세요',['이번 업데이트에서 "타격 이펙트"와 "배경음악(BGM)"이 새로 들어왔습니다.','두 기능이 불편하거나 이상하게 동작하면 설정에서 끄고 플레이해 주세요. (타격 이펙트: 설정의 타격 연출을 "끔"으로, 배경음악: 화면의 ♪ 버튼을 "끔"으로)']],
     sec:[['🎵 소리·연출',['타격 이펙트: 공격이 맞을 때 베기·찌르기·충격 같은 효과가 나옵니다. 설정에서 끔·가볍게·보통·강하게로 고를 수 있습니다.','배경음악: ♪ 버튼으로 켜고 끕니다(기본은 꺼짐). 고요·불길·도서관 세 가지 스타일이 있고, 전투 곡이 따로 있습니다.','효과음: 참격·관통·타격을 소리로 구분할 수 있게 다시 만들었습니다.']],
@@ -1029,7 +1029,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🩸 혈귀',['혈귀 종족 특수 이벤트가 하나 추가되었습니다.']],
       ['⚔ 규칙·장비·적',['공격 수치 규칙을 바꿨습니다. 공격 2당 명중 1, 공격 6당 피해 1이 붙습니다. 상태 화면에서 환산을 볼 수 있습니다.','공방 해결사는 전용 장비로 시작하고 보관함 장비를 녹여 계속 강화합니다.','초반 적이 늘었고, 적마다 싸우는 이유를 붙이고 있습니다.','숨은 요소 일부가 추가·개편되었습니다. 어디에 있는지는 직접 찾아보세요.']],
       ['📜 엔딩 힌트',['기록실의 엔딩 힌트가 더 분명해졌습니다. 엔딩으로 이어지는 갈림길을 한 번이라도 지나치면, 그 엔딩의 소개 문구가 정확한 조건으로 바뀝니다.']],
-      ['🔧 그 밖에',['청혼과 결혼 판정을 고쳤습니다.','무한 모드에 전공 승급과 전용 사건이 추가되었습니다. 덜 본 사건이 먼저 나오고, 같은 사건이 반복되면 문구가 달라집니다.','보냐텔리 가문 출신 설명에 남아 있던 엄지 90% 문구를 지웠습니다.']]]};
+      ['🔧 그 밖에',['청혼과 결혼 판정을 고쳤습니다.','무한 모드에 전공 승급과 전용 사건이 추가되었습니다. 덜 본 사건이 먼저 나오고, 같은 사건이 반복되면 문구가 달라집니다.','보냐텔리 가문 출신 설명에 남아 있던 엄지 90% 문구를 지웠습니다.','일부 문구를 다듬었습니다. (웃는 가로등 설명, 기록실 엔딩 힌트 표기)']]]};
   const V944SEC=[['🔧 버그 수정',['별에 선택받은 자가 무기를 강화할 때 처음 가진 "맨손"이 재료로 뜨던 문제를 고쳤습니다. 맨손은 더 이상 보관함에 남지 않습니다.','출생 화면의 "다시 태어난다"가 다시 굴릴 때마다 위쪽 내용 높이가 달라져 움직이던 문제를 고쳤습니다. 이제 제자리에 있습니다.','제 1막 종료 화면에 "여기서 끝낸다" 버튼을 넣었습니다. 제 2막으로 가지 않고 끝낼 수 있고, 이 판의 저장이 지워집니다. "다시 태어난다"를 눌러도 이전 판 저장이 바로 지워집니다.','설정 팝업의 제목이 세로로 쪼개져 보이던 문제를 고쳤습니다.']],
     ['⚖ 조정',['PC 화면(폭 900px 이상)에서 본문, 왼쪽 능력치 칸, 오른쪽 가방 칸, 버튼, 팝업을 함께 키웠습니다. 창이 넓을수록 더 커지고, 창 높이가 낮으면 잘리지 않도록 배율을 낮춥니다. 첫 화면과 휴대폰 화면은 그대로입니다.','금기 실험으로 찾아오는 "강화체"의 이름을 "발톱 · 재시험", "조율자 · 재시험"으로 바꿨습니다.','무한 모드 불순물의 최대 HP 상한을 1000만에서 1500만으로 늘렸습니다.']]];
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
