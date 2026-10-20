@@ -59,6 +59,7 @@ export function startUI(E,app){
   const SFXS=(()=>{let o={};try{o=JSON.parse(store.get(SFXK)||'{}')||{}}catch(e){}return {on:o.on!==false,vol:typeof o.vol==='number'?Math.max(0,Math.min(1,o.vol)):0.7}})();
   const sfxSave=()=>store.set(SFXK,JSON.stringify(SFXS));
   const SFX=createSfx(()=>SFXS.on,()=>SFXS.vol);
+  if(SFX.supported)['pointerdown','touchend','keydown'].forEach(t=>document.addEventListener(t,SFX.unlock,{passive:true}));
   const sfx=k=>{if(MODE!=='off'&&!SKIP)SFX.play(k)};
   const bgmSave=()=>store.set(BGMK,JSON.stringify({on:BGM.isOn(),vol:BGM.vol(),style:BGM.style()}));
   {let o={};try{o=JSON.parse(store.get(BGMK)||'{}')||{}}catch(e){}

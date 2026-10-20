@@ -54,8 +54,12 @@ export function createSfx(isOn,getVol){
       if(hard)noise(180,0.7,'lowpass',0.26,0.5,0.35,0.01);
     }
   }
+  /* 모바일 브라우저는 사용자가 누르기 전에는 오디오를 멈춰 둔다. 멈춘 채 예약하면 시작 시각이 지나 버려 소리가 사라지므로,
+     처음 누를 때 미리 깨워 두고, 아직 멈춰 있으면 깨어난 뒤에 낸다 */
+  const unlock=()=>{if(isOn()&&ensure()&&ctx.state==='suspended')ctx.resume()};
   function play(kind){
     if(!isOn()||!ensure())return;
+    if(ctx.state!=='running'){ctx.resume().then(()=>{if(ctx.state==='running')play(kind)}).catch(()=>{});return}
     const v=getVol();if(!(v>0))return;
     if(kind==='impact'||kind==='hard'||kind==='block'||kind==='whoosh'){result(kind);return}
     const p=P[kind]||P.tick,t=ctx.currentTime+0.005,det=1+(Math.random()-0.5)*0.12;
@@ -74,5 +78,5 @@ export function createSfx(isOn,getVol){
       const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.5,t+0.003);g.gain.exponentialRampToValueAtTime(0.0008,t+0.07);
       n.connect(lp);lp.connect(g);g.connect(out);n.start(t);n.stop(t+0.1)}
   }
-  return {play,supported:!!AC};
+  return {play,unlock,supported:!!AC};
 }
