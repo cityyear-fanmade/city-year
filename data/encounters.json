@@ -675,6 +675,508 @@
      "max": 100,
      "enemy": "hw_steward"
     }
+   ],
+   "early@wtrain": [
+    {
+     "max": 5,
+     "enemy": "lamp"
+    },
+    {
+     "max": 10,
+     "enemy": "warp_scrap"
+    },
+    {
+     "max": 15,
+     "enemy": "thug"
+    },
+    {
+     "max": 20,
+     "enemy": "strays"
+    },
+    {
+     "max": 24,
+     "enemy": "collector"
+    },
+    {
+     "max": 28,
+     "enemy": "sentry"
+    },
+    {
+     "max": 32,
+     "enemy": "warp_scrap"
+    },
+    {
+     "max": 36,
+     "enemy": "unlicensed"
+    },
+    {
+     "max": 40,
+     "enemy": "armthief"
+    },
+    {
+     "max": 44,
+     "enemy": "courier"
+    },
+    {
+     "max": 48,
+     "enemy": "pickpocket"
+    },
+    {
+     "max": 52,
+     "enemy": "warp_scrap"
+    },
+    {
+     "max": 56,
+     "enemy": "hawker"
+    },
+    {
+     "max": 60,
+     "enemy": "pipeman"
+    },
+    {
+     "max": 64,
+     "enemy": "fence"
+    },
+    {
+     "max": 68,
+     "enemy": "stalker"
+    },
+    {
+     "max": 72,
+     "enemy": "warp_scrap"
+    },
+    {
+     "max": 76,
+     "enemy": "mender"
+    },
+    {
+     "max": 80,
+     "enemy": "banner"
+    },
+    {
+     "max": 84,
+     "enemy": "f_runner"
+    },
+    {
+     "max": 88,
+     "enemy": "w_cleaner"
+    },
+    {
+     "max": 92,
+     "enemy": "warp_scrap"
+    },
+    {
+     "max": 96,
+     "enemy": "o_runner"
+    },
+    {
+     "max": 100,
+     "enemy": "apprentice"
+    }
+   ],
+   "mid@wtrain": [
+    {
+     "max": -1,
+     "enemy": "lullaby"
+    },
+    {
+     "max": 1,
+     "enemy": "bloodman"
+    },
+    {
+     "max": 4,
+     "enemy": "doll"
+    },
+    {
+     "max": 7,
+     "enemy": "warp_mass"
+    },
+    {
+     "max": 8,
+     "enemy": "lieutenant"
+    },
+    {
+     "max": 11,
+     "enemy": "sweeper"
+    },
+    {
+     "max": 13,
+     "enemy": "turncoat"
+    },
+    {
+     "max": 16,
+     "enemy": "cleanup"
+    },
+    {
+     "max": 19,
+     "enemy": "youngsters"
+    },
+    {
+     "max": 21,
+     "enemy": "porter"
+    },
+    {
+     "max": 23,
+     "enemy": "warp_doll"
+    },
+    {
+     "max": 24,
+     "enemy": "rat_watch"
+    },
+    {
+     "max": 26,
+     "enemy": "rat_butcher"
+    },
+    {
+     "max": 28,
+     "enemy": "rat_collector"
+    },
+    {
+     "max": 29,
+     "enemy": "rat_father"
+    },
+    {
+     "max": 31,
+     "enemy": "iron_a"
+    },
+    {
+     "max": 33,
+     "enemy": "iron_b"
+    },
+    {
+     "max": 34,
+     "enemy": "warp_mass"
+    },
+    {
+     "max": 36,
+     "enemy": "iron_d"
+    },
+    {
+     "max": 37,
+     "enemy": "iron_boss"
+    },
+    {
+     "max": 39,
+     "enemy": "pb_a"
+    },
+    {
+     "max": 40,
+     "enemy": "pb_b"
+    },
+    {
+     "max": 42,
+     "enemy": "pb_c"
+    },
+    {
+     "max": 44,
+     "enemy": "pb_d"
+    },
+    {
+     "max": 45,
+     "enemy": "warp_doll"
+    },
+    {
+     "max": 48,
+     "enemy": "ch_a"
+    },
+    {
+     "max": 50,
+     "enemy": "ch_b"
+    },
+    {
+     "max": 51,
+     "enemy": "ch_c"
+    },
+    {
+     "max": 53,
+     "enemy": "ch_d"
+    },
+    {
+     "max": 54,
+     "enemy": "ch_boss"
+    },
+    {
+     "max": 56,
+     "enemy": "ob_a"
+    },
+    {
+     "max": 57,
+     "enemy": "warp_mass"
+    },
+    {
+     "max": 59,
+     "enemy": "ob_c"
+    },
+    {
+     "max": 61,
+     "enemy": "ob_d"
+    },
+    {
+     "max": 62,
+     "enemy": "ob_boss"
+    },
+    {
+     "max": 64,
+     "enemy": "o_clerk"
+    },
+    {
+     "max": 66,
+     "enemy": "a_auditor"
+    },
+    {
+     "max": 68,
+     "enemy": "w_guard"
+    },
+    {
+     "max": 70,
+     "enemy": "warp_doll"
+    },
+    {
+     "max": 72,
+     "enemy": "s_enforcer"
+    },
+    {
+     "max": 74,
+     "enemy": "w_defector"
+    },
+    {
+     "max": 76,
+     "enemy": "a_defector"
+    },
+    {
+     "max": 78,
+     "enemy": "f_deserter"
+    },
+    {
+     "max": 80,
+     "enemy": "s_runaway"
+    },
+    {
+     "max": 82,
+     "enemy": "o_ledger"
+    },
+    {
+     "max": 84,
+     "enemy": "warp_mass"
+    },
+    {
+     "max": 86,
+     "enemy": "f_ledger"
+    },
+    {
+     "max": 88,
+     "enemy": "s_ledger"
+    },
+    {
+     "max": 90,
+     "enemy": "w_ledger"
+    },
+    {
+     "max": 92,
+     "enemy": "th_soldato"
+    },
+    {
+     "max": 94,
+     "enemy": "pt_agent"
+    },
+    {
+     "max": 96,
+     "enemy": "rg_apprentice"
+    },
+    {
+     "max": 97,
+     "enemy": "warp_doll"
+    },
+    {
+     "max": 98,
+     "enemy": "pt_defector"
+    },
+    {
+     "max": 99,
+     "enemy": "rg_deserter"
+    },
+    {
+     "max": 100,
+     "enemy": "md_deserter"
+    }
+   ],
+   "late@wtrain": [
+    {
+     "max": -7,
+     "enemy": "lullaby"
+    },
+    {
+     "max": -4,
+     "enemy": "bloodman"
+    },
+    {
+     "max": -1,
+     "enemy": "doll"
+    },
+    {
+     "max": 2,
+     "enemy": "warp_trained"
+    },
+    {
+     "max": 5,
+     "enemy": "hunter"
+    },
+    {
+     "max": 8,
+     "enemy": "guest"
+    },
+    {
+     "max": 11,
+     "enemy": "inspector"
+    },
+    {
+     "max": 15,
+     "enemy": "bountyhunter"
+    },
+    {
+     "max": 17,
+     "enemy": "subject"
+    },
+    {
+     "max": 20,
+     "enemy": "warp_mass"
+    },
+    {
+     "max": 21,
+     "enemy": "pianist"
+    },
+    {
+     "max": 24,
+     "enemy": "sc_apprentice"
+    },
+    {
+     "max": 26,
+     "enemy": "sc_welder"
+    },
+    {
+     "max": 29,
+     "enemy": "sc_kindling"
+    },
+    {
+     "max": 32,
+     "enemy": "sc_smoke"
+    },
+    {
+     "max": 34,
+     "enemy": "warp_doll"
+    },
+    {
+     "max": 36,
+     "enemy": "zw_a"
+    },
+    {
+     "max": 39,
+     "enemy": "zw_b"
+    },
+    {
+     "max": 42,
+     "enemy": "zw_c"
+    },
+    {
+     "max": 44,
+     "enemy": "zw_d"
+    },
+    {
+     "max": 46,
+     "enemy": "zw_boss"
+    },
+    {
+     "max": 49,
+     "enemy": "warp_trained"
+    },
+    {
+     "max": 51,
+     "enemy": "sv_b"
+    },
+    {
+     "max": 54,
+     "enemy": "sv_c"
+    },
+    {
+     "max": 57,
+     "enemy": "sv_d"
+    },
+    {
+     "max": 59,
+     "enemy": "sv_boss"
+    },
+    {
+     "max": 61,
+     "enemy": "liu_a"
+    },
+    {
+     "max": 64,
+     "enemy": "warp_mass"
+    },
+    {
+     "max": 67,
+     "enemy": "liu_c"
+    },
+    {
+     "max": 69,
+     "enemy": "liu_d"
+    },
+    {
+     "max": 71,
+     "enemy": "liu_boss"
+    },
+    {
+     "max": 74,
+     "enemy": "shi_a"
+    },
+    {
+     "max": 77,
+     "enemy": "shi_b"
+    },
+    {
+     "max": 79,
+     "enemy": "warp_doll"
+    },
+    {
+     "max": 82,
+     "enemy": "shi_d"
+    },
+    {
+     "max": 84,
+     "enemy": "shi_boss"
+    },
+    {
+     "max": 86,
+     "enemy": "kuro_boss"
+    },
+    {
+     "max": 88,
+     "enemy": "a_elite"
+    },
+    {
+     "max": 90,
+     "enemy": "w_officer"
+    },
+    {
+     "max": 92,
+     "enemy": "warp_trained"
+    },
+    {
+     "max": 94,
+     "enemy": "s_captain"
+    },
+    {
+     "max": 96,
+     "enemy": "o_proxy"
+    },
+    {
+     "max": 98,
+     "enemy": "w_traitor"
+    },
+    {
+     "max": 100,
+     "enemy": "a_traitor"
+    }
    ]
   }
  }

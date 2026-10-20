@@ -6260,6 +6260,74 @@
     "atk": 3,
     "eva": 2
    }
+  },
+  "warp_scrap": {
+   "n": "일반석의 살덩이 조각",
+   "color": "#9c4a4a",
+   "hp": 24,
+   "atk": 1,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "bloodlet",
+    "slash",
+    "rustnote",
+    "guard"
+   ],
+   "intro": "복구를 기다리던 살덩이 하나가 좌석 밑에서 일어선다. 눈이 있던 자리에 번호표만 붙어 있다.",
+   "tier": "early",
+   "abno": true
+  },
+  "warp_mass": {
+   "n": "일반석의 살덩이 괴물",
+   "color": "#7d2f3a",
+   "hp": 44,
+   "atk": 3,
+   "eva": 0,
+   "spd": 1,
+   "deck": [
+    "bloodlet",
+    "smash",
+    "rend",
+    "guard"
+   ],
+   "intro": "수천 년을 버틴 승객들이 서로를 뜯어 하나로 뭉쳤다. 여러 입이 같은 말을 같은 박자로 되풀이한다. 열차 안에서는 죽을 수 없다는 말이다.",
+   "tier": "mid",
+   "abno": true
+  },
+  "warp_doll": {
+   "n": "개조된 일등석 승객",
+   "color": "#b8a2c9",
+   "hp": 32,
+   "atk": 2,
+   "eva": 4,
+   "spd": 3,
+   "deck": [
+    "shard",
+    "tremor",
+    "hollow",
+    "shadowstep"
+   ],
+   "intro": "동면 캡슐에서 나온 승객의 뼈 사이에 기계 장치가 박혀 있다. 누군가 이들을 인형으로 고쳐 놓았다. 인형은 명찰을 달고 있다.",
+   "tier": "mid",
+   "abno": true
+  },
+  "warp_trained": {
+   "n": "일반석의 수련자",
+   "color": "#5c6a8a",
+   "hp": 46,
+   "atk": 4,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "lunge",
+    "rend",
+    "precise",
+    "guard"
+   ],
+   "intro": "수천 년 동안 한 가지 기술만 되풀이해 익힌 승객이 길을 막는다. 손에는 아무것도 없다. 손이 이미 무기다.",
+   "tier": "late",
+   "abno": true
   }
  },
  "fixedFights": {

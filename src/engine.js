@@ -871,7 +871,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!s.startsWith('table:'))return {id:s,roll:null,table:null};
     const name=s.slice(6),T_=D.encounters.tables;
     /* 라만차랜드 루트(혈귀)는 소속보다 먼저 */
-    const key=ch.hw&&!ch.hw.out&&!ch.hw.done&&T_[`${name}@hwhome`]?`${name}@hwhome`:ch.flags&&ch.flags.lamancha&&T_[`${name}@lamancha`]?`${name}@lamancha`:ch.aff&&T_[`${name}@${ch.aff.type}`]?`${name}@${ch.aff.type}`:name;
+    const key=ch.hw&&!ch.hw.out&&!ch.hw.done&&T_[`${name}@hwhome`]?`${name}@hwhome`:ch.flags&&ch.flags.lamancha&&T_[`${name}@lamancha`]?`${name}@lamancha`:ch.wtrain&&T_[`${name}@wtrain`]?`${name}@wtrain`:ch.aff&&T_[`${name}@${ch.aff.type}`]?`${name}@${ch.aff.type}`:name;
     /* 같은 조직의 적(enemy.org가 내 소속 종류나 내 소속 이름과 같음)은 배신자·명부의 처리 대상(enemy.traitor)이 아니면 만나지 않는다. 방금 싸운 적도 되도록 피한다 */
     const mine=new Set();if(ch.aff){mine.add(ch.aff.name);mine.add((D.orgs.syn||[]).includes(ch.aff.name)?'syn':ch.aff.type)}
     /* H사 홍원 가문의 후보는 도시의 조직(손가락·조직·협회·날개·사무소·공방)과 얽히지 않는다: 소속 표시가 있는 적은 만나지 않는다 */
@@ -1793,6 +1793,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* W사 열차 직원이 무한 모드(2막)에서 열차를 내릴지 정한다: free=내리고 독립(공방·해결사·소속 제안이 다시 열린다) · stay=남아 정리 요원장 · later=5년 뒤 다시 */
     if(fx.wquit&&ch.wtrain){const W_=CFG.warp;
       if(fx.wquit==='free'){ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;chips.push('W사 열차를 내렸다 · 어느 소속도 아니다');chips.push('공방과 해결사, 소속 제안의 길이 다시 열린다')}
+      else if(fx.wquit==='rival'){ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;ch.flags.wayfarer=1;addStats(ch.stats,W_.rival.stats);ch.money+=W_.rival.money;chips.push('웨이페어러 컴퍼니와 계약했다 · 열차를 내렸다');chips.push(`속도 +${W_.rival.stats.spd} · 판정 +${W_.rival.stats.check} · 계약금 ${W_.rival.money}`)}
       else if(fx.wquit==='stay'){ch.wLead=true;addStats(ch.stats,W_.lead);ch.hp+=W_.lead.maxHp;chips.push('정리 요원장 · 열차에 남는다');chips.push(`최대 HP +${W_.lead.maxHp} · 공격 +${W_.lead.atk} · 열차 사건이 더 자주 온다`)}
       else{ch.wQuitAt=(ch.year||0)+W_.laterYears;ch.wQuitShown=false;chips.push(`${W_.laterYears}년 뒤 같은 서류가 놓인다`)}}
     if(fx.bondLeave&&ch.bond&&ch.bond.st==='met')bondLeft(ch,chips);
