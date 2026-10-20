@@ -2449,7 +2449,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const wd=!c.die&&!c.range&&A.wx?(sub?sub.dice:A.wx.dice):null;
       if(sub&&sub.range&&!c.die)rolls.push(sub.range[0]-1+d(sub.range[1]-sub.range[0]+1));
       /* 무기 주사위: 면 수는 무기, 개수는 카드와 무기 중 많은 쪽 (+ 카드 등급) */
-      else if(wd){const n=Math.max(wd[0],c.dice)+(gr?gr.dice:0);for(let i=0;i<n;i++)rolls.push(Math.max(Math.min(lo,wd[1]),d(wd[1])))}
+      else if(wd){const n=Math.max(wd[0],c.dice)+(c.fsDice&&fsb?c.fsDice:0)+(gr?gr.dice:0);for(let i=0;i<n;i++)rolls.push(Math.max(Math.min(lo,wd[1]),d(wd[1])))}
       else{let ex=c.exec&&(B.disp||0)>0?c.exec:0;if(ex)pnote+=` 처분 표식 주사위+${ex}`;
         if(c.serumBurst&&(A.serum||0)>0){ex+=A.serum;pnote+=` 혈청 ${A.serum} 소모 · 주사위+${A.serum}`;A.serum=0}for(let i=0;i<c.dice+ex+(c.fsDice&&fsb?c.fsDice:0)+(gr&&!c.die?gr.dice:0);i++)rolls.push(c.range?c.range[0]-1+d(c.range[1]-c.range[0]+1):Math.max(lo2,d(die)))}
       let note=fsb?' 선제':'';
