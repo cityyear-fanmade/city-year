@@ -1807,7 +1807,39 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <p class="small dim">무작위 캐릭터(성장기 포함), 카드는 손패에서 무작위로 낸다. 전투 사이 HP ${CFG.chainHeal} 회복. 더 많이 돌리려면 터미널에서 npm run sim -- --n 2000</p></div>
       <button class="btn primary" data-a="sim">다시 측정</button><button class="btn quiet" data-a="title">돌아가기</button>`;
   }
+  /* ===== 타격 모션 시험실 (dist/motion-lab.html 빌드에서만 켜진다) ===== */
+  const LABW=[['칼 (베기)',{n:'식칼'}],['대검 (X자)',{n:'대검'}],['창 (찌르기)',{n:'창'}],['낫 (할퀴기)',{n:'낫'}],['망치 (충격 고리)',{n:'망치'}],['무기 없음 (키워드로 결정)',null]];
+  const LABS=[['하얀 발톱',{n:'하얀 발톱',id:'job_claw'}],['미미크리',{n:'미미크리'}],['다 카포',{n:'다 카포'}],['궁니르',{n:'궁니르',id:'gungnir'}],['절대음감',{n:'절대음감'}],['레바테인 · 봉인',{n:'레바테인',id:'laev_sealed'}],['레바테인 · 1단계',{n:'레바테인',id:'laev_s1'}],['레바테인 · 2단계',{n:'레바테인',id:'laev_s2'}],['레바테인 · 해방',{n:'레바테인',id:'laev'}],...[1,2,3,4,5,6,7,8,9].map(k=>['검은 침묵의 장갑 '+k,{n:'검은 침묵의 장갑',note:'장갑 1d9 '+k}])];
+  const LAB={att:'P',lv:'mid',kw:'',crit:false,big:false,hits:1,last:false};
+  function labPlay(w){
+    const sv={C,HFX,MODE,SKIP,HFXM};HFX=LAB.lv;MODE='slow';SKIP=false;HFXM=LAB.last?'last':'each';
+    const def=LAB.att==='P'?'E':'P',n=LAB.hits;
+    C={id:'lab',P:{maxHp:100},E:{maxHp:100},ch:{gear:{weapon:LAB.att==='P'&&w&&w.n?{n:w.n,id:w.id||''}:null}}};
+    for(let i=0;i<n;i++)setTimeout(()=>{PREV[def]={};const snap={};snap[def]=LAB.kw?{[LAB.kw]:3}:{};
+      hitFx({def,att:LAB.att,snap,note:(LAB.crit?'치명 ':'')+((w&&w.note)||''),dmg:LAB.big||LAB.crit?30:6,card:{hits:n},_g:{i,n}})},i*230);
+    setTimeout(()=>{C=sv.C;HFX=sv.HFX;MODE=sv.MODE;SKIP=sv.SKIP;HFXM=sv.HFXM},n*230+900);
+  }
+  function labDraw(){
+    const chip=(on,a,t)=>`<button class="btn quiet" style="width:auto;flex:none;padding:6px 12px${on?';background:var(--gold);color:#111;border-color:var(--gold);font-weight:700':''}" data-lab="${a}">${t}</button>`;
+    const box=(side,nm,col)=>`<div class="panel stack ent" id="ent-${side}" style="min-height:130px;background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="row between"><b class="serif">${nm}</b><span class="mono small dim">HP 100/100</span></div><div class="small dim">타격 효과는 이 상자 가운데에 나옵니다</div></div>`;
+    app.innerHTML=`<div class="stack" style="gap:10px;padding:14px;max-width:760px;margin:0 auto"><div class="eyebrow">타격 모션 시험실 · 게임에 들어 있는 실제 코드로 그립니다</div>
+      <div class="row" style="gap:8px;align-items:stretch">${box('E','적','#c25050')}${box('P','나','#5a8ac2')}</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">공격자</span>${chip(LAB.att==='P','att:P','나 → 적')}${chip(LAB.att==='E','att:E','적 → 나')}</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">강도</span>${chip(LAB.lv==='low','lv:low','가볍게')}${chip(LAB.lv==='mid','lv:mid','보통')}${chip(LAB.lv==='high','lv:high','강하게')}</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">키워드 색</span>${chip(!LAB.kw,'kw:','없음')}${chip(LAB.kw==='bleed','kw:bleed','출혈')}${chip(LAB.kw==='burn','kw:burn','화상')}${chip(LAB.kw==='rupture','kw:rupture','파열')}</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">옵션</span>${chip(LAB.crit,'crit','치명타')}${chip(LAB.big,'big','큰 피해')}${[1,2,3,4].map(k=>chip(LAB.hits===k,'hits:'+k,k+'연타')).join('')}${chip(LAB.last,'last','마지막만 크게')}</div>
+      <div class="small dim">무기를 누르면 그 무기로 때리는 모션이 나옵니다. 연타는 한 번에 여러 번 이어서 나옵니다.</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">${LABW.map(([t],i)=>`<button class="btn" style="width:auto;flex:none;padding:8px 14px" data-w="w${i}">${t}</button>`).join('')}</div>
+      <div class="small dim">전용 모션이 있는 무기</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">${LABS.map(([t],i)=>`<button class="btn" style="width:auto;flex:none;padding:8px 14px" data-w="s${i}">${t}</button>`).join('')}</div></div>`;
+    if(!app._lab){app._lab=true;app.addEventListener('click',ev=>{
+      const b=ev.target.closest('[data-w]');if(b){const k=b.dataset.w;labPlay(k[0]==='w'?LABW[+k.slice(1)][1]:LABS[+k.slice(1)][1]);return}
+      const c=ev.target.closest('[data-lab]');if(!c)return;const [a,v]=c.dataset.lab.split(':');
+      if(a==='att')LAB.att=v;else if(a==='lv')LAB.lv=v;else if(a==='kw')LAB.kw=v;else if(a==='hits')LAB.hits=+v;else if(a==='crit')LAB.crit=!LAB.crit;else if(a==='big')LAB.big=!LAB.big;else if(a==='last')LAB.last=!LAB.last;
+      labDraw()})}
+  }
   function render(){
+    if(window.CITY_LAB){labDraw();return}
     const s=UI.screen;
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
     const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
