@@ -131,7 +131,7 @@ html{background:var(--bg)}
 .skin-tab{display:inline-flex;align-items:center;align-self:center;height:26px;padding:0 18px;font:500 11.5px/1 var(--mono);letter-spacing:.14em;color:var(--dim);border:1px solid var(--line)}
 html[data-skin="dante"]{
   --bg:#0d0807; --panel:#1a100d; --panel2:#24150f; --line:#4a2418; --line2:#7a3a22;
-  --fg:#efe1cf; --dim:#a68b78; --gold:#f0a23b; --gold-ink:#1d0d04;
+  --fg:#f4e8d8; --dim:#c0a893; --gold:#f0a23b; --gold-ink:#1d0d04;
   --frame:#5b2618; --frame2:#8e4325; --rivet:#c8743a;
 }
 html[data-skin="dante"] body{
@@ -174,7 +174,7 @@ html[data-skin="dante"] .die,html[data-skin="dante"] .d6{border-radius:4px}
 
 html[data-skin="terminal"]{
   --bg:#050607; --panel:#04080c; --panel2:#071019; --line:#12324a; --line2:#1d5a82;
-  --fg:#c9e4f1; --dim:#7fa3b8; --gold:#5cc3f2; --gold-ink:#02121c;
+  --fg:#d4ebf6; --dim:#9bbdd0; --gold:#5cc3f2; --gold-ink:#02121c;
   --bleed:#ff6b7a; --rupture:#8fb4ff; --breath:#6ff0d2; --good:#7dffb0;
   --shell:#e9edf0; --shell2:#aeb6bd; --shell3:#6d767e;
 }
@@ -270,7 +270,7 @@ button.chip:hover{background:color-mix(in srgb,var(--gold) 14%,transparent)}
 /* 도서관 초대장: 검은 바탕 + 옅은 금빛. 단테(붉은 갈색·잘린 모서리)와 달리 둥근 아치·모서리 꺾쇠·금빛 번짐 */
 html[data-skin="ruina"]{
   --bg:#010101; --panel:#060504; --panel2:#0a0806; --line:#3a3020; --line2:#8c7448;
-  --fg:#eadfc6; --dim:#97896f; --gold:#ecc97f; --gold-ink:#140f06;
+  --fg:#f0e6cf; --dim:#b8aa8d; --gold:#ecc97f; --gold-ink:#140f06;
   --g:#e2c07a; --g2:rgba(226,192,122,.45); --glow:rgba(236,201,127,.16);
 }
 html[data-skin="ruina"] body{
