@@ -2046,7 +2046,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.id===CFG.endless.finalNext&&ch.rb&&ch.rb.headSeen){ch.rb.done=1;chips.push('금기의 끝')}
       if(f0.hwClue&&ch.hw){const h_=CFG.hw.clueHp;ch.hw.clues=(ch.hw.clues||0)+1;ch.hw.sNext=(ch.year||0)+1;s_(ch,h_);chips.push(`영생의 단서 ${ch.hw.clues}/4 · 최대 HP +${h_}`)}
       if(f0.hwElder&&ch.hw){ch.hw.elderDone=1;ch.hw.fnext=(ch.year||0)+CFG.hw.finalGap}
-      if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리');{const cw=CFG.hw.crown.filter(k=>!hwHave(ch).includes(k));if(cw.length){(ch.hw.have=ch.hw.have||[]).push(...cw);chips.push(`가주의 재갈 · ${cw.map(k=>aniOf(k).nm).join(' · ')} · 영구히 당신의 것이 되었다`);
+      if(f0.hwFinal&&ch.hw){ch.hw.done=1;chips.push('가주의 자리');{const cw=ZKEYS.filter(k=>!hwHave(ch).includes(k)),cr=cw.filter(k=>CFG.hw.crown.includes(k)),rest=cw.filter(k=>!cr.includes(k));if(cw.length){(ch.hw.have=ch.hw.have||[]).push(...cw);if(cr.length)chips.push(`가주의 재갈 · ${cr.map(k=>aniOf(k).nm).join(' · ')} · 영구히 당신의 것이 되었다`);if(rest.length)chips.push(`홍원의 군주가 맡아 둔 재갈 · ${rest.map(k=>aniOf(k).nm).join(' · ')} · 가주가 된 자에게 넘어갔다 · 열두 흑수가 모두 당신 곁에 선다`);
         /* 재갈마다 흑수 카드와 전리품(흑수 · ○○)을 준다. 덱이 넘치면 일반 카드가 카드함으로 간다 */
         for(const k of cw){const cid='zp_'+k;if(!D.cards[cid])continue;forceAdd(ch,cid);chips.push('흑수 카드 · '+D.cards[cid].n);(ch.relics=ch.relics||[]).push('흑수 · '+D.cards[cid].n.replace('흑수 · ',''))}
         while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}}}ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
