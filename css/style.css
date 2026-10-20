@@ -522,3 +522,12 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 
 .hfx .critstar{position:absolute;left:50%;top:50%;width:70px;height:70px;margin:-35px;background:radial-gradient(circle,#fff 0 12%,var(--c) 14% 28%,transparent 62%);clip-path:polygon(50% 0,58% 38%,100% 50%,58% 62%,50% 100%,42% 62%,0 50%,42% 38%);opacity:0;filter:drop-shadow(0 0 8px var(--c));animation:hStar .38s ease-out forwards}
 @keyframes hStar{0%{transform:scale(.2) rotate(0);opacity:1}45%{transform:scale(1.25) rotate(20deg);opacity:1}100%{transform:scale(1.5) rotate(35deg);opacity:0}}
+
+/* 전용 타격 모션 */
+.hfx .jw{position:absolute;inset:0;display:block;animation:hJit .36s steps(1) forwards}
+.hfx .jw.lng .slash{animation-duration:.55s}
+@keyframes hJit{0%{transform:translate(0,0)}15%{transform:translate(-4px,1px)}30%{transform:translate(4px,-1px)}45%{transform:translate(-3px,0)}60%{transform:translate(3px,1px)}75%{transform:translate(-2px,0)}100%{transform:translate(0,0)}}
+.hfx .eyefx{position:absolute;left:50%;top:50%;width:38px;height:18px;margin:-9px -19px;border-radius:50%;background:radial-gradient(circle,#111 0 22%,#d0344a 26% 46%,#fff 50% 58%,transparent 62%);border:2px solid #d0344a;box-shadow:0 0 10px #d0344a;opacity:0;transform:scaleY(.1);animation:hEye .5s ease-out .12s forwards}
+@keyframes hEye{0%{opacity:0;transform:scaleY(.1)}30%{opacity:1;transform:scaleY(1.1)}70%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(.2)}}
+.hfx .cres{position:absolute;left:6%;top:6%;width:88%;height:80%;border-radius:50%;border-top:7px solid var(--c);border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:0;box-shadow:0 -4px 14px var(--c);transform:rotate(var(--rot,-16deg)) scaleX(0);transform-origin:var(--org,left center);opacity:0;animation:hCres .42s ease-out forwards}
+@keyframes hCres{0%{transform:rotate(var(--rot,-16deg)) scaleX(0);opacity:1}50%{transform:rotate(var(--rot,-16deg)) scaleX(1);opacity:1}100%{transform:rotate(var(--rot,-16deg)) scaleX(1.05);opacity:0}}

@@ -145,8 +145,33 @@ export function startUI(E,app){
     const hitsN=(e.card&&e.card.hits)||1,pk=a=>a[Math.floor(Math.random()*a.length)];
     const wn=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon.n:'',wm=weaponMotion(wn);
     const mo=crit?'critx':wm?wm:kt==='burn'?'ring':kt==='bleed'?'claw':kt==='rupture'?'crack':hitsN>=2?pk(['cross','claw']):pk(['slash','slash','thrust','cross']);
+    /* 전용 모션: 기믹 무기는 무기마다 따로 그린다 (레바테인=해방 단계별, 발톱=흰 발톱자국, 미미크리=눈, 다 카포·궁니르=떨림, 검은 침묵의 장갑=나온 무기 번호별) */
+    const gw=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon:null,wid=gw?gw.id:'',gl=/장갑 1d9 (\d)/.exec(e.note||'');
+    const LST={laev_sealed:0,laev_s1:1,laev_s2:2,laev:3};
+    const sp=crit?'':gl?'gl'+gl[1]:wid==='job_claw'?'tclaw':wid in LST?'lv'+LST[wid]:/미미크리/.test(wn)?'eye':/다 카포/.test(wn)?'tremor':wid==='gungnir'?'reson':'';
     let h='';
-    if(!(multi&&!lastHit)){
+    if(sp&&!(multi&&!lastHit)){
+      const FL='#ff8a3c';
+      if(sp==='tclaw'){col='#fff';h=`<u class="jw lng">`+sl(rot*0.7,18,'height:3px;--c:#fff')+sl(rot*0.7,36,'height:4px;animation-delay:40ms;--c:#fff')+sl(rot*0.7,54,'height:4px;animation-delay:80ms;--c:#fff')+sl(rot*0.7,72,'height:3px;animation-delay:120ms;--c:#fff')+`</u>`}
+      else if(sp==='eye'){col='#d0344a';h=sl(rot,50,'height:6px;--c:#d0344a')+`<i class="eyefx"></i>`}
+      else if(sp==='tremor'){h=`<u class="jw">`+sl(rot,50)+sl(rot,50,'opacity:.5;animation-delay:70ms')+sl(rot,50,'opacity:.3;animation-delay:140ms')+`</u>`}
+      else if(sp==='reson'){h=`<u class="jw"><i class="thrust" style="--c:${col};--org:${org}"></i></u><i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:${col};animation-delay:.22s"></i><i class="ringfx" style="--c:${col};animation-delay:.34s;opacity:.5"></i>`}
+      else if(sp==='lv0'){col=kt==='burn'?col:FL;h=sl(rot*1.3,34,'height:3px;--c:'+col)+sl(-rot,64,'height:3px;animation-delay:80ms;--c:'+col)}
+      else if(sp==='lv1'){col=kt==='burn'?col:FL;h=sl(rot,40,'--c:'+col)+sl(-rot,60,'animation-delay:70ms;--c:'+col)}
+      else if(sp==='lv2'){col=kt==='burn'?col:FL;h=sl(rot,50,'height:7px;--c:'+col)+`<i class="ringfx" style="--c:${col}"></i>`}
+      else if(sp==='lv3'){col=kt==='burn'?col:FL;h=`<i class="cres" style="--c:${col};--rot:${rot*1.4}deg;--org:${org}"></i>`+sl(rot*1.4,50,'height:3px;--c:#fff')+`<i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:#fff"></i>`}
+      else{
+        const g=+sp.slice(2);
+        if(g===1)h=sl(rot*2.2,50,'height:9px');
+        else if(g===2||g===3)h=sl(rot,50);
+        else if(g===4)h=sl(rot,50)+sl(-rot,50,'animation-delay:70ms');
+        else if(g===5)h=sl(rot,34,'height:3px')+sl(rot,66,'height:3px;animation-delay:60ms');
+        else if(g===6)h=`<i class="thrust" style="--c:${col};--org:${org}"></i><i class="thrust" style="--c:${col};--org:${org};top:30%;animation-delay:30ms"></i><i class="thrust" style="--c:${col};--org:${org};top:70%;animation-delay:30ms"></i>`;
+        else if(g===7)h=`<i class="thrust" style="--c:${col};--org:${org};height:7px"></i><i class="ringfx small" style="--c:${col}"></i>`;
+        else if(g===8)h=sl(rot,50,'height:11px')+`<i class="hflash" style="--c:${col}"></i>`;
+        else h=`<i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:${col}"></i>`;
+      }
+    }else if(!(multi&&!lastHit)){
       if(wm&&kt==='burn')h+=`<i class="ringfx small" style="--c:${col}"></i>`;
       if(mo==='critx')h=sl(rot,50,'height:7px')+sl(-rot,50,'height:7px;animation-delay:60ms')+`<i class="critstar" style="--c:${col}"></i>`;
       else if(mo==='slash')h=sl(rot,50);
