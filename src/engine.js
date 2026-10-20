@@ -1341,7 +1341,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const mk=(tpl,fxk)=>({t:tpl.t,x:fill(tpl.x),c:tpl.check?[{l:tpl.l,h:'판정 · 성공해도 실패해도 후보를 세우는 일은 이어진다',check:tpl.check,ok:{t:fill(tpl.ok.t),fx:tpl.ok.fx},fail:{t:fill(tpl.fail.t),fx:tpl.fail.fx}}]:[{l:tpl.l,ok:{t:fill(tpl.t2),fx:{hwb:fxk}}}]});
     const done=ev=>{r.bnext=y+Z.gap;return ev};
     if(r.rank2){
-      if((r.mk||0)>=B.maker.length){if(r.accept)return null;const F=B.final;return done({t:F.t,x:fill(F.x)+(r.loved?' {c}은(는) 당신의 손을 놓지 않는다.':r.refused?' {c}은(는) 그날의 대답을 묻지 않고, 곁에 선 흑수를 본다.':'').replace(/\{c\}/g,cn),c:[{l:F.accept.l,h:F.accept.h,ok:{t:fill(F.accept.t2),fx:{hwb:'accept'}}},{l:F.flee.l,h:F.flee.h,ok:{t:fill(F.flee.t2),fx:{hwb:'flee'}}}]})}
+      if((r.mk||0)>=B.maker.length){if(r.accept||y<Z.finalFrom)return null;const F=B.final;return done({t:F.t,x:fill(F.x)+(r.loved?' {c}은(는) 당신의 손을 놓지 않는다.':r.refused?' {c}은(는) 그날의 대답을 묻지 않고, 곁에 선 흑수를 본다.':'').replace(/\{c\}/g,cn),c:[{l:F.accept.l,h:F.accept.h,ok:{t:fill(F.accept.t2),fx:{hwb:'accept'}}},{l:F.flee.l,h:F.flee.h,ok:{t:fill(F.flee.t2),fx:{hwb:'flee'}}}]})}
       return done(mk(B.maker[r.mk||0],'mk'));
     }
     if((r.bp||0)>=Z.rank2&&r.rank1)return done({t:B.rank2.t,x:fill(B.rank2.x),c:[{l:B.rank2.l,ok:{t:fill(B.rank2.t2),fx:{hwb:'rank2'}}}]});
