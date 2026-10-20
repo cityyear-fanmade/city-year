@@ -139,7 +139,7 @@ export function startUI(E,app){
     const n=multi&&!lastHit?3:lv===1?0:lv===2?(bigFx?10:6):(bigFx?18:12);
     /* 방향: 공격한 쪽에서 맞은 쪽으로 베어 들어온다 (플레이어가 오른쪽 · 적이 왼쪽). 연달아 맞을 때는 위·아래로 번갈아 긋는다 */
     HFXFLIP=!HFXFLIP;const fromRight=e.att==='P',rot=(fromRight?-1:1)*(HFXFLIP?1:-1)*(12+Math.round(Math.random()*10));
-    const org=`${fromRight?'right':'left'} center`,sl=(r,top,ex='')=>`<svg class="blade" viewBox="0 0 100 24" preserveAspectRatio="none" style="--c:${col};--rot:${r}deg;--org:${org};--a0:inset(0 ${fromRight?'0 0 100%':'100% 0 0'});--top:${top}%;${ex}"><path class="bd" d="M0 18 Q44 -4 100 8 Q50 20 0 18Z"/><path class="bc" d="M6 17 Q46 9 94 8.5"/></svg>`;
+    const org=`${fromRight?'right':'left'} center`,sl0=(r,top,ex='')=>`<svg class="blade" viewBox="0 0 100 24" preserveAspectRatio="none" style="--c:${col};--rot:${r}deg;--org:${org};--a0:inset(0 ${fromRight?'0 0 100%':'100% 0 0'});--top:${top}%;${ex}"><path class="bd" d="M0 18 Q44 -4 100 8 Q50 20 0 18Z"/><path class="bc" d="M6 17 Q46 9 94 8.5"/></svg>`,sl=(r,top,ex='')=>{const m=/animation-delay:(\d+)ms/.exec(ex);return sl0(r,top,ex)+(/--ng/.test(ex)?'':sl0(r,top,ex+`;--ng:1;animation-delay:${(m?+m[1]:0)+40}ms;animation-duration:.26s;filter:opacity(.3);margin-top:-4px`))};
     /* 모션: 새로 걸린 키워드와 타수로 고른다 (화상=불꽃 고리, 출혈=할퀴기, 파열=균열, 연타=할퀴기·X자, 그 밖에는 베기·찌르기·X자 중 무작위) */
     const kt=col===kwc('burn')||col===kwc('flame')?'burn':col===kwc('bleed')?'bleed':col===kwc('rupture')?'rupture':'';
     const hitsN=(e.card&&e.card.hits)||1,pk=a=>a[Math.floor(Math.random()*a.length)];
@@ -153,7 +153,7 @@ export function startUI(E,app){
     let h='';
     if(sp&&!(multi&&!lastHit)){
       const FL='#ff8a3c';
-      if(sp==='tclaw'){col='#fff';const T=[[18,3],[36,4],[54,4],[72,3]],gh=(t,hh,d)=>sl(rot*0.7,t,`--sw:0;height:${hh}px;animation-delay:${d}ms`),ghost=(t,hh,d,mt,o)=>sl(rot*0.7,t,`--sw:0;height:${hh}px;animation-delay:${d}ms;margin-top:${mt}px;filter:opacity(${o})`);h=`<u class="jw lng">`+T.map(([t,hh],k)=>ghost(t,hh,k*40+90,-7,.18)+ghost(t,hh,k*40+45,-3,.4)+gh(t,hh+1,k*40)).join('')+`</u>`}
+      if(sp==='tclaw'){col='#fff';const T=[[18,3],[36,4],[54,4],[72,3]],gh=(t,hh,d)=>sl(rot*0.7,t,`--ng:1;--sw:0;height:${hh}px;animation-delay:${d}ms`),ghost=(t,hh,d,mt,o)=>sl(rot*0.7,t,`--ng:1;--sw:0;height:${hh}px;animation-delay:${d}ms;margin-top:${mt}px;filter:opacity(${o})`);h=`<u class="jw lng">`+T.map(([t,hh],k)=>ghost(t,hh,k*40+90,-7,.18)+ghost(t,hh,k*40+45,-3,.4)+gh(t,hh+1,k*40)).join('')+`</u>`}
       else if(sp==='eye'){col='#d0344a';h=sl(rot,50,'height:7px;--c:#d0344a')+sl(rot*0.6,56,'--sw:0;height:3px;--c:#7a1020;animation-delay:50ms')}
       else if(sp==='tremor'){h=`<u class="jw">`+sl(rot,50,'--c:#5fd0ff;margin-top:-3px')+sl(rot,50,'--c:#ff4d6d;margin-top:3px;animation-delay:30ms')+sl(rot,50,'--c:#fff;animation-delay:15ms')+sl(rot,50,'opacity:.5;animation-delay:70ms')+sl(rot,50,'opacity:.3;animation-delay:140ms')+`</u>`}
       else if(sp==='reson'){col='#4aa8ff';h=`<u class="jw"><i class="thrust beam" style="--c:#4aa8ff;--org:${org}"></i></u><i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:${col};animation-delay:.22s"></i><i class="ringfx" style="--c:${col};animation-delay:.34s;opacity:.5"></i>`}
