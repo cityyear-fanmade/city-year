@@ -128,6 +128,14 @@ export function startUI(E,app){
   const WMOT=[[/낫|발톱|손톱|팔$|부리|갈고리/,'claw'],[/십자가|쌍수|난무|대검/,'cross'],[/창|송곳|비수|권총|화살|총$|탄/,'thrust'],[/망치|몽둥이|파이프|지휘봉|장갑|주먹|사슬|방패|책갈피/,'ring'],[/도$|검$|칼$|단도|장도|박도|언월도|톱$|검 |칼날/,'slash']];
   const WMOT2={궁니르:'thrust',레바테인:'slash',미미크리:'slash','다 카포':'ring',절대음감:'ring',금서:'ring',황혼:'slash',아라야시키:'slash',동부십검:'slash','붉은 눈':'ring','우주의 조각':'ring',후회:'ring',요정:'slash'};
   const weaponMotion=n=>{if(!n)return '';n=n.split(' · ')[0].replace(/\s*\(.*\)$/,'');if(WMOT2[n])return WMOT2[n];for(const [re,m] of WMOT)if(re.test(n))return m;return ''};
+  /* 타격음 종류: 무기 모션으로 정한다 (베기·할퀴기=참격, 찌르기=관통, 고리=타격). 큰 피해는 뒤에 _h */
+  function hitKind(e){
+    const big=e.dmg>=(C[e.def].maxHp||100)*0.15,crit=/치명/.test(e.note||'');
+    const edg=e.att!=='P'&&C&&D.enemies[C.id]&&D.enemies[C.id].drop&&D.enemies[C.id].drop.gear,ewn=(Array.isArray(edg)?edg:[edg]).filter(g=>g&&g.slot==='weapon').map(g=>g.n)[0]||'';
+    const wn=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon.n:ewn,m=weaponMotion(wn);
+    const k=m==='thrust'?'pierce':m==='ring'?'blunt':'slash';
+    return k+(big||crit?'_h':'');
+  }
   function hitFx(e){
     const lv=HFX_N[HFX]||0;if(!lv||MODE==='off'||SKIP||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
     const box=$('ent-'+e.def);if(!box)return;
@@ -265,7 +273,7 @@ export function startUI(E,app){
     anim($('ent-'+e.att),e.att==='P'?'lunge-up':'lunge-down',500);
     await wait(200);
     if(e.hit){
-      anim($('ent-'+e.def),'hurt',520);hitFx(e);sfx(e.dmg>=(C[e.def].maxHp||100)*0.15?'hard':'impact');
+      anim($('ent-'+e.def),'hurt',520);hitFx(e);sfx(hitKind(e));
       const box=$('dmgd'),fc=(e.card&&e.card.die)||6;$('dmgw').hidden=false;$('dmgw').querySelector('.dcap').textContent='피해 d'+fc;
       const dm=()=>'<div class="d6"><b>–</b></div>',sp=e.rolls2||[];
       box.innerHTML=e.rolls.map(dm).join('')+(sp.length?`<span class="small dim" style="align-self:center;padding:0 6px">${esc(e.ally2||'')}</span>`+sp.map(()=>'<div class="d6 sp" style="border-color:var(--bleed)"><b>–</b></div>').join(''):'');
