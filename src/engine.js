@@ -2034,6 +2034,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const pv=E.passive&&E.passive.id;
     if(pv==='obey'){P.obey=Math.min(CFG.hw.obey.cap,(P.obey||0)+CFG.hw.obey.gain);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 공허한 순종 ${P.obey}`}
     E.maskOn=pv==='mask'&&C.round%E.passive.every===0;
+    /* 카세티(혈귀): 체력이 hp 비율 아래로 처음 내려가면 피할 수 없는 광역 출혈을 걸고 체력을 회복한다 */
+    if(pv==='kas'&&!E.kasDone&&E.hp>0&&E.hp<=E.maxHp*E.passive.hp){E.kasDone=true;P.bleed=Math.min(bleedCap(P),(P.bleed||0)+E.passive.bleed);const hl=Math.round(E.maxHp*E.passive.heal);E.hp=Math.min(E.maxHp,E.hp+hl);
+      if(!C.quiet){const m={t:'kw',s:`${E.name} · ${E.passive.n} · 피할 수 없는 광역 출혈 · ${P.name} 출혈 +${E.passive.bleed} (지금 ${P.bleed}) · ${E.name} 체력 +${hl}`};C.log.push(m);C.cur.push(m)}}
     /* 에고 개방(붉은 안개 · 칼리): HP가 at 이하가 되면 공격 +atk · 회피 −eva · 피해 +dmgB · 받는 피해 −dr%, 이름이 바뀐다 (보스 전용, 전투당 한 번) */
     {const K=E.kali;if(K&&!E.kaliOn&&E.hp>0&&E.hp<=E.maxHp*K.at){E.kaliOn=true;E.atk+=K.atk;E.eva-=K.eva;E.name=K.name;
       const m={t:'kw',s:`${K.name} · 에고 개방 · 공격 +${K.atk} · 회피 −${K.eva} · 피해 +${K.dmgB} · 받는 피해 −${K.dr}%`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}
@@ -2300,6 +2303,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.extraD2){let x=0;for(let i=0;i<A.extraD2;i++)x+=d(2);dmg+=x;note+=` 추가 1d2×${A.extraD2}+${x}`}
       if(A.passive&&A.passive.id==='stance'){const x=A.stance==='bear'?A.sal:Math.floor((A.passive.salMax-A.sal)/2);if(x>0){dmg+=x;note+=` 본국검술[살] ${A.sal} · ${A.stance==='bear'?'곰 사냥':'범 사냥'}+${x}`}}
       if(B.passive&&B.passive.id==='stance'){const v=B.stance==='bear'?Math.max(0,5-B.sal):Math.max(0,B.sal-5);if(v>0){dmg+=v*2;note+=` 살 ${B.sal} · 취약+${v*2}`}}
+      if(A.passive&&A.passive.id==='kas'&&B.bleed>0){const x=Math.min(B.bleed,A.passive.cap)*A.passive.per;dmg+=x;note+=` ${A.passive.n}+${x}`}
       if(A.passive){
         if(A.passive.id==='godfather'&&A.gfBonus){const x=d(2);dmg+=x;A.gfBonus=false;note+=` ${A.passive.n}+${x}`}
         if(A.passive.id==='claw'){const x=d(A.passive.dice||4);dmg+=x;note+=` ${A.passive.n}+${x}`}
