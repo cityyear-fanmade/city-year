@@ -959,6 +959,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.any)return req.any.some(r=>meets(ch,r));
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
     if(req.startsWith('flag:')){const [k,n]=req.slice(5).split('>=');return (ch.flags[k]||0)>=(+n||1)}
+    if(req.startsWith('lead:')){const [k,n]=req.slice(5).split('>=');return ((ch.leads||{})[k]||0)>=(+n||1)}
     if(req==='fingerup')return canFingerUp(ch);
     if(req.startsWith('corpup<'))return ((ch.corp&&ch.corp.up)||0)<+req.slice(7);
     if(req.startsWith('corpup>='))return ((ch.corp&&ch.corp.up)||0)>=+req.slice(8);
@@ -1913,6 +1914,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.bloomNote){chips.push(ch.bloomNote);ch.bloomNote=null}
     let title=null,tlabel=null,newly=false,colorRoll=null,unlock=null;
     const foe=D.enemies[C.id];
+    /* 단서: 같은 사연의 평범한 적을 이길 때마다 쌓이고, 쌓인 만큼 연관된 히든 보스가 나타날 확률이 오른다 */
+    if(foe.lead&&!foe.hidden){ch.leads=ch.leads||{};ch.leads[foe.lead]=(ch.leads[foe.lead]||0)+1;if(ch.leads[foe.lead]===3)chips.push(`단서 · ${CFG.leads[foe.lead]} (3번째)`)}
     /* 인연: 결혼 중 히든 보스를 이길 때마다 배우자 사망 위험이 0.1%씩 쌓인다 (엔딩까지 가려면 거의 반드시 잡아야 하는 상대) */
     if(ch.bond&&ch.bond.st==='married'&&foe.hidden)ch.bond.risk=(ch.bond.risk||0)+BD.riskStep;
     /* 피의 각인된 갈망: 전투가 끝나면 자식이 흩어지고(각자 확률), 이긴 일반·보스 적은 새 자식이 된다. 히든 보스·환상체는 안 된다 */
