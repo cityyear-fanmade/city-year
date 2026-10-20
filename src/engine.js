@@ -660,7 +660,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const C_=CR[ch.aff.type],RK=ch.wtrain&&ch.aff.name==='W사 날개'&&C_.trainRanks||C_.ranks,r=RK[(ch.fi??-1)+1];if(!r)return null;
     ch.fi=(ch.fi??-1)+1;ch.fr=r;addStats(ch.stats,r.fx);
     /* W사 열차 직원: 직급이 오를 때마다 무기가 바뀐다 (이전 무기는 보관함으로) */
-    if(r.gear)equip(ch,structuredClone(r.gear));if(r.fx.maxHp)ch.hp+=r.fx.maxHp;
+    {const wf=ch.wtrain&&ch.wFam&&D.warpWeapons&&D.warpWeapons[ch.wFam];if(wf&&wf[ch.fi]){equip(ch,structuredClone(wf[ch.fi]));}else if(r.gear&&!ch.wPick)equip(ch,structuredClone(r.gear))}if(r.fx.maxHp)ch.hp+=r.fx.maxHp;
     if(ch.wtrain&&ch.aff.name==='W사 날개'){if(r.gear2)equip(ch,structuredClone(r.gear2));warpRankCards(ch,r)}
     /* 협회 직급에 맞는 해결사 급수 (예: 지부장은 최소 4급) */
     if(r.minRank&&ch.licensed&&ch.rank>r.minRank)ch.rank=r.minRank;
@@ -1718,6 +1718,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(W.i<W.ids.length){const id=W.ids[W.i++];return {type:'fight',enemy:id,enc:{label:`${W.label} · ${W.i}/${W.ids.length}`}}}
       if(W.hid&&!W.hidTried){W.hidTried=true;if(d(100)<=W.hid.chance&&D.enemies[W.hid.id]){W.hidFight=true;return {type:'fight',enemy:W.hid.id,enc:{hidden:true,label:W.hid.label}}}}
       mc.wChain=null;const F=W.hidFight&&W.doneHid?W.doneHid:W.done;return {type:'event',ev:{t:F.t,x:F.x,c:[{l:F.l,ok:{t:F.t2,fx:F.fx}}]}}}
+    if(mc.wtrain&&mc.wPick&&D.warpWeaponPick)return {type:'event',ev:D.warpWeaponPick};
     {const we=warpEvent(G);if(we)return {type:'event',ev:we}}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;return {type:'end',win:true,trueEnd:!!G.endless,hw:hk}}
@@ -1896,8 +1897,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
     if(fx.warpChain&&D.warpChains&&D.warpChains[fx.warpChain]){const W=D.warpChains[fx.warpChain];ch.wChain={ids:W.ids.slice(),i:0,label:W.label,done:W.done,doneHid:W.doneHid,hid:W.hid};if(fx.warpChain==='blood')(ch.warpOnce=ch.warpOnce||[]).push('bloodhunt');chips.push(`${W.label} · 연전 ${W.ids.length}판 · 해가 넘어가지 않는다`)}
+    if(fx.warpWpn&&ch.wtrain&&D.warpWeapons&&D.warpWeapons[fx.warpWpn]){ch.wFam=fx.warpWpn;ch.wPick=false;const w0=D.warpWeapons[fx.warpWpn][Math.max(0,Math.min(4,ch.fi||0))];equip(ch,structuredClone(w0));chips.push(`차원 무기 · ${w0.n} (${w0.e})`)}
     if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
-      if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(r.gear)equip(ch,structuredClone(r.gear));for(let q=0;q<=Math.max(0,ch.fi||0);q++){const g2=C_.trainRanks[q]&&C_.trainRanks[q].gear2;if(g2)equip(ch,structuredClone(g2))}chips.push(`W사 열차 직원 · ${r.n}`);chips.push('무기 '+r.gear.n)}if(!ch.deckLocked&&!ch.cardMoney&&!ch.packOffer&&D.warpDeck){ch.packOffer={n:'W사 정리 요원 책장',cards:warpDeckFor(ch.fi||0),relic:'정리 요원의 책장'};chips.push('정리 요원 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
+      if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(D.warpWeapons&&D.warpWeaponPick){ch.wPick=true;chips.push('차원 무기 · 입사 때 계열을 고른다')}else if(r.gear)equip(ch,structuredClone(r.gear));for(let q=0;q<=Math.max(0,ch.fi||0);q++){const g2=C_.trainRanks[q]&&C_.trainRanks[q].gear2;if(g2)equip(ch,structuredClone(g2))}chips.push(`W사 열차 직원 · ${r.n}`)}if(!ch.deckLocked&&!ch.cardMoney&&!ch.packOffer&&D.warpDeck){ch.packOffer={n:'W사 정리 요원 책장',cards:warpDeckFor(ch.fi||0),relic:'정리 요원의 책장'};chips.push('정리 요원 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
       else chips.push('W사 날개 · 본사 근무')}
     /* W사 열차 직원이 무한 모드(2막)에서 열차를 내릴지 정한다: free=내리고 독립(공방·해결사·소속 제안이 다시 열린다) · stay=남아 정리 요원장 · later=5년 뒤 다시 */
     if(fx.wquit&&ch.wtrain){const W_=CFG.warp;
@@ -1922,7 +1924,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 전투 승리 보상: 회복, 카드, 경험치, 자격 등록 또는 (고정 전투) 승급 */
   function winRewards(G,C){
     const ch=G.ch,chips=[];
-    {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
+    {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
     if(C.escort){const Z=CFG.escort,m=earn(ch,Z.money+Z.moneyPer*C.escort.lv);ch.money+=m;chips.push(`동행 의뢰 보수 · ${C.escort.name} · +${money(m)}`)}
@@ -2486,6 +2488,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
       if(A.isP&&A.angry>0&&dmg>0){dmg+=A.angry;note+=` 분노+${A.angry}`;A.angry=0}
       if(A.wx&&A.wx.grudge&&A.grudge>0){const x=A.grudge*A.wx.grudge;dmg+=x;note+=` ${A.wx.grudgeN||'원한'}+${x}`;A.grudge=0}
+      if(A.wx&&A.wx.scythe&&A.scRound!==C.round&&C.round%A.wx.scythe.every===0&&A.charge>=A.wx.scythe.cost){A.scRound=C.round;A.charge-=A.wx.scythe.cost;const x=A.wx.scythe.bonus+d(A.wx.dice?A.wx.dice[1]:6);dmg+=x;note+=` 추가타+${x} (충전 ${A.wx.scythe.cost} 소모)`}
       if(A.wx&&A.wx.crush&&A.crRound!==C.round){A.crRound=C.round;dmg+=A.wx.crush;note+=` ${A.wx.crushN||'짓누름'}+${A.wx.crush}`}
       if(B.middle&&B.isP&&(B.revenge||0)>0&&CFG.middle.def){const r_=Math.min(dmg-1,B.revenge*CFG.middle.def);if(r_>0){dmg-=r_;note+=` 되갚음 방어−${r_}`}}
       if(B.wx&&B.wx.ward){dmg=Math.max(1,dmg-B.wx.ward);note+=` 책장−${B.wx.ward}`}
