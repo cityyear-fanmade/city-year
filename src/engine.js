@@ -2111,6 +2111,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(pv==='kin'&&C.round>1&&d(100)<=E.passive.chance){P.angry=E.passive.anger;{const m={t:'kw',s:`중지의 아우가 얻어맞았다 · 분노 · 다음 적중 +${E.passive.anger}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}
     if(pv==='stance'){const st=Math.floor((C.round-1)/E.passive.every)%2===0?'bear':'tiger';if(E.sal==null)E.sal=5;
       if(E.stance!==st){E.stance=st;E.deck=E.passive.decks[st];if(!C.quiet){const m={t:'kw',s:`${E.name} · 본국태세 · ${st==='bear'?'곰 사냥 (강한 일격 · 살이 높을수록 강하다)':'범 사냥 (연격 · 살이 낮을수록 강하다)'}`};C.log.push(m);C.cur.push(m)}}}
+    /* 보라눈물: 참격 · 관통 · 타격 · 방어 네 태세를 every라운드마다 돌아가며 바꾼다. 방어 태세에서는 상태 이상에 걸리지 않고, leapEvery라운드마다 평행세계로 도약해 첫 공격을 피한다 */
+    if(pv==='forms'){const F=E.passive,st=F.order[Math.floor((C.round-1)/F.every)%F.order.length];
+      if(E.stance!==st){E.stance=st;E.deck=F.decks[st];E.formImmune=st==='guard';if(!C.quiet){const m={t:'kw',s:`${E.name} · ${F.names[st]}${st==='guard'?' · 상태 이상에 걸리지 않는다':''}`};C.log.push(m);C.cur.push(m)}}
+      if(C.round%F.leapEvery===0){E.leap=true;if(!C.quiet){const m={t:'kw',s:`${E.name} · 평행세계 도약 · 이번 라운드 첫 공격은 닿지 않는다`};C.log.push(m);C.cur.push(m)}}}
     P.locked=pv==='lock'&&C.round%E.passive.every===0?d(P.hand.length)-1:-1;
     C.order=P.tot>=E.tot?[P,E]:[E,P];
     /* 히든 직업 패시브: 발톱 질주(빛), 조율자 봉인(적 공격 카드 1장) */
@@ -2205,7 +2209,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const nailThr=C=>{const e=D.enemies[C.id];return CFG.nail.stun[e.hidden?'hidden':e.tier]||CFG.nail.stun.mid};
   const staggerStage=X=>{let st=null;for(const g of CFG.nail.stages)if((X.stagger||0)>=g.at)st=g;return st};
   function addStagger(C,B,n,L){
-    if(n<=0||B.stunned)return;
+    if(n<=0||B.stunned||B.formImmune)return;
     B.stagger=Math.min(CFG.nail.staggerCap,(B.stagger||0)+n);const thr=nailThr(C);
     L('kw',`  ${B.name}에게 흐트러짐 +${n} (지금 ${B.stagger}/${thr})`);
     if(B.stagger>=thr&&C.round>=(B.stunImmune||0)&&B.stunRound!==C.round+1){B.stunRound=C.round+1;L('kw',`  ${B.name} · 흐트러짐의 한계 · 다음 라운드 기절`)}
@@ -2241,6 +2245,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(let [k,n,to] of (c.kw||[])){
       if(A.distorted&&to!=='s')continue;
       const X=to==='s'?A:D_;
+      if(X.formImmune&&X!==A)continue;
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
       if(k==='burn'&&to!=='s'&&A.wx&&A.wx.burnPlus)n+=A.wx.burnPlus;
       const cap_=k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
@@ -2305,6 +2310,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(A.rv.t>=1&&!RV.buffs.some(k=>(B[k]||0)>0)){am+=RV.hit;pnote+=` 까마귀의 눈 · 버프 없음 명중+${RV.hit}`}
         if(A.rv.t>=3&&B.hp<=B.maxHp*RV.exec){dm=0;B.guarding=false;if(A.rvRound!==C.round){A.rvRound=C.round;L('kw',`${A.name} · 처형 인가 · ${B.name}은(는) 방어 자세를 취할 수 없고 회피가 0이다`)}}}
       if(B.stunned)dm=0;
+      if(B.leap&&!B.stunned){dm+=9999;B.leap=false;L('kw',`  ${B.name} · 평행세계로 도약 · 공격이 허공을 지난다`)}
       /* 중지: 서열이 오를수록 회피의 '피하는 힘'이 줄어든다(evaEff). 줄어든 만큼은 받는 피해 감소로 돌려준다 */
       if(B.middle&&B.isP&&B.midEff<1&&!B.stunned)dm-=Math.floor(Math.max(0,B.eva+B.evaB-(B.evaPen||0)+(B.odin?Math.max(0,odinEva(C.round,B)):0))*(1-B.midEff));
       {const ev_=Math.max(0,B.eva+B.evaB-(B.evaPen||0));if(c.ignoreEva)dm-=ev_;else if(A.awl&&A.lead)dm-=Math.floor(ev_/2)}
@@ -2372,6 +2378,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.extraD2){let x=0;for(let i=0;i<A.extraD2;i++)x+=d(2);dmg+=x;note+=` 추가 1d2×${A.extraD2}+${x}`}
       if(A.passive&&A.passive.id==='stance'){const x=A.stance==='bear'?A.sal:Math.floor((A.passive.salMax-A.sal)/2);if(x>0){dmg+=x;note+=` 본국검술[살] ${A.sal} · ${A.stance==='bear'?'곰 사냥':'범 사냥'}+${x}`}}
       if(B.passive&&B.passive.id==='stance'){const v=B.stance==='bear'?Math.max(0,5-B.sal):Math.max(0,B.sal-5);if(v>0){dmg+=v*2;note+=` 살 ${B.sal} · 취약+${v*2}`}}
+      if(A.passive&&A.passive.id==='forms'&&A.stance==='pierce'){const n=Math.min(A.passive.pierceCap,(B.bleed||0)+(B.rupture||0)+(B.burn||0));if(n>0){const x=n*A.passive.pierceBonus;dmg+=x;note+=` 관통 태세+${x}`}}
       if(A.passive&&A.passive.id==='kas'&&B.bleed>0){const x=Math.min(B.bleed,A.passive.cap)*A.passive.per;dmg+=x;note+=` ${A.passive.n}+${x}`}
       if(A.passive){
         if(A.passive.id==='godfather'&&A.gfBonus){const x=d(2);dmg+=x;A.gfBonus=false;note+=` ${A.passive.n}+${x}`}
@@ -2437,7 +2444,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
-      if(A.wx&&A.wx.hitBleed&&B.hp>0){B.bleed=Math.min(bleedCap(B),B.bleed+A.wx.hitBleed);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 출혈 +${A.wx.hitBleed} (지금 ${B.bleed})`)}
+      if(A.passive&&A.passive.id==='forms'&&A.stance==='strike'&&B.hp>0){addStagger(C,B,A.passive.stagger,L);if((A.stagger||0)>0){A.stagger=Math.max(0,A.stagger-A.passive.recover);L('kw',`  ${A.name} · 타격 태세 · 자신의 흐트러짐 −${A.passive.recover}`)}}
+      if(A.wx&&A.wx.hitBleed&&B.hp>0&&!B.formImmune){B.bleed=Math.min(bleedCap(B),B.bleed+A.wx.hitBleed);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 출혈 +${A.wx.hitBleed} (지금 ${B.bleed})`)}
       if(A.inkIds&&A.inkIds.length&&!c.inkFollow&&B.hp>0){const id=A.inkIds[(A.inkI=A.inkI||0)%A.inkIds.length],K=CFG.ink;if(A.obey>0)A.obey--;A.inkI++;let x=K.follow+Math.max(0,A.inkIds.length-1)*K.followPer;if(B.shield>0){const ab=Math.min(B.shield,x);B.shield-=ab;x-=ab}hpLoss(C,B,x,L);B.ink=Math.min(K.cap+(A.wx&&A.wx.inkCap||0),(B.ink||0)+K.followInk);L('hit',`  ${A.name}의 ${D.cards[id].n.replace('흑수 · ','')} 흑수가 거든다 · ${B.name}에게 ${x} · 수흔 +${K.followInk} (지금 ${B.ink})`)}
       if(A.wx&&A.wx.hitInk&&B.hp>0){B.ink=Math.min(CFG.ink.cap+(A.wx.inkCap||0),(B.ink||0)+A.wx.hitInk);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 수흔 +${A.wx.hitInk} (지금 ${B.ink})`)}
       if(c.verdict&&B.hp<=0&&A.rv)L('kw','처리 완료. 흔적은 남지 않았다.');
