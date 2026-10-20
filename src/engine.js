@@ -469,6 +469,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 살 수 있는지: 'ok' / 'locked'(등급) / 'money' / 'owned' */
   function canBuy(ch,id){
     const it=D.items[id];
+    if(it.hw&&!(ch.hw&&!ch.hw.out&&!ch.hw.done))return 'locked';
     if(ch.gear[it.slot]&&ch.gear[it.slot].id===id)return 'owned';
     if(ch.distForm&&!ch.distStable)return 'distort';
     if(it.slot==='aug'&&isN(ch))return 'nwing';

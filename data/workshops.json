@@ -190,6 +190,44 @@
     "spd": 1,
     "eva": 1
    }
+  },
+  "hw_blade": {
+   "grade": 3,
+   "slot": "weapon",
+   "n": "선대의 장검",
+   "price": 1800,
+   "hw": true,
+   "e": "공+5 · D6≥3 · 홍원 소장품",
+   "fx": {
+    "atk": 5,
+    "dmin": 3
+   }
+  },
+  "hw_coat": {
+   "grade": 3,
+   "slot": "armor",
+   "n": "흑수의 갑",
+   "price": 1600,
+   "hw": true,
+   "e": "HP+18 · 회피+3 · 피해 -5% · 홍원 소장품",
+   "fx": {
+    "maxHp": 18,
+    "eva": 3,
+    "defUp": 5
+   }
+  },
+  "hw_pill": {
+   "grade": 3,
+   "slot": "aug",
+   "n": "특제 흑수환",
+   "price": 1700,
+   "hw": true,
+   "e": "공+2 · 회피+2 · HP+8 · 홍원 소장품",
+   "fx": {
+    "atk": 2,
+    "eva": 2,
+    "maxHp": 8
+   }
   }
  },
  "special": {

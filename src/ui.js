@@ -762,7 +762,7 @@ export function startUI(E,app){
     };
     const shops=D.workshops.map(w=>{
       const open=w.grade<=acc;
-      const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade).filter(([id,it],_i,all)=>!hwHome()||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
+      const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade&&(hwHome()?(w.grade<3||it.hw):!it.hw)).filter(([id,it],_i,all)=>!hwHome()||w.grade===3||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
         const note=st==='owned'?'장착 중':st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
         if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span><span class="small dim">${D.slots[it.slot]}${cur?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · 이 장비를 맞출까?</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">맞춘다</button><button class="btn quiet" data-a="buyno">취소</button></div></div>`;
