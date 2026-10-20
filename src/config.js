@@ -310,9 +310,6 @@ export const CFG = {
   shinmang: {on: true, shinCost: 2, ringEvery: 3, ringCost: [3, 4, 5], maxRings: 3, takeShin: 0.10, dealShin: 0.10, dealRing: 0.08, ringHit: 3, winMind: 3},
   /* 특색 기념 의뢰: 특색을 받고 gap해 뒤에 소속별 전용 의수(의안·신체 개조) 설계 의뢰가 온다. 사양하면 retry해 뒤에 다시 */
   custEvent: {gap: 1, retry: 3},
-  /* 특색 전용 카드: 색 → 키워드 묶음. 특색을 받으면 그 키워드의 카드 2장(한 방 · 다타격) 가운데 하나를 고른다 */
-  colorCards: false /* true면 특색을 받을 때 전용 카드 2장 중 하나를 고른다 (내일 작업 · 아직 꺼 둔다) */,
-  colorKind: {'주홍': 'burn', '호박빛': 'burn', '금빛': 'burn', '붉은': 'bleed', '자줏빛': 'bleed', '분홍빛': 'bleed', '검은': 'rupture', '잿빛': 'rupture', '보랏빛': 'rupture', '푸른': 'breath', '하늘빛': 'breath', '연둣빛': 'breath', '은빛': 'stagger', '창백한': 'stagger', '옥빛': 'stagger'},
   /* 특색 위력: 특색을 가진 동안 전투마다 피해·명중·회피 중 하나가 무작위로 정해지고, HP가 hpMin 이상일 때만 켜진다 */
   colorBuff: {on: true, hpMin: 0.7, dmg: 4, hit: 10, eva: 8},
   workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100, hiddenSell: 2500, hiddenSellPer: 800, cardBase: 300, cardPer: 30, cardMax: 3 /* 카드 판매: 방문마다 cardMax장까지, 값은 cardBase + 카드 비용 × cardPer (지금은 300 + 비용 1마다 30) */},
