@@ -295,6 +295,9 @@ export const CFG = {
     armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 2}, hidden: {dr: 2, eva: 2}},
     /* 의수: 일반 강화 한 단계마다 명중 +1, 5·10·15단계마다 공격·회피·명중 중 하나를 골라 올린다 (pickAmt). pick은 예전 저장의 히든 의수 개조 값 */
     aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {hit: 1}, hidden: {hit: 2}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'}},
+    /* 커스텀 의수: 공방 해결사가 한 번 포인트(pts)를 나눠 만든다. 공격·회피는 1당 atkCost·evaCost 포인트에 +1, 체력은 hpCost 포인트에 +hpPer, 패시브 하나는 passCost 포인트 */
+    cust: {pts: 35, atkCost: 3, evaCost: 3, hpCost: 2, hpPer: 5, passCost: 5,
+      pass: {react: {n: '반응 회로', e: '전투 시작 후 2라운드 동안 회피 +10'}, absorb: {n: '흡수 코어', e: '라운드마다 HP +3'}, over: {n: '과부하 코어', e: '라운드 첫 공격 피해 +4'}}},
     /* 전투 승리 보상: 재료용 무기·방어구·의수 중 하나를 전투를 matWins번 이길 때마다 (무한 모드는 matGapInf해마다 한 번) */
     matWins: 2, matGapInf: 5,
     /* 특수 강화(대강화): 강화 5·10·15단계에서만 한 번씩 크게 오른다. 15단계 뒤로는 일반 강화(단계당 수치)만 끝없이 이어진다 */

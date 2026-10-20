@@ -558,7 +558,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     fx.hit=(fx.hit||0)+(g.n||0)*A_.normal.hit+(g.h||0)*A_.hidden.hit;fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);
     for(const x of pk)fx[x]=(fx[x]||0)+A_.pickAmt[x];
     if(g.pick)fx[g.pick]=(fx[g.pick]||0)+A_.pick;
-    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>`${A_.stats[x]||(x==='spd'?'속도':x)}+${v}`).join(' · ')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${pk.length?` · 선택 ${pk.length}/${B_.at.length}`:''}${g.pend?` · 고를 수 있는 선택 ${g.pend}`:''}`,fx}
+    const cu=w.cust&&w.cust.done?w.cust:null;
+    if(cu){if(cu.atk)fx.atk=(fx.atk||0)+cu.atk;if(cu.eva)fx.eva=(fx.eva||0)+cu.eva;if(cu.hp)fx.maxHp=(fx.maxHp||0)+cu.hp*WS.cust.hpPer}
+    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>`${A_.stats[x]||(x==='spd'?'속도':x==='maxHp'?'최대 HP':x)}+${v}`).join(' · ')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${pk.length?` · 선택 ${pk.length}/${B_.at.length}`:''}${g.pend?` · 고를 수 있는 선택 ${g.pend}`:''}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx}
   }
   /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
   function wsOpen(ch,chips){
@@ -589,6 +591,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     st.splice(i,1);ch.ws.g.pick=stat;ch.ws.ups++;
     const cur=ch.gear.aug;equip(ch,wsItem(ch,'aug'));if(cur)ch.stash=ch.stash.filter(x=>x!==cur);
     return {m:m.n,stat};
+  }
+  /* 커스텀 의수: 포인트를 공격·회피·체력·패시브에 나눠 한 번 만든다 */
+  function wsCustom(ch,o){
+    const K=WS.cust,w=ch.ws;if(!w||!isWs(ch)||(w.cust&&w.cust.done)||(ch.distForm&&!ch.distStable))return null;
+    const atk=Math.max(0,o.atk|0),eva=Math.max(0,o.eva|0),hp=Math.max(0,o.hp|0),pas=o.pas&&K.pass[o.pas]?o.pas:null;
+    const used=atk*K.atkCost+eva*K.evaCost+hp*K.hpCost+(pas?K.passCost:0);if(used>K.pts||used<=0)return null;
+    w.cust={atk,eva,hp,pas,done:true,used};const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return {used,atk,eva,hp,pas}
   }
   /* 의수 선택: 5·10·15단계에 닿으면 공격·회피·명중 중 하나를 고른다 */
   function wsAugChoose(ch,stat){
@@ -2142,6 +2151,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const SM=CFG.shinmang,isC=ch.titleKind==='color'||ch.colorDone;
       if(SM.on&&ch.pinky&&isC&&!ch.distForm&&ch.mind>SM.shinCost){ch.mind-=SM.shinCost;P.sm={rings:0,limit:Math.min(SM.maxRings,(ch.pinkyKeys||[]).length)};
         mindNote.push(`신(心) · 정신력 −${SM.shinCost} (지금 ${ch.mind}) · 받는 피해 −${Math.round(SM.takeShin*100)}% · 주는 피해 +${Math.round(SM.dealShin*100)}%${P.sm.limit?` · ${SM.ringEvery}라운드마다 망 하나 (최대 ${P.sm.limit}망)`:' · 소지의 별이 없어 망은 감기지 않는다'}`)}
+      P.augPas=(ch.ws&&ch.ws.cust&&ch.ws.cust.done&&isWs(ch))?ch.ws.cust.pas:null;
+      if(P.augPas)mindNote.push(`커스텀 의수 · ${CFG.ws.cust.pass[P.augPas].n} · ${CFG.ws.cust.pass[P.augPas].e}`);
       const CB=CFG.colorBuff;
       if(CB.on&&isC){const k=one(['dmg','hit','eva']);P.cb={k,v:CB[k]};mindNote.push(`특색 위력 · ${({dmg:'피해',hit:'명중',eva:'회피'})[k]} +${CB[k]} (HP ${Math.round(CB.hpMin*100)}% 이상일 때)`)}}
     if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
@@ -2173,6 +2184,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function newRound(C){
     C.round++;
     const {P,E}=C;P.triDmg=0;P.triCut=0;C.tri=null;
+    if(P.augPas==='absorb'&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(3,P.maxHp-P.hp);P.hp+=h;const m={t:'kw',s:`${P.name} · 흡수 코어 · HP +${h}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     /* 망(望): 3라운드마다 정신력을 쓰고 빛의 고리 하나가 감긴다. 최대 3망, 9라운드 이후에는 더 쓰지 않는다. 정신력이 모자라면 감기지 않는다 */
     {const SM=CFG.shinmang;if(P.sm&&C.round%SM.ringEvery===0&&P.sm.rings<P.sm.limit){const cost=SM.ringCost[P.sm.rings]||SM.ringCost[SM.ringCost.length-1];
       if(C.ch.mind>cost){C.ch.mind-=cost;P.sm.rings++;const m={t:'kw',s:`망(望) ${P.sm.rings}망 · 정신력 −${cost} (지금 ${C.ch.mind}) · 주는 피해 +${Math.round((SM.dealShin+P.sm.rings*SM.dealRing)*100)}% · 명중 +${P.sm.rings*SM.ringHit}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}}
@@ -2437,6 +2449,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.sm&&A.sm.rings)am+=A.sm.rings*CFG.shinmang.ringHit;
       if(A.cb&&A.cb.k==='hit'&&A.hp>=A.maxHp*CFG.colorBuff.hpMin)am+=A.cb.v;
       if(B.cb&&B.cb.k==='eva'&&B.hp>=B.maxHp*CFG.colorBuff.hpMin)dm+=B.cb.v;
+      if(B.augPas==='react'&&C.round<=2)dm+=10;
       if(A.rv){const RV=CFG.raven;
         if(A.rv.t>=1&&!RV.buffs.some(k=>(B[k]||0)>0)){am+=RV.hit;pnote+=` 까마귀의 눈 · 버프 없음 명중+${RV.hit}`}
         if(A.rv.t>=3&&B.hp<=B.maxHp*RV.exec){dm=0;B.guarding=false;if(A.rvRound!==C.round){A.rvRound=C.round;L('kw',`${A.name} · 처형 인가 · ${B.name}은(는) 방어 자세를 취할 수 없고 회피가 0이다`)}}}
@@ -2522,6 +2535,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.ring&&A.work>0){dmg+=CFG.ring.dmg*A.work;note+=` 작품 ${A.work}+${CFG.ring.dmg*A.work}`;if(A.work>=CFG.ring.max){dmg=Math.floor(dmg*CFG.ring.finish);A.work=CFG.ring.after;note+=` 완성×${CFG.ring.finish}`}}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
+      if(A.augPas==='over'&&A.ovRound!==C.round){A.ovRound=C.round;dmg+=4;note+=' 과부하 코어+4'}
       if(A.cb&&A.cb.k==='dmg'&&A.hp>=A.maxHp*CFG.colorBuff.hpMin){dmg+=A.cb.v;note+=` 특색 위력+${A.cb.v}`}
       if(A.sm){const SM=CFG.shinmang,mul=1+SM.dealShin+A.sm.rings*SM.dealRing;dmg=Math.floor(dmg*mul);note+=` 신망 ×${mul.toFixed(2)}`}
       if(A.wx&&A.wx.finish&&B.hp<=B.maxHp*A.wx.finish.at){dmg+=A.wx.finish.dmg;note+=` 마무리+${A.wx.finish.dmg}`}
@@ -2816,6 +2830,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
-    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
