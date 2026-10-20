@@ -1667,7 +1667,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 인연이 걸린 전조 문구의 {n}을 이름으로 채운다 */
   /* 제 2막 무한 모드: 이 세계에서는 만날 수 없던 히든도 균열을 통해 나타난다 */
   const riftOmen=nm=>({x:`세계에 균열이 갔다. 갈라진 틈 너머에서 ${nm}의 기척이 느껴진다. 이 세계에서는 만날 수 없던 운명이 균열을 타고 흘러든다.`,go:'균열 속으로 들어간다',away:'눈을 돌린다',awayT:'균열은 소리 없이 닫혔다. 만날 수 없던 운명은 다음 기회를 기다린다.'});
-  const omenOf=(ch,o)=>{if(!o||!ch.bond||!ch.bond.name)return o||{};const f=t=>t&&bondFill(t,ch.bond);return Object.assign({},o,{x:f(o.x),go:f(o.go),away:f(o.away),awayT:f(o.awayT)})};
+  const omenOf=(ch,o)=>{if(o&&o.alt){const a=o.alt.find(a=>meets(ch,a.req));if(a)o=Object.assign({},o,{x:a.x})}if(!o||!ch.bond||!ch.bond.name)return o||{};const f=t=>t&&bondFill(t,ch.bond);return Object.assign({},o,{x:f(o.x),go:f(o.go),away:f(o.away),awayT:f(o.awayT)})};
   function answerOmen(G,st,go){
     if(go||!st.escape){(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:!!st.rift,label:st.rift?'균열 너머의 운명':T.hiddenBoss}}}
     const e=encounter(G.ch,st.spec);return {type:'fight',enemy:e.id,enc:e,avoided:st.boss};
