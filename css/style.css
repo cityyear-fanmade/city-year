@@ -500,11 +500,11 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 
 /* 타격 연출: 맞은 쪽 상자 위의 베기 선과 파편 */
 .hfx{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:7}
-.hfx .slash{position:absolute;left:-8%;top:48%;width:116%;height:5px;border-radius:3px;background:linear-gradient(90deg,transparent,#fff 38%,var(--c) 62%,transparent);transform:rotate(-26deg) scaleX(0);transform-origin:left center;filter:drop-shadow(0 0 7px var(--c));animation:hSlash .3s ease-out forwards}
+.hfx .slash{position:absolute;left:-8%;top:48%;width:116%;height:5px;border-radius:3px;background:linear-gradient(90deg,transparent,#fff 38%,var(--c) 62%,transparent);transform:rotate(var(--rot,-26deg)) scaleX(0);transform-origin:var(--org,left center);filter:drop-shadow(0 0 7px var(--c));animation:hSlash .3s ease-out forwards}
 .hfx .whiff{position:absolute;left:-8%;top:52%;width:116%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:rotate(-14deg) scaleX(0);transform-origin:left center;animation:hSlash .35s ease-out forwards}
 .hfx .spk{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);opacity:0;animation:hSpk .55s ease-out var(--d,0ms) forwards}
 .hfx .hflash{position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 50% 50%,var(--c),transparent 70%);opacity:0;animation:hFlash .32s ease-out forwards}
-@keyframes hSlash{0%{transform:rotate(-26deg) scaleX(0);opacity:1}55%{transform:rotate(-26deg) scaleX(1);opacity:1}100%{transform:rotate(-26deg) scaleX(1);opacity:0}}
+@keyframes hSlash{0%{transform:rotate(var(--rot,-26deg)) scaleX(0);opacity:1}55%{transform:rotate(var(--rot,-26deg)) scaleX(1);opacity:1}100%{transform:rotate(var(--rot,-26deg)) scaleX(1);opacity:0}}
 @keyframes hSpk{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.15);opacity:0}}
 @keyframes hFlash{0%{opacity:.55}100%{opacity:0}}
 .wrap.shk{animation:hShake .26s linear}

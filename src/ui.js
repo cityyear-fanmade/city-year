@@ -122,19 +122,23 @@ export function startUI(E,app){
   const PREV={};
   /* 타격 연출: 맞은 쪽 상자 위에 베기 선·파편이 튄다. 맞은 카드·무기가 새로 건 키워드(화상·출혈·파열 등)에 따라 색이 달라진다. 단계: off(끔)·low(가볍게)·mid(보통)·high(강하게) */
   const HFXK='cityYearHitFx';let HFX=store.get(HFXK)||'mid';
-  const HFX_N={off:0,low:1,mid:2,high:3};
+  const HFX_N={off:0,low:1,mid:2,high:3};let HFXFLIP=false;const HFXMK='cityYearHitFxM';let HFXM=store.get(HFXMK)||'each';
   function hitFx(e){
     const lv=HFX_N[HFX]||0;if(!lv||MODE==='off'||SKIP||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
     const box=$('ent-'+e.def);if(!box)return;
     let col='#cfe6ff',best=0;const sn=e.snap&&e.snap[e.def],pv=PREV[e.def];
     if(sn&&pv)for(const k of Object.keys(D.keywords)){const dl=(sn[k]||0)-(pv[k]||0);if(dl>best){best=dl;col=kwc(k)}}
     const big=e.dmg>=(C[e.def].maxHp||100)*0.15;
-    const n=lv===1?0:lv===2?(big?10:6):(big?18:12);
-    let h=`<i class="slash" style="--c:${col}"></i>`;
-    if(lv>=3)h+=`<i class="hflash" style="--c:${col}"></i>`;
+    /* '마지막만 크게': 타수 3 이상인 카드는 앞의 타격은 작은 파편만, 마지막 타격에 베기와 큰 효과가 몰린다 */
+    const multi=HFXM==='last'&&e._g&&e._g.n>=3,lastHit=!multi||e._g.i===e._g.n-1,bigFx=big||(multi&&lastHit);
+    const n=multi&&!lastHit?3:lv===1?0:lv===2?(bigFx?10:6):(bigFx?18:12);
+    /* 방향: 공격한 쪽에서 맞은 쪽으로 베어 들어온다 (플레이어가 오른쪽 · 적이 왼쪽). 연달아 맞을 때는 위·아래로 번갈아 긋는다 */
+    HFXFLIP=!HFXFLIP;const fromRight=e.att==='P',rot=(fromRight?-1:1)*(HFXFLIP?1:-1)*(22+Math.round(Math.random()*12));
+    let h=multi&&!lastHit?'':`<i class="slash" style="--c:${col};--rot:${rot}deg;--org:${fromRight?'right':'left'} center;--sx:${fromRight?1:0}"></i>`;
+    if(lv>=3&&lastHit)h+=`<i class="hflash" style="--c:${col}"></i>`;
     for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
     const fx=document.createElement('div');fx.className='hfx';fx.innerHTML=h;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
-    if(lv>=2&&big||lv>=3){const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&big?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}}
+    if(lastHit&&(lv>=2&&bigFx||lv>=3)){const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&bigFx?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}}
   }
   function whiffFx(e){
     const lv=HFX_N[HFX]||0;if(lv<2||MODE==='off'||SKIP)return;
@@ -240,6 +244,9 @@ export function startUI(E,app){
   }
   async function runPlayback(evs){
     PLAYING=true;SKIP=false;
+    /* 같은 카드로 이어지는 타격 묶음: 타수가 3 이상이면 묶음 안에서 몇 번째 타격인지 표시해 둔다 (연출 '마지막만 크게'에서 쓴다) */
+    for(let i=0;i<evs.length;i++){const a=evs[i];if(!a||a.k!=='atk'||a._g)continue;let j=i;while(j+1<evs.length&&evs[j+1]&&evs[j+1].k==='atk'&&evs[j+1].att===a.att&&evs[j+1].card===a.card)j++;
+      const n=j-i+1;for(let k=i;k<=j;k++)evs[k]._g={n,i:k-i};}
     for(const e of evs){if(SKIP)break;await playEvent(e)}
     markSides(null,null);
     await waitTap(C.over?'전투 결과 보기':'라운드 마치기');
@@ -348,7 +355,7 @@ export function startUI(E,app){
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">효과음 음량</span><b class="mono" id="sfxPct">${Math.round(SFXS.vol*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="sfxstep" data-i="-10" aria-label="효과음 10 줄이기">−10</button><input type="range" id="sfxRange" min="0" max="100" step="1" value="${Math.round(SFXS.vol*100)}" aria-label="효과음 음량"><button class="chip" data-a="sfxstep" data-i="10" aria-label="효과음 10 올리기">+10</button></div></div>
         <span class="small dim">주사위가 멈출 때 나는 '탁' 소리다. 배경음악과 따로 켜고 끈다. 연출을 끄면 나지 않는다</span></div>`:''}
-      <div class="stack" style="gap:6px"><span class="eyebrow">타격 연출</span><div class="seg">${b('hitfx','off','끔',HFX)}${b('hitfx','low','가볍게',HFX)}${b('hitfx','mid','보통',HFX)}${b('hitfx','high','강하게',HFX)}</div><span class="small dim">맞은 쪽에 베기 선과 파편이 튄다. 화상은 주황, 출혈은 붉은색, 파열은 보라 같은 식으로 새로 걸린 키워드에 따라 색이 달라진다. 연출을 끄면 나오지 않는다</span></div>
+      <div class="stack" style="gap:6px"><span class="eyebrow">타격 연출</span><div class="seg">${b('hitfx','off','끔',HFX)}${b('hitfx','low','가볍게',HFX)}${b('hitfx','mid','보통',HFX)}${b('hitfx','high','강하게',HFX)}</div><div class="seg">${b('hitfxm','each','타격마다',HFXM)}${b('hitfxm','last','타수 많으면 마지막만 크게',HFXM)}</div><span class="small dim">맞은 쪽에 베기 선과 파편이 튄다. 화상은 주황, 출혈은 붉은색, 파열은 보라 같은 식으로 새로 걸린 키워드에 따라 색이 달라진다. 연출을 끄면 나오지 않는다</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
   }
@@ -1880,6 +1887,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     title(){UI.confirmNew=null;if(UI.shared){UI.shared=null;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}UI.screen='title';render()},
     mode(i){MODE=i;store.set('cityYearMode',i);render()},
     hitfx(i){HFX=i;store.set(HFXK,i);render()},
+    hitfxm(i){HFXM=i;store.set(HFXMK,i);render()},
     fightmode(i){FIGHT=i;store.set('cityYearFight',i);UI.paused=false;render()},
     pause(){UI.paused=!UI.paused;if(UI.paused&&UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     autogap(i){AUTOGAP=i;store.set('cityYearAutoGap',i);if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
