@@ -801,14 +801,15 @@ export function startUI(E,app){
     const ch=G.ch;if(!E.isWs(ch))return '';E.wsEnsure(ch);const w=ch.ws;if(!w)return '';
     const st=ch.stash||[],W_=CFG.ws,nm={weapon:'무기',armor:'방어구'},key={weapon:'w',armor:'a'};
     const dead=ch.distForm&&!ch.distStable;
+    const nameRow=sl=>`<div class="row" style="gap:6px"><input id="wsn_${sl}" maxlength="12" autocomplete="off" placeholder="이름 짓기 (12자까지)" value="${esc(((ch.ws.names||{})[sl])||'')}" style="flex:1;min-width:0"><button class="chip" data-a="wsname" data-i="${sl}">이름 정하기</button></div>`;
     const rows=['weapon','armor'].map(sl=>{
       const cur=ch.gear[sl];if(!cur||cur.id!=='ws_'+sl)return '';
       const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&m.slot===sl);
       const btns=mats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="${sl}:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
-      return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>${esc(cur.n)}</b><span class="mono small dim">일반 ${k.p}/${E.wsNeed(k.n)} · 강화 ${k.n}${k.h?' · 히든 '+k.h:''}</span></div><span class="mono small" style="color:var(--gold)">${esc(cur.e)}</span>${btns||`<p class="small dim">녹일 ${nm[sl]}이(가) 보관함에 없다.</p>`}</div>`;
+      return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow(sl)}<div class="row between"><b>${esc(cur.n)}</b><span class="mono small dim">일반 ${k.p}/${E.wsNeed(k.n)} · 강화 ${k.n}${k.h?' · 히든 '+k.h:''}</span></div><span class="mono small" style="color:var(--gold)">${esc(cur.e)}</span>${btns||`<p class="small dim">녹일 ${nm[sl]}이(가) 보관함에 없다.</p>`}</div>`;
     }).join('');
     const ag=ch.gear.aug,done=w.g&&w.g.pick,cands=st.map((m,i)=>[m,i]).filter(([m])=>E.wsAugOk(ch,m));
-    const augRow=!ag||ag.id!=='ws_aug'?'':`<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>${esc(ag.n)}</b><span class="mono small dim">${done?'개조 완료':'개조 가능 · 한 번뿐'}</span></div><span class="mono small" style="color:var(--gold)">${esc(ag.e)}</span>
+    const augRow=!ag||ag.id!=='ws_aug'?'':`<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow('aug')}<div class="row between"><b>${esc(ag.n)}</b><span class="mono small dim">${done?'개조 완료':'개조 가능 · 한 번뿐'}</span></div><span class="mono small" style="color:var(--gold)">${esc(ag.e)}</span>
       ${done?'':cands.length?cands.map(([m,i])=>`<div class="stack" style="gap:4px"><b class="small">${esc(m.n)} <span class="chip warn">히든</span></b><div class="row" style="gap:6px;flex-wrap:wrap">${Object.entries(W_.aug.stats).map(([k,l])=>`<button class="btn" data-a="wsaug" data-i="${i}:${k}" ${dead?'disabled':''}><b>${l} +${W_.aug.pick}</b></button>`).join('')}</div></div>`).join(''):'<p class="small dim">히든 의수를 구하면 한 번 개조할 수 있다. 녹이면 공격, 회피, 명중 중 하나가 +'+W_.aug.pick+' 오르고, 한번 고르면 바꿀 수 없다.</p>'}</div>`;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b class="serif">작업대</b><span class="chip">공방 해결사</span></div>
       <p class="small dim">전용 무기·방어구·의수는 빼거나 바꿀 수 없다. 다른 장비는 모두 재료다. 무기와 방어구는 같은 칸의 보관함 장비를 녹여 끝없이 강화한다. 일반 장비는 모아서 한 단계(필요한 개수는 단계가 오를수록 늘어난다), 히든 장비는 1개로 한 단계. 녹인 장비는 돌아오지 않고, 재료로 쓴 공방 물건은 다시 살 때마다 값이 오른다.</p>
@@ -1957,6 +1958,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     sell(i){const g=(G.ch.stash||[])[+i];if(!g)return;const v=E.sellStash(G.ch,+i);if(v){UI.sold=`${g.n}을(를) ${E.money(v)}에 팔았다.`;render()}},
     swapcard(i){if((UI.swapped||[]).length>=CFG.shop.swapMax)return;const r=E.swapCard(G.ch,+i);if(r){(UI.swapped=UI.swapped||[]).push([D.cards[r.old].n,D.cards[r.nid].n]);render()}},
     wsmelt(i){const [sl,ix]=String(i).split(':'),r=E.wsMelt(G.ch,sl,+ix);if(r){UI.wsMsg=`${r.m}을(를) 녹였다 · ${r.hidden?'히든 재료 · 한 단계 상승':r.step?'일반 재료 · 한 단계 상승 ('+r.n+'단계)':'일반 재료 · '+r.p+'/'+r.need}`;resave();render()}},
+    wsname(sl){const el=document.getElementById('wsn_'+sl),n=E.wsRename(G.ch,sl,el?el.value:'');if(n){UI.wsMsg=`이름을 '${n}'(으)로 정했다.`;resave();render()}},
     wsaug(i){const [ix,k]=String(i).split(':'),r=E.wsAugPick(G.ch,+ix,k);if(r){UI.wsMsg=`${r.m}을(를) 녹여 의수를 개조했다 · ${CFG.ws.aug.stats[r.stat]} +${CFG.ws.aug.pick}`;resave();render()}},
     tune(k,el){const r=E.tuneGear(G.ch,k,el&&el.dataset?el.dataset.s:null);if(r){UI.tuneMsg={ok:r.ok,t:`${r.n} · ${r.stat==='atk'?'공격':'회피'} +1 ${r.ok?'성공':'실패'} (${r.tries}/${E.tuneMax(G.ch)})`};render()}},
     delcard(i){if((UI.deleted||[]).length>=CFG.shop.delMax)return;const c=E.delCard(G.ch,+i);if(c){(UI.deleted=UI.deleted||[]).push(D.cards[c].n);render()}},

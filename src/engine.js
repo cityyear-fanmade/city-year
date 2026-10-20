@@ -531,12 +531,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const wsHidden=m=>!(D.items&&D.items[m.id])&&!((m.grade||0)>=1&&(m.grade||0)<=4)&&!(m.id==='birth'||m.n==='맨손');
   function wsItem(ch,slot){
     const w=ch.ws,k=w[wsKey(slot)];
+    const nmOf=d=>(w.names&&w.names[slot])||d;
     if(slot==='weapon'){const C_=WS.weapon,atk=C_.base.atk+k.n*C_.normal.atk,dmg=k.h*C_.hidden.dmgB;
-      return {id:'ws_weapon',slot,n:C_.n,grade:4,e:`공+${atk}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{atk,dmgB:dmg},wx:{dice:C_.dice.slice()}}}
+      return {id:'ws_weapon',slot,n:nmOf(C_.n),grade:4,e:`공+${atk}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{atk,dmgB:dmg},wx:{dice:C_.dice.slice()}}}
     if(slot==='armor'){const C_=WS.armor,hp=C_.base.maxHp+k.n*C_.normal.maxHp;
-      return {id:'ws_armor',slot,n:C_.n,grade:4,e:`HP+${hp}${k.h?` · 받는 피해 −${k.h}% · 회피+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{maxHp:hp,dr:k.h*C_.hidden.dr,eva:k.h*C_.hidden.eva}}}
+      return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${k.h?` · 받는 피해 −${k.h}% · 회피+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{maxHp:hp,dr:k.h*C_.hidden.dr,eva:k.h*C_.hidden.eva}}}
     const A_=WS.aug,fx=Object.assign({},A_.base);if(k.pick)fx[k.pick]=(fx[k.pick]||0)+A_.pick;
-    return {id:'ws_aug',slot,n:A_.n,grade:4,e:Object.entries(fx).map(([x,v])=>`${A_.stats[x]||x}+${v}`).join(' · ')+(k.pick?` · 개조 완료 (${A_.stats[k.pick]}+${A_.pick})`:' · 히든 의수 하나로 개조할 수 있다'),fx}
+    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).map(([x,v])=>`${A_.stats[x]||x}+${v}`).join(' · ')+(k.pick?` · 개조 완료 (${A_.stats[k.pick]}+${A_.pick})`:' · 히든 의수 하나로 개조할 수 있다'),fx}
   }
   /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
   function wsOpen(ch,chips){
@@ -544,6 +545,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.ws={y:ch.year||0,ups:0,w:{n:0,h:0,p:0},a:{n:0,h:0,p:0},g:{pick:null}};
     for(const sl of ['weapon','armor','aug']){const it=wsItem(ch,sl);equip(ch,it);chips&&chips.push(`첫 공방 개설 · ${it.n} (${it.e})`)}
     chips&&chips.push('전용 무기·방어구·의수는 빼거나 바꿀 수 없다 · 다른 장비는 녹여서 재료로 쓴다');
+  }
+  /* 전용 장비 이름 짓기: 12자까지, 비우면 기본 이름으로 돌아간다 */
+  function wsRename(ch,slot,name){
+    const cur=ch.gear[slot];if(!ch.ws||!isWs(ch)||!cur||cur.id!=='ws_'+slot)return null;
+    const nm=String(name||'').replace(/\s+/g,' ').trim().slice(0,12);
+    ch.ws.names=ch.ws.names||{};if(nm)ch.ws.names[slot]=nm;else delete ch.ws.names[slot];
+    equip(ch,carryTune(cur,wsItem(ch,slot)));ch.stash=(ch.stash||[]).filter(x=>x!==cur);return ch.gear[slot].n;
   }
   /* 예전 저장(의수 유형이 있던 판)과 공방 해결사가 된 뒤 처음 들어오는 경우를 맞춘다 */
   function wsEnsure(ch){
@@ -2651,7 +2659,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    wsOpen,wsEnsure,wsMelt,wsAugPick,wsAugOk,wsNeed,wsHidden,
+    wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugOk,wsNeed,wsHidden,
     cardCost,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

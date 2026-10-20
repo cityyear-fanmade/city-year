@@ -10,100 +10,156 @@
   "tables": {
    "early": [
     {
-     "max": 5,
+     "max": 3,
      "enemy": "lamp"
     },
     {
-     "max": 10,
+     "max": 6,
      "enemy": "echo"
     },
     {
-     "max": 15,
+     "max": 8,
+     "enemy": "grate_rat"
+    },
+    {
+     "max": 11,
      "enemy": "thug"
     },
     {
-     "max": 20,
+     "max": 14,
      "enemy": "strays"
     },
     {
-     "max": 24,
+     "max": 16,
+     "enemy": "lantern_boy"
+    },
+    {
+     "max": 19,
      "enemy": "collector"
     },
     {
-     "max": 28,
+     "max": 22,
      "enemy": "sentry"
     },
     {
-     "max": 32,
+     "max": 24,
+     "enemy": "chalk_man"
+    },
+    {
+     "max": 27,
      "enemy": "rats"
     },
     {
-     "max": 36,
+     "max": 30,
      "enemy": "unlicensed"
     },
     {
-     "max": 40,
+     "max": 32,
+     "enemy": "tin_dancer"
+    },
+    {
+     "max": 35,
      "enemy": "armthief"
     },
     {
-     "max": 44,
+     "max": 38,
      "enemy": "courier"
     },
     {
-     "max": 48,
+     "max": 40,
+     "enemy": "rain_coat"
+    },
+    {
+     "max": 43,
      "enemy": "pickpocket"
     },
     {
-     "max": 52,
+     "max": 46,
      "enemy": "gambler"
     },
     {
-     "max": 56,
+     "max": 48,
+     "enemy": "dock_porter"
+    },
+    {
+     "max": 51,
      "enemy": "hawker"
     },
     {
-     "max": 60,
+     "max": 54,
      "enemy": "pipeman"
     },
     {
-     "max": 64,
+     "max": 56,
+     "enemy": "clock_peddler"
+    },
+    {
+     "max": 59,
      "enemy": "fence"
     },
     {
-     "max": 68,
+     "max": 62,
      "enemy": "stalker"
     },
     {
-     "max": 72,
+     "max": 64,
+     "enemy": "alley_dog"
+    },
+    {
+     "max": 67,
      "enemy": "plumber"
     },
     {
-     "max": 76,
+     "max": 70,
      "enemy": "mender"
     },
     {
-     "max": 80,
+     "max": 72,
+     "enemy": "hole_kid"
+    },
+    {
+     "max": 75,
      "enemy": "banner"
     },
     {
-     "max": 84,
+     "max": 78,
      "enemy": "f_runner"
     },
     {
-     "max": 88,
+     "max": 80,
+     "enemy": "brick_layer"
+    },
+    {
+     "max": 83,
      "enemy": "w_cleaner"
     },
     {
-     "max": 92,
+     "max": 86,
      "enemy": "a_patrol"
     },
     {
-     "max": 96,
+     "max": 88,
+     "enemy": "smoke_vendor"
+    },
+    {
+     "max": 91,
      "enemy": "o_runner"
     },
     {
-     "max": 100,
+     "max": 94,
      "enemy": "apprentice"
+    },
+    {
+     "max": 96,
+     "enemy": "night_guard"
+    },
+    {
+     "max": 98,
+     "enemy": "knife_grinder"
+    },
+    {
+     "max": 100,
+     "enemy": "mask_seller"
     }
    ],
    "mid": [
@@ -678,100 +734,156 @@
    ],
    "early@wtrain": [
     {
-     "max": 5,
+     "max": 3,
      "enemy": "lamp"
     },
     {
-     "max": 10,
+     "max": 6,
      "enemy": "warp_scrap"
     },
     {
-     "max": 15,
+     "max": 8,
+     "enemy": "grate_rat"
+    },
+    {
+     "max": 11,
      "enemy": "thug"
     },
     {
-     "max": 20,
+     "max": 14,
      "enemy": "strays"
     },
     {
-     "max": 24,
+     "max": 16,
+     "enemy": "lantern_boy"
+    },
+    {
+     "max": 19,
      "enemy": "collector"
     },
     {
-     "max": 28,
+     "max": 22,
      "enemy": "sentry"
     },
     {
-     "max": 32,
+     "max": 24,
      "enemy": "warp_scrap"
     },
     {
-     "max": 36,
+     "max": 27,
+     "enemy": "rats"
+    },
+    {
+     "max": 30,
      "enemy": "unlicensed"
     },
     {
-     "max": 40,
+     "max": 32,
+     "enemy": "tin_dancer"
+    },
+    {
+     "max": 35,
      "enemy": "armthief"
     },
     {
-     "max": 44,
+     "max": 38,
      "enemy": "courier"
     },
     {
-     "max": 48,
-     "enemy": "pickpocket"
+     "max": 40,
+     "enemy": "rain_coat"
     },
     {
-     "max": 52,
+     "max": 43,
      "enemy": "warp_scrap"
     },
     {
-     "max": 56,
+     "max": 46,
+     "enemy": "gambler"
+    },
+    {
+     "max": 48,
+     "enemy": "dock_porter"
+    },
+    {
+     "max": 51,
      "enemy": "hawker"
     },
     {
-     "max": 60,
+     "max": 54,
      "enemy": "pipeman"
     },
     {
-     "max": 64,
+     "max": 56,
+     "enemy": "clock_peddler"
+    },
+    {
+     "max": 59,
      "enemy": "fence"
     },
     {
-     "max": 68,
-     "enemy": "stalker"
-    },
-    {
-     "max": 72,
+     "max": 62,
      "enemy": "warp_scrap"
     },
     {
-     "max": 76,
+     "max": 64,
+     "enemy": "alley_dog"
+    },
+    {
+     "max": 67,
+     "enemy": "plumber"
+    },
+    {
+     "max": 70,
      "enemy": "mender"
     },
     {
-     "max": 80,
+     "max": 72,
+     "enemy": "hole_kid"
+    },
+    {
+     "max": 75,
      "enemy": "banner"
     },
     {
-     "max": 84,
+     "max": 78,
      "enemy": "f_runner"
     },
     {
-     "max": 88,
-     "enemy": "w_cleaner"
-    },
-    {
-     "max": 92,
+     "max": 80,
      "enemy": "warp_scrap"
     },
     {
-     "max": 96,
+     "max": 83,
+     "enemy": "w_cleaner"
+    },
+    {
+     "max": 86,
+     "enemy": "a_patrol"
+    },
+    {
+     "max": 88,
+     "enemy": "smoke_vendor"
+    },
+    {
+     "max": 91,
      "enemy": "o_runner"
     },
     {
-     "max": 100,
+     "max": 94,
      "enemy": "apprentice"
+    },
+    {
+     "max": 96,
+     "enemy": "night_guard"
+    },
+    {
+     "max": 98,
+     "enemy": "warp_scrap"
+    },
+    {
+     "max": 100,
+     "enemy": "mask_seller"
     }
    ],
    "mid@wtrain": [

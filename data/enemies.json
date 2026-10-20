@@ -6387,6 +6387,218 @@
     "atk": 3,
     "eva": 2
    }
+  },
+  "grate_rat": {
+   "n": "하수구 쥐잡이",
+   "color": "#7a8a6a",
+   "hp": 22,
+   "atk": 1,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard"
+   ],
+   "intro": "맨홀 뚜껑 옆에서 긴 갈고리를 든 사내가 쥐를 세고 있다. 쥐 대신 당신의 걸음 수를 센다.",
+   "tier": "early"
+  },
+  "lantern_boy": {
+   "n": "등불 든 아이",
+   "color": "#d4a85a",
+   "hp": 20,
+   "atk": 0,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "glare",
+    "faint",
+    "guard"
+   ],
+   "intro": "등불을 든 아이가 골목 어귀에 서 있다. 불빛이 당신 발끝만 비춘다. 아이는 길을 가르쳐 주지 않는다.",
+   "tier": "early"
+  },
+  "chalk_man": {
+   "n": "분필 사내",
+   "color": "#cfcfc0",
+   "hp": 28,
+   "atk": 1,
+   "eva": 0,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "glare",
+    "guard"
+   ],
+   "intro": "바닥에 분필로 선을 긋는 사내가 있다. 선을 넘어서자 사내가 천천히 일어난다.",
+   "tier": "early"
+  },
+  "tin_dancer": {
+   "n": "양철 춤꾼",
+   "color": "#8fa0b0",
+   "hp": 24,
+   "atk": 1,
+   "eva": 5,
+   "spd": 5,
+   "deck": [
+    "faint",
+    "shadowstep",
+    "thrust"
+   ],
+   "intro": "골목 안쪽에서 태엽 소리가 난다. 양철 인형이 같은 춤을 되풀이하다가 동작을 멈추고 이쪽을 본다.",
+   "tier": "early",
+   "abno": true
+  },
+  "rain_coat": {
+   "n": "우비 사내",
+   "color": "#4a6a7a",
+   "hp": 28,
+   "atk": 1,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "slash",
+    "aim",
+    "guard"
+   ],
+   "intro": "비가 오지 않는데 우비를 입은 사내가 처마 밑에 서 있다. 모자 아래에서 물이 떨어진다.",
+   "tier": "early"
+  },
+  "dock_porter": {
+   "n": "부두 짐꾼",
+   "color": "#8a6a4a",
+   "hp": 34,
+   "atk": 2,
+   "eva": 0,
+   "spd": 0,
+   "deck": [
+    "smash",
+    "smash",
+    "guard"
+   ],
+   "intro": "어깨에 궤짝을 멘 사내가 골목을 막고 있다. 궤짝 안에서 무언가 숨 쉬는 소리가 난다.",
+   "tier": "early"
+  },
+  "clock_peddler": {
+   "n": "고장 난 시계 장수",
+   "color": "#b89a5a",
+   "hp": 24,
+   "atk": 1,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "glare",
+    "aim",
+    "faint"
+   ],
+   "intro": "시계를 빼곡히 건 좌판 뒤에서 장수가 웃는다. 시계는 모두 다른 시각을 가리키고 있다.",
+   "tier": "early"
+  },
+  "alley_dog": {
+   "n": "쓰레기장 개",
+   "color": "#6a5a4a",
+   "hp": 22,
+   "atk": 0,
+   "eva": 3,
+   "spd": 5,
+   "deck": [
+    "lunge",
+    "lunge",
+    "slash"
+   ],
+   "intro": "쓰레기 더미 위의 개가 이를 드러낸다. 목줄은 끊겨 있고 주인은 보이지 않는다.",
+   "tier": "early"
+  },
+  "hole_kid": {
+   "n": "구멍 속의 아이",
+   "color": "#9a8aa8",
+   "hp": 26,
+   "atk": 1,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "faint",
+    "hollow",
+    "guard"
+   ],
+   "intro": "벽에 뚫린 구멍에서 아이가 고개를 내민다. 아이는 같은 말을 되풀이한다. 들어오지 말라는 말이다.",
+   "tier": "early",
+   "abno": true
+  },
+  "brick_layer": {
+   "n": "벽돌 쌓는 이",
+   "color": "#a05a4a",
+   "hp": 32,
+   "atk": 2,
+   "eva": 0,
+   "spd": 1,
+   "deck": [
+    "smash",
+    "rustblade",
+    "guard"
+   ],
+   "intro": "골목 한가운데에 벽돌을 쌓는 사람이 있다. 벽은 높아지는데 어디를 막으려는 건지 알 수 없다.",
+   "tier": "early"
+  },
+  "smoke_vendor": {
+   "n": "연기 장수",
+   "color": "#8a8a9a",
+   "hp": 22,
+   "atk": 1,
+   "eva": 4,
+   "spd": 3,
+   "deck": [
+    "glare",
+    "shadowstep",
+    "thrust"
+   ],
+   "intro": "연기를 병에 담아 파는 장수가 있다. 병을 열 때마다 골목의 시야가 흐려진다.",
+   "tier": "early"
+  },
+  "night_guard": {
+   "n": "밤 순찰 기계",
+   "color": "#5a6a8a",
+   "hp": 30,
+   "atk": 1,
+   "eva": 0,
+   "spd": 2,
+   "deck": [
+    "smash",
+    "aim",
+    "guard"
+   ],
+   "intro": "골목 가로등 사이를 일정한 속도로 오가는 기계가 있다. 순찰 경로 안에 들어서자 눈이 이쪽으로 돌아간다.",
+   "tier": "early"
+  },
+  "knife_grinder": {
+   "n": "칼갈이",
+   "color": "#9a9a9a",
+   "hp": 26,
+   "atk": 2,
+   "eva": 1,
+   "spd": 2,
+   "deck": [
+    "rustblade",
+    "slash",
+    "thrust"
+   ],
+   "intro": "돌을 굴리며 칼을 가는 사내가 앉아 있다. 갈던 칼을 멈추고 당신의 칼 쥐는 법을 본다.",
+   "tier": "early"
+  },
+  "mask_seller": {
+   "n": "가면 장수",
+   "color": "#c27a6a",
+   "hp": 24,
+   "atk": 1,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "faint",
+    "slash",
+    "guard"
+   ],
+   "intro": "가면을 늘어놓은 좌판 앞에서 장수가 가면 하나를 건넨다. 받지 않자 장수의 표정이 가면처럼 굳는다.",
+   "tier": "early"
   }
  },
  "fixedFights": {
