@@ -705,9 +705,10 @@ export function startUI(E,app){
         <div class="check" style="border-color:var(--bleed)"><b class="bad">주의 · 덱이 통째로 바뀐다</b><br>바꾸면 지금 덱 ${ch.deck.length}장과 카드함 ${(ch.side||[]).length}장이 '${esc(ch.packName||'기본 카드팩')}'으로 가방의 카드팩 보관함에 남는다. 새 팩은 덱이 고정되고 새 카드는 돈으로 받는다. 보관한 팩은 가방의 카드팩 탭에서 전투 밖이면 언제든 바꿔 끼울 수 있다.</div>
         ${P.e?`<div class="check"><b>패시브</b> · ${esc(P.e)}</div>`:''}
         <div class="invcards">${Object.keys(cnt).map(id=>cardRow(id,cnt[id]>1?`<span class="mono small dim">×${cnt[id]}</span>`:'')).join('')}</div>
-        <button class="btn${UI.packAsk?' primary':''}" data-a="packyes">${UI.packAsk?'정말 바꾼다 (이전 덱은 보관된다)':'이 책장으로 바꾼다'}</button>
-        <button class="btn primary" data-a="packno">지금 덱을 지킨다</button>
-        <p class="small dim">지금 덱을 지키면 이 책장은 사라진다. 다른 전리품은 그대로 받는다.</p>`,'offer',false)}
+        ${P.must?`<div class="check"><b>${esc(P.yes)}</b> · ${esc(P.yesE)}</div><div class="check"><b>${esc(P.alt.label)}</b> · ${esc(P.alt.e)}</div>`:''}
+        <button class="btn${UI.packAsk?' primary':''}" data-a="packyes">${UI.packAsk?'정말 바꾼다 (이전 덱은 보관된다)':(P.must?esc(P.yes):'이 책장으로 바꾼다')}</button>
+        ${P.alt?`<button class="btn primary" data-a="packalt">${esc(P.alt.label)}</button>`:`<button class="btn primary" data-a="packno">지금 덱을 지킨다</button>`}
+        <p class="small dim">${P.must?'둘 중 하나를 고른다. 이전 덱은 가방의 카드팩 보관함에 남는다.':'지금 덱을 지키면 이 책장은 사라진다. 다른 전리품은 그대로 받는다.'}</p>`,'offer',false)}
     if((ch.picks||[]).length&&!(ch.offers||[]).length){const g=ch.picks[0];
       return sheet(`<span class="eyebrow">카드 발견 · ${g.length}장 가운데 하나${ch.picks.length>1?` · 남은 묶음 ${ch.picks.length}`:''}</span><h2>하나를 고른다</h2>
         <div class="invcards">${g.map((id,j)=>cardRow(id,`${ownTag(ch,id)}<button class="chip" data-a="pkpick" data-i="${j}">이 카드를 고른다</button>`)).join('')}</div>
@@ -2170,6 +2171,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       UI.screen='title';render();
     },
     packyes(){if(!UI.packAsk){UI.packAsk=true;render();return}UI.packAsk=false;const n=G.ch.packOffer.n;if(E.acceptPack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 덱이 바뀌고 고정되었다 (이전 덱은 가방의 카드팩 보관함에 남았다)`];resave();render()}},
+    packalt(){UI.packAsk=false;const P=G.ch.packOffer;if(!P||!P.alt)return;if(E.acceptPackAlt(G.ch)){UI.res.chips=[...UI.res.chips,`${P.alt.label} · 후보 시절 카드를 덜어내고 흑수의 카드를 더했다`];resave();render()}},
     packno(){UI.packAsk=false;const n=G.ch.packOffer.n;if(E.declinePack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 지금 덱을 지켰다`];resave();render()}},
     gwear(){E.resolveGear(G.ch,0,true);resave();render()},
     gkeep(){E.resolveGear(G.ch,0,false);resave();render()},
