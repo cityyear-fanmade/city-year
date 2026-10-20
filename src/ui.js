@@ -403,7 +403,7 @@ export function startUI(E,app){
       ${SFX.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">효과음</span><div class="seg">${b('sfx','off','끔',SFXS.on?'on':'off')}${b('sfx','on','켬',SFXS.on?'on':'off')}</div>
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">효과음 음량</span><b class="mono" id="sfxPct">${Math.round(SFXS.vol*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="sfxstep" data-i="-10" aria-label="효과음 10 줄이기">−10</button><input type="range" id="sfxRange" min="0" max="100" step="1" value="${Math.round(SFXS.vol*100)}" aria-label="효과음 음량"><button class="chip" data-a="sfxstep" data-i="10" aria-label="효과음 10 올리기">+10</button></div></div>
-        <button class="chip" data-a="sfxtest">소리 시험 (탁 · 타격 · 회피)</button><span class="small dim">주사위가 멈출 때와 타격·회피 때 나는 소리다. 배경음악과 따로 켜고 끈다. 연출을 끄면 나지 않는다. 시험 소리가 안 들리면 기기의 미디어 음량·무음 설정을 확인한다</span></div>`:''}
+        <button class="chip" data-a="sfxtest">소리 시험 (탁 · 타격 · 회피)</button><span class="small mono" id="sfxState"></span><span class="small dim">주사위가 멈출 때와 타격·회피 때 나는 소리다. 배경음악과 따로 켜고 끈다. 연출을 끄면 나지 않는다. 시험 소리가 안 들리면 기기의 미디어 음량·무음 설정을 확인한다</span></div>`:''}
       <div class="stack" style="gap:6px"><span class="eyebrow">타격 연출</span><div class="seg">${b('hitfx','off','끔',HFX)}${b('hitfx','low','가볍게',HFX)}${b('hitfx','mid','보통',HFX)}${b('hitfx','high','강하게',HFX)}</div><div class="seg">${b('hitfxm','each','타격마다',HFXM)}${b('hitfxm','last','타수 많으면 마지막만 크게',HFXM)}</div><span class="small dim">맞은 쪽에 베기 선과 파편이 튄다. 화상은 주황, 출혈은 붉은색, 파열은 보라 같은 식으로 새로 걸린 키워드에 따라 색이 달라진다. 연출을 끄면 나오지 않는다</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
@@ -1944,7 +1944,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bgm(i){BGM.set(i==='on');bgmSave();render()},
     qsfx(){SFXS.on=!SFXS.on;sfxSave();if(SFXS.on)SFX.play('snap');render()},
     sfx(i){SFXS.on=i==='on';sfxSave();if(SFXS.on)SFX.play('snap');render()},
-    sfxtest(){SFX.play('snap');setTimeout(()=>SFX.play('hit'),380);setTimeout(()=>SFX.play('dodge'),760)},
+    sfxtest(){SFX.play('snap');setTimeout(()=>{const x=$('sfxState');if(x)x.textContent='오디오 상태 · '+SFX.state()},300);setTimeout(()=>SFX.play('hit'),380);setTimeout(()=>SFX.play('dodge'),760)},
     sfxstep(i){const p=Math.round(SFXS.vol*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;SFXS.vol=clamp(n,0,100)/100;sfxSave();SFX.play('hit');render()},
     qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
     qstyle(){BGM.setStyle(BGM.style()==='passion'?'calm':'passion');bgmSave();render()},

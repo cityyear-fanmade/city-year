@@ -78,5 +78,5 @@ export function createSfx(isOn,getVol){
       const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.5,t+0.003);g.gain.exponentialRampToValueAtTime(0.0008,t+0.07);
       n.connect(lp);lp.connect(g);g.connect(out);n.start(t);n.stop(t+0.1)}
   }
-  return {play,unlock,supported:!!AC};
+  return {play,unlock,state:()=>ctx?ctx.state+' · '+ctx.sampleRate+'Hz':'아직 만들어지지 않음',supported:!!AC};
 }
