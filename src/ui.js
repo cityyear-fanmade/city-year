@@ -804,15 +804,15 @@ export function startUI(E,app){
     const rows=['weapon','armor','aug'].map(sl=>{
       if(sl==='aug'&&!w.g){
         if(!E.wsAugReady(ch))return `<div class="stack" style="gap:4px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>전용 의수</b><span class="mono small dim">개설 ${Math.max(0,(ch.year||0)-w.y)}/${W_.augYears}년 · 강화 ${w.ups}/${W_.augUps}회</span></div><p class="small dim">개설한 지 ${W_.augYears}년이 지나고 강화를 ${W_.augUps}번 하면 의수를 한 번 맞출 수 있다. 고른 유형은 바꿀 수 없다.</p></div>`;
-        return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><b>전용 의수를 맞춘다</b><p class="small dim">한 번 고르면 바꿀 수 없다. 이 의수는 보관함 장비라면 무엇이든 녹여 강화한다.</p>${['atk','def','gim'].map(t=>{const a=W_.aug[t];return `<button class="btn" data-a="wsaug" data-i="${t}"><b>${a.n}</b><span class="mono small dim">${t==='atk'?'공격형 · ':t==='def'?'수비형 · ':'기믹형 · '}${a.d}${a.base}</span></button>`}).join('')}</div>`}
+        return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><b>전용 의수를 맞춘다</b><p class="small dim">한 번 고르면 바꿀 수 없다. 이 의수는 보관함의 의수를 녹여 강화한다. 같은 칸의 장비만 재료가 된다.</p>${['atk','def','gim'].map(t=>{const a=W_.aug[t];return `<button class="btn" data-a="wsaug" data-i="${t}"><b>${a.n}</b><span class="mono small dim">${t==='atk'?'공격형 · ':t==='def'?'수비형 · ':'기믹형 · '}${a.d}${a.base}</span></button>`}).join('')}</div>`}
       const cur=ch.gear[sl],ok=!!cur&&cur.id==='ws_'+sl;
       if(!ok){const si=st.findIndex(x=>x.id==='ws_'+sl);return `<div class="stack" style="gap:4px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>전용 ${nm[sl]}</b><span class="mono small dim">장착 중이 아니다</span></div><p class="small dim">전용 장비는 장착하고 있어야 강화할 수 있다.</p>${si>=0?`<button class="btn" data-a="wsequip" data-i="${si}"><b>${esc(st[si].n)} 장착</b><span class="mono small dim">${esc(st[si].e||'')}</span></button>`:''}</div>`}
-      const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&(sl==='aug'||m.slot===sl));
+      const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&m.slot===sl);
       const btns=mats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="${sl}:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
       return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>${esc(cur.n)}</b><span class="mono small dim">일반 ${k.p}/${E.wsNeed(k.n)} · 강화 ${k.n}${k.h?' · 히든 '+k.h:''}</span></div><span class="mono small" style="color:var(--gold)">${esc(cur.e)}</span>${btns||'<p class="small dim">녹일 수 있는 장비가 보관함에 없다.</p>'}</div>`;
     }).join('');
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b class="serif">작업대</b><span class="chip">공방 해결사</span></div>
-      <p class="small dim">보관함 장비를 녹여 전용 장비를 끝없이 강화한다. 일반 장비는 모아서 한 단계(필요한 개수는 단계가 오를수록 늘어난다), 히든 장비는 1개로 한 단계. 녹인 장비는 돌아오지 않는다.</p>
+      <p class="small dim">보관함 장비를 녹여 전용 장비를 끝없이 강화한다. 일반 장비는 모아서 한 단계(필요한 개수는 단계가 오를수록 늘어난다), 히든 장비는 1개로 한 단계. 녹인 장비는 돌아오지 않고, 재료로 쓴 공방 물건은 다시 살 때마다 값이 오른다.</p>
       ${UI.wsMsg?`<p class="good small">${esc(UI.wsMsg)}</p>`:''}${rows}</div>`;
   }
   function vTune(){

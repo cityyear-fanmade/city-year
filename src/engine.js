@@ -478,7 +478,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 공방 해결사: 공방 물건 할인, 보관함 장비 판매 */
   const WF=CFG.workshopFixer;
   const isWs=ch=>!!ch.aff&&ch.aff.type==='workshop';
-  const priceOf=(ch,id)=>{const p=D.items[id].price;return isWs(ch)?Math.round(p*(1-WF.discount)):p};
+  const priceOf=(ch,id)=>{const p=D.items[id].price,up=1+(CFG.ws.priceUp||0)*((ch.ws&&ch.ws.used&&ch.ws.used[id])||0);return Math.round(isWs(ch)?p*(1-WF.discount)*up:p*up)};
   const sellValue=it=>(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
   function sellStash(ch,i){const st=ch.stash||[];if(!isWs(ch)||!st[i])return 0;const v=sellValue(st[i]);st.splice(i,1);ch.money+=v;return v}
   /* 암시장: 영구 강화(한 번만)와 특수 장비 */
@@ -534,7 +534,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(slot==='armor'){const C_=WS.armor,hp=C_.base.maxHp+k.n*C_.normal.maxHp;
       return {id:'ws_armor',slot,n:C_.n,grade:4,e:`HP+${hp}${k.h?` · 받는 피해 −${k.h}% · 회피+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{maxHp:hp,dr:k.h*C_.hidden.dr,eva:k.h*C_.hidden.eva}}}
     const A_=WS.aug[k.t];
-    if(k.t==='atk'){const f=A_.base+k.n*A_.normal;return {id:'ws_aug',slot,n:A_.n,grade:4,e:`${A_.d}${f}${k.h?` · 공격+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{wsFirst:f,atk:k.h*A_.hidden.atk}}}
+    if(k.t==='atk'){const f=A_.base+k.n*A_.normal;return {id:'ws_aug',slot,n:A_.n,grade:4,e:`${A_.d}${f}${k.h?` · 피해+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{wsFirst:f,dmgB:k.h*A_.hidden.dmgB}}}
     if(k.t==='def'){const f=A_.base+k.n*A_.normal;return {id:'ws_aug',slot,n:A_.n,grade:4,e:`${A_.d}${f}${k.h?` · 라운드마다 회복+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{wsShield:f,regen:k.h*A_.hidden.regen}}}
     const st=Math.min(A_.cap,A_.base+k.n*A_.normal),kn=Math.min(A_.kws.length,A_.kwBase+k.h);
     return {id:'ws_aug',slot,n:A_.n,grade:4,e:`${A_.d}${st} · 키워드 ${kn}종 (${A_.kws.slice(0,kn).map(x=>D.keywords[x]?D.keywords[x].n:x).join('·')}) · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{wsCyc:st,wsCycK:kn}}
@@ -554,9 +554,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 보관함 장비 하나를 녹여 장착 중인 전용 장비를 강화한다. 무기는 무기, 방어구는 방어구를 재료로 받고 의수는 무엇이든 받는다 */
   function wsMelt(ch,slot,i){
     const w=ch.ws,st=ch.stash||[],m=st[i],cur=ch.gear[slot];
-    if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||(m.id&&String(m.id).startsWith('ws_'))||(slot!=='aug'&&m.slot!==slot)||(ch.distForm&&!ch.distStable))return null;
+    if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||(m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot||(ch.distForm&&!ch.distStable))return null;
     const k=w[wsKey(slot)],hid=wsHidden(m);let step=0;
     st.splice(i,1);
+    if(D.items&&D.items[m.id]){w.used=w.used||{};w.used[m.id]=(w.used[m.id]||0)+1}
     if(hid){k.h++;step=1}else{k.p++;if(k.p>=wsNeed(k.n)){k.p=0;k.n++;step=1}}
     if(step)w.ups++;
     equip(ch,carryTune(cur,wsItem(ch,slot)));ch.stash=ch.stash.filter(x=>x!==cur);

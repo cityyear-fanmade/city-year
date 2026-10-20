@@ -284,11 +284,11 @@ export const CFG = {
      일반 재료: 단계마다 필요한 개수가 needEvery단계마다 1개씩 늘어난다 (1+⌊단계/needEvery⌋개). 히든 재료: 1개에 바로 1단계.
      전용 의수는 개설 후 augYears년이 지나고 강화를 augUps번 했을 때 한 번 맞출 수 있다 (공격형·수비형·기믹형) */
   ws: {
-    needEvery: 10, augYears: 12, augUps: 20,
+    needEvery: 10, augYears: 12, augUps: 20, priceUp: 0.25 /* 재료로 쓴 공방 물건은 쓸 때마다 다시 살 때의 값이 원래 값의 priceUp 비율씩 오른다 */,
     weapon: {n: '작업대의 칼날', base: {atk: 3}, dice: [1, 6], normal: {atk: 1}, dmgEvery: 4, hidden: {dmgB: 1}} /* 일반 재료는 공격 +1, 단계 dmgEvery마다 피해 +1이 덤으로 붙는다 (공격만 올리면 어느 순간 명중이 더 필요 없어진다) */,
     armor: {n: '공방 작업복', base: {maxHp: 8}, normal: {maxHp: 2}, hidden: {dr: 1, eva: 1}},
     aug: {
-      atk: {n: '분쇄 의수', d: '전투의 첫 적중 피해 +', base: 3, normal: 1, hidden: {atk: 1}},
+      atk: {n: '분쇄 의수', d: '전투의 첫 적중 피해 +', base: 3, normal: 1, hidden: {dmgB: 1}},
       def: {n: '방벽 의수', d: '전투 시작 보호막 ', base: 8, normal: 2, hidden: {regen: 1}},
       gim: {n: '개조 의수', d: '적중마다 상대에게 키워드를 번갈아 건다 · 한 번에 ', base: 1, normal: 1, cap: 6, kws: ['bleed', 'rupture', 'burn', 'sink', 'flame'], kwBase: 3}
     }
