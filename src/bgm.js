@@ -55,11 +55,12 @@ export function createBgm(){
     }
   };
   let ctx=null,master=null,bus=null,bright=null,analyser=null,noiseBuf=null,on=false,vol=0.3,mood='base',scene='calm',style='calm',timer=null,hidden=false;
-  /* 악기 샘플 곡: 스타일마다 평시·전투 한 곡씩(32마디가 한 바퀴, 끝에서 처음으로 이어진다). 히든 보스 곡은 합성음을 그대로 쓴다.
+  /* 악기 샘플 곡: 스타일마다 평시·전투 한 곡씩(32마디가 한 바퀴, 끝에서 처음으로 이어진다). 히든 보스 곡도 한 곡(boss_boss.mp3, 도입 4마디 뒤부터 되풀이).
      빌드 파일에서는 window.CITY_BGM에 data 주소로 들어 있고, 개발 서버에서는 assets/bgm/<스타일>_<장면>.mp3를 읽는다. 읽지 못하면 합성음으로 돌아간다 */
   const smp={buf:{},loading:{},bad:{},cur:null,node:null};
-  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
-  const smpUsable=(st,sc)=>sc!=='boss'&&!!smpSrc(st,sc)&&!smp.bad[st+'_'+sc];
+  const smpKey=(st,sc)=>sc==='boss'?'boss_boss':st+'_'+sc,BOSS_LOOP=4*4*60/66;
+  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st='boss'}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
+  const smpUsable=(st,sc)=>!!smpSrc(st,sc)&&!smp.bad[smpKey(st,sc)];
   function smpLoad(key,src){
     if(smp.loading[key])return;
     smp.loading[key]=(async()=>{try{let ab;
@@ -75,11 +76,11 @@ export function createBgm(){
   /* 지금 스타일·장면의 샘플 곡을 틀고 있게 한다. 합성음으로 넘어가야 하면 false */
   function smpPlay(){
     if(!smpUsable(style,scene)){smpStop(0.5);return false}
-    const key=style+'_'+scene;if(smp.cur===key)return true;
+    const key=smpKey(style,scene);if(smp.cur===key)return true;
     if(!smp.buf[key]){smpLoad(key,smpSrc(style,scene));return !smp.bad[key]}   // 읽는 동안은 조용히 기다린다
     smpStop(0.6);
     const now=ctx.currentTime,src=ctx.createBufferSource(),g=ctx.createGain();
-    src.buffer=smp.buf[key];src.loop=true;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
+    src.buffer=smp.buf[key];src.loop=true;if(scene==='boss'){src.loopStart=BOSS_LOOP;src.loopEnd=smp.buf[key].duration}g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
     src.connect(g);g.connect(master);src.start(now);smp.cur=key;smp.node={src,g};return true;
   }
   let barT=0,barN=0,lastScene='calm',lastStyle='calm',cur=null,duckUntil=0;
