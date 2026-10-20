@@ -1360,7 +1360,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const mk=(tpl,fxk)=>tpl.fight?({t:tpl.t,x:fill(tpl.x),c:[{l:tpl.l,h:tpl.h,ok:{t:fill(tpl.t2),fx:{hwb:'mkf',hwEnemy:tpl.fight}}}]}):({t:tpl.t,x:fill(tpl.x),c:tpl.check?[{l:tpl.l,h:'판정 · 성공해도 실패해도 후보를 세우는 일은 이어진다',check:tpl.check,ok:{t:fill(tpl.ok.t),fx:tpl.ok.fx},fail:{t:fill(tpl.fail.t),fx:tpl.fail.fx}}]:[{l:tpl.l,ok:{t:fill(tpl.t2),fx:{hwb:fxk}}}]});
     const done=ev=>{r.bnext=y+Z.gap;return ev};
     if(r.rank2){
-      if((r.mk||0)>=B.maker.length){if(r.accept||y<Z.finalFrom)return null;const F=B.final;return done({t:F.t,x:fill(F.x)+(r.loved?' {c}은(는) 당신의 손을 놓지 않는다.':r.refused?' {c}은(는) 그날의 대답을 묻지 않고, 곁에 선 흑수를 본다.':'').replace(/\{c\}/g,cn),c:[{l:F.accept.l,h:F.accept.h,ok:{t:fill(F.accept.t2),fx:{hwb:'accept'}}},{l:F.flee.l,h:F.flee.h,ok:{t:fill((F.flee.t2s||[])[Math.min(r.clues||0,2)]||F.flee.t2),fx:{hwb:'flee'}}}]})}
+      if((r.mk||0)>=B.maker.length){if(r.accept||y<Z.finalFrom)return null;const F=B.final;return done({t:F.t,x:fill(F.x)+(r.loved?' {c}은(는) 당신의 손을 놓지 않는다.':r.refused?' {c}은(는) 그날의 대답을 묻지 않고, 곁에 선 흑수를 본다.':'').replace(/\{c\}/g,cn),c:[{l:F.accept.l,h:fill(F.accept.h),ok:{t:fill(F.accept.t2),fx:{hwb:'accept'}}},{l:F.flee.l,h:fill(F.flee.h),ok:{t:fill((F.flee.t2s||[])[Math.min(r.clues||0,2)]||F.flee.t2),fx:{hwb:'flee'}}}]})}
       if(!ch.bond||ch.bond.st==='pick')return null;
       {const ev=mk(B.maker[r.mk||0],'mk');r.bnext=y+(Z.mkGap||Z.gap);return ev}
     }
@@ -2253,7 +2253,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function autoTri(C){if(!triOk(C)||C.triRound===C.round)return;const want=C.P.hp<=C.P.maxHp*0.6?['ri','gon','gun']:['gun','gon','ri'];setTri(C,want.find(k=>k!==C.triPrev))}
   function autoPick(C){autoTri(C);autoForm(C);
     const P=C.P,low=P.hp/P.maxHp<0.35;
-    const bad=P.bleed+P.rupture+(P.burn||0)+(P.flame||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.inkCall?9:0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
+    const bad=P.bleed+P.rupture+(P.burn||0)+(P.flame||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.shield||0)*0.5+(c.passNext||0)*0.4+(c.gain||0)*2-(c.hpCost||0)*0.3+(c.inkCall?9:0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
       :c.hits*(c.dice*((c.die||6)+1)/2+c.b+(P.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(P.bonB&&BONA.has(c)?P.bonB:0))+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05+(c.spend?Math.min(P.charge||0,c.spend)*(c.fixPer||0)*c.hits:0)+(P.oracle&&P.starId&&c===D.cards[P.starId]?30:0)+(c.nailBurst&&C.E.nail>=Math.min(5,nailThr(C)-(C.E.stagger||0))?(C.E.nail||0)*2*c.nailBurst.mul+(c.nailBurst.add||0):0);
     let best=[],bs=-1;
     for(let m=1;m<1<<P.hand.length;m++){
@@ -2261,7 +2261,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(idx.includes(P.locked))continue;
       if(idx.some(i=>(D.cards[P.hand[i]].needBlack&&!P.black)||(D.cards[P.hand[i]].needLow&&C.E.hp>C.E.maxHp*CFG.raven.low)))continue;
       if(idx.reduce((a,i)=>a+cardCost(P,D.cards[P.hand[i]]),0)>P.light)continue;
-      const sc=idx.reduce((a,i)=>a+score(D.cards[P.hand[i]]),0);
+      const sc=idx.reduce((a,i)=>a+score(D.cards[P.hand[i]])+0.01,0);
       if(sc>bs){bs=sc;best=idx}
     }
     return best.sort((a,b)=>(D.cards[P.hand[b]].t==='def')-(D.cards[P.hand[a]].t==='def')||score(D.cards[P.hand[b]])-score(D.cards[P.hand[a]]));
