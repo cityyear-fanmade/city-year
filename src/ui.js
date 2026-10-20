@@ -1861,8 +1861,34 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       if(a==='att')LAB.att=v;else if(a==='lv')LAB.lv=v;else if(a==='kw')LAB.kw=v;else if(a==='hits')LAB.hits=+v;else if(a==='crit')LAB.crit=!LAB.crit;else if(a==='big')LAB.big=!LAB.big;else if(a==='last')LAB.last=!LAB.last;else if(a==='chips')LAB.chips=!LAB.chips;
       labDraw()})}
   }
+  /* 의수 의뢰 체험(--augdemo 빌드): 특색을 얻은 지 한 해 뒤에 오는 "커스텀 공방제 의수 의뢰"를 게임 없이 미리 만져 본다 */
+  const AD={name:'',atk:0,eva:0,hp:0,pas:null,done:false};
+  function augDemoDraw(){
+    const K=CFG.ws.cust,used=AD.atk*K.atkCost+AD.eva*K.evaCost+AD.hp*K.hpCost+(AD.pas?K.passCost:0),left=K.pts-used;
+    const stp=(k,l,cost,unit)=>`<div class="row between" style="gap:6px"><span class="small"><b>${l}</b> +${AD[k]*unit} <span class="dim">(${cost}포인트당 +${unit})</span></span><span class="row" style="gap:6px"><button class="chip" data-ad="d:${k}:-1" ${AD[k]<=0?'disabled':''}>−</button><button class="chip" data-ad="d:${k}:1" ${left<cost?'disabled':''}>＋</button></span></div>`;
+    const nm=(AD.name||'').trim()||'이름 없는 의수',pv=[AD.atk?`공격 +${AD.atk*K.atkPer}`:'',AD.eva?`회피 +${AD.eva}`:'',AD.hp?`최대 HP +${AD.hp*K.hpPer}`:'',AD.pas?`패시브 · ${K.pass[AD.pas].n} (${K.pass[AD.pas].e})`:''].filter(Boolean);
+    if(AD.done){app.innerHTML=`<div class="stack" style="gap:12px;padding:16px;max-width:560px;margin:0 auto"><div class="eyebrow">특색 기념 의뢰 · 주문 완료</div><h2>${esc(nm)}</h2>
+      <div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="small">공방 사람이 도면을 접어 넣으며 말한다. "한 해 걸릴 줄 알았는데, 이만하면 사흘이면 됩니다."</span>${pv.length?pv.map(t=>`<div class="mono small" style="color:var(--gold)">${esc(t)}</div>`).join(''):'<div class="small dim">주문서에 적힌 것이 없다.</div>'}<div class="small dim">쓴 포인트 ${used}/${K.pts}</div></div>
+      <p class="small dim">실제 게임에서는 이 의수가 보관함(또는 바로 장착)으로 들어옵니다. 이 체험판에서는 여기까지만 만져 볼 수 있습니다.</p>
+      <button class="btn primary" data-ad="again">다시 설계해 본다</button></div>`;return}
+    app.innerHTML=`<div class="stack" style="gap:12px;padding:16px;max-width:560px;margin:0 auto"><div class="eyebrow">체험판 · 특색 기념 커스텀 공방제 의수 의뢰</div><h2>어떻게 주문할까?</h2>
+      <div class="panel stack" style="gap:6px"><span class="small dim">특색을 받고 한 해가 지났다. 공방에서 연락이 왔다.</span><span>"기념으로 의수 한 점을 만들어 드리지요. 쓰실 분이 직접 설계하시지요. 어떻게 주문할까요?"</span></div>
+      <div class="panel stack" style="gap:10px"><div class="row" style="gap:8px"><span class="small"><b>이름</b></span><input id="adname" maxlength="12" autocomplete="off" placeholder="의수 이름 (12자까지)" value="${esc(AD.name)}" style="flex:1;min-width:0"></div>
+        <div class="row between"><b>포인트</b><span class="chip warn">남은 포인트 ${left}/${K.pts}</span></div>${stp('atk','공격',K.atkCost,K.atkPer)}${stp('eva','회피',K.evaCost,1)}${stp('hp','체력',K.hpCost,K.hpPer)}
+        <div class="stack" style="gap:4px"><span class="small"><b>패시브</b> <span class="dim">(${K.passCost}포인트, 하나만)</span></span><div class="row" style="gap:6px;flex-wrap:wrap">${Object.entries(K.pass).map(([k,v])=>`<button class="btn${AD.pas===k?' primary':''}" style="flex:1 1 30%" data-ad="p:${k}" ${AD.pas!==k&&!AD.pas&&left<K.passCost?'disabled':''}><b>${v.n}</b><span class="small dim">${v.e}</span></button>`).join('')}</div></div></div>
+      <div class="panel stack" style="gap:4px;border-color:var(--gold)"><span class="eyebrow">미리보기</span><b class="serif">${esc(nm)}</b>${pv.length?pv.map(t=>`<div class="mono small" style="color:var(--gold)">${esc(t)}</div>`).join(''):'<div class="small dim">아직 아무것도 고르지 않았다.</div>'}</div>
+      <button class="btn primary" data-ad="ok" ${used<=0?'disabled':''}>이 설계로 주문한다</button><div class="small dim">포인트를 다 쓰지 않아도 주문할 수 있습니다. 주문하면 바꿀 수 없습니다.</div></div>`;
+    if(!app._ad){app._ad=true;
+      app.addEventListener('input',ev=>{if(ev.target.id==='adname')AD.name=ev.target.value});
+      app.addEventListener('click',ev=>{const b=ev.target.closest('[data-ad]');if(!b)return;const [a,x,y]=b.dataset.ad.split(':'),K=CFG.ws.cust,cost={atk:K.atkCost,eva:K.evaCost,hp:K.hpCost},u=AD.atk*K.atkCost+AD.eva*K.evaCost+AD.hp*K.hpCost+(AD.pas?K.passCost:0);
+        if(a==='d'){if(+y>0){if(K.pts-u>=cost[x])AD[x]++}else AD[x]=Math.max(0,AD[x]-1)}
+        else if(a==='p'){if(AD.pas===x)AD.pas=null;else if(!AD.pas&&K.pts-u>=K.passCost)AD.pas=x}
+        else if(a==='ok'){if(u>0)AD.done=true}else if(a==='again'){AD.done=false}
+        augDemoDraw()})}
+  }
   function render(){
     if(window.CITY_LAB){labDraw();return}
+    if(window.CITY_AUGDEMO){augDemoDraw();return}
     const s=UI.screen;
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
     const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
