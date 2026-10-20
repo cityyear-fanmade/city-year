@@ -411,7 +411,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return bad?`${min}~${max}글자로 적어 주세요 (한글·영문·숫자·일본어${o.space?'':', 띄어쓰기 없이'})`:null;
   }
   const OKW={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상'};
-  const canFound=ch=>ch.licensed&&ch.rank<=CFG.office.rank&&!ch.job&&!noFixer(ch)&&!ch.officePick&&(!ch.aff||(ch.aff.type==='office'&&!ch.aff.own));
+  const canFound=ch=>ch.licensed&&ch.rank<=CFG.office.rank&&!ch.job&&!noFixer(ch)&&!ch.officePick&&(!ch.aff||(ch.aff.type==='office'&&!ch.aff.own)||(isWs(ch)&&!ch.office));
   function officeNameErr(n){
     {const e=nameErr(n);if(e)return e}
     if((D.offices||[]).some(o=>o.n===n+' 사무소'))return '이미 있는 사무소 이름이다';
@@ -419,11 +419,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function setOffice(ch,name,kw){
     if(officeNameErr(name)||!OKW[kw])return false;
+    if(isWs(ch)){ch.office={name:name+' 사무소',kw,tier:0,ws:true};ch.officePick=false;return true}
     ch.office={name:name+' 사무소',kw,tier:0};ch.aff={type:'office',name:ch.office.name,own:true};ch.officePick=false;return true;
   }
   const officeCards=kw=>[...new Set([...D.rewards,'rustnote','tknife','supper','faint','o_ember','o_blaze','o_stance'])].filter(id=>D.cards[id]&&(D.cards[id].kw||[]).some(k=>k[0]===kw));
   function officeBroker(ch){
-    const O=ch.office;if(!O||!ch.aff||!ch.aff.own)return null;
+    const O=ch.office;if(!O||!ch.aff||!(ch.aff.own||(O.ws&&isWs(ch))))return null;
     const tier=ch.title||ch.rank<=1?3:ch.rank<=3?2:1,gs=(D.officeGear||{})[O.kw]||[];
     if((O.tier||0)<tier&&gs[tier-1]){O.tier=tier;const g=gs[tier-1];offerGear(ch,Object.assign({id:`office_${O.kw}${tier}`,grade:tier+2},g));return {kind:'gear',n:g.n}}
     const all=officeCards(O.kw),fresh=all.filter(id=>!ownsCard(ch,id)),cid=one(fresh.length?fresh:all);if(!cid)return null;
@@ -533,18 +534,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const wsHidden=m=>!(D.items&&D.items[m.id])&&!((m.grade||0)>=1&&(m.grade||0)<=4)&&!(m.id==='birth'||m.n==='맨손');
   function wsItem(ch,slot){
     const w=ch.ws,k=w[wsKey(slot)];
-    const nmOf=d=>(w.names&&w.names[slot])||d;
-    if(slot==='weapon'){const C_=WS.weapon,atk=C_.base.atk+k.n*C_.normal.atk,dmg=k.h*C_.hidden.dmgB;
-      return {id:'ws_weapon',slot,n:nmOf(C_.n),grade:4,e:`공+${atk}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{atk,dmgB:dmg},wx:{dice:C_.dice.slice()}}}
-    if(slot==='armor'){const C_=WS.armor,hp=C_.base.maxHp+k.n*C_.normal.maxHp;
-      return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${k.h?` · 받는 피해 −${k.h}% · 회피+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{maxHp:hp,dr:k.h*C_.hidden.dr,eva:k.h*C_.hidden.eva}}}
-    const A_=WS.aug,fx=Object.assign({},A_.base);if(k.pick)fx[k.pick]=(fx[k.pick]||0)+A_.pick;
-    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).map(([x,v])=>`${A_.stats[x]||x}+${v}`).join(' · ')+(k.pick?` · 개조 완료 (${A_.stats[k.pick]}+${A_.pick})`:' · 히든 의수 하나로 개조할 수 있다'),fx}
+    const nmOf=d=>(w.names&&w.names[slot])||d,B_=WS.big;
+    if(slot==='weapon'){const C_=WS.weapon,bg=Math.floor(k.n/B_.every),atk=C_.base.atk+k.n*C_.normal.atk,dmg=k.h*C_.hidden.dmgB+bg*B_.weaponDmg,spd=C_.base.spd||0;
+      return {id:'ws_weapon',slot,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 대강화 ${bg}`:''}`,fx:{atk,spd,dmgB:dmg},wx:{dice:C_.dice.slice()}}}
+    if(slot==='armor'){const C_=WS.armor,bg=Math.floor(k.n/B_.every),hp=C_.base.maxHp+k.n*C_.normal.maxHp+bg*B_.armorHp,rg=bg*B_.armorRegen,dr=k.h*C_.hidden.dr+Math.floor(k.n/B_.drEvery)*B_.armorDr,eva=k.h*C_.hidden.eva;
+      return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 대강화 ${bg}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
+    const A_=WS.aug,g=w.g,bg=Math.floor((g.n||0)/B_.every),fx=Object.assign({},A_.base);
+    fx.eva=(fx.eva||0)+(g.n||0)*A_.normal.eva+bg*B_.augEva+(g.h||0)*A_.hidden.eva;
+    if(g.pick)fx[g.pick]=(fx[g.pick]||0)+A_.pick;
+    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>`${A_.stats[x]||(x==='spd'?'속도':x)}+${v}`).join(' · ')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${bg?` · 대강화 ${bg}`:''}`+(g.pick?' · 개조 완료':' · 히든 의수 하나로 개조할 수 있다'),fx}
   }
   /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
   function wsOpen(ch,chips){
     if(ch.ws)return;
-    ch.ws={y:ch.year||0,ups:0,w:{n:0,h:0,p:0},a:{n:0,h:0,p:0},g:{pick:null}};
+    ch.ws={y:ch.year||0,ups:0,w:{n:0,h:0,p:0},a:{n:0,h:0,p:0},g:{pick:null,n:0,p:0,h:0}};
     for(const sl of ['weapon','armor','aug']){const it=wsItem(ch,sl);equip(ch,it);chips&&chips.push(`첫 공방 개설 · ${it.n} (${it.e})`)}
     chips&&chips.push('전용 무기·방어구·의수는 빼거나 바꿀 수 없다 · 다른 장비는 녹여서 재료로 쓴다');
   }
@@ -560,6 +563,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!isWs(ch))return;
     if(!ch.ws){wsOpen(ch,[]);return}
     if(!ch.ws.g||!('pick' in ch.ws.g)){ch.ws.g={pick:null};}
+    {const g=ch.ws.g;g.n=g.n||0;g.p=g.p||0;g.h=g.h||0}
     for(const sl of ['weapon','armor','aug'])if(!ch.gear[sl]||ch.gear[sl].id!=='ws_'+sl)equip(ch,wsItem(ch,sl));
   }
   /* 의수는 히든 의수 하나로 한 번만 개조한다: 공격·회피·명중 중 하나를 올린다 */
@@ -573,7 +577,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 보관함 장비 하나를 녹여 장착 중인 전용 무기·방어구를 강화한다. 무기는 무기, 방어구는 방어구만 재료가 된다 */
   function wsMelt(ch,slot,i){
     const w=ch.ws,st=ch.stash||[],m=st[i],cur=ch.gear[slot];
-    if(!w||!isWs(ch)||slot==='aug'||!cur||cur.id!=='ws_'+slot||!m||(m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot||(ch.distForm&&!ch.distStable))return null;
+    const mat=!!m&&m.id==='hidmat';
+    if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||(!mat&&((m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot))||(ch.distForm&&!ch.distStable))return null;
+    if(slot==='aug'&&!mat&&wsHidden(m))return null;
     const k=w[wsKey(slot)],hid=wsHidden(m);let step=0;
     st.splice(i,1);
     if(D.items&&D.items[m.id]){w.used=w.used||{};w.used[m.id]=(w.used[m.id]||0)+1}
@@ -803,6 +809,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.money){const m=earn(ch,fx.money);ch.money=Math.max(0,ch.money+m);chips.push((m>0?'+':'−')+money(Math.abs(m))+(m!==fx.money?' (금전운)':''))}
     if(fx.check){s.check+=fx.check;chips.push('사건 판정 '+sg(fx.check))}
     if(fx.startBreath){s.startBreath+=fx.startBreath;chips.push('시작 '+D.keywords.breath.n+' +'+fx.startBreath)}
+    if(fx.wsMat){(ch.stash=ch.stash||[]).push({id:'hidmat',n:'히든 강화재료',slot:'any',grade:5,e:'어떤 전용 장비든 녹이면 히든 한 단계'});chips.push('히든 강화재료 · 보관함에 들어왔다')}
     if(fx.card)addCard(ch,fx.card,chips,null,true);else if(fx.reward)offerPick(ch,D.rewards,chips,null);
     if(fx.escort)ch.flags.escortNext=1;
     if(fx.officeFound){ch.officePick=true;chips.push('사무소 개설 · 이름과 전문 분야를 정한다')}
@@ -925,9 +932,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const xpNext=ch=>xpFor(ch.lv+1);
   function gainXp(ch,n){const b=ch.lv;if(hasInn(ch,'scholar')&&n>0){ch.xpAcc=(ch.xpAcc||0)+n*(CFG.innate.scholarMul-1);const x=Math.floor(ch.xpAcc+1e-9);if(x>0){ch.xpAcc-=x;n+=x}}ch.xp+=n;ch.lv=lvOf(ch.xp)+(ch.lvBonus||0);ch.lvPend+=ch.lv-b;return ch.lv-b}
   /* 덱이 고정(책장·전용 카드팩)이면 카드를 받을 수 없으므로 '보상 카드' 성장은 선택지에서 뺀다 */
+  const WSMAT={n:'비장 재료',e:'히든 강화재료 1개 · 어떤 전용 장비든 녹이면 히든 한 단계',fx:{wsMat:1}};
   function rollGrowth(ch){
     const out=[],locked=!!(ch&&(ch.deckLocked||ch.cardMoney));let g=0;
-    while(out.length<3&&g++<80){const r=d(100),x=pick(D.growth,r);if(locked&&x.fx&&x.fx.reward)continue;if(!out.some(o=>o.g===x))out.push({r,g:x})}
+    const wsm=!!(ch&&isWs(ch));
+    while(out.length<3&&g++<80){const r=d(100);let x=pick(D.growth,r);if(wsm&&x.fx&&x.fx.reward)x=WSMAT;if(locked&&x.fx&&x.fx.reward)continue;if(!out.some(o=>o.g===x))out.push({r,g:x})}
     return out;
   }
 
@@ -1006,8 +1015,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='nojob')return !ch.job;
     if(req==='canfix')return !noFixer(ch);
     /* 내 사무소(대표) / 남의 사무소 직원 */
-    if(req==='ownoffice')return !!ch.aff&&!!ch.aff.own;
-    if(req==='notown')return !(ch.aff&&ch.aff.own);
+    if(req==='ownoffice')return (!!ch.aff&&!!ch.aff.own)||(!!ch.office&&isWs(ch));
+    if(req==='notown')return !((ch.aff&&ch.aff.own)||(ch.office&&isWs(ch)));
     if(req==='aff')return !!ch.aff;
     if(req==='noaff')return !ch.aff&&!isFounder(ch);
     if(req.startsWith('aff:'))return !!ch.aff&&ch.aff.type===req.slice(4);
@@ -1803,7 +1812,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 6시즌: 격리 실패 (환상체 보스는 조우 표가 아니라 이 사건으로만 나온다) */
     if(D.abnoBreach&&G.year>=CFG.abnoBreach.from&&abnoLeft(ch).length&&d(100)<=CFG.abnoBreach.chance)return {type:'event',ev:D.abnoBreach};
     /* 6시즌: 내 사무소 개설(5급 이상, 5년마다 다시 묻는다) · 소속 없는 해결사는 4년마다 급수에 맞는 사무소 문을 두드린다 */
-    if(D.officeFound&&canFound(ch)&&G.year>=(ch.officeNext||0)){ch.officeNext=G.year+CFG.office.foundEvery;return {type:'event',ev:D.officeFound}}
+    if(D.officeFound&&canFound(ch)&&G.year>=(ch.officeNext||0)){ch.officeNext=G.year+CFG.office.foundEvery;return {type:'event',ev:isWs(ch)?Object.assign({},D.officeFound,{x:D.officeFound.x+' 공방의 작업대는 그대로 두고, 그 옆에 간판을 하나 더 건다.'}):D.officeFound}}
     if(D.officeKnock&&ch.licensed&&!ch.aff&&!ch.job&&!noFixer(ch)&&G.year>CFG.affiliationYear&&G.year>=(ch.knockNext||0)){ch.knockNext=G.year+CFG.office.knockEvery;return {type:'event',ev:D.officeKnock}}
     /* 사건을 다 쓰면 다시 섞는다 */
     if(!G.pool.length){G.pool=sample(D.events.map((_,i)=>i),D.events.length);

@@ -418,7 +418,7 @@ export function startUI(E,app){
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
   }
-  const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+ch.fr.n:''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
+  const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.office&&ch.office.ws?' · 내 사무소 '+esc(ch.office.name):''}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+ch.fr.n:''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
     +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
   const innateOne=(c,k)=>k==='mark'&&c.markOn?D.innate.mark.awake:D.innate[k].n;
   const innateName=c=>c.innate?[c.innate,c.innate2].filter(Boolean).map(k=>innateOne(c,k)).join(' · '):null;
@@ -806,15 +806,17 @@ export function startUI(E,app){
     const nameRow=sl=>`<div class="row" style="gap:6px"><input id="wsn_${sl}" maxlength="12" autocomplete="off" placeholder="이름 짓기 (12자까지)" value="${esc(((ch.ws.names||{})[sl])||'')}" style="flex:1;min-width:0"><button class="chip" data-a="wsname" data-i="${sl}">이름 정하기</button></div>`;
     const rows=['weapon','armor'].map(sl=>{
       const cur=ch.gear[sl];if(!cur||cur.id!=='ws_'+sl)return '';
-      const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&m.slot===sl);
+      const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&(m.slot===sl||m.id==='hidmat'));
       const btns=mats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="${sl}:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
       return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow(sl)}<div class="row between"><b>${esc(cur.n)}</b><span class="mono small dim">일반 ${k.p}/${E.wsNeed(k.n)} · 강화 ${k.n}${k.h?' · 히든 '+k.h:''}</span></div><span class="mono small" style="color:var(--gold)">${esc(cur.e)}</span>${btns||`<p class="small dim">녹일 ${nm[sl]}이(가) 보관함에 없다.</p>`}</div>`;
     }).join('');
     const ag=ch.gear.aug,done=w.g&&w.g.pick,cands=st.map((m,i)=>[m,i]).filter(([m])=>E.wsAugOk(ch,m));
-    const augRow=!ag||ag.id!=='ws_aug'?'':`<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow('aug')}<div class="row between"><b>${esc(ag.n)}</b><span class="mono small dim">${done?'개조 완료':'개조 가능 · 한 번뿐'}</span></div><span class="mono small" style="color:var(--gold)">${esc(ag.e)}</span>
+    const amats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&(m.id==='hidmat'||(m.slot==='aug'&&!E.wsHidden(m))));
+    const abtn=amats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="aug:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
+    const augRow=!ag||ag.id!=='ws_aug'?'':`<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow('aug')}<div class="row between"><b>${esc(ag.n)}</b><span class="mono small dim">일반 ${w.g.p||0}/${E.wsNeed(w.g.n||0)} · 강화 ${w.g.n||0}${w.g.h?' · 히든 '+w.g.h:''} · ${done?'개조 완료':'개조 가능 · 한 번뿐'}</span></div><span class="mono small" style="color:var(--gold)">${esc(ag.e)}</span>${abtn||'<p class="small dim">녹일 의수가 보관함에 없다.</p>'}
       ${done?'':cands.length?cands.map(([m,i])=>`<div class="stack" style="gap:4px"><b class="small">${esc(m.n)} <span class="chip warn">히든</span></b><div class="row" style="gap:6px;flex-wrap:wrap">${Object.entries(W_.aug.stats).map(([k,l])=>`<button class="btn" data-a="wsaug" data-i="${i}:${k}" ${dead?'disabled':''}><b>${l} +${W_.aug.pick}</b></button>`).join('')}</div></div>`).join(''):'<p class="small dim">히든 의수를 구하면 한 번 개조할 수 있다. 녹이면 공격, 회피, 명중 중 하나가 +'+W_.aug.pick+' 오르고, 한번 고르면 바꿀 수 없다.</p>'}</div>`;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b class="serif">작업대</b><span class="chip">공방 해결사</span></div>
-      <p class="small dim">전용 무기·방어구·의수는 빼거나 바꿀 수 없다. 다른 장비는 모두 재료다. 무기와 방어구는 같은 칸의 보관함 장비를 녹여 끝없이 강화한다. 일반 장비는 모아서 한 단계(필요한 개수는 단계가 오를수록 늘어난다), 히든 장비는 1개로 한 단계. 녹인 장비는 돌아오지 않고, 재료로 쓴 공방 물건은 다시 살 때마다 값이 오른다.</p>
+      <p class="small dim">전용 무기·방어구·의수는 빼거나 바꿀 수 없다. 다른 장비는 모두 재료다. 무기·방어구·의수는 같은 칸의 보관함 장비를 녹여 끝없이 강화하고, 5단계마다 한 번 크게 오른다. 히든 강화재료는 어떤 전용 장비에든 쓸 수 있다. 일반 장비는 모아서 한 단계(필요한 개수는 단계가 오를수록 늘어난다), 히든 장비는 1개로 한 단계. 녹인 장비는 돌아오지 않고, 재료로 쓴 공방 물건은 다시 살 때마다 값이 오른다.</p>
       ${UI.wsMsg?`<p class="good small">${esc(UI.wsMsg)}</p>`:''}${rows}${augRow}</div>`;
   }
   function vTune(){
