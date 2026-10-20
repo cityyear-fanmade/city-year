@@ -120,6 +120,26 @@ export function startUI(E,app){
     p.appendChild(s);setTimeout(()=>s.remove(),1000);
   }
   const PREV={};
+  /* 타격 연출: 맞은 쪽 상자 위에 베기 선·파편이 튄다. 맞은 카드·무기가 새로 건 키워드(화상·출혈·파열 등)에 따라 색이 달라진다. 단계: off(끔)·low(가볍게)·mid(보통)·high(강하게) */
+  const HFXK='cityYearHitFx';let HFX=store.get(HFXK)||'mid';
+  const HFX_N={off:0,low:1,mid:2,high:3};
+  function hitFx(e){
+    const lv=HFX_N[HFX]||0;if(!lv||MODE==='off'||SKIP||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
+    const box=$('ent-'+e.def);if(!box)return;
+    let col='#cfe6ff',best=0;const sn=e.snap&&e.snap[e.def],pv=PREV[e.def];
+    if(sn&&pv)for(const k of Object.keys(D.keywords)){const dl=(sn[k]||0)-(pv[k]||0);if(dl>best){best=dl;col=kwc(k)}}
+    const big=e.dmg>=(C[e.def].maxHp||100)*0.15;
+    const n=lv===1?0:lv===2?(big?10:6):(big?18:12);
+    let h=`<i class="slash" style="--c:${col}"></i>`;
+    if(lv>=3)h+=`<i class="hflash" style="--c:${col}"></i>`;
+    for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
+    const fx=document.createElement('div');fx.className='hfx';fx.innerHTML=h;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
+    if(lv>=2&&big||lv>=3){const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&big?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}}
+  }
+  function whiffFx(e){
+    const lv=HFX_N[HFX]||0;if(lv<2||MODE==='off'||SKIP)return;
+    const box=$('ent-'+e.def);if(!box)return;const fx=document.createElement('div');fx.className='hfx';fx.innerHTML='<i class="whiff"></i>';box.appendChild(fx);setTimeout(()=>fx.remove(),600);
+  }
   function applySnap(sn){
     for(const side of ['P','E']){
       const X=C[side],v=sn[side],h=$('hp-'+side);
@@ -192,7 +212,7 @@ export function startUI(E,app){
     anim($('ent-'+e.att),e.att==='P'?'lunge-up':'lunge-down',500);
     await wait(200);
     if(e.hit){
-      anim($('ent-'+e.def),'hurt',520);sfx(e.dmg>=(C[e.def].maxHp||100)*0.15?'hard':'impact');
+      anim($('ent-'+e.def),'hurt',520);hitFx(e);sfx(e.dmg>=(C[e.def].maxHp||100)*0.15?'hard':'impact');
       const box=$('dmgd'),fc=(e.card&&e.card.die)||6;$('dmgw').hidden=false;$('dmgw').querySelector('.dcap').textContent='피해 d'+fc;
       const dm=()=>'<div class="d6"><b>–</b></div>',sp=e.rolls2||[];
       box.innerHTML=e.rolls.map(dm).join('')+(sp.length?`<span class="small dim" style="align-self:center;padding:0 6px">${esc(e.ally2||'')}</span>`+sp.map(()=>'<div class="d6 sp" style="border-color:var(--bleed)"><b>–</b></div>').join(''):'');
@@ -212,7 +232,7 @@ export function startUI(E,app){
       await wait(500);
     }else{
       setVerdict(`빗나감 · ${C[e.def].name}이(가) 피했다`,'miss');
-      anim($('ent-'+e.def),'dodge',600);sfx('whoosh');floatTxt(e.def,'회피','var(--rupture)');
+      anim($('ent-'+e.def),'dodge',600);whiffFx(e);sfx('whoosh');floatTxt(e.def,'회피','var(--rupture)');
       appendLog(e.lines);applySnap(e.snap);
       await holdTap();
       await wait(500);
@@ -328,6 +348,7 @@ export function startUI(E,app){
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">효과음 음량</span><b class="mono" id="sfxPct">${Math.round(SFXS.vol*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="sfxstep" data-i="-10" aria-label="효과음 10 줄이기">−10</button><input type="range" id="sfxRange" min="0" max="100" step="1" value="${Math.round(SFXS.vol*100)}" aria-label="효과음 음량"><button class="chip" data-a="sfxstep" data-i="10" aria-label="효과음 10 올리기">+10</button></div></div>
         <span class="small dim">주사위가 멈출 때 나는 '탁' 소리다. 배경음악과 따로 켜고 끈다. 연출을 끄면 나지 않는다</span></div>`:''}
+      <div class="stack" style="gap:6px"><span class="eyebrow">타격 연출</span><div class="seg">${b('hitfx','off','끔',HFX)}${b('hitfx','low','가볍게',HFX)}${b('hitfx','mid','보통',HFX)}${b('hitfx','high','강하게',HFX)}</div><span class="small dim">맞은 쪽에 베기 선과 파편이 튄다. 화상은 주황, 출혈은 붉은색, 파열은 보라 같은 식으로 새로 걸린 키워드에 따라 색이 달라진다. 연출을 끄면 나오지 않는다</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
   }
@@ -1858,6 +1879,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     finish(){store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.screen='title';render()},
     title(){UI.confirmNew=null;if(UI.shared){UI.shared=null;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}UI.screen='title';render()},
     mode(i){MODE=i;store.set('cityYearMode',i);render()},
+    hitfx(i){HFX=i;store.set(HFXK,i);render()},
     fightmode(i){FIGHT=i;store.set('cityYearFight',i);UI.paused=false;render()},
     pause(){UI.paused=!UI.paused;if(UI.paused&&UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     autogap(i){AUTOGAP=i;store.set('cityYearAutoGap',i);if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
