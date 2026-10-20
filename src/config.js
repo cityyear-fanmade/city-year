@@ -280,6 +280,19 @@ export const CFG = {
   /* 엄지 검술(덱 고정): 카드를 얻는 자리마다 대신 받는 돈 */
   lockedCardMoney: 150,
   /* 공방 해결사: 4년차 갈림길에 chance% 확률로 제안. 1d die에서 minRoll 이상이면 성공. 공방 물건 할인율, 보관함 판매 비율 */
+  /* 공방 해결사의 작업대: 첫 공방 개설 때 전용 무기·방어구를 받고, 보관함 장비를 녹여 끝없이 강화한다.
+     일반 재료: 단계마다 필요한 개수가 needEvery단계마다 1개씩 늘어난다 (1+⌊단계/needEvery⌋개). 히든 재료: 1개에 바로 1단계.
+     전용 의수는 개설 후 augYears년이 지나고 강화를 augUps번 했을 때 한 번 맞출 수 있다 (공격형·수비형·기믹형) */
+  ws: {
+    needEvery: 10, augYears: 12, augUps: 20,
+    weapon: {n: '작업대의 칼날', base: {atk: 3}, dice: [1, 6], normal: {atk: 1}, dmgEvery: 4, hidden: {dmgB: 1}} /* 일반 재료는 공격 +1, 단계 dmgEvery마다 피해 +1이 덤으로 붙는다 (공격만 올리면 어느 순간 명중이 더 필요 없어진다) */,
+    armor: {n: '공방 작업복', base: {maxHp: 8}, normal: {maxHp: 2}, hidden: {dr: 1, eva: 1}},
+    aug: {
+      atk: {n: '분쇄 의수', d: '전투의 첫 적중 피해 +', base: 3, normal: 1, hidden: {atk: 1}},
+      def: {n: '방벽 의수', d: '전투 시작 보호막 ', base: 8, normal: 2, hidden: {regen: 1}},
+      gim: {n: '개조 의수', d: '적중마다 상대에게 키워드를 번갈아 건다 · 한 번에 ', base: 1, normal: 1, cap: 6, kws: ['bleed', 'rupture', 'burn', 'sink', 'flame'], kwBase: 3}
+    }
+  },
   workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100, hiddenSell: 2500, hiddenSellPer: 800},
   /* 출신 진로 보정: 그 진로의 권유 사건이 (보정값 × 이 값)% 확률로 먼저 나온다 */
   pathEventMul: 2,

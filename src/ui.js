@@ -774,7 +774,7 @@ export function startUI(E,app){
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
     return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">${hwHome()?'홍원의 저잣거리':'공방'} · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
-      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vBlack()}${vSell()}${vSwapCard()}${vTune()}
+      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
       <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':'공방을 나간다'}</button>`;
   }
   /* 공방 해결사: 보관함 장비 판매 */
@@ -796,6 +796,25 @@ export function startUI(E,app){
       ${left>0&&!can?'<p class="small dim">돈이 모자란다.</p>':''}${left<=0?'<p class="small dim">이번 방문에는 더 바꿀 수 없다.</p>':''}</div>`;
   }
   /* 공방: 장비 정비 (장착 장비마다 최대 tune.max번, chance% 확률로 공격 또는 회피 +1) */
+  /* 공방 해결사의 작업대: 보관함 장비를 녹여 전용 무기·방어구·의수를 끝없이 강화한다 */
+  function vForge(){
+    const ch=G.ch;if(!E.isWs(ch))return '';E.wsEnsure(ch);const w=ch.ws;if(!w)return '';
+    const st=ch.stash||[],W_=CFG.ws,nm={weapon:'무기',armor:'방어구',aug:'의수'},key={weapon:'w',armor:'a',aug:'g'};
+    const dead=ch.distForm&&!ch.distStable;
+    const rows=['weapon','armor','aug'].map(sl=>{
+      if(sl==='aug'&&!w.g){
+        if(!E.wsAugReady(ch))return `<div class="stack" style="gap:4px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>전용 의수</b><span class="mono small dim">개설 ${Math.max(0,(ch.year||0)-w.y)}/${W_.augYears}년 · 강화 ${w.ups}/${W_.augUps}회</span></div><p class="small dim">개설한 지 ${W_.augYears}년이 지나고 강화를 ${W_.augUps}번 하면 의수를 한 번 맞출 수 있다. 고른 유형은 바꿀 수 없다.</p></div>`;
+        return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><b>전용 의수를 맞춘다</b><p class="small dim">한 번 고르면 바꿀 수 없다. 이 의수는 보관함 장비라면 무엇이든 녹여 강화한다.</p>${['atk','def','gim'].map(t=>{const a=W_.aug[t];return `<button class="btn" data-a="wsaug" data-i="${t}"><b>${a.n}</b><span class="mono small dim">${t==='atk'?'공격형 · ':t==='def'?'수비형 · ':'기믹형 · '}${a.d}${a.base}</span></button>`}).join('')}</div>`}
+      const cur=ch.gear[sl],ok=!!cur&&cur.id==='ws_'+sl;
+      if(!ok){const si=st.findIndex(x=>x.id==='ws_'+sl);return `<div class="stack" style="gap:4px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>전용 ${nm[sl]}</b><span class="mono small dim">장착 중이 아니다</span></div><p class="small dim">전용 장비는 장착하고 있어야 강화할 수 있다.</p>${si>=0?`<button class="btn" data-a="wsequip" data-i="${si}"><b>${esc(st[si].n)} 장착</b><span class="mono small dim">${esc(st[si].e||'')}</span></button>`:''}</div>`}
+      const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&(sl==='aug'||m.slot===sl));
+      const btns=mats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="${sl}:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
+      return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>${esc(cur.n)}</b><span class="mono small dim">일반 ${k.p}/${E.wsNeed(k.n)} · 강화 ${k.n}${k.h?' · 히든 '+k.h:''}</span></div><span class="mono small" style="color:var(--gold)">${esc(cur.e)}</span>${btns||'<p class="small dim">녹일 수 있는 장비가 보관함에 없다.</p>'}</div>`;
+    }).join('');
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b class="serif">작업대</b><span class="chip">공방 해결사</span></div>
+      <p class="small dim">보관함 장비를 녹여 전용 장비를 끝없이 강화한다. 일반 장비는 모아서 한 단계(필요한 개수는 단계가 오를수록 늘어난다), 히든 장비는 1개로 한 단계. 녹인 장비는 돌아오지 않는다.</p>
+      ${UI.wsMsg?`<p class="good small">${esc(UI.wsMsg)}</p>`:''}${rows}</div>`;
+  }
   function vTune(){
     const ch=G.ch,T=Object.assign({},CFG.shop.tune,{max:E.tuneMax(G.ch)}),slots=Object.keys(ch.gear).filter(k=>ch.gear[k]);
     const rows=slots.map(k=>{const g=ch.gear[k],n=g.tries||0,mx=E.tuneMax(ch,g),full=n>=mx,cost=E.tuneCost(g),tn=g.tune||{},ok=!full&&ch.money>=cost&&(!ch.distForm||ch.distStable);
@@ -1938,6 +1957,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     },
     sell(i){const g=(G.ch.stash||[])[+i];if(!g)return;const v=E.sellStash(G.ch,+i);if(v){UI.sold=`${g.n}을(를) ${E.money(v)}에 팔았다.`;render()}},
     swapcard(i){if((UI.swapped||[]).length>=CFG.shop.swapMax)return;const r=E.swapCard(G.ch,+i);if(r){(UI.swapped=UI.swapped||[]).push([D.cards[r.old].n,D.cards[r.nid].n]);render()}},
+    wsmelt(i){const [sl,ix]=String(i).split(':'),r=E.wsMelt(G.ch,sl,+ix);if(r){UI.wsMsg=`${r.m}을(를) 녹였다 · ${r.hidden?'히든 재료 · 한 단계 상승':r.step?'일반 재료 · 한 단계 상승 ('+r.n+'단계)':'일반 재료 · '+r.p+'/'+r.need}`;resave();render()}},
+    wsequip(i){if(E.equipStash(G.ch,+i)){UI.wsMsg=null;resave();render()}},
+    wsaug(t){if(E.wsAug(G.ch,t)){UI.wsMsg=`${CFG.ws.aug[t].n}를 맞췄다. 이제 보관함 장비를 녹여 강화할 수 있다.`;resave();render()}},
     tune(k,el){const r=E.tuneGear(G.ch,k,el&&el.dataset?el.dataset.s:null);if(r){UI.tuneMsg={ok:r.ok,t:`${r.n} · ${r.stat==='atk'?'공격':'회피'} +1 ${r.ok?'성공':'실패'} (${r.tries}/${E.tuneMax(G.ch)})`};render()}},
     delcard(i){if((UI.deleted||[]).length>=CFG.shop.delMax)return;const c=E.delCard(G.ch,+i);if(c){(UI.deleted=UI.deleted||[]).push(D.cards[c].n);render()}},
     tname(){
@@ -2029,7 +2051,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
-    shop(){UI.showIncome=false;UI.screen='shop';render()},
+    shop(){UI.wsMsg=null;E.wsEnsure(G.ch);UI.showIncome=false;UI.screen='shop';render()},
     /* 6시즌: 공방 거리에서 쉬어 가기 (공방 거래 없이 정신력 회복) */
     rest(){if(UI.rested)return;if(G.ch.restYear===G.year){UI.rested='이번 해에는 이미 쉬었다 · 정신력은 해마다 한 번만 회복한다';render();return}G.ch.restYear=G.year;const g=E.gainMind(G.ch,CFG.shop.restMind);UI.rested=g?`잠시 쉬었다 · 정신력 +${g} (${G.ch.mind}/${E.mindMax(G.ch)})`:'잠시 쉬었다 · 정신력이 이미 가득하다';UI.showIncome=false;resave();render()},
     buy(id){UI.buyAsk=id;render()},
@@ -2179,6 +2201,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       c.bond={st:k,route:c.aff.type==='office'?'office':c.aff.type,name:k==='pick'?'':'하나',step:2,tries:1,love:2,since:G.year,saved:false};if(k==='pick')c.bondPick=true;if(kids)c.bond.kids=[{n:'하늘',born:G.year-23,job:'assoc',told:true},{n:'이슬',born:G.year-4,job:'fixer',told:false}];if(dist)c.distForm={n:'이름 없는 뒤틀림'};UI.res={t:'인연 시험',chips:[]};UI.screen='result';render()},
     testPick(k,v){if(!G)return;G.ch[k]=k==='orgPick'?(v||'wing'):true;if(k==='singPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0}}if(k==='wingPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0,n:'ゼロ'}}if(k==='titlePick'){G.ch.licensed=true;G.ch.rank=5;G.ch.title=D.colors[G.ch.ci].adj+' 임시'}if(k==='officePick'){G.ch.licensed=true;G.ch.rank=5}UI.res={t:'이름 시험',chips:[]};UI.screen='result';render()},
     testMoney(n){if(G){G.ch.money=n;render()}},
+    testWs(yrs){if(!G)return;const c=G.ch;c.licensed=true;c.rank=5;c.aff={type:'workshop',name:'공방 해결사'};c.year=G.year=yrs||14;E.wsEnsure(c);c.ws.y=1;c.ws.ups=22;c.stash=[{id:'club',slot:'weapon',n:'무거운 쇠몽둥이',grade:1,e:'공+1',fx:{}},{id:'h_w',slot:'weapon',n:'히든 시험 무기',grade:5,e:'공+14',fx:{}},{id:'leather',slot:'armor',n:'덧댄 가죽옷',grade:1,e:'HP+6',fx:{}}];UI.ws_test=1;UI.screen='shop';render()},
     testShop(){if(!G)return;G.ch.money=5000;G.ch.hp=Math.floor(G.ch.stats.maxHp/2);UI.stock=Object.keys(D.special).slice(0,2);UI.cardBox=true;UI.aid=true;UI.swapped=null;UI.tuneMsg=null;UI.bought=null;UI.deleted=null;UI.sold=null;UI.rested=null;UI.broker=null;UI.screen='shop';render()},
     /* 6시즌 자동 테스트: 사무소 개설 화면, 사건 바로 보기, 사무소 알선 */
     testBirthRoll(n){if(!BC)return;E.reseed(BC.seed);let c;for(let i=0;i<20000;i++){c=E.newChar();if(c.r.o===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;BC.fresh=false;render()},
