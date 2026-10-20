@@ -153,7 +153,7 @@ export function startUI(E,app){
     let h='';
     if(sp&&!(multi&&!lastHit)){
       const FL='#ff8a3c';
-      if(sp==='tclaw'){col='#fff';h=`<u class="jw lng">`+sl(rot*0.7,18,'--sw:0;height:3px;--c:#fff')+sl(rot*0.7,36,'height:4px;animation-delay:40ms;--c:#fff')+sl(rot*0.7,54,'height:4px;animation-delay:80ms;--c:#fff')+sl(rot*0.7,72,'--sw:0;height:3px;animation-delay:120ms;--c:#fff')+`</u>`}
+      if(sp==='tclaw'){col='#fff';const T=[[18,3],[36,4],[54,4],[72,3]],gh=(t,hh,d)=>sl(rot*0.7,t,`--sw:0;height:${hh}px;animation-delay:${d}ms`),ghost=(t,hh,d,mt,o)=>sl(rot*0.7,t,`--sw:0;height:${hh}px;animation-delay:${d}ms;margin-top:${mt}px;filter:opacity(${o})`);h=`<u class="jw lng">`+T.map(([t,hh],k)=>ghost(t,hh,k*40+90,-7,.18)+ghost(t,hh,k*40+45,-3,.4)+gh(t,hh+1,k*40)).join('')+`</u>`}
       else if(sp==='eye'){col='#d0344a';h=sl(rot,50,'height:7px;--c:#d0344a')+sl(rot*0.6,56,'--sw:0;height:3px;--c:#7a1020;animation-delay:50ms')}
       else if(sp==='tremor'){h=`<u class="jw">`+sl(rot,50,'--c:#5fd0ff;margin-top:-3px')+sl(rot,50,'--c:#ff4d6d;margin-top:3px;animation-delay:30ms')+sl(rot,50,'--c:#fff;animation-delay:15ms')+sl(rot,50,'opacity:.5;animation-delay:70ms')+sl(rot,50,'opacity:.3;animation-delay:140ms')+`</u>`}
       else if(sp==='reson'){col='#4aa8ff';h=`<u class="jw"><i class="thrust beam" style="--c:#4aa8ff;--org:${org}"></i></u><i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:${col};animation-delay:.22s"></i><i class="ringfx" style="--c:${col};animation-delay:.34s;opacity:.5"></i>`}
