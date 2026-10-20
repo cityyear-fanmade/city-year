@@ -283,9 +283,11 @@ export const CFG = {
   /* 공방 해결사의 작업대: 첫 공방 개설 때 전용 무기·방어구를 받고, 보관함 장비를 녹여 끝없이 강화한다.
      일반 재료: 단계마다 필요한 개수가 needEvery단계마다 1개씩 늘어난다 (1+⌊단계/needEvery⌋개). 히든 재료: 1개에 바로 1단계.
      전용 의수는 개설 후 augYears년이 지나고 강화를 augUps번 했을 때 한 번 맞출 수 있다 (공격형·수비형·기믹형) */
+  /* 공격과 명중: 공격은 hitPer배(소수점 버림)만큼 명중을 올리고, dmgPer마다 피해 +1을 한계 없이 더한다. 명중 스탯은 명중만 올린다 */
+  atkRule: {on: true, hitPer: 0.5, dmgPer: 6},
   ws: {
     needEvery: 10, augYears: 12, augUps: 20, priceUp: 0.25 /* 재료로 쓴 공방 물건은 쓸 때마다 다시 살 때의 값이 원래 값의 priceUp 비율씩 오른다 */,
-    weapon: {n: '작업대의 칼날', base: {atk: 3}, dice: [1, 6], normal: {atk: 1}, dmgEvery: 4, hidden: {dmgB: 1}} /* 일반 재료는 공격 +1, 단계 dmgEvery마다 피해 +1이 덤으로 붙는다 (공격만 올리면 어느 순간 명중이 더 필요 없어진다) */,
+    weapon: {n: '작업대의 칼날', base: {atk: 3}, dice: [1, 6], normal: {atk: 1}, hidden: {dmgB: 1}},
     armor: {n: '공방 작업복', base: {maxHp: 8}, normal: {maxHp: 2}, hidden: {dr: 1, eva: 1}},
     aug: {
       atk: {n: '분쇄 의수', d: '전투의 첫 적중 피해 +', base: 3, normal: 1, hidden: {dmgB: 1}},

@@ -493,7 +493,7 @@ export function startUI(E,app){
   /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
   function vSideL(P){
     const ch=G.ch,s=ch.stats,pad=(k,v)=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`,up=n=>n?` <i class="bufup">${n>0?'+':'−'}${Math.abs(n)}</i>`:'';
-    const rows=[['HP',P?`${Math.max(0,P.hp)}/${P.maxHp}`:`${ch.hp}/${s.maxHp}`],['정신력',ch.distForm?'???':`${ch.mind}/${E.mindMax(ch)}`],['공격',sg(s.atk)+(P?up(P.atk-s.atk):'')],['회피',sg(s.eva)+(P?up((P.evaB||0)):'')],['속도',sg(s.spd)+(P?up(P.spd-s.spd):'')],['판정',sg(s.check)],['최소 피해',s.dmin],...(s.dr?[['피해 감소',s.dr+'%']]:[]),...(s.regen?[['HP 회복/라운드',s.regen]]:[]),...(s.startBleed?[['시작 출혈',s.startBleed]]:[]),...(s.startBreath?[['시작 호흡',s.startBreath]]:[]),['카드',`${ch.deck.length}/${E.deckMax(ch)}`],['레벨',`Lv ${ch.lv}`],['경험치',E.xpNext(ch)!=null?`${ch.xp}/${E.xpNext(ch)}`:`${ch.xp} (최고)`],...(E.canPromote(ch)?[[E.ptsName(ch),`${ch.pp||0}/${E.promoNeed(ch)}`]]:[]),['자산',E.money(ch.money)]];
+    const rows=[['HP',P?`${Math.max(0,P.hp)}/${P.maxHp}`:`${ch.hp}/${s.maxHp}`],['정신력',ch.distForm?'???':`${ch.mind}/${E.mindMax(ch)}`],['공격',sg(s.atk)+(P?up(P.atk-s.atk):'')],...(s.hit?[['명중',sg(s.hit)]]:[]),['회피',sg(s.eva)+(P?up((P.evaB||0)):'')],['속도',sg(s.spd)+(P?up(P.spd-s.spd):'')],['판정',sg(s.check)],['최소 피해',s.dmin],...(s.dr?[['피해 감소',s.dr+'%']]:[]),...(s.regen?[['HP 회복/라운드',s.regen]]:[]),...(s.startBleed?[['시작 출혈',s.startBleed]]:[]),...(s.startBreath?[['시작 호흡',s.startBreath]]:[]),['카드',`${ch.deck.length}/${E.deckMax(ch)}`],['레벨',`Lv ${ch.lv}`],['경험치',E.xpNext(ch)!=null?`${ch.xp}/${E.xpNext(ch)}`:`${ch.xp} (최고)`],...(E.canPromote(ch)?[[E.ptsName(ch),`${ch.pp||0}/${E.promoNeed(ch)}`]]:[]),['자산',E.money(ch.money)]];
     const gear=Object.entries(D.slots).map(([k,n])=>`<div class="srow"><span>${n}</span><b class="gname">${ch.gear[k]?esc(ch.gear[k].n):'없음'}</b></div>`).join('');
     return `<aside class="side-l" aria-label="수치판"><div class="stitle">${titledName(ch)}</div>${rows.map(([k,v])=>pad(k,v)).join('')}<div class="ssep"></div>${gear}</aside>`;
   }
@@ -538,7 +538,7 @@ export function startUI(E,app){
         <input id="cardq" value="${esc(f.q||'')}" placeholder="카드 이름 찾기" autocomplete="off" style="flex:1;min-width:8em"></div>
       <div class="stack" style="gap:8px" id="cardlist">${cardListHtml()}</div>`;
   }
-  const FXN={maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'판정',dmin:'피해 최소',dr:'피해 감소(%)',regen:'라운드마다 HP 회복',die:'피해 주사위',dmgB:'피해',burnHit:'붉은 화염',startBleed:'시작 출혈',startBreath:'시작 호흡',defUp:'방어 회피',extraD2:'추가 피해'};
+  const FXN={maxHp:'최대 HP',atk:'공격',hit:'명중',eva:'회피',spd:'속도',check:'판정',dmin:'피해 최소',dr:'피해 감소(%)',regen:'라운드마다 HP 회복',die:'피해 주사위',dmgB:'피해',burnHit:'붉은 화염',startBleed:'시작 출혈',startBreath:'시작 호흡',defUp:'방어 회피',extraD2:'추가 피해'};
   function fxDiff(nw,old){
     const a=nw.fx||{},b=(old&&old.fx)||{};
     return [...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>FXN[k]&&(a[k]||0)!==(b[k]||0))
@@ -579,7 +579,7 @@ export function startUI(E,app){
     const ch=G.ch,s=ch.stats,gear=Object.values(ch.gear);
     const gsum=k=>gear.reduce((a,g)=>a+((g.fx||{})[k]||0),0);
     const row=(l,v,k)=>{const g=k?gsum(k):0;return `<div class="invr"><span>${l}</span><b class="mono">${v}</b><span class="mono small dim">${g?'장비 '+sg(g):''}</span></div>`};
-    return `<div>${[row('최대 HP',s.maxHp,'maxHp'),row('공격 (명중 보정)',sg(s.atk),'atk'),row('회피',sg(s.eva),'eva'),row('속도 (순서 보정)',sg(s.spd),'spd'),
+    return `<div>${[row('최대 HP',s.maxHp,'maxHp'),row('공격 (명중 +½ · 피해 6마다 +1, 소수점 버림)',sg(s.atk),'atk'),row('명중',sg(s.hit||0),'hit'),row('회피',sg(s.eva),'eva'),row('속도 (순서 보정)',sg(s.spd),'spd'),
       row('사건 판정',sg(s.check),'check'),row('피해 주사위 최소',s.dmin+(s.dmin>=CFG.dminCap?' (최대)':''),null),...(s.dr?[row('피해 감소',s.dr+'%',null)]:[]),...(s.regen?[row('라운드마다 HP 회복',s.regen,null)]:[]),row('전투 시작 출혈',s.startBleed,null),row('전투 시작 호흡',s.startBreath,null),
       ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림',s.adv>=1?'있음':Math.round(s.adv*100)+'% 확률',null)]:[]),
       row('카드 등급',E.cardGrade(ch.year,ch).n||'기본',null),...(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)?[row('특이점 · '+esc(ch.corp.n),`${CFG.corp.types[ch.corp.type].e}${ch.corp.wing?' · '+esc(ch.corp.wing):''}`,null)]:[]),...(E.isN(ch)?[row('N사 · 의체 심판',`의수를 쓰지 않는다 · 신체 강화 공격 +${CFG.nWing.atk} · 회피 +${CFG.nWing.eva} · 속도 +${CFG.nWing.spd} · 의체 상대 적중마다 피해 +${CFG.nWing.augDmg}`,null)]:[]),...(ch.aff&&ch.aff.name==='중지'?[row('중지 · 되갚음','맞을 때마다 1 (최대 5) · 다음 적중 +2×스택',null)]:[]),...(ch.aff&&ch.aff.name==='검지'?[row('검지 · 지령 수행',`☆ 칸 카드를 내면 1 (최대 5) · 호흡 +4 · 받는 피해 −5%×스택 · 가득 찬 뒤 ${CFG.prescPlus.every}번 더 수행할 때마다 카드 수치(피해 · 회피 · 보호막) +1 (최대 +${CFG.prescPlus.max})`,null)]:[]),...(ch.office?[row('내 사무소',esc(ch.office.name)+' · '+E.OKW[ch.office.kw],null)]:[]),...((ch.auth||[]).length?[row('조율자 권한',ch.auth.length+'단계 ('+ch.auth.map(a=>a==='seal'?'봉인':'집행').join('·')+')',null)]:[])].join('')}</div>`;
@@ -627,7 +627,7 @@ export function startUI(E,app){
   function cardGuide(){
     const G_=CFG.cardGrade.slice(1).map(g=>`${g.n}(${g.from}년차~ 피해 +${g.b} · 명중 +${g.hit}${g.dice?' · 주사위 +'+g.dice:''})`).join(' / ');
     const rows=[
-      ['카드 한 장의 흐름','① 빛(왼쪽 숫자)을 내고 카드를 낸다 → ② 명중 굴림: 1d100 + 공격 + 카드 명중 보정이 상대 1d100 + 회피보다 크면 적중 → ③ 적중하면 피해 주사위를 굴린다 → ④ 같은 적중에 "적중 시" 효과가 붙는다(키워드 스택·보호막 등) → ⑤ 흑수 부하·전용 무기가 있으면 그 효과가 이어진다. 빗나가면 ③~⑤는 일어나지 않는다.'],
+      ['카드 한 장의 흐름','① 빛(왼쪽 숫자)을 내고 카드를 낸다 → ② 명중 굴림: 1d100 + 명중(공격의 절반, 소수점 버림 + 명중 스탯) + 카드 명중 보정이 상대 1d100 + 회피보다 크면 적중 → ③ 적중하면 피해 주사위를 굴린다 → ④ 같은 적중에 "적중 시" 효과가 붙는다(키워드 스택·보호막 등) → ⑤ 흑수 부하·전용 무기가 있으면 그 효과가 이어진다. 빗나가면 ③~⑤는 일어나지 않는다.'],
       ['○타','"3타"는 ②~⑤를 3번 따로 반복한다. 명중 굴림도, 피해 주사위도 타마다 새로 굴린다. 출혈이 걸린 쪽은 타마다 피해를 입으므로, 타수가 많은 카드를 낼수록 출혈이 빨리 닳는다.'],
       ['6d8 · 3d6 표기','"6d8"은 8면체 주사위 6개를 굴려 합친다는 뜻이다. "3d6"은 6면체 3개. 앞 숫자가 개수, 뒤 숫자가 면 수다. 개수가 많을수록 결과가 평균 근처로 모이고, 면 수가 클수록 눈의 폭이 커진다. 면 수를 적지 않은 카드는 6면체다.'],
       ['+N (피해 뒤 고정값)','"2d4+2"의 +2는 주사위를 합친 값에 더하는 고정 피해다.'],
@@ -845,7 +845,7 @@ export function startUI(E,app){
       <li><b>특이점 강화 · 금기 실험</b> 특이점은 강화를 ${CFG.corp.upMax}번까지만 할 수 있다. 그보다 더 오르지 않는다. 금기 실험은 별개로 ${CFG.corp.forbMax}번까지 할 수 있고, 큰 강화를 주는 대신 정신력이 깎이고 결혼 중이면 위의 배우자 사망 위험이 붙는다. 금기 실험을 ${CFG.corp.forbMax}번 채우면 머리가 ${D.enemies.claw.n}과 ${D.enemies.arbiter.n}를 보낸다. 둘을 이기면 보상을 한 번 받고, 그 뒤로 더 일어나는 일은 없다.</li>
       <li><b>${D.pinky.n}</b> 어느 소속에도 겹쳐 붙는 표식. ${D.pinky.e}.</li>
       <li><b>돈과 공방</b> 해마다 소속 봉급(${T.licensed}는 급수 수당 추가), 전투 현상금, 일부 사건으로 ${D.money.unit}을 번다. 공방은 ${D.workshops.map(w=>w.n).join(' · ')} 3등급이고, 소속과 급수에 따라 들어갈 수 있는 등급이 정해진다. 무기·방어구·의수 칸마다 하나씩 맞춘다.</li>
-      <li><b>장비 표기</b> 공+N 공격(명중 보정) · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · D6≥N 피해 주사위 d6을 굴려 N보다 작게 나오면 N으로 친다 · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
+      <li><b>장비 표기</b> 공+N 공격(명중 +N÷2, 피해 +N÷6, 모두 소수점 버림) · 명중+N 명중만 올라간다 · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · D6≥N 피해 주사위 d6을 굴려 N보다 작게 나오면 N으로 친다 · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
       <li><b>승급</b> 전투 승리(초반 ${CFG.promo.gain.early} · 중반 ${CFG.promo.gain.mid} · 보스 ${CFG.promo.gain.boss} · 히든 ${CFG.promo.gain.hidden})와 판정 성공(+${CFG.promo.gain.check})으로 진로의 포인트를 모은다(해결사 ${T.promoPoints} · 협회 ${D.careers.assoc.pts} · 날개 ${D.careers.wing.pts} · 손가락 ${D.careers.finger.pts}). 필요량에 닿으면 다음 해에 심사가 열리고, 성공하면 한 단계 오른다. 필요량은 단계마다 ×${CFG.promo.mult.join(' → ×')}씩 늘어난다. 실패하면 해결사·협회는 포인트 1/4, 날개·손가락은 1/3을 잃고, 날개는 두 번 연속 실패 시 해고, 손가락은 숙청 전투. 맨 위 단계에 오르면 특수 심사(해결사는 특색)가 한 번 열리고, 실패하면 다시 기회가 없다.</li>
       <li><b>${T.hiddenBoss}</b> 조건을 채우면 고정 전투 대신 나타난다. 금기를 어기면 머리의 집행자가, 초대장을 두 번 받아들이면 도서관이, 지령을 거역하면 대행자가 찾아온다. 특색은 ${D.hiddenBosses.find(h=>h.id==='blue').req.replace('rank<=','')}${T.rankUnit} 이상 해결사만 드물게 마주치며, ${D.hiddenBosses.find(h=>h.id==='blue').penalty.fullRank}${T.rankUnit} 미만이면 급수 부족 보정(명중·회피 ${sg(D.hiddenBosses.find(h=>h.id==='blue').penalty.atk)})을 받는다.</li>
       <li><b>${T.titleLabel}</b> ${CFG.colorRank}${T.rankUnit} ${T.licensed} 가운데 특출난 자만 받는다. ${CFG.colorRank}${T.rankUnit}에 오를 때 1d100 + 판정 보정 ≥ ${CFG.colorDc}이면 내 색과 가장 높은 능력치로 이름이 붙는다.</li>
