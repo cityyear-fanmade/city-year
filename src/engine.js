@@ -2128,6 +2128,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(P.pw)P.dmgB=P.dmgB0+T_.dmg*P.lostN;if(P.wl)P.defUp=P.defUp0+T_.def*P.lostN}
     if(P.armor)P.dr=P.dr0+(P.charge>=P.armor.at?P.armor.dr:0);
     if(P.chargeRound){P.charge=Math.min(P.chargeCap,P.charge+P.chargeRound)}
+    if(P.wx&&P.wx.field&&C.round%P.wx.field.every===0&&P.charge>=P.wx.field.cost){P.charge-=P.wx.field.cost;P.shield=Math.min(CFG.shieldCap,(P.shield||0)+P.wx.field.shield);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 충전 역장 · 충전 ${P.wx.field.cost} 소모 · 보호막 +${P.wx.field.shield}`}
     for(const X of [P,E]){X.swiftR=!!X.swiftNext;X.swiftNext=false}
     for(const X of [P,E]){X.r=d(100);X.cu=X.catchup;X.tot=X.r+X.spd*CFG.spdMul+(X.synInit||0)+(X.catchup?CFG.catchupBonus:0)+(X.warpLead>=C.round?200:0)+(X.swift||X.swiftR?1000:0)}
     for(const [X,Y] of [[P,E],[E,P]]){
@@ -2488,7 +2489,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
       if(A.isP&&A.angry>0&&dmg>0){dmg+=A.angry;note+=` 분노+${A.angry}`;A.angry=0}
       if(A.wx&&A.wx.grudge&&A.grudge>0){const x=A.grudge*A.wx.grudge;dmg+=x;note+=` ${A.wx.grudgeN||'원한'}+${x}`;A.grudge=0}
-      if(A.wx&&A.wx.scythe&&A.scRound!==C.round&&C.round%A.wx.scythe.every===0&&A.charge>=A.wx.scythe.cost){A.scRound=C.round;A.charge-=A.wx.scythe.cost;const x=A.wx.scythe.bonus+d(A.wx.dice?A.wx.dice[1]:6);dmg+=x;note+=` 첫 공격 추가 피해+${x} (충전 ${A.wx.scythe.cost} 소모)`}
+      if(A.wx&&A.wx.scythe&&A.scRound!==C.round&&C.round%A.wx.scythe.every===0&&A.charge>=A.wx.scythe.cost){A.scRound=C.round;A.charge-=A.wx.scythe.cost;const nh=A.wx.scythe.hits||1;let x=0;for(let q=0;q<nh;q++)x+=A.wx.scythe.bonus+d(A.wx.dice?A.wx.dice[1]:6);dmg+=x;note+=` 첫 공격 추가 피해+${x}${nh>1?` (${nh}연타)`:''} (충전 ${A.wx.scythe.cost} 소모)`}
       if(A.wx&&A.wx.crush&&A.crRound!==C.round){A.crRound=C.round;dmg+=A.wx.crush;note+=` ${A.wx.crushN||'짓누름'}+${A.wx.crush}`}
       if(B.middle&&B.isP&&(B.revenge||0)>0&&CFG.middle.def){const r_=Math.min(dmg-1,B.revenge*CFG.middle.def);if(r_>0){dmg-=r_;note+=` 되갚음 방어−${r_}`}}
       if(B.wx&&B.wx.ward){dmg=Math.max(1,dmg-B.wx.ward);note+=` 책장−${B.wx.ward}`}
@@ -2649,7 +2650,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.hpCost&&A.hp>1){const x=Math.min(c.hpCost,A.hp-1);A.hp-=x;L('kw',`${A.name} · ${c.n} · HP −${x}`)}
       /* 충전: 카드를 낼 때 spend만큼(있는 만큼) 소모하고, 소모한 충전 1당 fixPer의 고정 피해를 적중마다 더한다 */
       if(c.once&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.onceUsed=C.onceUsed||[]).push(id_)}
-      A.focusOn=!!(A.focus&&A.charge>=A.focus.at);A.spent=0;if(c.spend&&A.charge>0){A.spent=Math.min(A.charge,c.spend);A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · 충전 ${A.spent} 소모 (남은 ${A.charge})`)}
+      A.focusOn=!!(A.focus&&A.charge>=A.focus.at);A.spent=0;if(c.spend&&A.charge>0){A.spent=Math.min(A.charge,c.spend+(A.wx&&A.wx.edge?A.wx.edge.spend:0));A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · 충전 ${A.spent} 소모 (남은 ${A.charge})`)}
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
       if(c.t==='def'){A.defRound=C.round;cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){const sh_=c.shield+(A.prescPlus||0);A.shield=Math.min(CFG.shieldCap,(A.shield||0)+sh_);L('kw',`${A.name} · ${c.n} · 보호막 +${sh_} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp+(A.prescPlus||0);A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
       if(P.hp<=0||E.hp<=0)return;
