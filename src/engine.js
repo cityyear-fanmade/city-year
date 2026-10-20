@@ -769,12 +769,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.hwb&&ch.hw){const r=ch.hw,k=fx.hwb,Z=CFG.hw.beast;
       if(k==='stay')r.fork=1;
       else if(k==='become'){r.fork=1;r.beast=1;r.bk=fx.hwbKey;r.bp=0;r.mk=0;r.bnext=(ch.year||0)+1;r.cand='hr_'+(aniOf(r.bk).pi);const a=aniOf(r.bk);
-        addStats(ch.stats,Z.startFx);if(Z.startFx.maxHp)ch.hp+=Z.startFx.maxHp;(ch.relics=ch.relics||[]).push('흑수 · '+a.nm);addCard(ch,'zb_'+r.bk+'_1',chips,'흑수 카드');
+        addStats(ch.stats,Z.startFx);if(Z.startFx.maxHp)ch.hp+=Z.startFx.maxHp;(ch.relics=ch.relics||[]).push('흑수 · '+a.nm);addCard(ch,'zb_'+r.bk+'_1',chips,'흑수 카드');{const w=((D.hwBeast.weapons||{})[r.bk]||[])[0];if(w){equip(ch,structuredClone(w));chips.push(`흑수의 무기 · ${w.n} (${w.e})`)}}
         if(!ch.bond){ch.bond={st:'pick',route:'hcorp',variant:1,name:'',step:0,tries:0,love:0,fixed:1};ch.bondPick=true;chips.push('인연 · 후원할 가주 후보의 이름을 정한다 (확정 인연)')}
         chips.push(`${a.nm}(${a.hj})의 흑수가 되었다 · 가주 승계를 내려놓는다 · 최대 HP +${Z.startFx.maxHp} · 회피 +${Z.startFx.eva}`);chips.push('후원할 가주 후보 · '+((D.enemies[r.cand]||{}).n||'가주 후보'))}
       else if(k==='act'){r.bp=(r.bp||0)+1;chips.push(`흑수 활동 ${r.bp}/${Z.rank2}`)}
       else if(k==='rank1'){r.rank1=1;addStats(ch.stats,Z.rank1Fx);if(Z.rank1Fx.maxHp)ch.hp+=Z.rank1Fx.maxHp;addCard(ch,'zb_'+r.bk+'_2',chips,'흑수 카드');chips.push(`${aniOf(r.bk).nm}의 흑수 · 공격 +${Z.rank1Fx.atk} · 회피 +${Z.rank1Fx.eva} · 최대 HP +${Z.rank1Fx.maxHp}`)}
-      else if(k==='rank2'){r.rank2=1;addStats(ch.stats,Z.rank2Fx);if(Z.rank2Fx.maxHp)ch.hp+=Z.rank2Fx.maxHp;const tt='흑수 필두';ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt)}addCard(ch,'zb_'+r.bk+'_3',chips,'흑수 카드');chips.push(`칭호 · ${tt} (${aniOf(r.bk).nm}) · 공격 +${Z.rank2Fx.atk} · 회피 +${Z.rank2Fx.eva} · 최대 HP +${Z.rank2Fx.maxHp}`)}
+      else if(k==='rank2'){r.rank2=1;addStats(ch.stats,Z.rank2Fx);if(Z.rank2Fx.maxHp)ch.hp+=Z.rank2Fx.maxHp;const tt='흑수 필두';ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt)}addCard(ch,'zb_'+r.bk+'_3',chips,'흑수 카드');{const w=((D.hwBeast.weapons||{})[r.bk]||[])[1];if(w){equip(ch,structuredClone(w));chips.push(`필두의 무기 · ${w.n} (${w.e})`)}}chips.push(`칭호 · ${tt} (${aniOf(r.bk).nm}) · 공격 +${Z.rank2Fx.atk} · 회피 +${Z.rank2Fx.eva} · 최대 HP +${Z.rank2Fx.maxHp}`)}
       else if(k==='mk'){r.mk=(r.mk||0)+1;chips.push(`후보를 세우는 일 ${r.mk}/${(D.hwBeast.maker||[]).length}`)}
       else if(k==='accept'){r.accept=1;r.hongruPend=1;chips.push('선황충을 받아들였다 · 홍루가 나선다')}
       else if(k==='flee'){r.flee=1;r.maker=1;r.done=1;chips.push('가문을 버리고 후보와 도망쳤다')}
