@@ -878,6 +878,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
     if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push('혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)');
       if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
+    if(fx.redPost){ch.redPost=(ch.redPost||0)+1;chips.push(`붉은 안개 · 책을 덮었다 (${ch.redPost}번째) · 체력 ×${Math.pow(CFG.redBook.hpMul,ch.redPost).toFixed(2)}`)}
     if(fx.hwb&&ch.hw){const r=ch.hw,k=fx.hwb,Z=CFG.hw.beast;
       if(k==='stay')r.fork=1;
       else if(k==='become'){r.fork=1;r.beast=1;r.bk=fx.hwbKey;r.bp=0;r.mk=0;r.bnext=(ch.year||0)+1;r.cand='hr_'+(aniOf(r.bk).pi);const a=aniOf(r.bk);
@@ -1840,7 +1841,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {const sr=synRouteEvent(G);if(sr)return {type:'event',ev:sr}}
       {const gr=giriRouteEvent(G);if(gr)return {type:'event',ev:gr}}
     }
-    {const ch2=G.ch;if(D.redBook&&ch2.flags&&ch2.flags.redBook&&!ch2.beaten.includes('redmist')&&G.year>=(ch2.bookNext||0)){ch2.bookNext=G.year+CFG.redBook.every;return {type:'event',ev:D.redBook}}}
+    {const ch2=G.ch;if(D.redBook&&ch2.flags&&ch2.flags.redBook&&!ch2.beaten.includes('redmist')&&G.year>=(ch2.bookNext||0)){ch2.bookNext=G.year+CFG.redBook.every;{const n=ch2.redPost||0,RB=CFG.redBook,m=Math.pow(RB.hpMul,n).toFixed(2),ev=structuredClone(D.redBook);ev.c[0].h=`붉은 안개와 싸운다 · 이기면 더는 요동치지 않는다${n?` · 미뤄 온 만큼 체력 ×${m} (${n}번 미뤘다)`:''}`;ev.c[1].h=`${RB.every}년 뒤 다시 요동친다 · 붉은 안개의 체력이 ×${RB.hpMul}배로 커진다${n?` (지금 ×${m})`:''}`;ev.c[1].ok=Object.assign({},ev.c[1].ok,{fx:{redPost:true}});return {type:'event',ev}}}}
     /* 6시즌: 격리 실패 (환상체 보스는 조우 표가 아니라 이 사건으로만 나온다) */
     if(D.abnoBreach&&G.year>=CFG.abnoBreach.from&&abnoLeft(ch).length&&d(100)<=CFG.abnoBreach.chance)return {type:'event',ev:D.abnoBreach};
     /* 6시즌: 내 사무소 개설(5급 이상, 5년마다 다시 묻는다) · 소속 없는 해결사는 4년마다 급수에 맞는 사무소 문을 두드린다 */
@@ -2048,7 +2049,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         ch.packOffer={n:'엄지 검술',cards:td.deck.slice(),relic:'엄지 검술'};chips.push(`전리품 · ${td.n} (${td.gear.e}) · 장착할지 고른다`);chips.push('엄지 검술 · 덱을 바꿀지 고른다')}
       /* 특수환: 승리하면 능력치 하나를 골라 영구 증가 (전리품보다 먼저, 전리품이 맨 끝) */
       if(foe.pill){ch.pillPick=true;chips.push(`${foe.pill.n} · 능력치 하나를 골라 +${foe.pill.v} (영구)`)}
-      if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
+      if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;if(C.id==='redmist'&&(ch.redPost||0)>0){const x=ch.redPost*CFG.redBook.coatPer;ch.stats.maxHp+=x;ch.hp+=x;chips.push(`미뤄 온 값 · 최대 HP +${x} (영구)`)}(ch.relics=ch.relics||[]).push(dr.n);
         if(dr.flag)ch.flags[dr.flag]=1;
         if(dr.promote&&ch.fi===(dr.promoteFrom||1)&&canFingerUp(ch))chips.push(...fingerStep(ch))
         if(dr.title){ch.titles=ch.titles||[];if(!ch.titles.includes(dr.title)){ch.titles.push(dr.title);(ch.titleLog=ch.titleLog||[]).push(dr.title)}chips.push('칭호 · '+dr.title)}
@@ -2119,7 +2120,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const SI_=ch.infinite?Math.max(0,gradeRaw(ch.year||0)-X_.grades.length+1):0;
     const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||null,ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
     const ehhCap=ch.infinite?Math.min(ehh0_,CFG.infinite.hpMax):ehh0_;
-    const ehh0=ehhCap,ehh=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0;
+    const ehh0=ehhCap,ehh1=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0,ehh=id==='redmist'&&(ch.redPost||0)>0?Math.round(ehh1*Math.pow(CFG.redBook.hpMul,ch.redPost)):ehh1;
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
     const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:Math.max(1,e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,kali:e.kali||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 무한 모드에서도 적의 회피는 enemyMax에서 멈춘다. 공격(명중)도 enemyMax에서 멈추지만, 균열을 닫은(균열 엔딩을 본) 뒤에는 균열 피해가 없어지므로 atkMax까지 올라 플레이어 회피가 아무리 높아도 결국 맞게 한다 */

@@ -671,7 +671,7 @@ export function startUI(E,app){
       ${msg?`<p class="small bad">${esc(msg)}</p>`:''}
       <div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b style="color:var(--gold)">지금 쓰는 팩 · ${esc(ch.packName||'출신 카드팩')}</b><span class="mono small dim">덱 ${ch.deck.length}장</span></div>${flag(1,ch.deckLocked||ch.cardMoney)}${chips(ch.deck)}${ch.packKind==='basic'?rn(-1,ch.packName):''}</div>
       ${ps.length?ps.map((t,i)=>{const can=E.packCan(ch,i),ask=UI.packSwAsk===i;return `<div class="panel stack" style="gap:6px"><div class="row between"><b>${esc(t.n)}</b><span class="mono small dim">덱 ${t.deck.length}장${t.side.length?' · 카드함 '+t.side.length+'장':''}</span></div>${flag(1,t.deckLocked||t.cardMoney)}${chips(t.deck)}${t.k==='basic'?rn(i,t.n):''}
-        ${can==='ok'?`<button class="btn${ask?' primary':''}" data-a="packsw" data-i="${i}"><b>${ask?'정말 바꾼다 · 한 번 더 누른다':'이 팩으로 바꾼다'}</b><span class="dim small">지금 팩은 보관함으로 간다</span></button>`:`<p class="small dim">${why[can]||''}</p>`}</div>`}).join(''):'<div class="panel"><p class="small dim">보관한 팩이 없다. 전용 카드팩을 받아 덱이 통째로 바뀌면 이전 덱이 여기에 남는다.</p></div>'}`;
+        ${can==='ok'?`<button class="btn${ask?' primary':''}" data-a="packsw" data-i="${i}"><b>이 팩으로 바꾼다</b><span class="dim small">지금 팩은 보관함으로 간다</span></button>`:`<p class="small dim">${why[can]||''}</p>`}</div>`}).join(''):'<div class="panel"><p class="small dim">보관한 팩이 없다. 전용 카드팩을 받아 덱이 통째로 바뀌면 이전 덱이 여기에 남는다.</p></div>'}`;
   }
   function vBag(){
     const ch=G.ch,t=UI.bag;
@@ -704,7 +704,7 @@ export function startUI(E,app){
       return sheet(`<span class="eyebrow">전용 책장 · ${P.cards.length}장</span><h2>${esc(P.n)}으로 덱을 바꿀까</h2>
         <div class="check" style="border-color:var(--bleed)"><b class="bad">주의 · 덱이 통째로 바뀐다</b><br>바꾸면 지금 덱 ${ch.deck.length}장과 카드함 ${(ch.side||[]).length}장이 '${esc(ch.packName||'기본 카드팩')}'으로 가방의 카드팩 보관함에 남는다. 새 팩은 덱이 고정되고 새 카드는 돈으로 받는다. 보관한 팩은 가방의 카드팩 탭에서 전투 밖이면 언제든 바꿔 끼울 수 있다.</div>
         ${P.e?`<div class="check"><b>패시브</b> · ${esc(P.e)}</div>`:''}
-        <div class="invcards">${Object.keys(cnt).map(id=>cardRow(id,cnt[id]>1?`<span class="mono small dim">×${cnt[id]}</span>`:'')).join('')}</div>
+        <div class="invcards">${Object.keys(cnt).map(id=>cardRow(id,ownTag(ch,id)+(cnt[id]>1?` <span class="mono small dim">책장 ×${cnt[id]}</span>`:''))).join('')}</div>
         ${P.must?`<div class="check"><b>${esc(P.yes)}</b> · ${esc(P.yesE)}</div><div class="check"><b>${esc(P.alt.label)}</b> · ${esc(P.alt.e)}</div>`:''}
         <button class="btn${UI.packAsk?' primary':''}" data-a="packyes">${UI.packAsk?'정말 바꾼다 (이전 덱은 보관된다)':(P.must?esc(P.yes):'이 책장으로 바꾼다')}</button>
         ${P.alt?`<button class="btn primary" data-a="packalt">${esc(P.alt.label)}</button>`:`<button class="btn primary" data-a="packno">지금 덱을 지킨다</button>`}
@@ -1900,10 +1900,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
-    const ov=UI.help&&!UI.cfg?vHelp():UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif" style="white-space:nowrap">설정</b><button class="btn quiet" style="width:auto;flex:none;padding:8px 16px" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeTop()}${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
+    const ov=UI.help&&!UI.cfg?vHelp():UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif" style="white-space:nowrap">설정</b><button class="btn quiet" style="width:auto;flex:none;padding:8px 16px" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):ok&&UI.bag?vBag():pend?vOffer():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeTop()}${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
+    const bagOver=ok&&UI.bag&&pend;
     const ovKey=UI.help&&!UI.cfg?'help':UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
-    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${(()=>{const cb=UI.cbar;UI.cbar='';return s==='combat'&&cb&&!ov?`<div class="cbar"><div class="cbar-in">${cb}</div></div>`:''})()}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+quickAudio():''}`;
+    const shO=app.querySelector('.sheet'),stO=shO?shO.scrollTop:0,scrKey=ovKey+(ok&&UI.bag?':'+UI.bag:'');
+    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${['records','chron','chronview'].includes(s)?`<button class="backbtn" data-a="${s==='chronview'?'chron':'title'}" aria-label="돌아가기">←</button>`:''}${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${(()=>{const cb=UI.cbar;UI.cbar='';return s==='combat'&&cb&&!ov?`<div class="cbar"><div class="cbar-in">${cb}</div></div>`:''})()}${ov}${pend&&!UI.bag&&!UI.help&&!UI.cfg?'<button class="bagpeek" data-a="bag" data-i="card" aria-label="가방 열기">가방 보기</button>':''}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+quickAudio():''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
+    if(ov&&scrKey===UI.lastScr){const sh=app.querySelector('.sheet');if(sh)sh.scrollTop=stO}
+    UI.lastScr=scrKey;
     if(s==='end'){if(!UI.chronDone&&$('endShot')){UI.chronDone=true;try{chronAuto()}catch(e){}}}else UI.chronDone=false;
     document.documentElement.dataset.scr=s;
     if(s==='birth')fixBirthRows();
@@ -2185,11 +2189,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       UI.packMsg=r===true?'이름을 바꿨다.':r;if(r===true)resave();render();
     },
     packsw(i){
-      i=+i;if(UI.packSwAsk!==i){UI.packSwAsk=i;render();return}UI.packSwAsk=null;
+      i=+i;UI.packSwAsk=null;
       if(E.switchPack(G.ch,i)){UI.packMsg='카드팩을 바꿨다 · 지금 쓰는 팩: '+(G.ch.packName||'기본 카드팩');resave()}else UI.packMsg='지금은 바꿀 수 없다.';
       render();
     },
-    bag(k){UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;UI.packSwAsk=null;render()},
+    bag(k){if(UI.bag===k){UI.bag=null;UI.dropAsk=null;UI.bonAsk=null;UI.packSwAsk=null;render();return}UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;UI.packSwAsk=null;render()},
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
     help(){UI.help='card';if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     helptab(k){UI.help=k;render()},

@@ -128,13 +128,14 @@ export const CFG = {
     },
     trial: {claw: {hp: 1, atk: 0}, arbiter: {hp: 1, atk: 0}}, grow: {maxHp: 3}, up: {maxHp: 8, atk: 2}, forb: {maxHp: 5, atk: 2, eva: 1}, clear: {maxHp: 15, atk: 3, eva: 2}},
   /* 도서관 관장을 쓰러뜨리면 붉은 안개의 책 연계 퀘스트: 얻은 뒤 every년마다 책이 요동치고, 펼쳐서 붉은 안개를 쓰러뜨리면 끝난다 */
-  redBook: {every: 3},
+  /* 붉은 안개의 책: 덮어 둘 때마다 붉은 안개의 체력이 hpMul배씩 커진다 (복리). */
+  redBook: {every: 3, hpMul: 1.1},
   /* 붉은 안개 전용 카드팩 패시브: 적을 쓰러뜨리면 HP heal 회복 */
-  redMist: {heal: 40},
+  redMist: {heal: 60},
   /* 오늘의 시드로 시작하면 출신 굴림을 이 숫자로 고정한다 (null이면 시드 그대로). 1 = 혈귀 */
   dailyOrigin: 1,
   /* 날짜별 오늘의 시드 지정 (한국 시간 기준 날짜): origin = 출신 굴림(80 = 동부 출신 외곽 생존자), innate = 타고난 것 */
-  dailyPlan: {'2026-10-19': {origin: 50}, '2026-10-15': {origin: 80, innate: 'mark'}, '2026-10-16': {origin: 20, innate: 'growth'}, '2026-10-17': {origin: 1, innate: 'psycho'}, '2026-10-18': {origin: 90, innate: 'mark'}},
+  dailyPlan: {'2026-10-20': {origin: 10, innate: 'will'}, '2026-10-21': {origin: 30}, '2026-10-19': {origin: 50}, '2026-10-15': {origin: 80, innate: 'mark'}, '2026-10-16': {origin: 20, innate: 'growth'}, '2026-10-17': {origin: 1, innate: 'psycho'}, '2026-10-18': {origin: 90, innate: 'mark'}},
   /* 혈귀 1권속 카드팩 패시브 '오랜 굶주림': HP를 회복할 때마다 HP 1당 스택 +1(최대 max). 공격 카드를 내면 스택을 모두 써서 그 카드의 첫 적중 피해가 스택만큼 늘고, 스택은 비운다 */
   hunger: {max: 15},
   /* 일상 사건: from년차부터 사건이 있는 해에 chance% 확률로 일상이 온다 (선택지 3개 중 능력치 +1~3 하나, 판당 max번). 인연이 없는 소속 캐릭터는 일상 중 meetChance%가 인연(조우자)을 만나는 사건이 된다 */
