@@ -138,9 +138,6 @@ export function startUI(E,app){
     const k=m==='thrust'?'pierce':m==='ring'?'blunt':'slash';
     return k+(big||crit?'_h':'');
   }
-  /* 타격 효과의 기준점: 디버프 칩이 늘어 상자가 커져도 효과 위치가 따라 내려가지 않도록, 이 전투에서 본 가장 작은 상자 높이의 가운데에 고정한다 */
-  const FXH={c:null,E:0,P:0};
-  function fxAnchor(fx,box,side){if(FXH.c!==C){FXH.c=C;FXH.E=0;FXH.P=0}const h=FXH[side]=Math.min(FXH[side]||1e9,box.offsetHeight);fx.style.top=(h/2)+'px'}
   function hitFx(e){
     const lv=HFX_N[HFX]||0;if(!lv||MODE==='off'||SKIP||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
     const box=$('ent-'+e.def);if(!box)return;
@@ -198,13 +195,13 @@ export function startUI(E,app){
     }
     if(lv>=3&&lastHit)h+=`<i class="hflash" style="--c:${col}"></i>`;
     for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk${sp==='eye'?' drop':''}" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)+(sp==='eye'?26:0)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
-    const fx=document.createElement('div');fx.className='hfx';fx.innerHTML=h;fxAnchor(fx,box,e.def);box.appendChild(fx);setTimeout(()=>fx.remove(),800);
+    const fx=document.createElement('div');fx.className='hfx';fx.innerHTML=h;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
     if(crit&&lv>=2)floatTxt(e.def,'치명!','#ffd35a','crit');
     if(lastHit&&(lv>=2&&bigFx||lv>=3)){const hs=bigFx&&lv>=2?90:0;/* 역경직: 큰 타격은 잠깐 멈칫(밝아졌다 굳음)한 뒤 흔들린다 */if(hs){box.classList.add('hstop');setTimeout(()=>box.classList.remove('hstop'),hs)}setTimeout(()=>{const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&bigFx?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}},hs)}
   }
   function whiffFx(e){
     const lv=HFX_N[HFX]||0;if(lv<2||MODE==='off'||SKIP)return;
-    const box=$('ent-'+e.def);if(!box)return;const fx=document.createElement('div');fx.className='hfx';fx.innerHTML='<i class="whiff"></i>';fxAnchor(fx,box,e.def);box.appendChild(fx);setTimeout(()=>fx.remove(),600);
+    const box=$('ent-'+e.def);if(!box)return;const fx=document.createElement('div');fx.className='hfx';fx.innerHTML='<i class="whiff"></i>';box.appendChild(fx);setTimeout(()=>fx.remove(),600);
   }
   function applySnap(sn){
     for(const side of ['P','E']){
@@ -1816,7 +1813,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* ===== 타격 모션 시험실 (dist/motion-lab.html 빌드에서만 켜진다) ===== */
   const LABW=[['칼 (베기)',{n:'식칼'}],['대검 (X자)',{n:'대검'}],['창 (찌르기)',{n:'창'}],['낫 (할퀴기)',{n:'낫'}],['망치 (충격 고리)',{n:'망치'}],['무기 없음 (키워드로 결정)',null]];
   const LABS=[['하얀 발톱',{n:'하얀 발톱',id:'job_claw'}],['미미크리',{n:'미미크리'}],['다 카포',{n:'다 카포'}],['궁니르',{n:'궁니르',id:'gungnir'}],['절대음감',{n:'절대음감'}],['레바테인 · 봉인',{n:'레바테인',id:'laev_sealed'}],['레바테인 · 1단계',{n:'레바테인',id:'laev_s1'}],['레바테인 · 2단계',{n:'레바테인',id:'laev_s2'}],['레바테인 · 해방',{n:'레바테인',id:'laev'}],...[1,2,3,4,5,6,7,8,9].map(k=>['검은 침묵의 장갑 '+k,{n:'검은 침묵의 장갑',note:'장갑 1d9 '+k}])];
-  const LAB={att:'P',lv:'mid',kw:'',crit:false,big:false,hits:1,last:false};
+  const LAB={att:'P',lv:'mid',kw:'',crit:false,big:false,hits:1,last:false,chips:false};
   function labPlay(w){
     const sv={C,HFX,MODE,SKIP,HFXM};HFX=LAB.lv;MODE='slow';SKIP=false;HFXM=LAB.last?'last':'each';
     const def=LAB.att==='P'?'E':'P',n=LAB.hits;
@@ -1830,13 +1827,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(EXP&&Date.now()>EXP){app.innerHTML='<div class="stack" style="gap:10px;padding:40px 20px;text-align:center"><b class="serif" style="font-size:1.3em">시험 기간이 끝났습니다</b><span class="small dim">이 타격 모션 시험실은 정해진 시간까지만 열려 있습니다.</span></div>';return}
     if(EXP&&!app._labTimer){app._labTimer=setInterval(()=>{if(Date.now()>EXP){clearInterval(app._labTimer);labDraw()}},15000)}
     const chip=(on,a,t)=>`<button class="btn quiet" style="width:auto;flex:none;padding:6px 12px${on?';background:var(--gold);color:#111;border-color:var(--gold);font-weight:700':''}" data-lab="${a}">${t}</button>`;
-    const box=(side,nm,col)=>`<div class="panel stack ent" id="ent-${side}" style="min-height:110px;background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="row between"><b class="serif">${nm}</b><span class="mono small dim">HP 100/100</span></div><div class="small dim">타격 효과는 이 상자 가운데에 나옵니다</div></div>`;
+    const box=(side,nm,col)=>`<div class="panel stack ent" id="ent-${side}" style="min-height:110px;background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="row between"><b class="serif">${nm}</b><span class="mono small dim">HP 100/100</span></div><div class="small dim">타격 효과는 이 상자 가운데에 나옵니다</div>${LAB.chips?'<div class="chips" id="chips-'+side+'">'+['출혈 3','화상 2','파열 5','충전 4','호흡 3','침잠 1'].map(t=>'<span class="chip">'+t+'</span>').join('')+'</div>':''}</div>`;
     app.innerHTML=`<div class="stack" style="gap:10px;padding:14px;max-width:760px;margin:0 auto"><div class="eyebrow">타격 모션 시험실 · 게임에 들어 있는 실제 코드로 그립니다${window.CITY_EXPIRES?' · '+new Date(window.CITY_EXPIRES).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Seoul'})+'까지':''}</div>
       <div class="row" style="gap:8px;align-items:stretch;position:sticky;top:0;z-index:30;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)">${box('E','적','#c25050')}${box('P','나','#5a8ac2')}</div>
       <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">공격자</span>${chip(LAB.att==='P','att:P','나 → 적')}${chip(LAB.att==='E','att:E','적 → 나')}</div>
       <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">강도</span>${chip(LAB.lv==='low','lv:low','가볍게')}${chip(LAB.lv==='mid','lv:mid','보통')}${chip(LAB.lv==='high','lv:high','강하게')}</div>
       <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">키워드 색</span>${chip(!LAB.kw,'kw:','없음')}${chip(LAB.kw==='bleed','kw:bleed','출혈')}${chip(LAB.kw==='burn','kw:burn','화상')}${chip(LAB.kw==='rupture','kw:rupture','파열')}</div>
-      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">옵션</span>${chip(LAB.crit,'crit','치명타')}${chip(LAB.big,'big','큰 피해')}${[1,2,3,4].map(k=>chip(LAB.hits===k,'hits:'+k,k+'연타')).join('')}${chip(LAB.last,'last','마지막만 크게')}</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">옵션</span>${chip(LAB.crit,'crit','치명타')}${chip(LAB.big,'big','큰 피해')}${[1,2,3,4].map(k=>chip(LAB.hits===k,'hits:'+k,k+'연타')).join('')}${chip(LAB.last,'last','마지막만 크게')}${chip(LAB.chips,'chips','디버프 칩 많음(상자가 커짐)')}</div>
       <div class="small dim">무기를 누르면 그 무기로 때리는 모션이 나옵니다. 연타는 한 번에 여러 번 이어서 나옵니다.</div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${LABW.map(([t],i)=>`<button class="btn" style="width:auto;flex:none;padding:8px 14px" data-w="w${i}">${t}</button>`).join('')}</div>
       <div class="small dim">전용 모션이 있는 무기</div>
@@ -1844,7 +1841,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(!app._lab){app._lab=true;app.addEventListener('click',ev=>{
       const b=ev.target.closest('[data-w]');if(b){const k=b.dataset.w;labPlay(k[0]==='w'?LABW[+k.slice(1)][1]:LABS[+k.slice(1)][1]);return}
       const c=ev.target.closest('[data-lab]');if(!c)return;const [a,v]=c.dataset.lab.split(':');
-      if(a==='att')LAB.att=v;else if(a==='lv')LAB.lv=v;else if(a==='kw')LAB.kw=v;else if(a==='hits')LAB.hits=+v;else if(a==='crit')LAB.crit=!LAB.crit;else if(a==='big')LAB.big=!LAB.big;else if(a==='last')LAB.last=!LAB.last;
+      if(a==='att')LAB.att=v;else if(a==='lv')LAB.lv=v;else if(a==='kw')LAB.kw=v;else if(a==='hits')LAB.hits=+v;else if(a==='crit')LAB.crit=!LAB.crit;else if(a==='big')LAB.big=!LAB.big;else if(a==='last')LAB.last=!LAB.last;else if(a==='chips')LAB.chips=!LAB.chips;
       labDraw()})}
   }
   function render(){
