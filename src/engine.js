@@ -661,6 +661,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.fi=(ch.fi??-1)+1;ch.fr=r;addStats(ch.stats,r.fx);
     /* W사 열차 직원: 직급이 오를 때마다 무기가 바뀐다 (이전 무기는 보관함으로) */
     if(r.gear)equip(ch,structuredClone(r.gear));if(r.fx.maxHp)ch.hp+=r.fx.maxHp;
+    if(ch.wtrain&&ch.aff.name==='W사 날개'){if(r.gear2)equip(ch,structuredClone(r.gear2));warpRankCards(ch,r)}
     /* 협회 직급에 맞는 해결사 급수 (예: 지부장은 최소 4급) */
     if(r.minRank&&ch.licensed&&ch.rank>r.minRank)ch.rank=r.minRank;
     const out=[`${ch.aff.name} · ${r.n}`,...(r.e?[r.e]:[])];
@@ -682,6 +683,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      전용 카드팩(cardMoney)이라 이후 카드는 얻을 수 없고(대신 돈), 나중에 히든 책장으로 덱이 바뀌어도 협회 패시브는 소속 기록(assocName)으로 남는다 */
   /* R사 날개처럼 팀이 있는 소속은 처음 들어갈 때 1dN으로 팀이 정해지고, 그 팀의 전용 책장과 패시브를 쓴다 */
   const orgRows=(ch,C_)=>C_.cards&&(C_.cards[ch.aff.name+(ch.rteam?'/'+ch.rteam:'')]||C_.cards[ch.aff.name]);
+  /* W사 열차 직원 책장: 직급이 오를 때 카드가 바뀌거나 늘어난다 (절단 → 공간 절단, 5등급에 차원 절단) */
+  const warpDeckFor=fi=>{const W=D.warpDeck;return W.base.concat(fi>=1?W.mid:W.early,fi>=4?W.top:[])};
+  function warpRankCards(ch,r){
+    if(!(ch.relics||[]).includes('정리 요원의 책장'))return;
+    if(r.cardSwap&&ch.deck.includes(r.cardSwap.from))ch.deck=ch.deck.map(id=>id===r.cardSwap.from?r.cardSwap.to:id);
+    if(r.cardAdd)for(const id of r.cardAdd)if(ch.deck.length<deckMax(ch))ch.deck.push(id);
+  }
   function giveOrgCards(ch,C_,at,out){
     const T_=C_.teams&&C_.teams[ch.aff.name];
     if(at===0&&T_&&!ch.rteam){const r=d(T_.length);ch.rteam=T_[r-1];out.push(`${ch.aff.name} · ${ch.rteam} 배정 (1d${T_.length} · ${r})`)}
@@ -1884,7 +1892,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
     if(fx.warpChain&&D.warpChains&&D.warpChains[fx.warpChain]){const W=D.warpChains[fx.warpChain];ch.wChain={ids:W.ids.slice(),i:0,label:W.label,done:W.done,doneHid:W.doneHid,hid:W.hid};if(fx.warpChain==='blood')(ch.warpOnce=ch.warpOnce||[]).push('bloodhunt');chips.push(`${W.label} · 연전 ${W.ids.length}판 · 해가 넘어가지 않는다`)}
     if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
-      if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(r.gear)equip(ch,structuredClone(r.gear));chips.push(`W사 열차 직원 · ${r.n}`);chips.push('무기 '+r.gear.n)}if(!ch.deckLocked&&!ch.cardMoney&&!ch.packOffer&&D.warpDeck){ch.packOffer={n:'W사 정리 요원 책장',cards:D.warpDeck.slice(),relic:'정리 요원의 책장'};chips.push('정리 요원 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
+      if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(r.gear)equip(ch,structuredClone(r.gear));for(let q=0;q<=Math.max(0,ch.fi||0);q++){const g2=C_.trainRanks[q]&&C_.trainRanks[q].gear2;if(g2)equip(ch,structuredClone(g2))}chips.push(`W사 열차 직원 · ${r.n}`);chips.push('무기 '+r.gear.n)}if(!ch.deckLocked&&!ch.cardMoney&&!ch.packOffer&&D.warpDeck){ch.packOffer={n:'W사 정리 요원 책장',cards:warpDeckFor(ch.fi||0),relic:'정리 요원의 책장'};chips.push('정리 요원 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
       else chips.push('W사 날개 · 본사 근무')}
     /* W사 열차 직원이 무한 모드(2막)에서 열차를 내릴지 정한다: free=내리고 독립(공방·해결사·소속 제안이 다시 열린다) · stay=남아 정리 요원장 · later=5년 뒤 다시 */
     if(fx.wquit&&ch.wtrain){const W_=CFG.warp;
