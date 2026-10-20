@@ -2488,7 +2488,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
       if(A.isP&&A.angry>0&&dmg>0){dmg+=A.angry;note+=` 분노+${A.angry}`;A.angry=0}
       if(A.wx&&A.wx.grudge&&A.grudge>0){const x=A.grudge*A.wx.grudge;dmg+=x;note+=` ${A.wx.grudgeN||'원한'}+${x}`;A.grudge=0}
-      if(A.wx&&A.wx.scythe&&A.scRound!==C.round&&C.round%A.wx.scythe.every===0&&A.charge>=A.wx.scythe.cost){A.scRound=C.round;A.charge-=A.wx.scythe.cost;const x=A.wx.scythe.bonus+d(A.wx.dice?A.wx.dice[1]:6);dmg+=x;note+=` 추가타+${x} (충전 ${A.wx.scythe.cost} 소모)`}
+      if(A.wx&&A.wx.scythe&&A.scRound!==C.round&&C.round%A.wx.scythe.every===0&&A.charge>=A.wx.scythe.cost){A.scRound=C.round;A.charge-=A.wx.scythe.cost;const x=A.wx.scythe.bonus+d(A.wx.dice?A.wx.dice[1]:6);dmg+=x;note+=` 첫 공격 추가 피해+${x} (충전 ${A.wx.scythe.cost} 소모)`}
       if(A.wx&&A.wx.crush&&A.crRound!==C.round){A.crRound=C.round;dmg+=A.wx.crush;note+=` ${A.wx.crushN||'짓누름'}+${A.wx.crush}`}
       if(B.middle&&B.isP&&(B.revenge||0)>0&&CFG.middle.def){const r_=Math.min(dmg-1,B.revenge*CFG.middle.def);if(r_>0){dmg-=r_;note+=` 되갚음 방어−${r_}`}}
       if(B.wx&&B.wx.ward){dmg=Math.max(1,dmg-B.wx.ward);note+=` 책장−${B.wx.ward}`}
