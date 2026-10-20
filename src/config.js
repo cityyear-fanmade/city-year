@@ -300,7 +300,7 @@ export const CFG = {
       weapon: [{dmgB: 2}, {atk: 3}, {dmgB: 3, spd: 2}],
       armor: [{maxHp: 10, regen: 1}, {maxHp: 10, dr: 2}, {maxHp: 20, regen: 2}]}
   },
-  workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100, hiddenSell: 2500, hiddenSellPer: 800, cardBase: 80, cardPer: 60, cardMax: 3 /* 카드 판매: 방문마다 cardMax장까지, 값은 cardBase + 카드 비용 × cardPer */},
+  workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100, hiddenSell: 2500, hiddenSellPer: 800, cardBase: 300, cardPer: 0, cardMax: 3 /* 카드 판매: 방문마다 cardMax장까지, 값은 cardBase + 카드 비용 × cardPer (지금은 장당 300) */},
   /* 출신 진로 보정: 그 진로의 권유 사건이 (보정값 × 이 값)% 확률로 먼저 나온다 */
   pathEventMul: 2,
   /* 전투 승리 후 해결사 등록 판정 난이도 (1d100 + 해결사 진로 보정) */
