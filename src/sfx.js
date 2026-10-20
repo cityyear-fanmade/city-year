@@ -52,25 +52,22 @@ export function createSfx(isOn,getVol){
       /* 막는 소리: 방패에 닿는 둔한 울림 */
       noise(2600,0.9,'bandpass',0.05,0.6);tone(1250,0.22,0.45);tone(1930,0.16,0.32);tone(3100,0.1,0.22);tone(420,0.1,0.4,300);
     }else if(kind.startsWith('slash')){
-      /* 참격: 쇠가 스치는 '샤' 울림(고음 공명 몇 줄) + 베어 가르는 바람 + 살에 닿는 짧은 둔탁함 */
-      const ring=(f,len,gn)=>{const n=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=nb;bp.type='bandpass';bp.frequency.value=f*det;bp.Q.value=22;
+      /* 참격: 높고 공기 같은 '샤악'. 위로 쓸려 올라가는 고음 바람 + 쇠 울림 몇 줄. 낮은 몸통은 일부러 없앤다 (관통·타격과 소리의 높이로 구분) */
+      const ring=(f,len,gn)=>{const n=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=nb;bp.type='bandpass';bp.frequency.value=f*det;bp.Q.value=24;
         g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gn*2.2,t+0.002);g.gain.exponentialRampToValueAtTime(0.0008,t+len);n.connect(bp);bp.connect(g);g.connect(out);n.start(t,rnd()*0.9);n.stop(t+len+0.03)};
-      ring(2300,big?0.3:0.2,0.55);ring(3700,big?0.24:0.16,0.45);ring(5600,0.12,0.3);
-      {const n=ctx.createBufferSource();n.buffer=nb;n.playbackRate.value=1.2;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.Q.value=1.4;bp.frequency.setValueAtTime(2200,t);bp.frequency.exponentialRampToValueAtTime(7000,t+0.09);
-        const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.7,t+0.01);g.gain.exponentialRampToValueAtTime(0.0008,t+0.11);n.connect(bp);bp.connect(g);g.connect(out);n.start(t);n.stop(t+0.13)}
-      noise(big?800:1100,0.7,'lowpass',0.09,0.7,0.6);tone(big?200:260,0.1,0.55,120);
-      if(big)noise(300,0.7,'lowpass',0.18,0.4,0.45,0.01);
+      {const n=ctx.createBufferSource();n.buffer=nb;n.playbackRate.value=1.4;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.Q.value=1.1;bp.frequency.setValueAtTime(2800,t);bp.frequency.exponentialRampToValueAtTime(9000,t+(big?0.2:0.13));
+        const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(1.0,t+0.012);g.gain.exponentialRampToValueAtTime(0.0008,t+(big?0.26:0.17));n.connect(bp);bp.connect(g);g.connect(out);n.start(t);n.stop(t+0.3)}
+      ring(3400,big?0.4:0.26,0.6);ring(5200,big?0.32:0.2,0.5);ring(7400,big?0.22:0.14,0.4);
+      noise(1600,0.8,'bandpass',0.035,0.3);
+      if(big)tone(320,0.09,0.3,200);
     }else if(kind.startsWith('pierce')){
-      /* 관통: 짧게 박히는 '푹' + 살을 뚫고 내려앉는 소리(대역이 아래로 쓸려 내림) */
-      tone(big?170:230,0.12,0.85,95);noise(big?500:700,0.8,'lowpass',0.09,0.95,0.55);
-      {const n=ctx.createBufferSource();n.buffer=nb;n.playbackRate.value=0.8;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.Q.value=2.2;bp.frequency.setValueAtTime(1700,t);bp.frequency.exponentialRampToValueAtTime(420,t+0.14);
-        const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.75,t+0.006);g.gain.exponentialRampToValueAtTime(0.0008,t+0.16);n.connect(bp);bp.connect(g);g.connect(out);n.start(t);n.stop(t+0.18)}
-      noise(3400,1.2,'bandpass',0.014,0.5);
-      if(big){tone(80,0.2,0.6,50);noise(250,0.7,'lowpass',0.2,0.5,0.4,0.01)}
+      /* 관통: 짧고 건조한 '픽·퍽'. 음이 빠르게 내려꽂히는 소리 + 마른 클릭 + 박히는 소리. 길이는 0.1초 안팎으로 짧게 (참격은 길게 번지고 타격은 낮게 울린다) */
+      tone(big?1300:1100,0.07,0.6,260);noise(1900,2.2,'bandpass',0.03,0.6);tone(big?130:170,0.09,0.55,90);noise(500,0.8,'lowpass',0.05,0.4,0.6);
+      if(big){tone(100,0.13,0.35,60);noise(2600,2,'bandpass',0.025,0.7)}
     }else if(kind.startsWith('blunt')){
-      /* 타격: 묵직한 쿵 + 뼈가 울리는 갈라짐 */
-      tone(big?150:220,big?0.22:0.15,0.95,big?85:120);noise(big?600:900,0.7,'lowpass',big?0.2:0.13,0.9,0.5);noise(2400,1.0,'bandpass',0.035,0.55);
-      if(big){noise(1700,1.4,'bandpass',0.05,0.4,1.3,0.002);tone(70,0.26,0.6,45)}
+      /* 타격: 낮고 길게 울리는 '쿵'. 폰 스피커에서도 들리도록 중저음에 윗배음을 같이 낸다 */
+      tone(big?95:120,big?0.4:0.28,0.55,big?48:62);tone(big?210:260,0.12,0.9,130);noise(big?420:560,0.7,'lowpass',big?0.3:0.2,0.95,0.4);noise(2200,1.0,'bandpass',0.02,0.55);noise(1100,0.8,'bandpass',0.09,0.7,0.8);
+      if(big){tone(60,0.5,0.7,38);noise(900,0.8,'bandpass',0.12,0.5,0.5)}
     }else{
       const hard=kind==='hard';
       /* 맞는 소리: 낮은 몸통 + 둔탁한 살 + 짧은 잔향. 큰 피해는 더 낮고 길게 */
