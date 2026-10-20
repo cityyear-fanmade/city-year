@@ -470,11 +470,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function canBuy(ch,id){
     const it=D.items[id];
     if(it.hw&&!(ch.hw&&!ch.hw.out&&!ch.hw.done))return 'locked';
+    if(it.hw&&(ch.hwGot||[]).includes(id))return 'owned';
     if(ch.gear[it.slot]&&ch.gear[it.slot].id===id)return 'owned';
     if(ch.distForm&&!ch.distStable)return 'distort';
     if(it.slot==='aug'&&isN(ch))return 'nwing';
     if(inStash(ch,id))return 'stash';
-    if(it.grade>shopAccess(ch))return 'locked';
+    if(it.grade>shopAccess(ch)&&!it.hw)return 'locked';
     if(ch.money<priceOf(ch,id))return 'money';
     return 'ok';
   }
@@ -503,7 +504,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function buy(ch,id,offer){
     if(canBuy(ch,id)!=='ok')return false;
-    const it=D.items[id];ch.money-=priceOf(ch,id);if(offer)offerGear(ch,Object.assign({id},it));else equip(ch,Object.assign({id},it));return true;
+    const it=D.items[id];ch.money-=priceOf(ch,id);if(it.hw)(ch.hwGot=ch.hwGot||[]).push(id);if(offer)offerGear(ch,Object.assign({id},it));else equip(ch,Object.assign({id},it));return true;
   }
   /* 금전운: 버는 돈 +20% */
   const earn=(ch,n)=>n>0&&hasInn(ch,'fortune')?Math.round(n*CFG.innate.money):n;
