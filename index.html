@@ -890,7 +890,7 @@ const CFG = {
       weapon: [{dmgB: 2}, {atk: 3}, {dmgB: 3, spd: 2}],
       armor: [{maxHp: 10, regen: 1}, {maxHp: 10, dr: 2}, {maxHp: 20, regen: 2}]}
   },
-  workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100, hiddenSell: 2500, hiddenSellPer: 800},
+  workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100, hiddenSell: 2500, hiddenSellPer: 800, cardBase: 300, cardPer: 30, cardMax: 3 /* 카드 판매: 방문마다 cardMax장까지, 값은 cardBase + 카드 비용 × cardPer (지금은 300 + 비용 1마다 30) */},
   /* 출신 진로 보정: 그 진로의 권유 사건이 (보정값 × 이 값)% 확률로 먼저 나온다 */
   pathEventMul: 2,
   /* 전투 승리 후 해결사 등록 판정 난이도 (1d100 + 해결사 진로 보정) */
@@ -1398,7 +1398,13 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   const isWs=ch=>!!ch.aff&&ch.aff.type==='workshop';
   const priceOf=(ch,id)=>{const p=D.items[id].price,up=1+(CFG.ws.priceUp||0)*((ch.ws&&ch.ws.used&&ch.ws.used[id])||0);return Math.round(isWs(ch)?p*(1-WF.discount)*up:p*up)};
   const sellValue=it=>it.id==='hidmat'?WF.sellBase*2:(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
-  function sellStash(ch,i){const st=ch.stash||[];if(!isWs(ch)||!st[i])return 0;const v=sellValue(st[i]);st.splice(i,1);ch.money+=v;return v}
+  /* 공방 해결사: 장비 판매는 없다. 대신 덱의 카드를 공방에 넘긴다 (덱 고정·전용 카드팩·고정 카드는 팔 수 없고, 덱은 minDeck장 아래로 줄이지 않는다) */
+  const cardPrice=id=>WF.cardBase+WF.cardPer*((D.cards[id]&&D.cards[id].c)||0);
+  function sellCard(ch,i){
+    const id=ch.deck[i];
+    if(!isWs(ch)||ch.deckLocked||ch.cardMoney||!id||D.cards[id].fixed||ch.deck.length<=CFG.shop.minDeck)return null;
+    const v=cardPrice(id);ch.deck.splice(i,1);ch.money+=v;return {id,v};
+  }
   /* 암시장: 영구 강화(한 번만)와 특수 장비 */
   function canBuySpecial(ch,id){
     const it=D.special[id];
@@ -3698,7 +3704,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
-    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
 
@@ -5045,13 +5051,14 @@ function startUI(E,app){
       <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
       <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':'공방을 나간다'}</button>`;
   }
-  /* 공방 해결사: 보관함 장비 판매 */
+  /* 공방 해결사: 카드 판매 (장비 판매는 없다) */
   function vSell(){
-    const ch=G.ch;if(!E.isWs(ch))return '';const st=ch.stash||[];
-    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">보관함 팔기</b><span class="chip">공방 해결사</span></div>
-      <p class="small dim">보관함에 있는 장비를 공방에 넘긴다. 장착 중인 장비는 팔 수 없다.</p>
+    const ch=G.ch;if(!E.isWs(ch))return '';const WF=CFG.workshopFixer,n=UI.soldN||0,locked=ch.deckLocked||ch.cardMoney,full=n>=WF.cardMax,min=ch.deck.length<=CFG.shop.minDeck;
+    const rows=ch.deck.map((id,i)=>[id,i]).filter(([id])=>!D.cards[id].fixed).map(([id,i])=>`<button class="btn" data-a="sellcard" data-i="${i}" ${locked||full||min?'disabled':''}><span class="row between"><b>${esc(D.cards[id].n)}</b><span class="mono" style="color:var(--gold)">+${E.money(E.cardPrice(id))}</span></span><span class="mono small dim">${esc(D.cards[id].d||'')}</span></button>`).join('');
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 팔기</b><span class="chip">공방 해결사 · ${n}/${WF.cardMax}</span></div>
+      <p class="small dim">덱의 카드를 공방에 넘긴다. 한 번 들를 때 ${WF.cardMax}장까지, 덱은 ${CFG.shop.minDeck}장 아래로 줄일 수 없다. 값은 ${E.money(WF.cardBase)}에 카드 비용 1마다 ${E.money(WF.cardPer)}을 더한다.</p>
       ${UI.sold?`<p class="good small">${esc(UI.sold)}</p>`:''}
-      ${st.length?st.map((g,i)=>`<button class="btn" data-a="sell" data-i="${i}"><span class="row between"><b>${esc(g.n)}</b><span class="mono" style="color:var(--gold)">+${E.money(E.sellValue(g))}</span></span><span class="mono small dim">${D.slots[g.slot]} · ${esc(g.e||'')}</span></button>`).join(''):'<p class="small dim">보관함이 비어 있다.</p>'}</div>`;
+      ${locked?'<p class="small dim">이 덱은 카드를 팔 수 없다.</p>':rows||'<p class="small dim">팔 수 있는 카드가 없다.</p>'}</div>`;
   }
   /* 공방: 카드 교환 (방문마다 swapMax장까지, 일반 보상 카드 무작위로) */
   function vSwapCard(){
@@ -6169,7 +6176,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
-      UI.bought=null;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.rested=null;UI.healed=0;UI.healMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
+      UI.bought=null;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.soldN=0;UI.rested=null;UI.healed=0;UI.healMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
     }
     UI.stock=[];saveGame({st});UI.screen='event';render();
   }
@@ -6300,7 +6307,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const ty=UI.egoType||'atk';E.setEgo(G.ch,ty,n);UI.egoErr='';UI.egoName='';UI.egoType=null;
       UI.res.chips=[...UI.res.chips,`E.G.O · ${n} (${CFG.mind.ego[ty].n})`];render();
     },
-    sell(i){const g=(G.ch.stash||[])[+i];if(!g)return;const v=E.sellStash(G.ch,+i);if(v){UI.sold=`${g.n}을(를) ${E.money(v)}에 팔았다.`;render()}},
+    sellcard(i){if((UI.soldN||0)>=CFG.workshopFixer.cardMax)return;const r=E.sellCard(G.ch,+i);if(r){UI.soldN=(UI.soldN||0)+1;UI.sold=`${D.cards[r.id].n}을(를) ${E.money(r.v)}에 팔았다.`;resave();render()}},
     swapcard(i){if((UI.swapped||[]).length>=CFG.shop.swapMax)return;const r=E.swapCard(G.ch,+i);if(r){(UI.swapped=UI.swapped||[]).push([D.cards[r.old].n,D.cards[r.nid].n]);render()}},
     wsmelt(i){const [sl,ix]=String(i).split(':'),r=E.wsMelt(G.ch,sl,+ix);if(r){UI.wsMsg=`${r.m}을(를) 녹였다 · ${r.hidden?'히든 재료 · 한 단계 상승':r.step?'일반 재료 · 한 단계 상승 ('+r.n+'단계)':'일반 재료 · '+r.p+'/'+r.need}`;resave();render()}},
     wsname(sl){const el=document.getElementById('wsn_'+sl),n=E.wsRename(G.ch,sl,el?el.value:'');if(n){UI.wsMsg=`이름을 '${n}'(으)로 정했다.`;resave();render()}},
