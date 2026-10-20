@@ -5,7 +5,7 @@ import {extname,join,normalize} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('..',import.meta.url));
 const port=+process.env.PORT||5173;
-const TYPES={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png'};
+const TYPES={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png','.mp3':'audio/mpeg'};
 createServer(async(req,res)=>{
   let p=decodeURIComponent(new URL(req.url,'http://x').pathname);
   if(p.endsWith('/'))p+='dev.html';

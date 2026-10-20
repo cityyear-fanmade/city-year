@@ -55,6 +55,33 @@ export function createBgm(){
     }
   };
   let ctx=null,master=null,bus=null,bright=null,analyser=null,noiseBuf=null,on=false,vol=0.3,mood='base',scene='calm',style='calm',timer=null,hidden=false;
+  /* 악기 샘플 곡: 스타일마다 평시·전투 한 곡씩(32마디가 한 바퀴, 끝에서 처음으로 이어진다). 히든 보스 곡은 합성음을 그대로 쓴다.
+     빌드 파일에서는 window.CITY_BGM에 data 주소로 들어 있고, 개발 서버에서는 assets/bgm/<스타일>_<장면>.mp3를 읽는다. 읽지 못하면 합성음으로 돌아간다 */
+  const smp={buf:{},loading:{},bad:{},cur:null,node:null};
+  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
+  const smpUsable=(st,sc)=>sc!=='boss'&&!!smpSrc(st,sc)&&!smp.bad[st+'_'+sc];
+  function smpLoad(key,src){
+    if(smp.loading[key])return;
+    smp.loading[key]=(async()=>{try{let ab;
+      if(src.startsWith('data:')){const b=atob(src.slice(src.indexOf(',')+1)),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);ab=u.buffer}
+      else{const r=await fetch(src);if(!r.ok)throw new Error('no');ab=await r.arrayBuffer()}
+      smp.buf[key]=await ctx.decodeAudioData(ab)}catch(e){smp.bad[key]=1}})();
+  }
+  function smpStop(fade){
+    const o=smp.node;smp.cur=null;smp.node=null;if(!o||!ctx)return;
+    const now=ctx.currentTime;o.g.gain.cancelScheduledValues(now);o.g.gain.setValueAtTime(o.g.gain.value,now);o.g.gain.linearRampToValueAtTime(0,now+fade);
+    try{o.src.stop(now+fade+0.05)}catch(e){}setTimeout(()=>{try{o.src.disconnect();o.g.disconnect()}catch(e){}},(fade+0.3)*1000);
+  }
+  /* 지금 스타일·장면의 샘플 곡을 틀고 있게 한다. 합성음으로 넘어가야 하면 false */
+  function smpPlay(){
+    if(!smpUsable(style,scene)){smpStop(0.5);return false}
+    const key=style+'_'+scene;if(smp.cur===key)return true;
+    if(!smp.buf[key]){smpLoad(key,smpSrc(style,scene));return !smp.bad[key]}   // 읽는 동안은 조용히 기다린다
+    smpStop(0.6);
+    const now=ctx.currentTime,src=ctx.createBufferSource(),g=ctx.createGain();
+    src.buffer=smp.buf[key];src.loop=true;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
+    src.connect(g);g.connect(master);src.start(now);smp.cur=key;smp.node={src,g};return true;
+  }
   let barT=0,barN=0,lastScene='calm',lastStyle='calm',cur=null,duckUntil=0;
   const AC=typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext);
   const hz=m=>440*Math.pow(2,(m-69)/12),rnd=Math.random,pick=a=>a[Math.floor(rnd()*a.length)];
@@ -358,6 +385,7 @@ export function createBgm(){
   }
   function schedule(now,M){
     if(lastScene!==scene||lastStyle!==style){if(lastStyle!==style||lastScene==='boss'||scene==='boss')barN=0;lastScene=scene;lastStyle=style;newEpoch();barT=now+0.32}
+    if(smpPlay())return;
     if(barT<now)barT=now+0.05;
     const wet=bus._wet;if(wet&&now>duckUntil)wet.gain.setTargetAtTime(M.wet*(scene==='fight'?0.7:1)*(style==='passion'?0.7:style==='library'?1.35:1),now,0.6);
     bright.frequency.setTargetAtTime(scene==='boss'?Math.min(M.cut,P.bossCut)*1.2:M.cut*P.cutMul[style][scene],now,2);
@@ -388,7 +416,7 @@ export function createBgm(){
     supported:!!AC,
     isOn:()=>on,vol:()=>vol,
     level:()=>{if(!analyser)return null;const d=new Float32Array(2048);analyser.getFloatTimeDomainData(d);let p=0,q=0;for(const v of d){const a=Math.abs(v);if(a>p)p=a;q+=v*v}return {peakDb:+(20*Math.log10(p+1e-9)).toFixed(1),rmsDb:+(10*Math.log10(q/d.length+1e-12)).toFixed(1)}},
-    debug:()=>({state:ctx&&ctx.state,gain:master?master.gain.value:null,on,vol,mood,scene,style}),
+    debug:()=>({state:ctx&&ctx.state,gain:master?master.gain.value:null,on,vol,mood,scene,style,sample:smp.cur,sampleBad:Object.keys(smp.bad)}),
     /* 켜기/끄기: 켜는 것은 사용자가 누른 순간(클릭 처리 안)에서만 호출해야 한다 */
     set(v){if(v===on)return on;on=!!v;if(on)start();else stop();return on},
     setVol(v){vol=Math.max(0,Math.min(1,+v||0));if(on&&ctx)ramp(gainOf(vol),0.3)},
