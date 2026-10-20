@@ -564,3 +564,8 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .hfx .critstar{filter:drop-shadow(2px 0 0 #14101c) drop-shadow(-2px 0 0 #14101c) drop-shadow(0 2px 0 #14101c) drop-shadow(0 -2px 0 #14101c);background:radial-gradient(circle,#fff 0 26%,var(--c) 28% 100%);animation-timing-function:steps(6,end)}
 .hfx .crack{filter:drop-shadow(2px 0 0 #14101c) drop-shadow(-2px 0 0 #14101c);animation-timing-function:steps(5,end)}
 .hfx .hflash{opacity:0;animation:hFlash .2s steps(2,end) forwards}
+
+/* 파편은 윤곽선 없는 반투명 점으로: 파팟 튀고 사라진다 */
+.hfx .spk{width:9px;height:9px;margin:-4px;border:0;border-radius:50%;background:radial-gradient(circle,var(--c) 0 35%,transparent 72%);opacity:0;transform:none;animation:hSpk2 .5s ease-out var(--d,0ms) forwards}
+.hfx .spk.drop{width:7px;height:11px;border-radius:50%}
+@keyframes hSpk2{0%{transform:translate(0,0) scale(1.2);opacity:.75}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
