@@ -386,7 +386,7 @@ export function startUI(E,app){
     
     const ex=x.length?' · '+x.join(' · '):'';
     /* 전용 무기 주사위가 있으면 실제로 굴리는 주사위로 표시 */
-    if(wx&&wx.dice&&!c.die){const n=Math.max(wx.dice[0],c.dice)+(g?g.dice:0),b=(c.b||0)+(g?g.b:0);return `${c.hits>1?c.hits+'타 · ':''}${n}d${wx.dice[1]}${b?sg(b):''} · 명중 ${sg(c.hit+(g?g.hit:0))} · 무기 주사위${g&&g.n?' · 등급 '+g.n:''}${ex}`}
+    if(wx&&wx.dice){const dc=c.dice+(g&&!c.die?g.dice:0),b=(c.b||0)+(g?g.b:0),base=c.range?`${dc}d(${c.range[0]}~${c.range[1]})`:`${dc}d${c.die||6}`;return `${c.hits>1?c.hits+'타 · ':''}${base}${b?sg(b):''} + ${wx.dice[0]}d${wx.dice[1]} · 명중 ${sg(c.hit+(g?g.hit:0))} · 무기 주사위 추가${g&&g.n?' · 등급 '+g.n:''}${ex}`}
     if(g&&g.n){const dc=c.dice+(c.die?0:g.dice),b=(c.b||0)+g.b;return `${c.hits>1?c.hits+'타 · ':''}${dc}d${c.die||6}${b?sg(b):''} · 명중 ${sg(c.hit+g.hit)} · 등급 ${g.n}${ex}`}
     return `${c.hits>1?c.hits+'타 · ':''}${c.dice}d${c.die||6}${c.b?sg(c.b):''} · 명중 ${sg(c.hit)}${x.length?' · '+x.join(' · '):''}`;
   }

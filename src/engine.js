@@ -2446,12 +2446,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 피해 주사위 면 수: 기본 d6, 카드에 die가 있으면 그 값 (예: Furioso 1d2 × 9). 최소값 보정은 면 수를 넘지 않는다 */
       const die=c.die||(A.isP?A.pdie:6)||6,lo2=Math.min(lo,die);
       /* 전용 무기 피해 주사위: 카드 주사위 대신 무기 주사위 (Furioso처럼 주사위가 정해진 카드는 그대로) */
-      const wd=!c.die&&!c.range&&A.wx?(sub?sub.dice:A.wx.dice):null;
-      if(sub&&sub.range&&!c.die)rolls.push(sub.range[0]-1+d(sub.range[1]-sub.range[0]+1));
-      /* 무기 주사위: 면 수는 무기, 개수는 카드와 무기 중 많은 쪽 (+ 카드 등급) */
-      else if(wd){const n=Math.max(wd[0],c.dice)+(c.fsDice&&fsb?c.fsDice:0)+(gr?gr.dice:0);for(let i=0;i<n;i++)rolls.push(Math.max(Math.min(lo,wd[1]),d(wd[1])))}
-      else{let ex=c.exec&&(B.disp||0)>0?c.exec:0;if(ex)pnote+=` 처분 표식 주사위+${ex}`;
+      /* 무기 주사위는 카드 주사위를 바꾸지 않고 위에 더해진다 (카드 주사위 + 무기 주사위). 자세 무기의 범위 피해도 한 번 더한다 */
+      const wd=null,wdx=A.wx?(sub?sub.dice:A.wx.dice):null;
+      {let ex=c.exec&&(B.disp||0)>0?c.exec:0;if(ex)pnote+=` 처분 표식 주사위+${ex}`;
         if(c.serumBurst&&(A.serum||0)>0){ex+=A.serum;pnote+=` 혈청 ${A.serum} 소모 · 주사위+${A.serum}`;A.serum=0}for(let i=0;i<c.dice+ex+(c.fsDice&&fsb?c.fsDice:0)+(gr&&!c.die?gr.dice:0);i++)rolls.push(c.range?c.range[0]-1+d(c.range[1]-c.range[0]+1):Math.max(lo2,d(die)))}
+      if(sub&&sub.range)rolls.push(sub.range[0]-1+d(sub.range[1]-sub.range[0]+1));
+      else if(wdx)for(let i=0;i<wdx[0];i++)rolls.push(Math.max(Math.min(lo,wdx[1]),d(wdx[1])));
       let note=fsb?' 선제':'';
       if(c.rr&&rolls.length){
         let mi=0;rolls.forEach((v,i)=>{if(v<rolls[mi])mi=i});
