@@ -46,7 +46,7 @@ export const CFG = {
   /* 진행: 연수, 시작 나이, 해마다·승리 후·연속 전투 시뮬 회복량 */
   years: 55, startAge: 17, yearHeal: 9, winHeal: 11, chainHeal: 14,
   /* 특색: 이 급수에 오르면 특색 심사 사건이 한 번 열린다. 1d100 + 판정 보정 ≥ colorDc면 특색, 실패하면 그 판에서는 다시 기회가 없다 */
-  colorRank: 1, colorDc: 90, topDc: 90, colorMul: 1.2 /* 특색을 받으면 공격·회피·속도·최대 HP가 이 배수만큼 (최소 +1) */,
+  colorRank: 1, colorDc: 90, topDc: 90, colorReward: false /* true면 특색 보상(능력치 배수 + 패시브 선택)을 준다. 논의 뒤에 켠다 */, colorMul: 1.2 /* 특색을 받으면 공격·회피·속도·최대 HP가 이 배수만큼 (최소 +1) */,
   /* 승급 포인트와 승급 심사. 필요량: base, 그다음 단계마다 이전 필요량 × mult[i] (마지막 값이 계속 쓰인다).
      심사 실패 시 포인트의 loseFrac를 잃는다. 심사 난이도 = examDc + examDcStep × 지금까지 승급 횟수 */
   promo: {total: 192, fixerMul: 0.87, mult: [2, 1.4, 1.2, 1.1], loseFrac: 0.25, gain: {early: 3, mid: 4, late: 5, boss: 6, hidden: 10, check: 2, year: 2}, examDc: 40, examDcSpan: 15},
