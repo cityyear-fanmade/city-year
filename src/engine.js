@@ -833,12 +833,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(k==='stay')r.fork=1;
       else if(k==='become'){r.fork=1;r.beast=1;r.bk=fx.hwbKey;r.bp=0;r.mk=0;r.bnext=(ch.year||0)+1;r.cand='hr_'+(aniOf(r.bk).pi);const a=aniOf(r.bk);
         addStats(ch.stats,Z.startFx);if(Z.startFx.maxHp)ch.hp+=Z.startFx.maxHp;(ch.relics=ch.relics||[]).push('흑수 · '+a.nm);addCard(ch,'zb_'+r.bk+'_1',chips,'흑수 카드');{const w=((D.hwBeast.weapons||{})[r.bk]||[])[0];if(w){equip(ch,structuredClone(w));chips.push(`흑수의 무기 · ${w.n} (${w.e})`)}}
-        if(!ch.bond){ch.bond={st:'pick',route:'hcorp',variant:1,name:'',step:0,tries:0,love:0,fixed:1};ch.bondPick=true;chips.push('인연 · 가장 약한 가주 후보를 만난다 · 이름을 정한다 (확정 인연)')}
         chips.push(`${a.nm}(${a.hj})의 흑수가 되었다 · 가주 승계를 내려놓는다 · 최대 HP +${Z.startFx.maxHp} · 회피 +${Z.startFx.eva}`);chips.push('후원할 가주 후보 · '+((D.enemies[r.cand]||{}).n||'가주 후보'))}
       else if(k==='act'){r.bp=(r.bp||0)+1;chips.push(`흑수 활동 ${r.bp}/${Z.rank2}`)}
       else if(k==='rank1'){r.rank1=1;addStats(ch.stats,Z.rank1Fx);if(Z.rank1Fx.maxHp)ch.hp+=Z.rank1Fx.maxHp;addCard(ch,'zb_'+r.bk+'_2',chips,'흑수 카드');addCard(ch,'zb_'+r.bk+'_4',chips,'흑수 카드');{const w=((D.hwBeast.weapons||{})[r.bk]||[])[1];if(w){equip(ch,structuredClone(w));chips.push(`흑수의 무기가 자란다 · ${w.n} (${w.e})`)}}chips.push(`${aniOf(r.bk).nm}의 흑수 · 공격 +${Z.rank1Fx.atk} · 회피 +${Z.rank1Fx.eva} · 최대 HP +${Z.rank1Fx.maxHp}`)}
       else if(k==='rank2'){r.rank2=1;addStats(ch.stats,Z.rank2Fx);if(Z.rank2Fx.maxHp)ch.hp+=Z.rank2Fx.maxHp;const tt='흑수 필두';ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt)}addCard(ch,'zb_'+r.bk+'_3',chips,'흑수 카드');addCard(ch,'zb_'+r.bk+'_5',chips,'흑수 카드');{const w=((D.hwBeast.weapons||{})[r.bk]||[])[2];if(w){equip(ch,structuredClone(w));chips.push(`필두의 무기 · ${w.n} (${w.e})`)}}chips.push(`칭호 · ${tt} (${aniOf(r.bk).nm}) · 공격 +${Z.rank2Fx.atk} · 회피 +${Z.rank2Fx.eva} · 최대 HP +${Z.rank2Fx.maxHp}`)}
-      else if(k==='mk'){r.mk=(r.mk||0)+1;chips.push(`후보를 세우는 일 ${r.mk}/${(D.hwBeast.maker||[]).length}`);{const CR=CFG.hw.candRanks||[],cl=CR[Math.min(r.mk,CR.length-1)];if(cl)chips.push(`후보의 위상 · ${cl}`)}if(r.mk>=(D.hwBeast.maker||[]).length){const w=((D.hwBeast.weapons||{})[r.bk]||[])[3];if(w){equip(ch,structuredClone(w));chips.push(`무기가 완성되었다 · ${w.n} (${w.e})`)}}}
+      else if(k==='mk'||k==='mkf'){const was=hwCandRank(r.mk||0);r.mk=(r.mk||0)+1;if(k==='mkf'&&fx.hwEnemy)ch.purge=fx.hwEnemy;chips.push(`후보를 세우는 일 ${r.mk}/${(D.hwBeast.maker||[]).length}`);{const nw=hwCandRank(r.mk);if(nw!==was)chips.push(`후보의 위상이 오른다 · ${CFG.hw.candRanks[nw]}`)}if(r.mk>=(D.hwBeast.maker||[]).length){const w=((D.hwBeast.weapons||{})[r.bk]||[])[3];if(w){equip(ch,structuredClone(w));chips.push(`무기가 완성되었다 · ${w.n} (${w.e})`)}}}
       else if(k==='accept'){r.accept=1;chips.push('가주 혼자 철함사에 들어갔다 · 문 밖에서 주위를 지킨다')}
       else if(k==='flee'){r.flee=1;r.maker=1;r.out=1;r.fc=0;r.fh=0;r.cnext=(ch.year||0)+CFG.hw.fleeGap;chips.push('가문을 버리고 후보와 도망쳤다 · 홍원의 추격대가 뒤를 쫓는다')}
       else if(k==='fchase'){ch.purge=D.hwBeast.fleeIds[r.fc];r.fc++;r.cnext=(ch.year||0)+CFG.hw.fleeGap}
@@ -1282,10 +1281,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 인연 이벤트를 하나도 쌓지 않았다면 상대는 관심이 없다: 청혼 자리가 열리지 않고 조용히 떠난다 */
     if(!(b.love||0)&&!(b.extra||0))return {t:'말없이 떠난 사람',x:bondFill(R.left,b)+' 함께한 시간은 있었지만 쌓인 것은 없었다.',c:[{l:'떠나는 뒷모습을 본다',h:`최대 정신력 −${BD.leaveMind} (영구)`,ok:{t:bondFill('{n}의 이름을 한 번 불러 보았다. 대답은 돌아오지 않았다.',b),fx:{bondLeave:true}}}]};
     /* 흑수 루트: 청혼이 아니라 약한 후보가 먼저 고백한다. 플레이어는 지금의 자리를 보고 받아들일지 정한다 */
-    if(ch.hw&&ch.hw.beast){const rk=ch.hw.rank2?'필두':ch.hw.rank1?'흑수':'아직 이름을 얻지 못한 몸';
+    if(ch.hw&&ch.hw.beast){const rk=(ch.hw.rank2?'필두':ch.hw.rank1?'흑수':'아직 이름을 얻지 못한 몸')+' · '+CFG.hw.candRanks[hwCandRank(ch.hw.mk||0)];
       return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[
-        {l:'받아들인다',h:`지금은 ${rk}의 자리 · 결혼 · 최대 HP·정신력·판정 상승`,ok:{t:bondFill('{n}의 손을 잡았다. 흑수의 자리에서도, 후보의 자리에서도 해 본 적 없는 대답이었다.',b),fx:{hwLoveYes:true}}},
-        {l:'받아들일 수 없다',h:`지금은 ${rk}의 자리 · 결혼하지 않는다 · 흑수로 곁에 남는다`,ok:{t:bondFill('{n}에게 고개를 숙였다. 자리가 다르다고 했다. {n}은 한참 뒤에 고개를 끄덕였다. 곁에 서겠다는 약속만은 거두지 않았다.',b),fx:{hwLoveNo:true}}}]}}
+        {l:'받아들인다',h:`지금은 ${rk} · 결혼 · 최대 HP·정신력·판정 상승`,ok:{t:bondFill('{n}의 손을 잡았다. 흑수의 자리에서도, 후보의 자리에서도 해 본 적 없는 대답이었다.',b),fx:{hwLoveYes:true}}},
+        {l:'받아들일 수 없다',h:`지금은 ${rk} · 결혼하지 않는다 · 흑수로 곁에 남는다`,ok:{t:bondFill('{n}에게 고개를 숙였다. 자리가 다르다고 했다. {n}은 한참 뒤에 고개를 끄덕였다. 곁에 서겠다는 약속만은 거두지 않았다.',b),fx:{hwLoveNo:true}}}]}}
     const left=BD.tries-(b.tries||0);
     return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[
       {l:B.proposeYes,h:`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps}${b.extra?` · 더 쌓은 인연 ${b.extra}`:''} · 1d${BD.die} + 인연이 ${BD.marryNeed} 이상이면 결혼 · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
@@ -1331,18 +1330,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(r.fc<ids.length&&(r.fc===0||ch.beaten.includes(ids[r.fc-1]))){const ev=fill(B.fleeChase[r.fc]);if(r.fh>=2)ev.c=ev.c.slice(0,1);return ev}
     return null;
   }
+  /* 흑수 루트: 후보를 세우는 일을 끝낸 횟수로 후보의 위상(부족한 → 어엿한 → 후계)이 정해진다 */
+  const hwCandRank=n=>{const A=CFG.hw.candAt;let k=0;for(let i=0;i<A.length;i++)if(n>=A[i])k=i;return k};
   function hwBeastYear(G){
     const ch=G.ch,r=ch.hw,y=G.year,Z=CFG.hw.beast,B=D.hwBeast;if(!B||!r.bk||r.maker)return null;
     /* 흑수가 홍원에 머무는 동안에도 인연(자신이 후원할 가주 후보)이 이어진다: 흑수가 된 뒤 한 번 만나고, 이후 인연 사건이 때가 되면 먼저 온다 */
     {const bv=bondEvent(G);if(bv)return bv}
-    if(!ch.bond&&!r.bmet){r.bmet=1;const e=bondMeetEvent(ch);if(e)return e}
+    if(r.rank2&&!ch.bond&&!r.bmet){r.bmet=1;const e=bondMeetEvent(ch);if(e)return e}
     if(y<(r.bnext||0))return null;
     const nm=aniOf(r.bk).nm,cn=(ch.bond&&ch.bond.name)||(D.enemies[r.cand]||{}).n||'가주 후보',fill=t=>String(t).replace(/\{n\}/g,nm).replace(/\{c\}/g,cn);
-    const mk=(tpl,fxk)=>({t:tpl.t,x:fill(tpl.x),c:tpl.check?[{l:tpl.l,h:'판정 · 성공해도 실패해도 후보를 세우는 일은 이어진다',check:tpl.check,ok:{t:fill(tpl.ok.t),fx:tpl.ok.fx},fail:{t:fill(tpl.fail.t),fx:tpl.fail.fx}}]:[{l:tpl.l,ok:{t:fill(tpl.t2),fx:{hwb:fxk}}}]});
+    const mk=(tpl,fxk)=>tpl.fight?({t:tpl.t,x:fill(tpl.x),c:[{l:tpl.l,h:tpl.h,ok:{t:fill(tpl.t2),fx:{hwb:'mkf',hwEnemy:tpl.fight}}}]}):({t:tpl.t,x:fill(tpl.x),c:tpl.check?[{l:tpl.l,h:'판정 · 성공해도 실패해도 후보를 세우는 일은 이어진다',check:tpl.check,ok:{t:fill(tpl.ok.t),fx:tpl.ok.fx},fail:{t:fill(tpl.fail.t),fx:tpl.fail.fx}}]:[{l:tpl.l,ok:{t:fill(tpl.t2),fx:{hwb:fxk}}}]});
     const done=ev=>{r.bnext=y+Z.gap;return ev};
     if(r.rank2){
       if((r.mk||0)>=B.maker.length){if(r.accept||y<Z.finalFrom)return null;const F=B.final;return done({t:F.t,x:fill(F.x)+(r.loved?' {c}은(는) 당신의 손을 놓지 않는다.':r.refused?' {c}은(는) 그날의 대답을 묻지 않고, 곁에 선 흑수를 본다.':'').replace(/\{c\}/g,cn),c:[{l:F.accept.l,h:F.accept.h,ok:{t:fill(F.accept.t2),fx:{hwb:'accept'}}},{l:F.flee.l,h:F.flee.h,ok:{t:fill(F.flee.t2),fx:{hwb:'flee'}}}]})}
-      return done(mk(B.maker[r.mk||0],'mk'));
+      if(!ch.bond||ch.bond.st==='pick')return null;
+      {const ev=mk(B.maker[r.mk||0],'mk');r.bnext=y+(Z.mkGap||Z.gap);return ev}
     }
     if((r.bp||0)>=Z.rank2&&r.rank1)return done({t:B.rank2.t,x:fill(B.rank2.x),c:[{l:B.rank2.l,ok:{t:fill(B.rank2.t2),fx:{hwb:'rank2'}}}]});
     if((r.bp||0)>=Z.rank1&&!r.rank1)return done({t:B.rank1.t,x:fill(B.rank1.x),c:[{l:B.rank1.l,ok:{t:fill(B.rank1.t2),fx:{hwb:'rank1'}}}]});
