@@ -702,8 +702,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   const assocOf=ch=>ch.assocName||(ch.aff&&ch.aff.type==='assoc'?ch.aff.name:null);
   /* 최고 단계의 특수 사건: 해결사는 특색 심사, 다른 진로는 careers.*.top */
-  const topEvent=ch=>{const k=career(ch);return k==='fixer'?D.colorExam:CR[k]&&CR[k].top};
-  const topReady=ch=>{const k=career(ch);return !!k&&!canPromote(ch)&&!ch.title&&!ch.colorFailed&&promoDone(ch)>0&&(ch.year||0)>=(ch.topNext||0)}
+  const assocColor=ch=>career(ch)==='assoc'&&ch.titleKind==='top'&&!!ch.licensed&&ch.rank<=CFG.colorRank&&!ch.colorFailed&&!ch.colorDone;
+  const topEvent=ch=>{const k=career(ch);return k==='fixer'||assocColor(ch)?D.colorExam:CR[k]&&CR[k].top};
+  const topReady=ch=>{const k=career(ch);return !!k&&!canPromote(ch)&&(!ch.title||assocColor(ch))&&!ch.colorFailed&&promoDone(ch)>0&&(ch.year||0)>=(ch.topNext||0)}
   /* 특색·상석 심사 실패: 최대 CFG.top.tries번까지, 실패하면 CFG.top.wait년 뒤 다시 */
   function topFailed(ch,chips,label){ch.topTries=(ch.topTries||0)+1;const sb=ch.bond;if(sb&&sb.st==='married'){sb.promo=(sb.promo||0)+1;chips.push(`배우자 승급 · ${sb.name} (+1급)`)}const left=CFG.top.tries-ch.topTries;
     if(left<=0){ch.colorFailed=true;chips.push(label+' 실패 · 다시 기회 없음')}else{ch.topNext=(ch.year||0)+CFG.top.wait;chips.push(`${label} 실패 · 남은 기회 ${left}번 · ${CFG.top.wait}년 뒤 다시`)}}
@@ -909,10 +910,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(C_.strike==='purge'){ch.purge=C_.purgeFoe;chips.push('숙청 대상이 되었다')}
       }
     }
-    if(fx.topPass){const C_=CR[career(ch)];ch.title=isN(ch)&&isEastOuter(ch)?CFG.nWing.eastTitle:C_.topTitle;ch.titleKind='top';(ch.titleLog=ch.titleLog||[]).push(ch.title);addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
+    if(fx.topPass){const C_=CR[career(ch)];ch.title=isN(ch)&&isEastOuter(ch)?CFG.nWing.eastTitle:C_.topTitle;ch.titleKind='top';ch.topTries=0;ch.topNext=0;(ch.titleLog=ch.titleLog||[]).push(ch.title);addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
-    if(fx.colorPass){ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';(ch.titleLog=ch.titleLog||[]).push('특색');ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 발현자 · 특색 · 모든 능력치 +5')}}
+    if(fx.colorPass){if(ch.titleKind==='top'){ch.title2=ch.title;ch.topTries=0}ch.colorDone=true;ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';(ch.titleLog=ch.titleLog||[]).push('특색');ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 발현자 · 특색 · 모든 능력치 +5')}}
     if(fx.colorFail)topFailed(ch,chips,T.titleLabel+' 심사')
     let licensed=false;
     if(fx.license){licensed=license(ch);if(licensed){chips.push(T.licenseGained+' · '+ch.rank+T.rankUnit);alignEast(ch,chips)}}
@@ -1303,8 +1304,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const DL=CFG.daily;
   function dailyEvent(G){
     const ch=G.ch,y=G.year,L=D.dailyLife;
-    if(!L||!L.length||ch.distForm||ch.job||y<DL.from||d(100)>DL.chance)return null;
-    if(!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&d(100)<=BD.meetChance){const e=bondMeetEvent(ch);if(e)return e}
+    if(!L||!L.length||ch.distForm||ch.job||y<DL.from)return null;
+    const late=!ch.bond&&y>=BD.by&&!!bondRouteOf(ch);
+    if(!late&&d(100)>DL.chance)return null;
+    if(!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&(late||d(100)<=BD.meetChance)){const e=bondMeetEvent(ch);if(e)return e}
     if((ch.dailyN||0)>=DL.max)return null;
     const seen=ch.dailySeen=ch.dailySeen||[];let pool=L.map((e,i)=>i).filter(i=>!seen.includes(i));
     if(!pool.length){seen.length=0;pool=L.map((e,i)=>i)}
@@ -2143,7 +2146,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         C.kidNote=`${P.name} · 피의 각인된 갈망 · 자식 ${kn}명 · 혈찬 +${CFG.kids.per*kn}${h?` · HP +${h}`:''}`}}
     if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-(X.blade?(X.bladeBoost&&X.synT>=2?0:CFG.syn['검계'].decay[X.synT]):CFG.breath.decay));
     if(P.blade){const g=P.synT>=2?2:1;P.breath=Math.min(CFG.breath.cap,P.breath+g);if(!C.quiet){const m={t:'kw',s:`${P.name} · 호흡결 · 호흡 +${g} (지금 ${P.breath})`};C.log.push(m);C.cur.push(m)}}
-    {const dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id)));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
+    {const cdOk=id=>!((D.cards[id].cd||0)&&((C.cdUntil||{})[id]||0)>C.round),dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))&&cdOk(id));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
     if(P.form)P.hand=P.hand.map(id=>formId(id,P.form));
     if(P.handPlusNext){const dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))),ex=sample(dk.length?dk:P.deck,P.handPlusNext);P.hand=P.hand.concat(ex);P.handPlusNext=0}
     if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
@@ -2650,6 +2653,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.hpCost&&A.hp>1){const x=Math.min(c.hpCost,A.hp-1);A.hp-=x;L('kw',`${A.name} · ${c.n} · HP −${x}`)}
       /* 충전: 카드를 낼 때 spend만큼(있는 만큼) 소모하고, 소모한 충전 1당 fixPer의 고정 피해를 적중마다 더한다 */
       if(c.once&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.onceUsed=C.onceUsed||[]).push(id_)}
+      if(c.cd&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.cdUntil=C.cdUntil||{})[id_]=C.round+c.cd+1}
       A.focusOn=!!(A.focus&&A.charge>=A.focus.at);A.spent=0;if(c.spend&&A.charge>0){A.spent=Math.min(A.charge,c.spend+(A.wx&&A.wx.edge?A.wx.edge.spend:0));A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · 충전 ${A.spent} 소모 (남은 ${A.charge})`)}
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
       if(c.t==='def'){A.defRound=C.round;cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){const sh_=c.shield+(A.prescPlus||0);A.shield=Math.min(CFG.shieldCap,(A.shield||0)+sh_);L('kw',`${A.name} · ${c.n} · 보호막 +${sh_} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp+(A.prescPlus||0);A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}

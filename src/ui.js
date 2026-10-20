@@ -60,7 +60,7 @@ export function startUI(E,app){
   const sfxSave=()=>store.set(SFXK,JSON.stringify(SFXS));
   const SFX=createSfx(()=>SFXS.on,()=>SFXS.vol);
   if(SFX.supported)['pointerdown','touchend','keydown'].forEach(t=>document.addEventListener(t,SFX.unlock,{passive:true}));
-  const sfx=k=>{if(MODE!=='off'&&!SKIP)SFX.play(k)};
+  const sfx=k=>{if(!SKIP)SFX.play(k)};
   const bgmSave=()=>store.set(BGMK,JSON.stringify({on:BGM.isOn(),vol:BGM.vol(),style:BGM.style()}));
   {let o={};try{o=JSON.parse(store.get(BGMK)||'{}')||{}}catch(e){}
     BGM.setVol(typeof o.vol==='number'?o.vol:0.3);BGM.setMood(SKIN);BGM.setStyle(o.style);
@@ -1029,7 +1029,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🩸 혈귀',['혈귀 종족 특수 이벤트가 하나 추가되었습니다.']],
       ['⚔ 규칙·장비·적',['공격 수치 규칙을 바꿨습니다. 공격 2당 명중 1, 공격 6당 피해 1이 붙습니다. 상태 화면에서 환산을 볼 수 있습니다.','공방 해결사는 전용 장비로 시작하고 보관함 장비를 녹여 계속 강화합니다.','초반 적이 늘었고, 적마다 싸우는 이유를 붙이고 있습니다.','숨은 요소 일부가 추가·개편되었습니다. 어디에 있는지는 직접 찾아보세요.']],
       ['📜 엔딩 힌트',['기록실의 엔딩 힌트가 더 분명해졌습니다. 엔딩으로 이어지는 갈림길을 한 번이라도 지나치면, 그 엔딩의 소개 문구가 정확한 조건으로 바뀝니다.']],
-      ['🔧 그 밖에',['청혼과 결혼 판정을 고쳤습니다.','무한 모드에 전공 승급과 전용 사건이 추가되었습니다. 덜 본 사건이 먼저 나오고, 같은 사건이 반복되면 문구가 달라집니다.','보냐텔리 가문 출신 설명에 남아 있던 엄지 90% 문구를 지웠습니다.','일부 문구를 다듬었습니다. (웃는 가로등 설명, 기록실 엔딩 힌트 표기)']]]};
+      ['🔧 그 밖에',['청혼과 결혼 판정을 고쳤습니다.','무한 모드에 전공 승급과 전용 사건이 추가되었습니다. 덜 본 사건이 먼저 나오고, 같은 사건이 반복되면 문구가 달라집니다.','보냐텔리 가문 출신 설명에 남아 있던 엄지 90% 문구를 지웠습니다.','일부 문구를 다듬었습니다. (웃는 가로등 설명, 기록실 엔딩 힌트 표기)','적 40여 종에 싸우는 이유를 붙였습니다.','협회 직원도 "본부 직속"에 오르면 해결사 1급이 되고, 특색 심사를 따로 받을 수 있습니다.','인연을 만나는 시기를 27세 이후 40세 안쪽으로 앞당겼습니다.','회복 카드(재생 조직 등)는 한 번 쓰면 몇 턴 동안 손패에 들어오지 않습니다. 덱이 작을 때 매 라운드 쓰던 문제를 고쳤습니다.','R사 부화장 출신의 배치 설명과 연인 문구를 고쳤습니다.','아이폰 무음 모드에서 배경음악·효과음이 나지 않던 문제를 줄이는 수정을 넣었습니다. (연출 끔 상태에서도 효과음이 납니다)']]]};
   const V944SEC=[['🔧 버그 수정',['별에 선택받은 자가 무기를 강화할 때 처음 가진 "맨손"이 재료로 뜨던 문제를 고쳤습니다. 맨손은 더 이상 보관함에 남지 않습니다.','출생 화면의 "다시 태어난다"가 다시 굴릴 때마다 위쪽 내용 높이가 달라져 움직이던 문제를 고쳤습니다. 이제 제자리에 있습니다.','제 1막 종료 화면에 "여기서 끝낸다" 버튼을 넣었습니다. 제 2막으로 가지 않고 끝낼 수 있고, 이 판의 저장이 지워집니다. "다시 태어난다"를 눌러도 이전 판 저장이 바로 지워집니다.','설정 팝업의 제목이 세로로 쪼개져 보이던 문제를 고쳤습니다.']],
     ['⚖ 조정',['PC 화면(폭 900px 이상)에서 본문, 왼쪽 능력치 칸, 오른쪽 가방 칸, 버튼, 팝업을 함께 키웠습니다. 창이 넓을수록 더 커지고, 창 높이가 낮으면 잘리지 않도록 배율을 낮춥니다. 첫 화면과 휴대폰 화면은 그대로입니다.','금기 실험으로 찾아오는 "강화체"의 이름을 "발톱 · 재시험", "조율자 · 재시험"으로 바꿨습니다.','무한 모드 불순물의 최대 HP 상한을 1000만에서 1500만으로 늘렸습니다.']]];
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
@@ -1653,7 +1653,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${df?`<div><span class="chip" style="color:#c25050;border-color:#c25050">뒤틀림 · ${esc(df.n)}</span></div>`:''}
       ${E.bondMarried(c)?`<div><span class="chip">가족 · ${esc(c.bond.name)}${c.distForm?' (당신을 알아보지 못한다)':''}</span></div>`:''}
       ${(c.bond&&(c.bond.kids||[]).length)?`<div class="row" style="gap:6px;flex-wrap:wrap">${c.bond.kids.map(k=>{const a=Math.max(0,G.year-k.born);return `<span class="chip">아이 · ${esc(k.n)} ${a}세${a>=CFG.bond.kid.adult?' · '+esc((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l):''}</span>`}).join('')}</div>`:''}
-      ${c.title?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${c.titleKind==='top'?'칭호':T.titleLabel} · ${esc(c.title)}</span></div>`:''}
+      ${c.title?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${c.titleKind==='top'?'칭호':T.titleLabel} · ${esc(c.title)}</span>${c.title2?` <span class="chip" style="color:var(--gold);border-color:var(--gold)">칭호 · ${esc(c.title2)}</span>`:''}</div>`:''}
       ${!w&&dt?`<div class="mono small bad">${dt.year}년차 · ${dt.cause==='distort'?'뒤틀림':dt.cause==='mind'?'정신 붕괴로 쓰러졌다':esc(dt.foe)+'에게 쓰러졌다'}${dt.hidden?' (히든 보스)':''}</div>`:''}
       <div class="row" style="gap:8px;flex-wrap:wrap"><span class="chip" style="color:${c.hard?'#c25050':c.easy?'#6aa0c4':'var(--fg)'};border-color:currentColor">난이도 · ${diffOf(c)}</span><span class="mono small dim" style="align-self:center">시드 ${c.seed}</span></div>
       <p class="lead">${df?distLead(c,w,tr,dt):UI.overflowEnd?'당신은 세계의 규칙마저 벗어나 버린 존재가 되었다. 당신은 이미 도시라는 거대한 무언가를 벗어나, 외곽 너머에 있다.':UI.outEnd?OUTEND[UI.outEnd][1]:UI.outerEnd?'머리가 닫은 문 바깥, 아무도 이름을 붙이지 않은 땅에서 당신은 걸음을 멈췄다. 괴수들의 울음이 멀어졌다. 쫓겨난 것이 아니라 스스로 닿은 자리라고, 누군가는 기록할 것이다.':UI.oldEnd?'백 살을 넘겼다. 이 도시에서 늙는다는 것은 끝까지 이겨 왔다는 뜻이다.':blankEnd(c,w)?BLANK_END[blankEnd(c,w)][1]+hwTail(c,blankEnd(c,w)):dt&&dt.id==='hongru'?'홍루가 가주의 자리 앞에서 붕대를 천천히 풀었다. 주인을 잃은 열 흑수가 그의 곁으로 모였다. 붉은 누각의 등이 하나씩 켜졌고, 홍원에는 군주가 살게 되었다. 이 세계에서 홍원 군주는 그렇게 태어났다.':dt&&dt.cause==='distort'?'당신의 모양을 한 무언가가 골목에 남았다. 사람들은 그것을 더 이상 당신의 이름으로 부르지 않는다.':dt&&dt.cause==='mind'?'몸은 멀쩡했지만, 마음이 먼저 꺼졌다.':tr?'바랄의 발톱도, 제나의 봉인도 당신을 멈추지 못했다. 금기를 정하던 쪽이 처음으로 질문을 받았고, 도시의 문은 한 번도 닫힌 적 없는 방향으로 한 뼘 열렸다. 당신을 부르는 이름은 도시의 어느 장부에도 맞지 않았다. 끝이라고 불리던 자리 너머로 외곽이 이어진다.':endLead(c,w)}</p>

@@ -1,5 +1,18 @@
 /* 효과음: 외부 음원 없이 Web Audio로 합성한다. 주사위가 멈출 때의 둔탁한 '뚝' 소리만 쓴다.
    높고 날카로운 '딱' 잡음은 빼고, 나무 몸통이 울리는 낮은 공명 + 낮은 둔탁함 + 방에 남는 짧은 잔향으로 만든다 */
+/* 아이폰은 무음 스위치가 켜져 있으면 Web Audio 소리를 통째로 막는다. 소리 없는 <audio>를 하나 재생해 "미디어 재생"으로 인식시키면 무음 스위치와 상관없이 난다.
+   (navigator.audioSession이 있는 최신 iOS는 type을 playback으로 바꾼다) 첫 터치 때 한 번만 시도한다 */
+let silentA=null;
+export function unlockIOSAudio(){
+  if(typeof document==='undefined'||silentA)return;
+  try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+  try{
+    const n=800,u=new Uint8Array(44+n),w=(o,v,b)=>{for(let i=0;i<b;i++)u[o+i]=(v>>(8*i))&255},t=(o,x)=>{for(let i=0;i<x.length;i++)u[o+i]=x.charCodeAt(i)};
+    t(0,'RIFF');w(4,36+n,4);t(8,'WAVEfmt ');w(16,16,4);w(20,1,2);w(22,1,2);w(24,8000,4);w(28,8000,4);w(32,1,2);w(34,8,2);t(36,'data');w(40,n,4);u.fill(128,44);
+    const a=document.createElement('audio');a.src=URL.createObjectURL(new Blob([u],{type:'audio/wav'}));a.loop=true;a.setAttribute('playsinline','');a.setAttribute('x-webkit-airplay','deny');
+    silentA=a;const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{silentA=null});
+  }catch(e){silentA=null}
+}
 export function createSfx(isOn,getVol){
   const AC=typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext);
   let ctx=null,nb=null,room=null,comp=null;const rnd=Math.random;
@@ -80,9 +93,9 @@ export function createSfx(isOn,getVol){
   }
   /* 모바일 브라우저는 사용자가 누르기 전에는 오디오를 멈춰 둔다. 멈춘 채 예약하면 시작 시각이 지나 버려 소리가 사라지므로,
      처음 누를 때 미리 깨워 두고, 아직 멈춰 있으면 깨어난 뒤에 낸다 */
-  const unlock=()=>{if(isOn()&&ensure()&&ctx.state==='suspended')ctx.resume()};
+  const unlock=()=>{unlockIOSAudio();if(isOn()&&ensure()&&ctx.state==='suspended')ctx.resume()};
   function play(kind){
-    if(!isOn()||!ensure())return;
+    if(!isOn()||!ensure())return;unlockIOSAudio();
     if(ctx.state!=='running'){ctx.resume().then(()=>{if(ctx.state==='running')play(kind)}).catch(()=>{});return}
     const v=getVol();if(!(v>0))return;
     if(/^(impact|hard|block|whoosh|slash|pierce|blunt)/.test(kind)){result(kind);return}

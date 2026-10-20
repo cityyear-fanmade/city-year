@@ -1,3 +1,4 @@
+import {unlockIOSAudio} from './sfx.js';
 /* 배경음악: 외부 음원 없이 Web Audio로 합성한다 (저작권 문제 없음). 직접 만든 곡이다.
    - 기본은 꺼져 있고, 사용자가 설정에서 켠 뒤에만 소리가 난다 (브라우저 정책상 한 번 눌러야 시작)
    - 켤 때 마스터 음량을 0에서 서서히 올리고, 전체 출력은 컴프레서를 거친다
@@ -397,6 +398,7 @@ export function createBgm(){
     schedule(ctx.currentTime,P.moods[mood]||P.moods.base);
   }
   function start(){
+    unlockIOSAudio();
     if(!ensure())return false;
     ctx.resume&&ctx.resume();
     if(!timer)timer=setInterval(tick,350);
