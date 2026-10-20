@@ -138,6 +138,9 @@ export function startUI(E,app){
     const k=m==='thrust'?'pierce':m==='ring'?'blunt':'slash';
     return k+(big||crit?'_h':'');
   }
+  /* 타격 효과의 기준점: 디버프 칩이 늘어 상자가 커져도 효과 위치가 따라 내려가지 않도록, 이 전투에서 본 가장 작은 상자 높이의 가운데에 고정한다 */
+  const FXH={c:null,E:0,P:0};
+  function fxAnchor(fx,box,side){if(FXH.c!==C){FXH.c=C;FXH.E=0;FXH.P=0}const h=FXH[side]=Math.min(FXH[side]||1e9,box.offsetHeight);fx.style.top=(h/2)+'px'}
   function hitFx(e){
     const lv=HFX_N[HFX]||0;if(!lv||MODE==='off'||SKIP||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
     const box=$('ent-'+e.def);if(!box)return;
@@ -195,13 +198,13 @@ export function startUI(E,app){
     }
     if(lv>=3&&lastHit)h+=`<i class="hflash" style="--c:${col}"></i>`;
     for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk${sp==='eye'?' drop':''}" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)+(sp==='eye'?26:0)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
-    const fx=document.createElement('div');fx.className='hfx';fx.innerHTML=h;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
+    const fx=document.createElement('div');fx.className='hfx';fx.innerHTML=h;fxAnchor(fx,box,e.def);box.appendChild(fx);setTimeout(()=>fx.remove(),800);
     if(crit&&lv>=2)floatTxt(e.def,'치명!','#ffd35a','crit');
     if(lastHit&&(lv>=2&&bigFx||lv>=3)){const hs=bigFx&&lv>=2?90:0;/* 역경직: 큰 타격은 잠깐 멈칫(밝아졌다 굳음)한 뒤 흔들린다 */if(hs){box.classList.add('hstop');setTimeout(()=>box.classList.remove('hstop'),hs)}setTimeout(()=>{const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&bigFx?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}},hs)}
   }
   function whiffFx(e){
     const lv=HFX_N[HFX]||0;if(lv<2||MODE==='off'||SKIP)return;
-    const box=$('ent-'+e.def);if(!box)return;const fx=document.createElement('div');fx.className='hfx';fx.innerHTML='<i class="whiff"></i>';box.appendChild(fx);setTimeout(()=>fx.remove(),600);
+    const box=$('ent-'+e.def);if(!box)return;const fx=document.createElement('div');fx.className='hfx';fx.innerHTML='<i class="whiff"></i>';fxAnchor(fx,box,e.def);box.appendChild(fx);setTimeout(()=>fx.remove(),600);
   }
   function applySnap(sn){
     for(const side of ['P','E']){
