@@ -6235,10 +6235,10 @@
   "violet": {
    "n": "보라눈물",
    "color": "#8e5fc7",
-   "hp": 250,
-   "atk": 16,
-   "eva": 13,
-   "spd": 10,
+   "hp": 290,
+   "atk": 18,
+   "eva": 14,
+   "spd": 12,
    "deck": [
     "x_vi_slash",
     "x_vi_cut",
@@ -6340,8 +6340,8 @@
     "gearChance": 35
    },
    "hard": {
-    "hp": 1.75,
-    "atk": 3,
+    "hp": 1.55,
+    "atk": 2,
     "eva": 2
    },
    "passive": {
