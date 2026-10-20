@@ -740,6 +740,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
     for(const f of [].concat(fx.flag||[]))ch.flags[f]=(ch.flags[f]||0)+1;
     if([].concat(fx.flag||[]).includes('taboo'))bondTaboo(ch);
+    /* 열차를 내린 뒤 일반 흐름으로: 해결사로 등록하고 급수를 한꺼번에 받는다 (협회나 해결사 길만 열려 있다). 받는 급수에 맞는 능력치 보너스도 같이 */
+    if(fx.setRank&&!ch.wtrain){const R_=fx.setRank,B_=CFG.warp.after.bonus[R_.rank];if(!ch.licensed)license(ch);
+      if(ch.licensed){ch.rank=Math.min(ch.rank,R_.rank);if(B_){addStats(ch.stats,B_);if(B_.maxHp)ch.hp+=B_.maxHp}chips.push(`해결사 ${ch.rank}급으로 등록되었다`+(B_?` · 공격 +${B_.atk||0} · 회피 +${B_.eva||0} · 최대 HP +${B_.maxHp||0}`:''))}}
     if(fx.join){
       /* 손가락 가입: 소지를 뺀 네 손가락 중 하나를 직접 고른다 (고르지 않고 넘어오면 무작위 · 엄지 특화 출신은 엄지 확률 보정) */
       if(fx.join.from==='finger'&&!fx.join.name){ch.fingerPick=true;chips.push('손가락 · 어느 손가락에 설지 고른다')}
@@ -1592,6 +1595,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     {const rv=rbFree(G);if(rv)return rv}
     if(mc.hw&&mc.hw.done&&!mc.hw.ended){mc.hw.ended=true;return {type:'end',win:true,hw:mc.hw.flee?'hwflee':mc.hw.maker?'hwmaker':mc.hw.host?'hwhost':mc.hw.broke?'hwbreak':'hwfree'}}
+    if(mc.flags&&mc.flags.wquit&&!mc.wAfter&&D.warpAfter&&(!mc.wEnd||mc.wEnded)){mc.wAfter=true;return {type:'event',ev:D.warpAfter}}
     if(mc.wEnd&&!mc.wEnded){mc.wEnded=true;return {type:'end',win:true,hw:mc.wEnd}}
     if(mc.rb&&mc.rb.done&&!mc.rb.ended){mc.rb.ended=true;return {type:'end',win:true,rb:true}}
     /* 연전: 바랄을 쓰러뜨리면 쉬지 않고 제나가 나선다 */
