@@ -5,7 +5,7 @@ import fs from 'node:fs';import path from 'node:path';
 const strip=f=>fs.readFileSync(f,'utf8').replace(/export function /g,'function ');
 const dir=process.argv[2],samples=[];
 if(dir)for(const f of fs.readdirSync(dir).filter(x=>/^sample_.*\.mp3$/.test(x)).sort()){samples.push([f.replace(/^sample_|\.mp3$/g,''),fs.readFileSync(path.join(dir,f)).toString('base64')])}
-const LABEL={dj_calm:'어두운 재즈 · 평시 (악기 샘플)',dj_fight:'어두운 재즈 · 전투 (악기 샘플)',lib_calm:'도서관 · 평시 (악기 샘플)',lib_fight:'도서관 · 전투 (악기 샘플)',dark_calm:'어두운 잔잔 · 평시 (악기 샘플)',dark_fight:'어두운 전투 (악기 샘플)'};
+const LABEL={fire_calm:'불길 · 평시 (악기 샘플)',fire_fight:'불길 · 전투 (악기 샘플)',dj_calm:'어두운 재즈 · 평시 (악기 샘플)',dj_fight:'어두운 재즈 · 전투 (악기 샘플)',lib_calm:'도서관 · 평시 (악기 샘플)',lib_fight:'도서관 · 전투 (악기 샘플)',dark_calm:'어두운 잔잔 · 평시 (악기 샘플)',dark_fight:'어두운 전투 (악기 샘플)'};
 const html=`<title>소리 시험실</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
