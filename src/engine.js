@@ -2398,7 +2398,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.extraD2){let x=0;for(let i=0;i<A.extraD2;i++)x+=d(2);dmg+=x;note+=` 추가 1d2×${A.extraD2}+${x}`}
       if(A.passive&&A.passive.id==='stance'){const x=A.stance==='bear'?A.sal:Math.floor((A.passive.salMax-A.sal)/2);if(x>0){dmg+=x;note+=` 본국검술[살] ${A.sal} · ${A.stance==='bear'?'곰 사냥':'범 사냥'}+${x}`}}
       if(B.passive&&B.passive.id==='stance'){const v=B.stance==='bear'?Math.max(0,5-B.sal):Math.max(0,B.sal-5);if(v>0){dmg+=v*2;note+=` 살 ${B.sal} · 취약+${v*2}`}}
-      if(A.isP&&A.form==='a'&&A.wx&&A.wx.forms){dmg+=CFG.form.atkDmg;note+=` 공격 자세+${CFG.form.atkDmg}`}
+      if(A.isP&&A.form==='a'&&A.wx&&A.wx.forms){dmg+=CFG.form.atkDmg;note+=` 참격 자세+${CFG.form.atkDmg}`}
       if(A.passive&&A.passive.id==='forms'&&A.stance==='pierce'){const n=Math.min(A.passive.pierceCap,(B.bleed||0)+(B.rupture||0)+(B.burn||0));if(n>0){const x=n*A.passive.pierceBonus;dmg+=x;note+=` 관통 태세+${x}`}}
       if(A.passive&&A.passive.id==='kas'&&B.bleed>0){const x=Math.min(B.bleed,A.passive.cap)*A.passive.per;dmg+=x;note+=` ${A.passive.n}+${x}`}
       if(A.passive){

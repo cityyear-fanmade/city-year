@@ -1503,7 +1503,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 하나 협회 패시브: 카드 위에서 매 라운드 한 가지를 고른다 */
   const TRI_E={gun:'공격 피해 +'+CFG.tri.gun,gon:'받는 피해 −'+CFG.tri.gon+'%',gam:'빛 +'+CFG.tri.gam,ri:'HP +'+CFG.tri.ri.heal+' · 호흡 +'+CFG.tri.ri.breath};
   /* 보랏빛 사복검: 전투 중 라운드마다 자세를 하나 고른다 (카드를 고르기 전에) */
-  const FORM_E={a:'환도와 타도 · 피해 +'+CFG.form.atkDmg,d:'방패 겸용 단검 · 받는 피해 −'+CFG.form.defCut+'%',p:'창과 사복검 · 적중마다 출혈 +'+CFG.form.bleed,s:'건틀릿 · 적중마다 상대의 흐트러짐 +'+CFG.form.stagger};
+  const FORM_E={a:'참격 · 피해 +'+CFG.form.atkDmg,d:'방어 · 받는 피해 −'+CFG.form.defCut+'%',p:'관통 · 적중마다 출혈 +'+CFG.form.bleed,s:'타격 · 적중마다 상대의 흐트러짐 +'+CFG.form.stagger};
   function formBar(P){
     if(!E.formOk(C))return '';
     const used=C.formRound===C.round&&!PLAYING,off=PLAYING||FIGHT==='auto';
