@@ -597,8 +597,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 협회·날개 직급: 단계마다 그 직급의 보정을 더한다 (손가락 fingerStep과 같은 방식) */
   function careerStep(ch){
-    const C_=CR[ch.aff.type],r=C_.ranks[(ch.fi??-1)+1];if(!r)return null;
-    ch.fi=(ch.fi??-1)+1;ch.fr=r;addStats(ch.stats,r.fx);if(r.fx.maxHp)ch.hp+=r.fx.maxHp;
+    const C_=CR[ch.aff.type],RK=ch.wtrain&&ch.aff.name==='W사 날개'&&C_.trainRanks||C_.ranks,r=RK[(ch.fi??-1)+1];if(!r)return null;
+    ch.fi=(ch.fi??-1)+1;ch.fr=r;addStats(ch.stats,r.fx);
+    /* W사 열차 직원: 직급이 오를 때마다 무기가 바뀐다 (이전 무기는 보관함으로) */
+    if(r.gear)equip(ch,structuredClone(r.gear));if(r.fx.maxHp)ch.hp+=r.fx.maxHp;
     /* 협회 직급에 맞는 해결사 급수 (예: 지부장은 최소 4급) */
     if(r.minRank&&ch.licensed&&ch.rank>r.minRank)ch.rank=r.minRank;
     const out=[`${ch.aff.name} · ${r.n}`,...(r.e?[r.e]:[])];
@@ -903,6 +905,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.startsWith('year>='))return (ch.year||0)>=+req.slice(6);
     if(req.startsWith('ledger:')){const [k,n]=req.slice(7).split('>=');return ((ch.ledger||{})[k]||0)>=+n}
     if(req==='inf')return !!ch.infinite;
+    if(req==='wtrain')return !!ch.wtrain;
     if(req==='licensed')return ch.licensed;
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
@@ -1504,6 +1507,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(year%R.every)return null;
     const t=R.tiers.find(t=>year<=t.until);return t?t.spec:null;
   }
+  /* W사 열차 직원 전용 사건: 열차 안에서 일어나는 일이라 해가 넘어가지 않는다 (해마다 최대 한 번) */
+  function warpEvent(G){
+    const ch=G.ch,L=D.warpEvents;if(!ch.wtrain||!L||!L.length||ch.distForm||ch.warpYear===G.year||d(100)>CFG.warp.chance)return null;
+    const seen=ch.warpSeen=ch.warpSeen||[];let pool=L.map((e,i)=>i).filter(i=>!seen.includes(i)&&meets(ch,L[i].req));
+    if(!pool.length){seen.length=0;pool=L.map((e,i)=>i).filter(i=>meets(ch,L[i].req))}
+    if(!pool.length)return null;const i=one(pool);seen.push(i);ch.warpYear=G.year;return L[i];
+  }
   function advanceYear(G){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
     G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
@@ -1556,6 +1566,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!ch.outSeen.seal&&G.year>baseEnd_&&riftBosses().every(h=>ch.beaten.includes(h.id))){ch.outSeen.seal=1;return {type:'end',win:true,out:'seal'}}
       if(!ch.outSeen.star&&ch.beaten.length>=OE.starHidden){ch.outSeen.star=1;return {type:'end',win:true,out:'star'}}
       if(!ch.outSeen.settle&&bondMarried(ch)&&(ch.bond.kids||[]).some(k=>G.year-k.born>=BD.kid.adult)&&G.year>=baseEnd_+OE.settleYears){ch.outSeen.settle=1;return {type:'end',win:true,out:'settle'}}}
+    /* W사: 입사 직후 근무지 선택, 열차 직원은 해마다 열차 안 사건이 온다 (해는 넘어가지 않음) */
+    if(mc.aff&&mc.aff.name==='W사 날개'&&D.warpFork&&mc.wtrain===undefined&&!mc.wAsked){mc.wAsked=true;return {type:'event',ev:D.warpFork}}
+    {const we=warpEvent(G);if(we)return {type:'event',ev:we}}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
     G.ch.year=G.year;
@@ -1732,6 +1745,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
+    if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
+      if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(r.gear)equip(ch,structuredClone(r.gear));chips.push(`W사 열차 직원 · ${r.n}`);chips.push('무기 '+r.gear.n)}}
+      else chips.push('W사 날개 · 본사 근무')}
     if(fx.bondLeave&&ch.bond&&ch.bond.st==='met')bondLeft(ch,chips);
     if(fx.bondPropose)bondPropose(ch,chips,true);
     if(fx.bondSlip)bondPropose(ch,chips,false);
