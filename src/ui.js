@@ -779,13 +779,14 @@ export function startUI(E,app){
       <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
       <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':'공방을 나간다'}</button>`;
   }
-  /* 공방 해결사: 보관함 장비 판매 */
+  /* 공방 해결사: 카드 판매 (장비 판매는 없다) */
   function vSell(){
-    const ch=G.ch;if(!E.isWs(ch))return '';const st=ch.stash||[];
-    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">보관함 팔기</b><span class="chip">공방 해결사</span></div>
-      <p class="small dim">보관함에 있는 장비를 공방에 넘긴다. 장착 중인 장비는 팔 수 없다.</p>
+    const ch=G.ch;if(!E.isWs(ch))return '';const WF=CFG.workshopFixer,n=UI.soldN||0,locked=ch.deckLocked||ch.cardMoney,full=n>=WF.cardMax,min=ch.deck.length<=CFG.shop.minDeck;
+    const rows=ch.deck.map((id,i)=>[id,i]).filter(([id])=>!D.cards[id].fixed).map(([id,i])=>`<button class="btn" data-a="sellcard" data-i="${i}" ${locked||full||min?'disabled':''}><span class="row between"><b>${esc(D.cards[id].n)}</b><span class="mono" style="color:var(--gold)">+${E.money(E.cardPrice(id))}</span></span><span class="mono small dim">${esc(D.cards[id].d||'')}</span></button>`).join('');
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 팔기</b><span class="chip">공방 해결사 · ${n}/${WF.cardMax}</span></div>
+      <p class="small dim">덱의 카드를 공방에 넘긴다. 한 번 들를 때 ${WF.cardMax}장까지, 덱은 ${CFG.shop.minDeck}장 아래로 줄일 수 없다. 값은 카드 비용이 높을수록 오른다.</p>
       ${UI.sold?`<p class="good small">${esc(UI.sold)}</p>`:''}
-      ${st.length?st.map((g,i)=>`<button class="btn" data-a="sell" data-i="${i}"><span class="row between"><b>${esc(g.n)}</b><span class="mono" style="color:var(--gold)">+${E.money(E.sellValue(g))}</span></span><span class="mono small dim">${D.slots[g.slot]} · ${esc(g.e||'')}</span></button>`).join(''):'<p class="small dim">보관함이 비어 있다.</p>'}</div>`;
+      ${locked?'<p class="small dim">이 덱은 카드를 팔 수 없다.</p>':rows||'<p class="small dim">팔 수 있는 카드가 없다.</p>'}</div>`;
   }
   /* 공방: 카드 교환 (방문마다 swapMax장까지, 일반 보상 카드 무작위로) */
   function vSwapCard(){
@@ -1903,7 +1904,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
-      UI.bought=null;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.rested=null;UI.healed=0;UI.healMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
+      UI.bought=null;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.soldN=0;UI.rested=null;UI.healed=0;UI.healMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
     }
     UI.stock=[];saveGame({st});UI.screen='event';render();
   }
@@ -2034,7 +2035,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const ty=UI.egoType||'atk';E.setEgo(G.ch,ty,n);UI.egoErr='';UI.egoName='';UI.egoType=null;
       UI.res.chips=[...UI.res.chips,`E.G.O · ${n} (${CFG.mind.ego[ty].n})`];render();
     },
-    sell(i){const g=(G.ch.stash||[])[+i];if(!g)return;const v=E.sellStash(G.ch,+i);if(v){UI.sold=`${g.n}을(를) ${E.money(v)}에 팔았다.`;render()}},
+    sellcard(i){if((UI.soldN||0)>=CFG.workshopFixer.cardMax)return;const r=E.sellCard(G.ch,+i);if(r){UI.soldN=(UI.soldN||0)+1;UI.sold=`${D.cards[r.id].n}을(를) ${E.money(r.v)}에 팔았다.`;resave();render()}},
     swapcard(i){if((UI.swapped||[]).length>=CFG.shop.swapMax)return;const r=E.swapCard(G.ch,+i);if(r){(UI.swapped=UI.swapped||[]).push([D.cards[r.old].n,D.cards[r.nid].n]);render()}},
     wsmelt(i){const [sl,ix]=String(i).split(':'),r=E.wsMelt(G.ch,sl,+ix);if(r){UI.wsMsg=`${r.m}을(를) 녹였다 · ${r.hidden?'히든 재료 · 한 단계 상승':r.step?'일반 재료 · 한 단계 상승 ('+r.n+'단계)':'일반 재료 · '+r.p+'/'+r.need}`;resave();render()}},
     wsname(sl){const el=document.getElementById('wsn_'+sl),n=E.wsRename(G.ch,sl,el?el.value:'');if(n){UI.wsMsg=`이름을 '${n}'(으)로 정했다.`;resave();render()}},
