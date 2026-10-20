@@ -784,7 +784,7 @@ export function startUI(E,app){
     const ch=G.ch;if(!E.isWs(ch))return '';const WF=CFG.workshopFixer,n=UI.soldN||0,locked=ch.deckLocked||ch.cardMoney,full=n>=WF.cardMax,min=ch.deck.length<=CFG.shop.minDeck;
     const rows=ch.deck.map((id,i)=>[id,i]).filter(([id])=>!D.cards[id].fixed).map(([id,i])=>`<button class="btn" data-a="sellcard" data-i="${i}" ${locked||full||min?'disabled':''}><span class="row between"><b>${esc(D.cards[id].n)}</b><span class="mono" style="color:var(--gold)">+${E.money(E.cardPrice(id))}</span></span><span class="mono small dim">${esc(D.cards[id].d||'')}</span></button>`).join('');
     return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">카드 팔기</b><span class="chip">공방 해결사 · ${n}/${WF.cardMax}</span></div>
-      <p class="small dim">덱의 카드를 공방에 넘긴다. 한 번 들를 때 ${WF.cardMax}장까지, 덱은 ${CFG.shop.minDeck}장 아래로 줄일 수 없다. 카드는 장당 ${E.money(WF.cardBase)}이다.</p>
+      <p class="small dim">덱의 카드를 공방에 넘긴다. 한 번 들를 때 ${WF.cardMax}장까지, 덱은 ${CFG.shop.minDeck}장 아래로 줄일 수 없다. 값은 ${E.money(WF.cardBase)}에 카드 비용 1마다 ${E.money(WF.cardPer)}을 더한다.</p>
       ${UI.sold?`<p class="good small">${esc(UI.sold)}</p>`:''}
       ${locked?'<p class="small dim">이 덱은 카드를 팔 수 없다.</p>':rows||'<p class="small dim">팔 수 있는 카드가 없다.</p>'}</div>`;
   }
