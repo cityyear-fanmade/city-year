@@ -797,6 +797,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const s=ch.stats,chips=[];
     if(fx.maxHp){s.maxHp+=fx.maxHp;ch.hp+=fx.maxHp;chips.push('최대 HP '+sg(fx.maxHp))}
     if(fx.hp){ch.hp=clamp(ch.hp+fx.hp,1,s.maxHp);chips.push('HP '+sg(fx.hp))}
+    if(fx.mindLoss)loseMind(ch,d(3)+d(3),t=>chips.push(t+' · 2d3'));
     for(const k of ['atk','eva','spd'])if(fx[k]){s[k]+=fx[k];chips.push(STAT[k]+' '+sg(fx[k]))}
     if(fx.money){const m=earn(ch,fx.money);ch.money=Math.max(0,ch.money+m);chips.push((m>0?'+':'−')+money(Math.abs(m))+(m!==fx.money?' (금전운)':''))}
     if(fx.check){s.check+=fx.check;chips.push('사건 판정 '+sg(fx.check))}
@@ -1670,6 +1671,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
     if(hasInn(mc,'mark')&&!mc.markOn&&G.year>=CFG.innate.markYear-1)return {type:'event',ev:D.innateEvents.mark};
     if(D.relicEvent&&!mc.relicEvt&&!mc.hw&&G.year===CFG.relicEvent.year-1){mc.relicEvt=true;return {type:'event',ev:D.relicEvent}}
+    /* 혈귀 종족: 40~70년차 사이 한 번 참을 수 없는 갈증이 온다 (연인이 인간인지 혈귀인지에 따라 다른 사건) */
+    if(mc.race==='hyeolgwi'&&D.thirstEvents&&!mc.thirstDone&&!mc.distForm){mc.thirstAt=mc.thirstAt||(40+d(31)-1);
+      if(G.year>=mc.thirstAt){mc.thirstDone=true;const T_=D.thirstEvents,b=mc.bond,mar=b&&b.st==='married',ev=JSON.parse(JSON.stringify(mar?(b.variant===1?T_.hyeol:T_.human):T_.solo)),nm=mar?b.name:'';
+        return {type:'event',ev:JSON.parse(JSON.stringify(ev).replace(/\{n\}/g,nm))}}}
     {const sw=bondSweetEvent(G);if(sw)return {type:'event',ev:sw}}
     if(mc.resoPend&&D.familyReso&&G.year>=(mc.resoAt||0)){mc.resoPend=false;mc.resoAsked=true;return {type:'event',ev:D.familyReso}}
     if(mc.familyPend&&D.familyCall){mc.familyPend=false;mc.familyAsked=true;return {type:'event',ev:D.familyCall}}
