@@ -839,7 +839,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(k==='rank1'){r.rank1=1;addStats(ch.stats,Z.rank1Fx);if(Z.rank1Fx.maxHp)ch.hp+=Z.rank1Fx.maxHp;addCard(ch,'zb_'+r.bk+'_2',chips,'흑수 카드');addCard(ch,'zb_'+r.bk+'_4',chips,'흑수 카드');{const w=((D.hwBeast.weapons||{})[r.bk]||[])[1];if(w){equip(ch,structuredClone(w));chips.push(`흑수의 무기가 자란다 · ${w.n} (${w.e})`)}}chips.push(`${aniOf(r.bk).nm}의 흑수 · 공격 +${Z.rank1Fx.atk} · 회피 +${Z.rank1Fx.eva} · 최대 HP +${Z.rank1Fx.maxHp}`)}
       else if(k==='rank2'){r.rank2=1;addStats(ch.stats,Z.rank2Fx);if(Z.rank2Fx.maxHp)ch.hp+=Z.rank2Fx.maxHp;const tt='흑수 필두';ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt)}addCard(ch,'zb_'+r.bk+'_3',chips,'흑수 카드');addCard(ch,'zb_'+r.bk+'_5',chips,'흑수 카드');{const w=((D.hwBeast.weapons||{})[r.bk]||[])[2];if(w){equip(ch,structuredClone(w));chips.push(`필두의 무기 · ${w.n} (${w.e})`)}}chips.push(`칭호 · ${tt} (${aniOf(r.bk).nm}) · 공격 +${Z.rank2Fx.atk} · 회피 +${Z.rank2Fx.eva} · 최대 HP +${Z.rank2Fx.maxHp}`)}
       else if(k==='mk'){r.mk=(r.mk||0)+1;chips.push(`후보를 세우는 일 ${r.mk}/${(D.hwBeast.maker||[]).length}`);{const CR=CFG.hw.candRanks||[],cl=CR[Math.min(r.mk,CR.length-1)];if(cl)chips.push(`후보의 위상 · ${cl}`)}if(r.mk>=(D.hwBeast.maker||[]).length){const w=((D.hwBeast.weapons||{})[r.bk]||[])[3];if(w){equip(ch,structuredClone(w));chips.push(`무기가 완성되었다 · ${w.n} (${w.e})`)}}}
-      else if(k==='accept'){r.accept=1;r.hongruPend=1;chips.push('선황충을 받아들였다 · 홍루가 나선다')}
+      else if(k==='accept'){r.accept=1;chips.push('가주 혼자 철함사에 들어갔다 · 문 밖에서 주위를 지킨다')}
       else if(k==='flee'){r.flee=1;r.maker=1;r.out=1;r.fc=0;r.fh=0;r.cnext=(ch.year||0)+CFG.hw.fleeGap;chips.push('가문을 버리고 후보와 도망쳤다 · 홍원의 추격대가 뒤를 쫓는다')}
       else if(k==='fchase'){ch.purge=D.hwBeast.fleeIds[r.fc];r.fc++;r.cnext=(ch.year||0)+CFG.hw.fleeGap}
       else if(k==='fhide'){r.fh++;r.cnext=(ch.year||0)+CFG.hw.fleeGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
@@ -1700,7 +1700,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(G.infinite&&mc.wtrain&&D.warpQuit&&!mc.wLead&&!mc.wQuitShown&&(mc.year||0)>=(mc.wQuitAt||0)){mc.wQuitShown=true;return {type:'event',ev:D.warpQuit}}
     {const we=warpEvent(G);if(we)return {type:'event',ev:we}}
     G.free=false;G.year++;
-    if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
+    if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;return {type:'end',win:true,trueEnd:!!G.endless,hw:hk}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);if(hasInn(G.ch,'will'))gainMind(G.ch,CFG.innate.willHeal);
       {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+corpLv(G.ch)*(mt.yearPer||0))}
