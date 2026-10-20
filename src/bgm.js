@@ -15,7 +15,7 @@ export function createBgm(){
     maxGain:2,          // 음량 100%일 때 마스터 음량 (컴프레서가 최고점을 눌러 준다)
     fadeIn:3,           // 켤 때 서서히 커지는 시간(초)
     fadeOut:0.8,        // 끌 때 서서히 줄어드는 시간(초)
-    bpm:{calm:{calm:100,fight:132},passion:{calm:150,fight:168},library:{calm:116,fight:152}},   // [스타일][장면]
+    bpm:{calm:{calm:100,fight:132},passion:{calm:150,fight:168},library:{calm:116,fight:176}},   // [스타일][장면]
     bossBpm:{intro:66,main:144},bossGain:0.62,bossCut:2400,
     styleGain:{calm:0.7,passion:0.6,library:0.7},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
     cutMul:{calm:{calm:0.8,fight:1},passion:{calm:1.1,fight:1.3},library:{calm:1.05,fight:1.25}}, // 장면별 밝기
