@@ -139,7 +139,7 @@ export function startUI(E,app){
     const n=multi&&!lastHit?3:lv===1?0:lv===2?(bigFx?10:6):(bigFx?18:12);
     /* 방향: 공격한 쪽에서 맞은 쪽으로 베어 들어온다 (플레이어가 오른쪽 · 적이 왼쪽). 연달아 맞을 때는 위·아래로 번갈아 긋는다 */
     HFXFLIP=!HFXFLIP;const fromRight=e.att==='P',rot=(fromRight?-1:1)*(HFXFLIP?1:-1)*(12+Math.round(Math.random()*10));
-    const org=`${fromRight?'right':'left'} center`,sl=(r,top,ex='')=>`<i class="slash" style="--c:${col};--rot:${r}deg;--org:${org};--top:${top}%;${ex}"></i>`;
+    const org=`${fromRight?'right':'left'} center`,sl=(r,top,ex='')=>`<svg class="blade" viewBox="0 0 100 24" preserveAspectRatio="none" style="--c:${col};--rot:${r}deg;--org:${org};--a0:inset(0 ${fromRight?'0 0 100%':'100% 0 0'});--top:${top}%;${ex}"><path class="bd" d="M0 18 Q44 -4 100 8 Q50 20 0 18Z"/><path class="bc" d="M6 17 Q46 9 94 8.5"/></svg>`;
     /* 모션: 새로 걸린 키워드와 타수로 고른다 (화상=불꽃 고리, 출혈=할퀴기, 파열=균열, 연타=할퀴기·X자, 그 밖에는 베기·찌르기·X자 중 무작위) */
     const kt=col===kwc('burn')||col===kwc('flame')?'burn':col===kwc('bleed')?'bleed':col===kwc('rupture')?'rupture':'';
     const hitsN=(e.card&&e.card.hits)||1,pk=a=>a[Math.floor(Math.random()*a.length)];
@@ -153,20 +153,20 @@ export function startUI(E,app){
     let h='';
     if(sp&&!(multi&&!lastHit)){
       const FL='#ff8a3c';
-      if(sp==='tclaw'){col='#fff';h=`<u class="jw lng">`+sl(rot*0.7,18,'height:3px;--c:#fff')+sl(rot*0.7,36,'height:4px;animation-delay:40ms;--c:#fff')+sl(rot*0.7,54,'height:4px;animation-delay:80ms;--c:#fff')+sl(rot*0.7,72,'height:3px;animation-delay:120ms;--c:#fff')+`</u>`}
-      else if(sp==='eye'){col='#d0344a';h=sl(rot,50,'height:7px;--c:#d0344a')+sl(rot*0.6,56,'height:3px;--c:#7a1020;animation-delay:50ms')}
+      if(sp==='tclaw'){col='#fff';h=`<u class="jw lng">`+sl(rot*0.7,18,'--sw:0;height:3px;--c:#fff')+sl(rot*0.7,36,'height:4px;animation-delay:40ms;--c:#fff')+sl(rot*0.7,54,'height:4px;animation-delay:80ms;--c:#fff')+sl(rot*0.7,72,'--sw:0;height:3px;animation-delay:120ms;--c:#fff')+`</u>`}
+      else if(sp==='eye'){col='#d0344a';h=sl(rot,50,'height:7px;--c:#d0344a')+sl(rot*0.6,56,'--sw:0;height:3px;--c:#7a1020;animation-delay:50ms')}
       else if(sp==='tremor'){h=`<u class="jw">`+sl(rot,50,'--c:#5fd0ff;margin-top:-3px')+sl(rot,50,'--c:#ff4d6d;margin-top:3px;animation-delay:30ms')+sl(rot,50,'--c:#fff;animation-delay:15ms')+sl(rot,50,'opacity:.5;animation-delay:70ms')+sl(rot,50,'opacity:.3;animation-delay:140ms')+`</u>`}
       else if(sp==='reson'){col='#4aa8ff';h=`<u class="jw"><i class="thrust beam" style="--c:#4aa8ff;--org:${org}"></i></u><i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:${col};animation-delay:.22s"></i><i class="ringfx" style="--c:${col};animation-delay:.34s;opacity:.5"></i>`}
-      else if(sp==='lv0'){col=kt==='burn'?col:FL;h=sl(rot*1.3,34,'height:3px;--c:'+col)+sl(-rot,64,'height:3px;animation-delay:80ms;--c:'+col)}
+      else if(sp==='lv0'){col=kt==='burn'?col:FL;h=sl(rot*1.3,34,'--sw:0;height:3px;--c:'+col)+sl(-rot,64,'--sw:0;height:3px;animation-delay:80ms;--c:'+col)}
       else if(sp==='lv1'){col=kt==='burn'?col:FL;h=sl(rot,40,'--c:'+col)+sl(-rot,60,'animation-delay:70ms;--c:'+col)}
       else if(sp==='lv2'){col=kt==='burn'?col:FL;h=sl(rot,50,'height:7px;--c:'+col)+`<i class="ringfx" style="--c:${col}"></i>`}
-      else if(sp==='lv3'){col=kt==='burn'?col:FL;h=`<i class="cres" style="--c:${col};--rot:${rot*1.4}deg;--org:${org}"></i>`+sl(rot*1.4,50,'height:3px;--c:#fff')+`<i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:#fff"></i>`}
+      else if(sp==='lv3'){col=kt==='burn'?col:FL;h=`<i class="cres" style="--c:${col};--rot:${rot*1.4}deg;--org:${org}"></i>`+sl(rot*1.4,50,'--sw:0;height:3px;--c:#fff')+`<i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:#fff"></i>`}
       else{
         const g=+sp.slice(2);
         if(g===1)h=sl(rot*2.2,50,'height:9px');
         else if(g===2||g===3)h=sl(rot,50);
         else if(g===4)h=sl(rot,50)+sl(-rot,50,'animation-delay:70ms');
-        else if(g===5)h=sl(rot,34,'height:3px')+sl(rot,66,'height:3px;animation-delay:60ms');
+        else if(g===5)h=sl(rot,34,'--sw:0;height:3px')+sl(rot,66,'--sw:0;height:3px;animation-delay:60ms');
         else if(g===6)h=`<i class="thrust" style="--c:${col};--org:${org}"></i><i class="thrust" style="--c:${col};--org:${org};top:30%;animation-delay:30ms"></i><i class="thrust" style="--c:${col};--org:${org};top:70%;animation-delay:30ms"></i>`;
         else if(g===7)h=`<i class="thrust" style="--c:${col};--org:${org};height:7px"></i><i class="ringfx small" style="--c:${col}"></i>`;
         else if(g===8)h=sl(rot,50,'height:11px')+`<i class="hflash" style="--c:${col}"></i>`;
@@ -177,7 +177,7 @@ export function startUI(E,app){
       if(mo==='critx')h=`<i class="hdark"></i>`+sl(rot,50,'height:7px')+sl(-rot,50,'height:7px;animation-delay:60ms')+`<i class="critstar" style="--c:${col}"></i>`;
       else if(mo==='slash')h=sl(rot,50);
       else if(mo==='cross')h=sl(rot,50)+sl(-rot,50,'animation-delay:70ms');
-      else if(mo==='claw')h=sl(rot,24,'height:3px')+sl(rot,50,'height:3px;animation-delay:50ms')+sl(rot,76,'height:3px;animation-delay:100ms');
+      else if(mo==='claw')h=sl(rot,24,'--sw:0;height:3px')+sl(rot,50,'--sw:0;height:3px;animation-delay:50ms')+sl(rot,76,'--sw:0;height:3px;animation-delay:100ms');
       else if(mo==='thrust')h=`<i class="thrust" style="--c:${col};--org:${org}"></i><i class="ringfx small" style="--c:${col}"></i>`;
       else if(mo==='ring')h=`<i class="ringfx" style="--c:${col}"></i>`;
       else h=`<i class="crack" style="--c:${col};--fl:${fromRight?-1:1}"></i>`;

@@ -547,3 +547,20 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .hfx .eyefx::after{content:'';position:absolute;left:50%;top:50%;width:11px;height:14px;margin:-7px;border-radius:50%;background:#111;animation:hPupil .5s ease-out .12s forwards}
 @keyframes hPupil{0%{transform:scale(1.6)}60%{transform:scale(.45,1.1)}100%{transform:scale(.3,1)}}
 .hfx .thrust.beam{height:10px;margin-top:-5px;background:linear-gradient(90deg,transparent,var(--c) 30%,#fff 60%,#fff 75%,transparent);filter:drop-shadow(0 0 10px var(--c)) drop-shadow(0 0 4px #fff)}
+
+/* 2D 셀 애니메이션 스타일: 두꺼운 윤곽선 · 단색 덩어리 · 끊어 치는(steps) 움직임. 네온 번짐은 쓰지 않는다 */
+.hfx .slash,.hfx .thrust,.hfx .ringfx,.hfx .cres,.hfx .spk,.hfx .critstar{mix-blend-mode:normal}
+.hfx .blade{position:absolute;left:8%;top:var(--top,50%);width:84%;height:18px;translate:0 -50%;overflow:visible;transform:rotate(var(--rot,-16deg));transform-origin:var(--org,left center);clip-path:var(--a0,inset(0 100% 0 0));animation:hBlade .34s steps(6,end) forwards}
+.hfx .blade .bd{fill:var(--c);stroke:#14101c;stroke-width:var(--sw,2.4);stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.hfx .blade .bc{fill:none;stroke:#fff;stroke-width:calc(var(--sw,2.4)*.8);stroke-linecap:round;vector-effect:non-scaling-stroke}
+@keyframes hBlade{0%{clip-path:var(--a0);opacity:1}55%{clip-path:inset(0);opacity:1}100%{clip-path:inset(0);opacity:0}}
+.hfx .spk{width:11px;height:11px;margin:-6px;border:2px solid #14101c;border-radius:50% 50% 50% 0;box-shadow:none;animation-timing-function:steps(6,end);transform:rotate(-45deg)}
+.hfx .spk.drop{width:9px;height:12px;border-radius:50% 50% 50% 50%/65% 65% 35% 35%}
+.hfx .ringfx{border-width:5px;box-shadow:0 0 0 2px #14101c,inset 0 0 0 2px #14101c;animation-timing-function:steps(5,end)}
+.hfx .ringfx.small{border-width:4px}
+.hfx .thrust{height:12px;margin-top:-6px;border:2px solid #14101c;border-radius:3px;filter:none;background:linear-gradient(90deg,transparent,var(--c) 30%,var(--c) 55%,#fff 56% 80%,var(--c) 81%);animation-timing-function:steps(5,end)}
+.hfx .thrust.beam{height:16px;margin-top:-8px;filter:none;background:linear-gradient(90deg,transparent,var(--c) 25%,var(--c) 45%,#fff 46% 85%,var(--c) 86%)}
+.hfx .cres{border-top-width:11px;box-shadow:none;filter:drop-shadow(0 2px 0 #14101c);animation-timing-function:steps(7,end)}
+.hfx .critstar{filter:drop-shadow(2px 0 0 #14101c) drop-shadow(-2px 0 0 #14101c) drop-shadow(0 2px 0 #14101c) drop-shadow(0 -2px 0 #14101c);background:radial-gradient(circle,#fff 0 26%,var(--c) 28% 100%);animation-timing-function:steps(6,end)}
+.hfx .crack{filter:drop-shadow(2px 0 0 #14101c) drop-shadow(-2px 0 0 #14101c);animation-timing-function:steps(5,end)}
+.hfx .hflash{opacity:0;animation:hFlash .2s steps(2,end) forwards}
