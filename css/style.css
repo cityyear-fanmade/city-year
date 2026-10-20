@@ -519,3 +519,6 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 @keyframes hThrust{0%{transform:scaleX(0);opacity:1}60%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
 @keyframes hRing{0%{transform:scale(.3);opacity:.95}100%{transform:scale(1.9);opacity:0}}
 @keyframes hCrack{0%{transform:scaleX(calc(var(--fl,1)*.4)) scaleY(.2);opacity:0}30%{transform:scaleX(var(--fl,1)) scaleY(1);opacity:1}100%{transform:scaleX(var(--fl,1)) scaleY(1);opacity:0}}
+
+.hfx .critstar{position:absolute;left:50%;top:50%;width:70px;height:70px;margin:-35px;background:radial-gradient(circle,#fff 0 12%,var(--c) 14% 28%,transparent 62%);clip-path:polygon(50% 0,58% 38%,100% 50%,58% 62%,50% 100%,42% 62%,0 50%,42% 38%);opacity:0;filter:drop-shadow(0 0 8px var(--c));animation:hStar .38s ease-out forwards}
+@keyframes hStar{0%{transform:scale(.2) rotate(0);opacity:1}45%{transform:scale(1.25) rotate(20deg);opacity:1}100%{transform:scale(1.5) rotate(35deg);opacity:0}}

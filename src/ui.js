@@ -132,7 +132,8 @@ export function startUI(E,app){
     const box=$('ent-'+e.def);if(!box)return;
     let col='#cfe6ff',best=0;const sn=e.snap&&e.snap[e.def],pv=PREV[e.def];
     if(sn&&pv)for(const k of Object.keys(D.keywords)){const dl=(sn[k]||0)-(pv[k]||0);if(dl>best){best=dl;col=kwc(k)}}
-    const big=e.dmg>=(C[e.def].maxHp||100)*0.15;
+    const crit=/치명/.test(e.note||'');if(crit)col='#ffd35a';
+    const big=crit||e.dmg>=(C[e.def].maxHp||100)*0.15;
     /* '마지막만 크게': 타수 3 이상인 카드는 앞의 타격은 작은 파편만, 마지막 타격에 베기와 큰 효과가 몰린다 */
     const multi=HFXM==='last'&&e._g&&e._g.n>=3,lastHit=!multi||e._g.i===e._g.n-1,bigFx=big||(multi&&lastHit);
     const n=multi&&!lastHit?3:lv===1?0:lv===2?(bigFx?10:6):(bigFx?18:12);
@@ -143,11 +144,12 @@ export function startUI(E,app){
     const kt=col===kwc('burn')||col===kwc('flame')?'burn':col===kwc('bleed')?'bleed':col===kwc('rupture')?'rupture':'';
     const hitsN=(e.card&&e.card.hits)||1,pk=a=>a[Math.floor(Math.random()*a.length)];
     const wn=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon.n:'',wm=weaponMotion(wn);
-    const mo=wm?wm:kt==='burn'?'ring':kt==='bleed'?'claw':kt==='rupture'?'crack':hitsN>=2?pk(['cross','claw']):pk(['slash','slash','thrust','cross']);
+    const mo=crit?'critx':wm?wm:kt==='burn'?'ring':kt==='bleed'?'claw':kt==='rupture'?'crack':hitsN>=2?pk(['cross','claw']):pk(['slash','slash','thrust','cross']);
     let h='';
     if(!(multi&&!lastHit)){
       if(wm&&kt==='burn')h+=`<i class="ringfx small" style="--c:${col}"></i>`;
-      if(mo==='slash')h=sl(rot,50);
+      if(mo==='critx')h=sl(rot,50,'height:7px')+sl(-rot,50,'height:7px;animation-delay:60ms')+`<i class="critstar" style="--c:${col}"></i>`;
+      else if(mo==='slash')h=sl(rot,50);
       else if(mo==='cross')h=sl(rot,50)+sl(-rot,50,'animation-delay:70ms');
       else if(mo==='claw')h=sl(rot,24,'height:3px')+sl(rot,50,'height:3px;animation-delay:50ms')+sl(rot,76,'height:3px;animation-delay:100ms');
       else if(mo==='thrust')h=`<i class="thrust" style="--c:${col};--org:${org}"></i><i class="ringfx small" style="--c:${col}"></i>`;
@@ -157,6 +159,7 @@ export function startUI(E,app){
     if(lv>=3&&lastHit)h+=`<i class="hflash" style="--c:${col}"></i>`;
     for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
     const fx=document.createElement('div');fx.className='hfx';fx.innerHTML=h;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
+    if(crit&&lv>=2)floatTxt(e.def,'치명!','#ffd35a');
     if(lastHit&&(lv>=2&&bigFx||lv>=3)){const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&bigFx?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}}
   }
   function whiffFx(e){
