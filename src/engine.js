@@ -1698,6 +1698,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* W사: 입사 직후 근무지 선택, 열차 직원은 해마다 열차 안 사건이 온다 (해는 넘어가지 않음) */
     if(mc.aff&&mc.aff.name==='W사 날개'&&D.warpFork&&mc.wtrain===undefined&&!mc.wAsked){mc.wAsked=true;return {type:'event',ev:D.warpFork}}
     if(G.infinite&&mc.wtrain&&D.warpQuit&&!mc.wLead&&!mc.wQuitShown&&(mc.year||0)>=(mc.wQuitAt||0)){mc.wQuitShown=true;return {type:'event',ev:D.warpQuit}}
+    /* 열차 연전: 사건 하나에서 적을 연달아 상대한다. 해는 넘어가지 않고, 정리가 끝나 수복한 뒤에야 해가 지난다 */
+    if(mc.wChain){const W=mc.wChain;
+      if(W.i<W.ids.length){const id=W.ids[W.i++];return {type:'fight',enemy:id,enc:{label:`${W.label} · ${W.i}/${W.ids.length}`}}}
+      mc.wChain=null;const F=W.done;return {type:'event',ev:{t:F.t,x:F.x,c:[{l:F.l,ok:{t:F.t2,fx:F.fx}}]}}}
     {const we=warpEvent(G);if(we)return {type:'event',ev:we}}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;return {type:'end',win:true,trueEnd:!!G.endless,hw:hk}}
@@ -1875,6 +1879,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
+    if(fx.warpChain&&D.warpChains&&D.warpChains[fx.warpChain]){const W=D.warpChains[fx.warpChain];ch.wChain={ids:W.ids.slice(),i:0,label:W.label,done:W.done};chips.push(`${W.label} · 연전 ${W.ids.length}판 · 해가 넘어가지 않는다`)}
     if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
       if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(r.gear)equip(ch,structuredClone(r.gear));chips.push(`W사 열차 직원 · ${r.n}`);chips.push('무기 '+r.gear.n)}}
       else chips.push('W사 날개 · 본사 근무')}
