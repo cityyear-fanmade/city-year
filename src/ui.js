@@ -133,8 +133,21 @@ export function startUI(E,app){
     const multi=HFXM==='last'&&e._g&&e._g.n>=3,lastHit=!multi||e._g.i===e._g.n-1,bigFx=big||(multi&&lastHit);
     const n=multi&&!lastHit?3:lv===1?0:lv===2?(bigFx?10:6):(bigFx?18:12);
     /* 방향: 공격한 쪽에서 맞은 쪽으로 베어 들어온다 (플레이어가 오른쪽 · 적이 왼쪽). 연달아 맞을 때는 위·아래로 번갈아 긋는다 */
-    HFXFLIP=!HFXFLIP;const fromRight=e.att==='P',rot=(fromRight?-1:1)*(HFXFLIP?1:-1)*(22+Math.round(Math.random()*12));
-    let h=multi&&!lastHit?'':`<i class="slash" style="--c:${col};--rot:${rot}deg;--org:${fromRight?'right':'left'} center;--sx:${fromRight?1:0}"></i>`;
+    HFXFLIP=!HFXFLIP;const fromRight=e.att==='P',rot=(fromRight?-1:1)*(HFXFLIP?1:-1)*(12+Math.round(Math.random()*10));
+    const org=`${fromRight?'right':'left'} center`,sl=(r,top,ex='')=>`<i class="slash" style="--c:${col};--rot:${r}deg;--org:${org};--top:${top}%;${ex}"></i>`;
+    /* 모션: 새로 걸린 키워드와 타수로 고른다 (화상=불꽃 고리, 출혈=할퀴기, 파열=균열, 연타=할퀴기·X자, 그 밖에는 베기·찌르기·X자 중 무작위) */
+    const kt=col===kwc('burn')||col===kwc('flame')?'burn':col===kwc('bleed')?'bleed':col===kwc('rupture')?'rupture':'';
+    const hitsN=(e.card&&e.card.hits)||1,pk=a=>a[Math.floor(Math.random()*a.length)];
+    const mo=kt==='burn'?'ring':kt==='bleed'?'claw':kt==='rupture'?'crack':hitsN>=2?pk(['cross','claw']):pk(['slash','slash','thrust','cross']);
+    let h='';
+    if(!(multi&&!lastHit)){
+      if(mo==='slash')h=sl(rot,50);
+      else if(mo==='cross')h=sl(rot,50)+sl(-rot,50,'animation-delay:70ms');
+      else if(mo==='claw')h=sl(rot,24,'height:3px')+sl(rot,50,'height:3px;animation-delay:50ms')+sl(rot,76,'height:3px;animation-delay:100ms');
+      else if(mo==='thrust')h=`<i class="thrust" style="--c:${col};--org:${org}"></i><i class="ringfx small" style="--c:${col}"></i>`;
+      else if(mo==='ring')h=`<i class="ringfx" style="--c:${col}"></i>`;
+      else h=`<i class="crack" style="--c:${col};--fl:${fromRight?-1:1}"></i>`;
+    }
     if(lv>=3&&lastHit)h+=`<i class="hflash" style="--c:${col}"></i>`;
     for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
     const fx=document.createElement('div');fx.className='hfx';fx.innerHTML=h;box.appendChild(fx);setTimeout(()=>fx.remove(),800);

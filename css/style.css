@@ -499,9 +499,9 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 @media (min-width:900px){.cbar-in{max-width:640px}}
 
 /* 타격 연출: 맞은 쪽 상자 위의 베기 선과 파편 */
-.hfx{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:7}
-.hfx .slash{position:absolute;left:-8%;top:48%;width:116%;height:5px;border-radius:3px;background:linear-gradient(90deg,transparent,#fff 38%,var(--c) 62%,transparent);transform:rotate(var(--rot,-26deg)) scaleX(0);transform-origin:var(--org,left center);filter:drop-shadow(0 0 7px var(--c));animation:hSlash .3s ease-out forwards}
-.hfx .whiff{position:absolute;left:-8%;top:52%;width:116%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:rotate(-14deg) scaleX(0);transform-origin:left center;animation:hSlash .35s ease-out forwards}
+.hfx{position:absolute;left:0;right:0;top:0;height:76px;pointer-events:none;overflow:visible;clip-path:inset(0 -6px -22px -6px);z-index:7}
+.hfx .slash{position:absolute;left:8%;top:var(--top,50%);width:84%;height:5px;border-radius:3px;background:linear-gradient(90deg,transparent,#fff 38%,var(--c) 62%,transparent);transform:rotate(var(--rot,-26deg)) scaleX(0);transform-origin:var(--org,left center);filter:drop-shadow(0 0 7px var(--c));animation:hSlash .3s ease-out forwards}
+.hfx .whiff{position:absolute;left:-8%;top:50%;width:116%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:rotate(-14deg) scaleX(0);transform-origin:left center;animation:hSlash .35s ease-out forwards}
 .hfx .spk{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);opacity:0;animation:hSpk .55s ease-out var(--d,0ms) forwards}
 .hfx .hflash{position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 50% 50%,var(--c),transparent 70%);opacity:0;animation:hFlash .32s ease-out forwards}
 @keyframes hSlash{0%{transform:rotate(var(--rot,-26deg)) scaleX(0);opacity:1}55%{transform:rotate(var(--rot,-26deg)) scaleX(1);opacity:1}100%{transform:rotate(var(--rot,-26deg)) scaleX(1);opacity:0}}
@@ -511,3 +511,11 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .wrap.shk2{animation:hShake2 .3s linear}
 @keyframes hShake{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}75%{transform:translate(-2px,0)}}
 @keyframes hShake2{0%,100%{transform:translate(0,0)}20%{transform:translate(-6px,2px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,1px)}80%{transform:translate(3px,0)}}
+
+.hfx .thrust{position:absolute;left:4%;top:50%;width:92%;height:4px;margin-top:-2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--c) 45%,#fff 70%,transparent);transform:scaleX(0);transform-origin:var(--org,left center);filter:drop-shadow(0 0 6px var(--c));animation:hThrust .26s ease-out forwards}
+.hfx .ringfx{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;border:3px solid var(--c);box-shadow:0 0 10px var(--c);opacity:0;animation:hRing .45s ease-out forwards}
+.hfx .ringfx.small{width:22px;height:22px;margin:-11px;border-width:2px;animation-delay:.12s}
+.hfx .crack{position:absolute;left:8%;top:12%;width:84%;height:76%;background:var(--c);clip-path:polygon(0 52%,22% 40%,34% 58%,52% 38%,66% 56%,100% 44%,100% 48%,68% 62%,52% 44%,34% 64%,22% 46%,0 56%);transform:scaleX(calc(var(--fl,1)*1)) scaleY(.4);opacity:0;filter:drop-shadow(0 0 6px var(--c));animation:hCrack .4s ease-out forwards}
+@keyframes hThrust{0%{transform:scaleX(0);opacity:1}60%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+@keyframes hRing{0%{transform:scale(.3);opacity:.95}100%{transform:scale(1.9);opacity:0}}
+@keyframes hCrack{0%{transform:scaleX(calc(var(--fl,1)*.4)) scaleY(.2);opacity:0}30%{transform:scaleX(var(--fl,1)) scaleY(1);opacity:1}100%{transform:scaleX(var(--fl,1)) scaleY(1);opacity:0}}
