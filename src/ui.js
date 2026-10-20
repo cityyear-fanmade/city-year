@@ -850,7 +850,7 @@ export function startUI(E,app){
       <li><b>장비 표기</b> 공+N 공격(명중 +N÷2, 피해 +N÷6, 모두 소수점 버림) · 명중+N 명중만 올라간다 · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · D6≥N 피해 주사위 d6을 굴려 N보다 작게 나오면 N으로 친다 · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
       <li><b>승급</b> 전투 승리(초반 ${CFG.promo.gain.early} · 중반 ${CFG.promo.gain.mid} · 보스 ${CFG.promo.gain.boss} · 히든 ${CFG.promo.gain.hidden})와 판정 성공(+${CFG.promo.gain.check})으로 진로의 포인트를 모은다(해결사 ${T.promoPoints} · 협회 ${D.careers.assoc.pts} · 날개 ${D.careers.wing.pts} · 손가락 ${D.careers.finger.pts}). 필요량에 닿으면 다음 해에 심사가 열리고, 성공하면 한 단계 오른다. 필요량은 단계마다 ×${CFG.promo.mult.join(' → ×')}씩 늘어난다. 실패하면 해결사·협회는 포인트 1/4, 날개·손가락은 1/3을 잃고, 날개는 두 번 연속 실패 시 해고, 손가락은 숙청 전투. 맨 위 단계에 오르면 특수 심사(해결사는 특색)가 한 번 열리고, 실패하면 다시 기회가 없다.</li>
       <li><b>${T.hiddenBoss}</b> 조건을 채우면 고정 전투 대신 나타난다. 금기를 어기면 머리의 집행자가, 초대장을 두 번 받아들이면 도서관이, 지령을 거역하면 대행자가 찾아온다. 특색은 ${D.hiddenBosses.find(h=>h.id==='blue').req.replace('rank<=','')}${T.rankUnit} 이상 해결사만 드물게 마주치며, ${D.hiddenBosses.find(h=>h.id==='blue').penalty.fullRank}${T.rankUnit} 미만이면 급수 부족 보정(명중·회피 ${sg(D.hiddenBosses.find(h=>h.id==='blue').penalty.atk)})을 받는다.</li>
-      <li><b>${T.titleLabel}</b> ${CFG.colorRank}${T.rankUnit} ${T.licensed} 가운데 특출난 자만 받는다. ${CFG.colorRank}${T.rankUnit}에 오를 때 1d100 + 판정 보정 ≥ ${CFG.colorDc}이면 내 색과 가장 높은 능력치로 이름이 붙는다.</li>
+      <li><b>${T.titleLabel}</b> ${CFG.colorRank}${T.rankUnit} ${T.licensed} 가운데 특출난 자만 받는다. ${CFG.colorRank}${T.rankUnit}에 오를 때 1d100 + 판정 보정 ≥ ${CFG.colorDc}이면 내 색과 가장 높은 능력치로 이름이 붙고, 모든 능력치가 ${CFG.colorMul}배가 되며 패시브를 하나 고른다.</li>
     </ul></details>`;
   }
   /* 플레이테스트 빌드: 종료 시각이 지나면 새 판을 시작할 수 없다 (진행 중인 판은 끝까지) */
@@ -1029,7 +1029,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🩸 혈귀',['혈귀 종족 특수 이벤트가 하나 추가되었습니다.']],
       ['⚔ 규칙·장비·적',['공격 수치 규칙을 바꿨습니다. 공격 2당 명중 1, 공격 6당 피해 1이 붙습니다. 상태 화면에서 환산을 볼 수 있습니다.','공방 해결사는 전용 장비로 시작하고 보관함 장비를 녹여 계속 강화합니다.','초반 적이 늘었고, 적마다 싸우는 이유를 붙이고 있습니다.','숨은 요소 일부가 추가·개편되었습니다. 어디에 있는지는 직접 찾아보세요.']],
       ['📜 엔딩 힌트',['기록실의 엔딩 힌트가 더 분명해졌습니다. 엔딩으로 이어지는 갈림길을 한 번이라도 지나치면, 그 엔딩의 소개 문구가 정확한 조건으로 바뀝니다.']],
-      ['🔧 그 밖에',['청혼과 결혼 판정을 고쳤습니다.','무한 모드에 전공 승급과 전용 사건이 추가되었습니다. 덜 본 사건이 먼저 나오고, 같은 사건이 반복되면 문구가 달라집니다.','보냐텔리 가문 출신 설명에 남아 있던 엄지 90% 문구를 지웠습니다.','일부 문구를 다듬었습니다. (웃는 가로등 설명, 기록실 엔딩 힌트 표기)','적 40여 종에 싸우는 이유를 붙였습니다.','협회 직원도 "본부 직속"에 오르면 해결사 1급이 되고, 특색 심사를 따로 받을 수 있습니다.','인연을 만나는 시기를 27세 이후 40세 안쪽으로 앞당겼습니다.','회복 카드(재생 조직 등)는 한 번 쓰면 몇 턴 동안 손패에 들어오지 않습니다. 덱이 작을 때 매 라운드 쓰던 문제를 고쳤습니다.','R사 부화장 출신의 배치 설명과 연인 문구를 고쳤습니다.','아이폰 무음 모드에서 배경음악·효과음이 나지 않던 문제를 줄이는 수정을 넣었습니다. (연출 끔 상태에서도 효과음이 납니다)']]]};
+      ['🔧 그 밖에',['청혼과 결혼 판정을 고쳤습니다.','무한 모드에 전공 승급과 전용 사건이 추가되었습니다. 덜 본 사건이 먼저 나오고, 같은 사건이 반복되면 문구가 달라집니다.','보냐텔리 가문 출신 설명에 남아 있던 엄지 90% 문구를 지웠습니다.','일부 문구를 다듬었습니다. (웃는 가로등 설명, 기록실 엔딩 힌트 표기)','적 40여 종에 싸우는 이유를 붙였습니다.','협회 직원도 "본부 직속"에 오르면 해결사 1급이 되고, 특색 심사를 따로 받을 수 있습니다.','특색의 가치를 올렸습니다. 특색을 받으면 공격·회피·속도·최대 HP가 1.2배가 되고, 패시브(낙인·재생·일격) 중 하나를 고릅니다. 색마다 다른 전용 카드는 준비 중입니다.','인연을 만나는 시기를 27세 이후 40세 안쪽으로 앞당겼습니다.','회복 카드(재생 조직 등)는 한 번 쓰면 몇 턴 동안 손패에 들어오지 않습니다. 덱이 작을 때 매 라운드 쓰던 문제를 고쳤습니다.','R사 부화장 출신의 배치 설명과 연인 문구를 고쳤습니다.','아이폰 무음 모드에서 배경음악·효과음이 나지 않던 문제를 줄이는 수정을 넣었습니다. (연출 끔 상태에서도 효과음이 납니다)']]]};
   const V944SEC=[['🔧 버그 수정',['별에 선택받은 자가 무기를 강화할 때 처음 가진 "맨손"이 재료로 뜨던 문제를 고쳤습니다. 맨손은 더 이상 보관함에 남지 않습니다.','출생 화면의 "다시 태어난다"가 다시 굴릴 때마다 위쪽 내용 높이가 달라져 움직이던 문제를 고쳤습니다. 이제 제자리에 있습니다.','제 1막 종료 화면에 "여기서 끝낸다" 버튼을 넣었습니다. 제 2막으로 가지 않고 끝낼 수 있고, 이 판의 저장이 지워집니다. "다시 태어난다"를 눌러도 이전 판 저장이 바로 지워집니다.','설정 팝업의 제목이 세로로 쪼개져 보이던 문제를 고쳤습니다.']],
     ['⚖ 조정',['PC 화면(폭 900px 이상)에서 본문, 왼쪽 능력치 칸, 오른쪽 가방 칸, 버튼, 팝업을 함께 키웠습니다. 창이 넓을수록 더 커지고, 창 높이가 낮으면 잘리지 않도록 배율을 낮춥니다. 첫 화면과 휴대폰 화면은 그대로입니다.','금기 실험으로 찾아오는 "강화체"의 이름을 "발톱 · 재시험", "조율자 · 재시험"으로 바꿨습니다.','무한 모드 불순물의 최대 HP 상한을 1000만에서 1500만으로 늘렸습니다.']]];
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
@@ -1270,7 +1270,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.colorPick?vColorPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
@@ -1322,6 +1322,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <button class="btn primary" data-a="singset">이 특이점으로 정한다</button></div>`;
   }
   /* 특수환: 승리 보상으로 능력치 하나를 골라 영구 증가 */
+  function vColorPick(){
+    const P=E.colorPasv;
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">특색 패시브</span>
+      <p class="small">도시가 당신의 색을 불렀다. 색이 주는 힘 중 하나만 고를 수 있다.</p>
+      <div class="stack" style="gap:8px">${Object.entries(P).map(([k,v])=>`<button class="btn" data-a="cpick" data-i="${k}"><b>${v.n}</b><span class="small dim">${v.e}</span></button>`).join('')}</div></div>`;
+  }
   function vPillPick(){
     const P=Object.values(D.enemies).find(e=>e.pill).pill;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">${P.n}</span>
@@ -1956,6 +1962,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       if(err){UI.offErr=err;UI.offName=n;render();return}
       const kw=UI.offKw||'bleed';E.setOffice(G.ch,n,kw);UI.offErr='';UI.offName='';UI.offKw=null;resave();
       UI.res.chips=[...UI.res.chips,`내 사무소 · ${G.ch.office.name} (${E.OKW[kw]})`];render();
+    },
+    cpick(k){
+      if(E.setColorPick(G.ch,k)){resave();UI.res.chips=[...UI.res.chips,`특색 패시브 · ${E.colorPasv[k].n}`];render()}
     },
     pill(k){
       const P=Object.values(D.enemies).find(e=>e.pill).pill;
