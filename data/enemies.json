@@ -6251,93 +6251,45 @@
    "tier": "hidden",
    "drop": {
     "n": "보랏빛 사복검",
-    "card": "x_vt_sword",
+    "card": "x_vs_a1",
     "fx": {
      "atk": 1,
      "maxHp": 5
     },
-    "e": "공+1 · HP+5 · 무기 보랏빛 사복검 · 전용 책장 · 네 태세의 무기가 떨어질 수 있다",
+    "e": "공+1 · HP+5 · 무기 보랏빛 사복검 · 전용 책장 · 전투 중 자세를 바꾼다",
     "gear": {
      "id": "w_violet_dagger",
      "slot": "weapon",
      "n": "보랏빛 사복검",
-     "e": "공+13 · 피해 2d6 · 전용 책장을 쓸 때마다 이름이 익스큐셔너 소드 · 레이피어 · 카타나 중 하나로 바뀌고, 같은 계열 카드 피해 +1",
+     "e": "공+8 · 피해 2d6 · 전투 중 매 라운드 한 번 자세(공격 · 수비 · 찌르기 · 타격)를 고른다. 자세에 따라 무기의 모습과 전용 책장의 카드가 함께 바뀐다",
      "fx": {
-      "atk": 13
+      "atk": 8
      },
      "wx": {
       "dice": [
        2,
        6
       ],
-      "vform": true
+      "forms": true
      }
     },
     "cards": [
-     "x_vt_sword",
-     "x_vt_sword",
-     "x_vt_sword",
-     "x_vt_phantom",
-     "x_vt_phantom",
-     "x_vt_slam",
-     "x_vt_slam",
-     "x_vt_slam",
-     "x_vt_wall",
-     "x_vt_wall"
+     "x_vs_a1",
+     "x_vs_a1",
+     "x_vs_a1",
+     "x_vs_a1",
+     "x_vs_a2",
+     "x_vs_a2",
+     "x_vs_a2",
+     "x_vs_a2",
+     "x_vs_a3",
+     "x_vs_a3",
+     "x_vs_a4",
+     "x_vs_a4"
     ],
     "lockDeck": true,
     "packName": "보랏빛 책장",
-    "packE": "자색검 3 · 내려찍기 3 · 환영난무 2 · 뱀의 장벽 2 (덱이 통째로 바뀐다)",
-    "gears": [
-     {
-      "id": "w_vi_hwando",
-      "slot": "weapon",
-      "n": "보랏빛 환도",
-      "e": "공+12 · 피해 2d6 · 참격의 무기",
-      "fx": {
-       "atk": 12
-      },
-      "wx": {
-       "dice": [
-        2,
-        6
-       ]
-      }
-     },
-     {
-      "id": "w_vi_spear",
-      "slot": "weapon",
-      "n": "보랏빛 창",
-      "e": "공+10 · 피해 2d5 · 적중 시 출혈 1 · 관통의 무기",
-      "fx": {
-       "atk": 10
-      },
-      "wx": {
-       "dice": [
-        2,
-        5
-       ],
-       "hitBleed": 1
-      }
-     },
-     {
-      "id": "w_vi_gauntlet",
-      "slot": "weapon",
-      "n": "보랏빛 건틀릿",
-      "e": "공+9 · 피해+1 · 피해 2d6 · 타격의 무기",
-      "fx": {
-       "atk": 9,
-       "dmgB": 1
-      },
-      "wx": {
-       "dice": [
-        2,
-        6
-       ]
-      }
-     }
-    ],
-    "gearChance": 35
+    "packE": "환도 일섬 4 · 타도 연참 4 · 자색 절개 2 · 환도 오의 2 (덱이 통째로 바뀐다) · 자세를 바꾸면 손패의 카드가 그 자세의 카드로 바뀐다 (수비 · 찌르기 · 타격 자세마다 4종씩, 모두 16종)"
    },
    "hard": {
     "hp": 1.55,

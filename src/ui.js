@@ -1493,7 +1493,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     }).join('');
     return `${M?duo({E:X,P})+vOrder(true):entHtml('E',X,X)+arenaHtml(false)+entHtml('P',P,P)+vOrder()+log}
       ${P.index&&P.starId?`<div class="prescBar"><b>📜 이번 라운드 지령</b> · <b>${esc(D.cards[P.starId].n)}</b>을(를) 내라 <span class="small">→ 지령 수행 +1 (지금 ${P.presc||0}/5) · 호흡 +4 · 받는 피해 −5%씩</span>${UI.sel.some(j=>j===P.starSlot)?' <b class="good">✔ 지령 카드를 골랐다</b>':''}</div>`:''}
-      ${triBar(P)}
+      ${triBar(P)}${formBar(P)}
       ${egoBar(C.ch)}
       <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">${P.distorted?'빛 없음':`빛 ${left}/${P.light}`}</span></div>
       <div class="hand">${cards}</div>
@@ -1502,6 +1502,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   }
   /* 하나 협회 패시브: 카드 위에서 매 라운드 한 가지를 고른다 */
   const TRI_E={gun:'공격 피해 +'+CFG.tri.gun,gon:'받는 피해 −'+CFG.tri.gon+'%',gam:'빛 +'+CFG.tri.gam,ri:'HP +'+CFG.tri.ri.heal+' · 호흡 +'+CFG.tri.ri.breath};
+  /* 보랏빛 사복검: 전투 중 라운드마다 자세를 하나 고른다 (카드를 고르기 전에) */
+  const FORM_E={a:'환도와 타도 · 피해 +'+CFG.form.atkDmg,d:'방패 겸용 단검 · 받는 피해 −'+CFG.form.defCut+'%',p:'창과 사복검 · 적중마다 출혈 +'+CFG.form.bleed,s:'건틀릿 · 적중마다 상대의 흐트러짐 +'+CFG.form.stagger};
+  function formBar(P){
+    if(!E.formOk(C))return '';
+    const used=C.formRound===C.round&&!PLAYING,off=PLAYING||FIGHT==='auto';
+    return `<div class="triBar"><div class="small dim">${esc(CFG.form.weapon[P.form]||'보랏빛 사복검')} · 이번 라운드 자세를 고른다 (손패의 카드가 그 자세의 카드로 바뀐다)${used?' · <b class="good">'+esc(CFG.form.names[P.form])+' 선택</b>':''}</div><div class="row" style="gap:6px">${Object.keys(CFG.form.names).map(k=>`<button class="btn quiet${P.form===k?' primary':''}" style="flex:1;padding:8px 4px;flex-direction:column" data-a="form" data-i="${k}" ${off||used?'disabled':''}><b>${CFG.form.names[k].replace(' 자세','')}</b><span class="mono small dim" style="font-size:10px;line-height:1.2">${esc(FORM_E[k])}</span></button>`).join('')}</div></div>`;
+  }
   function triBar(P){
     if(!E.triOk(C))return '';
     const used=C.triRound===C.round&&!PLAYING,off=PLAYING||FIGHT==='auto';
@@ -2128,6 +2135,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       C.logBefore=lb;PLAYING=true;render();if(isMobile())window.scrollTo(0,0);runPlayback(C.evs);
     },
     tri(k){if(E.setTri(C,k))render()},
+    form(k){if(E.setForm(C,k))render()},
     skip(){SKIP=true;if(wake)wake();if(tapWake)tapWake()},
     tap(){if(tapWake)tapWake()},
     fin(){
@@ -2201,6 +2209,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       c.bond={st:k,route:c.aff.type==='office'?'office':c.aff.type,name:k==='pick'?'':'하나',step:2,tries:1,love:2,since:G.year,saved:false};if(k==='pick')c.bondPick=true;if(kids)c.bond.kids=[{n:'하늘',born:G.year-23,job:'assoc',told:true},{n:'이슬',born:G.year-4,job:'fixer',told:false}];if(dist)c.distForm={n:'이름 없는 뒤틀림'};UI.res={t:'인연 시험',chips:[]};UI.screen='result';render()},
     testPick(k,v){if(!G)return;G.ch[k]=k==='orgPick'?(v||'wing'):true;if(k==='singPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0}}if(k==='wingPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0,n:'ゼロ'}}if(k==='titlePick'){G.ch.licensed=true;G.ch.rank=5;G.ch.title=D.colors[G.ch.ci].adj+' 임시'}if(k==='officePick'){G.ch.licensed=true;G.ch.rank=5}UI.res={t:'이름 시험',chips:[]};UI.screen='result';render()},
     testMoney(n){if(G){G.ch.money=n;render()}},
+    testForm(assoc){if(!G)return;const dr=D.enemies.violet.drop;E.equip(G.ch,structuredClone(dr.gear));G.ch.deck=dr.cards.slice();G.ch.deckLocked=true;if(assoc)G.ch.aff={type:'assoc',name:'하나 협회'};startCombat('thug');C.E.hp=400;C.E.maxHp=400;render()},
     testWs(yrs){if(!G)return;const c=G.ch;c.licensed=true;c.rank=5;c.aff={type:'workshop',name:'공방 해결사'};c.year=G.year=yrs||14;E.wsEnsure(c);c.stash=(c.stash||[]).concat([{id:'club',slot:'weapon',n:'무거운 쇠몽둥이',grade:1,e:'공+1',fx:{}},{id:'h_w',slot:'weapon',n:'히든 시험 무기',grade:5,e:'공+14',fx:{}},{id:'leather',slot:'armor',n:'덧댄 가죽옷',grade:1,e:'HP+6',fx:{}},{id:'rustpart',slot:'aug',n:'녹슨 특이점 부품',grade:5,e:'시험',fx:{}}]);UI.screen='shop';render()},
     testShop(){if(!G)return;G.ch.money=5000;G.ch.hp=Math.floor(G.ch.stats.maxHp/2);UI.stock=Object.keys(D.special).slice(0,2);UI.cardBox=true;UI.aid=true;UI.swapped=null;UI.tuneMsg=null;UI.bought=null;UI.deleted=null;UI.sold=null;UI.rested=null;UI.broker=null;UI.screen='shop';render()},
     /* 6시즌 자동 테스트: 사무소 개설 화면, 사건 바로 보기, 사무소 알선 */
