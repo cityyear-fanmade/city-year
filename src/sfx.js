@@ -19,10 +19,10 @@ export function createSfx(isOn,getVol){
   };
   /* crack은 쓰지 않는다(날카로운 '딱' 제거) · body: 몸통 공명(Hz 두 개와 길이) · room: 잔향 양 */
   const P={
-    snap:{crack:[3800,1.6,0.028,0.9],body:[[1100,0.07,0.55],[2400,0.045,0.3]],room:0.4,g:1.0},
-    hit: {crack:[2600,1.2,0.03,0.8], body:[[800,0.08,0.6],[1900,0.05,0.3]],room:0.35,g:0.95},
-    dodge:{crack:[1900,1.0,0.034,0.65],body:[[620,0.09,0.6],[1500,0.06,0.3]],room:0.35,g:0.95},
-    tick:{crack:[2200,1.0,0.025,0.6],body:[[1500,0.04,0.5],[3100,0.03,0.25]],room:0.25,g:0.85}
+    snap:{body:[[1900,0.03,1.0],[3300,0.02,0.7],[620,0.05,0.9]],room:0.4,g:1.0},
+    hit: {body:[[1500,0.04,1.0],[2700,0.025,0.6],[480,0.07,1.0]],room:0.35,g:0.95},
+    dodge:{body:[[1300,0.04,0.9],[2300,0.03,0.5],[380,0.08,0.9]],room:0.35,g:0.95},
+    tick:{body:[[2400,0.025,0.8],[4000,0.02,0.5],[700,0.04,0.6]],room:0.25,g:0.85}
   };
   /* 결과음: 명중(impact·hard는 큰 피해) · 막음(block) · 회피(whoosh) */
   function result(kind){
@@ -52,12 +52,21 @@ export function createSfx(isOn,getVol){
       /* 막는 소리: 방패에 닿는 둔한 울림 */
       noise(2600,0.9,'bandpass',0.05,0.6);tone(1250,0.22,0.45);tone(1930,0.16,0.32);tone(3100,0.1,0.22);tone(420,0.1,0.4,300);
     }else if(kind.startsWith('slash')){
-      /* 참격: 날카로운 쓸어내림 + 살이 갈리는 소리 */
-      tone(big?1500:1900,0.07,0.5,big?600:800);noise(big?4200:5200,1.0,'bandpass',0.07,0.75);noise(big?1100:1500,0.8,'bandpass',0.1,0.7,0.8);tone(big?240:330,0.12,0.5,150);
+      /* 참격: 쇠가 스치는 '샤' 울림(고음 공명 몇 줄) + 베어 가르는 바람 + 살에 닿는 짧은 둔탁함 */
+      const ring=(f,len,gn)=>{const n=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=nb;bp.type='bandpass';bp.frequency.value=f*det;bp.Q.value=22;
+        g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gn*2.2,t+0.002);g.gain.exponentialRampToValueAtTime(0.0008,t+len);n.connect(bp);bp.connect(g);g.connect(out);n.start(t,rnd()*0.9);n.stop(t+len+0.03)};
+      ring(2300,big?0.3:0.2,0.55);ring(3700,big?0.24:0.16,0.45);ring(5600,0.12,0.3);
+      {const n=ctx.createBufferSource();n.buffer=nb;n.playbackRate.value=1.2;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.Q.value=1.4;bp.frequency.setValueAtTime(2200,t);bp.frequency.exponentialRampToValueAtTime(7000,t+0.09);
+        const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.7,t+0.01);g.gain.exponentialRampToValueAtTime(0.0008,t+0.11);n.connect(bp);bp.connect(g);g.connect(out);n.start(t);n.stop(t+0.13)}
+      noise(big?800:1100,0.7,'lowpass',0.09,0.7,0.6);tone(big?200:260,0.1,0.55,120);
       if(big)noise(300,0.7,'lowpass',0.18,0.4,0.45,0.01);
     }else if(kind.startsWith('pierce')){
-      /* 관통: 짧게 박히는 둔탁한 퍽 + 뚫고 들어가는 소리 */
-      tone(big?300:420,0.1,0.6,150);noise(big?700:1000,0.9,"bandpass",0.06,0.6,0.7);noise(2800,1.0,'bandpass',0.025,0.45);tone(big?120:170,0.14,0.7,80);
+      /* 관통: 짧게 박히는 '푹' + 살을 뚫고 내려앉는 소리(대역이 아래로 쓸려 내림) */
+      tone(big?170:230,0.12,0.85,95);noise(big?500:700,0.8,'lowpass',0.09,0.95,0.55);
+      {const n=ctx.createBufferSource();n.buffer=nb;n.playbackRate.value=0.8;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.Q.value=2.2;bp.frequency.setValueAtTime(1700,t);bp.frequency.exponentialRampToValueAtTime(420,t+0.14);
+        const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.75,t+0.006);g.gain.exponentialRampToValueAtTime(0.0008,t+0.16);n.connect(bp);bp.connect(g);g.connect(out);n.start(t);n.stop(t+0.18)}
+      noise(3400,1.2,'bandpass',0.014,0.5);
+      if(big){tone(80,0.2,0.6,50);noise(250,0.7,'lowpass',0.2,0.5,0.4,0.01)}
     }else if(kind.startsWith('blunt')){
       /* 타격: 묵직한 쿵 + 뼈가 울리는 갈라짐 */
       tone(big?150:220,big?0.22:0.15,0.95,big?85:120);noise(big?600:900,0.7,'lowpass',big?0.2:0.13,0.9,0.5);noise(2400,1.0,'bandpass',0.035,0.55);
@@ -81,15 +90,16 @@ export function createSfx(isOn,getVol){
     const v=getVol();if(!(v>0))return;
     if(/^(impact|hard|block|whoosh|slash|pierce|blunt)/.test(kind)){result(kind);return}
     const p=P[kind]||P.tick,t=ctx.currentTime+0.005,det=1+(Math.random()-0.5)*0.12;
-    const out=ctx.createGain();out.gain.value=Math.min(2.2,1.4*p.g*(0.25+v*0.85));
+    const out=ctx.createGain();out.gain.value=Math.min(2.6,2.0*p.g*(0.25+v*0.85));
     out.connect(comp);
     const wet=ctx.createGain();wet.gain.value=p.room;out.connect(wet);wet.connect(room);
     /* 몸통 공명: 부딪힌 나무가 울리는 소리. 피치를 내리지 않고 그대로 줄어들게 해서 '뚝'하고 꺾이지 않게 한다 */
+    /* 돌·나무가 부딪히는 '톡': 짧은 잡음을 좁은 대역 공명에 통과시킨다 (사인파로 내면 삑 하는 전자음이 된다) */
     for(const [f,len,gn] of p.body){
-      const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.value=f*det;
-      g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gn*0.5,t+0.002);g.gain.exponentialRampToValueAtTime(0.0008,t+len);
-      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=f*3;
-      o.connect(g);g.connect(lp);lp.connect(out);o.start(t);o.stop(t+len+0.03)}
+      const n=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=nb;n.playbackRate.value=1;
+      bp.type='bandpass';bp.frequency.value=f*(0.93+rnd()*0.14);bp.Q.value=f>1000?11:5;
+      g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gn*2.4,t+0.0015);g.gain.exponentialRampToValueAtTime(0.0008,t+len);
+      n.connect(bp);bp.connect(g);g.connect(out);n.start(t,rnd()*0.9);n.stop(t+len+0.03)}
     /* 낮은 둔탁함 */
     {const n=ctx.createBufferSource();n.buffer=nb;n.playbackRate.value=0.5*det;
       const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;
