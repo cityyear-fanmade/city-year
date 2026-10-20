@@ -593,7 +593,7 @@ export function startUI(E,app){
   }
   function vRelic(){
     const ch=G.ch;
-    return (ch.relics||[]).length?`<div>${ch.relics.map(n=>{const e=Object.values(D.enemies).find(x=>x.drop&&x.drop.n===n),r=Object.values(D.relics||{}).find(x=>x.n===n),nt=(D.relicNotes||{})[n]||(n.startsWith('성도 · ')&&ch.seongNote?ch.seongNote.replace(/^[^·]*· /,''):'');return `<div class="invr rel"><span>${esc(n)}</span><b class="mono" style="color:var(--gold)">${e?esc(e.drop.e):r?esc(r.e):nt?esc(nt):''}</b></div>`}).join('')}</div>`:'<p class="small dim">아직 전리품이 없다. 숨은 보스를 이기면 얻는다.</p>';
+    return (ch.relics||[]).length?`<div>${ch.relics.map(n=>{const e=Object.values(D.enemies).find(x=>x.drop&&x.drop.n===n),r=Object.values(D.relics||{}).find(x=>x.n===n),nt=(D.relicNotes||{})[n]||((n.startsWith('의안 · ')||n.startsWith('신체 개조 · '))&&ch.custNote?ch.custNote:'')||(n.startsWith('성도 · ')&&ch.seongNote?ch.seongNote.replace(/^[^·]*· /,''):'');return `<div class="invr rel"><span>${esc(n)}</span><b class="mono" style="color:var(--gold)">${e?esc(e.drop.e):r?esc(r.e):nt?esc(nt):''}</b></div>`}).join('')}</div>`:'<p class="small dim">아직 전리품이 없다. 숨은 보스를 이기면 얻는다.</p>';
   }
   function sheet(inner,cls,closable){
     return `<div class="ov"><div class="ovbg"${closable?' data-a="bagclose"':''}></div><div class="sheet ${cls}" role="dialog" aria-modal="true">${inner}</div></div>`;
@@ -822,7 +822,7 @@ export function startUI(E,app){
       ${w.g.pend>0?`<div class="stack" style="gap:4px"><b class="small" style="color:var(--gold)">특수 강화 · 하나를 고른다 (${w.g.pend}번 남음)</b><div class="row" style="gap:6px;flex-wrap:wrap">${Object.entries(W_.aug.stats).map(([k,l])=>`<button class="btn" data-a="wsaugc" data-i="${k}" ${dead?'disabled':''}><b>${l} +${W_.aug.pickAmt[k]}</b></button>`).join('')}</div></div>`:`<p class="small dim">${W_.big.at.map(t=>t+'단계').join('·')}에 닿으면 공격·회피·명중 중 하나를 고른다 (지금 ${(w.g.picks||[]).length}/${W_.big.at.length}).</p>`}</div>`;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b class="serif">작업대</b><span class="chip">공방 해결사</span></div>
       <p class="small dim">전용 무기·방어구·의수는 빼거나 바꿀 수 없다. 다른 장비는 모두 재료다. 무기·방어구·의수는 같은 칸의 보관함 장비를 녹여 끝없이 강화하고, 5·10·15단계에서 한 번씩 크게 오른다(특수 강화). 15단계 뒤로는 일반 강화만 끝없이 이어진다. 히든 강화재료는 어떤 전용 장비에든 쓸 수 있다. 일반 장비는 모아서 한 단계(필요한 개수는 단계가 오를수록 늘어난다), 히든 장비는 1개로 한 단계. 녹인 장비는 돌아오지 않고, 재료로 쓴 공방 물건은 다시 살 때마다 값이 오른다.</p>
-      ${UI.wsMsg?`<p class="good small">${esc(UI.wsMsg)}</p>`:''}${rows}${custRow}${augRow}</div>`;
+      ${UI.wsMsg?`<p class="good small">${esc(UI.wsMsg)}</p>`:''}${rows}${augRow}</div>`;
   }
   function vTune(){
     const ch=G.ch,T=Object.assign({},CFG.shop.tune,{max:E.tuneMax(G.ch)}),slots=Object.keys(ch.gear).filter(k=>ch.gear[k]);
@@ -1281,7 +1281,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.colorPick?vColorPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.custPick?vCustPick():G.ch.colorPick?vColorPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
@@ -1338,6 +1338,19 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">특색 패시브</span>
       <p class="small">도시가 당신의 색을 불렀다. 색이 주는 힘 중 하나만 고를 수 있다.</p>
       <div class="stack" style="gap:8px">${Object.entries(P).map(([k,v])=>`<button class="btn" data-a="cpick" data-i="${k}"><b>${v.n}</b><span class="small dim">${v.e}</span></button>`).join('')}</div></div>`;
+  }
+  /* 특색 기념 의뢰: 이름·능력치·패시브를 직접 설계한다 */
+  function vCustPick(){
+    const ch=G.ch,K=CFG.ws.cust,cu=UI.cu=UI.cu||{name:'',atk:0,eva:0,hp:0,pas:null},noun=E.custNoun(ch);
+    const used=cu.atk*K.atkCost+cu.eva*K.evaCost+cu.hp*K.hpCost+(cu.pas?K.passCost:0),left=K.pts-used;
+    const stp=(k,l,cost,unit)=>`<div class="row between" style="gap:6px"><span class="small"><b>${l}</b> +${cu[k]*unit} <span class="dim">(${cost}포인트당 +${unit})</span></span><span class="row" style="gap:6px"><button class="chip" data-a="custd" data-i="${k}:-1" ${cu[k]<=0?'disabled':''}>−</button><button class="chip" data-a="custd" data-i="${k}:1" ${left<cost?'disabled':''}>＋</button></span></div>`;
+    const nm=(cu.name||'').trim()||'이름 없는 '+noun,pv=[cu.atk?`공격 +${cu.atk*K.atkPer}`:'',cu.eva?`회피 +${cu.eva}`:'',cu.hp?`최대 HP +${cu.hp*K.hpPer}`:'',cu.pas?`패시브 · ${K.pass[cu.pas].n} (${K.pass[cu.pas].e})`:''].filter(Boolean);
+    return `<div class="panel stack" style="gap:10px;border-color:var(--gold)"><span class="eyebrow">특색 기념 · 전용 ${noun}</span><p class="small">${esc(E.custIntro(ch))}</p>
+      <div class="row" style="gap:8px"><span class="small"><b>이름</b></span><input id="cuname" maxlength="12" autocomplete="off" placeholder="${noun} 이름 (12자까지)" value="${esc(cu.name)}" style="flex:1;min-width:0"></div>
+      <div class="row between"><b>포인트</b><span class="chip warn">남은 포인트 ${left}/${K.pts}</span></div>${stp('atk','공격',K.atkCost,K.atkPer)}${stp('eva','회피',K.evaCost,1)}${stp('hp','체력',K.hpCost,K.hpPer)}
+      <div class="stack" style="gap:4px"><span class="small"><b>패시브</b> <span class="dim">(${K.passCost}포인트, 하나만)</span></span><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-items:stretch">${Object.entries(K.pass).map(([k,v])=>`<button class="btn${cu.pas===k?' primary':''}" style="min-height:96px;justify-content:flex-start;word-break:keep-all" data-a="custp" data-i="${k}" ${cu.pas!==k&&!cu.pas&&left<K.passCost?'disabled':''}><b>${v.n}</b><span class="small dim">${v.e}</span></button>`).join('')}</div></div>
+      <div class="panel stack" style="gap:4px"><span class="eyebrow">미리보기</span><b class="serif">${esc(nm)}</b>${pv.length?pv.map(t=>`<div class="mono small" style="color:var(--gold)">${esc(t)}</div>`).join(''):'<div class="small dim">아직 아무것도 고르지 않았다.</div>'}</div>
+      <button class="btn primary" data-a="custok" ${used<=0?'disabled':''}>이 설계로 맡긴다</button><span class="small dim">포인트를 다 쓰지 않아도 맡길 수 있다. 맡기면 바꿀 수 없다.</span></div>`;
   }
   function vPillPick(){
     const P=Object.values(D.enemies).find(e=>e.pill).pill;
@@ -2209,7 +2222,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     packyes(){if(!UI.packAsk){UI.packAsk=true;render();return}UI.packAsk=false;const n=G.ch.packOffer.n;if(E.acceptPack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 덱이 바뀌고 고정되었다 (이전 덱은 가방의 카드팩 보관함에 남았다)`];resave();render()}},
     custd(v){const [k,d]=String(v).split(':'),K=CFG.ws.cust,cu=UI.cu=UI.cu||{atk:0,eva:0,hp:0,pas:null},cost={atk:K.atkCost,eva:K.evaCost,hp:K.hpCost}[k];if(!cost)return;const left=K.pts-(cu.atk*K.atkCost+cu.eva*K.evaCost+cu.hp*K.hpCost+(cu.pas?K.passCost:0));if(+d>0&&left<cost)return;cu[k]=Math.max(0,cu[k]+(+d>0?1:-1));render()},
     custp(k){const K=CFG.ws.cust,cu=UI.cu=UI.cu||{atk:0,eva:0,hp:0,pas:null};if(cu.pas===k){cu.pas=null}else{const left=K.pts-(cu.atk*K.atkCost+cu.eva*K.evaCost+cu.hp*K.hpCost+(cu.pas?K.passCost:0));if(!cu.pas&&left<K.passCost)return;cu.pas=k}render()},
-    custok(){const r=E.wsCustom(G.ch,UI.cu||{});if(r){UI.wsMsg=`커스텀 의수를 만들었다 · 공격 +${r.atk*CFG.ws.cust.atkPer} · 회피 +${r.eva} · 체력 +${r.hp*CFG.ws.cust.hpPer}${r.pas?' · '+CFG.ws.cust.pass[r.pas].n:''}`;UI.cu=null;resave();render()}},
+    custok(){const r=E.custBuild(G.ch,UI.cu||{});if(r){if(UI.res)UI.res.chips=[...(UI.res.chips||[]),...r.chips];UI.cu=null;resave();render()}},
     packalt(){UI.packAsk=false;const P=G.ch.packOffer;if(!P||!P.alt)return;if(E.acceptPackAlt(G.ch)){UI.res.chips=[...UI.res.chips,`${P.alt.label} · 후보 시절 카드를 덜어내고 흑수의 카드를 더했다`];resave();render()}},
     packno(){UI.packAsk=false;const n=G.ch.packOffer.n;if(E.declinePack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 지금 덱을 지켰다`];resave();render()}},
     gwear(){E.resolveGear(G.ch,0,true);resave();render()},
@@ -2286,6 +2299,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(t.classList.contains('bhelp'))UI.helpOpen=t.open},true);
   /* 휴대폰 키보드의 이동·완료(Enter)로도 시드 적용 */
   app.addEventListener('change',e=>{if(e.target.id!=='xfileIn')return;const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{UI.xask=null;xApply(String(r.result||''))};r.readAsText(f)});
+  app.addEventListener('input',e=>{if(e.target.id==='cuname'){(UI.cu=UI.cu||{name:'',atk:0,eva:0,hp:0,pas:null}).name=e.target.value}});
   app.addEventListener('input',e=>{if(e.target.id!=='bgmRange'&&e.target.id!=='bgmQuick')return;const v=Math.max(0,Math.min(100,+e.target.value||0));BGM.setVol(v/100);for(const id of ['bgmPct','bgmQuickPct']){const l=document.getElementById(id);if(l)l.textContent=v+'%'}});
   app.addEventListener('input',e=>{if(e.target.id!=='sfxRange')return;const v=Math.max(0,Math.min(100,+e.target.value||0));SFXS.vol=v/100;const l=document.getElementById('sfxPct');if(l)l.textContent=v+'%'});
   app.addEventListener('change',e=>{if(e.target.id==='shTitle'&&G&&G.ch){UI.shareTitle=e.target.value;UI.shareTitleFor=G.ch.seed;UI.shareText=UI.shareMsg=UI.imgUrl=null;render()}});

@@ -935,6 +935,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.eastScout&&!isN(ch)){joinAff(ch,{type:'wing',from:'wing'},CFG.nWing.name,chips);ch.eastScoutDone=true;for(let i=ch.fi||0;i<CFG.eastN.startFi;i++){ch.promos=(ch.promos||0)+1;const c=careerStep(ch);if(c)chips.push(...c)}}
     if(fx.oracleFail){ch.oracleTries=(ch.oracleTries||0)+1;ch.oracleNext=(ch.year||0)+CFG.oracle.every}
     if(fx.oracleDecline)ch.oracleTries=CFG.oracle.tries;
+    if(fx.custOpen)ch.custPick=true;
     if(fx.pinky&&!ch.pinky){ch.pinkyYear=ch.year||0;ch.pinky=true;addStats(s,D.pinky.fx);chips.push(D.pinky.n+' 표식 · '+D.pinky.e)}
     if(fx.examPass){const need=promoNeed(ch),p=promoteAny(ch);if(p){chips.push(...p.chips);ch.pp=Math.max(0,(ch.pp||0)-need);ch.promos=(ch.promos||0)+1;ch.strikes=0}}
     if(fx.examFail){
@@ -953,7 +954,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.topPass){const C_=CR[career(ch)];ch.title=isN(ch)&&isEastOuter(ch)?CFG.nWing.eastTitle:C_.topTitle;ch.titleKind='top';ch.topTries=0;ch.topNext=0;(ch.titleLog=ch.titleLog||[]).push(ch.title);addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
-    if(fx.colorPass){if(ch.titleKind==='top'){ch.title2=ch.title;ch.topTries=0}ch.colorDone=true;if(CFG.colorReward){const up=k=>{const b=s[k];s[k]=Math.max(b+1,Math.round(b*CFG.colorMul));return s[k]-b},mh=Math.round(s.maxHp*CFG.colorMul)-s.maxHp;const ga=up('atk'),ge=up('eva'),gs=up('spd');s.maxHp+=mh;ch.hp+=mh;chips.push(`특색 · 모든 능력치 ×${CFG.colorMul} (공격 +${ga} · 회피 +${ge} · 속도 +${gs} · 최대 HP +${mh})`);ch.colorPick=true;chips.push('특색 패시브 · 셋 중 하나를 고른다')}ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';(ch.titleLog=ch.titleLog||[]).push('특색');ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 발현자 · 특색 · 모든 능력치 +5')}}
+    if(fx.colorPass){if(ch.titleKind==='top'){ch.title2=ch.title;ch.topTries=0}ch.colorDone=true;ch.colorYear=ch.year||0;{const kk=(CFG.colorKind||{})[D.colors[ch.ci].adj];if(kk&&D.cards['zc_'+kk+'_a'])offerPick(ch,['zc_'+kk+'_a','zc_'+kk+'_b'],chips,'특색 카드')}if(CFG.colorReward){const up=k=>{const b=s[k];s[k]=Math.max(b+1,Math.round(b*CFG.colorMul));return s[k]-b},mh=Math.round(s.maxHp*CFG.colorMul)-s.maxHp;const ga=up('atk'),ge=up('eva'),gs=up('spd');s.maxHp+=mh;ch.hp+=mh;chips.push(`특색 · 모든 능력치 ×${CFG.colorMul} (공격 +${ga} · 회피 +${ge} · 속도 +${gs} · 최대 HP +${mh})`);ch.colorPick=true;chips.push('특색 패시브 · 셋 중 하나를 고른다')}ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';(ch.titleLog=ch.titleLog||[]).push('특색');ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 발현자 · 특색 · 모든 능력치 +5')}}
     if(fx.colorFail)topFailed(ch,chips,T.titleLabel+' 심사')
     let licensed=false;
     if(fx.license){licensed=license(ch);if(licensed){chips.push(T.licenseGained+' · '+ch.rank+T.rankUnit);alignEast(ch,chips)}}
@@ -1716,6 +1717,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.orgPick)chooseOrg(mc,one(D.orgs[mc.orgPick]));
     if(mc.fingerPick)chooseFinger(mc,mc.thumbBias&&d(100)<=mc.thumbBias?'엄지':one(D.orgs.finger));
     if(mc.pillPick)setPill(mc,'atk');
+    if(mc.custPick)custBuild(mc,{name:'',atk:4,eva:4,hp:3,pas:'absorb'});
     if(mc.colorPick)setColorPick(mc,'brand');
     if(mc.namePend)mc.namePend=null;
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
@@ -1841,6 +1843,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {const sr=synRouteEvent(G);if(sr)return {type:'event',ev:sr}}
       {const gr=giriRouteEvent(G);if(gr)return {type:'event',ev:gr}}
     }
+    {const c3=G.ch;if(c3.colorDone&&!c3.custDone&&!c3.custPick&&!c3.distForm&&!c3.job){if(c3.colorYear==null)c3.colorYear=G.year;if(G.year>=c3.colorYear+CFG.custEvent.gap&&G.year>=(c3.custNext||0)){c3.custNext=G.year+CFG.custEvent.retry;return {type:'event',ev:custEvent(c3)}}}}
     {const ch2=G.ch;if(D.redBook&&ch2.flags&&ch2.flags.redBook&&!ch2.beaten.includes('redmist')&&G.year>=(ch2.bookNext||0)){ch2.bookNext=G.year+CFG.redBook.every;{const n=ch2.redPost||0,RB=CFG.redBook,m=Math.pow(RB.hpMul,n).toFixed(2),ev=structuredClone(D.redBook);ev.c[0].h=`붉은 안개와 싸운다 · 이기면 더는 요동치지 않는다${n?` · 미뤄 온 만큼 체력 ×${m} (${n}번 미뤘다)`:''}`;ev.c[1].h=`${RB.every}년 뒤 다시 요동친다 · 붉은 안개의 체력이 ×${RB.hpMul}배로 커진다${n?` (지금 ×${m})`:''}`;ev.c[1].ok=Object.assign({},ev.c[1].ok,{fx:{redPost:true}});return {type:'event',ev}}}}
     /* 6시즌: 격리 실패 (환상체 보스는 조우 표가 아니라 이 사건으로만 나온다) */
     if(D.abnoBreach&&G.year>=CFG.abnoBreach.from&&abnoLeft(ch).length&&d(100)<=CFG.abnoBreach.chance)return {type:'event',ev:D.abnoBreach};
@@ -1974,6 +1977,33 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:res.t,roll,chips,title:licensed?rankLabel(ch):null,tlabel:licensed?T.licenseGained:null,combat:enc?enc.id:null,enc};
   }
   /* 전투 승리 보상: 회복, 카드, 경험치, 자격 등록 또는 (고정 전투) 승급 */
+  /* ===== 특색 기념 의뢰: 소속에 따라 전용 의수 · 의안(공방 해결사) · 신체 개조(N사)를 설계해 받는다 ===== */
+  const custKind=ch=>isN(ch)?'body':isWs(ch)?'eye':'aug';
+  const custNoun=ch=>({aug:'의수',eye:'의안',body:'신체 개조'})[custKind(ch)];
+  function custIntro(ch){const a=ch.aff;
+    if(isN(ch))return 'N사는 의체를 쓰지 않는다. 대신 연구소에서 특색 기념으로 전용 신체 개조를 설계해 준다고 한다.';
+    if(isWs(ch))return '공방 동료들이 특색 기념으로 전용 의안을 만들어 준다고 한다.';
+    if(!a)return '협회가 이름도 알려 주지 않고 공방 하나를 안내해 주었다. 특색 기념으로 전용 의수를 만들어 준다고 한다.';
+    if(a.type==='assoc')return `${a.name} 직속 공방에서 특색 기념으로 전용 의수를 만들어 준다고 한다.`;
+    if(a.type==='wing')return `${a.name} 직속 개발실에서 특색 기념으로 전용 의수를 만들어 준다고 한다.`;
+    if(a.type==='finger')return `${a.name}이(가) 쓰는 공방에서 특색 기념으로 전용 의수를 만들어 준다고 한다.`;
+    return `${a.name} 단골 공방에서 특색 기념으로 전용 의수를 만들어 준다고 한다.`}
+  function custEvent(ch){const nn=custNoun(ch);
+    return {t:'특색 기념 의뢰',x:`특색을 받고 한 해가 지났다. ${custIntro(ch)} 이름과 능력치를 직접 설계할 수 있다.`,c:[
+      {l:`전용 ${nn}을(를) 설계한다`,h:`포인트 ${WS.cust.pts}를 나눠 이름·능력치·패시브를 정한다`,ok:{t:`도면 위에 손을 올렸다. 무엇을 넣을지 정할 차례다.`,fx:{custOpen:true}}},
+      {l:'지금은 사양한다',h:`${CFG.custEvent.retry}년 뒤 다시 연락이 온다`,ok:{t:'다음에 하겠다고 답했다. 연락은 다시 올 것이다.',fx:{}}}]}}
+  /* 설계 확정: 의수는 장비 제안으로, 의안과 신체 개조는 몸(능력치·패시브)에 새겨진다 */
+  function custBuild(ch,o){
+    const K=WS.cust,atk=Math.max(0,o.atk|0),eva=Math.max(0,o.eva|0),hp=Math.max(0,o.hp|0),pas=o.pas&&K.pass[o.pas]?o.pas:null,used=atk*K.atkCost+eva*K.evaCost+hp*K.hpCost+(pas?K.passCost:0);
+    if(!ch.custPick||ch.custDone||used>K.pts||used<=0)return null;
+    const kind=custKind(ch),noun=custNoun(ch),nm=String(o.name||'').replace(/\s+/g,' ').trim().slice(0,12)||('이름 없는 '+noun),fx={};
+    if(atk)fx.atk=atk*K.atkPer;if(eva)fx.eva=eva;if(hp)fx.maxHp=hp*K.hpPer;
+    const txt=[atk?`공격 +${fx.atk}`:'',eva?`회피 +${eva}`:'',hp?`최대 HP +${fx.maxHp}`:'',pas?`${K.pass[pas].n} (${K.pass[pas].e})`:''].filter(Boolean).join(' · ');
+    const chips=[];ch.custPick=false;ch.custDone=true;ch.cust={name:nm,kind,atk,eva,hp,pas};
+    if(kind==='aug'){offerGear(ch,{id:'cust_aug',slot:'aug',n:nm,grade:4,e:txt,fx,cust:{pas}});chips.push(`전용 의수 · ${nm} · ${txt} (받을지 고른다)`)}
+    else{addStats(ch.stats,fx);if(fx.maxHp)ch.hp+=fx.maxHp;ch.custPas=pas;ch.custNote=txt;(ch.relics=ch.relics||[]).push(`${noun} · ${nm}`);chips.push(`${kind==='eye'?'전용 의안':'전용 신체 개조'} · ${nm} · ${txt}`)}
+    return {chips,kind,nm,txt}
+  }
   function winRewards(G,C){
     const ch=G.ch,chips=[];
     {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
@@ -2154,7 +2184,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const SM=CFG.shinmang,isC=ch.titleKind==='color'||ch.colorDone;
       if(SM.on&&ch.pinky&&isC&&!ch.distForm&&ch.mind>SM.shinCost){ch.mind-=SM.shinCost;P.sm={rings:0,limit:Math.min(SM.maxRings,(ch.pinkyKeys||[]).length)};
         mindNote.push(`신(心) · 정신력 −${SM.shinCost} (지금 ${ch.mind}) · 받는 피해 −${Math.round(SM.takeShin*100)}% · 주는 피해 +${Math.round(SM.dealShin*100)}%${P.sm.limit?` · ${SM.ringEvery}라운드마다 망 하나 (최대 ${P.sm.limit}망)`:' · 소지의 별이 없어 망은 감기지 않는다'}`)}
-      P.augPas=(ch.ws&&ch.ws.cust&&ch.ws.cust.done&&isWs(ch))?ch.ws.cust.pas:null;
+      P.augPas=(ch.gear&&ch.gear.aug&&ch.gear.aug.cust&&ch.gear.aug.cust.pas)||ch.custPas||((ch.ws&&ch.ws.cust&&ch.ws.cust.done&&isWs(ch))?ch.ws.cust.pas:null);
       if(P.augPas)mindNote.push(`커스텀 의수 · ${CFG.ws.cust.pass[P.augPas].n} · ${CFG.ws.cust.pass[P.augPas].e}`);
       const CB=CFG.colorBuff;
       if(CB.on&&isC){const k=one(['dmg','hit','eva']);P.cb={k,v:CB[k]};mindNote.push(`특색 위력 · ${({dmg:'피해',hit:'명중',eva:'회피'})[k]} +${CB[k]} (HP ${Math.round(CB.hpMin*100)}% 이상일 때)`)}}
@@ -2833,6 +2863,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
-    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
