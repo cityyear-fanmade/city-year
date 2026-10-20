@@ -120,6 +120,8 @@ export function startUI(E,app){
     s.className='float'+(cls?' '+cls:'');s.textContent=txt;s.style.color=color;
     p.appendChild(s);setTimeout(()=>s.remove(),1000);
   }
+  /* 체력 위험 표시(깜빡임): 최대 체력이 50 미만이면 10% 미만, 그 이상이면 체력 20 이하 (체력이 아주 큰 상대는 10%에서 계속 깜빡이지 않게) */
+  const isDanger=(hp,max)=>hp>0&&(max<50?hp<max*0.1:hp<=20);
   const PREV={};
   /* 타격 연출: 맞은 쪽 상자 위에 베기 선·파편이 튄다. 맞은 카드·무기가 새로 건 키워드(화상·출혈·파열 등)에 따라 색이 달라진다. 단계: off(끔)·low(가볍게)·mid(보통)·high(강하게) */
   const HFXK='cityYearHitFx';let HFX=store.get(HFXK)||'mid';
@@ -210,7 +212,7 @@ export function startUI(E,app){
       if(pv)Object.keys(D.keywords).forEach((k,i)=>{const dlt=(v[k]||0)-(pv[k]||0);if(dlt>0)setTimeout(()=>floatTxt(side,`${D.keywords[k].n} +${dlt}`,kwc(k),'kwf'),120+i*160)});
       h.textContent=`HP ${v.hp}/${X.maxHp}`;
       $('bar-'+side).firstElementChild.style.width=clamp(v.hp/X.maxHp*100,0,100)+'%';
-      {const en=$('ent-'+side);if(en)en.classList.toggle('danger',v.hp>0&&v.hp<=X.maxHp*0.1)}
+      {const en=$('ent-'+side);if(en)en.classList.toggle('danger',isDanger(v.hp,X.maxHp))}
       $('chips-'+side).innerHTML=stacks(v);
     }
   }
@@ -1438,7 +1440,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const col=X.color;PREV[side]={...v};
     const head=compact?`<div class="entname"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span>`
       :`<div class="row between"><div class="row"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span></div>`;
-    return `<div class="panel stack ent${compact?' compact':''}${v.hp>0&&v.hp<=X.maxHp*0.1?' danger':''}" id="ent-${side}" style="background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
+    return `<div class="panel stack ent${compact?' compact':''}${isDanger(v.hp,X.maxHp)?' danger':''}" id="ent-${side}" style="background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
       ${head}
       <div class="bar" id="bar-${side}"><i style="width:${clamp(v.hp/X.maxHp*100,0,100)}%;background:${col}"></i></div>
       <div class="chips" id="chips-${side}">${stacks(v)}</div>${side==='P'&&C&&C.ally?`<div class="small" style="color:var(--bleed)">${esc(C.ally.name)} · 함께 싸운다 <span class="dim">· 같은 공격을 함께 굴려 주사위 합 ¾씩 · 상대 명중 +${CFG.bond.allyHit}</span></div>`:''}${side==='E'&&X.passive?`<div class="small" style="color:var(--gold)">패시브 · ${esc(X.passive.n)}${X.passive.id==='recital'?` (악장 ${X.recital||0}/${X.passive.every})`:''}${X.passive.id==='stance'?` (${X.stance==='bear'?'곰 사냥':'범 사냥'} · 살 ${X.sal==null?5:X.sal}/${X.passive.salMax})`:''}${X.maskOn?' <b>(이번 라운드 발동)</b>':''} <span class="dim">· ${esc(X.passive.d)}</span></div>`:''}${side==='E'&&X.trait&&D.traits&&D.traits[X.trait]?`<div class="small" style="color:var(--gold)">특성 · ${esc(D.traits[X.trait].n)} <span class="dim">· ${esc(D.traits[X.trait].d)}</span></div>`:''}</div>`;
