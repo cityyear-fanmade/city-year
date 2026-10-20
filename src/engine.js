@@ -919,6 +919,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.startsWith('ledger:')){const [k,n]=req.slice(7).split('>=');return ((ch.ledger||{})[k]||0)>=+n}
     if(req==='inf')return !!ch.infinite;
     if(req==='wtrain')return !!ch.wtrain;
+    if(req.startsWith('wfi:')){const [a,b]=req.slice(4).split('-').map(Number),i=ch.fi||0;return !!ch.wtrain&&i>=a&&i<=b}
     if(req==='licensed')return ch.licensed;
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
@@ -1548,7 +1549,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* W사 열차 직원 전용 사건: 열차 안에서 일어나는 일이라 해가 넘어가지 않는다 (해마다 최대 한 번) */
   function warpEvent(G){
-    const ch=G.ch,L=D.warpEvents;if(!ch.wtrain||!L||!L.length||ch.distForm||ch.warpYear===G.year||d(100)>CFG.warp.chance)return null;
+    const ch=G.ch,L=D.warpEvents;if(!ch.wtrain||!L||!L.length||ch.distForm||ch.warpYear===G.year||d(100)>CFG.warp.chance+(ch.wLead?CFG.warp.leadPlus:0))return null;
     const seen=ch.warpSeen=ch.warpSeen||[];let pool=L.map((e,i)=>i).filter(i=>!seen.includes(i)&&meets(ch,L[i].req));
     if(!pool.length){seen.length=0;pool=L.map((e,i)=>i).filter(i=>meets(ch,L[i].req))}
     if(!pool.length)return null;const i=one(pool);seen.push(i);ch.warpYear=G.year;return L[i];
@@ -1608,6 +1609,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!ch.outSeen.settle&&bondMarried(ch)&&(ch.bond.kids||[]).some(k=>G.year-k.born>=BD.kid.adult)&&G.year>=baseEnd_+OE.settleYears){ch.outSeen.settle=1;return {type:'end',win:true,out:'settle'}}}
     /* W사: 입사 직후 근무지 선택, 열차 직원은 해마다 열차 안 사건이 온다 (해는 넘어가지 않음) */
     if(mc.aff&&mc.aff.name==='W사 날개'&&D.warpFork&&mc.wtrain===undefined&&!mc.wAsked){mc.wAsked=true;return {type:'event',ev:D.warpFork}}
+    if(G.infinite&&mc.wtrain&&D.warpQuit&&!mc.wLead&&!mc.wQuitShown&&(mc.year||0)>=(mc.wQuitAt||0)){mc.wQuitShown=true;return {type:'event',ev:D.warpQuit}}
     {const we=warpEvent(G);if(we)return {type:'event',ev:we}}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);return {type:'end',win:true,trueEnd:!!G.endless}}
@@ -1788,6 +1790,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
       if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(r.gear)equip(ch,structuredClone(r.gear));chips.push(`W사 열차 직원 · ${r.n}`);chips.push('무기 '+r.gear.n)}}
       else chips.push('W사 날개 · 본사 근무')}
+    /* W사 열차 직원이 무한 모드(2막)에서 열차를 내릴지 정한다: free=내리고 독립(공방·해결사·소속 제안이 다시 열린다) · stay=남아 정리 요원장 · later=5년 뒤 다시 */
+    if(fx.wquit&&ch.wtrain){const W_=CFG.warp;
+      if(fx.wquit==='free'){ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;chips.push('W사 열차를 내렸다 · 어느 소속도 아니다');chips.push('공방과 해결사, 소속 제안의 길이 다시 열린다')}
+      else if(fx.wquit==='stay'){ch.wLead=true;addStats(ch.stats,W_.lead);ch.hp+=W_.lead.maxHp;chips.push('정리 요원장 · 열차에 남는다');chips.push(`최대 HP +${W_.lead.maxHp} · 공격 +${W_.lead.atk} · 열차 사건이 더 자주 온다`)}
+      else{ch.wQuitAt=(ch.year||0)+W_.laterYears;ch.wQuitShown=false;chips.push(`${W_.laterYears}년 뒤 같은 서류가 놓인다`)}}
     if(fx.bondLeave&&ch.bond&&ch.bond.st==='met')bondLeft(ch,chips);
     if(fx.bondPropose)bondPropose(ch,chips,true);
     if(fx.bondSlip)bondPropose(ch,chips,false);
