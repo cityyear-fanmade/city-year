@@ -1636,8 +1636,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* W사 열차 직원 전용 사건: 열차 안에서 일어나는 일이라 해가 넘어가지 않는다 (해마다 최대 한 번) */
   function warpEvent(G){
     const ch=G.ch,L=D.warpEvents;if(!ch.wtrain||!L||!L.length||ch.distForm||ch.warpYear===G.year||d(100)>CFG.warp.chance+(ch.wLead?CFG.warp.leadPlus:0))return null;
-    const seen=ch.warpSeen=ch.warpSeen||[];let pool=L.map((e,i)=>i).filter(i=>!seen.includes(i)&&meets(ch,L[i].req));
-    if(!pool.length){seen.length=0;pool=L.map((e,i)=>i).filter(i=>meets(ch,L[i].req))}
+    const seen=ch.warpSeen=ch.warpSeen||[];let pool=L.map((e,i)=>i).filter(i=>!seen.includes(i)&&meets(ch,L[i].req)&&!(L[i].once&&(ch.warpOnce||[]).includes(L[i].once)));
+    if(!pool.length){seen.length=0;pool=L.map((e,i)=>i).filter(i=>meets(ch,L[i].req)&&!(L[i].once&&(ch.warpOnce||[]).includes(L[i].once)))}
     if(!pool.length)return null;const i=one(pool);seen.push(i);ch.warpYear=G.year;return L[i];
   }
   function advanceYear(G){
@@ -1879,7 +1879,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
-    if(fx.warpChain&&D.warpChains&&D.warpChains[fx.warpChain]){const W=D.warpChains[fx.warpChain];ch.wChain={ids:W.ids.slice(),i:0,label:W.label,done:W.done};chips.push(`${W.label} · 연전 ${W.ids.length}판 · 해가 넘어가지 않는다`)}
+    if(fx.warpChain&&D.warpChains&&D.warpChains[fx.warpChain]){const W=D.warpChains[fx.warpChain];ch.wChain={ids:W.ids.slice(),i:0,label:W.label,done:W.done};if(fx.warpChain==='blood')(ch.warpOnce=ch.warpOnce||[]).push('bloodhunt');chips.push(`${W.label} · 연전 ${W.ids.length}판 · 해가 넘어가지 않는다`)}
     if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
       if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(r.gear)equip(ch,structuredClone(r.gear));chips.push(`W사 열차 직원 · ${r.n}`);chips.push('무기 '+r.gear.n)}}
       else chips.push('W사 날개 · 본사 근무')}
