@@ -1592,6 +1592,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     {const rv=rbFree(G);if(rv)return rv}
     if(mc.hw&&mc.hw.done&&!mc.hw.ended){mc.hw.ended=true;return {type:'end',win:true,hw:mc.hw.flee?'hwflee':mc.hw.maker?'hwmaker':mc.hw.host?'hwhost':mc.hw.broke?'hwbreak':'hwfree'}}
+    if(mc.wEnd&&!mc.wEnded){mc.wEnded=true;return {type:'end',win:true,hw:mc.wEnd}}
     if(mc.rb&&mc.rb.done&&!mc.rb.ended){mc.rb.ended=true;return {type:'end',win:true,rb:true}}
     /* 연전: 바랄을 쓰러뜨리면 쉬지 않고 제나가 나선다 */
     if(G.ch.hw&&G.ch.hw.hongruPend&&!G.ch.beaten.includes('hongru'))return {type:'fight',enemy:'hongru',enc:{hidden:true,label:'선황충을 노리는 홍루'}};
@@ -1792,9 +1793,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else chips.push('W사 날개 · 본사 근무')}
     /* W사 열차 직원이 무한 모드(2막)에서 열차를 내릴지 정한다: free=내리고 독립(공방·해결사·소속 제안이 다시 열린다) · stay=남아 정리 요원장 · later=5년 뒤 다시 */
     if(fx.wquit&&ch.wtrain){const W_=CFG.warp;
-      if(fx.wquit==='free'){ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;chips.push('W사 열차를 내렸다 · 어느 소속도 아니다');chips.push('공방과 해결사, 소속 제안의 길이 다시 열린다')}
-      else if(fx.wquit==='rival'){ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;ch.flags.wayfarer=1;addStats(ch.stats,W_.rival.stats);ch.money+=W_.rival.money;chips.push('웨이페어러 컴퍼니와 계약했다 · 열차를 내렸다');chips.push(`속도 +${W_.rival.stats.spd} · 판정 +${W_.rival.stats.check} · 계약금 ${W_.rival.money}`)}
-      else if(fx.wquit==='stay'){ch.wLead=true;addStats(ch.stats,W_.lead);ch.hp+=W_.lead.maxHp;chips.push('정리 요원장 · 열차에 남는다');chips.push(`최대 HP +${W_.lead.maxHp} · 공격 +${W_.lead.atk} · 열차 사건이 더 자주 온다`)}
+      const wTitle=tt=>{ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt);chips.push('칭호 · '+tt)}};
+      if(fx.wquit==='free'){wTitle('열차를 내린 자');ch.wEnd='wfree';ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;chips.push('W사 열차를 내렸다 · 어느 소속도 아니다');chips.push('공방과 해결사, 소속 제안의 길이 다시 열린다')}
+      else if(fx.wquit==='rival'){wTitle('열차를 내린 자');ch.wEnd='wrival';ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;ch.flags.wayfarer=1;addStats(ch.stats,W_.rival.stats);ch.money+=W_.rival.money;chips.push('웨이페어러 컴퍼니와 계약했다 · 열차를 내렸다');chips.push(`속도 +${W_.rival.stats.spd} · 판정 +${W_.rival.stats.check} · 계약금 ${W_.rival.money}`)}
+      else if(fx.wquit==='stay'){wTitle('정리 요원장');ch.wEnd='wstay';ch.wLead=true;addStats(ch.stats,W_.lead);ch.hp+=W_.lead.maxHp;chips.push('정리 요원장 · 열차에 남는다');chips.push(`최대 HP +${W_.lead.maxHp} · 공격 +${W_.lead.atk} · 열차 사건이 더 자주 온다`)}
       else{ch.wQuitAt=(ch.year||0)+W_.laterYears;ch.wQuitShown=false;chips.push(`${W_.laterYears}년 뒤 같은 서류가 놓인다`)}}
     if(fx.bondLeave&&ch.bond&&ch.bond.st==='met')bondLeft(ch,chips);
     if(fx.bondPropose)bondPropose(ch,chips,true);
@@ -1859,6 +1861,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     if(foe.hidden){
       ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
+      if(C.id==='kasetti'){ch.titles=ch.titles||[];if(!ch.titles.includes('혈귀를 잠재운 자')){ch.titles.push('혈귀를 잠재운 자');(ch.titleLog=ch.titleLog||[]).push('혈귀를 잠재운 자');chips.push('칭호 · 혈귀를 잠재운 자')}}
       if(C.id==='hongru'&&ch.hw&&ch.hw.accept&&!ch.hw.maker){ch.hw.maker=1;ch.hw.done=1;chips.push('홍루를 쓰러뜨렸다 · 선황충을 품은 가주 곁의 필두로 남는다')}
       if(foe.chain){ch.flags.zenaPend=1;chips.push('연전 · 쉴 틈 없이 다음 상대가 나선다')}else if(C.id===CFG.endless.finalNext)ch.flags.zenaPend=0;
       if(ch.corp&&ch.corp.trial===C.id)ch.corp.trial=null;
