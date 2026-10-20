@@ -264,7 +264,7 @@ export const CFG = {
       {n: '후보의 장도', fx: {atk: 5, eva: 4}, dice: [2, 5], wx: {hitInk: 1}, e: '공+5 · 회피+4 · 피해 2d5 · 적중 시 수흔 +1'}],
       host: {n: '가주의 장도', fx: {atk: 8, eva: 4}, dice: [2, 6], wx: {hitInk: 1, lightUp: 1}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 수흔 +1 · 전투 시작 빛 +1'},
       free: {n: '가주의 장도', fx: {atk: 5, eva: 7}, dice: [2, 6], wx: {hitInk: 1, inkCap: 4}, e: '공+5 · 회피+7 · 피해 2d6 · 적중 시 수흔 +1 · 수흔 스택 한도 +4'}}},
-  rb: {total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, team: [[30, '토끼팀'], [60, '순록팀'], [90, '코뿔소팀'], [100, '까마귀팀']], foes: {'까마귀팀': 'rh2', '코뿔소팀': 'rh3', '순록팀': 'rh4', '토끼팀': 'rh5'}, headFrom: 64, headGap: 1, bossGap: 3, head: ['baral'], boss: 'rcorp_boss', xp: 4, trial: {baral: {hp: 0.75, atk: -1}, zena: {hp: 0.75, atk: -1}}},
+  rb: {total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, team: [[34, '토끼팀'], [67, '순록팀'], [100, '코뿔소팀']], foes: {'까마귀팀': 'rh2', '코뿔소팀': 'rh3', '순록팀': 'rh4', '토끼팀': 'rh5'}, headFrom: 64, headGap: 1, bossGap: 3, head: ['baral'], boss: 'rcorp_boss', xp: 4, trial: {baral: {hp: 0.75, atk: -1}, zena: {hp: 0.75, atk: -1}}},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},
   middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30], evaEff: [1, 1, 0.5, 0], evaDr: 0.5, drCap: 50, counter: 3, sinkHit: 0.5, cap: 10},
