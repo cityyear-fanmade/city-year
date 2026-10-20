@@ -840,7 +840,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(k==='rank2'){r.rank2=1;addStats(ch.stats,Z.rank2Fx);if(Z.rank2Fx.maxHp)ch.hp+=Z.rank2Fx.maxHp;const tt='흑수 필두';ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt)}addCard(ch,'zb_'+r.bk+'_3',chips,'흑수 카드');addCard(ch,'zb_'+r.bk+'_5',chips,'흑수 카드');{const w=((D.hwBeast.weapons||{})[r.bk]||[])[2];if(w){equip(ch,structuredClone(w));chips.push(`필두의 무기 · ${w.n} (${w.e})`)}}chips.push(`칭호 · ${tt} (${aniOf(r.bk).nm}) · 공격 +${Z.rank2Fx.atk} · 회피 +${Z.rank2Fx.eva} · 최대 HP +${Z.rank2Fx.maxHp}`)}
       else if(k==='mk'){r.mk=(r.mk||0)+1;chips.push(`후보를 세우는 일 ${r.mk}/${(D.hwBeast.maker||[]).length}`);{const CR=CFG.hw.candRanks||[],cl=CR[Math.min(r.mk,CR.length-1)];if(cl)chips.push(`후보의 위상 · ${cl}`)}if(r.mk>=(D.hwBeast.maker||[]).length){const w=((D.hwBeast.weapons||{})[r.bk]||[])[3];if(w){equip(ch,structuredClone(w));chips.push(`무기가 완성되었다 · ${w.n} (${w.e})`)}}}
       else if(k==='accept'){r.accept=1;r.hongruPend=1;chips.push('선황충을 받아들였다 · 홍루가 나선다')}
-      else if(k==='flee'){r.flee=1;r.maker=1;r.done=1;chips.push('가문을 버리고 후보와 도망쳤다')}
+      else if(k==='flee'){r.flee=1;r.maker=1;r.out=1;r.fc=0;r.fh=0;r.cnext=(ch.year||0)+CFG.hw.fleeGap;chips.push('가문을 버리고 후보와 도망쳤다 · 홍원의 추격대가 뒤를 쫓는다')}
+      else if(k==='fchase'){ch.purge=D.hwBeast.fleeIds[r.fc];r.fc++;r.cnext=(ch.year||0)+CFG.hw.fleeGap}
+      else if(k==='fhide'){r.fh++;r.cnext=(ch.year||0)+CFG.hw.fleeGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
+      else if(k==='fend'){r.done=1;chips.push('추격이 끝났다')}
     }
     if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
       if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}
@@ -1317,6 +1320,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== H사 홍원 가주 후보 루트 =====
      ch.hw = {fi(가문 사건 진행), picked, pair, rivals[적 id], rv(만난 후보 수), cnext, shrine, host(선황충), elderDone, fnext, finalSeen, done} */
   /* 흑수 루트: 하나의 흑수로 활동하며 흑수 → 필두가 되고, 후보 한 명을 가주로 세운다 (가주메이커) */
+  /* 도망자 루트: 후보와 홍원을 떠난 뒤 추격대가 차례로 온다 (방계 → 흑수 → 철함사 → 홍루). 이기면 추격이 끝난다 */
+  function hwFleeYear(G){
+    const ch=G.ch,r=ch.hw,y=G.year,B=D.hwBeast,ids=B.fleeIds,cn=(ch.bond&&ch.bond.name)||(D.enemies[r.cand]||{}).n||'가주 후보';
+    if(r.done)return null;
+    {const bv=bondEvent(G);if(bv)return bv}
+    const fill=ev=>JSON.parse(JSON.stringify(ev).replace(/\{c\}/g,cn));
+    if(ids.every(id=>ch.beaten.includes(id)))return fill(B.fleeEnd);
+    if(y<r.cnext)return null;
+    if(r.fc<ids.length&&(r.fc===0||ch.beaten.includes(ids[r.fc-1]))){const ev=fill(B.fleeChase[r.fc]);if(r.fh>=2)ev.c=ev.c.slice(0,1);return ev}
+    return null;
+  }
   function hwBeastYear(G){
     const ch=G.ch,r=ch.hw,y=G.year,Z=CFG.hw.beast,B=D.hwBeast;if(!B||!r.bk||r.maker)return null;
     /* 흑수가 홍원에 머무는 동안에도 인연(자신이 후원할 가주 후보)이 이어진다: 흑수가 된 뒤 한 번 만나고, 이후 인연 사건이 때가 되면 먼저 온다 */
@@ -1343,7 +1357,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!r.fork&&r.fi>=1&&y>=Z.forkAt&&R.fork){const ks=Z.beast.keys.filter(k=>hwAllowed().includes(k)),F=R.fork;
       return {t:F.t,x:F.x,c:[{l:F.stay,h:F.stayH,ok:{t:F.stayT,fx:{hwb:'stay'}}},...ks.map(key=>{const {nm,hj}=aniOf(key),cd=D.cards['zp_'+key];
         return {l:`${nm}(${hj})의 흑수가 된다`,h:`가주 승계를 포기한다 · 이 흑수 하나로만 활동한다 · 카드 ${cd.n.replace('흑수 · ','')} 1장 (${cd.d.split(' · ')[1]||cd.d.split(' · ')[0]}) · 최대 HP +${Z.beast.startFx.maxHp} · 회피 +${Z.beast.startFx.eva}`,ok:{t:F.beastT.replace(/\{n\}/g,nm),fx:{hwb:'become',hwbKey:key}}}})]}}
-    if(r.beast)return hwBeastYear(G);
+    if(r.beast)return r.flee?hwFleeYear(G):hwBeastYear(G);
     /* 1) 홍원 안: 앞의 가문 사건 */
     if(r.fi<Z.homeEvents)return y>=Z.famAt[r.fi]?R.fam[r.fi]:null;
     /* 2) 가주의 명으로 홍원 밖에서 영생의 단서를 찾는다 */
