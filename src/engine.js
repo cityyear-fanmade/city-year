@@ -136,7 +136,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문). 숨은 출생이 talents·flaws·kidTable·noWeapon을 가지면 재능·결점·성장기는 그 표에서, 무기는 맨손(전용 무기)으로 */
     const HO=!J&&(!keep||keep.fate)&&(D.hiddenOrigins||[]).find(x=>x.roll===(keep&&keep.fate?keep.fate:r.o)&&(keep||!(CFG.blankFate.pool||[]).includes(x.roll)));
     const o=keep?(keep.fate&&HO?HO:BLANK.o):J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(o.talents||D.talents,r.t),f=keep?BLANK.f:pick(o.flaws||D.flaws,r.f),w=keep||o.noWeapon?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
-    const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,dr:0,regen:0,defUp:0,hit:0,wsFirst:0,wsShield:0,wsCyc:0,wsCycK:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,gearUp:0,egoSight:0,relicApt:0};
+    const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,dr:0,regen:0,defUp:0,hit:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,gearUp:0,egoSight:0,relicApt:0};
     for(const x of [o,t,f])addStats(s,x.fx);
     const kid=keep?keep.kid.map(k=>{addStats(s,k.x.fx);return k}):childhood(s,o);
     const ch={r,o,t,f,w,kid,ci,blank:!!keep&&!(keep.fate&&HO),fated:!!(keep&&keep.fate&&HO),color:D.colors[ci].hex,licensed:false,title:null,aff:null,paths:Object.assign({},o.paths),
@@ -191,6 +191,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 육신 뒤틀림: 장비를 낄 수 없다 (보관함으로) · N사 날개: 의수를 끼지 않는다 (보관함으로) */
     if((ch.distForm&&!ch.distStable)||(item.slot==='aug'&&isN(ch))){(ch.stash=ch.stash||[]).push(item);return}
     const s=ch.stats,old=ch.gear[item.slot];
+    /* 공방 해결사의 전용 무기·방어구·의수는 빼거나 다른 장비로 바꿀 수 없다 (다른 장비는 보관함으로) */
+    if(old&&old.id==='ws_'+item.slot&&item.id!==old.id&&isWs(ch)){(ch.stash=ch.stash||[]).push(item);return}
     if(old)for(const [k,v] of Object.entries(old.fx))if(k!=='dmin'&&k in s){s[k]-=v;if(k==='maxHp')ch.hp=Math.min(ch.hp,s.maxHp)}
     for(const [k,v] of Object.entries(item.fx))if(k!=='dmin'&&k in s){s[k]+=v;if(k==='maxHp')ch.hp+=v}
     ch.gear[item.slot]=item;
@@ -529,32 +531,39 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const wsHidden=m=>!(D.items&&D.items[m.id])&&!((m.grade||0)>=1&&(m.grade||0)<=4)&&!(m.id==='birth'||m.n==='맨손');
   function wsItem(ch,slot){
     const w=ch.ws,k=w[wsKey(slot)];
-    if(slot==='weapon'){const C_=WS.weapon,atk=C_.base.atk+k.n*C_.normal.atk,dmg=k.h*C_.hidden.dmgB+Math.floor(k.n/C_.dmgEvery);
+    if(slot==='weapon'){const C_=WS.weapon,atk=C_.base.atk+k.n*C_.normal.atk,dmg=k.h*C_.hidden.dmgB;
       return {id:'ws_weapon',slot,n:C_.n,grade:4,e:`공+${atk}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{atk,dmgB:dmg},wx:{dice:C_.dice.slice()}}}
     if(slot==='armor'){const C_=WS.armor,hp=C_.base.maxHp+k.n*C_.normal.maxHp;
       return {id:'ws_armor',slot,n:C_.n,grade:4,e:`HP+${hp}${k.h?` · 받는 피해 −${k.h}% · 회피+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{maxHp:hp,dr:k.h*C_.hidden.dr,eva:k.h*C_.hidden.eva}}}
-    const A_=WS.aug[k.t];
-    if(k.t==='atk'){const f=A_.base+k.n*A_.normal;return {id:'ws_aug',slot,n:A_.n,grade:4,e:`${A_.d}${f}${k.h?` · 피해+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{wsFirst:f,dmgB:k.h*A_.hidden.dmgB}}}
-    if(k.t==='def'){const f=A_.base+k.n*A_.normal;return {id:'ws_aug',slot,n:A_.n,grade:4,e:`${A_.d}${f}${k.h?` · 라운드마다 회복+${k.h}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{wsShield:f,regen:k.h*A_.hidden.regen}}}
-    const st=Math.min(A_.cap,A_.base+k.n*A_.normal),kn=Math.min(A_.kws.length,A_.kwBase+k.h);
-    return {id:'ws_aug',slot,n:A_.n,grade:4,e:`${A_.d}${st} · 키워드 ${kn}종 (${A_.kws.slice(0,kn).map(x=>D.keywords[x]?D.keywords[x].n:x).join('·')}) · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}`,fx:{wsCyc:st,wsCycK:kn}}
+    const A_=WS.aug,fx=Object.assign({},A_.base);if(k.pick)fx[k.pick]=(fx[k.pick]||0)+A_.pick;
+    return {id:'ws_aug',slot,n:A_.n,grade:4,e:Object.entries(fx).map(([x,v])=>`${A_.stats[x]||x}+${v}`).join(' · ')+(k.pick?` · 개조 완료 (${A_.stats[k.pick]}+${A_.pick})`:' · 히든 의수 하나로 개조할 수 있다'),fx}
   }
+  /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
   function wsOpen(ch,chips){
-    if(ch.ws)return;for(const k of ['wsFirst','wsShield','wsCyc','wsCycK'])if(!(k in ch.stats))ch.stats[k]=0;
-    ch.ws={y:ch.year||0,ups:0,w:{n:0,h:0,p:0},a:{n:0,h:0,p:0},g:null};
-    for(const sl of ['weapon','armor']){const it=wsItem(ch,sl),cur=ch.gear[sl];
-      if(!cur||cur.n==='맨손'){equip(ch,it);chips&&chips.push(`첫 공방 개설 · ${it.n} (${it.e}) · 장착했다`)}else{(ch.stash=ch.stash||[]).push(it);chips&&chips.push(`첫 공방 개설 · ${it.n} (${it.e}) · 보관함에 두었다`)}}
+    if(ch.ws)return;
+    ch.ws={y:ch.year||0,ups:0,w:{n:0,h:0,p:0},a:{n:0,h:0,p:0},g:{pick:null}};
+    for(const sl of ['weapon','armor','aug']){const it=wsItem(ch,sl);equip(ch,it);chips&&chips.push(`첫 공방 개설 · ${it.n} (${it.e})`)}
+    chips&&chips.push('전용 무기·방어구·의수는 빼거나 바꿀 수 없다 · 다른 장비는 녹여서 재료로 쓴다');
   }
-  const wsEnsure=ch=>{if(isWs(ch)&&!ch.ws)wsOpen(ch,[])};
-  const wsAugReady=ch=>!!ch.ws&&!ch.ws.g&&(ch.year||0)-ch.ws.y>=WS.augYears&&ch.ws.ups>=WS.augUps&&!ch.distForm;
-  function wsAug(ch,t){
-    if(!wsAugReady(ch)||!WS.aug[t])return false;
-    ch.ws.g={t,n:0,h:0,p:0};const it=wsItem(ch,'aug');equip(ch,it);return true;
+  /* 예전 저장(의수 유형이 있던 판)과 공방 해결사가 된 뒤 처음 들어오는 경우를 맞춘다 */
+  function wsEnsure(ch){
+    if(!isWs(ch))return;
+    if(!ch.ws){wsOpen(ch,[]);return}
+    if(!ch.ws.g||!('pick' in ch.ws.g)){ch.ws.g={pick:null};}
+    for(const sl of ['weapon','armor','aug'])if(!ch.gear[sl]||ch.gear[sl].id!=='ws_'+sl)equip(ch,wsItem(ch,sl));
   }
-  /* 보관함 장비 하나를 녹여 장착 중인 전용 장비를 강화한다. 무기는 무기, 방어구는 방어구를 재료로 받고 의수는 무엇이든 받는다 */
+  /* 의수는 히든 의수 하나로 한 번만 개조한다: 공격·회피·명중 중 하나를 올린다 */
+  const wsAugOk=(ch,m)=>!!ch.ws&&ch.ws.g&&!ch.ws.g.pick&&isWs(ch)&&!!m&&m.slot==='aug'&&wsHidden(m)&&!(m.id&&String(m.id).startsWith('ws_'));
+  function wsAugPick(ch,i,stat){
+    const st=ch.stash||[],m=st[i];if(!wsAugOk(ch,m)||!WS.aug.stats[stat]||(ch.distForm&&!ch.distStable))return null;
+    st.splice(i,1);ch.ws.g.pick=stat;ch.ws.ups++;
+    const cur=ch.gear.aug;equip(ch,wsItem(ch,'aug'));if(cur)ch.stash=ch.stash.filter(x=>x!==cur);
+    return {m:m.n,stat};
+  }
+  /* 보관함 장비 하나를 녹여 장착 중인 전용 무기·방어구를 강화한다. 무기는 무기, 방어구는 방어구만 재료가 된다 */
   function wsMelt(ch,slot,i){
     const w=ch.ws,st=ch.stash||[],m=st[i],cur=ch.gear[slot];
-    if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||(m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot||(ch.distForm&&!ch.distStable))return null;
+    if(!w||!isWs(ch)||slot==='aug'||!cur||cur.id!=='ws_'+slot||!m||(m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot||(ch.distForm&&!ch.distStable))return null;
     const k=w[wsKey(slot)],hid=wsHidden(m);let step=0;
     st.splice(i,1);
     if(D.items&&D.items[m.id]){w.used=w.used||{};w.used[m.id]=(w.used[m.id]||0)+1}
@@ -1982,7 +1991,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',hunger:ch.flags&&ch.flags.hunger?0:null,name:(eqT(ch)?`[${eqT(ch)}] `:'')+(ch.name||T.you),tt:eqT(ch)||'',color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:Math.max(0,s.eva-infYears(ch)*CFG.infinite.evaDown),spd:s.spd,
       bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
-    P.ample=ch.ample||0;P.hitB=s.hit||0;P.wsFirst=s.wsFirst||0;P.wsCyc=s.wsCyc||0;P.wsCycK=s.wsCycK||0;if(s.wsShield)P.shield=Math.min(CFG.shieldCap,(P.shield||0)+s.wsShield);P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
+    P.ample=ch.ample||0;P.hitB=s.hit||0;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;
     const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*grow)*(e.hidden?H_.hpMul*(EZ?EZ.hidden:1):S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*g));
@@ -2352,7 +2361,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.extraD2){let x=0;for(let i=0;i<A.extraD2;i++)x+=d(2);dmg+=x;note+=` 추가 1d2×${A.extraD2}+${x}`}
       if(A.passive&&A.passive.id==='stance'){const x=A.stance==='bear'?A.sal:Math.floor((A.passive.salMax-A.sal)/2);if(x>0){dmg+=x;note+=` 본국검술[살] ${A.sal} · ${A.stance==='bear'?'곰 사냥':'범 사냥'}+${x}`}}
       if(B.passive&&B.passive.id==='stance'){const v=B.stance==='bear'?Math.max(0,5-B.sal):Math.max(0,B.sal-5);if(v>0){dmg+=v*2;note+=` 살 ${B.sal} · 취약+${v*2}`}}
-      if(A.wsFirst&&!A.wsFirstUsed){A.wsFirstUsed=true;dmg+=A.wsFirst;note+=` 분쇄 의수+${A.wsFirst}`}
       if(A.passive&&A.passive.id==='kas'&&B.bleed>0){const x=Math.min(B.bleed,A.passive.cap)*A.passive.per;dmg+=x;note+=` ${A.passive.n}+${x}`}
       if(A.passive){
         if(A.passive.id==='godfather'&&A.gfBonus){const x=d(2);dmg+=x;A.gfBonus=false;note+=` ${A.passive.n}+${x}`}
@@ -2418,7 +2426,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
-      if(A.wsCyc&&B.hp>0){const ks=WS.aug.gim.kws.slice(0,A.wsCycK||1),k_=ks[(A.wsCi||0)%ks.length];A.wsCi=(A.wsCi||0)+1;applyKw(A,B,{kw:[[k_,A.wsCyc,'t']]},L)}
       if(A.wx&&A.wx.hitBleed&&B.hp>0){B.bleed=Math.min(bleedCap(B),B.bleed+A.wx.hitBleed);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 출혈 +${A.wx.hitBleed} (지금 ${B.bleed})`)}
       if(A.inkIds&&A.inkIds.length&&!c.inkFollow&&B.hp>0){const id=A.inkIds[(A.inkI=A.inkI||0)%A.inkIds.length],K=CFG.ink;if(A.obey>0)A.obey--;A.inkI++;let x=K.follow+Math.max(0,A.inkIds.length-1)*K.followPer;if(B.shield>0){const ab=Math.min(B.shield,x);B.shield-=ab;x-=ab}hpLoss(C,B,x,L);B.ink=Math.min(K.cap+(A.wx&&A.wx.inkCap||0),(B.ink||0)+K.followInk);L('hit',`  ${A.name}의 ${D.cards[id].n.replace('흑수 · ','')} 흑수가 거든다 · ${B.name}에게 ${x} · 수흔 +${K.followInk} (지금 ${B.ink})`)}
       if(A.wx&&A.wx.hitInk&&B.hp>0){B.ink=Math.min(CFG.ink.cap+(A.wx.inkCap||0),(B.ink||0)+A.wx.hitInk);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 수흔 +${A.wx.hitInk} (지금 ${B.ink})`)}
@@ -2644,7 +2651,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    wsOpen,wsEnsure,wsMelt,wsAug,wsAugReady,wsNeed,wsHidden,
+    wsOpen,wsEnsure,wsMelt,wsAugPick,wsAugOk,wsNeed,wsHidden,
     cardCost,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
