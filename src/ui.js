@@ -1823,9 +1823,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     setTimeout(()=>{C=sv.C;HFX=sv.HFX;MODE=sv.MODE;SKIP=sv.SKIP;HFXM=sv.HFXM},n*230+900);
   }
   function labDraw(){
+    const EXP=window.CITY_EXPIRES;
+    if(EXP&&Date.now()>EXP){app.innerHTML='<div class="stack" style="gap:10px;padding:40px 20px;text-align:center"><b class="serif" style="font-size:1.3em">시험 기간이 끝났습니다</b><span class="small dim">이 타격 모션 시험실은 정해진 시간까지만 열려 있습니다.</span></div>';return}
+    if(EXP&&!app._labTimer){app._labTimer=setInterval(()=>{if(Date.now()>EXP){clearInterval(app._labTimer);labDraw()}},15000)}
     const chip=(on,a,t)=>`<button class="btn quiet" style="width:auto;flex:none;padding:6px 12px${on?';background:var(--gold);color:#111;border-color:var(--gold);font-weight:700':''}" data-lab="${a}">${t}</button>`;
     const box=(side,nm,col)=>`<div class="panel stack ent" id="ent-${side}" style="min-height:110px;background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="row between"><b class="serif">${nm}</b><span class="mono small dim">HP 100/100</span></div><div class="small dim">타격 효과는 이 상자 가운데에 나옵니다</div></div>`;
-    app.innerHTML=`<div class="stack" style="gap:10px;padding:14px;max-width:760px;margin:0 auto"><div class="eyebrow">타격 모션 시험실 · 게임에 들어 있는 실제 코드로 그립니다</div>
+    app.innerHTML=`<div class="stack" style="gap:10px;padding:14px;max-width:760px;margin:0 auto"><div class="eyebrow">타격 모션 시험실 · 게임에 들어 있는 실제 코드로 그립니다${window.CITY_EXPIRES?' · '+new Date(window.CITY_EXPIRES).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Seoul'})+'까지':''}</div>
       <div class="row" style="gap:8px;align-items:stretch;position:sticky;top:0;z-index:30;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)">${box('E','적','#c25050')}${box('P','나','#5a8ac2')}</div>
       <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">공격자</span>${chip(LAB.att==='P','att:P','나 → 적')}${chip(LAB.att==='E','att:E','적 → 나')}</div>
       <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">강도</span>${chip(LAB.lv==='low','lv:low','가볍게')}${chip(LAB.lv==='mid','lv:mid','보통')}${chip(LAB.lv==='high','lv:high','강하게')}</div>

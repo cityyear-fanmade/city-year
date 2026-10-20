@@ -27,7 +27,7 @@ if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (�
 let html=r('dev.html')
   .replace('<link rel="stylesheet" href="css/style.css">',()=>`<style>\n${r('css/style.css')}</style>`)
   .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_BGM=${JSON.stringify(bgmData)};\n(()=>{\n${js}\nconst DATA=${JSON.stringify(D)};\nwindow.CITY=startUI(createEngine(DATA),document.getElementById('app'));\n})();\n</script>`);
-if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('<script>\nwindow.CITY_BGM=','<script>\nwindow.CITY_LAB=true;\nwindow.CITY_BGM=');
+if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('<script>\nwindow.CITY_BGM=',`<script>\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_BGM=`);
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');
 if(expires)html=html.replace(routeTest?'<title>도시의 한 해 · R사·H사 테스트</title>':'<title>도시의 한 해</title>',routeTest?'<title>도시의 한 해 R사 H사 테스트</title>':'<title>도시의 한 해 플레이테스트</title>')
   .replace('<script>\nwindow.CITY_BGM=',`<script>\nwindow.CITY_EXPIRES=${expires};\nwindow.CITY_BGM=`);
