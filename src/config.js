@@ -302,6 +302,10 @@ export const CFG = {
       weapon: [{dmgB: 2}, {atk: 3}, {dmgB: 3, spd: 2}],
       armor: [{maxHp: 10, regen: 1}, {maxHp: 10, dr: 2}, {maxHp: 20, regen: 2}]}
   },
+  /* 특색 + 소지: 신(心)·망(望). 신: 전투 시작에 정신력 shinCost, 받는 피해 −takeShin · 주는 피해 +dealShin. 망: ringEvery라운드마다 하나(정신력 ringCost 순서대로), 망마다 주는 피해 +dealRing · 명중 +ringHit, 최대 maxRings(소지의 별 수 이내). 전투를 이기면 정신력 winMind 회복 */
+  shinmang: {on: true, shinCost: 2, ringEvery: 3, ringCost: [3, 4, 5], maxRings: 3, takeShin: 0.10, dealShin: 0.10, dealRing: 0.08, ringHit: 3, winMind: 3},
+  /* 특색 위력: 특색을 가진 동안 전투마다 피해·명중·회피 중 하나가 무작위로 정해지고, HP가 hpMin 이상일 때만 켜진다 */
+  colorBuff: {on: true, hpMin: 0.7, dmg: 4, hit: 10, eva: 8},
   workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100, hiddenSell: 2500, hiddenSellPer: 800, cardBase: 300, cardPer: 30, cardMax: 3 /* 카드 판매: 방문마다 cardMax장까지, 값은 cardBase + 카드 비용 × cardPer (지금은 300 + 비용 1마다 30) */},
   /* 출신 진로 보정: 그 진로의 권유 사건이 (보정값 × 이 값)% 확률로 먼저 나온다 */
   pathEventMul: 2,

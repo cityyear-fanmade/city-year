@@ -1960,6 +1960,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
+    if(C.P&&C.P.sm){const SM=CFG.shinmang,g=gainMind(ch,SM.winMind);if(g)chips.push(`신(心)을 거둔다 · 정신력 +${g} (${ch.mind}/${mindMax(ch)})`)}
     /* 공방 해결사: 전투를 두 번 이길 때마다 재료용 장비를 하나 얻는다 (무한 모드는 5해마다 한 번) */
     if(isWs(ch)&&ch.ws){let give=false;
       if(ch.infinite){if(G.year-(ch.ws.matY||0)>=CFG.ws.matGapInf){ch.ws.matY=G.year;give=true}}
@@ -2130,6 +2131,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 굳은 정신: 기본 정신력 보정에 더해, 정신력 15부터 5마다 한 단계(최대 100까지 willSteps단계): 단계마다 호흡 +1 · 최대 HP +willHp, 2단계마다 회피 +1, 3단계마다 모든 능력치 +1 */
     if(!ch.distForm&&hasInn(ch,'will')&&ch.mind>=CFG.innate.willFrom){const I=CFG.innate,n=Math.min(I.willSteps,Math.floor((ch.mind-I.willFrom)/5)+1),ev=Math.floor(n/2),st=Math.floor(n/3),br=Math.min(n,Math.max(0,CFG.breath.cap-P.breath)),hp=n*I.willHp+st;
       P.breath+=br;P.eva+=ev+st;P.atk+=st;P.spd+=st;P.maxHp+=hp;P.hp+=hp;mindNote.push(`굳은 정신 · 정신력 ${ch.mind} (${n}단계) · 호흡 +${br} · 회피 +${ev+st} · 최대 HP +${hp}${st?` · 공격·속도 +${st}`:''}`)}
+    /* 특색 + 소지: 신(心) — 전투를 시작할 때 정신력을 쓰고 받는 피해를 줄이며 주는 피해를 늘린다. 3라운드마다 망이 하나씩 감긴다 (newRound) */
+    {const SM=CFG.shinmang,isC=ch.titleKind==='color'||ch.colorDone;
+      if(SM.on&&ch.pinky&&isC&&!ch.distForm&&ch.mind>SM.shinCost){ch.mind-=SM.shinCost;P.sm={rings:0,limit:Math.min(SM.maxRings,(ch.pinkyKeys||[]).length)};
+        mindNote.push(`신(心) · 정신력 −${SM.shinCost} (지금 ${ch.mind}) · 받는 피해 −${Math.round(SM.takeShin*100)}% · 주는 피해 +${Math.round(SM.dealShin*100)}%${P.sm.limit?` · ${SM.ringEvery}라운드마다 망 하나 (최대 ${P.sm.limit}망)`:' · 소지의 별이 없어 망은 감기지 않는다'}`)}
+      const CB=CFG.colorBuff;
+      if(CB.on&&isC){const k=one(['dmg','hit','eva']);P.cb={k,v:CB[k]};mindNote.push(`특색 위력 · ${({dmg:'피해',hit:'명중',eva:'회피'})[k]} +${CB[k]} (HP ${Math.round(CB.hpMin*100)}% 이상일 때)`)}}
     if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.lightUp=(P.lightUp||0)+CFG.lvLight.up*n}
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
@@ -2159,6 +2166,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function newRound(C){
     C.round++;
     const {P,E}=C;P.triDmg=0;P.triCut=0;C.tri=null;
+    /* 망(望): 3라운드마다 정신력을 쓰고 빛의 고리 하나가 감긴다. 최대 3망, 9라운드 이후에는 더 쓰지 않는다. 정신력이 모자라면 감기지 않는다 */
+    {const SM=CFG.shinmang;if(P.sm&&C.round%SM.ringEvery===0&&P.sm.rings<P.sm.limit){const cost=SM.ringCost[P.sm.rings]||SM.ringCost[SM.ringCost.length-1];
+      if(C.ch.mind>cost){C.ch.mind-=cost;P.sm.rings++;const m={t:'kw',s:`망(望) ${P.sm.rings}망 · 정신력 −${cost} (지금 ${C.ch.mind}) · 주는 피해 +${Math.round((SM.dealShin+P.sm.rings*SM.dealRing)*100)}% · 명중 +${P.sm.rings*SM.ringHit}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}}
     P.evaPen=P.evaPenNext||0;P.evaPenNext=0;
     /* 토끼 강화·충전 자극 근력: 체력이 낮거나 충전이 충분하면 라운드 동안 속도가 오른다 */
     if(P.spdBoost){const B_=P.spdBoost;P.spd=P.spdBase+(P.hp<=P.maxHp*B_.low[0]?B_.low[1]:0)+(P.charge>=B_.charge[0]?B_.charge[1]:0)}
@@ -2417,6 +2427,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const trH=(A.trait==='bloodscent'&&B.bleed>0?15:0)+(A.trait==='enrage'&&A.hp<=A.maxHp/2?15:0),trE=B.trait==='coward'&&B.hp<=B.maxHp/2?20:0;
       const exH=(c.execHit&&(B.disp||0)>0?c.execHit:0)+trH;if(exH)pnote+=` 처분 표식 명중+${exH}`;
       let am=(CFG.atkRule.on?Math.trunc(A.atk*CFG.atkRule.hitPer)+(A.hitB||0):A.atk)+(!A.isP&&C.ally?CFG.bond.allyHit:0)+(A.awl&&B.bleed>0?CFG.syn['밤의 송곳'].bleedHit:0)+c.hit+exH-(A.manner||0)*CFG.thumbManner-(A.obey||0)*CFG.hw.obey.hit+(gr?gr.hit:0)+fsb+Math.min(CFG.spdHit.max,Math.max(0,Math.floor((A.spd-B.spd)/CFG.spdHit.per)))+A.passHit+acA+(A.wx&&A.wx.hitB||0)+(A.ring?CFG.ring.hit*A.work:0)+(sub?sub.atk:0)-3*(A.prescript||0)-Math.floor((B.middle?CFG.middle.sinkHit:1)*CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per))-((staggerStage(A)||{}).hit||0)-(A.isP&&A.laev==='open'&&isBlue(A)?Math.round(CFG.laev.selfBlueHit*(A.laevF||1)):0),dm=B.eva+B.evaB-(B.evaPen||0)+(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0)+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?odinEva(C.round,B):0);
+      if(A.sm&&A.sm.rings)am+=A.sm.rings*CFG.shinmang.ringHit;
+      if(A.cb&&A.cb.k==='hit'&&A.hp>=A.maxHp*CFG.colorBuff.hpMin)am+=A.cb.v;
+      if(B.cb&&B.cb.k==='eva'&&B.hp>=B.maxHp*CFG.colorBuff.hpMin)dm+=B.cb.v;
       if(A.rv){const RV=CFG.raven;
         if(A.rv.t>=1&&!RV.buffs.some(k=>(B[k]||0)>0)){am+=RV.hit;pnote+=` 까마귀의 눈 · 버프 없음 명중+${RV.hit}`}
         if(A.rv.t>=3&&B.hp<=B.maxHp*RV.exec){dm=0;B.guarding=false;if(A.rvRound!==C.round){A.rvRound=C.round;L('kw',`${A.name} · 처형 인가 · ${B.name}은(는) 방어 자세를 취할 수 없고 회피가 0이다`)}}}
@@ -2502,6 +2515,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.ring&&A.work>0){dmg+=CFG.ring.dmg*A.work;note+=` 작품 ${A.work}+${CFG.ring.dmg*A.work}`;if(A.work>=CFG.ring.max){dmg=Math.floor(dmg*CFG.ring.finish);A.work=CFG.ring.after;note+=` 완성×${CFG.ring.finish}`}}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
+      if(A.cb&&A.cb.k==='dmg'&&A.hp>=A.maxHp*CFG.colorBuff.hpMin){dmg+=A.cb.v;note+=` 특색 위력+${A.cb.v}`}
+      if(A.sm){const SM=CFG.shinmang,mul=1+SM.dealShin+A.sm.rings*SM.dealRing;dmg=Math.floor(dmg*mul);note+=` 신망 ×${mul.toFixed(2)}`}
       if(A.wx&&A.wx.finish&&B.hp<=B.maxHp*A.wx.finish.at){dmg+=A.wx.finish.dmg;note+=` 마무리+${A.wx.finish.dmg}`}
       if(A.triDmg){dmg+=A.triDmg;note+=` 건+${A.triDmg}`}
       if(A.hungerUse>0){dmg+=A.hungerUse;note+=` 굶주림+${A.hungerUse}`;A.hungerUse=0}
@@ -2537,6 +2552,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.psycho||B.psycho){const m=(A.psycho?CFG.innate.psycho:1)*(B.psycho?CFG.innate.psycho:1);dmg*=m;note+=` 사이코패스×${m}`}
       if(A.trait==='enrage'&&A.hp<=A.maxHp/2){dmg+=2;note+=' 분노+2'}
       if(A.kaliOn){dmg+=A.kali.dmgB;note+=` 칼리+${A.kali.dmgB}`}
+      if(B.sm){const r=Math.floor(dmg*CFG.shinmang.takeShin);if(r>0){dmg-=r;note+=` 신−${r}`}}
       if(B.kaliOn){const r=Math.floor(dmg*B.kali.dr/100);if(r>0){dmg-=r;note+=` 칼리−${r}`}}
       if(B.trait==='callus'){const r=Math.min(2,dmg-1);if(r>0){dmg-=r;note+=` 굳은살−${r}`}}
       if(B.presc>0){const r=Math.floor(dmg*B.presc*0.05);if(r>0){dmg-=r;note+=` 지령 수행−${r}`}}
