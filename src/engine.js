@@ -37,7 +37,7 @@ export function validateData(D){
     if(D[tbl].at(-1).max!==100)err.push(`${tbl}: 마지막 max가 100이 아님`);
   if(D.childhood.table.at(-1).max!==100)err.push('childhood.table: 마지막 max가 100이 아님');
   for(const [id,it] of Object.entries(D.items)){
-    if(!D.slots[it.slot])err.push(`공방 물건 ${id}: 없는 칸 "${it.slot}"`);
+    if(!it.perm&&!D.slots[it.slot])err.push(`공방 물건 ${id}: 없는 칸 "${it.slot}"`);
     if(!D.workshops.some(w=>w.grade===it.grade))err.push(`공방 물건 ${id}: 없는 공방 등급 ${it.grade}`);
     if(it.card)card(it.card,`공방 물건 ${id}`);
   }
@@ -504,7 +504,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function buy(ch,id,offer){
     if(canBuy(ch,id)!=='ok')return false;
-    const it=D.items[id];ch.money-=priceOf(ch,id);if(it.hw)(ch.hwGot=ch.hwGot||[]).push(id);if(offer)offerGear(ch,Object.assign({id},it));else equip(ch,Object.assign({id},it));return true;
+    const it=D.items[id];ch.money-=priceOf(ch,id);if(it.hw)(ch.hwGot=ch.hwGot||[]).push(id);if(it.perm){addStats(ch.stats,it.fx);if(it.fx.maxHp)ch.hp+=it.fx.maxHp;return true}if(offer)offerGear(ch,Object.assign({id},it));else equip(ch,Object.assign({id},it));return true;
   }
   /* 금전운: 버는 돈 +20% */
   const earn=(ch,n)=>n>0&&hasInn(ch,'fortune')?Math.round(n*CFG.innate.money):n;
