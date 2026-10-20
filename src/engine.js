@@ -1868,7 +1868,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const laevFrac=w=>w&&LAEV_F[w.id]!=null?LAEV_F[w.id]:null;
   const laevState=w=>{const f=laevFrac(w);return f==null?null:f>=0.5?'open':'sealed'};
   const isBlue=X=>X.flame>0&&(X.blue||X.flame>=CFG.laev.blueAt);
-  const snap=C=>{const f=X=>({hunger:X.hunger||0,hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,burn:X.burn||0,ink:X.ink||0,obey:X.obey||0,flame:X.flame||0,nail:X.nail||0,stagger:X.stagger||0,stunned:!!X.stunned,work:X.work||0,blue:isBlue(X),echo:X.echo||0,ledger:X.ledger||0,prescript:X.prescript||0,warp:X.warp||0,shock:X.shock||0,chain:X.chain||0,web:X.web||0,mk:X.mk||0,grudge:X.grudge||0,shield:X.shield||0,matc:X.matc||0,mat:X.mat||0,wecho:X.wecho||0,revenge:X.revenge||0,revMul:X.revMul||0,presc:X.presc||0,serum:X.serum||0,ammo:X.ammo||0,manner:X.manner||0,disp:X.disp||0,sealMark:X.sealMark||0,accel:X.accel||0,cloud:X.cloud||0,black:X.black?1:0});return {P:f(C.P),E:f(C.E)}};
+  const snap=C=>{const f=X=>({hunger:X.hunger||0,hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,burn:X.burn||0,vt:X.vtStack||0,ink:X.ink||0,obey:X.obey||0,flame:X.flame||0,nail:X.nail||0,stagger:X.stagger||0,stunned:!!X.stunned,work:X.work||0,blue:isBlue(X),echo:X.echo||0,ledger:X.ledger||0,prescript:X.prescript||0,warp:X.warp||0,shock:X.shock||0,chain:X.chain||0,web:X.web||0,mk:X.mk||0,grudge:X.grudge||0,shield:X.shield||0,matc:X.matc||0,mat:X.mat||0,wecho:X.wecho||0,revenge:X.revenge||0,revMul:X.revMul||0,presc:X.presc||0,serum:X.serum||0,ammo:X.ammo||0,manner:X.manner||0,disp:X.disp||0,sealMark:X.sealMark||0,accel:X.accel||0,cloud:X.cloud||0,black:X.black?1:0});return {P:f(C.P),E:f(C.E)}};
   /* 오랜 굶주림: HP를 회복할 때마다 스택 */
   const HG=(X,h)=>{if(h>0&&X&&X.hunger!=null)X.hunger=Math.min(CFG.hunger.max,X.hunger+h)};
   const kidsOn=ch=>ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea');
@@ -2021,9 +2021,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(let i=0;i<n;i++)for(const X of C.order)if(q[X.uid][i])out.push({side:X.uid,card:q[X.uid][i]});
     return out;
   }
-  function autoPlay(hand,light){
+  /* 카드 코스트: 환영난무처럼 vtCost 카드는 뱀의 장벽을 쓴 만큼(최대 serpent.max) 싸진다 */
+  const cardCost=(X,c)=>c.vtCost?Math.max(0,c.c-Math.min(CFG.serpent.max,(X&&X.vtStack)||0)):c.c;
+  function autoPlay(hand,light,X){
     const plays=[];let l=light;
-    for(const id of sample(hand,hand.length)){const c=D.cards[id];if(c.c<=l){plays.push(c);l-=c.c}}
+    for(const id of sample(hand,hand.length)){const c=D.cards[id],cc=cardCost(X,c);if(cc<=l){plays.push(c);l-=cc}}
     return plays;
   }
   /* 자동 전투용 카드 선택: 빛 안에서 점수 합이 가장 큰 조합(손패 4장이라 모든 조합을 본다).
@@ -2052,7 +2054,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const idx=P.hand.map((_,i)=>i).filter(i=>m>>i&1);
       if(idx.includes(P.locked))continue;
       if(idx.some(i=>(D.cards[P.hand[i]].needBlack&&!P.black)||(D.cards[P.hand[i]].needLow&&C.E.hp>C.E.maxHp*CFG.raven.low)))continue;
-      if(idx.reduce((a,i)=>a+D.cards[P.hand[i]].c,0)>P.light)continue;
+      if(idx.reduce((a,i)=>a+cardCost(P,D.cards[P.hand[i]]),0)>P.light)continue;
       const sc=idx.reduce((a,i)=>a+score(D.cards[P.hand[i]]),0);
       if(sc>bs){bs=sc;best=idx}
     }
@@ -2069,7 +2071,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const last=E.lastIds||[],f=hand.filter(id=>!(D.cards[id].noRepeat&&last.includes(id)));if(f.length)hand=f}
     const noGuard=E.lastGuard===C.round-1||d(100)>G_.chance;
     if(noGuard&&hand.some(id=>D.cards[id].t!=='def'))hand=hand.filter(id=>D.cards[id].t!=='def');
-    const plan=autoPlay(hand,E.light);
+    const plan=autoPlay(hand,E.light,E);
     E.lastIds=plan.map(c=>cardId.get(c)).filter(Boolean);
     if(plan.some(c=>c.t==='def'))E.lastGuard=C.round;
     return plan;
@@ -2218,7 +2220,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const nv=Math.max(lo2,d(die));if(nv>rolls[mi]){note+=` 재굴림 ${rolls[mi]}→${nv}`;rolls[mi]=nv}
       }
       if(A.rv&&A.rv.t>=2&&B.hp<=B.maxHp*CFG.raven.low&&rolls.length){pnote+=` 까마귀의 눈 · 주사위 ${rolls.length}개 +1`}
-      let dmg=rolls.reduce((a,b)=>a+b,0)+(A.rv&&A.rv.t>=2&&B.hp<=B.maxHp*CFG.raven.low?rolls.length:0)+c.b+(gr?gr.b:0)+(A.prescPlus||0)+(A.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(A.bonB&&BONA.has(c)?A.bonB:0)+(c.markB&&B.disp?c.markB*B.disp:0);
+      let dmg=rolls.reduce((a,b)=>a+b,0)+(A.rv&&A.rv.t>=2&&B.hp<=B.maxHp*CFG.raven.low?rolls.length:0)+c.b+(gr?gr.b:0)+(A.prescPlus||0)+(A.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(A.bonB&&BONA.has(c)?A.bonB:0)+(c.markB&&B.disp?c.markB*B.disp:0)+(A.vtUse||0)+(A.vtBonus||0);
       /* 인연과 함께 싸우는 보스: 배우자가 같은 공격을 같이 굴린다. 피해 주사위 합 = (본인 + 배우자)의 ¾씩 */
       let spR=null;
       if(A.isP&&C.ally&&rolls.length){const dd=wd?wd[1]:die;spR=rolls.map(()=>c.range&&!wd?c.range[0]-1+d(c.range[1]-c.range[0]+1):Math.max(lo2,d(dd)));
@@ -2417,6 +2419,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else{const G_=CFG.egoGrow,u_=C.ch.egoUses,L_=egoLvFor(u_),nx_=G_.need[L_+1];if(nx_!=null)L('kw',`${A.name} · ${c.n} ${u_}회 · E.G.O ${G_.tier[L_]} → ${G_.tier[L_+1]}까지 ${nx_-u_}회`)}}
       if(A.isP&&c.mindCost)loseMind(C.ch,c.mindCost,t=>L('kw',`${A.name} · ${c.n} · ${t}`));
       /* 오랜 굶주림: 공격 카드를 낼 때 쌓인 스택을 모두 써서 그 카드의 첫 적중 피해가 늘고, 스택은 비운다 */
+      /* 보라눈물: 뱀의 장벽을 쓸 때마다 스택 +1(최대 7), 환영난무를 내면 쌓인 만큼 추가 피해를 주고 스택을 비운다 */
+      if(c.serpent){A.vtStack=Math.min(CFG.serpent.max,(A.vtStack||0)+1);L('kw',`${A.name} · ${c.n} · 뱀의 장벽 ${A.vtStack}/${CFG.serpent.max} · 환영난무 빛 −1`)}
+      A.vtUse=0;if(c.serpentDmg){A.vtUse=A.vtStack||0;A.vtStack=0;if(A.vtUse>0)L('kw',`${A.name} · ${c.n} · 뱀의 장벽 ${A.vtUse} 소진 · 피해 +${A.vtUse}`)}
+      /* 보랏빛 사복검: 전용 책장 카드를 낼 때마다 이름이 익스큐셔너 소드·레이피어·카타나 중 하나로 바뀐다. 같은 계열 카드는 피해 +1 */
+      A.vtBonus=0;if(A.isP&&A.wx&&A.wx.vform&&c.vform){const forms=CFG.vform;const f=one(Object.keys(forms));A.vform=f;L('kw',`${A.name} · 보랏빛 사복검 · ${forms[f]}(으)로 바뀐다`);if(c.vform===f){A.vtBonus=1;L('kw',`  ${forms[f]} · ${c.n} 피해 +1`)}}
       A.hungerUse=0;if(A.hunger>0&&c.t==='atk'){A.hungerUse=A.hunger;L('kw',`${A.name} · 오랜 굶주림 ${A.hunger} 소진 · 이 카드의 첫 적중 피해 +${A.hunger}`);A.hunger=0}
       if(c.hpCost&&A.hp>1){const x=Math.min(c.hpCost,A.hp-1);A.hp-=x;L('kw',`${A.name} · ${c.n} · HP −${x}`)}
       /* 충전: 카드를 낼 때 spend만큼(있는 만큼) 소모하고, 소모한 충전 1당 fixPer의 고정 피해를 적중마다 더한다 */
@@ -2522,6 +2529,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    cardCost,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

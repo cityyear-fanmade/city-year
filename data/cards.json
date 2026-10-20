@@ -5766,6 +5766,57 @@
      "t"
     ]
    ]
+  },
+  "x_vt_sword": {
+   "n": "자색검",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 4,
+   "b": 1,
+   "hit": 5,
+   "vform": "katana",
+   "vt": true,
+   "d": "2d4 · 피해 +1"
+  },
+  "x_vt_slam": {
+   "n": "내려찍기",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 4,
+   "die": 4,
+   "b": 1,
+   "hit": 0,
+   "vform": "exec",
+   "vt": true,
+   "d": "4d4 · 피해 +1"
+  },
+  "x_vt_phantom": {
+   "n": "환영난무",
+   "c": 7,
+   "t": "atk",
+   "hits": 1,
+   "dice": 6,
+   "die": 6,
+   "b": 1,
+   "hit": 0,
+   "vform": "rapier",
+   "vt": true,
+   "vtCost": true,
+   "serpentDmg": true,
+   "d": "6d6 · 피해 +1 · 뱀의 장벽 스택만큼 추가 피해 · 뱀의 장벽을 쓴 만큼 빛이 줄고(최대 7), 쓰면 스택이 비워진다"
+  },
+  "x_vt_wall": {
+   "n": "뱀의 장벽",
+   "c": 1,
+   "t": "def",
+   "eva": 0,
+   "shield": 10,
+   "serpent": true,
+   "vt": true,
+   "d": "보호막 10 · 뱀의 장벽 +1 (환영난무 빛 −1, 최대 7)"
   }
  },
  "rewards": [

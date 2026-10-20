@@ -262,6 +262,7 @@ export function startUI(E,app){
   const KWHINT={obey:n=>`내 명중 −${n*CFG.hw.obey.hit} · 흑수 부하가 거들 때마다 −1 · 흑수여, 답하라는 전부 푼다`,nail:n=>'망치 카드가 쌓인 못을 흐트러짐으로 바꾼다',stagger:n=>{const st=CFG.nail.stages.filter(g=>n>=g.at).pop(),thr=C&&C.E?E.nailThr(C):CFG.nail.stun.mid;return `기절 ${n}/${thr}${st?` · 명중 −${st.hit}${st.dmg?` · 주는 피해 −${st.dmg}`:''}${st.take?` · 받는 피해 +${st.take}`:''}`:''}`},burn:n=>`라운드 끝에 스택×${CFG.burn.dmg} 피해(내가 받으면 ×${CFG.burn.dmgMe}) · 스택 절반 · 최대 ${CFG.burn.max}`,charge:n=>`쓰면 소모 · 맞으면 −${G&&G.ch&&C&&C.P?C.P.chargeLoss:1}`,ink:n=>`라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반이 된다 (최대 ${CFG.ink.cap})`,sink:n=>`주는 피해 −${Math.floor(n/CFG.sink.per)*CFG.sink.dmg} · 명중 −${CFG.sink.hit*Math.floor(n/CFG.sink.per)} (${CFG.sink.per}당 1단계 · 라운드마다 −1)`,flame:n=>n>=CFG.laev.blueAt?`받는 피해 ×${CFG.laev.blueMul}`:`받는 피해 ×1.5 · ${CFG.laev.blueAt}스택이면 푸른 화염`,bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>n>=1&&n<=CFG.breath.evaMax?`회피 +${CFG.breath.eva}`:`치명 ${E.critPct(n)}%`};
   function stacks(X){
     const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?`<small>받는 피해 ×${X.blueM||CFG.laev.blueMul} · 라운드마다 ${X[k]*(X.blueD||CFG.laev.blueDot)}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
+    if(X.vt>0)out.push(`<span class="chip stk" style="--kc:#8e5fc7"><b>뱀의 장벽 ${X.vt}/${CFG.serpent.max}</b><small>환영난무 빛 −${X.vt} · 피해 +${X.vt}</small></span>`);
     if(X.stunned)out.push('<span class="chip stk" style="--kc:#b07cc6"><b>기절</b><small>이번 라운드 행동 불가 · 회피 0</small></span>');
     /* 히든 보스 패시브 스택: 잔향(내게 쌓임), 장부(보스에게 쌓임) */
     const pv=C&&C.E&&C.E.passive;
@@ -1377,11 +1378,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.cbar=FIGHT==='auto'?`<button class="btn${UI.paused?' primary':''}" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button><button class="btn quiet" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button>`
       :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button><button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`;
     /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
-    const cost=UI.sel.reduce((a,i)=>a+D.cards[P.hand[i]].c-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
+    const cost=UI.sel.reduce((a,i)=>a+E.cardCost(P,D.cards[P.hand[i]])-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
     const cards=P.hand.map((id,i)=>{
-      const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&c.c>left)||(c.needBlack&&!P.black)||(c.needLow&&X.hp>X.maxHp*CFG.raven.low);
+      const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&E.cardCost(P,c)>left)||(c.needBlack&&!P.black)||(c.needLow&&X.hp>X.maxHp*CFG.raven.low);
       return `<button class="card ${si>=0?'sel':''}${P.index&&i===P.starSlot?' presc':''}" data-a="pick" data-i="${i}" ${dis?'disabled':''}>
-        <span class="cost">${c.c}</span>${si>=0?`<em class="ord">${si+1}</em>`:''}${P.index&&i===P.starSlot?'<span class="prescTag">📜 지령</span>':''}
+        <span class="cost">${E.cardCost(P,c)}</span>${si>=0?`<em class="ord">${si+1}</em>`:''}${P.index&&i===P.starSlot?'<span class="prescTag">📜 지령</span>':''}
         <span class="nm">${kindBadge(c)} ${c.n}${c.t==='atk'&&P.cg&&P.cg.n?` <b style="color:var(--gold)">${P.cg.n}</b>`:''}${lk?` <span class="bad small">잠김 · ${esc(C.E.passive.n)}</span>`:''}</span>${c.t==='atk'?`<span class="mono small" style="color:var(--gold)">최종 명중 ${sg(P.atk+c.hit+(P.passHit||0)+(P.cg?P.cg.hit:0))}${P.fsOn&&P.fs?' (+선제 '+CFG.firstHit+')':''}</span>`:''}<span class="cd">${cardLine(c,c.t==='atk'?P.cg:null,P.wx)}</span>
         ${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</button>`;
     }).join('');
@@ -1998,7 +1999,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     grow(i){const ch=G.ch;E.applyGrowth(ch,ch.lvOpts[+i].g.fx);ch.lvPend--;ch.lvOpts=null;flow()},
     pick(i){i=+i;const at=UI.sel.indexOf(i);if(at>=0){UI.sel.splice(at,1);
         /* 빛 회복 카드를 빼서 빛이 모자라면 뒤에 고른 카드부터 뺀다 */
-        const H=C.P.hand,net=()=>UI.sel.reduce((a,j)=>a+D.cards[H[j]].c-(D.cards[H[j]].gain||0),0);while(UI.sel.length&&net()>C.P.light)UI.sel.pop()}
+        const H=C.P.hand,net=()=>UI.sel.reduce((a,j)=>a+E.cardCost(C.P,D.cards[H[j]])-(D.cards[H[j]].gain||0),0);while(UI.sel.length&&net()>C.P.light)UI.sel.pop()}
       else UI.sel.push(i);render()},
     go(){
       const pp=UI.sel.map(i=>D.cards[C.P.hand[i]]);

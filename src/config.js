@@ -74,6 +74,7 @@ export const CFG = {
   oldAge: 100, overflowAge: 1000 /* 무한 모드 오버플로우 엔딩 나이 */,
   /* 사건 판정 주사위 최대치(플레이어): 타고난 것 등으로 아무리 커져도 이 값에서 멈춘다 */
   checkMax: 220,
+  serpent: {max: 7} /* 보라눈물: 뱀의 장벽 스택 최대 */, vform: {exec: '익스큐셔너 소드', rapier: '레이피어', katana: '카타나'} /* 보랏빛 사복검의 이름 */,
   warp: {chance: 40} /* W사 열차 직원: 해마다 이 확률로 열차 안 사건(해가 넘어가지 않음)이 하나 온다 */,
   drainCap: 5 /* 무기 흡수(미미크리 등): 한 전투에서 적중 흡수는 최대 5번까지 */,
   infinite: {erodeFrom: 90, erodePer: 0.5, erodeMax: 30, enemyMax: 260, atkMax: 260 /* 균열을 닫은 뒤의 적 공격 상한 (enemyMax와 같다) */, midCut: 1, midCutMax: 20 /* 누적 최대 20%p */ /* 중지: 무한 모드에서 맞을 때마다 받는 피해 −1%p (전투 내 누적, 상대의 몰아침 배율 대신) */, every: 8, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 15000000, legacyNeed: 40 /* 최고 직위 뒤: 포인트 40마다 연륜 1단계(능력치 +1) */, legacyMax: 40, atkGrow: 1, evaGrow: 0.5, evaDown: 1 /* 무한 모드 해마다 양쪽 회피 −1 */, escPerP: 0.03, escPerE: 0.03, infLvEvery: 5 /* 무한 모드에서 전투 승리 5번마다 레벨 +1 */, atkEvery: 2 /* 무한 모드 적 명중(공격) 보정 +1이 붙는 햇수 간격 */, escMaxP: 4, escMaxE: 30 /* 한 전투에서 맞을 때마다 받는 피해가 복리로 증가: 양쪽 모두 ×1.03씩, 상한은 플레이어 ×4, 적 ×30 */},
