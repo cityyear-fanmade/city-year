@@ -123,6 +123,10 @@ export function startUI(E,app){
   /* 타격 연출: 맞은 쪽 상자 위에 베기 선·파편이 튄다. 맞은 카드·무기가 새로 건 키워드(화상·출혈·파열 등)에 따라 색이 달라진다. 단계: off(끔)·low(가볍게)·mid(보통)·high(강하게) */
   const HFXK='cityYearHitFx';let HFX=store.get(HFXK)||'mid';
   const HFX_N={off:0,low:1,mid:2,high:3};let HFXFLIP=false;const HFXMK='cityYearHitFxM';let HFXM=store.get(HFXMK)||'each';
+  /* 무기 이름으로 타격 모양을 고른다 (플레이어의 공격만. 맨손·기타는 키워드·무작위 모션) */
+  const WMOT=[[/낫|발톱|손톱|팔$|부리|갈고리/,'claw'],[/십자가|쌍수|난무|대검/,'cross'],[/창|송곳|비수|권총|화살|총$|탄/,'thrust'],[/망치|몽둥이|파이프|지휘봉|장갑|주먹|사슬|방패|책갈피/,'ring'],[/도$|검$|칼$|단도|장도|박도|언월도|톱$|검 |칼날/,'slash']];
+  const WMOT2={궁니르:'thrust',레바테인:'slash',미미크리:'slash','다 카포':'ring',절대음감:'ring',금서:'ring',황혼:'slash',아라야시키:'slash',동부십검:'slash','붉은 눈':'ring','우주의 조각':'ring',후회:'ring',요정:'slash'};
+  const weaponMotion=n=>{if(!n)return '';n=n.split(' · ')[0].replace(/\s*\(.*\)$/,'');if(WMOT2[n])return WMOT2[n];for(const [re,m] of WMOT)if(re.test(n))return m;return ''};
   function hitFx(e){
     const lv=HFX_N[HFX]||0;if(!lv||MODE==='off'||SKIP||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
     const box=$('ent-'+e.def);if(!box)return;
@@ -138,9 +142,11 @@ export function startUI(E,app){
     /* 모션: 새로 걸린 키워드와 타수로 고른다 (화상=불꽃 고리, 출혈=할퀴기, 파열=균열, 연타=할퀴기·X자, 그 밖에는 베기·찌르기·X자 중 무작위) */
     const kt=col===kwc('burn')||col===kwc('flame')?'burn':col===kwc('bleed')?'bleed':col===kwc('rupture')?'rupture':'';
     const hitsN=(e.card&&e.card.hits)||1,pk=a=>a[Math.floor(Math.random()*a.length)];
-    const mo=kt==='burn'?'ring':kt==='bleed'?'claw':kt==='rupture'?'crack':hitsN>=2?pk(['cross','claw']):pk(['slash','slash','thrust','cross']);
+    const wn=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon.n:'',wm=weaponMotion(wn);
+    const mo=wm?wm:kt==='burn'?'ring':kt==='bleed'?'claw':kt==='rupture'?'crack':hitsN>=2?pk(['cross','claw']):pk(['slash','slash','thrust','cross']);
     let h='';
     if(!(multi&&!lastHit)){
+      if(wm&&kt==='burn')h+=`<i class="ringfx small" style="--c:${col}"></i>`;
       if(mo==='slash')h=sl(rot,50);
       else if(mo==='cross')h=sl(rot,50)+sl(-rot,50,'animation-delay:70ms');
       else if(mo==='claw')h=sl(rot,24,'height:3px')+sl(rot,50,'height:3px;animation-delay:50ms')+sl(rot,76,'height:3px;animation-delay:100ms');
