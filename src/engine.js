@@ -766,6 +766,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
     if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push('혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)');
       if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
+    if(fx.hwb&&ch.hw){const r=ch.hw,k=fx.hwb,Z=CFG.hw.beast;
+      if(k==='stay')r.fork=1;
+      else if(k==='become'){r.fork=1;r.beast=1;r.bk=fx.hwbKey;r.bp=0;r.mk=0;r.bnext=(ch.year||0)+1;r.cand='hr_'+(aniOf(r.bk).pi);const a=aniOf(r.bk);
+        addStats(ch.stats,Z.startFx);if(Z.startFx.maxHp)ch.hp+=Z.startFx.maxHp;(ch.relics=ch.relics||[]).push('흑수 · '+a.nm);addCard(ch,'zp_'+r.bk,chips,'흑수 카드');
+        chips.push(`${a.nm}(${a.hj})의 흑수가 되었다 · 가주 승계를 내려놓는다 · 최대 HP +${Z.startFx.maxHp} · 회피 +${Z.startFx.eva}`);chips.push('후원할 가주 후보 · '+((D.enemies[r.cand]||{}).n||'가주 후보'))}
+      else if(k==='act'){r.bp=(r.bp||0)+1;chips.push(`흑수 활동 ${r.bp}/${Z.rank2}`)}
+      else if(k==='rank1'){r.rank1=1;addStats(ch.stats,Z.rank1Fx);if(Z.rank1Fx.maxHp)ch.hp+=Z.rank1Fx.maxHp;chips.push(`${aniOf(r.bk).nm}의 흑수 · 공격 +${Z.rank1Fx.atk} · 회피 +${Z.rank1Fx.eva} · 최대 HP +${Z.rank1Fx.maxHp}`)}
+      else if(k==='rank2'){r.rank2=1;addStats(ch.stats,Z.rank2Fx);if(Z.rank2Fx.maxHp)ch.hp+=Z.rank2Fx.maxHp;const tt='흑수 필두';ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt)}chips.push(`칭호 · ${tt} (${aniOf(r.bk).nm}) · 공격 +${Z.rank2Fx.atk} · 회피 +${Z.rank2Fx.eva} · 최대 HP +${Z.rank2Fx.maxHp}`)}
+      else if(k==='mk'){r.mk=(r.mk||0)+1;chips.push(`후보를 세우는 일 ${r.mk}/${(D.hwBeast.maker||[]).length}`)}
+      else if(k==='maker'){r.maker=1;r.done=1;chips.push('가주메이커 · 가주의 자리에 후보가 앉았다')}
+    }
     if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
       if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}
       if(r){
@@ -1149,7 +1160,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&rt!=='hcorp'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
     const R0=rt&&B&&B.routes[rt];
     if(!R0)return null;
-    const vi=R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;
+    const vi=rt==='hcorp'&&R0.variants?(ch.hw&&ch.hw.beast?1:0):R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;
     return {t:R.meet.t,x:R.meet.x,c:[
       {l:B.meetYes,h:'동반자의 이름을 정한다 · 이후 몇 해마다 사건이 온다',ok:{t:B.meetYesT,fx:{bondMeet:rt,bondVariant:vi}}},
       {l:B.meetNo,h:'다시 만나지 않는다',ok:{t:B.meetNoT,fx:{bondDecline:true}}}]};
@@ -1230,8 +1241,34 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 의리 순례: 중지 동생 이상 → 원한의 책 제안 → 장부 3장 (첫째·둘째는 히든 전투) → 형님의 시험 (순응: 버티기 / 반역: 암살자 추격) */
   /* ===== H사 홍원 가주 후보 루트 =====
      ch.hw = {fi(가문 사건 진행), picked, pair, rivals[적 id], rv(만난 후보 수), cnext, shrine, host(선황충), elderDone, fnext, finalSeen, done} */
+  /* 흑수 루트: 하나의 흑수로 활동하며 흑수 → 필두가 되고, 후보 한 명을 가주로 세운다 (가주메이커) */
+  function hwBeastYear(G){
+    const ch=G.ch,r=ch.hw,y=G.year,Z=CFG.hw.beast,B=D.hwBeast;if(!B||!r.bk||r.maker)return null;
+    /* 흑수가 홍원에 머무는 동안에도 인연(자신이 후원할 가주 후보)이 이어진다: 흑수가 된 뒤 한 번 만나고, 이후 인연 사건이 때가 되면 먼저 온다 */
+    {const bv=bondEvent(G);if(bv)return bv}
+    if(r.rank1&&!ch.bond&&!r.bmet){r.bmet=1;const e=bondMeetEvent(ch);if(e)return e}
+    if(y<(r.bnext||0))return null;
+    const nm=aniOf(r.bk).nm,cn=(D.enemies[r.cand]||{}).n||'가주 후보',fill=t=>String(t).replace(/\{n\}/g,nm).replace(/\{c\}/g,cn);
+    const mk=(tpl,fxk)=>({t:tpl.t,x:fill(tpl.x),c:tpl.check?[{l:tpl.l,h:'판정 · 성공해도 실패해도 후보를 세우는 일은 이어진다',check:tpl.check,ok:{t:fill(tpl.ok.t),fx:tpl.ok.fx},fail:{t:fill(tpl.fail.t),fx:tpl.fail.fx}}]:[{l:tpl.l,ok:{t:fill(tpl.t2),fx:{hwb:fxk}}}]});
+    const done=ev=>{r.bnext=y+Z.gap;return ev};
+    if(r.rank2){
+      if((r.mk||0)>=B.maker.length)return done({t:B.final.t,x:fill(B.final.x),c:[{l:B.final.l,ok:{t:fill(B.final.t2),fx:{hwb:'maker'}}}]});
+      return done(mk(B.maker[r.mk||0],'mk'));
+    }
+    if((r.bp||0)>=Z.rank2&&r.rank1)return done({t:B.rank2.t,x:fill(B.rank2.x),c:[{l:B.rank2.l,ok:{t:fill(B.rank2.t2),fx:{hwb:'rank2'}}}]});
+    if((r.bp||0)>=Z.rank1&&!r.rank1)return done({t:B.rank1.t,x:fill(B.rank1.x),c:[{l:B.rank1.l,ok:{t:fill(B.rank1.t2),fx:{hwb:'rank1'}}}]});
+    const used=r.bused=r.bused||[];let pool=B.acts.map((_,i)=>i).filter(i=>!used.includes(i));if(!pool.length){used.length=0;pool=B.acts.map((_,i)=>i)}
+    const i=one(pool);used.push(i);const a=B.acts[i];
+    const cc=o=>({l:o.l,h:o.h,check:o.check,ok:{t:fill(o.ok.t),fx:o.ok.fx},fail:o.fail&&{t:fill(o.fail.t),fx:o.fail.fx}});
+    return done({t:a.t,x:fill(a.x),c:a.c.map(cc)});
+  }
   function hwYear(G){
     const ch=G.ch,r=ch.hw,y=G.year,Z=CFG.hw,R=D.hwRoute;if(!r||!R||r.done)return null;
+    /* 승계의 갈림길: 홍원 2년차에 가주 승계를 이어 가거나, 승계를 내려놓고 열두 흑수 중 하나의 흑수가 된다 */
+    if(!r.fork&&r.fi>=1&&y>=Z.forkAt&&R.fork){const ks=sample(hwAllowed(),4),F=R.fork;
+      return {t:F.t,x:F.x,c:[{l:F.stay,h:F.stayH,ok:{t:F.stayT,fx:{hwb:'stay'}}},...ks.map(key=>{const {nm,hj}=aniOf(key),cd=D.cards['zp_'+key];
+        return {l:`${nm}(${hj})의 흑수가 된다`,h:`가주 승계를 포기한다 · 이 흑수 하나로만 활동한다 · 카드 ${cd.n.replace('흑수 · ','')} 1장 (${cd.d.split(' · ')[1]||cd.d.split(' · ')[0]}) · 최대 HP +${Z.beast.startFx.maxHp} · 회피 +${Z.beast.startFx.eva}`,ok:{t:F.beastT.replace(/\{n\}/g,nm),fx:{hwb:'become',hwbKey:key}}}})]}}
+    if(r.beast)return hwBeastYear(G);
     /* 1) 홍원 안: 앞의 가문 사건 */
     if(r.fi<Z.homeEvents)return y>=Z.famAt[r.fi]?R.fam[r.fi]:null;
     /* 2) 가주의 명으로 홍원 밖에서 영생의 단서를 찾는다 */
@@ -1551,7 +1588,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
     }
     {const rv=rbFree(G);if(rv)return rv}
-    if(mc.hw&&mc.hw.done&&!mc.hw.ended){mc.hw.ended=true;return {type:'end',win:true,hw:mc.hw.host?'hwhost':mc.hw.broke?'hwbreak':'hwfree'}}
+    if(mc.hw&&mc.hw.done&&!mc.hw.ended){mc.hw.ended=true;return {type:'end',win:true,hw:mc.hw.maker?'hwmaker':mc.hw.host?'hwhost':mc.hw.broke?'hwbreak':'hwfree'}}
     if(mc.rb&&mc.rb.done&&!mc.rb.ended){mc.rb.ended=true;return {type:'end',win:true,rb:true}}
     /* 연전: 바랄을 쓰러뜨리면 쉬지 않고 제나가 나선다 */
     if(G.ch.flags.zenaPend&&!G.ch.beaten.includes(CFG.endless.finalNext))return {type:'fight',enemy:CFG.endless.finalNext,enc:{hidden:true,label:'연전 · 마지막 상대'}};
