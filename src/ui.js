@@ -147,8 +147,8 @@ export function startUI(E,app){
     const multi=HFXM==='last'&&e._g&&e._g.n>=3,lastHit=!multi||e._g.i===e._g.n-1,bigFx=big||(multi&&lastHit);
     const n=multi&&!lastHit?3:lv===1?0:lv===2?(bigFx?10:6):(bigFx?18:12);
     /* 방향: 공격한 쪽에서 맞은 쪽으로 베어 들어온다 (플레이어가 오른쪽 · 적이 왼쪽). 연달아 맞을 때는 위·아래로 번갈아 긋는다 */
-    HFXFLIP=!HFXFLIP;const fromRight=e.att==='P',rot=(fromRight?-1:1)*(HFXFLIP?1:-1)*(12+Math.round(Math.random()*10));
-    const org=`${fromRight?'right':'left'} center`,sl0=(r,top,ex='')=>`<svg class="blade" viewBox="0 0 100 24" preserveAspectRatio="none" style="--c:${col};--rot:${r}deg;--org:${org};--a0:inset(0 ${fromRight?'0 0 100%':'100% 0 0'});--top:${top}%;${ex}"><path class="bd" d="M0 18 Q44 -4 100 8 Q50 20 0 18Z"/><path class="bc" d="M6 17 Q46 9 94 8.5"/></svg>`,sl=(r,top,ex='')=>{const m=/animation-delay:(\d+)ms/.exec(ex);return sl0(r,top,ex)+(/--ng/.test(ex)?'':sl0(r,top,ex+`;--ng:1;animation-delay:${(m?+m[1]:0)+40}ms;animation-duration:.26s;filter:opacity(.3);margin-top:-4px`))};
+    HFXFLIP=!HFXFLIP;const fromRight=e.att==='P',pose=['/','\\','|'][Math.floor(Math.random()*3)],RD=Math.random(),rot=pose==='/'?-(24+RD*14):pose==='\\'?(24+RD*14):(HFXFLIP?1:-1)*(66+RD*10);
+    const org=`${fromRight?'right':'left'} center`,sl0=(r,top,ex='')=>`<svg class="blade" viewBox="0 0 100 24" preserveAspectRatio="none" style="--c:${col};--rot:${Math.max(-82,Math.min(82,r))}deg;--w:${pose==='|'?44:84}%;--wm:${pose==='|'?120:210}px;--org:${org};--a0:inset(0 ${fromRight?'0 0 100%':'100% 0 0'});--top:${top}%;${ex}"><path class="bd" d="M0 18 Q44 -4 100 8 Q50 20 0 18Z"/><path class="bc" d="M6 17 Q46 9 94 8.5"/></svg>`,sl=(r,top,ex='')=>{const m=/animation-delay:(\d+)ms/.exec(ex);return sl0(r,top,ex)+(/--ng/.test(ex)?'':sl0(r,top,ex+`;--ng:1;animation-delay:${(m?+m[1]:0)+40}ms;animation-duration:.26s;filter:opacity(.3);margin-top:-4px`))};
     /* 모션: 새로 걸린 키워드와 타수로 고른다 (화상=불꽃 고리, 출혈=할퀴기, 파열=균열, 연타=할퀴기·X자, 그 밖에는 베기·찌르기·X자 중 무작위) */
     const kt=col===kwc('burn')||col===kwc('flame')?'burn':col===kwc('bleed')?'bleed':col===kwc('rupture')?'rupture':'';
     const hitsN=(e.card&&e.card.hits)||1,pk=a=>a[Math.floor(Math.random()*a.length)];
@@ -169,10 +169,10 @@ export function startUI(E,app){
       else if(sp==='lv0'){col=kt==='burn'?col:FL;h=sl(rot*1.3,34,'--sw:0;height:3px;--c:'+col)+sl(-rot,64,'--sw:0;height:3px;animation-delay:80ms;--c:'+col)}
       else if(sp==='lv1'){col=kt==='burn'?col:FL;h=sl(rot,40,'--c:'+col)+sl(-rot,60,'animation-delay:70ms;--c:'+col)}
       else if(sp==='lv2'){col=kt==='burn'?col:FL;h=sl(rot,50,'height:7px;--c:'+col)+`<i class="ringfx" style="--c:${col}"></i>`}
-      else if(sp==='lv3'){col=kt==='burn'?col:FL;h=`<i class="cres" style="--c:${col};--rot:${rot*1.4}deg;--org:${org}"></i>`+sl(rot*1.4,50,'--sw:0;height:3px;--c:#fff')+`<i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:#fff"></i>`}
+      else if(sp==='lv3'){col=kt==='burn'?col:FL;h=`<i class="cres" style="--c:${col};--rot:${Math.max(-60,Math.min(60,rot*1.2))}deg;--org:center center"></i>`+sl(rot*1.4,50,'--sw:0;height:3px;--c:#fff')+`<i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:#fff"></i>`}
       else{
         const g=+sp.slice(2);
-        if(g===1)h=sl(rot*2.2,50,'height:9px');
+        if(g===1)h=sl(rot*1.3,50,'height:9px');
         else if(g===2||g===3)h=sl(rot,50);
         else if(g===4)h=sl(rot,50)+sl(-rot,50,'animation-delay:70ms');
         else if(g===5)h=sl(rot,34,'--sw:0;height:3px')+sl(rot,66,'--sw:0;height:3px;animation-delay:60ms');
