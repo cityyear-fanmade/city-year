@@ -5734,6 +5734,38 @@
    "hit": 22,
    "adv": true,
    "d": "인의예지 네 별을 한 줄로 잇는 일격 · 유리"
+  },
+  "x_scarlet_brand": {
+   "n": "낙인",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "b": 1,
+   "hit": 5,
+   "kw": [
+    [
+     "burn",
+     3,
+     "t"
+    ]
+   ]
+  },
+  "x_scarlet_pyre": {
+   "n": "화형",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 4,
+   "b": 2,
+   "hit": -3,
+   "kw": [
+    [
+     "burn",
+     4,
+     "t"
+    ]
+   ]
   }
  },
  "rewards": [

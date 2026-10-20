@@ -1664,27 +1664,5 @@
   "hg_6",
   "hg_8",
   "hg_9"
- ],
- "hiddenWeapons": {
-  "scarlet_cross": {
-   "id": "w_scarlet_cross",
-   "slot": "weapon",
-   "n": "달궈진 십자가",
-   "grade": 5,
-   "e": "공+14 · 피해 2d6 · 적중 시 화상 1 · 화상을 줄 때마다 +1 · 화상 상한 ×1.5 · 라운드 끝에 상대의 화상 수치만큼 고정 피해 (최대 22)",
-   "fx": {
-    "atk": 14,
-    "burnHit": 1
-   },
-   "wx": {
-    "dice": [
-     2,
-     6
-    ],
-    "burnCap": 1.5,
-    "burnPlus": 1,
-    "burnTick": true
-   }
-  }
- }
+ ]
 }
