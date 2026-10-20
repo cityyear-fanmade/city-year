@@ -295,6 +295,8 @@ export const CFG = {
     armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 2}, hidden: {dr: 2, eva: 2}},
     /* 의수: 일반 강화 한 단계마다 명중 +1, 5·10·15단계마다 공격·회피·명중 중 하나를 골라 올린다 (pickAmt). pick은 예전 저장의 히든 의수 개조 값 */
     aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {hit: 1}, hidden: {hit: 2}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'}},
+    /* 전투 승리 보상: 재료용 무기·방어구·의수 중 하나를 전투를 matWins번 이길 때마다 (무한 모드는 matGapInf해마다 한 번) */
+    matWins: 2, matGapInf: 5,
     /* 특수 강화(대강화): 강화 5·10·15단계에서만 한 번씩 크게 오른다. 15단계 뒤로는 일반 강화(단계당 수치)만 끝없이 이어진다 */
     big: {at: [5, 10, 15],
       weapon: [{dmgB: 2}, {atk: 3}, {dmgB: 3, spd: 2}],

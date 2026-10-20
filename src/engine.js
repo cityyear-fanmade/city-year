@@ -1960,9 +1960,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
-    /* 공방 해결사: 전투를 이기면 재료용 장비를 가끔 얻는다 (2해마다 한 번, 무한 모드는 5해마다 한 번) */
-    if(isWs(ch)&&ch.ws){const gap=ch.infinite?CFG.ws.matGapInf:CFG.ws.matGap;
-      if(G.year-(ch.ws.matY||0)>=gap){ch.ws.matY=G.year;const sl=one(['weapon','armor','aug']),nm={weapon:'무기',armor:'방어구',aug:'의수'}[sl];
+    /* 공방 해결사: 전투를 두 번 이길 때마다 재료용 장비를 하나 얻는다 (무한 모드는 5해마다 한 번) */
+    if(isWs(ch)&&ch.ws){let give=false;
+      if(ch.infinite){if(G.year-(ch.ws.matY||0)>=CFG.ws.matGapInf){ch.ws.matY=G.year;give=true}}
+      else{ch.ws.winN=(ch.ws.winN||0)+1;if(ch.ws.winN>=CFG.ws.matWins){ch.ws.winN=0;give=true}}
+      if(give){const sl=one(['weapon','armor','aug']),nm={weapon:'무기',armor:'방어구',aug:'의수'}[sl];
         (ch.stash=ch.stash||[]).push({id:'wsmat_'+sl,n:'재료용 '+nm,slot:sl,grade:3,price:200,e:'작업대에서 '+nm+' 칸에 녹이면 한 조각'});chips.push('재료용 '+nm+' · 보관함에 들어왔다')}}
     if(C.escort){const Z=CFG.escort,m=earn(ch,Z.money+Z.moneyPer*C.escort.lv);ch.money+=m;chips.push(`동행 의뢰 보수 · ${C.escort.name} · +${money(m)}`)}
     if(C.id==='kid_hunt'&&ch.bond){
