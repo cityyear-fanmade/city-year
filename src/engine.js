@@ -1710,7 +1710,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(h.afterKey&&G.year<(G.ch[h.afterKey]||0))continue;
         if(G.year<(h.from||1)||G.ch.beaten.includes(h.id)||(G.met||[]).includes(h.id)||!meets(G.ch,h.req))continue;
         /* chanceBonus: 조건이 맞으면 확률 가산 (예: 검지 소속은 대행자 +30%) */
-        const ch_=h.chance?Math.min(95,h.chance+(h.chanceBonus&&meets(G.ch,h.chanceBonus.req)?h.chanceBonus.add:0)+(G.infinite?INF.hiddenAdd:0)):0;
+        const ch_=h.chance?Math.min(95,h.chance+[].concat(h.chanceBonus||[]).reduce((t_,b_)=>t_+(meets(G.ch,b_.req)?b_.add:0),0)+(G.infinite?INF.hiddenAdd:0)):0;
         if(ch_&&d(100)>ch_)continue;
         if(G.infinite&&G.year>baseEnd)return {type:'omen',boss:h.id,omen:riftOmen(D.enemies[h.id].n),rift:true,escape:!h.noEscape,spec:f};
         return {type:'omen',boss:h.id,omen:omenOf(G.ch,h.omen),escape:!h.noEscape,spec:f};
