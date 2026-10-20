@@ -484,7 +484,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const WF=CFG.workshopFixer;
   const isWs=ch=>!!ch.aff&&ch.aff.type==='workshop';
   const priceOf=(ch,id)=>{const p=D.items[id].price,up=1+(CFG.ws.priceUp||0)*((ch.ws&&ch.ws.used&&ch.ws.used[id])||0);return Math.round(isWs(ch)?p*(1-WF.discount)*up:p*up)};
-  const sellValue=it=>(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
+  const sellValue=it=>it.id==='hidmat'?WF.sellBase*2:(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
   function sellStash(ch,i){const st=ch.stash||[];if(!isWs(ch)||!st[i])return 0;const v=sellValue(st[i]);st.splice(i,1);ch.money+=v;return v}
   /* 암시장: 영구 강화(한 번만)와 특수 장비 */
   function canBuySpecial(ch,id){
@@ -535,19 +535,22 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function wsItem(ch,slot){
     const w=ch.ws,k=w[wsKey(slot)];
     const nmOf=d=>(w.names&&w.names[slot])||d,B_=WS.big;
-    if(slot==='weapon'){const C_=WS.weapon,bg=Math.floor(k.n/B_.every),atk=C_.base.atk+k.n*C_.normal.atk,dmg=k.h*C_.hidden.dmgB+bg*B_.weaponDmg,spd=C_.base.spd||0;
-      return {id:'ws_weapon',slot,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 대강화 ${bg}`:''}`,fx:{atk,spd,dmgB:dmg},wx:{dice:C_.dice.slice()}}}
-    if(slot==='armor'){const C_=WS.armor,bg=Math.floor(k.n/B_.every),hp=C_.base.maxHp+k.n*C_.normal.maxHp+bg*B_.armorHp,rg=bg*B_.armorRegen,dr=k.h*C_.hidden.dr+Math.floor(k.n/B_.drEvery)*B_.armorDr,eva=k.h*C_.hidden.eva;
-      return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 대강화 ${bg}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
-    const A_=WS.aug,g=w.g,bg=Math.floor((g.n||0)/B_.every),fx=Object.assign({},A_.base);
-    fx.eva=(fx.eva||0)+(g.n||0)*A_.normal.eva+bg*B_.augEva+(g.h||0)*A_.hidden.eva;
+    /* 특수 강화: 5·10·15단계에 닿은 만큼의 보너스를 합친다 */
+    const tiers=n=>B_.at.map((t,i)=>n>=t?i:-1).filter(i=>i>=0),bigFx=(sl,n)=>{const o={};for(const i of tiers(n))for(const [x,v] of Object.entries(B_[sl][i]))o[x]=(o[x]||0)+v;return o};
+    if(slot==='weapon'){const C_=WS.weapon,bf=bigFx('weapon',k.n),atk=C_.base.atk+k.n*C_.normal.atk+(bf.atk||0)+k.h*(C_.hidden.atk||0),dmg=k.h*C_.hidden.dmgB+(bf.dmgB||0),spd=(C_.base.spd||0)+(bf.spd||0),bg=tiers(k.n).length;
+      return {id:'ws_weapon',slot,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{atk,spd,dmgB:dmg},wx:{dice:C_.dice.slice()}}}
+    if(slot==='armor'){const C_=WS.armor,bf=bigFx('armor',k.n),hp=C_.base.maxHp+k.n*C_.normal.maxHp+(bf.maxHp||0)+k.h*(C_.hidden.maxHp||0),rg=bf.regen||0,dr=k.h*C_.hidden.dr+(bf.dr||0),eva=k.h*C_.hidden.eva,bg=tiers(k.n).length;
+      return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
+    const A_=WS.aug,g=w.g,fx=Object.assign({},A_.base),pk=g.picks||[];
+    fx.hit=(fx.hit||0)+(g.n||0)*A_.normal.hit+(g.h||0)*A_.hidden.hit;fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);
+    for(const x of pk)fx[x]=(fx[x]||0)+A_.pickAmt[x];
     if(g.pick)fx[g.pick]=(fx[g.pick]||0)+A_.pick;
-    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>`${A_.stats[x]||(x==='spd'?'속도':x)}+${v}`).join(' · ')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${bg?` · 대강화 ${bg}`:''}`+(g.pick?' · 개조 완료':' · 히든 의수 하나로 개조할 수 있다'),fx}
+    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>`${A_.stats[x]||(x==='spd'?'속도':x)}+${v}`).join(' · ')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${pk.length?` · 선택 ${pk.length}/${B_.at.length}`:''}${g.pend?` · 고를 수 있는 선택 ${g.pend}`:''}`,fx}
   }
   /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
   function wsOpen(ch,chips){
     if(ch.ws)return;
-    ch.ws={y:ch.year||0,ups:0,w:{n:0,h:0,p:0},a:{n:0,h:0,p:0},g:{pick:null,n:0,p:0,h:0}};
+    ch.ws={y:ch.year||0,ups:0,w:{n:0,h:0,p:0},a:{n:0,h:0,p:0},g:{pick:null,n:0,p:0,h:0,picks:[],pend:0}};
     for(const sl of ['weapon','armor','aug']){const it=wsItem(ch,sl);equip(ch,it);chips&&chips.push(`첫 공방 개설 · ${it.n} (${it.e})`)}
     chips&&chips.push('전용 무기·방어구·의수는 빼거나 바꿀 수 없다 · 다른 장비는 녹여서 재료로 쓴다');
   }
@@ -563,28 +566,33 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!isWs(ch))return;
     if(!ch.ws){wsOpen(ch,[]);return}
     if(!ch.ws.g||!('pick' in ch.ws.g)){ch.ws.g={pick:null};}
-    {const g=ch.ws.g;g.n=g.n||0;g.p=g.p||0;g.h=g.h||0}
+    {const g=ch.ws.g;g.n=g.n||0;g.p=g.p||0;g.h=g.h||0;g.picks=g.picks||[];g.pend=g.pend||0}
     for(const sl of ['weapon','armor','aug'])if(!ch.gear[sl]||ch.gear[sl].id!=='ws_'+sl)equip(ch,wsItem(ch,sl));
   }
   /* 의수는 히든 의수 하나로 한 번만 개조한다: 공격·회피·명중 중 하나를 올린다 */
-  const wsAugOk=(ch,m)=>!!ch.ws&&ch.ws.g&&!ch.ws.g.pick&&isWs(ch)&&!!m&&m.slot==='aug'&&wsHidden(m)&&!(m.id&&String(m.id).startsWith('ws_'));
+  const wsAugOk=(ch,m)=>false;
   function wsAugPick(ch,i,stat){
     const st=ch.stash||[],m=st[i];if(!wsAugOk(ch,m)||!WS.aug.stats[stat]||(ch.distForm&&!ch.distStable))return null;
     st.splice(i,1);ch.ws.g.pick=stat;ch.ws.ups++;
     const cur=ch.gear.aug;equip(ch,wsItem(ch,'aug'));if(cur)ch.stash=ch.stash.filter(x=>x!==cur);
     return {m:m.n,stat};
   }
+  /* 의수 선택: 5·10·15단계에 닿으면 공격·회피·명중 중 하나를 고른다 */
+  function wsAugChoose(ch,stat){
+    const g=ch.ws&&ch.ws.g;if(!g||!isWs(ch)||!(g.pend>0)||!WS.aug.pickAmt[stat]||(ch.distForm&&!ch.distStable))return null;
+    g.pend--;(g.picks=g.picks||[]).push(stat);const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return {stat,amt:WS.aug.pickAmt[stat]};
+  }
   /* 보관함 장비 하나를 녹여 장착 중인 전용 무기·방어구를 강화한다. 무기는 무기, 방어구는 방어구만 재료가 된다 */
   function wsMelt(ch,slot,i){
     const w=ch.ws,st=ch.stash||[],m=st[i],cur=ch.gear[slot];
     const mat=!!m&&m.id==='hidmat';
     if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||(!mat&&((m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot))||(ch.distForm&&!ch.distStable))return null;
-    if(slot==='aug'&&!mat&&wsHidden(m))return null;
     const k=w[wsKey(slot)],hid=wsHidden(m);let step=0;
     st.splice(i,1);
     if(D.items&&D.items[m.id]){w.used=w.used||{};w.used[m.id]=(w.used[m.id]||0)+1}
     if(hid){k.h++;step=1}else{k.p++;if(k.p>=wsNeed(k.n)){k.p=0;k.n++;step=1}}
     if(step)w.ups++;
+    if(slot==='aug'&&step&&!hid&&WS.big.at.includes(k.n))k.pend=(k.pend||0)+1;
     equip(ch,carryTune(cur,wsItem(ch,slot)));ch.stash=ch.stash.filter(x=>x!==cur);
     return {hidden:hid,step,n:k.n,h:k.h,p:k.p,need:wsNeed(k.n),m:m.n};
   }
@@ -2776,7 +2784,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugOk,wsNeed,wsHidden,
+    wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
     cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellStash,sellValue,isWs,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

@@ -291,13 +291,14 @@ export const CFG = {
   ws: {
     needEvery: 10, priceUp: 0.25 /* 재료로 쓴 공방 물건은 쓸 때마다 다시 살 때의 값이 원래 값의 priceUp 비율씩 오른다 */,
     /* 기본값은 공방 1등급 물건 중 가장 낮은 것 수준 (날 세운 단검 · 누빈 작업복 · 중고 의수) */
-    weapon: {n: '작업대의 칼날', base: {atk: 2, spd: 1}, dice: [1, 6], normal: {atk: 1}, hidden: {dmgB: 1}},
-    armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 2}, hidden: {dr: 1, eva: 1}},
-    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {eva: 1}, hidden: {eva: 2}, pick: 5, stats: {atk: '공격', eva: '회피', hit: '명중'}},
-    /* 대강화: 강화 every단계마다 한 번 크게 오른다. 방어구 피해 감소는 drEvery단계마다 */
-    /* 전투 승리 보상: 재료용 무기·방어구·의수 중 하나를 matGap해마다 한 번 (무한 모드는 matGapInf해) */
-    matGap: 2, matGapInf: 5,
-    big: {every: 5, weaponDmg: 2, armorHp: 10, armorRegen: 1, drEvery: 10, armorDr: 1, augEva: 2}
+    weapon: {n: '작업대의 칼날', base: {atk: 2, spd: 1}, dice: [1, 6], normal: {atk: 1}, hidden: {dmgB: 2}},
+    armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 2}, hidden: {dr: 2, eva: 2}},
+    /* 의수: 일반 강화 한 단계마다 명중 +1, 5·10·15단계마다 공격·회피·명중 중 하나를 골라 올린다 (pickAmt). pick은 예전 저장의 히든 의수 개조 값 */
+    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {hit: 1}, hidden: {hit: 2}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'}},
+    /* 특수 강화(대강화): 강화 5·10·15단계에서만 한 번씩 크게 오른다. 15단계 뒤로는 일반 강화(단계당 수치)만 끝없이 이어진다 */
+    big: {at: [5, 10, 15],
+      weapon: [{dmgB: 2}, {atk: 3}, {dmgB: 3, spd: 2}],
+      armor: [{maxHp: 10, regen: 1}, {maxHp: 10, dr: 2}, {maxHp: 20, regen: 2}]}
   },
   workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100, hiddenSell: 2500, hiddenSellPer: 800},
   /* 출신 진로 보정: 그 진로의 권유 사건이 (보정값 × 이 값)% 확률로 먼저 나온다 */
