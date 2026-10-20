@@ -1794,7 +1794,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* W사 열차 직원이 무한 모드(2막)에서 열차를 내릴지 정한다: free=내리고 독립(공방·해결사·소속 제안이 다시 열린다) · stay=남아 정리 요원장 · later=5년 뒤 다시 */
     if(fx.wquit&&ch.wtrain){const W_=CFG.warp;
       const wTitle=tt=>{ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt);chips.push('칭호 · '+tt)}};
-      if(fx.wquit==='free'){wTitle('열차를 내린 자');ch.wEnd='wfree';ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;chips.push('W사 열차를 내렸다 · 어느 소속도 아니다');chips.push('공방과 해결사, 소속 제안의 길이 다시 열린다')}
+      if(fx.wquit==='free'){wTitle('열차를 내린 자');ch.wEnd='wfree';ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;ch.flags.wgag=1;chips.push('W사 열차를 내렸다 · 어느 소속도 아니다');chips.push('특이점과 워프열차에 대한 이야기를 할 수 없게 되었다');chips.push('공방과 해결사, 소속 제안의 길이 다시 열린다')}
       else if(fx.wquit==='rival'){wTitle('열차를 내린 자');ch.wEnd='wrival';ch.wtrain=false;ch.aff=null;ch.fr=null;ch.fi=null;ch.flags=ch.flags||{};ch.flags.wquit=1;ch.flags.wayfarer=1;addStats(ch.stats,W_.rival.stats);ch.money+=W_.rival.money;chips.push('웨이페어러 컴퍼니와 계약했다 · 열차를 내렸다');chips.push(`속도 +${W_.rival.stats.spd} · 판정 +${W_.rival.stats.check} · 계약금 ${W_.rival.money}`)}
       else if(fx.wquit==='stay'){wTitle('정리 요원장');ch.wEnd='wstay';ch.wLead=true;addStats(ch.stats,W_.lead);ch.hp+=W_.lead.maxHp;chips.push('정리 요원장 · 열차에 남는다');chips.push(`최대 HP +${W_.lead.maxHp} · 공격 +${W_.lead.atk} · 열차 사건이 더 자주 온다`)}
       else{ch.wQuitAt=(ch.year||0)+W_.laterYears;ch.wQuitShown=false;chips.push(`${W_.laterYears}년 뒤 같은 서류가 놓인다`)}}
