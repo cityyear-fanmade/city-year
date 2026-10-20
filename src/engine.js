@@ -1265,7 +1265,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function hwYear(G){
     const ch=G.ch,r=ch.hw,y=G.year,Z=CFG.hw,R=D.hwRoute;if(!r||!R||r.done)return null;
     /* 승계의 갈림길: 홍원 2년차에 가주 승계를 이어 가거나, 승계를 내려놓고 열두 흑수 중 하나의 흑수가 된다 */
-    if(!r.fork&&r.fi>=1&&y>=Z.forkAt&&R.fork){const ks=sample(hwAllowed(),4),F=R.fork;
+    if(!r.fork&&r.fi>=1&&y>=Z.forkAt&&R.fork){const ks=Z.beast.keys.filter(k=>hwAllowed().includes(k)),F=R.fork;
       return {t:F.t,x:F.x,c:[{l:F.stay,h:F.stayH,ok:{t:F.stayT,fx:{hwb:'stay'}}},...ks.map(key=>{const {nm,hj}=aniOf(key),cd=D.cards['zp_'+key];
         return {l:`${nm}(${hj})의 흑수가 된다`,h:`가주 승계를 포기한다 · 이 흑수 하나로만 활동한다 · 카드 ${cd.n.replace('흑수 · ','')} 1장 (${cd.d.split(' · ')[1]||cd.d.split(' · ')[0]}) · 최대 HP +${Z.beast.startFx.maxHp} · 회피 +${Z.beast.startFx.eva}`,ok:{t:F.beastT.replace(/\{n\}/g,nm),fx:{hwb:'become',hwbKey:key}}}})]}}
     if(r.beast)return hwBeastYear(G);
