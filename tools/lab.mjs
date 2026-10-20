@@ -68,10 +68,10 @@ const paint=()=>{for(const b of $('kindrow').children)b.classList.toggle('on',b.
 let scene='calm';
 mk($('kindrow'),KINDS,()=>kind,k=>kind=k);
 $('bigb').onclick=()=>{big=!big;paint()};
-const NAMES=[['snap','주사위 굴림','시작'],['hit','주사위 멈춤','명중'],['dodge','주사위 멈춤','회피'],['tick','피해 주사위','틱'],['slash','참격','보통'],['slash_h','참격','큰 피해'],['pierce','관통','보통'],['pierce_h','관통','큰 피해'],['blunt','타격','보통'],['blunt_h','타격','큰 피해'],['block','막기','금속'],['whoosh','빗나감','먹먹']];
+const NAMES=[['hit','주사위 멈춤','명중'],['dodge','주사위 멈춤','회피'],['tick','피해 주사위','틱'],['slash','참격','보통'],['slash_h','참격','큰 피해'],['pierce','관통','보통'],['pierce_h','관통','큰 피해'],['blunt','타격','보통'],['blunt_h','타격','큰 피해'],['block','막기','금속'],['whoosh','빗나감','먹먹']];
 $('sg').innerHTML=NAMES.map(([k,a,b])=>'<button data-p="'+k+'">'+a+'<small>'+b+'</small></button>').join('');
 $('sg').onclick=e=>{const b=e.target.closest('button');if(b)SFX.play(b.dataset.p)};
-const seq=t=>{const k=kind+(big?'_h':'');if(t==='hit'){SFX.play('snap');setTimeout(()=>SFX.play('hit'),500);setTimeout(()=>SFX.play('dodge'),700);setTimeout(()=>SFX.play(k),1150)}else{SFX.play('snap');setTimeout(()=>SFX.play('hit'),500);setTimeout(()=>SFX.play('dodge'),700);setTimeout(()=>SFX.play('whoosh'),1150)}};
+const seq=t=>{const k=kind+(big?'_h':'');if(t==='hit'){SFX.play('hit');setTimeout(()=>SFX.play('dodge'),200);setTimeout(()=>SFX.play(k),650)}else{SFX.play('hit');setTimeout(()=>SFX.play('dodge'),200);setTimeout(()=>SFX.play('whoosh'),650)}};
 document.querySelectorAll('[data-seq]').forEach(b=>b.onclick=()=>seq(b.dataset.seq));
 $('sv').oninput=e=>{vol=+e.target.value/100;$('svp').textContent=e.target.value+'%'};
 mk($('stl'),[['calm','고요'],['passion','불길'],['library','도서관']],()=>BGM.style(),k=>BGM.setStyle(k));
