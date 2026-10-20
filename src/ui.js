@@ -155,8 +155,8 @@ export function startUI(E,app){
       const FL='#ff8a3c';
       if(sp==='tclaw'){col='#fff';h=`<u class="jw lng">`+sl(rot*0.7,18,'height:3px;--c:#fff')+sl(rot*0.7,36,'height:4px;animation-delay:40ms;--c:#fff')+sl(rot*0.7,54,'height:4px;animation-delay:80ms;--c:#fff')+sl(rot*0.7,72,'height:3px;animation-delay:120ms;--c:#fff')+`</u>`}
       else if(sp==='eye'){col='#d0344a';h=sl(rot,50,'height:6px;--c:#d0344a')+`<i class="eyefx"></i>`}
-      else if(sp==='tremor'){h=`<u class="jw">`+sl(rot,50)+sl(rot,50,'opacity:.5;animation-delay:70ms')+sl(rot,50,'opacity:.3;animation-delay:140ms')+`</u>`}
-      else if(sp==='reson'){h=`<u class="jw"><i class="thrust" style="--c:${col};--org:${org}"></i></u><i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:${col};animation-delay:.22s"></i><i class="ringfx" style="--c:${col};animation-delay:.34s;opacity:.5"></i>`}
+      else if(sp==='tremor'){h=`<u class="jw">`+sl(rot,50,'--c:#5fd0ff;margin-top:-3px')+sl(rot,50,'--c:#ff4d6d;margin-top:3px;animation-delay:30ms')+sl(rot,50,'--c:#fff;animation-delay:15ms')+sl(rot,50,'opacity:.5;animation-delay:70ms')+sl(rot,50,'opacity:.3;animation-delay:140ms')+`</u>`}
+      else if(sp==='reson'){col='#4aa8ff';h=`<u class="jw"><i class="thrust beam" style="--c:#4aa8ff;--org:${org}"></i></u><i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:${col};animation-delay:.22s"></i><i class="ringfx" style="--c:${col};animation-delay:.34s;opacity:.5"></i>`}
       else if(sp==='lv0'){col=kt==='burn'?col:FL;h=sl(rot*1.3,34,'height:3px;--c:'+col)+sl(-rot,64,'height:3px;animation-delay:80ms;--c:'+col)}
       else if(sp==='lv1'){col=kt==='burn'?col:FL;h=sl(rot,40,'--c:'+col)+sl(-rot,60,'animation-delay:70ms;--c:'+col)}
       else if(sp==='lv2'){col=kt==='burn'?col:FL;h=sl(rot,50,'height:7px;--c:'+col)+`<i class="ringfx" style="--c:${col}"></i>`}
@@ -174,7 +174,7 @@ export function startUI(E,app){
       }
     }else if(!(multi&&!lastHit)){
       if(wm&&kt==='burn')h+=`<i class="ringfx small" style="--c:${col}"></i>`;
-      if(mo==='critx')h=sl(rot,50,'height:7px')+sl(-rot,50,'height:7px;animation-delay:60ms')+`<i class="critstar" style="--c:${col}"></i>`;
+      if(mo==='critx')h=`<i class="hdark"></i>`+sl(rot,50,'height:7px')+sl(-rot,50,'height:7px;animation-delay:60ms')+`<i class="critstar" style="--c:${col}"></i>`;
       else if(mo==='slash')h=sl(rot,50);
       else if(mo==='cross')h=sl(rot,50)+sl(-rot,50,'animation-delay:70ms');
       else if(mo==='claw')h=sl(rot,24,'height:3px')+sl(rot,50,'height:3px;animation-delay:50ms')+sl(rot,76,'height:3px;animation-delay:100ms');
@@ -183,10 +183,10 @@ export function startUI(E,app){
       else h=`<i class="crack" style="--c:${col};--fl:${fromRight?-1:1}"></i>`;
     }
     if(lv>=3&&lastHit)h+=`<i class="hflash" style="--c:${col}"></i>`;
-    for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
+    for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk${sp==='eye'?' drop':''}" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)+(sp==='eye'?26:0)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
     const fx=document.createElement('div');fx.className='hfx';fx.innerHTML=h;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
-    if(crit&&lv>=2)floatTxt(e.def,'치명!','#ffd35a');
-    if(lastHit&&(lv>=2&&bigFx||lv>=3)){const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&bigFx?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}}
+    if(crit&&lv>=2)floatTxt(e.def,'치명!','#ffd35a','crit');
+    if(lastHit&&(lv>=2&&bigFx||lv>=3)){const hs=bigFx&&lv>=2?90:0;/* 역경직: 큰 타격은 잠깐 멈칫(밝아졌다 굳음)한 뒤 흔들린다 */if(hs){box.classList.add('hstop');setTimeout(()=>box.classList.remove('hstop'),hs)}setTimeout(()=>{const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&bigFx?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}},hs)}
   }
   function whiffFx(e){
     const lv=HFX_N[HFX]||0;if(lv<2||MODE==='off'||SKIP)return;
