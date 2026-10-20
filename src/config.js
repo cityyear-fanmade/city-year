@@ -295,6 +295,8 @@ export const CFG = {
     armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 2}, hidden: {dr: 1, eva: 1}},
     aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {eva: 1}, hidden: {eva: 2}, pick: 5, stats: {atk: '공격', eva: '회피', hit: '명중'}},
     /* 대강화: 강화 every단계마다 한 번 크게 오른다. 방어구 피해 감소는 drEvery단계마다 */
+    /* 전투 승리 보상: 재료용 무기·방어구·의수 중 하나를 matGap해마다 한 번 (무한 모드는 matGapInf해) */
+    matGap: 2, matGapInf: 5,
     big: {every: 5, weaponDmg: 2, armorHp: 10, armorRegen: 1, drEvery: 10, armorDr: 1, augEva: 2}
   },
   workshopFixer: {chance: 20, die: 5, minRoll: 4, discount: 0.2, sell: 0.5, sellBase: 100, hiddenSell: 2500, hiddenSellPer: 800},
