@@ -154,7 +154,7 @@ export function startUI(E,app){
     if(sp&&!(multi&&!lastHit)){
       const FL='#ff8a3c';
       if(sp==='tclaw'){col='#fff';h=`<u class="jw lng">`+sl(rot*0.7,18,'height:3px;--c:#fff')+sl(rot*0.7,36,'height:4px;animation-delay:40ms;--c:#fff')+sl(rot*0.7,54,'height:4px;animation-delay:80ms;--c:#fff')+sl(rot*0.7,72,'height:3px;animation-delay:120ms;--c:#fff')+`</u>`}
-      else if(sp==='eye'){col='#d0344a';h=sl(rot,50,'height:6px;--c:#d0344a')+`<i class="eyefx"></i>`}
+      else if(sp==='eye'){col='#d0344a';h=sl(rot,50,'height:7px;--c:#d0344a')+sl(rot*0.6,56,'height:3px;--c:#7a1020;animation-delay:50ms')}
       else if(sp==='tremor'){h=`<u class="jw">`+sl(rot,50,'--c:#5fd0ff;margin-top:-3px')+sl(rot,50,'--c:#ff4d6d;margin-top:3px;animation-delay:30ms')+sl(rot,50,'--c:#fff;animation-delay:15ms')+sl(rot,50,'opacity:.5;animation-delay:70ms')+sl(rot,50,'opacity:.3;animation-delay:140ms')+`</u>`}
       else if(sp==='reson'){col='#4aa8ff';h=`<u class="jw"><i class="thrust beam" style="--c:#4aa8ff;--org:${org}"></i></u><i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:${col};animation-delay:.22s"></i><i class="ringfx" style="--c:${col};animation-delay:.34s;opacity:.5"></i>`}
       else if(sp==='lv0'){col=kt==='burn'?col:FL;h=sl(rot*1.3,34,'height:3px;--c:'+col)+sl(-rot,64,'height:3px;animation-delay:80ms;--c:'+col)}
