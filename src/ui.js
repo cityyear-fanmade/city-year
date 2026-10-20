@@ -384,7 +384,7 @@ export function startUI(E,app){
   function quickAudio(){
     if(!BGM.supported)return '';
     const on=BGM.isOn(),v=Math.round(BGM.vol()*100),ic=v===0?'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="none"/>':'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none"/>';
-    return `<div class="qaudio"><div class="qrow"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><button class="qb" data-a="qstyle" aria-label="배경음악 스타일 바꾸기" title="스타일">${BGM.style()==='passion'?'불길':'고요'}</button></div>${SFX.supported?`<div class="qrow"><button class="qb${SFXS.on?' on':''}" data-a="qsfx" aria-label="효과음 ${SFXS.on?'끄기':'켜기'}" title="효과음">${SFXS.on?'탁 켬':'탁 끔'}</button></div>`:''}</div>
+    return `<div class="qaudio"><div class="qrow"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><button class="qb" data-a="qstyle" aria-label="배경음악 스타일 바꾸기" title="스타일">${{passion:'불길',library:'도서관'}[BGM.style()]||'고요'}</button></div>${SFX.supported?`<div class="qrow"><button class="qb${SFXS.on?' on':''}" data-a="qsfx" aria-label="효과음 ${SFXS.on?'끄기':'켜기'}" title="효과음">${SFXS.on?'탁 켬':'탁 끔'}</button></div>`:''}</div>
       <div class="volbox"><button class="qb${UI.volOpen?' on':''}" data-a="qvol" aria-label="음량 조절" title="음량"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ic}</svg></button>${UI.volOpen?`<div class="volpop"><input type="range" id="bgmQuick" min="0" max="100" step="1" value="${v}" aria-label="배경음악 음량"><b class="mono" id="bgmQuickPct">${v}%</b></div>`:''}</div>`;
   }
   function vSettings(){
@@ -396,7 +396,7 @@ export function startUI(E,app){
         <span class="small dim">자동 전투에서 라운드와 라운드 사이를 얼마나 쉬는지 · 전투 중 일시정지도 할 수 있다</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">인생 주사위</span><div class="seg">${b('dice','free','매번 다르게',DICE)}${b('dice','fixed','시드 고정(재현)',DICE)}</div>
         <span class="small dim">${DICE==='fixed'?'시드가 같고 선택이 같으면 인생 전체의 주사위가 똑같이 나온다 (공유·재현용)':'출생만 시드로 정해지고, 태어난 뒤의 사건 주사위는 판마다 달라진다'}</span></div>
-      ${BGM.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">배경음악</span><div class="seg">${b('bgm','off','끔',BGM.isOn()?'on':'off')}${b('bgm','on','켬',BGM.isOn()?'on':'off')}</div><div class="stack" style="gap:4px"><span class="small">스타일 · 전투에 들어가면 템포가 오른다</span><div class="seg">${b('bgmstyle','calm','고요',BGM.style())}${b('bgmstyle','passion','불길',BGM.style())}</div></div>
+      ${BGM.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">배경음악</span><div class="seg">${b('bgm','off','끔',BGM.isOn()?'on':'off')}${b('bgm','on','켬',BGM.isOn()?'on':'off')}</div><div class="stack" style="gap:4px"><span class="small">스타일 · 전투에 들어가면 템포가 오른다</span><div class="seg">${b('bgmstyle','calm','고요',BGM.style())}${b('bgmstyle','passion','불길',BGM.style())}${b('bgmstyle','library','도서관',BGM.style())}</div></div>
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">음량</span><b class="mono" id="bgmPct">${Math.round(BGM.vol()*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="bgmstep" data-i="-10" aria-label="음량 10 줄이기">−10</button><input type="range" id="bgmRange" min="0" max="100" step="1" value="${Math.round(BGM.vol()*100)}" aria-label="배경음악 음량"><button class="chip" data-a="bgmstep" data-i="10" aria-label="음량 10 올리기">+10</button></div></div>
         <span class="small dim">외부 음원 없이 만든 배경음이다. 고요와 불길 두 가지 중에서 고른다. 켜면 소리가 서서히 커지고, 언제든 끌 수 있다. 처음 음량은 30%이고, 막대를 끌거나 −10 · +10 버튼으로 0~100%까지 조절한다</span></div>`:''}
@@ -1947,7 +1947,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     sfxtest(){SFX.play('snap');setTimeout(()=>{const x=$('sfxState');if(x)x.textContent='오디오 상태 · '+SFX.state()},300);setTimeout(()=>SFX.play('hit'),380);setTimeout(()=>SFX.play('dodge'),760)},
     sfxstep(i){const p=Math.round(SFXS.vol*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;SFXS.vol=clamp(n,0,100)/100;sfxSave();SFX.play('hit');render()},
     qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
-    qstyle(){BGM.setStyle(BGM.style()==='passion'?'calm':'passion');bgmSave();render()},
+    qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:'calm'}[BGM.style()]||'calm');bgmSave();render()},
     qvol(){UI.volOpen=!UI.volOpen;render()},
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
