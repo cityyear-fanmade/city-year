@@ -2446,7 +2446,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 피해 주사위 면 수: 기본 d6, 카드에 die가 있으면 그 값 (예: Furioso 1d2 × 9). 최소값 보정은 면 수를 넘지 않는다 */
       const die=c.die||(A.isP?A.pdie:6)||6,lo2=Math.min(lo,die);
       /* 전용 무기 피해 주사위: 카드 주사위 대신 무기 주사위 (Furioso처럼 주사위가 정해진 카드는 그대로) */
-      const wd=!c.die&&A.wx?(sub?sub.dice:A.wx.dice):null;
+      const wd=!c.die&&!c.range&&A.wx?(sub?sub.dice:A.wx.dice):null;
       if(sub&&sub.range&&!c.die)rolls.push(sub.range[0]-1+d(sub.range[1]-sub.range[0]+1));
       /* 무기 주사위: 면 수는 무기, 개수는 카드와 무기 중 많은 쪽 (+ 카드 등급) */
       else if(wd){const n=Math.max(wd[0],c.dice)+(gr?gr.dice:0);for(let i=0;i<n;i++)rolls.push(Math.max(Math.min(lo,wd[1]),d(wd[1])))}
