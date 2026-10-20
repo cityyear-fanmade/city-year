@@ -1360,15 +1360,19 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const autoOff=FIGHT==='auto'?'<button class="btn quiet" data-a="fightmode" data-i="pick">다음 라운드부터 직접 고르기</button>':'';
     if(PLAYING){
       const lg=logBox(logLines(C.log.slice(0,C.logBefore).slice(-40)));
-      return M?`${duo(PRE)}${arenaHtml(true)}${vOrder(true)}<button class="btn quiet" data-a="skip">연출 건너뛰기</button>${lg}${autoOff}`
-        :`${entHtml('E',X,PRE.E)}${arenaHtml(true)}${entHtml('P',P,PRE.P)}${vOrder()}${lg}<button class="btn quiet" data-a="skip">연출 건너뛰기</button>${autoOff}`;
+      UI.cbar=`<button class="btn quiet" data-a="skip">연출 건너뛰기</button>${autoOff}`;
+      return M?`${duo(PRE)}${arenaHtml(true)}${vOrder(true)}${lg}`
+        :`${entHtml('E',X,PRE.E)}${arenaHtml(true)}${entHtml('P',P,PRE.P)}${vOrder()}${lg}`;
     }
     const log=logBox(logLines(C.log.slice(-60))||'<div class="sys">전투가 시작되었다.</div>');
     if(C.over){
       const w=C.over==='win';
-      return `${M?duo({E:X,P}):entHtml('E',X,X)+entHtml('P',P,P)}<div class="panel stack"><h2 class="${w?'good':'bad'}">${w?'승리 · '+esc(X.name)+'을(를) 꺾었다':'당신은 쓰러졌다'}</h2>
-        <button class="btn primary" data-a="fin">${w?'전리품을 챙긴다':'결말을 본다'}</button></div>${log}`;
+      UI.cbar=`<button class="btn primary" data-a="fin">${w?'전리품을 챙긴다':'결말을 본다'}</button>`;
+      return `${M?duo({E:X,P}):entHtml('E',X,X)+entHtml('P',P,P)}<div class="panel stack"><h2 class="${w?'good':'bad'}">${w?'승리 · '+esc(X.name)+'을(를) 꺾었다':'당신은 쓰러졌다'}</h2></div>${log}`;
     }
+    /* 전투 버튼은 화면 아래에 고정한 막대에 둔다: 내용 길이가 바뀌어도 버튼 자리는 움직이지 않는다 */
+    UI.cbar=FIGHT==='auto'?`<button class="btn${UI.paused?' primary':''}" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button><button class="btn quiet" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button>`
+      :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button><button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`;
     /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
     const cost=UI.sel.reduce((a,i)=>a+D.cards[P.hand[i]].c-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
     const cards=P.hand.map((id,i)=>{
@@ -1384,8 +1388,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${egoBar(C.ch)}
       <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">${P.distorted?'빛 없음':`빛 ${left}/${P.light}`}</span></div>
       <div class="hand">${cards}</div>
-      ${FIGHT==='auto'?`<div class="check">${UI.paused?'일시정지 · 다음 라운드를 기다린다':'자동 전투 중 · 카드를 알아서 고르고 진행한다'}</div><div class="row" style="gap:8px"><button class="btn${UI.paused?' primary':''}" style="flex:1" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button><button class="btn quiet" style="flex:1" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button></div>`
-        :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button><button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`}
+      ${FIGHT==='auto'?`<div class="check">${UI.paused?'일시정지 · 다음 라운드를 기다린다':'자동 전투 중 · 카드를 알아서 고르고 진행한다'}</div>`:''}
       ${M?`${log}<details class="logbox"><summary>설정 (테마 · 연출 · 전투 진행)</summary><div class="stack" style="margin-top:10px">${vSettings()}</div></details>`:vSettings()}`;
   }
   /* 하나 협회 패시브: 카드 위에서 매 라운드 한 가지를 고른다 */
@@ -1670,7 +1673,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
     const ov=UI.help&&!UI.cfg?vHelp():UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif" style="white-space:nowrap">설정</b><button class="btn quiet" style="width:auto;flex:none;padding:8px 16px" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):pend?vOffer():ok&&UI.bag?vBag():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const ovKey=UI.help&&!UI.cfg?'help':UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
-    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+quickAudio():''}`;
+    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${(()=>{const cb=UI.cbar;UI.cbar='';return s==='combat'&&cb&&!ov?`<div class="cbar"><div class="cbar-in">${cb}</div></div>`:''})()}${ov}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+quickAudio():''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     if(s==='end'){if(!UI.chronDone&&$('endShot')){UI.chronDone=true;try{chronAuto()}catch(e){}}}else UI.chronDone=false;
     document.documentElement.dataset.scr=s;

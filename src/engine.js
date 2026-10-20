@@ -2315,7 +2315,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.echo){B.wecho=(B.wecho||0)+1;L('kw',`  ${B.name}에게 ${X.echo.n||'잔향'} ${B.wecho}/${X.echo.need}`);if(B.wecho>=X.echo.need){hpLoss(C,B,X.echo.dmg,L);B.wecho=0;L('dmg',`  ${X.echo.n||'잔향'}이 울린다 · ${B.name} 고정 피해 ${X.echo.dmg}`)}}
         if(X.breathHit){A.breath=Math.min(CFG.breath.cap,A.breath+X.breathHit)}
         /* ALEPH E.G.O: 미미크리 흡수, 다 카포 악장 */
-        if(X.drain&&A.hp>0){const h=Math.min(X.drain,A.maxHp-A.hp);if(h>0){A.hp+=h;HG(A,h);L('kw',`  ${A.name} · 흡수 · HP +${h}`)}}
+        if(X.drain&&A.hp>0&&(A.drainN||0)<CFG.drainCap){A.drainN=(A.drainN||0)+1;const h=Math.min(X.drain,A.maxHp-A.hp);if(h>0){A.hp+=h;HG(A,h);L('kw',`  ${A.name} · 흡수 ${A.drainN}/${CFG.drainCap} · HP +${h}`)}}
         if(X.movement&&C.round%X.movement.every===0&&A.mvRound!==C.round&&B.hp>0){A.mvRound=C.round;hpLoss(C,B,X.movement.dmg,L);L('dmg',`  다 카포 · 악장 · ${B.name} 고정 피해 ${X.movement.dmg}`)}
         if(X.execute&&B.hp>0&&B.hp<=B.maxHp*X.execute.below){hpLoss(C,B,X.execute.dmg,L);L('dmg',`  조율 · ${B.name} 고정 피해 ${X.execute.dmg}`)}}
       if(B.wx&&B.wx.grudge&&B.hp>0){B.grudge=Math.min(5,(B.grudge||0)+1)}
