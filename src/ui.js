@@ -143,12 +143,13 @@ export function startUI(E,app){
     /* 모션: 새로 걸린 키워드와 타수로 고른다 (화상=불꽃 고리, 출혈=할퀴기, 파열=균열, 연타=할퀴기·X자, 그 밖에는 베기·찌르기·X자 중 무작위) */
     const kt=col===kwc('burn')||col===kwc('flame')?'burn':col===kwc('bleed')?'bleed':col===kwc('rupture')?'rupture':'';
     const hitsN=(e.card&&e.card.hits)||1,pk=a=>a[Math.floor(Math.random()*a.length)];
-    const wn=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon.n:'',wm=weaponMotion(wn);
+    const edg=e.att!=='P'&&C&&D.enemies[C.id]&&D.enemies[C.id].drop&&D.enemies[C.id].drop.gear,ewn=(Array.isArray(edg)?edg:[edg]).filter(g=>g&&g.slot==='weapon').map(g=>g.n)[0]||'';
+    const wn=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon.n:ewn,wm=weaponMotion(wn);
     const mo=crit?'critx':wm?wm:kt==='burn'?'ring':kt==='bleed'?'claw':kt==='rupture'?'crack':hitsN>=2?pk(['cross','claw']):pk(['slash','slash','thrust','cross']);
     /* 전용 모션: 기믹 무기는 무기마다 따로 그린다 (레바테인=해방 단계별, 발톱=흰 발톱자국, 미미크리=눈, 다 카포·궁니르=떨림, 검은 침묵의 장갑=나온 무기 번호별) */
     const gw=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon:null,wid=gw?gw.id:'',gl=/장갑 1d9 (\d)/.exec(e.note||'');
     const LST={laev_sealed:0,laev_s1:1,laev_s2:2,laev:3};
-    const sp=crit?'':gl?'gl'+gl[1]:wid==='job_claw'?'tclaw':wid in LST?'lv'+LST[wid]:/미미크리/.test(wn)?'eye':/다 카포/.test(wn)?'tremor':wid==='gungnir'?'reson':'';
+    const sp=crit?'':gl?'gl'+gl[1]:(wid==='job_claw'||/하얀 발톱/.test(wn))?'tclaw':wid in LST?'lv'+LST[wid]:/미미크리/.test(wn)?'eye':/다 카포/.test(wn)?'tremor':(wid==='gungnir'||/절대음감/.test(wn))?'reson':'';
     let h='';
     if(sp&&!(multi&&!lastHit)){
       const FL='#ff8a3c';
