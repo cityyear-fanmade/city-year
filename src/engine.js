@@ -769,13 +769,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.hwb&&ch.hw){const r=ch.hw,k=fx.hwb,Z=CFG.hw.beast;
       if(k==='stay')r.fork=1;
       else if(k==='become'){r.fork=1;r.beast=1;r.bk=fx.hwbKey;r.bp=0;r.mk=0;r.bnext=(ch.year||0)+1;r.cand='hr_'+(aniOf(r.bk).pi);const a=aniOf(r.bk);
-        addStats(ch.stats,Z.startFx);if(Z.startFx.maxHp)ch.hp+=Z.startFx.maxHp;(ch.relics=ch.relics||[]).push('흑수 · '+a.nm);addCard(ch,'zp_'+r.bk,chips,'흑수 카드');
+        addStats(ch.stats,Z.startFx);if(Z.startFx.maxHp)ch.hp+=Z.startFx.maxHp;(ch.relics=ch.relics||[]).push('흑수 · '+a.nm);addCard(ch,'zb_'+r.bk+'_1',chips,'흑수 카드');
+        if(!ch.bond){ch.bond={st:'pick',route:'hcorp',variant:1,name:'',step:0,tries:0,love:0,fixed:1};ch.bondPick=true;chips.push('인연 · 후원할 가주 후보의 이름을 정한다 (확정 인연)')}
         chips.push(`${a.nm}(${a.hj})의 흑수가 되었다 · 가주 승계를 내려놓는다 · 최대 HP +${Z.startFx.maxHp} · 회피 +${Z.startFx.eva}`);chips.push('후원할 가주 후보 · '+((D.enemies[r.cand]||{}).n||'가주 후보'))}
       else if(k==='act'){r.bp=(r.bp||0)+1;chips.push(`흑수 활동 ${r.bp}/${Z.rank2}`)}
-      else if(k==='rank1'){r.rank1=1;addStats(ch.stats,Z.rank1Fx);if(Z.rank1Fx.maxHp)ch.hp+=Z.rank1Fx.maxHp;chips.push(`${aniOf(r.bk).nm}의 흑수 · 공격 +${Z.rank1Fx.atk} · 회피 +${Z.rank1Fx.eva} · 최대 HP +${Z.rank1Fx.maxHp}`)}
-      else if(k==='rank2'){r.rank2=1;addStats(ch.stats,Z.rank2Fx);if(Z.rank2Fx.maxHp)ch.hp+=Z.rank2Fx.maxHp;const tt='흑수 필두';ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt)}chips.push(`칭호 · ${tt} (${aniOf(r.bk).nm}) · 공격 +${Z.rank2Fx.atk} · 회피 +${Z.rank2Fx.eva} · 최대 HP +${Z.rank2Fx.maxHp}`)}
+      else if(k==='rank1'){r.rank1=1;addStats(ch.stats,Z.rank1Fx);if(Z.rank1Fx.maxHp)ch.hp+=Z.rank1Fx.maxHp;addCard(ch,'zb_'+r.bk+'_2',chips,'흑수 카드');chips.push(`${aniOf(r.bk).nm}의 흑수 · 공격 +${Z.rank1Fx.atk} · 회피 +${Z.rank1Fx.eva} · 최대 HP +${Z.rank1Fx.maxHp}`)}
+      else if(k==='rank2'){r.rank2=1;addStats(ch.stats,Z.rank2Fx);if(Z.rank2Fx.maxHp)ch.hp+=Z.rank2Fx.maxHp;const tt='흑수 필두';ch.titles=ch.titles||[];if(!ch.titles.includes(tt)){ch.titles.push(tt);(ch.titleLog=ch.titleLog||[]).push(tt)}addCard(ch,'zb_'+r.bk+'_3',chips,'흑수 카드');chips.push(`칭호 · ${tt} (${aniOf(r.bk).nm}) · 공격 +${Z.rank2Fx.atk} · 회피 +${Z.rank2Fx.eva} · 최대 HP +${Z.rank2Fx.maxHp}`)}
       else if(k==='mk'){r.mk=(r.mk||0)+1;chips.push(`후보를 세우는 일 ${r.mk}/${(D.hwBeast.maker||[]).length}`)}
-      else if(k==='maker'){r.maker=1;r.done=1;chips.push('가주메이커 · 가주의 자리에 후보가 앉았다')}
+      else if(k==='accept'){r.accept=1;r.hongruPend=1;chips.push('선황충을 받아들였다 · 홍루가 나선다')}
+      else if(k==='flee'){r.flee=1;r.maker=1;r.done=1;chips.push('가문을 버리고 후보와 도망쳤다')}
     }
     if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
       if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}
@@ -1140,7 +1142,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 청혼: roll이면 1dN을 굴려 성공 범위면 결혼, 아니면 기회 1회 소모 (기회를 다 쓰면 인연이 끝난다) */
   /* 결혼 판정: 1d4에 쌓은 인연(인연 이벤트 + '인연을 더 쌓는다')을 더해 marryNeed 이상이면 성공 */
-  const marryScore=b=>Math.min(b.love||0,BD.steps)+(b.extra||0);
+  const marryScore=b=>b.fixed?BD.marryNeed:Math.min(b.love||0,BD.steps)+(b.extra||0);
   function bondPropose(ch,chips,roll){
     const b=ch.bond;if(!b||b.st!=='met')return;
     let ok=false;
@@ -1252,7 +1254,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const mk=(tpl,fxk)=>({t:tpl.t,x:fill(tpl.x),c:tpl.check?[{l:tpl.l,h:'판정 · 성공해도 실패해도 후보를 세우는 일은 이어진다',check:tpl.check,ok:{t:fill(tpl.ok.t),fx:tpl.ok.fx},fail:{t:fill(tpl.fail.t),fx:tpl.fail.fx}}]:[{l:tpl.l,ok:{t:fill(tpl.t2),fx:{hwb:fxk}}}]});
     const done=ev=>{r.bnext=y+Z.gap;return ev};
     if(r.rank2){
-      if((r.mk||0)>=B.maker.length)return done({t:B.final.t,x:fill(B.final.x),c:[{l:B.final.l,ok:{t:fill(B.final.t2),fx:{hwb:'maker'}}}]});
+      if((r.mk||0)>=B.maker.length){if(r.accept)return null;const F=B.final;return done({t:F.t,x:fill(F.x),c:[{l:F.accept.l,h:F.accept.h,ok:{t:fill(F.accept.t2),fx:{hwb:'accept'}}},{l:F.flee.l,h:F.flee.h,ok:{t:fill(F.flee.t2),fx:{hwb:'flee'}}}]})}
       return done(mk(B.maker[r.mk||0],'mk'));
     }
     if((r.bp||0)>=Z.rank2&&r.rank1)return done({t:B.rank2.t,x:fill(B.rank2.x),c:[{l:B.rank2.l,ok:{t:fill(B.rank2.t2),fx:{hwb:'rank2'}}}]});
@@ -1588,9 +1590,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {type:'fight',enemy:id,enc:{hidden:true,label:'머리의 시험 · '+D.enemies[id].n}};
     }
     {const rv=rbFree(G);if(rv)return rv}
-    if(mc.hw&&mc.hw.done&&!mc.hw.ended){mc.hw.ended=true;return {type:'end',win:true,hw:mc.hw.maker?'hwmaker':mc.hw.host?'hwhost':mc.hw.broke?'hwbreak':'hwfree'}}
+    if(mc.hw&&mc.hw.done&&!mc.hw.ended){mc.hw.ended=true;return {type:'end',win:true,hw:mc.hw.flee?'hwflee':mc.hw.maker?'hwmaker':mc.hw.host?'hwhost':mc.hw.broke?'hwbreak':'hwfree'}}
     if(mc.rb&&mc.rb.done&&!mc.rb.ended){mc.rb.ended=true;return {type:'end',win:true,rb:true}}
     /* 연전: 바랄을 쓰러뜨리면 쉬지 않고 제나가 나선다 */
+    if(G.ch.hw&&G.ch.hw.hongruPend&&!G.ch.beaten.includes('hongru'))return {type:'fight',enemy:'hongru',enc:{hidden:true,label:'선황충을 노리는 홍루'}};
     if(G.ch.flags.zenaPend&&!G.ch.beaten.includes(CFG.endless.finalNext))return {type:'fight',enemy:CFG.endless.finalNext,enc:{hidden:true,label:'연전 · 마지막 상대'}};
     /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
     if(G.infinite&&!G.ch.oldEnd&&age(G)>=CFG.oldAge){G.ch.oldEnd=true;return {type:'end',win:true,old:true}}
@@ -1848,6 +1851,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     if(foe.hidden){
       ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
+      if(C.id==='hongru'&&ch.hw&&ch.hw.accept&&!ch.hw.maker){ch.hw.maker=1;ch.hw.done=1;chips.push('홍루를 쓰러뜨렸다 · 선황충을 품은 가주 곁의 필두로 남는다')}
       if(foe.chain){ch.flags.zenaPend=1;chips.push('연전 · 쉴 틈 없이 다음 상대가 나선다')}else if(C.id===CFG.endless.finalNext)ch.flags.zenaPend=0;
       if(ch.corp&&ch.corp.trial===C.id)ch.corp.trial=null;
       /* 기업 루트: 머리의 시험(발톱 → 조율자)을 끝까지 넘으면 영구 강화 */
@@ -1972,7 +1976,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(e.kidHunt){const K=CFG.bond.hunt,m=(ch.kidFoeLv||0)>=K.topLv?K.mulTop:K.mul;
       E.maxHp=E.hp=Math.max(1,Math.round(P.maxHp*m));E.atk=Math.max(1,Math.round(P.atk*m));E.eva=Math.round(P.eva*m);E.spd=Math.round(P.spd*m);E.deck=ch.deck.slice()}
     /* 인연과 함께 싸우는 보스(엘레나): 결혼한 인연이 라운드마다 추가 공격 */
-    const ally=e.ally&&ch.bond&&ch.bond.st==='married'?{name:ch.bond.name,lv:spouseLevel(ch.bond,ch.year||0)}:null;
+    const beastAlly=ch.hw&&ch.hw.beast&&ch.hw.bk&&!ch.hw.done;
+    const ally=e.ally&&ch.bond&&ch.bond.st==='married'?{name:ch.bond.name,lv:spouseLevel(ch.bond,ch.year||0)}:beastAlly?{name:(ch.bond&&ch.bond.name)||((D.enemies[ch.hw.cand]||{}).n||'가주 후보'),lv:ch.bond&&ch.bond.route?spouseLevel(ch.bond,ch.year||0):2}:null;
     const allyFirst=ch.flags&&ch.flags.bondFirst&&ch.bond&&ch.bond.st==='married'?{name:ch.bond.name,lv:spouseLevel(ch.bond,ch.year||0)}:null;
     const C={ch,P,E,id,ally,allyFirst,penalty,duel:assocOf(ch)===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
     {const fl=ch.flags||{};if(fl.escortNext){fl.escortNext=0;if(ch.bond&&ch.bond.st==='married')C.escort={name:ch.bond.name,kind:escortKind(ch.bond.route),lv:spouseLevel(ch.bond,ch.year||0)}}}
@@ -2258,6 +2263,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       if(A.rv&&A.rv.t>=2&&B.hp<=B.maxHp*CFG.raven.low&&rolls.length){pnote+=` 까마귀의 눈 · 주사위 ${rolls.length}개 +1`}
       let dmg=rolls.reduce((a,b)=>a+b,0)+(A.rv&&A.rv.t>=2&&B.hp<=B.maxHp*CFG.raven.low?rolls.length:0)+c.b+(gr?gr.b:0)+(A.prescPlus||0)+(A.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(A.bonB&&BONA.has(c)?A.bonB:0)+(c.markB&&B.disp?c.markB*B.disp:0)+(A.vtUse||0)+(A.vtBonus||0);
+      /* 흑수 카드: 속도 · 파열 · 호흡 · 보호막 · 화상에 따른 피해 보정 (주사위당 +n은 주사위 수만큼 더한다) */
+      if(c.hz){const nr=rolls.length||1;
+        if(c.spdRupt&&A.spd>B.spd)dmg=Math.floor(dmg*(1+Math.min(0.5,(A.spd-B.spd)*(B.rupture||0)/100)));
+        if(c.ruptB)dmg+=Math.min(2,Math.floor((B.rupture||0)/c.ruptB))*nr;
+        if(c.breathRupt)dmg+=Math.min(c.breathRupt[1],Math.floor(((A.breath||0)+(B.rupture||0))/c.breathRupt[0]))*nr;
+        if(c.shieldDmg)dmg=Math.floor(dmg*(1+Math.min(0.5,(A.shield||0)*c.shieldDmg/100)));
+        if(c.spdFinal&&A.spd>B.spd)dmg+=c.spdFinal*nr;
+        if(c.lowHpB&&A.hp<A.maxHp*0.5)dmg+=c.lowHpB*nr;
+        if(c.burnDmg)dmg=Math.floor(dmg*(1+Math.min(0.3,(B.burn||0)*c.burnDmg/100)));
+        if(c.ruptBreath&&(B.rupture||0)>=5){A.breath=Math.min(CFG.breath.cap,(A.breath||0)+c.ruptBreath);L('kw',`  ${A.name} · ${c.n} · 파열 5 이상 · 호흡 +${c.ruptBreath}`)}}
       /* 인연과 함께 싸우는 보스: 배우자가 같은 공격을 같이 굴린다. 피해 주사위 합 = (본인 + 배우자)의 ¾씩 */
       let spR=null;
       if(A.isP&&C.ally&&rolls.length){const dd=wd?wd[1]:die;spR=rolls.map(()=>c.range&&!wd?c.range[0]-1+d(c.range[1]-c.range[0]+1):Math.max(lo2,d(dd)));
