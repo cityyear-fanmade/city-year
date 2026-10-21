@@ -2034,6 +2034,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
+    /* 불순물을 쓰러뜨릴 때마다 얻는 전용 강화: 조각이 몸에 남아 능력치와 주는 피해가 영구히 오르고, 상처가 한 번에 아문다 (모두에게 같은 회복 수단) */
+    if(ch.infinite&&C.id===CFG.endless.final&&C.over!=='lose'){const SH=CFG.infinite.shard;ch.infShard=(ch.infShard||0)+1;addStats(ch.stats,{atk:SH.atk,maxHp:SH.maxHp});const mh=ch.stats.maxHp,h0=ch.hp;ch.hp=Math.min(mh,ch.hp+SH.maxHp+Math.round(mh*SH.heal));chips.push(`불순물의 조각 ${ch.infShard}개 · 공격 +${SH.atk} · 최대 HP +${SH.maxHp} · 주는 피해 +${Math.round(SH.dmg*100*ch.infShard)}% (누적)`+(ch.hp>h0?` · HP +${ch.hp-h0}`:''))}
     if(C.P&&C.P.sm){const SM=CFG.shinmang,g=gainMind(ch,SM.winMind);if(g)chips.push(`신(心)을 거둔다 · 정신력 +${g} (${ch.mind}/${mindMax(ch)})`)}
     /* 공방 해결사: 전투를 두 번 이길 때마다 재료용 장비를 하나 얻는다 (무한 모드는 5해마다 한 번) */
     if(isWs(ch)&&ch.ws){let give=false;
@@ -2661,7 +2663,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.verdict){const x=Math.floor((B.maxHp-B.hp)/10);dmg=Math.max(dmg,rawDmg)+x;note+=` 처형 · 방어·감소 무시 · 잃은 체력 ${B.maxHp-B.hp} → 고정 +${x}`}
       if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const IF_=CFG.infinite,m=B.isP?Math.min(IF_.escMaxP,Math.pow(1+IF_.escPerP,A.escN)):Math.min(IF_.escMaxE,Math.pow(1+IF_.escPerE,A.escN));dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
       if(C.ch.infinite&&!A.isP&&B.isP&&dmg>0&&C.ch.infBoost){const m=1+C.ch.infBoost*CFG.infinite.century.enemyDmg;dmg=Math.round(dmg*m);note+=` 어긋남 ×${m.toFixed(2)}`}
-      if(C.ch.infinite&&A.isP&&dmg>0&&C.ch.infBoost){const m=1+C.ch.infBoost*CFG.infinite.century.dmg;dmg=Math.round(dmg*m);note+=` 백 해 ×${m.toFixed(2)}`}
+      if(C.ch.infinite&&A.isP&&dmg>0&&(C.ch.infBoost||C.ch.infShard)){const m=1+C.ch.infBoost*CFG.infinite.century.dmg+(C.ch.infShard||0)*CFG.infinite.shard.dmg;dmg=Math.round(dmg*m);note+=` 백 해 ×${m.toFixed(2)}`}
       {const SG=CFG.infinite.surge;if(C.ch.infinite&&A.isP&&dmg>0&&SG&&(C.ch.year||0)>=SG.year&&C.round>SG.round){const m=Math.min(SG.max,Math.pow(SG.per,C.round-SG.round));dmg=Math.round(dmg*m);note+=` 기세 ×${m>=1000?m.toExponential(1):m.toFixed(1)}`}}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
       hpLoss(C,B,dmg,L);if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
