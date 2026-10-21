@@ -1061,6 +1061,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.startsWith('memo:')){const [k,v]=req.slice(5).split('='),m=ch.memo&&ch.memo[k];return !!m&&!m.done&&(v==null||m.v===v)}
     if(req.startsWith('memoyears:')){const [k,n]=req.slice(10).split('>='),m=ch.memo&&ch.memo[k];return !!m&&(ch.year||0)-m.y>=+n}
     if(req.startsWith('year>='))return (ch.year||0)>=+req.slice(6);
+    if(req.startsWith('age<='))return 16+(ch.year||0)<=+req.slice(5);   // 나이 = 16 + 연차 (연차 1 = 17세)
     if(req.startsWith('ledger:')){const [k,n]=req.slice(7).split('>=');return ((ch.ledger||{})[k]||0)>=+n}
     if(req==='inf')return !!ch.infinite;
     if(req==='wtrain')return !!ch.wtrain;
