@@ -2035,7 +2035,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
     /* 불순물을 쓰러뜨릴 때마다 얻는 전용 강화: 조각이 몸에 남아 능력치와 주는 피해가 영구히 오르고, 상처가 한 번에 아문다 (모두에게 같은 회복 수단) */
-    if(ch.infinite&&C.id===CFG.endless.final&&C.over!=='lose'){const SH=CFG.infinite.shard;ch.infShard=(ch.infShard||0)+1;addStats(ch.stats,{atk:SH.atk,maxHp:SH.maxHp});const mh=ch.stats.maxHp,h0=ch.hp;ch.hp=Math.min(mh,ch.hp+SH.maxHp+Math.round(mh*SH.heal));chips.push(`불순물의 조각 ${ch.infShard}개 · 공격 +${SH.atk} · 최대 HP +${SH.maxHp} · 주는 피해 +${Math.round(SH.dmg*100*ch.infShard)}% (누적)`+(ch.hp>h0?` · HP +${ch.hp-h0}`:''))}
+    if(ch.infinite&&C.id===CFG.endless.final&&C.over!=='lose'){const SH=CFG.infinite.shard;ch.infShard=(ch.infShard||0)+1;addStats(ch.stats,{atk:SH.atk,maxHp:SH.maxHp});const mh=ch.stats.maxHp,h0=ch.hp;ch.hp=Math.min(mh,ch.hp+SH.maxHp+Math.round(mh*SH.heal));chips.push(`불순물의 조각 ${ch.infShard}개 · 공격 +${SH.atk} · 최대 HP +${SH.maxHp} · 주는 피해 +${(SH.dmg*100*ch.infShard).toFixed(1).replace(/\.0$/,'')}% (누적)`+(ch.hp>h0?` · HP +${ch.hp-h0}`:''))}
     if(C.P&&C.P.sm){const SM=CFG.shinmang,g=gainMind(ch,SM.winMind);if(g)chips.push(`신(心)을 거둔다 · 정신력 +${g} (${ch.mind}/${mindMax(ch)})`)}
     /* 공방 해결사: 전투를 두 번 이길 때마다 재료용 장비를 하나 얻는다 (무한 모드는 5해마다 한 번) */
     if(isWs(ch)&&ch.ws){let give=false;
