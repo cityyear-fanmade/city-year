@@ -1769,16 +1769,39 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       `${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`난이도 · ${diffOf(c)}`,`시드 ${c.seed}`+(c.daily?` · 오늘의 시드 ${c.daily}`:''),url].filter(Boolean).join('\n');
   }
   /* 엔딩 화면 그대로 찍기: 저장 버튼을 누를 때만 html2canvas를 불러온다. 실패하면 null (카드 이미지로 대신) */
+  const SHOTSRC=['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js','https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'];
   function loadShot(){
     if(window.html2canvas)return Promise.resolve(true);
-    return new Promise(res=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-      sc.onload=()=>res(!!window.html2canvas);sc.onerror=()=>res(false);document.head.appendChild(sc);setTimeout(()=>res(!!window.html2canvas),8000)});
+    /* 파일에 넣어 둔 html2canvas가 있으면 인터넷 없이 바로 쓴다 */
+    if(window.CITY_H2C){try{(0,eval)(window.CITY_H2C);if(window.html2canvas)return Promise.resolve(true)}catch(e){}}
+    /* 한 곳에서 못 받으면 다른 곳에서 한 번 더 받는다 (휴대폰 앱 브라우저·학교·회사 망에서 막히는 경우) */
+    const get=src=>new Promise(res=>{const sc=document.createElement('script');sc.src=src;let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+      sc.onload=()=>fin(!!window.html2canvas);sc.onerror=()=>fin(false);document.head.appendChild(sc);setTimeout(()=>fin(!!window.html2canvas),8000)});
+    return get(SHOTSRC[0]).then(ok=>ok||get(SHOTSRC[1]));
+  }
+  /* 엔딩 화면 그대로 찍기. 실패하면 null이고 UI.shotWhy에 이유('load' 도구를 못 불러옴 · 'draw' 그림을 못 만듦)가 남는다.
+     휴대폰은 캔버스 크기 제한이 작아 긴 화면은 해상도를 낮춰 다시 시도한다 */
+  /* html2canvas 1.4.1은 color-mix()가 계산된 'color(srgb …)' 색을 읽지 못해 통째로 실패한다. 복제본의 그런 색을 rgb로 바꿔 둔다 */
+  function fixShotColors(d,root){
+    try{const cv=d.createElement('canvas');cv.width=cv.height=1;const g=cv.getContext('2d',{willReadFrequently:true});
+      const rgb=m=>{try{g.clearRect(0,0,1,1);g.fillStyle='#000';g.fillStyle=m;g.fillRect(0,0,1,1);const p=g.getImageData(0,0,1,1).data;return `rgba(${p[0]},${p[1]},${p[2]},${(p[3]/255).toFixed(3)})`}catch(e){return 'rgba(0,0,0,0)'}};
+      const props=['color','background-color','background-image','border-top-color','border-right-color','border-bottom-color','border-left-color','outline-color','text-decoration-color','box-shadow','text-shadow','fill','stroke'];
+      const win=d.defaultView||window,els=[root,...root.querySelectorAll('*')];
+      for(const el of els){const cs=win.getComputedStyle(el);for(const pr of props){const v=cs.getPropertyValue(pr);if(v&&/color\(|color-mix\(/.test(v))el.style.setProperty(pr,v.replace(/color\((?:[^()]|\([^()]*\))*\)/g,rgb),'important')}}
+    }catch(e){}
   }
   async function shotEnd(id){
-    id=id||'endShot';const el=$(id);if(!el||!(await loadShot()))return null;
+    id=id||'endShot';UI.shotWhy='';const el=$(id);if(!el){UI.shotWhy='draw';return null}
+    if(!(await loadShot())){UI.shotWhy='load';return null}
     try{await document.fonts.ready}catch(e){}
-    try{const bg=getComputedStyle(document.body).backgroundColor||'#0d0d0f';
-      return await window.html2canvas(el,{backgroundColor:bg,scale:2,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){e.style.padding='28px 22px';e.style.background=bg}}})}catch(e){return null}
+    const bg=getComputedStyle(document.body).backgroundColor||'#0d0d0f',r=el.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);
+    /* 한 변 최대 8000px · 전체 1400만 화소 안에서 가장 큰 배율부터 */
+    const fit=Math.min(2,8000/h,Math.sqrt(14e6/(w*h))),tries=[fit,Math.min(fit,1),Math.min(fit,0.7),Math.min(fit,0.5)].filter((s,k,a)=>s>=0.3&&a.indexOf(s)===k);
+    for(const sc of tries){
+      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg}}});
+        if(cv&&cv.width>0&&cv.height>0)return cv}catch(e){}
+    }
+    UI.shotWhy='draw';return null;
   }
   /* 엔딩 카드 이미지 (1080×1350): 캔버스에 직접 그린다. 외부 라이브러리 없음 */
   async function endCard(){
@@ -2189,7 +2212,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
     async chimg(v){
       const [tab,id]=String(v).split(':'),e=(loadChron()[tab]||[]).find(x=>x.id===id);if(!e)return;
-      const cv=await shotEnd('chShot');if(!cv){UI.chMsg='이미지를 만들 수 없다. 인터넷 연결(이미지 도구 불러오기)을 확인해 주세요.';render();return}
+      const cv=await shotEnd('chShot');if(!cv){UI.chMsg=UI.shotWhy==='load'?'이미지 도구를 불러오지 못했다. 인터넷 연결을 확인하거나 앱 속 브라우저라면 크롬·사파리로 열어 다시 시도해 주세요.':'이 기록은 화면이 너무 길어 이미지로 만들지 못했다. 기록 화면을 직접 캡처해 저장해 주세요.';render();return}
       const name=`도시의한해_일대기_${(e.v||'')}_${e.id}.png`,blob=await new Promise(r=>cv.toBlob(r,'image/png'));
       try{const f=new File([blob],name,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(er){if(er&&er.name==='AbortError')return}
       try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(er){}
