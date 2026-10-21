@@ -1106,7 +1106,8 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     for(const k of [ch.innate,ch.innate2]){const E_=k&&D.innate[k]&&D.innate[k].fx;if(!E_)continue;const s_=ch.stats;for(const [sk,v] of Object.entries(E_))s_[sk]=(s_[sk]||0)+v;if(E_.maxHp)ch.hp+=E_.maxHp;if(E_.mindMax)ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s_.mindMax||0))}
     if(J){ch.job=job;ch.aff={type:'head',name:'머리'};if(J.deck){ch.deck=J.deck.slice();ch.cardMoney=true;ch.packName=J.n+' 전용 카드팩'}else for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
     /* 출생 때 굴린 무기는 무기 칸의 첫 장비 */
-    equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
+    /* 맨손은 무기가 아니다: 무기 칸을 비워 두고(화면에는 맨손으로 보인다) 그 보정은 몸에 직접 더한다 */
+    if(w.n==='맨손'){for(const [k,v] of Object.entries(w.fx||{}))if(k in ch.stats)ch.stats[k]+=v}else equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
     /* 히든 직업 전용 무기: 출생 무기는 보관함으로 */
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
@@ -1223,8 +1224,10 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   const bonNeed=ch=>{const w=ch.gear.weapon;return w&&(w.id==='bonatelli'&&w.lvl<CFG.bon.max||w.id==='star'&&w.lvl<CFG.star.max)?CFG.bon.need[w.lvl]:null};
   /* 강화할 수 있는 전용 무기의 다음 단계 */
   const upItem=(w,L)=>w.id==='star'?starItem(L,w.base.replace(/성도$/,''),w.virt):bonItem(L);
+  /* 맨손은 쥐고 있는 물건이 아니므로 어떤 강화의 재료도 되지 않는다 */
+  const isBare=x=>!!x&&x.id==='birth'&&x.n==='맨손';
   function bonUpgrade(ch,i){
-    const need=bonNeed(ch),st=ch.stash||[],m=st[i];if(need==null||!m||(m.grade||0)<need)return false;
+    const need=bonNeed(ch),st=ch.stash||[],m=st[i];if(need==null||!m||isBare(m)||(m.grade||0)<need)return false;
     st.splice(i,1);const old=ch.gear.weapon;equip(ch,carryTune(old,upItem(old,old.lvl+1)));ch.stash=ch.stash.filter(x=>x!==old);return true;
   }
   function equipStash(ch,i){const st=ch.stash||[];if(!st[i]||(st[i].slot==='aug'&&isN(ch)))return false;equip(ch,st.splice(i,1)[0]);return true}
@@ -1568,7 +1571,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   function wsMelt(ch,slot,i){
     const w=ch.ws,st=ch.stash||[],m=st[i],cur=ch.gear[slot];
     const mat=!!m&&m.id==='hidmat';
-    if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||(!mat&&((m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot))||(ch.distForm&&!ch.distStable))return null;
+    if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||isBare(m)||(!mat&&((m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot))||(ch.distForm&&!ch.distStable))return null;
     const k=w[wsKey(slot)],hid=wsHidden(m);let step=0;
     st.splice(i,1);
     if(D.items&&D.items[m.id]){w.used=w.used||{};w.used[m.id]=(w.used[m.id]||0)+1}
@@ -5022,7 +5025,7 @@ function startUI(E,app){
   }
   function vGear(){
     const ch=G.ch,st=ch.stash||[],cbt=UI.screen==='combat';
-    const eq=Object.entries(D.slots).map(([k,n])=>{const g=ch.gear[k];return `<div class="invr"><span>${n}</span><b>${g?esc(g.n):'<span class="dim">없음</span>'}</b><span class="mono small" style="color:var(--gold)">${g?esc(g.e||''):''}</span></div>`}).join('');
+    const eq=Object.entries(D.slots).map(([k,n])=>{const g=ch.gear[k];return `<div class="invr"><span>${n}</span><b>${g?esc(g.n):k==='weapon'?'맨손':'<span class="dim">없음</span>'}</b><span class="mono small" style="color:var(--gold)">${g?esc(g.e||''):''}</span></div>`}).join('');
     const sl=st.map((g,i)=>{const cur=ch.gear[g.slot],df=fxDiff(g,cur);
       return `<div class="invr stash"><span>${D.slots[g.slot]}</span><div class="stack" style="gap:2px;min-width:0"><b>${esc(g.n)}</b><span class="mono small" style="color:var(--gold)">${esc(g.e||'')}</span>${df?`<span class="mono small">지금 장비보다 · ${df}</span>`:''}</div>
         ${cbt?'<span class="small dim">전투 중 교체 불가</span>':`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}</div>`}).join('');
@@ -5282,7 +5285,7 @@ function startUI(E,app){
     const nameRow=sl=>`<div class="row" style="gap:6px"><input id="wsn_${sl}" maxlength="12" autocomplete="off" placeholder="이름 짓기 (12자까지)" value="${esc(((ch.ws.names||{})[sl])||'')}" style="flex:1;min-width:0"><button class="chip" data-a="wsname" data-i="${sl}">이름 정하기</button></div>`;
     const rows=['weapon','armor'].map(sl=>{
       const cur=ch.gear[sl];if(!cur||cur.id!=='ws_'+sl)return '';
-      const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&(m.slot===sl||m.id==='hidmat'));
+      const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&!(m.id==='birth'&&m.n==='맨손')&&(m.slot===sl||m.id==='hidmat'));
       const btns=mats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="${sl}:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
       return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow(sl)}<div class="row between"><b>${esc(cur.n)}</b><span class="mono small dim">일반 ${k.p}/${E.wsNeed(k.n)} · 강화 ${k.n}${k.h?' · 히든 '+k.h:''}</span></div><span class="mono small" style="color:var(--gold)">${esc(cur.e)}</span>${btns||`<p class="small dim">녹일 ${nm[sl]}이(가) 보관함에 없다.</p>`}</div>`;
     }).join('');
