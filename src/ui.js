@@ -1421,7 +1421,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       rows.push(['청혼 기회',`${BDc.tries-(b.tries||0)}/${BDc.tries}`]);
       rows.push(['결혼 판정',`1d${BDc.die} + 인연 ${Math.min(b.love||0,BDc.steps)+(b.extra||0)} · ${BDc.marryNeed} 이상이면 성공 (인연 ${Math.min(b.love||0,BDc.steps)}/${BDc.steps}${b.extra?` · 더 쌓은 인연 ${b.extra}`:''})`]);
     }else rows.push(['대가',`최대 정신력 −${st==='left'?BDc.leaveMind:BDc.lossMind} (영구)`]);
-    for(const k of b.kids||[]){const a=Math.max(0,G.year-k.born),J=(D.bond.kidJobs.find(j=>j.k===k.job)||{}).l;rows.push([`아이 · ${k.n}`,k.dead?'토벌 의뢰에서 쓰러졌다':`${a}세${a>=BDc.kid.adult?' · '+J:' · 자라는 중'}`]);if(k.grand&&!k.dead)rows.push([`손주 · ${k.grand.n}`,`${Math.max(0,G.year-k.grand.born)}세 · ${k.n}의 아이`])}
+    for(const k of b.kids||[]){const a=Math.max(0,G.year-k.born),J=(D.bond.kidJobs.find(j=>j.k===k.job)||{}).l;rows.push([`아이 · ${k.n}`,k.dead?(k.dead==='old'?'오래 살다 눈을 감았다':'토벌 의뢰에서 쓰러졌다'):`${a}세${a>=BDc.kid.adult?' · '+J:' · 자라는 중'}`]);if(k.grand&&!k.dead)rows.push([`손주 · ${k.grand.n}`,`${Math.max(0,G.year-k.grand.born)}세 · ${k.n}의 아이`])}
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">가족 · 인연</span><div class="row between"><b class="serif" style="font-size:20px">${esc(b.name)}</b><span class="chip" style="${st==='married'?'color:var(--gold);border-color:var(--gold)':''}">${head}</span></div>
       ${rows.map(([k,v])=>`<div class="row between small"><span class="dim">${k}</span><b class="mono" style="text-align:right">${esc(v)}</b></div>`).join('')}</div>`;
   }
