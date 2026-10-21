@@ -470,7 +470,7 @@ export function startUI(E,app){
   function infNote(){const N=D.infinite.notes,y=G.year||0,st=y<300?0:y<600?1:y<900?2:3,L=N[Math.min(st,N.length-1)];return L[y%L.length]}
   /* 무한 모드: 해가 바뀔 때 어긋난 글이 공지처럼 잠깐 떠서 떨리다 사라진다 (누르지 않아도 사라지고, 화면을 막지 않는다) */
   function showInfNote(text){
-    try{const old=document.querySelector('.infnote');if(old)old.remove();const el=document.createElement('div');el.className='infnote';el.setAttribute('role','status');el.textContent=text;document.body.appendChild(el);setTimeout(()=>{try{el.remove()}catch(e){}},5200)}catch(e){}
+    try{const old=document.querySelector('.infnote');if(old)old.remove();const el=document.createElement('div');el.className='infnote';el.setAttribute('role','status');const tx=document.createElement('span');tx.textContent=text;el.appendChild(tx);const x=document.createElement('button');x.type='button';x.className='infnote-x';x.setAttribute('aria-label','닫기');x.textContent='✕';x.addEventListener('click',ev=>{ev.stopPropagation();el.remove()});el.appendChild(x);document.body.appendChild(el);setTimeout(()=>{try{el.remove()}catch(e){}},5200)}catch(e){}
   }
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
