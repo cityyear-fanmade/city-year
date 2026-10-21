@@ -399,6 +399,8 @@ export function startUI(E,app){
     return `<div class="qaudio"><div class="qrow"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><button class="qb" data-a="qstyle" aria-label="배경음악 스타일 바꾸기" title="스타일">${{passion:'불길',library:'도서관'}[BGM.style()]||'고요'}</button></div>${SFX.supported?`<div class="qrow"><button class="qb${SFXS.on?' on':''}" data-a="qsfx" aria-label="효과음 ${SFXS.on?'끄기':'켜기'}" title="효과음">${SFXS.on?'효과음 켬':'효과음 끔'}</button></div>`:''}</div>
       <div class="volbox"><button class="qb${UI.volOpen?' on':''}" data-a="qvol" aria-label="음량 조절" title="음량"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ic}</svg></button>${UI.volOpen?`<div class="volpop"><input type="range" id="bgmQuick" min="0" max="100" step="1" value="${v}" aria-label="배경음악 음량"><b class="mono" id="bgmQuickPct">${v}%</b></div>`:''}</div>`;
   }
+  /* 엔딩 화면에서 이어서 살 수 있는 경우(여기서 끝낸다 버튼이 있는 경우). 이때 다시 태어나면 이어 살 판이 사라지므로 한 번 더 누르게 한다 */
+  const endCanResume=()=>!!(UI.endWin&&G&&((!G.endless)||UI.outEnd||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite)));
   function vSettings(){
     const b=(a,k,l,cur)=>`<button class="${cur===k?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`;
     return `<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
@@ -1711,7 +1713,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${UI.imgUrl?`<p class="small dim">저장이 막힌 환경이다. 아래 이미지를 길게 눌러 저장한다.</p><img src="${UI.imgUrl}" alt="엔딩 기록 이미지" style="width:100%;border-radius:8px">`:''}
       ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<input id="shareBox" readonly value="${esc(UI.shareText)}" onclick="this.select()" style="width:100%;font:inherit;font-size:13px">`:''}
       ${w&&((!G.endless)||UI.outEnd||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite))?'<button class="btn quiet" data-a="finish">여기서 끝낸다 (이 판의 저장 삭제)</button>':''}
-      <div class="endbar"><button class="btn ${w&&!G.endless?'quiet':'primary'}" data-a="start">다시 태어난다</button><button class="btn quiet" data-a="title">처음 화면</button></div>`;
+      ${UI.confirmNew==='start'&&endCanResume()?'<p class="small bad" style="margin:0 0 6px">이 판은 여기서 끝나고, 이어서 살 수 없게 된다. 정말 다시 태어나려면 한 번 더 누른다.</p>':''}<div class="endbar"><button class="btn ${w&&!G.endless?'quiet':'primary'}" data-a="start">${UI.confirmNew==='start'&&endCanResume()?'정말 다시 태어난다':'다시 태어난다'}</button><button class="btn quiet" data-a="title">처음 화면</button></div>`;
   }
   /* 기록 링크: 기록을 주소(#r=...) 안에 담는다. 서버 없이 열린다 */
   const PAGES='https://cityyear-fanmade.github.io/city-year/';
@@ -1955,7 +1957,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.fight=null;UI.pending=null;UI.curSt=st;UI.oldEnd=false;UI.overflowEnd=false;
     /* 100살 히든 엔딩은 한 번 본 뒤로는 다시 뜨지 않는다 (이미 본 기록이 있으면 그냥 이어서 간다) */
     if(st.type==='end'&&st.old&&loadRec().endings.includes('old')){nextYear();return}
-    if(st.type==='end'){UI.outEnd=st.out||null;UI.outerEnd=false;UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.oldEnd=!!st.old;UI.overflowEnd=!!st.overflow;UI.rbEnd=!!st.rb;UI.hwEnd=st.hw||null;UI.death=st.cause?{year:G.year,foe:st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;recordEnd();UI.screen='end';render();return}
+    if(st.type==='end'){UI.confirmNew=null;UI.outEnd=st.out||null;UI.outerEnd=false;UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.oldEnd=!!st.old;UI.overflowEnd=!!st.overflow;UI.rbEnd=!!st.rb;UI.hwEnd=st.hw||null;UI.death=st.cause?{year:G.year,foe:st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;recordEnd();UI.screen='end';render();return}
     UI.omen=null;UI.showIncome=G.year>1;
     if(st.type==='omen')UI.omen=st;
     else if(st.type==='fight'){UI.fight=st.enemy;UI.enc=st.enc}else{UI.ev=st.ev;noteHint(st.ev)}
@@ -2158,7 +2160,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     xfile(){const t=UI.xcode;if(!t)return;try{const b=new Blob([t],{type:'text/plain'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='도시의한해_세이브.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}catch(e){}},
     ximport(){const a=$('xin');xApply((a&&a.value.trim())||UI.xask||'')},
     diff(i){if(['easy','normal','hard'].includes(i)){store.set(DIFFK,i);render()}},
-    start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
+    start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='end'&&endCanResume()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     cont(){const o=loadSave();if(!o)return;G=o.G;E.ensurePacks(G.ch);C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
     async chimg(v){
