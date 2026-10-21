@@ -263,8 +263,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const egoLvFor=u=>CFG.egoGrow.need.reduce((a,n,i)=>u>=n?i:a,0);
   /* 발현을 낸 직후 확인: 장착 중이든 보관함이든 E.G.O 무기 하나를 올린다. 올렸으면 {old,nw} */
   /* 정비한 장비가 다른 등급 장비로 바뀔 때(E.G.O 성장·보냐텔리 강화) 정비 횟수와 강화분을 넘겨 준다 */
-  /* 승급·계열 변경으로 같은 칸의 장비가 바뀔 때: 장비에 쌓은 연마(공격·회피 +1 시도)를 새 장비로 옮긴다. 옛 장비는 연마가 빠진 채 보관함으로 간다 */
-  function equipUp(ch,nw){const old=ch.gear[nw.slot];if(old&&(old.tries||old.tune)&&old.id!==nw.id){const tn=Object.assign({},old.tune||{}),tr=old.tries||0;carryTune(old,nw);equip(ch,nw);for(const [k,v] of Object.entries(tn))if(old.fx&&k in old.fx)old.fx[k]-=v;delete old.tune;old.tries=0;return}equip(ch,nw)}
+  /* 승급·계열 변경으로 같은 칸의 장비가 바뀔 때: 장비에 쌓은 연마(공격·회피 +1 시도)를 새 장비로 옮긴다.
+     W사 열차 직급 무기처럼 직급이 오르며 대신 들어서는 무기는 업그레이드이므로 옛 무기는 보관함에 남기지 않고 사라진다. 그 밖의 무기(출신 무기·전리품 등)는 연마가 빠진 채 보관함으로 간다 */
+  const warpWid=()=>{const s=new Set();for(const f of Object.values(D.warpWeapons||{}))for(const w of f)s.add(w.id);for(const r of ((CR.wing||{}).trainRanks||[])){if(r.gear)s.add(r.gear.id);if(r.gear2)s.add(r.gear2.id)}return s};
+  function equipUp(ch,nw){const old=ch.gear[nw.slot];
+    if(old&&(old.tries||old.tune)&&old.id!==nw.id){const tn=Object.assign({},old.tune||{});carryTune(old,nw);equip(ch,nw);for(const [k,v] of Object.entries(tn))if(old.fx&&k in old.fx)old.fx[k]-=v;delete old.tune;old.tries=0}else equip(ch,nw);
+    if(old&&old.id!==nw.id&&warpWid().has(old.id))ch.stash=(ch.stash||[]).filter(x=>x!==old)}
   function carryTune(old,nw){if(!old||!(old.tries||old.tune))return nw;nw.tries=old.tries||0;if(old.tune){nw.tune=Object.assign({},old.tune);for(const [k,v] of Object.entries(old.tune))nw.fx[k]=(nw.fx[k]||0)+v}return nw}
   function egoGrow(ch){
     if(ch.egoUses==null)return null;
