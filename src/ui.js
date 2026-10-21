@@ -765,19 +765,22 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">암시장</b><span class="chip">이번 방문만</span></div>
       <p class="small dim">출처를 묻지 않는 물건들. 이번에 지나가면 다음엔 다른 물건이 나온다.</p><div class="stack">${items}</div>${box}${aid}</div>`;
   }
+  /* 공방 거리의 카페: 돈을 내고 차를 마시며 정신력을 회복한다 (치유소는 HP, 카페는 정신력) */
+  function vCafe(){
+    const ch=G.ch,K=CFG.clinic,mn=UI.mindHealed||0,mleft=K.mindMaxBuy-mn,mp=E.mindClinicPrice(ch),mmax=E.mindMax(ch),mfull=ch.mind>=mmax,mok=mleft>0&&!mfull&&!ch.distForm&&ch.money>=mp;
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">골목 카페</b><span class="mono" style="color:var(--gold)">${E.money(mp)} · 이번 방문 ${mn}/${K.mindMaxBuy}</span></div>
+      <p class="small dim">공방 거리 끝에 불이 켜진 작은 카페가 있다. 따뜻한 잔을 앞에 두고 앉으면 머릿속이 조용해진다. 한 잔에 정신력 ${K.mind} 회복. 마실 때마다 값이 ${E.money(K.mindStep)}씩 오른다 (이번 판 ${ch.mindBought||0}잔).</p>
+      ${UI.mindMsg?`<p class="good small">${esc(UI.mindMsg)}</p>`:''}
+      <button class="btn" data-a="mindcare" ${mok?'':'disabled'}><b>카페에 들른다</b><span class="mono small dim">정신력 ${ch.mind}/${mmax}${ch.distForm?' · 뒤틀린 몸은 마실 수 없다':mfull?' · 이미 평온하다':mleft<=0?' · 오늘은 더 마실 수 없다':ch.money<mp?' · 돈이 모자란다':''}</span></button></div>`;
+  }
   /* 공방 치유소 · 암시장 K사 엠플 */
   function vClinic(){
     const ch=G.ch,K=CFG.clinic,A=CFG.ample,n=UI.healed||0,left=K.max-n,cp=E.clinicPrice(ch),full=ch.hp>=ch.stats.maxHp,ok=left>0&&!full&&ch.money>=cp;
-    const mn=UI.mindHealed||0,mleft=K.mindMaxBuy-mn,mp=E.mindClinicPrice(ch),mmax=E.mindMax(ch),mfull=ch.mind>=mmax,mok=mleft>0&&!mfull&&!ch.distForm&&ch.money>=mp;
     const ap=E.ampPrice(ch),have=ch.ample||0,bought=ch.ampleBought||0,aok=have<A.carry&&(bought<A.limit||ch.infinite)&&ch.money>=ap;
     return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">치유소</b><span class="mono" style="color:var(--gold)">${E.money(cp)} · 이번 방문 ${n}/${K.max}</span></div>
       <p class="small dim">돈을 내고 상처를 치료한다. 한 번에 HP ${K.hp} 회복. 치료를 받을 때마다 값이 ${E.money(K.step)}씩 오른다 (이번 판 ${ch.healBought||0}번 받음).</p>
       ${UI.healMsg?`<p class="good small">${esc(UI.healMsg)}</p>`:''}
-      <button class="btn" data-a="heal" ${ok?'':'disabled'}><b>치료 받는다</b><span class="mono small dim">HP ${ch.hp}/${ch.stats.maxHp}${full?' · 이미 멀쩡하다':left<=0?' · 오늘은 더 받을 수 없다':ch.money<cp?' · 돈이 모자란다':''}</span></button>
-      <div class="row between" style="margin-top:6px"><b class="serif">마음 치료</b><span class="mono" style="color:var(--gold)">${E.money(mp)} · 이번 방문 ${mn}/${K.mindMaxBuy}</span></div>
-      <p class="small dim">돈을 내고 마음을 가라앉힌다. 한 번에 정신력 ${K.mind} 회복. 받을 때마다 값이 ${E.money(K.mindStep)}씩 오른다 (이번 판 ${ch.mindBought||0}번 받음).</p>
-      ${UI.mindMsg?`<p class="good small">${esc(UI.mindMsg)}</p>`:''}
-      <button class="btn" data-a="mindcare" ${mok?'':'disabled'}><b>마음을 치료받는다</b><span class="mono small dim">정신력 ${ch.mind}/${mmax}${ch.distForm?' · 뒤틀린 몸은 받을 수 없다':mfull?' · 이미 평온하다':mleft<=0?' · 오늘은 더 받을 수 없다':ch.money<mp?' · 돈이 모자란다':''}</span></button></div>
+      <button class="btn" data-a="heal" ${ok?'':'disabled'}><b>치료 받는다</b><span class="mono small dim">HP ${ch.hp}/${ch.stats.maxHp}${full?' · 이미 멀쩡하다':left<=0?' · 오늘은 더 받을 수 없다':ch.money<cp?' · 돈이 모자란다':''}</span></button></button></div>
     ${hwHome()?'':`<div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">${A.name}</b><span class="mono" style="color:var(--gold)">${E.money(ap)}</span></div>
       <p class="small dim">암시장에서 도는 전리품. 전투 중 HP가 최대 HP의 ${Math.round(A.belowPct*100)}% 이하가 되면 자동으로 쓰여 최대 HP의 ${Math.round(A.healPct*100)}%를 회복한다. 한 번에 쓰러질 만한 피해를 받으면 쓰러지기 전에 먼저 쓰이고(받은 피해만큼 회복이 줄어든다), 전투 중 횟수 제한 없이 한 번에 1개씩 쓰이고, 최대 ${A.carry}개까지 지닌다. 쓰고 나면 다음 공방에서 다시 살 수 있다. ${ch.infinite?`2막 무한 모드에서는 구매 횟수 제한이 없고 값이 ${E.money(A.priceInf)}이다.`:`한 판에 모두 ${A.limit}개까지만 살 수 있다 (2막 무한 모드에 들어서면 제한이 없어지고 값이 ${E.money(A.priceInf)}이 된다).`}</p>
       <button class="btn" data-a="ample" ${aok?'':'disabled'}><b>${A.name} 구입</b><span class="mono small dim">지닌 수 ${have}/${A.carry} · 산 수 ${bought}${ch.infinite?' (제한 없음)':'/'+A.limit}${bought>=A.limit&&!ch.infinite?' · 더는 살 수 없다':have>=A.carry?' · 더는 지닐 수 없다':ch.money<ap?' · 돈이 모자란다':''}</span></button></div>`}`;
@@ -807,7 +810,7 @@ export function startUI(E,app){
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
     return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">${hwHome()?'홍원의 저잣거리':(G.infinite&&G.ch.infinite)?'외곽의 가게':'공방'} · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
-      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
+      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vCafe()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
       <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':'공방을 나간다'}</button>`;
   }
   /* 공방 해결사: 카드 판매 (장비 판매는 없다) */
