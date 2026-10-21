@@ -438,7 +438,7 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 @media (min-width:1180px){.chron-in{display:none}.chron-out{display:flex;position:fixed;top:18px;left:18px;width:210px;z-index:5;background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.4)}}
 
 .helpbtn{top:52px;font:600 17px/1 var(--serif,serif)}
-.fsbtn{top:142px;font-size:17px}
+.fsbtn{top:10px;right:58px;width:auto;padding:0 13px;border-radius:18px;font:600 13px/1 var(--sans,inherit);white-space:nowrap}
 
 /* PC 화면: 본문 글자와 폭을 조금 키운다(능력치 칸·가방 칸·팝업은 그대로).
    폭 900~1099는 글자 8%·폭 그대로, 1100 이상은 글자 22%·폭 780→860. 폭이 늘어난 만큼 양옆 장식 띠(body::before/after)는 좁힌다 */
