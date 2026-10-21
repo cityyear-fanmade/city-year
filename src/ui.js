@@ -127,7 +127,8 @@ export function startUI(E,app){
   /* 전체 화면: 브라우저 위아래 줄이 보이지 않게 (방송·PC용). 지원하지 않는 브라우저(아이폰 사파리 등)와 휴대폰 폭(700px 이하)에서는 버튼을 숨긴다 */
   const FS={ok:()=>!!(document.fullscreenEnabled||document.webkitFullscreenEnabled)&&!(window.matchMedia&&matchMedia('(max-width:700px)').matches),on:()=>!!(document.fullscreenElement||document.webkitFullscreenElement),
     toggle(){const d=document,el=d.documentElement;try{if(FS.on())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else(el.requestFullscreen||el.webkitRequestFullscreen).call(el)}catch(e){}}};
-  ['fullscreenchange','webkitfullscreenchange'].forEach(t=>document.addEventListener(t,()=>{if(typeof render==='function'&&document.getElementById('app'))render()}));
+  /* 전체 화면이 켜지거나 꺼져도 화면 전체를 다시 그리지 않고 버튼 글자만 바꾼다 (전투 연출 중에도 끊기지 않게). 설정 창이 열려 있으면 그 창만 갱신 */
+  ['fullscreenchange','webkitfullscreenchange'].forEach(t=>document.addEventListener(t,()=>{const on=FS.on(),b=document.querySelector('.fsbtn');if(b){b.textContent=on?'창화면':'전체화면';b.setAttribute('aria-label',on?'전체 화면 끝내기':'전체 화면');b.title=b.getAttribute('aria-label')}if(UI&&UI.cfg&&typeof render==='function')render()}));
   const HFXK='cityYearHitFx';let HFX=store.get(HFXK)||'mid';
   const HFX_N={off:0,low:1,mid:2,high:3};let HFXFLIP=false;const HFXMK='cityYearHitFxM';let HFXM=store.get(HFXMK)||'each';
   /* 무기 이름으로 타격 모양을 고른다 (플레이어의 공격만. 맨손·기타는 키워드·무작위 모션) */
