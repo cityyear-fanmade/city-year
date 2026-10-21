@@ -158,7 +158,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const k of [ch.innate,ch.innate2]){const E_=k&&D.innate[k]&&D.innate[k].fx;if(!E_)continue;const s_=ch.stats;for(const [sk,v] of Object.entries(E_))s_[sk]=(s_[sk]||0)+v;if(E_.maxHp)ch.hp+=E_.maxHp;if(E_.mindMax)ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s_.mindMax||0))}
     if(J){ch.job=job;ch.aff={type:'head',name:'머리'};if(J.deck){ch.deck=J.deck.slice();ch.cardMoney=true;ch.packName=J.n+' 전용 카드팩'}else for(const c of J.cards.slice(1))ch.deck.push(c);ch.money=J.money||0;ch.relics=[J.n]}
     /* 출생 때 굴린 무기는 무기 칸의 첫 장비 */
-    equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
+    /* 맨손은 무기가 아니다: 무기 칸을 비워 두고(화면에는 맨손으로 보인다) 그 보정은 몸에 직접 더한다 */
+    if(w.n==='맨손'){for(const [k,v] of Object.entries(w.fx||{}))if(k in ch.stats)ch.stats[k]+=v}else equip(ch,{id:'birth',slot:'weapon',n:w.n,e:w.e,fx:w.fx});
     /* 히든 직업 전용 무기: 출생 무기는 보관함으로 */
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
