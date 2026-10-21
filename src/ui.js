@@ -529,9 +529,9 @@ export function startUI(E,app){
   const cardKind=c=>c.t==='def'?'eva':c.shield?'def':c.t==='buff'?'buff':'atk';
   const isDebuff=c=>(c.kw||[]).some(k=>k[2]!=='s');
   const kindBadge=c=>{const k=cardKind(c);return `<span class="kb" style="--kc:${KIND[k][1]}">${KIND[k][0]}</span>${isDebuff(c)?`<span class="kb" style="--kc:${KIND.debuff[1]}">디버프</span>`:''}`};
-  function cardRow(id,acts){
+  function cardRow(id,acts,n){
     const ch=G.ch,c=D.cards[id],g_=E.cardGrade(ch.year,ch),wx_=ch.gear.weapon&&ch.gear.weapon.wx||null,ga=c.t==='atk'&&g_.n;
-    return `<div class="invc" style="--kc:${KIND[cardKind(c)][1]}"><span class="cost">${c.c}</span><div class="stack" style="gap:3px;min-width:0"><div class="row" style="gap:6px">${kindBadge(c)}<b>${esc(c.n)}${ga?` <span style="color:var(--gold)">${g_.n}</span>`:''}</b></div>
+    return `<div class="invc" style="--kc:${KIND[cardKind(c)][1]}"><span class="cost">${c.c}</span><div class="stack" style="gap:3px;min-width:0"><div class="row" style="gap:6px">${kindBadge(c)}<b>${esc(c.n)}${ga?` <span style="color:var(--gold)">${g_.n}</span>`:''}</b>${n>1?`<span class="mono" style="color:var(--gold)">×${n}</span>`:''}</div>
       <div class="small dim">${cardLine(c,c.t==='atk'?g_:null,wx_)||''}${c.shield&&CFG.cardGrade.indexOf(g_)>0?` (지금 보호막 ${c.shield+5*CFG.cardGrade.indexOf(g_)})`:''}</div>${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</div>${acts?`<div class="acts">${acts}</div>`:''}</div>`;
   }
   function cardMatch(c){
@@ -543,11 +543,13 @@ export function startUI(E,app){
   }
   function cardListHtml(){
     const ch=G.ch,S=CFG.shop,can=!ch.deckLocked&&!ch.cardMoney&&UI.screen!=='combat',side=ch.side||[];
-    const deck=ch.deck.map((id,i)=>({id,i})).filter(x=>cardMatch(D.cards[x.id]));
-    const sd=side.map((id,i)=>({id,i})).filter(x=>cardMatch(D.cards[x.id]));
+    /* 같은 카드는 한 줄로 묶어 ×N으로 보여 준다 (버튼은 그중 한 장에 적용). 정렬: 획득순(원래 순서) · 코스트 · 이름 */
+    const sk=(UI.cf&&UI.cf.s)||'got',grp=list=>{const m=new Map();list.forEach((id,i)=>{if(!cardMatch(D.cards[id]))return;const g=m.get(id);if(g)g.n++;else m.set(id,{id,i,n:1})});const a=[...m.values()];
+      if(sk==='cost')a.sort((x,y)=>D.cards[x.id].c-D.cards[y.id].c||D.cards[x.id].n.localeCompare(D.cards[y.id].n,'ko')||x.i-y.i);else if(sk==='name')a.sort((x,y)=>D.cards[x.id].n.localeCompare(D.cards[y.id].n,'ko')||x.i-y.i);return a};
+    const deck=grp(ch.deck),sd=grp(side);
     const out=can&&ch.deck.length>S.minDeck,inn=can&&E.deckRoom(ch);const xo=i=>UI.screen!=='combat'&&ch.deck.length>S.minDeck&&E.extraOut(ch,i);
-    const dl=deck.map(({id,i})=>cardRow(id,out&&!D.cards[id].fixed?`<button class="chip" data-a="dout" data-i="${i}">카드함으로</button>`:xo(i)?`<button class="chip" data-a="dout" data-i="${i}">덱에서 빼기</button>`:D.cards[id].fixed?'<span class="small dim">전용 · 뺄 수 없다</span>':'')).join('')||'<p class="small dim">조건에 맞는 카드가 없다.</p>';
-    const sl=sd.map(({id,i})=>cardRow(id,can?`${inn?`<button class="chip" data-a="din" data-i="${i}">덱에 넣기</button>`:''}${ch.cardMoney?'':`<button class="chip${UI.dropAsk===i?' warn':''}" data-a="sdrop" data-i="${i}">${UI.dropAsk===i?'정말 버린다':'버리기'}</button>`}`:'')).join('');
+    const dl=deck.map(({id,i,n})=>cardRow(id,out&&!D.cards[id].fixed?`<button class="chip" data-a="dout" data-i="${i}">카드함으로</button>`:xo(i)?`<button class="chip" data-a="dout" data-i="${i}">덱에서 빼기</button>`:D.cards[id].fixed?'<span class="small dim">전용 · 뺄 수 없다</span>':'',n)).join('')||'<p class="small dim">조건에 맞는 카드가 없다.</p>';
+    const sl=sd.map(({id,i,n})=>cardRow(id,can?`${inn?`<button class="chip" data-a="din" data-i="${i}">덱에 넣기</button>`:''}${ch.cardMoney?'':`<button class="chip${UI.dropAsk===i?' warn':''}" data-a="sdrop" data-i="${i}">${UI.dropAsk===i?'정말 버린다':'버리기'}</button>`}`:'',n)).join('');
     return `<div class="row between"><span class="eyebrow">덱 ${ch.deck.length}/${E.deckMax(ch)}</span>${ch.deckLocked||ch.cardMoney?`<span class="small dim">${ch.deckLocked?'덱 고정':'전용 카드팩'} · 넣고 뺄 수 없다</span>`:''}</div><div class="invcards">${dl}</div>
       <div class="row between" style="margin-top:6px"><span class="eyebrow">카드함 ${side.length}</span>${side.length&&!inn&&can?'<span class="small dim">덱이 가득 찼다. 먼저 덱에서 빼야 넣을 수 있다</span>':''}</div>
       <div class="invcards">${sl||`<p class="small dim">${side.length?'조건에 맞는 카드가 없다.':'비어 있다. 덱에서 뺀 카드와 덱이 가득 찼을 때 얻은 카드가 여기에 모인다.'}</p>`}</div>`;
@@ -559,6 +561,7 @@ export function startUI(E,app){
       <div class="seg kinds">${kinds.map(([k,n])=>`<button class="${(f.k||'all')===k?'on':''}" data-a="cfk" data-i="${k}"${KIND[k]?` style="--kc:${KIND[k][1]}"`:''}>${n}</button>`).join('')}</div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(D.keywords).map(k=>`<button class="chip${f.kw===k?' on':''}" data-a="cfw" data-i="${k}" aria-pressed="${f.kw===k}" style="${f.kw===k?`background:${kwc(k)};color:var(--bg);font-weight:700;`:`color:${kwc(k)};`}border-color:${kwc(k)}">${f.kw===k?'✓ ':''}${D.keywords[k].n}</button>`).join('')}
         <input id="cardq" value="${esc(f.q||'')}" placeholder="카드 이름 찾기" autocomplete="off" style="flex:1;min-width:8em"></div>
+      <div class="row" style="gap:6px;align-items:center"><span class="small dim">정렬</span><div class="seg" style="flex:1">${[['got','획득순'],['cost','코스트'],['name','이름']].map(([k,n])=>`<button class="${(f.s||'got')===k?'on':''}" data-a="cfs" data-i="${k}">${n}</button>`).join('')}</div></div>
       <div class="stack" style="gap:8px" id="cardlist">${cardListHtml()}</div>`;
   }
   const FXN={maxHp:'최대 HP',atk:'공격',hit:'명중',eva:'회피',spd:'속도',check:'판정',dmin:'피해 최소',dr:'피해 감소(%)',regen:'라운드마다 HP 회복',die:'피해 주사위',dmgB:'피해',burnHit:'붉은 화염',startBleed:'시작 출혈',startBreath:'시작 호흡',defUp:'방어 회피',extraD2:'추가 피해'};
@@ -2310,6 +2313,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     din(i){UI.dropAsk=null;if(E.deckIn(G.ch,+i)){resave();render()}},
     sdrop(i){i=+i;if(UI.dropAsk!==i){UI.dropAsk=i;render();return}UI.dropAsk=null;if(E.sideDrop(G.ch,i)){resave();render()}},
     cfk(k){(UI.cf=UI.cf||{}).k=k;render()},
+    cfs(k){(UI.cf=UI.cf||{}).s=k;render()},
     cfw(k){const f=UI.cf=UI.cf||{};f.kw=f.kw===k?null:k;render()},
     aid(id){if(E.buyAid(G.ch,id))render()},
     mindcare(){if((UI.mindHealed||0)>=CFG.clinic.mindMaxBuy)return;const g=E.buyMind(G.ch);if(g){UI.mindHealed=(UI.mindHealed||0)+1;UI.mindMsg=`정신력 +${g}`;resave();render()}},
