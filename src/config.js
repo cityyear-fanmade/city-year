@@ -148,7 +148,7 @@ export const CFG = {
   escort: {chance: 35, gap: 6, money: 300, moneyPer: 100,
     kinds: {fighter: ['hyeolgwi', 'east', 'highfixer', 'blade', 'awl', 'ring', 'kuro', 'finger'], support: ['office', 'assoc', 'wing', 'pointer'], guard: ['thumb', 'middle', 'hcorp']},
     fighter: {base: 6, per: 2, rand: 4}, support: {shield: 12, shieldPer: 4, heal: 4, healPer: 1}, guard: {cut: 35, cutPer: 4, cutMax: 70, counter: 5, counterPer: 2}},
-  bond: {sweetEvery: 7, sweetEvery2: 12, routes: ['office', 'assoc', 'wing', 'freelance', 'finger', 'thumb', 'pointer', 'middle', 'ring', 'kuro', 'blade', 'awl'], from: 11, by: 24 /* 24년차(40세)까지 못 만났으면 이후 해는 일상 사건 확률과 무관하게 만난다 */, meetChance: 90, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], marryNeed: 5 /* 청혼 판정: 1d4 + 쌓은 인연(인연 이벤트 최대 3 + '인연을 더 쌓는다' 성공 횟수)이 5 이상이면 결혼 */, tries: 2, waitDc: 24, waitDie: 60 /* 청혼을 미루는 "기다린다": 보정 없이 1d60이 waitDc 이상이면 기회를 쓰지 않는다 */,
+  bond: {partner: {gap: 10 /* 붉은 머리 인연: 만난 뒤 이 해가 지나면 상대가 1급이 되어 특색을 받는다 */, deedEvery: 10 /* 이후 이 해마다 특색 해결사의 행적 */}, sweetEvery: 7, sweetEvery2: 12, routes: ['office', 'assoc', 'wing', 'freelance', 'finger', 'thumb', 'pointer', 'middle', 'ring', 'kuro', 'blade', 'awl'], from: 11, by: 24 /* 24년차(40세)까지 못 만났으면 이후 해는 일상 사건 확률과 무관하게 만난다 */, meetChance: 90, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], marryNeed: 5 /* 청혼 판정: 1d4 + 쌓은 인연(인연 이벤트 최대 3 + '인연을 더 쌓는다' 성공 횟수)이 5 이상이면 결혼 */, tries: 2, waitDc: 24, waitDie: 60 /* 청혼을 미루는 "기다린다": 보정 없이 1d60이 waitDc 이상이면 기회를 쓰지 않는다 */,
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
     /* 결혼 뒤: 금기를 저지른 다음 해부터 해마다 dieChance% 배우자가 세상을 떠난다(최대 정신력 −lossMind). 아이: kid.from년 뒤부터 해마다 chance%, 최대 max명, 간격 gap년, 태어나면 최대 정신력 +mind. adult살이 되면 사무소·해결사·협회 중 한 곳에 들어간다 */
     /* 히든 인연(상대가 처음부터 2~1급 해결사): 해결사 등록자가 rank급 이하일 때 만남이 열리면 chance% 확률로 이 길이 된다 */
@@ -161,7 +161,7 @@ export const CFG = {
     grand: {from: 30, to: 50, chance: 7, legacy: 40},
     hunt: {mind: 8, gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1, mul: 1.1, mulTop: 1.5, topLv: 8,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
-      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1, hcorp: 1, freelance: 4}, spouseYears: 3, spouseJob: {rcorp: 'fixer', hcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer', freelance: 'fixer'}}},
+      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1, hcorp: 1, freelance: 7}, spouseYears: 3, spouseJob: {rcorp: 'fixer', hcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer', freelance: 'fixer'}}},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
   /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */

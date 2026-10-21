@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v9.9.2';
+  const VERSION='v9.9.4';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -464,6 +464,7 @@ export function startUI(E,app){
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 '+CFG.artSense.every+'번 쓰러뜨릴 때마다 +1 (영구)':''}`);
     if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];
       P.push(`특이점 ${c.n} (${t.n}) · ${t.e.split(' (')[0]} · ${c.st==='dev'?`개발 ${c.stack}/${CFG.corp.devMax}`:`강화 ${c.up}/${CFG.corp.upMax} · 금기 실험 ${c.forb}/${CFG.corp.forbMax}`}`)}
+    if(ch.race==='hyeolgwi')P.push(`혈귀 · 혈찬 · 상대의 출혈이 5번 발동할 때마다 HP ${CFG.hyeolchan.heal} 회복`);
     if(ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea'))P.push(`피의 각인된 갈망 · 자식 ${ch.kids||0}/${CFG.kids.max} · 라운드마다 혈찬 +${CFG.kids.per}×자식 · 전투가 끝나면 자식마다 ${CFG.kids.lose}% 흩어짐`);
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.push(`레벨 ${CFG.lvLight.at}마다 · 전투 중 빛과 빛 최대치 +${CFG.lvLight.up*n} (지금 레벨 ${ch.lv})`)}
     if(ch.flags&&ch.flags.redMist)P.push('붉은 안개 · 적을 쓰러뜨리면 HP '+CFG.redMist.heal+' + 최대 HP의 '+Math.round(CFG.redMist.healPct*100)+'% 회복 · 미미크리 적중 '+CFG.redMist.gauge+'번 → 대절단 가로');
@@ -529,9 +530,9 @@ export function startUI(E,app){
   const cardKind=c=>c.t==='def'?'eva':c.shield?'def':c.t==='buff'?'buff':'atk';
   const isDebuff=c=>(c.kw||[]).some(k=>k[2]!=='s');
   const kindBadge=c=>{const k=cardKind(c);return `<span class="kb" style="--kc:${KIND[k][1]}">${KIND[k][0]}</span>${isDebuff(c)?`<span class="kb" style="--kc:${KIND.debuff[1]}">디버프</span>`:''}`};
-  function cardRow(id,acts){
+  function cardRow(id,acts,n){
     const ch=G.ch,c=D.cards[id],g_=E.cardGrade(ch.year,ch),wx_=ch.gear.weapon&&ch.gear.weapon.wx||null,ga=c.t==='atk'&&g_.n;
-    return `<div class="invc" style="--kc:${KIND[cardKind(c)][1]}"><span class="cost">${c.c}</span><div class="stack" style="gap:3px;min-width:0"><div class="row" style="gap:6px">${kindBadge(c)}<b>${esc(c.n)}${ga?` <span style="color:var(--gold)">${g_.n}</span>`:''}</b></div>
+    return `<div class="invc" style="--kc:${KIND[cardKind(c)][1]}"><span class="cost">${c.c}</span><div class="stack" style="gap:3px;min-width:0"><div class="row" style="gap:6px">${kindBadge(c)}<b>${esc(c.n)}${ga?` <span style="color:var(--gold)">${g_.n}</span>`:''}</b>${n>1?`<span class="mono" style="color:var(--gold)">×${n}</span>`:''}</div>
       <div class="small dim">${cardLine(c,c.t==='atk'?g_:null,wx_)||''}${c.shield&&CFG.cardGrade.indexOf(g_)>0?` (지금 보호막 ${c.shield+5*CFG.cardGrade.indexOf(g_)})`:''}</div>${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</div>${acts?`<div class="acts">${acts}</div>`:''}</div>`;
   }
   function cardMatch(c){
@@ -543,11 +544,13 @@ export function startUI(E,app){
   }
   function cardListHtml(){
     const ch=G.ch,S=CFG.shop,can=!ch.deckLocked&&!ch.cardMoney&&UI.screen!=='combat',side=ch.side||[];
-    const deck=ch.deck.map((id,i)=>({id,i})).filter(x=>cardMatch(D.cards[x.id]));
-    const sd=side.map((id,i)=>({id,i})).filter(x=>cardMatch(D.cards[x.id]));
+    /* 같은 카드는 한 줄로 묶어 ×N으로 보여 준다 (버튼은 그중 한 장에 적용). 정렬: 획득순(원래 순서) · 코스트 · 이름 */
+    const sk=(UI.cf&&UI.cf.s)||'got',grp=list=>{const m=new Map();list.forEach((id,i)=>{if(!cardMatch(D.cards[id]))return;const g=m.get(id);if(g)g.n++;else m.set(id,{id,i,n:1})});const a=[...m.values()];
+      if(sk==='cost')a.sort((x,y)=>D.cards[x.id].c-D.cards[y.id].c||D.cards[x.id].n.localeCompare(D.cards[y.id].n,'ko')||x.i-y.i);else if(sk==='name')a.sort((x,y)=>D.cards[x.id].n.localeCompare(D.cards[y.id].n,'ko')||x.i-y.i);return a};
+    const deck=grp(ch.deck),sd=grp(side);
     const out=can&&ch.deck.length>S.minDeck,inn=can&&E.deckRoom(ch);const xo=i=>UI.screen!=='combat'&&ch.deck.length>S.minDeck&&E.extraOut(ch,i);
-    const dl=deck.map(({id,i})=>cardRow(id,out&&!D.cards[id].fixed?`<button class="chip" data-a="dout" data-i="${i}">카드함으로</button>`:xo(i)?`<button class="chip" data-a="dout" data-i="${i}">덱에서 빼기</button>`:D.cards[id].fixed?'<span class="small dim">전용 · 뺄 수 없다</span>':'')).join('')||'<p class="small dim">조건에 맞는 카드가 없다.</p>';
-    const sl=sd.map(({id,i})=>cardRow(id,can?`${inn?`<button class="chip" data-a="din" data-i="${i}">덱에 넣기</button>`:''}${ch.cardMoney?'':`<button class="chip${UI.dropAsk===i?' warn':''}" data-a="sdrop" data-i="${i}">${UI.dropAsk===i?'정말 버린다':'버리기'}</button>`}`:'')).join('');
+    const dl=deck.map(({id,i,n})=>cardRow(id,out&&!D.cards[id].fixed?`<button class="chip" data-a="dout" data-i="${i}">카드함으로</button>`:xo(i)?`<button class="chip" data-a="dout" data-i="${i}">덱에서 빼기</button>`:D.cards[id].fixed?'<span class="small dim">전용 · 뺄 수 없다</span>':'',n)).join('')||'<p class="small dim">조건에 맞는 카드가 없다.</p>';
+    const sl=sd.map(({id,i,n})=>cardRow(id,can?`${inn?`<button class="chip" data-a="din" data-i="${i}">덱에 넣기</button>`:''}${ch.cardMoney?'':`<button class="chip${UI.dropAsk===i?' warn':''}" data-a="sdrop" data-i="${i}">${UI.dropAsk===i?'정말 버린다':'버리기'}</button>`}`:'',n)).join('');
     return `<div class="row between"><span class="eyebrow">덱 ${ch.deck.length}/${E.deckMax(ch)}</span>${ch.deckLocked||ch.cardMoney?`<span class="small dim">${ch.deckLocked?'덱 고정':'전용 카드팩'} · 넣고 뺄 수 없다</span>`:''}</div><div class="invcards">${dl}</div>
       <div class="row between" style="margin-top:6px"><span class="eyebrow">카드함 ${side.length}</span>${side.length&&!inn&&can?'<span class="small dim">덱이 가득 찼다. 먼저 덱에서 빼야 넣을 수 있다</span>':''}</div>
       <div class="invcards">${sl||`<p class="small dim">${side.length?'조건에 맞는 카드가 없다.':'비어 있다. 덱에서 뺀 카드와 덱이 가득 찼을 때 얻은 카드가 여기에 모인다.'}</p>`}</div>`;
@@ -559,6 +562,7 @@ export function startUI(E,app){
       <div class="seg kinds">${kinds.map(([k,n])=>`<button class="${(f.k||'all')===k?'on':''}" data-a="cfk" data-i="${k}"${KIND[k]?` style="--kc:${KIND[k][1]}"`:''}>${n}</button>`).join('')}</div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(D.keywords).map(k=>`<button class="chip${f.kw===k?' on':''}" data-a="cfw" data-i="${k}" aria-pressed="${f.kw===k}" style="${f.kw===k?`background:${kwc(k)};color:var(--bg);font-weight:700;`:`color:${kwc(k)};`}border-color:${kwc(k)}">${f.kw===k?'✓ ':''}${D.keywords[k].n}</button>`).join('')}
         <input id="cardq" value="${esc(f.q||'')}" placeholder="카드 이름 찾기" autocomplete="off" style="flex:1;min-width:8em"></div>
+      <div class="row" style="gap:6px;align-items:center"><span class="small dim">정렬</span><div class="seg" style="flex:1">${[['got','획득순'],['cost','코스트'],['name','이름']].map(([k,n])=>`<button class="${(f.s||'got')===k?'on':''}" data-a="cfs" data-i="${k}">${n}</button>`).join('')}</div></div>
       <div class="stack" style="gap:8px" id="cardlist">${cardListHtml()}</div>`;
   }
   const FXN={maxHp:'최대 HP',atk:'공격',hit:'명중',eva:'회피',spd:'속도',check:'판정',dmin:'피해 최소',dr:'피해 감소(%)',regen:'라운드마다 HP 회복',die:'피해 주사위',dmgB:'피해',burnHit:'붉은 화염',startBleed:'시작 출혈',startBreath:'시작 호흡',defUp:'방어 회피',extraD2:'추가 피해'};
@@ -1009,7 +1013,7 @@ export function startUI(E,app){
         <div class="row between"><span>도달한 위협 등급</span><b class="mono">${r.best.grade>=0?X.grades[r.best.grade]:'—'}</b></div>
         <div class="row between"><span>끝낸 판</span><b class="mono">${r.runs}</b></div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">칭호 · 최고 등급에 오른 횟수</span><div class="stack" style="gap:6px">${TITLE_REC.map(n=>{const c=(r.titles||{})[n]||0;return hintRow(c,`${esc(n)} ×${c}`,TITLE_HINT[n])}).join('')}</div></div>
-      ${(()=>{const LR={office:'사무소',assoc:'협회',wing:'날개',finger:'손가락',thumb:'엄지',pointer:'검지',middle:'중지',ring:'약지',kuro:'흑운회',blade:'검계',awl:'밤의 송곳',hyeolgwi:'혈귀',east:'동부 외곽 출신',highfixer:'고급 해결사',rcorp:'R사',hcorp:'H사'},lov=r.lovers||{},rows=[];
+      ${(()=>{const LR={office:'사무소',assoc:'협회',wing:'날개',finger:'손가락',thumb:'엄지',pointer:'검지',middle:'중지',ring:'약지',kuro:'흑운회',blade:'검계',awl:'밤의 송곳',hyeolgwi:'혈귀',freelance:'무소속',east:'동부 외곽 출신',highfixer:'고급 해결사',rcorp:'R사',hcorp:'H사'},lov=r.lovers||{},rows=[];
         for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++){const V=R.variants?R.variants[vi]:R,lv=lov[rk+':'+vi]||0;rows.push([lv,lv?`${lv>1?'♥':'✓'} ${V.who}`:'???',lv?`${LR[rk]||rk} · ${V.look||''}`:`${LR[rk]||rk} 쪽에서 만난다`])}
         const met=rows.filter(x=>x[0]).length,wed=rows.filter(x=>x[0]>1).length;
         return `<div class="panel stack" style="gap:6px"><span class="eyebrow">인연 · 만난 ${met}/${rows.length} · 결혼 ${wed}</span><div class="stack" style="gap:6px">${rows.map(([lv,l,h])=>`<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${lv?'':' dim'}" style="justify-self:start${lv>1?';color:var(--bleed);border-color:var(--bleed)':''}">${esc(l)}</span><span class="small dim">${esc(h)}</span></div>`).join('')}</div><p class="small dim">✓ 만나 본 인연 · ♥ 결혼까지 간 인연. 소속마다 만나는 사람이 다르다.</p></div>`})()}
@@ -1075,10 +1079,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🔧 그 밖의 버그 수정',['흑수 루트에서 후보 이름이 {c}로 그대로 보이던 문제를 고쳤습니다.','자동 전투가 0코스트 버프 카드(방어막·명중 보정·빛 획득 등)를 쓰지 않던 문제를 고쳤습니다.','재생 조직 등 회복 카드가 덱이 작을 때 매 라운드 손패에 들어오던 문제를 고쳤습니다. 한 번 쓰면 몇 턴 동안 손패에 들어오지 않습니다.','무기 흡수(미미크리 등)의 횟수 제한을 전투당 5번에서 턴당 5번으로 바꿨습니다.','기록실의 "아무것도 없이 시작해 결혼한 채 55년" 엔딩 설명에서 앞부분이 잘려 보이던 문제를 고쳤습니다. 이제 필요한 출생 선택이 그대로 적힙니다.','협회 직원이 2급에서 더 오르지 못하던 문제를 고쳤습니다. 본부 직속에 오르면 1급이 되고 특색 심사도 받을 수 있습니다.','아이폰 무음 모드에서 배경음악·효과음이 나지 않던 문제를 줄이는 수정을 넣었습니다. 연출을 끈 상태에서도 효과음이 납니다.','공방 해결사가 5급부터 사무소를 열 수 없던 문제를 고쳤습니다.']],
       ['📝 문구·보기',['문구를 다듬었습니다. (웃는 가로등, 승급 추천·급수 심사, R사 연인 문구)','배경 테마(단테·검지 단말기·도서관)의 보조 글자 색을 밝혀 읽기 쉽게 했습니다.']]];
   const V987SEC=[['🔧 버그 수정',['무기 주사위가 카드 주사위를 덮어쓰던 문제를 고쳤습니다. 이제 카드 주사위에 더해집니다.']]];
-  const NOTICE={id:'v9.9.2',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v9.9.4',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['⚔ 붉은 안개',['붉은 안개가 돌아옵니다.','붉은 안개와 전용 책장을 강화했습니다.']],
-      ['🔧 그 밖의 변경',['100살이 될 때마다 새 문구가 나옵니다.','엔딩 화면에서 입힌 피해, 받은 피해, 총 회복량, 건 디버프, 얻은 버프를 확인할 수 있습니다.','맨손은 이제 무기로 취급되지 않습니다. 맨손으로 시작하면 무기 칸이 비고, 어떤 강화의 재료로도 쓸 수 없습니다.','엄지의 탄환과 예의 조정','일대기 이미지 저장 버그 수정','PC 전체화면 버튼 추가','장비 표기 정리','연마 이전 및 버그 수정']]]};
+    sec:[['🩸 혈귀',['「붉은 밤의 초대」가 나오는 조건을 정리했고, 선택지에 얻는 것과 치르는 것을 자세히 적었습니다.','혈찬이 패시브 칸에 표시됩니다.','초대로 혈귀가 된 경우의 인연과 아이 설정을 고쳤습니다.']],
+      ['🔧 그 밖의 변경',['새로운 인연이 추가됩니다.','카드 화면에서 같은 카드를 ×N으로 묶어 보고, 정렬할 수 있습니다.','싸우는 이유가 더 많은 적에게 붙습니다.']]]};
   const V944SEC=[['🔧 버그 수정',['별에 선택받은 자가 무기를 강화할 때 처음 가진 "맨손"이 재료로 뜨던 문제를 고쳤습니다. 맨손은 더 이상 보관함에 남지 않습니다.','출생 화면의 "다시 태어난다"가 다시 굴릴 때마다 위쪽 내용 높이가 달라져 움직이던 문제를 고쳤습니다. 이제 제자리에 있습니다.','제 1막 종료 화면에 "여기서 끝낸다" 버튼을 넣었습니다. 제 2막으로 가지 않고 끝낼 수 있고, 이 판의 저장이 지워집니다. "다시 태어난다"를 눌러도 이전 판 저장이 바로 지워집니다.','설정 팝업의 제목이 세로로 쪼개져 보이던 문제를 고쳤습니다.']],
     ['⚖ 조정',['PC 화면(폭 900px 이상)에서 본문, 왼쪽 능력치 칸, 오른쪽 가방 칸, 버튼, 팝업을 함께 키웠습니다. 창이 넓을수록 더 커지고, 창 높이가 낮으면 잘리지 않도록 배율을 낮춥니다. 첫 화면과 휴대폰 화면은 그대로입니다.','금기 실험으로 찾아오는 "강화체"의 이름을 "발톱 · 재시험", "조율자 · 재시험"으로 바꿨습니다.','무한 모드 불순물의 최대 HP 상한을 1000만에서 1500만으로 늘렸습니다.']]];
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
@@ -1319,7 +1323,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.custPick?vCustPick():G.ch.colorPick?vColorPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.custPick?vCustPick():G.ch.colorPick?vColorPick():G.ch.singPick?vSingPick():G.ch.bondColPick?vBondCol():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
@@ -1416,6 +1420,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <span class="small bad">${UI.kidErr||''}</span>
       <button class="btn primary" data-a="kidset">이 이름으로 부른다</button></div>`;
   }
+  function vBondCol(){
+    const b=G.ch.bond;
+    return `<div class="panel stack" style="gap:8px;border-color:${esc(b.col.hex)}"><span class="eyebrow">인연 · ${esc(b.name)}의 특색 · <span style="color:${esc(b.col.hex)}">${esc(b.col.adj)}</span></span>
+      <p class="small">${esc(b.col.adj)} 특색을 얻은 ${esc(b.name)}의 이름을 함께 정한다.</p>
+      <div class="row"><span class="small">이름</span><input id="bondalias" maxlength="12" value="${esc(UI.bondAlias||'')}" autocomplete="off" placeholder="2~12글자" style="width:min(14em,60vw)"></div>
+      <span class="small bad">${UI.bondErr||''}</span>
+      <button class="btn primary" data-a="bondaliasset">이 이름으로 부른다</button></div>`;
+  }
   function vBondPick(){
     const b=G.ch.bond,R=E.bondData(G.ch);
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">인연 · ${esc(R.who)}</span>
@@ -1430,6 +1442,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const head=st==='married'?(ch.distForm?'당신을 알아보지 못한다':'배우자'):st==='lost'?'배우자의 죽음':st==='left'?'떠났다':`인연 · ${R.who}`;
     const rows=[];
     if(R.look)rows.push(['특징',R.look]);
+    if(b.alias)rows.push(['특색',`${b.alias} (${b.col.adj})`]);
     if(st==='married'){
       rows.push(['결혼한 해',b.since+'년차']);
       rows.push(['배우자 등급',`${9-E.spouseLevel(b,G.year)}급 (결혼 ${BDc.hunt.spouseYears}년마다 한 단계)`]);
@@ -2113,6 +2126,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const k=(G.ch.bond.kids||[]).find(x=>x.pend),nm=n||(k&&k.n)||'';E.setKidName(G.ch,n);UI.kidErr='';UI.kidName='';resave();
       UI.res.chips=[...UI.res.chips,`아이 · ${nm}`];render();
     },
+    bondaliasset(){
+      const n=(($('bondalias')||{}).value||'').trim(),err=E.partnerAliasErr(n);
+      if(err){UI.bondErr=err;UI.bondAlias=n;render();return}
+      E.setPartnerAlias(G.ch,n);UI.bondErr='';UI.bondAlias='';resave();
+      UI.res.chips=[...UI.res.chips,`특색 · ${n}`];render();
+    },
     bondset(){
       const n=(($('bondname')||{}).value||'').trim(),err=E.bondNameErr(n);
       if(err){UI.bondErr=err;UI.bondName=n;render();return}
@@ -2307,6 +2326,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     din(i){UI.dropAsk=null;if(E.deckIn(G.ch,+i)){resave();render()}},
     sdrop(i){i=+i;if(UI.dropAsk!==i){UI.dropAsk=i;render();return}UI.dropAsk=null;if(E.sideDrop(G.ch,i)){resave();render()}},
     cfk(k){(UI.cf=UI.cf||{}).k=k;render()},
+    cfs(k){(UI.cf=UI.cf||{}).s=k;render()},
     cfw(k){const f=UI.cf=UI.cf||{};f.kw=f.kw===k?null:k;render()},
     aid(id){if(E.buyAid(G.ch,id))render()},
     mindcare(){if((UI.mindHealed||0)>=CFG.clinic.mindMaxBuy)return;const g=E.buyMind(G.ch);if(g){UI.mindHealed=(UI.mindHealed||0)+1;UI.mindMsg=`정신력 +${g}`;resave();render()}},
@@ -2436,6 +2456,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testCent(n){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infIntro=1;G.ch.infCent=Array.from({length:n-1},(_,i)=>i+1);G.year=G.ch.year=n*100-16;const ev=E.infiniteEvent(G);if(!ev)return;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvent(k,lic){if(!G)return;G.ch.licensed=lic!==false;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvT(t){if(!G)return;const ev=D.events.find(e=>e.t===t);if(!ev)return;G.ch.licensed=true;G.ch.rank=G.ch.rank||9;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
+    testPreFight(id){if(!G||!D.enemies[id])return;UI.fight=id;UI.enc=null;UI.omen=null;UI.ev=null;UI.screen='event';render()},
     testShopAsk(){if(!G)return;UI.stock=[];UI.screen='shopask';render()},
     testBroker(){if(!G)return;UI.stock=[];UI.broker=E.officeBroker(G.ch);UI.screen='shopask';render()},
     testOrigin(n){if(!BC)return;const o=D.origins.find(x=>x.n===n);if(!o)return;E.reseed(BC.seed);let c;for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;render()},
