@@ -468,6 +468,10 @@ export function startUI(E,app){
   }
   /* 무한 모드: 외곽에서 나만 어색하다는 짧은 글이 해마다 바뀌고, 천 살에 가까워질수록 넘치려는 쪽으로 간다 */
   function infNote(){const N=D.infinite.notes,y=G.year||0,st=y<300?0:y<600?1:y<900?2:3,L=N[Math.min(st,N.length-1)];return L[y%L.length]}
+  /* 무한 모드: 해가 바뀔 때 어긋난 글이 공지처럼 잠깐 떠서 떨리다 사라진다 (누르지 않아도 사라지고, 화면을 막지 않는다) */
+  function showInfNote(text){
+    try{const old=document.querySelector('.infnote');if(old)old.remove();const el=document.createElement('div');el.className='infnote';el.setAttribute('role','status');el.textContent=text;document.body.appendChild(el);setTimeout(()=>{try{el.remove()}catch(e){}},5200)}catch(e){}
+  }
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `<div class="panel stack">
@@ -1919,6 +1923,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(window.CITY_AUGDEMO){augDemoDraw();return}
     const s=UI.screen;
     app.classList.toggle('barhide',barHidden());
+    if(G&&G.infinite&&G.ch&&G.ch.infinite&&D.infinite&&D.infinite.notes&&!['title','birth','end','records','chron','chronview'].includes(s)&&UI.noteYear!==G.year){UI.noteYear=G.year;showInfNote(infNote())}
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
     /* 전투 감정: 상대 체력이 줄거나 라운드가 이어질수록 불길 전투곡이 한 층씩 쌓인다 (체력 80·60·40·20% 아래, 라운드 3·6·9·12를 넘길 때도 오른다) */
     if(s==='combat'&&C&&C.E&&C.E.maxHp){const r=C.E.hp/C.E.maxHp,hs=1+[.8,.6,.4,.2].filter(x=>r<=x).length,rs=1+[3,6,9,12].filter(x=>(C.round||1)>x).length;BGM.setStage(Math.max(hs,rs))}else BGM.setStage(1);
@@ -2338,7 +2343,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 자동 테스트용 상태 조회 */
   return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff}),
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
-    testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testBgmStage:n=>BGM.setStage(n),testBgmPos:()=>BGM.pos(),testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
+    testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testBgmStage:n=>BGM.setStage(n),testInfNote:y=>{if(G)G.year=y||300;showInfNote(G?infNote():D.infinite.notes[2][3])},testBgmPos:()=>BGM.pos(),testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
     testShareLink:()=>shareLink(),
     testDistort(){if(!G)return;UI.ev=D.mindEvents.distort;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
