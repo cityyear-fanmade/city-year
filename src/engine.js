@@ -2346,6 +2346,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.boneNext){P.hand.push('bl_bone');P.boneNext=false}
     if(P.grantNext){P.hand.push(P.grantNext);P.grantNext=null}
     if(P.grantQ&&P.grantQ.length){for(const id of P.grantQ)P.hand.push(id);P.grantQ=null}
+    /* 한 라운드에 손패로 들어오는 지급 카드는 최대 2장이다. 그보다 많이 겹친 것은 다음 라운드로 넘어간다 */
+    if(P.grantWait&&P.grantWait.length){const w=P.grantWait.splice(0,2);P.grantNext=w[0]||null;P.grantQ=w[1]?[w[1]]:null}
     if(C.id==='kid_hunt'&&!P.noKill&&D.cards.x_nokill&&P.hand.length)P.hand[0]='x_nokill'   // 가족과 싸울 때: 첫 번째 손패는 해치고 싶지 않은 마음 (쓰기 전까지 매 라운드)
     /* 검지 패시브 지령 수행: 손패 한 칸에 ☆ 지령이 박힌다 */
     if(P.index){P.starSlot=d(Math.min(CFG.hand,P.hand.length))-1;P.starId=P.hand[P.starSlot]}
@@ -2528,8 +2530,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 발톱 전용 키워드 · 혈청: 혈청 카드를 낼 때마다 1 (최대 3). 3이면 다음 적중 피해 ×1.5 후 비움 */
   function addSerum(A,c,L){A.serum=Math.min(3,(A.serum||0)+c.serum);L('kw',`  ${A.name} · 혈청 ${A.serum}/3${A.serum>=3?' · 과부하 준비':''}`)}
-  /* 다음 라운드 손패에 넣어 줄 카드. 같은 때에 여러 장이 겹치면 한 장은 grantNext, 나머지는 줄에 세워 모두 받는다 (예: 붉은 안개 개방의 대절단 가로 + 수호 개화) */
-  function giveNext(A,id){if(!id)return;if(!A.grantNext)A.grantNext=id;else(A.grantQ=A.grantQ||[]).push(id)}
+  /* 다음 라운드 손패에 넣어 줄 카드. 같은 때에 여러 장이 겹치면 한 라운드에 최대 2장(grantNext + 줄 한 칸)까지 받고, 더 겹친 것은 다음 라운드(grantWait)로 넘어간다 (예: 붉은 안개 개방의 대절단 가로 + 수호 개화) */
+  function giveNext(A,id){if(!id)return;if(!A.grantNext)A.grantNext=id;else if(!A.grantQ||A.grantQ.length<1)A.grantQ=[id];else(A.grantWait=A.grantWait||[]).push(id)}
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
     if(c.noKill){if(A.noKill){L('sys',`${A.name} · ${c.n} · 이미 그런 마음이다`);return}A.noKill=true;A.eva-=80;A.takenMul=2;L('kw',`${A.name} · ${c.n} · 이번 전투 동안 받는 피해 2배 · 회피 −80`);return}
