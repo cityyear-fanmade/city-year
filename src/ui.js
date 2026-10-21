@@ -124,8 +124,8 @@ export function startUI(E,app){
   const isDanger=(hp,max)=>hp>0&&(max<50?hp<max*0.1:hp<=20);
   const PREV={};
   /* 타격 연출: 맞은 쪽 상자 위에 베기 선·파편이 튄다. 맞은 카드·무기가 새로 건 키워드(화상·출혈·파열 등)에 따라 색이 달라진다. 단계: off(끔)·low(가볍게)·mid(보통)·high(강하게) */
-  /* 전체 화면: 브라우저 위아래 줄이 보이지 않게 (방송·PC용). 지원하지 않는 브라우저(아이폰 사파리 등)에서는 버튼을 숨긴다 */
-  const FS={ok:()=>!!(document.fullscreenEnabled||document.webkitFullscreenEnabled),on:()=>!!(document.fullscreenElement||document.webkitFullscreenElement),
+  /* 전체 화면: 브라우저 위아래 줄이 보이지 않게 (방송·PC용). 지원하지 않는 브라우저(아이폰 사파리 등)와 휴대폰 폭(700px 이하)에서는 버튼을 숨긴다 */
+  const FS={ok:()=>!!(document.fullscreenEnabled||document.webkitFullscreenEnabled)&&!(window.matchMedia&&matchMedia('(max-width:700px)').matches),on:()=>!!(document.fullscreenElement||document.webkitFullscreenElement),
     toggle(){const d=document,el=d.documentElement;try{if(FS.on())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else(el.requestFullscreen||el.webkitRequestFullscreen).call(el)}catch(e){}}};
   ['fullscreenchange','webkitfullscreenchange'].forEach(t=>document.addEventListener(t,()=>{if(typeof render==='function'&&document.getElementById('app'))render()}));
   const HFXK='cityYearHitFx';let HFX=store.get(HFXK)||'mid';

@@ -489,7 +489,7 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
   .qb{padding:0 10px}
   .cfgbtn{right:10px}
   .helpbtn{top:10px;right:52px}
-  .fsbtn{top:10px;right:136px}
+  .fsbtn{display:none}
   .volbox{top:10px;right:94px}
   /* 위쪽 버튼 줄을 접고 펼치는 작은 탭 */
   .bartog{position:fixed;right:10px;top:50px;z-index:31;height:20px;min-width:34px;padding:0 8px;opacity:.75;border-radius:0 0 11px 11px;border:1px solid var(--line);border-top:0;background:color-mix(in srgb,var(--panel) 92%,transparent);color:var(--dim);font:600 11px/1 var(--mono);cursor:pointer}
