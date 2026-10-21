@@ -275,8 +275,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const bonNeed=ch=>{const w=ch.gear.weapon;return w&&(w.id==='bonatelli'&&w.lvl<CFG.bon.max||w.id==='star'&&w.lvl<CFG.star.max)?CFG.bon.need[w.lvl]:null};
   /* 강화할 수 있는 전용 무기의 다음 단계 */
   const upItem=(w,L)=>w.id==='star'?starItem(L,w.base.replace(/성도$/,''),w.virt):bonItem(L);
+  /* 맨손은 쥐고 있는 물건이 아니므로 어떤 강화의 재료도 되지 않는다 */
+  const isBare=x=>!!x&&x.id==='birth'&&x.n==='맨손';
   function bonUpgrade(ch,i){
-    const need=bonNeed(ch),st=ch.stash||[],m=st[i];if(need==null||!m||(m.grade||0)<need)return false;
+    const need=bonNeed(ch),st=ch.stash||[],m=st[i];if(need==null||!m||isBare(m)||(m.grade||0)<need)return false;
     st.splice(i,1);const old=ch.gear.weapon;equip(ch,carryTune(old,upItem(old,old.lvl+1)));ch.stash=ch.stash.filter(x=>x!==old);return true;
   }
   function equipStash(ch,i){const st=ch.stash||[];if(!st[i]||(st[i].slot==='aug'&&isN(ch)))return false;equip(ch,st.splice(i,1)[0]);return true}
@@ -620,7 +622,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function wsMelt(ch,slot,i){
     const w=ch.ws,st=ch.stash||[],m=st[i],cur=ch.gear[slot];
     const mat=!!m&&m.id==='hidmat';
-    if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||(!mat&&((m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot))||(ch.distForm&&!ch.distStable))return null;
+    if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||isBare(m)||(!mat&&((m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot))||(ch.distForm&&!ch.distStable))return null;
     const k=w[wsKey(slot)],hid=wsHidden(m);let step=0;
     st.splice(i,1);
     if(D.items&&D.items[m.id]){w.used=w.used||{};w.used[m.id]=(w.used[m.id]||0)+1}
