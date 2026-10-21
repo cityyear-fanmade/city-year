@@ -61,9 +61,9 @@ export function createBgm(){
   const smp={buf:{},loading:{},bad:{},cur:null,node:null};
   let stage=1;
   /* 시험곡(ext): 외부에서 받은 곡을 평시·전투에 하나씩 배정해 들어 본다. 같은 곡을 둘 다에 배정하면 장면이 바뀌어도 끊기지 않고 이어진다 */
-  const ext={calm:1,fight:1},extOn=()=>typeof window!=='undefined'&&!!(window.CITY_BGM&&window.CITY_BGM.ext);
-  const smpKey=(st,sc)=>sc==='boss'?'boss_boss':st==='ext'?'ext_t'+ext[sc]:st+'_'+sc,BOSS_LOOP=4*4*60/66;
-  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st='boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext[sc]])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
+  const ext={idx:1},extOn=()=>typeof window!=='undefined'&&!!(window.CITY_BGM&&window.CITY_BGM.ext);
+  const smpKey=(st,sc)=>sc==='boss'?'boss_boss':st==='ext'?'ext_t'+ext.idx+'_'+sc:st+'_'+sc,BOSS_LOOP=4*4*60/66;
+  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st='boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext.idx+'_'+sc])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
   const smpUsable=(st,sc)=>!!smpSrc(st,sc)&&!smp.bad[smpKey(st,sc)];
   function smpLoad(key,src){
     if(smp.loading[key])return;
@@ -105,10 +105,14 @@ export function createBgm(){
     if(!smpUsable(style,scene)){smpStop(0.5);return false}
     const key=smpKey(style,scene);if(smp.cur===key)return true;
     if(!smp.buf[key]){smpLoad(key,smpSrc(style,scene));return !smp.bad[key]}   // 읽는 동안은 조용히 기다린다
+    /* 시험곡: 같은 곡의 평시본과 전투본(템포만 빠름)은 길이 비율만큼 위치를 옮겨 같은 곳에서 이어 붙인다 */
+    let off=0;const o0=smp.node,buf=smp.buf[key];
+    if(style==='ext'&&scene!=='boss'&&o0&&o0.ext===ext.idx&&o0.scene&&o0.scene!==scene&&o0.dur){const pos=((o0.off+(ctx.currentTime-o0.t0))%o0.dur+o0.dur)%o0.dur;off=pos*buf.duration/o0.dur}
+    if(style==='ext'&&scene!=='boss'){const ok=smpKey(style,scene==='fight'?'calm':'fight');if(!smp.buf[ok]&&smpSrc(style,scene==='fight'?'calm':'fight'))smpLoad(ok,smpSrc(style,scene==='fight'?'calm':'fight'))}   // 반대 장면도 미리 읽어 둔다
     smpStop(0.6);
     const now=ctx.currentTime,src=ctx.createBufferSource(),g=ctx.createGain();
-    src.buffer=smp.buf[key];src.loop=true;if(scene==='boss'){src.loopStart=BOSS_LOOP;src.loopEnd=smp.buf[key].duration}g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
-    src.connect(g);g.connect(master);src.start(now);smp.cur=key;smp.node={src,g};return true;
+    src.buffer=buf;src.loop=true;if(scene==='boss'){src.loopStart=BOSS_LOOP;src.loopEnd=buf.duration}g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
+    src.connect(g);g.connect(master);src.start(now,off);smp.cur=key;smp.node={src,g,ext:style==='ext'&&scene!=='boss'?ext.idx:0,scene,off,t0:now,dur:buf.duration};return true;
   }
   let barT=0,barN=0,lastScene='calm',lastStyle='calm',cur=null,duckUntil=0;
   const AC=typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext);
@@ -445,6 +449,7 @@ export function createBgm(){
     supported:!!AC,
     isOn:()=>on,vol:()=>vol,
     level:()=>{if(!analyser)return null;const d=new Float32Array(2048);analyser.getFloatTimeDomainData(d);let p=0,q=0;for(const v of d){const a=Math.abs(v);if(a>p)p=a;q+=v*v}return {peakDb:+(20*Math.log10(p+1e-9)).toFixed(1),rmsDb:+(10*Math.log10(q/d.length+1e-12)).toFixed(1)}},
+    pos:()=>{const o=smp.node;return o&&o.dur&&ctx?{scene:o.scene,off0:+o.off.toFixed(2),pos:+((((o.off+(ctx.currentTime-o.t0))%o.dur)+o.dur)%o.dur).toFixed(2),dur:+o.dur.toFixed(2)}:null},
     debug:()=>({state:ctx&&ctx.state,gain:master?master.gain.value:null,on,vol,mood,scene,style,sample:smp.cur,stage,stems:smp.node&&smp.node.sg?smp.node.sg.map(x=>+x.gain.value.toFixed(2)):null,sampleBad:Object.keys(smp.bad)}),
     /* 켜기/끄기: 켜는 것은 사용자가 누른 순간(클릭 처리 안)에서만 호출해야 한다 */
     set(v){if(v===on)return on;on=!!v;if(on)start();else stop();return on},
@@ -456,7 +461,7 @@ export function createBgm(){
     stage:()=>stage,
     style:()=>style,
     setStyle(k){if(k==='calm'||k==='passion'||k==='library'||(k==='ext'&&extOn()))style=k},
-    extOn,ext:()=>({calm:ext.calm,fight:ext.fight}),
-    setExt(sc,i){if((sc==='calm'||sc==='fight')&&i>=1&&i<=5)ext[sc]=i}
+    extOn,ext:()=>ext.idx,
+    setExt(i){if(i>=1&&i<=5)ext.idx=i}
   };
 }

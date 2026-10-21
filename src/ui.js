@@ -410,7 +410,7 @@ export function startUI(E,app){
         <span class="small dim">자동 전투에서 라운드와 라운드 사이를 얼마나 쉬는지 · 전투 중 일시정지도 할 수 있다</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">인생 주사위</span><div class="seg">${b('dice','free','매번 다르게',DICE)}${b('dice','fixed','시드 고정(재현)',DICE)}</div>
         <span class="small dim">${DICE==='fixed'?'시드가 같고 선택이 같으면 인생 전체의 주사위가 똑같이 나온다 (공유·재현용)':'출생만 시드로 정해지고, 태어난 뒤의 사건 주사위는 판마다 달라진다'}</span></div>
-      ${BGM.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">배경음악</span><div class="seg">${b('bgm','off','끔',BGM.isOn()?'on':'off')}${b('bgm','on','켬',BGM.isOn()?'on':'off')}</div><div class="stack" style="gap:4px"><span class="small">스타일 · 전투에 들어가면 템포가 오른다</span><div class="seg">${b('bgmstyle','calm','고요',BGM.style())}${b('bgmstyle','passion','불길',BGM.style())}${b('bgmstyle','library','도서관',BGM.style())}${BGM.extOn()?b('bgmstyle','ext','시험곡',BGM.style()):''}</div>${BGM.extOn()?`<div class="stack" style="gap:6px;margin-top:6px"><span class="small">시험곡 배정 · 같은 곡을 평시와 전투에 모두 주면 끊기지 않고 이어진다</span>${['calm','fight'].map(sc=>`<div class="row" style="gap:6px;flex-wrap:wrap"><span class="small" style="min-width:2.4em">${sc==='calm'?'평시':'전투'}</span>${['강철','냉철','차선','사서','자정'].map((nm,k)=>`<button class="${BGM.ext()[sc]===k+1?'on':''}" data-a="bgmext" data-i="${sc}:${k+1}">${k+1} ${nm}</button>`).join('')}</div>`).join('')}<span class="small dim">1 Steel Core Conflict · 2 Weight of Cold Iron · 3 The Penultimate Gambit · 4 The Librarian's Gambit · 5 Midnight Manuscript Duel</span></div>`:''}</div>
+      ${BGM.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">배경음악</span><div class="seg">${b('bgm','off','끔',BGM.isOn()?'on':'off')}${b('bgm','on','켬',BGM.isOn()?'on':'off')}</div><div class="stack" style="gap:4px"><span class="small">스타일 · 전투에 들어가면 템포가 오른다</span><div class="seg">${b('bgmstyle','calm','고요',BGM.style())}${b('bgmstyle','passion','불길',BGM.style())}${b('bgmstyle','library','도서관',BGM.style())}${BGM.extOn()?b('bgmstyle','ext','시험곡',BGM.style()):''}</div>${BGM.extOn()?`<div class="stack" style="gap:6px;margin-top:6px"><span class="small">시험곡 · 한 곡이 평시에 나오고, 전투에서는 같은 곡이 템포만 빨라진다 (히든 보스는 기존 곡)</span><div class="row" style="gap:6px;flex-wrap:wrap">${['강철','냉철','차선','사서','자정'].map((nm,k)=>`<button class="${BGM.ext()===k+1?'on':''}" data-a="bgmext" data-i="${k+1}">${k+1} ${nm}</button>`).join('')}</div><span class="small dim">1 Steel Core Conflict · 2 Weight of Cold Iron · 3 The Penultimate Gambit · 4 The Librarian's Gambit · 5 Midnight Manuscript Duel</span></div>`:''}</div>
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">음량</span><b class="mono" id="bgmPct">${Math.round(BGM.vol()*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="bgmstep" data-i="-10" aria-label="음량 10 줄이기">−10</button><input type="range" id="bgmRange" min="0" max="100" step="1" value="${Math.round(BGM.vol()*100)}" aria-label="배경음악 음량"><button class="chip" data-a="bgmstep" data-i="10" aria-label="음량 10 올리기">+10</button></div></div>
         <span class="small dim">외부 음원 없이 만든 배경음이다. 고요와 불길 두 가지 중에서 고른다. 켜면 소리가 서서히 커지고, 언제든 끌 수 있다. 처음 음량은 30%이고, 막대를 끌거나 −10 · +10 버튼으로 0~100%까지 조절한다</span></div>`:''}
@@ -2132,7 +2132,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:BGM.extOn()?'ext':'calm',ext:'calm'}[BGM.style()]||'calm');bgmSave();render()},
     qvol(){UI.volOpen=!UI.volOpen;render()},
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
-    bgmext(i){const [sc,n]=String(i).split(':');BGM.setExt(sc,+n);BGM.setStyle('ext');bgmSave();render()},
+    bgmext(i){BGM.setExt(+i);BGM.setStyle('ext');bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;flow()},
@@ -2333,7 +2333,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 자동 테스트용 상태 조회 */
   return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff}),
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
-    testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testBgmStage:n=>BGM.setStage(n),testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
+    testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testBgmStage:n=>BGM.setStage(n),testBgmPos:()=>BGM.pos(),testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
     testShareLink:()=>shareLink(),
     testDistort(){if(!G)return;UI.ev=D.mindEvents.distort;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
