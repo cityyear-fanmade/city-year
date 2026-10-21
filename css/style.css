@@ -489,7 +489,12 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
   .cfgbtn{right:10px}
   .helpbtn{top:10px;right:52px}
   .volbox{top:10px;right:94px}
+  /* 위쪽 버튼 줄을 접고 펼치는 작은 탭 */
+  .bartog{position:fixed;left:50%;transform:translateX(-50%);top:50px;z-index:31;height:22px;padding:0 12px;border-radius:0 0 11px 11px;border:1px solid var(--line);border-top:0;background:color-mix(in srgb,var(--panel) 92%,transparent);color:var(--dim);font:600 11px/1 var(--mono);cursor:pointer}
+  #app.barhide .qaudio,#app.barhide .volbox,#app.barhide .helpbtn,#app.barhide .cfgbtn{display:none}
+  #app.barhide .bartog{top:0}
 }
+@media (min-width:701px){.bartog{display:none}}
 
 /* 전투 버튼 막대: 화면 아래에 고정해서 내용 길이가 바뀌어도 버튼이 움직이지 않는다 */
 .cbar{position:fixed;left:0;right:0;bottom:0;z-index:28;display:flex;justify-content:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg,#0b0d12) 70%,transparent);pointer-events:none}

@@ -66,7 +66,7 @@ out.push(table(['능력치','기본값','쓰이는 곳'],[
 h('## 3. 주사위 규칙');
 out.push(table(['판정','식','비고'],[
  ['사건 판정',`1d100 + 능력치 + 사건 판정 보정 (+ 출신 진로 보정) ≥ 난이도`,'능력치가 없는 "운 판정"은 보정만 더한다'],
- ['라운드 순서',`1d100 + 속도 (+${CFG.catchupBonus} 추격 보정)`,`높은 쪽이 선공·빛 +${CFG.orderBonusLight}. ${CFG.gapFirst} 이상 앞서면 선제: 첫 공격 명중 +${CFG.firstHit}. 진 쪽은 다음 라운드 추격 +${CFG.catchupBonus}. 동점이면 둘 다 보너스 없음`],
+ ['라운드 순서',`1d100 + 속도×${CFG.spdMul} (+${CFG.catchupBonus} 추격 보정)`,`높은 쪽이 선공·빛 +${CFG.orderBonusLight}. ${CFG.gapFirst} 이상 앞서면 선제: 첫 공격 명중 +${CFG.firstHit}. 진 쪽은 다음 라운드 추격 +${CFG.catchupBonus}. 동점이면 둘 다 보너스 없음`],
  ['명중',`1d100 + 공격 + 카드 명중 보정 > 상대 1d100 + 회피 (+ 방어 카드)`,'동점은 방어 쪽 승리'],
  ['피해',`카드의 d6 개수만큼 굴려 합 + 카드 고정값`,'코스트가 높을수록 주사위가 많다'],
  ['치명',`호흡 ${CFG.breath.from}~${CFG.breath.sure-1}는 ${CFG.breath.base}%에서 시작해 1마다 +${CFG.breath.step}%(최대 90%), ${CFG.breath.sure} 이상은 확정. 피해 ×${CFG.critMult} (소수점 버림)`,`호흡은 최대 ${CFG.breath.cap}, 라운드마다 ${CFG.breath.decay} 감소. 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}`],

@@ -2121,7 +2121,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   /* ===== 전투 (1:1) =====
-     라운드마다 1d100 + 속도로 순서를 정하고, 카드는 순서대로 한 장씩 번갈아 발동한다. */
+     라운드마다 1d100 + 속도×2로 순서를 정하고, 카드는 순서대로 한 장씩 번갈아 발동한다. */
   function mkEnt(o){return Object.assign({bleed:0,rupture:0,breath:0,burn:0,ink:0,flame:0,nail:0,stagger:0,stunned:false,charge:0,sink:0,spent:0,chargeCap:CFG.charge.cap,chargeLoss:CFG.charge.loss,chargeRound:0,chargeHit:0,evaB:0,fs:false,fsOn:false,catchup:false,cu:false,
     dmin:1,defUp:0,adv:0,advUsed:false,hand:[],light:0,guarding:false,passHit:0,passHitNext:0,lightUp:0,lightNext:0},o)}
   /* 푸른 화염: 해방 레바테인에게 화상을 받은 쪽(blue), 또는 화상 blueAt 이상 */
@@ -2217,7 +2217,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     newRound(C);
     return C;
   }
-  /* 순서: 1d100 + 속도 (+ 지난 라운드에 뒤처졌으면 추격 보정).
+  /* 순서: 1d100 + 속도×2 (+ 지난 라운드에 뒤처졌으면 추격 보정).
      상대보다 높으면 빛 +1, 격차 gapFirst 이상이면 첫 공격 명중 +firstHit. 동점이면 둘 다 보너스 없음 */
   /* 오딘의 눈 · 가속하는 미래: 라운드마다 회피 보정이 cycle 순서로 돌아간다 (마지막 칸은 과부하) */
   /* 예지안(보냐텔리 가문이 오딘의 눈을 얻으면): 전용 검술 카드(b_)의 피해 +CFG.odin.yeji */

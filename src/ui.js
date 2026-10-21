@@ -391,6 +391,8 @@ export function startUI(E,app){
     return `${c.hits>1?c.hits+'타 · ':''}${c.dice}d${c.die||6}${c.b?sg(c.b):''} · 명중 ${sg(c.hit)}${x.length?' · '+x.join(' · '):''}`;
   }
   /* 게임 중 화면 구석의 간단한 음악 조절: 왼쪽 위에 켬/끔·스타일(고요/불길), 오른쪽에 음량 버튼(누르면 작은 세로 막대가 열린다) */
+  /* 모바일: 위쪽 소리·설정 버튼 줄이 본문을 가리므로 접었다 펼 수 있다 (브라우저에 기억) */
+  const barHidden=()=>{try{return localStorage.getItem('cy_barhide')==='1'}catch(e){return false}};
   function quickAudio(){
     if(!BGM.supported)return '';
     const on=BGM.isOn(),v=Math.round(BGM.vol()*100),ic=v===0?'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="none"/>':'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none"/>';
@@ -621,7 +623,7 @@ export function startUI(E,app){
   function ruleDoc(){
     return [['명중','1d100 + 공격 + 카드 보정 > 상대 1d100 + 회피면 명중, 동점은 방어 성공. 일부 카드·무기는 명중을 두 번 굴려 높은 값을 쓴다.'],
       ['피해','카드의 d6 개수만큼 굴려 합산한다. 코스트가 높은 카드는 주사위가 많다.'],
-      ['순서',`라운드마다 1d100 + 속도. 1등은 빛 +${CFG.orderBonusLight}, 격차 ${CFG.gapFirst} 이상이면 첫 공격 명중 +${CFG.firstHit}. 뒤처지면 다음 라운드 순서 +${CFG.catchupBonus}.`],
+      ['순서',`라운드마다 1d100 + 속도×${CFG.spdMul}. 1등은 빛 +${CFG.orderBonusLight}, 격차 ${CFG.gapFirst} 이상이면 첫 공격 명중 +${CFG.firstHit}. 뒤처지면 다음 라운드 순서 +${CFG.catchupBonus}.`],
       ['방어 자세',`카드를 하나도 내지 않으면 그 라운드는 회피 대신 방어로 받는다. 막으면 피해 ${CFG.guard.guardHit}, 못 막으면 피해 ×${CFG.guard.guardFailMul}.`],
       ['빛',`라운드마다 ${CFG.light}. 남은 빛으로 손패 카드를 원하는 순서로 낸다. 남긴 빛은 사라진다.`]];
   }
@@ -843,7 +845,7 @@ export function startUI(E,app){
       <li><b>소속</b> 권유 사건으로 일찍 들어가거나, ${CFG.affiliationYear}년차 갈림길에서 고른다. ${T.licensed}면 ${T.affTypes.office}에 바로 들어가거나 ${T.affTypes.assoc} 심사를 볼 수 있고, ${T.affTypes.wing} 입사 시험과 ${T.affTypes.finger}의 문은 누구에게나 열려 있다. 소속에 따라 전용 사건이 생긴다.</li>
       <li><b>명중</b> 1d100 + 공격 + 카드 보정 &gt; 상대 1d100 + 회피면 명중, 동점은 방어 성공. 일부 카드·무기는 명중을 두 번 굴려 높은 값을 쓴다.</li>
       <li><b>피해</b> 카드의 d6 개수만큼 굴려 합산. 코스트가 높은 카드는 주사위가 많다.</li>
-      <li><b>순서</b> 라운드마다 1d100 + 속도. 1등은 빛 +${CFG.orderBonusLight}, 격차 ${CFG.gapFirst} 이상이면 첫 공격 명중 +${CFG.firstHit}. 뒤처지면 다음 라운드 순서 +${CFG.catchupBonus}.</li>
+      <li><b>순서</b> 라운드마다 1d100 + 속도×${CFG.spdMul}. 1등은 빛 +${CFG.orderBonusLight}, 격차 ${CFG.gapFirst} 이상이면 첫 공격 명중 +${CFG.firstHit}. 뒤처지면 다음 라운드 순서 +${CFG.catchupBonus}.</li>
       <li><b>방어 자세</b> 카드를 하나도 내지 않으면 그 라운드는 회피 대신 방어로 받는다. 막으면 피해 ${CFG.guard.guardHit}, 못 막으면 피해 ×${CFG.guard.guardFailMul}. 다음 라운드 명중 +${CFG.guard.nextHit}${CFG.guard.lightUp?`, 그 전투 동안 빛과 빛 최대치 +${CFG.guard.lightUp}(최대 +${CFG.guard.lightUpMax})`:''}${CFG.guard.lightNext?`, 다음 라운드 빛 +${CFG.guard.lightNext}`:''}.</li>
       <li><b>빛</b> 라운드마다 ${CFG.light}. 남은 빛으로 손패 카드를 원하는 순서로 낸다. 남긴 빛은 사라진다.</li>
       <li><b>${D.keywords.bleed.n}</b> 공격할 때마다(빗나가도) 스택만큼 피해, 그 뒤 1 감소. 내가 방어 자세면 절반으로 지혈. <b>${D.keywords.rupture.n}</b> 피격 시 스택만큼 추가 피해, 피격마다 1 감소. <b>${D.keywords.ink.n}</b> 라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.ink.cap}스택. <b>${D.keywords.burn.n}</b> 라운드가 끝날 때 스택당 ${CFG.burn.dmg} 피해(내가 받으면 ${CFG.burn.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.burn.max}스택이고, 적이 거는 화상은 쌓이는 양이 절반이다. <b>${D.keywords.flame.n}</b>(레바테인 전용) 받는 피해 ×1.5, 라운드 끝에 1 감소. ${CFG.laev.blueAt}스택 이상이면 <b>푸른 화염</b>이 되어 받는 피해 ×${CFG.laev.blueMul}, 라운드 끝에 스택당 ${CFG.laev.blueDot} 피해를 주고 1 감소한다. 일반 디버프 스택의 최대치는 ${CFG.stackCap}이다. <b>${D.keywords.breath.n}</b> 최대 ${CFG.breath.cap}, 라운드마다 ${CFG.breath.decay} 줄어든다. 4~9는 치명 ${CFG.breath.base}%에서 90%까지(×${CFG.critMult}), ${CFG.breath.sure} 이상은 확정 치명, 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}. 방어 카드를 내면 내 출혈·파열이 1/4 줄어든다(적도 같다).</li>
@@ -1498,9 +1500,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       /* 휴대폰: 접을 수 있는 라운드 패널. 접혀 있어도 요약 줄(재생 중이면 지금 행동)이 보인다 */
       const n=E.queue(C,PLAYING?UI.lastPP:UI.sel.map(i=>D.cards[C.P.hand[i]]),C.ePlan).length;
       return `<details class="panel roundbox"${UI.roundOpen?' open':''}><summary><span class="eyebrow">${C.round}라운드</span> · 선공 <b style="color:${C.order[0].color}">${esc(C.order[0].name)}</b> · 행동 ${n}개<span class="qnow" id="qnow"></span></summary>
-        <div class="stack" style="gap:6px;margin-top:10px"><span class="eyebrow">순서 1d100 + 속도</span><div class="ordline">${li}</div>${pen}${vQueue()}</div></details>`;
+        <div class="stack" style="gap:6px;margin-top:10px"><span class="eyebrow">순서 1d100 + 속도×${CFG.spdMul}</span><div class="ordline">${li}</div>${pen}${vQueue()}</div></details>`;
     }
-    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">${C.round}라운드 · 순서 1d100 + 속도</span>${li}${pen}${vQueue()}</div>`;
+    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">${C.round}라운드 · 순서 1d100 + 속도×${CFG.spdMul}</span>${li}${pen}${vQueue()}</div>`;
   }
   /* 이번 라운드에 실제로 발동하는 순서. 적 카드는 미리 공개된 의도, 내 카드는 고른 대로 */
   function vQueue(){
@@ -1909,6 +1911,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(window.CITY_LAB){labDraw();return}
     if(window.CITY_AUGDEMO){augDemoDraw();return}
     const s=UI.screen;
+    app.classList.toggle('barhide',barHidden());
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
     /* 전투 감정: 상대 체력이 줄거나 라운드가 이어질수록 불길 전투곡이 한 층씩 쌓인다 (체력 80·60·40·20% 아래, 라운드 3·6·9·12를 넘길 때도 오른다) */
     if(s==='combat'&&C&&C.E&&C.E.maxHp){const r=C.E.hp/C.E.maxHp,hs=1+[.8,.6,.4,.2].filter(x=>r<=x).length,rs=1+[3,6,9,12].filter(x=>(C.round||1)>x).length;BGM.setStage(Math.max(hs,rs))}else BGM.setStage(1);
@@ -1922,7 +1925,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const bagOver=ok&&UI.bag&&pend;
     const ovKey=UI.help&&!UI.cfg?'help':UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
     const shO=app.querySelector('.sheet'),stO=shO?shO.scrollTop:0,scrKey=ovKey+(ok&&UI.bag?':'+UI.bag:'');
-    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${['records','chron','chronview'].includes(s)?`<button class="backbtn" data-a="${s==='chronview'?'chron':'title'}" aria-label="돌아가기">←</button>`:''}${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${(()=>{const cb=UI.cbar;UI.cbar='';return s==='combat'&&cb&&!ov?`<div class="cbar"><div class="cbar-in">${cb}</div></div>`:''})()}${ov}${pend&&!UI.bag&&!UI.help&&!UI.cfg?'<button class="bagpeek" data-a="bag" data-i="card" aria-label="가방 열기">가방 보기</button>':''}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+quickAudio():''}`;
+    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${['records','chron','chronview'].includes(s)?`<button class="backbtn" data-a="${s==='chronview'?'chron':'title'}" aria-label="돌아가기">←</button>`:''}${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${(()=>{const cb=UI.cbar;UI.cbar='';return s==='combat'&&cb&&!ov?`<div class="cbar"><div class="cbar-in">${cb}</div></div>`:''})()}${ov}${pend&&!UI.bag&&!UI.help&&!UI.cfg?'<button class="bagpeek" data-a="bag" data-i="card" aria-label="가방 열기">가방 보기</button>':''}${!ov&&!['title','birth'].includes(s)?`<button class="bartog" data-a="bartog" aria-label="${barHidden()?'위쪽 버튼 펼치기':'위쪽 버튼 접기'}">${barHidden()?'﹀ 펼치기':'︿ 접기'}</button>`:''}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+quickAudio():''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     if(ov&&scrKey===UI.lastScr){const sh=app.querySelector('.sheet');if(sh)sh.scrollTop=stO}
     UI.lastScr=scrKey;
@@ -2122,6 +2125,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     sfx(i){SFXS.on=i==='on';sfxSave();if(SFXS.on)SFX.play('hit');render()},
     sfxtest(){SFX.play('hit');setTimeout(()=>{const x=$('sfxState');if(x)x.textContent='오디오 상태 · '+SFX.state()},300);setTimeout(()=>SFX.play('dodge'),380);setTimeout(()=>SFX.play('slash'),760)},
     sfxstep(i){const p=Math.round(SFXS.vol*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;SFXS.vol=clamp(n,0,100)/100;sfxSave();SFX.play('hit');render()},
+    bartog(){try{localStorage.setItem('cy_barhide',barHidden()?'0':'1')}catch(e){}render()},
     qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
     qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:'calm'}[BGM.style()]||'calm');bgmSave();render()},
     qvol(){UI.volOpen=!UI.volOpen;render()},
@@ -2317,7 +2321,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.bag){UI.bag=null;render()}});
   app.addEventListener('click',e=>{
     const b=e.target.closest('[data-a]');
-    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qvol','qsfx'].includes(b.dataset.a))return;
+    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qvol','qsfx','bartog'].includes(b.dataset.a))return;
     ACT[b.dataset.a](b.dataset.i,b);
   });
   /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */
