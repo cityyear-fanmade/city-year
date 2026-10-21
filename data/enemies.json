@@ -3799,8 +3799,7 @@
     "rm_cut",
     "rm_cut",
     "rm_guard",
-    "rm_dash",
-    "rm_cut6"
+    "rm_dash"
    ],
    "hidden": true,
    "tier": "hidden",
@@ -3884,6 +3883,7 @@
     "dmgB": 5,
     "dr": 10,
     "light": 3,
+    "card": "rm_cut6",
     "name": "붉은 안개 · 칼리"
    }
   },

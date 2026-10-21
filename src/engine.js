@@ -2328,8 +2328,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 카세티(혈귀): 체력이 hp 비율 아래로 처음 내려가면 피할 수 없는 광역 출혈을 걸고 체력을 회복한다 */
     if(pv==='kas'&&!E.kasDone&&E.hp>0&&E.hp<=E.maxHp*E.passive.hp){E.kasDone=true;P.bleed=Math.min(bleedCap(P),(P.bleed||0)+E.passive.bleed);const hl=Math.round(E.maxHp*E.passive.heal);E.hp=Math.min(E.maxHp,E.hp+hl);
       if(!C.quiet){const m={t:'kw',s:`${E.name} · ${E.passive.n} · 피할 수 없는 광역 출혈 · ${P.name} 출혈 +${E.passive.bleed} (지금 ${P.bleed}) · ${E.name} 체력 +${hl}`};C.log.push(m);C.cur.push(m)}}
-    /* 에고 개방(붉은 안개 · 칼리): HP가 at 이하가 되면 공격 +atk · 회피 −eva · 피해 +dmgB · 받는 피해 −dr%, 이름이 바뀐다 (보스 전용, 전투당 한 번) */
-    {const K=E.kali;if(K&&!E.kaliOn&&E.hp>0&&E.hp<=E.maxHp*K.at){E.kaliOn=true;E.atk+=K.atk;E.lightUp+=K.light||0;E.eva-=K.eva;E.name=K.name;
+    /* 에고 개방(붉은 안개 · 칼리): HP가 at 이하가 되면 공격 +atk · 회피 −eva · 피해 +dmgB · 받는 피해 −dr%, 이름이 바뀐다 (보스 전용, 전투당 한 번). 개방 직후 K.card를 이번 라운드에 한 번 쓴다 */
+    {const K=E.kali;if(K&&!E.kaliOn&&E.hp>0&&E.hp<=E.maxHp*K.at){E.kaliOn=true;E.atk+=K.atk;E.light+=K.light||0;if(K.card&&D.cards[K.card])E.forceNext=K.card;E.eva-=K.eva;E.name=K.name;
       const m={t:'kw',s:`${K.name} · 에고 개방 · 공격 +${K.atk} · 회피 −${K.eva} · 피해 +${K.dmgB} · 받는 피해 −${K.dr}%`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}
     if(pv==='kin'&&C.round>1&&d(100)<=E.passive.chance){P.angry=E.passive.anger;{const m={t:'kw',s:`중지의 아우가 얻어맞았다 · 분노 · 다음 적중 +${E.passive.anger}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}
     if(pv==='stance'){const st=Math.floor((C.round-1)/E.passive.every)%2===0?'bear':'tiger';if(E.sal==null)E.sal=5;
