@@ -76,7 +76,7 @@ export function createBgm(){
     for(const x of [].concat(o.src)){try{x.stop(now+fade+0.05)}catch(e){}}setTimeout(()=>{try{for(const x of [].concat(o.src))x.disconnect();for(const x of o.sg||[])x.disconnect();o.g.disconnect()}catch(e){}},(fade+0.3)*1000);
   }
   /* 지금 스타일·장면의 샘플 곡을 틀고 있게 한다. 합성음으로 넘어가야 하면 false */
-  /* 전투 감정: 불길 전투곡은 다섯 층(드럼·베이스 → 기타 → 현악·선율 → 브라스 → 아르페지오)을 같은 박에 겹쳐 틀고, 단계가 오르면 한 층씩 키운다 */
+  /* 전투 감정: 불길 전투곡은 다섯 단계의 편곡(베이스·피아노·선율 → 기타·드럼 → 현악·합창 → 브라스 → 아르페지오)을 같은 박에 겹쳐 틀어 두고, 단계가 오르면 다음 마디에서 바로 다음 편곡으로 바꾼다 */
   const STEMS=[1,2,3,4,5],stemKey=i=>'fight'+i;
   const stemsUsable=()=>style==='passion'&&scene==='fight'&&STEMS.every(i=>smpUsable(style,stemKey(i)));
   function stemsPlay(){
@@ -89,11 +89,14 @@ export function createBgm(){
     g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);g.connect(master);
     for(const i of STEMS){const src=ctx.createBufferSource(),x=ctx.createGain();src.buffer=smp.buf[smpKey(style,stemKey(i))];src.loop=true;x.gain.value=i<=stage?1:0;src.connect(x);x.connect(g);srcs.push(src);sg.push(x)}
     const t0=now+0.05;for(const src of srcs)src.start(t0);
-    smp.cur=key;smp.node={src:srcs,g,sg};return true;
+    smp.cur=key;smp.node={src:srcs,g,sg,t0};return true;
   }
-  function stemsApply(sec){
+  /* 단계가 오르내리면 다음 마디 첫 박에서 바로 다음 편곡으로 바뀐다 (서서히 커지지 않고, 곡 스타일이 넘어간다) */
+  const STEM_BAR=4*60/168;
+  function stemsApply(){
     const o=smp.node;if(!o||!o.sg||!ctx)return;const now=ctx.currentTime;
-    o.sg.forEach((x,i)=>{x.gain.cancelScheduledValues(now);x.gain.setValueAtTime(x.gain.value,now);x.gain.linearRampToValueAtTime(i+1<=stage?1:0,now+sec)})
+    let bt=o.t0+Math.ceil((now+0.1-o.t0)/STEM_BAR)*STEM_BAR;if(bt<now+0.1)bt+=STEM_BAR;
+    o.sg.forEach((x,i)=>{const v=x.gain.value;x.gain.cancelScheduledValues(now);x.gain.setValueAtTime(v,now);x.gain.setValueAtTime(v,bt-0.02);x.gain.linearRampToValueAtTime(i+1<=stage?1:0,bt+0.03)})
   }
   function smpPlay(){
     if(stemsUsable()&&stemsPlay())return true;
@@ -447,7 +450,7 @@ export function createBgm(){
     setMood(k){if(P.moods[k])mood=k},
     setScene(k){scene=k==='boss'?'boss':k==='fight'?'fight':'calm'},
     /* 전투 감정 단계(1~5). 불길 전투곡에서만 들린다 */
-    setStage(n){n=Math.max(1,Math.min(5,Math.round(+n)||1));if(n===stage)return;const up=n>stage;stage=n;stemsApply(up?1.2:2.4)},
+    setStage(n){n=Math.max(1,Math.min(5,Math.round(+n)||1));if(n===stage)return;stage=n;stemsApply()},
     stage:()=>stage,
     style:()=>style,
     setStyle(k){if(k==='calm'||k==='passion'||k==='library')style=k}
