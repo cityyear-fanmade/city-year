@@ -26,7 +26,7 @@ export const CFG = {
   /* 암시장 응급 카드: 방문마다 chance% 확률로 진열, 덱·카드함·제안 합쳐 최대 max장 */
   /* 공방 치유소: 한 번에 hp 회복, 방문마다 max번 */
   /* 치유소: 치료를 받을 때마다 값이 step씩 오른다 (한 판 전체 누적, 방문마다 최대 max번) */
-  clinic: {price: 500, step: 500, hp: 30, max: 3},
+  clinic: {price: 500, step: 500, hp: 30, max: 3, mind: 10, mindPrice: 400, mindStep: 200, mindMaxBuy: 3} /* 마음 치료: 한 번에 정신력 mind 회복, 방문마다 mindMaxBuy번, 값은 이번 판에 받은 횟수만큼 mindStep씩 오른다 */,
   /* 암시장 K사 엠플: 전투 중 HP가 최대 HP의 belowPct 이하가 되면 자동으로 heal 회복(전투당 사용 횟수 제한 없음, 한 번에 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
   ample: {name: 'K사 엠플', price: 5000, priceInf: 8000, carry: 3, limit: 5, /* 2막 무한 모드에 들어서면 구매 횟수 제한(limit)이 없어진다(carry는 그대로) */ belowPct: 0.2, healPct: 0.5},
   blackAid: {chance: 10, max: 3, price: {bm_firstaid: 500, bm_measure: 500}},
