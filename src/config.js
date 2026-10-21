@@ -131,7 +131,7 @@ export const CFG = {
   /* 붉은 안개의 책: 덮어 둘 때마다 붉은 안개의 체력이 hpMul배씩 커진다 (복리). */
   redBook: {every: 3, hpMul: 1.1},
   /* 붉은 안개 전용 카드팩 패시브: 적을 쓰러뜨리면 HP heal 회복 */
-  redMist: {shieldPct: 0.10},
+  redMist: {heal: 60, healPct: 0.15, shieldPct: 0.10},
   /* 오늘의 시드로 시작하면 출신 굴림을 이 숫자로 고정한다 (null이면 시드 그대로). 1 = 혈귀 */
   dailyOrigin: 1,
   /* 날짜별 오늘의 시드 지정 (한국 시간 기준 날짜): origin = 출신 굴림(80 = 동부 출신 외곽 생존자), innate = 타고난 것 */
