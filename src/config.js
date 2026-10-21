@@ -155,7 +155,7 @@ export const CFG = {
     hidden: {rank: 3, chance: 12},
     /* 인연과 함께 싸우는 보스: 라운드마다 인연이 추가 공격 (고정 피해 base + per×배우자 급수 레벨, ±3) */
     ally: {base: 8, per: 2}, allyDice: 0.75, allyHit: 10,
-    dieChance: 2, riskStep: 0.1, kid: {from: 5, chance: 22, max: 2, gap: 3, mind: 2, adult: 20, oldFrom: 87, oldFromLong: 187, oldStep: 7.2, oldMind: 3 /* 아이도 나이가 들면 눈을 감는다: oldFrom살부터 해마다 (나이−oldFrom+1)×oldStep% 확률: 보통은 87살부터 100살이면 반드시, 혈귀 종족이면 oldFromLong(187)살부터 200살이면 반드시, 정신력 −oldMind */},
+    dieChance: 2, riskStep: 0.1, kid: {from: 5, chance: 22, max: 2, gap: 3, mind: 2, adult: 20, oldFrom: 87, oldTo: 140, oldFromLong: 187, oldToLong: 250, oldMind: 3 /* 아이도 나이가 들면 눈을 감는다: oldFrom살부터 해마다 (나이−oldFrom+1)×oldStep% 확률: 보통은 87살부터 140살이면 반드시, 혈귀 종족이면 187살부터 250살이면 반드시 (구간 안에서 해마다 확률이 같은 폭으로 오른다), 정신력 −oldMind */},
     /* 뒤틀린 뒤: 성인이 된 아이가 있으면 gap년마다 chance%로 토벌 의뢰가 온다. 여럿이면 가장 강한 아이(등급)가 온다. 등급 = 20세 이후 2년마다 +1(최대 8) + 직업 가산 */
     /* 손주: 성인이 된 아이가 grand.from~grand.to살 사이에 해마다 chance% 확률로 아이를 하나 낳는다 (이름은 무작위, 한 명까지). legacy%는 일대기에 남은 이름(지난 삶의 나·연인·아이)을 물려받는 확률 */
     grand: {from: 30, to: 50, chance: 7, legacy: 40},

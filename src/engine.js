@@ -1254,7 +1254,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const spouseHy=(ch,b)=>!!(ch&&b&&ch.race==='hyeolgwi'&&b.variant===1);
   const kidHy=(ch,k)=>!!k&&(k.race?k.race==='hyeolgwi':ch.race==='hyeolgwi');
   const lifeFrom=hy=>hy?BD.kid.oldFromLong:BD.kid.oldFrom;
-  const lifeChance=(age,hy)=>Math.min(1000,Math.max(0,age-lifeFrom(hy)+1)*BD.kid.oldStep*10);
+  const lifeTo=hy=>hy?BD.kid.oldToLong:BD.kid.oldTo;
+  const lifeChance=(age,hy)=>Math.min(1000,Math.max(0,age-lifeFrom(hy)+1)*1000/(lifeTo(hy)-lifeFrom(hy)+1));
   function bondRisk(b,y,ch){if(ch&&ch.flags&&ch.flags.spouseAge)return 0;return ((b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0))*(ch&&ch.flags&&ch.flags.bondGuard?0.5:1)}
   function bondTaboo(ch){const b=ch.bond;if(b&&b.st==='married'&&b.tabooAt==null)b.tabooAt=ch.year||0}
   /* 결혼한 뒤의 배우자의 죽음 (큰 대가). 아이는 남는다 */
