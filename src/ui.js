@@ -2443,6 +2443,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testCent(n){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infIntro=1;G.ch.infCent=Array.from({length:n-1},(_,i)=>i+1);G.year=G.ch.year=n*100-16;const ev=E.infiniteEvent(G);if(!ev)return;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvent(k,lic){if(!G)return;G.ch.licensed=lic!==false;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvT(t){if(!G)return;const ev=D.events.find(e=>e.t===t);if(!ev)return;G.ch.licensed=true;G.ch.rank=G.ch.rank||9;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
+    testPreFight(id){if(!G||!D.enemies[id])return;UI.fight=id;UI.enc=null;UI.omen=null;UI.ev=null;UI.screen='event';render()},
     testShopAsk(){if(!G)return;UI.stock=[];UI.screen='shopask';render()},
     testBroker(){if(!G)return;UI.stock=[];UI.broker=E.officeBroker(G.ch);UI.screen='shopask';render()},
     testOrigin(n){if(!BC)return;const o=D.origins.find(x=>x.n===n);if(!o)return;E.reseed(BC.seed);let c;for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;render()},
