@@ -569,7 +569,11 @@ export function startUI(E,app){
   function vGear(){
     const ch=G.ch,st=ch.stash||[],cbt=UI.screen==='combat';
     const eq=Object.entries(D.slots).map(([k,n])=>{const g=ch.gear[k];return `<div class="invr"><span>${n}</span><b>${g?esc(g.n):k==='weapon'?'맨손':'<span class="dim">없음</span>'}</b><span class="mono small" style="color:var(--gold)">${g?esc(g.e||''):''}</span></div>`}).join('');
-    const sl=st.map((g,i)=>{const cur=ch.gear[g.slot],df=fxDiff(g,cur);
+    /* 보관함 분류: 전체 · 무기 · 방어구 · 의수. 전체에서는 칸 순서(무기→방어구→의수)로 묶어 보여 준다 (장착·재료 번호는 그대로) */
+    const slotKeys=Object.keys(D.slots),gt=UI.gTab&&slotKeys.includes(UI.gTab)?UI.gTab:'all',cnt=k=>st.filter(g=>g.slot===k).length;
+    const order=st.map((g,i)=>i).filter(i=>gt==='all'||st[i].slot===gt).sort((a,b)=>slotKeys.indexOf(st[a].slot)-slotKeys.indexOf(st[b].slot)||a-b);
+    const gtabs=st.length?`<div class="seg" style="margin:6px 0">${[['all','전체',st.length],...slotKeys.map(k=>[k,D.slots[k],cnt(k)])].map(([k,n,c])=>`<button class="${gt===k?'on':''}" data-a="gtab" data-i="${k}">${n} ${c}</button>`).join('')}</div>`:'';
+    const sl=order.map(i=>{const g=st[i],cur=ch.gear[g.slot],df=fxDiff(g,cur);
       return `<div class="invr stash"><span>${D.slots[g.slot]}</span><div class="stack" style="gap:2px;min-width:0"><b>${esc(g.n)}</b><span class="mono small" style="color:var(--gold)">${esc(g.e||'')}</span>${df?`<span class="mono small">지금 장비보다 · ${df}</span>`:''}</div>
         ${cbt?'<span class="small dim">전투 중 교체 불가</span>':`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}</div>`}).join('');
     const w=ch.gear.weapon,need=E.bonNeed(ch);
@@ -582,7 +586,7 @@ export function startUI(E,app){
       <p class="small">${lnx?`다음 단계 · ${esc(lnx.n)}까지 ${lnx.at-ln}번 남았다 (${ln}/${lnx.at})`:'해방을 마쳤다.'}</p>
       <p class="small dim">붉은 화염을 건 횟수는 영구히 쌓인다. 단계가 올라 무기가 바뀌어도 쌓은 횟수와 공방에서 한 정비(공격·회피 강화)는 그대로 이어진다.</p></div>`:'';
     return `<div><span class="eyebrow">장착 중</span>${eq}</div>${lp}${up}
-      <div><span class="eyebrow">보관함 ${st.length}</span>${sl||'<p class="small dim">보관함이 비어 있다. 새 장비를 얻으면 장착할지 보관할지 고를 수 있고, 장착하면 이전 장비가 여기로 온다.</p>'}</div>
+      <div><span class="eyebrow">보관함 ${st.length}</span>${gtabs}${sl||(st.length?'<p class="small dim">이 분류에는 장비가 없다.</p>':'<p class="small dim">보관함이 비어 있다. 새 장비를 얻으면 장착할지 보관할지 고를 수 있고, 장착하면 이전 장비가 여기로 온다.</p>')}</div>
       ${st.length?`<p class="small dim">장착을 누르면 같은 칸의 지금 장비와 자리를 바꾼다. 아무것도 사라지지 않는다.</p>`:''}`;
   }
   function vStat(){
@@ -739,7 +743,7 @@ export function startUI(E,app){
     if(UI.swap)return sheet(`<span class="eyebrow">덱의 카드와 바꾸기 · 빠진 카드는 카드함으로</span>${cardRow(cid)}
       <div class="invcards">${ch.deck.map((id,j)=>cardRow(id,D.cards[id].fixed?'<span class="small dim">전용 · 바꿀 수 없다</span>':`<button class="chip" data-a="oswap" data-i="${j}">이 카드와 바꾼다</button>`)).join('')}</div>
       <button class="btn" data-a="oswapmode">돌아가기</button>`,'offer',false);
-    return sheet(`<span class="eyebrow">카드 발견 · 덱 ${ch.deck.length}/${E.deckMax(ch)}${many}</span><h2>받을까, 버릴까</h2>${cardRow(cid,ownTag(ch,cid))}${myDeck(ch)}
+    return sheet(`<span class="eyebrow">카드 발견 · 덱 ${ch.deck.length}/${E.deckMax(ch)}${many}</span><h2>받을까, 버릴까</h2>${cardRow(cid,ownTag(ch,cid))}
       ${room?'<button class="btn primary" data-a="otake" data-i="deck">덱에 넣는다</button>':`<button class="btn primary" data-a="oswapmode">덱의 카드와 바꾼다</button><p class="small dim">덱이 가득 찼다 (최대 ${E.deckMax(ch)}장).</p>`}
       <button class="btn" data-a="otake" data-i="side">카드함에 넣어 둔다</button>
       <button class="btn quiet" data-a="odrop">버린다</button>`,'offer',false);
@@ -1576,7 +1580,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">${P.distorted?'빛 없음':`빛 ${left}/${P.light}`}</span></div>
       <div class="hand">${cards}</div>
       ${FIGHT==='auto'?`<div class="check">${UI.paused?'일시정지 · 다음 라운드를 기다린다':'자동 전투 중 · 카드를 알아서 고르고 진행한다'}</div>`:''}
-      ${M?`${log}<details class="logbox"><summary>설정 (테마 · 연출 · 전투 진행)</summary><div class="stack" style="margin-top:10px">${vSettings()}</div></details>`:vSettings()}`;
+      ${M?log:''}`;   /* 전투 화면 아래의 설정은 없앴다: 오른쪽 위 설정(⚙)과 같은 일을 하고, 누르면 전투 화면이 초기화되듯 돌아가서 헷갈렸다 */
   }
   /* 하나 협회 패시브: 카드 위에서 매 라운드 한 가지를 고른다 */
   const TRI_E={gun:'공격 피해 +'+CFG.tri.gun,gon:'받는 피해 −'+CFG.tri.gon+'%',gam:'빛 +'+CFG.tri.gam,ri:'HP +'+CFG.tri.ri.heal+' · 호흡 +'+CFG.tri.ri.breath};
@@ -2251,6 +2255,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     buy(id){UI.buyAsk=id;render()},
     buyok(id){UI.buyAsk=null;if(E.buy(G.ch,id,true)){UI.bought=D.items[id].n}render()},
     buyno(){UI.buyAsk=null;render()},
+    gtab(i){UI.gTab=i;render()},
     eqs(i){if(UI.screen!=='combat'&&E.equipStash(G.ch,+i)){resave();render()}},
     bspecial(id){if(E.buySpecial(G.ch,id,true)){UI.bought=D.special[id].n;render()}},
     noticeok(){store.set('cityYearNotice',NOTICE.id);render()},
