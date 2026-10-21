@@ -369,8 +369,10 @@ export function startUI(E,app){
     if(c.t!=='atk')return (c.d||'')+cardFx(c);
     return cardLine0(c,g,wx)+cardFx(c)+((c.mat||c.harvest||c.reuse)&&c.d?' · '+c.d:'')+(c.mindCost?` · 정신력 −${c.mindCost}`:'');
   }
+  /* 타수가 있으면 '(한 타의 피해) × n타'로 적어 주사위 개수(2d6)와 타수가 헷갈리지 않게 한다 */
+  const hx=(c,e)=>c.hits>1?`(${e}) × ${c.hits}타`:e;
   function cardLine0(c,g,wx){
-    if(c.range)return `${c.hits>1?c.hits+'타 · ':''}${c.dice>1?c.dice+'개 · ':''}1d${c.range[0]}~${c.range[1]}${c.b?sg(c.b):''} · 명중 ${sg(c.hit+(g?g.hit:0))}`;
+    if(c.range)return `${hx(c,`주사위 ${c.dice}개(각 ${c.range[0]}~${c.range[1]})${c.b?sg(c.b):''}`)} · 명중 ${sg(c.hit+(g?g.hit:0))}`;
     if(c.gamble)return `${c.d} · 명중 ${sg(c.hit+(g?g.hit:0))}`;
     const x=[];
     if(c.adv)x.push('명중 2회 굴림');
@@ -386,9 +388,9 @@ export function startUI(E,app){
     
     const ex=x.length?' · '+x.join(' · '):'';
     /* 전용 무기 주사위가 있으면 실제로 굴리는 주사위로 표시 */
-    if(wx&&wx.dice){const dc=c.dice+(g&&!c.die?g.dice:0),b=(c.b||0)+(g?g.b:0),base=c.range?`${dc}d(${c.range[0]}~${c.range[1]})`:`${dc}d${c.die||6}`;return `${c.hits>1?c.hits+'타 · ':''}${base}${b?sg(b):''} + ${wx.dice[0]}d${wx.dice[1]} · 명중 ${sg(c.hit+(g?g.hit:0))} · 무기 주사위 추가${g&&g.n?' · 등급 '+g.n:''}${ex}`}
-    if(g&&g.n){const dc=c.dice+(c.die?0:g.dice),b=(c.b||0)+g.b;return `${c.hits>1?c.hits+'타 · ':''}${dc}d${c.die||6}${b?sg(b):''} · 명중 ${sg(c.hit+g.hit)} · 등급 ${g.n}${ex}`}
-    return `${c.hits>1?c.hits+'타 · ':''}${c.dice}d${c.die||6}${c.b?sg(c.b):''} · 명중 ${sg(c.hit)}${x.length?' · '+x.join(' · '):''}`;
+    if(wx&&wx.dice){const dc=c.dice+(g&&!c.die?g.dice:0),b=(c.b||0)+(g?g.b:0),base=c.range?`${dc}d(${c.range[0]}~${c.range[1]})`:`${dc}d${c.die||6}`;return `${hx(c,`${base}${b?sg(b):''} + ${wx.dice[0]}d${wx.dice[1]}`)} · 명중 ${sg(c.hit+(g?g.hit:0))} · 무기 주사위 추가${g&&g.n?' · 등급 '+g.n:''}${ex}`}
+    if(g&&g.n){const dc=c.dice+(c.die?0:g.dice),b=(c.b||0)+g.b;return `${hx(c,`${dc}d${c.die||6}${b?sg(b):''}`)} · 명중 ${sg(c.hit+g.hit)} · 등급 ${g.n}${ex}`}
+    return `${hx(c,`${c.dice}d${c.die||6}${c.b?sg(c.b):''}`)} · 명중 ${sg(c.hit)}${x.length?' · '+x.join(' · '):''}`;
   }
   /* 게임 중 화면 구석의 간단한 음악 조절: 왼쪽 위에 켬/끔·스타일(고요/불길), 오른쪽에 음량 버튼(누르면 작은 세로 막대가 열린다) */
   /* 모바일: 위쪽 소리·설정 버튼 줄이 본문을 가리므로 접었다 펼 수 있다 (브라우저에 기억) */
@@ -641,7 +643,7 @@ export function startUI(E,app){
     const G_=CFG.cardGrade.slice(1).map(g=>`${g.n}(${g.from}년차~ 피해 +${g.b} · 명중 +${g.hit}${g.dice?' · 주사위 +'+g.dice:''})`).join(' / ');
     const rows=[
       ['카드 한 장의 흐름','① 빛(왼쪽 숫자)을 내고 카드를 낸다 → ② 명중 굴림: 1d100 + 명중(공격의 절반, 소수점 버림 + 명중 스탯) + 카드 명중 보정이 상대 1d100 + 회피보다 크면 적중 → ③ 적중하면 피해 주사위를 굴린다 → ④ 같은 적중에 "적중 시" 효과가 붙는다(키워드 스택·보호막 등) → ⑤ 흑수 부하·전용 무기가 있으면 그 효과가 이어진다. 빗나가면 ③~⑤는 일어나지 않는다.'],
-      ['○타','"3타"는 ②~⑤를 3번 따로 반복한다. 명중 굴림도, 피해 주사위도 타마다 새로 굴린다. 출혈이 걸린 쪽은 타마다 피해를 입으므로, 타수가 많은 카드를 낼수록 출혈이 빨리 닳는다.'],
+      ['○타','"(2d6+3) × 3타"는 괄호 안(주사위 2개를 굴려 3을 더한 피해)을 3번 따로 반복한다 (②~⑤를 3번 반복). 명중 굴림도, 피해 주사위도 타마다 새로 굴린다. 출혈이 걸린 쪽은 타마다 피해를 입으므로, 타수가 많은 카드를 낼수록 출혈이 빨리 닳는다.'],
       ['6d8 · 3d6 표기','"6d8"은 8면체 주사위 6개를 굴려 합친다는 뜻이다. "3d6"은 6면체 3개. 앞 숫자가 개수, 뒤 숫자가 면 수다. 개수가 많을수록 결과가 평균 근처로 모이고, 면 수가 클수록 눈의 폭이 커진다. 면 수를 적지 않은 카드는 6면체다.'],
       ['+N (피해 뒤 고정값)','"2d4+2"의 +2는 주사위를 합친 값에 더하는 고정 피해다.'],
       ['피해 주사위 최소 (D6≥N)',`장비·타고난 것에 쓰인 표기다. 주사위 눈이 N보다 작게 나오면 N으로 친다. 여러 곳에서 오는 보정을 합쳐도 최대 ${CFG.dminCap}까지다.`],
