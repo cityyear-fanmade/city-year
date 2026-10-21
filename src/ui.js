@@ -2023,7 +2023,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const trainHome=()=>!!(G&&G.ch&&G.ch.wtrain);
   const HWSHOP=[['저잣거리 대장간','홍원 성문 안쪽 골목의 대장간이다. 가문 이름을 대면 값을 속이지 않는다.'],['홍원 장인방','가문에 칼을 대는 장인들이 모여 사는 방이다. 후보라는 이름이 문을 연다.'],['가문의 보물고','선대가 모아 둔 물건을 푸는 방이다. 후보에게는 값을 받지 않고 내린다. 각각 한 번씩만 받을 수 있다.']];
   function vShopAsk(){
-    const nb=(G.year-1)+CFG.shop.every+1,hh=hwHome(),tr=trainHome(),rb=G.ch.rb&&G.ch.rb.out?(G.ch.rb.fled?'alley':'supply'):null,of=!!(G.infinite&&G.ch.infinite&&!tr&&!hh&&!rb);
+    const nb=(G.year-1)+CFG.shop.every+1,hh=hwHome(),tr=trainHome(),rb=G.ch.rb&&G.ch.rb.out?(G.ch.rb.fled?(G.ch.rb.bossDone?null:'alley'):'supply'):null,   /* R사 추적이 끝나면(숙청 집행관까지) '쫓기는 몸' 문구는 평범한 공방으로 돌아온다 */
+      of=!!(G.infinite&&G.ch.infinite&&!tr&&!hh&&!rb);
     return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · ${tr?'열차 승무원 칸':hh?'홍원의 저잣거리':rb==='supply'?'R사 보급 구역':rb==='alley'?'뒷골목 공방':of?'외곽의 어긋난 가게':'공방 거리'}</div><h2>${tr?'승무원 칸에 들른다':hh?'홍원의 저잣거리를 지난다':rb==='supply'?'R사 보급 구역을 지난다':rb==='alley'?'뒷골목 공방을 찾는다':of?'집 앞길 끝의 가게에 들른다':'공방 거리를 지난다'}</h2>
       <p class="lead">${rb==='supply'?'R사 날개 직원에게 열린 보급 구역이다. 손등의 번호표를 보여 주면 장비를 내준다. 들러도 한 해가 지나가지는 않는다. ':rb==='alley'?'번호표를 가리고 뒷골목 공방을 찾았다. 쫓기는 몸이라 아무것도 묻지 않는 곳만 골랐다. 들러도 한 해가 지나가지는 않는다. ':''}${rb?'':tr?'열차 끝 칸의 승무원 칸이다. 팔 물건은 없고, 의무실과 눈 붙일 자리만 있다. 들러도 해는 넘어가지 않는다.':hh?'붉은 대문 안쪽에 가문의 저잣거리가 있다. 장인과 상인은 모두 가문의 이름 아래 있다. 들러도 한 해가 지나가지는 않는다.':of?'외곽에는 거리가 없다. 그런데 집 앞길 끝에 가게가 하나 서 있다. 누가 여는지, 어디서 물건을 들여오는지 아무도 모른다. 이 자리에서는 필요한 사람이 있으면 필요한 가게가 선다. 들러도 한 해가 지나가지는 않는다.':'장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.'}${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
       <p class="small dim">${nb<=E.lastYear(G)?`다음 기회는 ${nb}년차.`:'이번이 마지막 기회다.'}</p>
@@ -2422,6 +2423,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testRecordEnd(){recordEnd()},
     testCent(n){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infIntro=1;G.ch.infCent=Array.from({length:n-1},(_,i)=>i+1);G.year=G.ch.year=n*100-16;const ev=E.infiniteEvent(G);if(!ev)return;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvent(k,lic){if(!G)return;G.ch.licensed=lic!==false;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
+    testShopAsk(){if(!G)return;UI.stock=[];UI.screen='shopask';render()},
     testBroker(){if(!G)return;UI.stock=[];UI.broker=E.officeBroker(G.ch);UI.screen='shopask';render()},
     testOrigin(n){if(!BC)return;const o=D.origins.find(x=>x.n===n);if(!o)return;E.reseed(BC.seed);let c;for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;render()},
     testOmen(id){if(!G)return;const h=D.hiddenBosses.find(x=>x.id===id);UI.omen={type:'omen',boss:id,omen:h.omen||{},escape:!h.noEscape,spec:'table:early'};UI.screen='event';render()}};
