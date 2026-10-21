@@ -1608,6 +1608,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.distForm={n:(name||'').trim()||'이름 없는 뒤틀림'};ch.huntNext=(ch.year||0)+(BD.hunt?BD.hunt.gap:3);ch.distPick=false;ch.distortPend=false;ch.distortDone=true;ch.voiceUsed=true;ch.mind=mindMax(ch);
     ensurePacks(ch);
     const fx=ch.deck.filter(id=>D.cards[id].fixed);
+    ch.preDistDeck=ch.deck.slice();   // 토벌 의뢰의 가족은 뒤틀리기 전 책장을 쓴다
     stashPack(ch,X.packN);
     ch.deck=X.deck.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false;ch.offers=[];ch.picks=[];ch.packOffer=null;
     (ch.relics=ch.relics||[]).push('뒤틀림 · '+ch.distForm.n);
@@ -2203,9 +2204,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     P.inkIds=ch.hw&&ch.hw.mission&&hwHave(ch).length?hwHave(ch).map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
     {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;if(o==='W사 날개'){const fi_=ch.fi??-1;if(fi_>=4)P.chargeRound=4;else if(fi_>=2)P.chargeRound=3}P.chargeHit=CH.hit||0;P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}
-    /* 토벌 의뢰의 가족: 주인공과 같은 카드를 쓰고, 능력치는 내 능력치의 배수 (특색급(최고 급수)은 mulTop, 그 밑은 mul) */
+    /* 토벌 의뢰의 가족: 주인공이 뒤틀리기 전의 책장과 같은 카드를 쓰고, 능력치는 내 능력치의 배수 (특색급(최고 급수)은 mulTop, 그 밑은 mul) */
     if(e.kidHunt){const K=CFG.bond.hunt,m=(ch.kidFoeLv||0)>=K.topLv?K.mulTop:K.mul;
-      E.maxHp=E.hp=Math.max(1,Math.round(P.maxHp*m));E.atk=Math.max(1,Math.round(P.atk*m));E.eva=Math.round(P.eva*m);E.spd=Math.round(P.spd*m);E.deck=ch.deck.slice()}
+      E.maxHp=E.hp=Math.max(1,Math.round(P.maxHp*m));E.atk=Math.max(1,Math.round(P.atk*m));E.eva=Math.round(P.eva*m);E.spd=Math.round(P.spd*m);E.deck=(ch.preDistDeck&&ch.preDistDeck.length?ch.preDistDeck:ch.deck).filter(id=>D.cards[id]).slice()}
     /* 인연과 함께 싸우는 보스(엘레나): 결혼한 인연이 라운드마다 추가 공격 */
     const beastAlly=ch.hw&&ch.hw.beast&&ch.hw.bk&&!ch.hw.done;
     const ally=e.ally&&ch.bond&&ch.bond.st==='married'?{name:ch.bond.name,lv:spouseLevel(ch.bond,ch.year||0)}:beastAlly?{name:(ch.bond&&ch.bond.name)||((D.enemies[ch.hw.cand]||{}).n||'가주 후보'),lv:ch.bond&&ch.bond.route?spouseLevel(ch.bond,ch.year||0):2}:null;
@@ -2259,6 +2260,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
     if(P.boneNext){P.hand.push('bl_bone');P.boneNext=false}
     if(P.grantNext){P.hand.push(P.grantNext);P.grantNext=null}
+    if(C.id==='kid_hunt'&&!P.noKill&&D.cards.x_nokill&&P.hand.length)P.hand[0]='x_nokill'   // 가족과 싸울 때: 첫 번째 손패는 해치고 싶지 않은 마음 (쓰기 전까지 매 라운드)
     /* 검지 패시브 지령 수행: 손패 한 칸에 ☆ 지령이 박힌다 */
     if(P.index){P.starSlot=d(Math.min(CFG.hand,P.hand.length))-1;P.starId=P.hand[P.starSlot]}
     /* 히든 보스 전용 패시브: 라운드 단위 */
@@ -2359,6 +2361,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(let m=1;m<1<<P.hand.length;m++){
       const idx=P.hand.map((_,i)=>i).filter(i=>m>>i&1);
       if(idx.includes(P.locked))continue;
+      if(idx.some(i=>D.cards[P.hand[i]].noKill))continue;   // 자동 전투는 '해치고 싶지 않다'를 스스로 쓰지 않는다
       if(idx.some(i=>(D.cards[P.hand[i]].needBlack&&!P.black)||(D.cards[P.hand[i]].needLow&&C.E.hp>C.E.maxHp*CFG.raven.low)))continue;
       if(idx.reduce((a,i)=>a+cardCost(P,D.cards[P.hand[i]]),0)>P.light)continue;
       const sc=idx.reduce((a,i)=>a+score(D.cards[P.hand[i]])+0.01,0);
@@ -2440,6 +2443,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function addSerum(A,c,L){A.serum=Math.min(3,(A.serum||0)+c.serum);L('kw',`  ${A.name} · 혈청 ${A.serum}/3${A.serum>=3?' · 과부하 준비':''}`)}
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
+    if(c.noKill){if(A.noKill){L('sys',`${A.name} · ${c.n} · 이미 그런 마음이다`);return}A.noKill=true;A.eva-=80;A.takenMul=2;L('kw',`${A.name} · ${c.n} · 이번 전투 동안 받는 피해 2배 · 회피 −80`);return}
     if(c.flesh){A.evaB-=30;A.fleshRound=C.round;L('kw',`${A.name} · ${c.n} · 이번 라운드 회피 −30`)}
     if(c.cloudGain&&A.kuro)for(let i=0;i<c.cloudGain;i++)addCloud(A,L);
     if(c.needBlack&&!A.black){L('sys',`${A.name} · ${c.n} · 흑운이 아니면 쓸 수 없다 · 불발`);return}
@@ -2615,6 +2619,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.psycho||B.psycho){const m=(A.psycho?CFG.innate.psycho:1)*(B.psycho?CFG.innate.psycho:1);dmg*=m;note+=` 사이코패스×${m}`}
       if(A.trait==='enrage'&&A.hp<=A.maxHp/2){dmg+=2;note+=' 분노+2'}
       if(A.kaliOn){dmg+=A.kali.dmgB;note+=` 칼리+${A.kali.dmgB}`}
+      if(B.takenMul>1){const r=Math.round(dmg*(B.takenMul-1));if(r>0){dmg+=r;note+=` 해치고 싶지 않다 +${r}`}}
       if(B.sm){const r=Math.floor(dmg*CFG.shinmang.takeShin);if(r>0){dmg-=r;note+=` 신−${r}`}}
       if(B.kaliOn){const r=Math.floor(dmg*B.kali.dr/100);if(r>0){dmg-=r;note+=` 칼리−${r}`}}
       if(B.trait==='callus'){const r=Math.min(2,dmg-1);if(r>0){dmg-=r;note+=` 굳은살−${r}`}}
