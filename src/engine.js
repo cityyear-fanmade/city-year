@@ -1050,6 +1050,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
     if(req.startsWith('flag:')){const [k,n]=req.slice(5).split('>=');return (ch.flags[k]||0)>=(+n||1)}
     if(req.startsWith('lead:')){const [k,n]=req.slice(5).split('>=');return ((ch.leads||{})[k]||0)>=(+n||1)}
+    if(req==='color')return !!(ch.colorDone||ch.titleKind==='color');   // 특색에 닿은 사람
+    if(req==='nocolor')return !(ch.colorDone||ch.titleKind==='color');
     if(req==='fingerup')return canFingerUp(ch);
     if(req.startsWith('corpup<'))return ((ch.corp&&ch.corp.up)||0)<+req.slice(7);
     if(req.startsWith('corpup>='))return ((ch.corp&&ch.corp.up)||0)>=+req.slice(8);
