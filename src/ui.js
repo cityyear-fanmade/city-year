@@ -129,6 +129,8 @@ export function startUI(E,app){
     toggle(){const d=document,el=d.documentElement;try{if(FS.on())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else(el.requestFullscreen||el.webkitRequestFullscreen).call(el)}catch(e){}}};
   /* 전체 화면이 켜지거나 꺼져도 화면 전체를 다시 그리지 않고 버튼 글자만 바꾼다 (전투 연출 중에도 끊기지 않게). 설정 창이 열려 있으면 그 창만 갱신 */
   ['fullscreenchange','webkitfullscreenchange'].forEach(t=>document.addEventListener(t,()=>{const on=FS.on(),b=document.querySelector('.fsbtn');if(b){b.textContent=on?'창화면':'전체화면';b.setAttribute('aria-label',on?'전체 화면 끝내기':'전체 화면');b.title=b.getAttribute('aria-label')}if(UI&&UI.cfg&&typeof render==='function')render()}));
+  /* 운영체제 공유 창은 휴대폰(터치 기기)에서만 연다. PC(특히 윈도)의 공유 창에는 로그인한 계정의 이메일 주소가 보여 방송에 노출될 수 있어서, PC에서는 파일을 바로 내려받게 한다 */
+  const touchShare=()=>!!(window.matchMedia&&matchMedia('(pointer: coarse)').matches);
   const HFXK='cityYearHitFx';let HFX=store.get(HFXK)||'mid';
   const HFX_N={off:0,low:1,mid:2,high:3};let HFXFLIP=false;const HFXMK='cityYearHitFxM';let HFXM=store.get(HFXMK)||'each';
   /* 무기 이름으로 타격 모양을 고른다 (플레이어의 공격만. 맨손·기타는 키워드·무작위 모션) */
@@ -2186,7 +2188,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     async saveimg(){
       UI.imgUrl=null;const cv=await shotEnd()||await endCard(),name=`도시의한해_${G.ch.seed}.png`;
       const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
-      try{const f=new File([blob],name,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
+      try{const f=new File([blob],name,{type:'image/png'});if(touchShare()&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
       try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(e){}
       /* 다운로드가 막히는 환경(미리보기 창 등)을 위해 이미지도 화면에 보여 준다 */
       if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');render()}
@@ -2194,7 +2196,6 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testCard:async()=>(await endCard()).toDataURL('image/png'),
     async share(){
       const url=shareLink();UI.shareText=null;UI.shareMsg=null;
-      try{if(navigator.share){await navigator.share({title:'도시의 한 해 · 내 기록',text:shareHead(),url});UI.shareMsg='공유 창을 열었다.';render();return}}catch(e){if(e&&e.name==='AbortError')return}
       try{await navigator.clipboard.writeText(url);UI.shareMsg='기록 링크를 복사했다. 붙여 넣기만 하면 된다.';render();return}catch(e){}
       UI.shareText=url;render();const b=$('shareBox');
       if(b){b.focus();b.select();try{if(document.execCommand('copy')){UI.shareMsg='기록 링크를 복사했다. 붙여 넣기만 하면 된다.';UI.shareText=null;render();return}}catch(e){}}
@@ -2214,7 +2215,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const [tab,id]=String(v).split(':'),e=(loadChron()[tab]||[]).find(x=>x.id===id);if(!e)return;
       const cv=await shotEnd('chShot');if(!cv){UI.chMsg=UI.shotWhy==='load'?'이미지 도구를 불러오지 못했다. 인터넷 연결을 확인하거나 앱 속 브라우저라면 크롬·사파리로 열어 다시 시도해 주세요.':'이 기록은 화면이 너무 길어 이미지로 만들지 못했다. 기록 화면을 직접 캡처해 저장해 주세요.';render();return}
       const name=`도시의한해_일대기_${(e.v||'')}_${e.id}.png`,blob=await new Promise(r=>cv.toBlob(r,'image/png'));
-      try{const f=new File([blob],name,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(er){if(er&&er.name==='AbortError')return}
+      try{const f=new File([blob],name,{type:'image/png'});if(touchShare()&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(er){if(er&&er.name==='AbortError')return}
       try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(er){}
       if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');UI.chMsg='';render()}
     },

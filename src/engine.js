@@ -343,9 +343,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 카드팩 보관함 =====
      덱이 통째로 바뀌기 전에 지금 팩(덱·카드함·고정 여부)을 보관한다. 전투 밖에서는 횟수 제한 없이 팩을 바꿔 끼울 수 있다 (고정 덱과 기본 덱을 견주어 보는 용도).
      전투 중에는 가방이 열리지 않아 바꿀 수 없다 */
-  const PACKMAX=12,BASE4=['slash','thrust','smash','guard'];
+  const PACKMAX=40,BASE4=['slash','thrust','smash','guard'];
   const packSnap=ch=>({n:ch.packName||'출신 카드팩',k:ch.packKind||'origin',deck:ch.deck.slice(),side:(ch.side||[]).slice(),extra:(ch.extra||[]).slice(),deckLocked:!!ch.deckLocked,cardMoney:!!ch.cardMoney,orgPack:ch.orgPack||null,finalGiven:!!ch.finalGiven});
-  function stashPack(ch,newName){(ch.packs=ch.packs||[]).push(packSnap(ch));while(ch.packs.length>PACKMAX){const i=ch.packs.findIndex(p=>p.k!=='basic');ch.packs.splice(i<0?0:i,1)}ch.packName=newName||'전용 카드팩';ch.packKind='special'}
+  function stashPack(ch,newName){(ch.packs=ch.packs||[]).push(packSnap(ch));/* 보관함이 가득 차면 가장 오래된 팩부터 밀려나지만, 기본 카드팩 3개와 출생 때 받은 팩은 지우지 않는다 */
+    while(ch.packs.length>PACKMAX){const i=ch.packs.findIndex(p=>p.k!=='basic'&&p.n!==ch.birthPack);if(i<0)break;ch.packs.splice(i,1)}ch.packName=newName||'전용 카드팩';ch.packKind='special'}
   /* 기본 카드팩 3개: 기본 4장으로 시작하는 이름을 바꿀 수 있는 프리셋. 출신 카드·소속 카드는 들어 있지 않고, 얻은 카드는 편집 가능한 모든 팩에 복사된다 */
   const newBasicPacks=()=>[1,2,3].map(i=>({n:'기본 카드팩 '+i,k:'basic',deck:BASE4.slice(),side:[],extra:[],deckLocked:false,cardMoney:false,orgPack:null,finalGiven:false}));
   /* 예전 판·새 판 공통: 기본 카드팩이 없으면 만들고, 지금 팩의 이름·종류를 채운다 */
