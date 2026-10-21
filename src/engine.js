@@ -2340,6 +2340,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
     if(P.boneNext){P.hand.push('bl_bone');P.boneNext=false}
     if(P.grantNext){P.hand.push(P.grantNext);P.grantNext=null}
+    if(P.grantQ&&P.grantQ.length){for(const id of P.grantQ)P.hand.push(id);P.grantQ=null}
     if(C.id==='kid_hunt'&&!P.noKill&&D.cards.x_nokill&&P.hand.length)P.hand[0]='x_nokill'   // 가족과 싸울 때: 첫 번째 손패는 해치고 싶지 않은 마음 (쓰기 전까지 매 라운드)
     /* 검지 패시브 지령 수행: 손패 한 칸에 ☆ 지령이 박힌다 */
     if(P.index){P.starSlot=d(Math.min(CFG.hand,P.hand.length))-1;P.starId=P.hand[P.starSlot]}
@@ -2522,6 +2523,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 발톱 전용 키워드 · 혈청: 혈청 카드를 낼 때마다 1 (최대 3). 3이면 다음 적중 피해 ×1.5 후 비움 */
   function addSerum(A,c,L){A.serum=Math.min(3,(A.serum||0)+c.serum);L('kw',`  ${A.name} · 혈청 ${A.serum}/3${A.serum>=3?' · 과부하 준비':''}`)}
+  /* 다음 라운드 손패에 넣어 줄 카드. 같은 때에 여러 장이 겹치면 한 장은 grantNext, 나머지는 줄에 세워 모두 받는다 (예: 붉은 안개 개방의 대절단 가로 + 수호 개화) */
+  function giveNext(A,id){if(!id)return;if(!A.grantNext)A.grantNext=id;else(A.grantQ=A.grantQ||[]).push(id)}
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
     if(c.noKill){if(A.noKill){L('sys',`${A.name} · ${c.n} · 이미 그런 마음이다`);return}A.noKill=true;A.eva-=80;A.takenMul=2;L('kw',`${A.name} · ${c.n} · 이번 전투 동안 받는 피해 2배 · 회피 −80`);return}
@@ -2747,7 +2750,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.chargeLoss>0&&B.charge>0&&B.isP){B.charge=Math.max(0,B.charge-B.chargeLoss);L('kw',`  ${B.name} · 피격 · 충전 −${B.chargeLoss} (남은 ${B.charge})`)}
       if(c.hitHeal&&A.hp>0){const h=Math.min(c.hitHeal,A.maxHp-A.hp);if(h>0){A.hp+=h;HG(A,h);L('kw',`  ${A.name} · ${c.n} · HP +${h}`)}}
       /* 보냐텔리 검술: 처분 표식, 엘레판테(표식이 있으면 다음 라운드 처분 1회) */
-      if(c.grant&&(B.disp||0)>0&&B.hp>0&&!A.grantNext){A.grantNext=c.grant;L('sys',`  ${A.name} · 처분 표식 · 다음 손패에 ${D.cards[c.grant].n}`)}
+      if(c.grant&&(B.disp||0)>0&&B.hp>0){giveNext(A,c.grant);L('sys',`  ${A.name} · 처분 표식 · 다음 손패에 ${D.cards[c.grant].n}`)}
       if(c.seal&&B.hp>0){B.sealMark=Math.min(5,(B.sealMark||0)+c.seal);L('kw',`  ${B.name}에게 봉인 각인 ${B.sealMark}/5`)}
       if(c.dmark&&B.hp>0){B.disp=Math.min(CFG.bon.markMax,(B.disp||0)+c.dmark);L('kw',`  ${B.name}에게 처분 표식 ${B.disp}`)}
       /* 마에스트로 책장: 재료 수집 부여 / 신체관극(상대 디버프 수만큼 재료) */
@@ -2762,7 +2765,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.echo){B.wecho=(B.wecho||0)+1;L('kw',`  ${B.name}에게 ${X.echo.n||'잔향'} ${B.wecho}/${X.echo.need}`);if(B.wecho>=X.echo.need){hpLoss(C,B,X.echo.dmg,L);B.wecho=0;L('dmg',`  ${X.echo.n||'잔향'}이 울린다 · ${B.name} 고정 피해 ${X.echo.dmg}`)}}
         if(X.breathHit){A.breath=Math.min(CFG.breath.cap,A.breath+X.breathHit)}
         /* ALEPH E.G.O: 미미크리 흡수, 다 카포 악장 */
-        if(X.drain&&A.isP&&A.rmGauge!=null&&!A.grantNext&&B.hp>0){A.rmGauge++;if(A.rmGauge>=CFG.redMist.gauge){A.rmGauge=0;A.rmOpen=(A.rmOpen||0)+1;A.grantNext='rp_cut6';A.burstLight=CFG.redMist.burstLight;A.burstTo=C.round+CFG.redMist.burstRounds;L('sys',`  ${A.name} · 붉은 안개 개방 · 다음 손패에 ${D.cards.rp_cut6.n}`)}else L('kw',`  ${A.name} · 붉은 안개 ${A.rmGauge}/${CFG.redMist.gauge}`)}
+        if(X.drain&&A.isP&&A.rmGauge!=null&&B.hp>0){A.rmGauge++;if(A.rmGauge>=CFG.redMist.gauge){A.rmGauge=0;A.rmOpen=(A.rmOpen||0)+1;giveNext(A,'rp_cut6');A.burstLight=CFG.redMist.burstLight;A.burstTo=C.round+CFG.redMist.burstRounds;L('sys',`  ${A.name} · 붉은 안개 개방 · 다음 손패에 ${D.cards.rp_cut6.n}`)}else L('kw',`  ${A.name} · 붉은 안개 ${A.rmGauge}/${CFG.redMist.gauge}`)}
         if(X.drain&&A.hp>0){if(A.drainRd!==C.round){A.drainRd=C.round;A.drainN=0}if(A.drainN<CFG.drainCap){A.drainN++;const h=Math.min(X.drain,A.maxHp-A.hp);if(h>0){A.hp+=h;HG(A,h);L('kw',`  ${A.name} · 흡수 ${A.drainN}/${CFG.drainCap} · HP +${h}`)}}}
         if(X.movement&&C.round%X.movement.every===0&&A.mvRound!==C.round&&B.hp>0){A.mvRound=C.round;hpLoss(C,B,X.movement.dmg,L);L('dmg',`  다 카포 · 악장 · ${B.name} 고정 피해 ${X.movement.dmg}`)}
         if(X.execute&&B.hp>0&&B.hp<=B.maxHp*X.execute.below){hpLoss(C,B,X.execute.dmg,L);L('dmg',`  조율 · ${B.name} 고정 피해 ${X.execute.dmg}`)}}
@@ -2805,7 +2808,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.resonance&&pp.some(c=>c.gungnir))P.drRound=C.round;
     const L=(t,s)=>{if(C.quiet)return;C.log.push({t,s});C.cur.push({t,s})};
     /* 보랏빛 사복검: 서로 다른 자세의 4코스트 카드를 두 가지 쓰면 다음 손패에 환영난무, 몇 라운드 동안 최대 빛 증가 (전투에 한 번) */
-    if(P.isP&&P.wx&&P.wx.forms){C.vsTop=C.vsTop||[];pp.forEach(c=>{if(c.vsTop&&!C.vsTop.includes(c.vsTop))C.vsTop.push(c.vsTop)});if(C.vsTop.length>=2&&!C.vsGiven){C.vsGiven=true;P.grantNext='x_vs_ego';P.burstLight=CFG.form.burstLight;P.burstTo=C.round+CFG.form.burstRounds;L('sys',`  ${P.name} · 4코스트 두 자세 · 다음 손패에 환영난무 · 최대 빛 +${CFG.form.burstLight} (${CFG.form.burstRounds}라운드)`)}}
+    if(P.isP&&P.wx&&P.wx.forms){C.vsTop=C.vsTop||[];pp.forEach(c=>{if(c.vsTop&&!C.vsTop.includes(c.vsTop))C.vsTop.push(c.vsTop)});if(C.vsTop.length>=2&&!C.vsGiven){C.vsGiven=true;giveNext(P,'x_vs_ego');P.burstLight=CFG.form.burstLight;P.burstTo=C.round+CFG.form.burstRounds;L('sys',`  ${P.name} · 4코스트 두 자세 · 다음 손패에 환영난무 · 최대 빛 +${CFG.form.burstLight} (${CFG.form.burstRounds}라운드)`)}}
     const push=ev=>{if(C.quiet)return;ev.lines=C.cur;C.cur=[];ev.snap=snap(C);ev.step=C.step;C.evs.push(ev)};
     L('head',`— ${C.round}라운드 · ${C.order[0].name} 선공 —`);
     if(C.round===1&&C.mindNote&&C.mindNote.length)C.mindNote.forEach(t=>L('kw',t));
@@ -2841,9 +2844,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     queue(C,pp,ep).forEach((st,i)=>{
       C.step=i;const A=C[st.side],c=st.card;
-      if(c.next){const nx_=!A.isP&&A.zChain?zNext(A,c):c.next;if(A.isP)A.grantNext=c.next;else A.forceNext=nx_;L('sys',`${A.name} · ${c.n} · 다음 라운드 ${D.cards[nx_].n} 준비`)}
+      if(c.next){const nx_=!A.isP&&A.zChain?zNext(A,c):c.next;if(A.isP)giveNext(A,c.next);else A.forceNext=nx_;L('sys',`${A.name} · ${c.n} · 다음 라운드 ${D.cards[nx_].n} 준비`)}
       if(A.isP&&c.t==='atk'&&(c.shield||c.lightNext)){if(c.shield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.shield);L('kw',`  ${A.name} · ${c.n} · 보호막 +${c.shield} (지금 ${A.shield})`)}if(c.lightNext){A.lightNext=(A.lightNext||0)+c.lightNext;L('kw',`  ${A.name} · ${c.n} · 다음 라운드 빛 +${c.lightNext}`)}}
-      if(A.isP&&c.bloomGrant&&D.cards[c.bloomGrant]){A.bloomUses=(A.bloomUses||0)+1;L('sys',`  ${A.name} · 개화 ${A.bloomUses}회${A.bloomUses%CFG.bloom.every?` · ${CFG.bloom.every-A.bloomUses%CFG.bloom.every}회 더 쓰면 1회용 스킬`:''}`);if(A.bloomUses%CFG.bloom.every===0&&!A.grantNext){A.grantNext=c.bloomGrant;L('sys',`  ${A.name} · ${c.n} · 다음 라운드 손패에 ${D.cards[c.bloomGrant].n} (1회용)`)}}
+      if(A.isP&&c.bloomGrant&&D.cards[c.bloomGrant]){A.bloomUses=(A.bloomUses||0)+1;L('sys',`  ${A.name} · 개화 ${A.bloomUses}회${A.bloomUses%CFG.bloom.every?` · ${CFG.bloom.every-A.bloomUses%CFG.bloom.every}회 더 쓰면 1회용 스킬`:''}`);if(A.bloomUses%CFG.bloom.every===0){giveNext(A,c.bloomGrant);L('sys',`  ${A.name} · ${c.n} · 다음 라운드 손패에 ${D.cards[c.bloomGrant].n} (1회용)`)}}
       if(A.isP&&c.egoGrow){C.ch.egoUses=(C.ch.egoUses||0)+1;const up=egoGrow(C.ch);
         /* 특수 강화는 그 자리에서: 장착 중이면 이번 전투 수치도 바로 바꾼다 */
         if(up&&up.worn){for(const k of ['atk','eva'])A[k]+=(up.nw.fx[k]||0)-(up.old.fx[k]||0);A.wx=up.nw.wx}
