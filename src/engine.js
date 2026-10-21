@@ -359,6 +359,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function ensurePacks(ch){
     repairStats(ch);
+    /* 예전 표기 'D6≥N'을 '피해 주사위 최소 N'으로: 이미 가진 장비·출생 설명도 새 표기로 */
+    {const fix=o=>{if(o&&typeof o.e==='string'&&o.e.includes('D6≥'))o.e=o.e.replace(/D6≥(\d+)/g,'피해 주사위 최소 $1')};Object.values(ch.gear||{}).forEach(fix);(ch.stash||[]).forEach(fix);(ch.gearOffers||[]).forEach(fix);[ch.w,ch.t,ch.f,ch.o].forEach(fix)}
     if(ch.wtrain&&!(ch.aff&&ch.aff.name==='W사 날개'))ch.wtrain=false;   // 해고 등으로 날개를 잃었는데 열차 상태만 남은 저장
     if(ch.packKind==='basic'||(ch.packs||[]).some(p=>p.k==='basic'))return;
     ch.packKind=ch.packKind||(ch.deckLocked||ch.cardMoney?'special':'origin');
