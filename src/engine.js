@@ -2177,7 +2177,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const SI_=ch.infinite?Math.max(0,gradeRaw(yH)-X_.grades.length+1):0;
     const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||null,ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
     /* 무한 모드 불순물: 100살(나이)마다 정해 둔 체력표를 쓴다 (첫 100살은 잡을 만하게, 200살부터 조금 많이, 300살부터 확 오른다) */
-    const infTab=ch.infinite&&id===X_.final?(()=>{const A_=CFG.startAge+(ch.year||0)-1,T_=CFG.infinite.hpTable;let v=T_[0][1];for(const [at,hp] of T_)if(A_>=at)v=hp;return v})():0;
+    /* 100살 구간의 첫 불순물은 표의 딱 맞는 숫자, 그 구간에서 불순물을 쓰러뜨릴 때마다 뒷자리가 조금씩 늘어난다 (구간 안에서 최대 hpBandMax) */
+    const infTab=ch.infinite&&id===X_.final?(()=>{const A_=CFG.startAge+(ch.year||0)-1,T_=CFG.infinite.hpTable,IF2=CFG.infinite;let v=T_[0][1],bi=0;T_.forEach(([at,hp],i)=>{if(A_>=at){v=hp;bi=i}});
+      if(ch.infBandI!==bi){ch.infBandI=bi;ch.infBandStart=ch.infImp||0}
+      const k=Math.max(0,(ch.infImp||0)-(ch.infBandStart||0));const jit=k>0?(((ch.year||0)*37+k*91)%11-5)*0.003:0;   // 숫자가 규칙적으로만 보이지 않게 ±1.5% 안에서 조금 흔든다 (같은 해에는 항상 같은 값)
+      return Math.round(v*(1+Math.min(IF2.hpBandMax,k*IF2.hpPerKill)+jit))})():0;
     const ehhX=infTab?Math.round(infTab*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)):ehh0_;
     const ehhCap=ch.infinite?Math.min(ehhX,CFG.infinite.hpMax):ehhX;
     const lastImp=ch.infinite&&id===X_.final&&(ch.year||0)+CFG.infinite.every>CFG.overflowAge-CFG.startAge+1;   // 1000살 오버플로우 전의 마지막 불순물 전투
