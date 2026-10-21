@@ -1818,6 +1818,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(c.innate)rows.push(['타고난 것',innateName(c)]);
     if(c.ego)rows.push(['E.G.O',`${c.ego.n} · ${CFG.mind.ego[c.ego.type].n}`]);
     rows.push(['정신력',c.distForm?'???':`${c.mind}/${E.mindMax(c)}`]);
+    if(c.rs&&(c.rs.dealt||c.rs.taken)){const n_=v=>(v||0).toLocaleString('ko-KR');rows.push(['입힌 피해',n_(c.rs.dealt)],['받은 피해',n_(c.rs.taken)],['총 회복량',n_(c.rs.heal)],['건 디버프 · 얻은 버프',`${n_(c.rs.debuff)} · ${n_(c.rs.buff)}`]);if(c.rs.debuffTaken)rows.push(['받은 디버프',n_(c.rs.debuffTaken)])}
     rows.push(['레벨',`Lv ${c.lv} · 공격 ${sg(c.stats.atk)} · 회피 ${sg(c.stats.eva)} · 속도 ${sg(c.stats.spd)}`]);
     rows.push(['출신',`${c.o.n} · ${c.t.n}`]);
     {const gw=c.gear&&c.gear.weapon,ga=c.gear&&c.gear.armor,ge=[gw&&gw.n,ga&&ga.n].filter(Boolean).join(' · ');if(ge)rows.push(['장비',ge])}
@@ -1846,6 +1847,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <div class="row between"><span>산 햇수</span><b class="mono">${lived}년 · ${E.age(G)}세</b></div>
       ${G.endless?`<div class="row between"><span>도달한 위협 등급</span><b class="mono">${grade}</b></div>`:''}
       <div class="row between"><span>최종 자리</span><b class="mono">${careerLine(c)}</b></div>
+      ${c.rs&&(c.rs.dealt||c.rs.taken)?(()=>{const n_=v=>(v||0).toLocaleString('ko-KR'),R=c.rs,rw=(l,v)=>`<div class="row between"><span>${l}</span><b class="mono">${v}</b></div>`;return rw('입힌 피해',n_(R.dealt))+rw('받은 피해',n_(R.taken))+rw('총 회복량',n_(R.heal))+rw('건 디버프',n_(R.debuff))+rw('얻은 버프',n_(R.buff))+(R.debuffTaken?rw('받은 디버프',n_(R.debuffTaken)):'')})():''}
       ${mini.length?`<div class="row between"><span>쓰러뜨린 이름난 상대</span><b class="mono">${mini.join(' · ')}</b></div>`:''}
       <p class="small dim">${line}</p></div>`;
   }
