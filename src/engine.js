@@ -1263,6 +1263,30 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!force&&kidNameErr(ch,name))return false;
     const n=(name||'').trim();if(n&&!kidNameErr(ch,n))k.n=n;delete k.pend;ch.kidPick=false;return true;
   }
+  /* 붉은 머리 인연(freelance): 2급이던 상대가 1급이 되어 특색을 받는다. 내 색을 뺀 색 하나가 무작위로 정해지고 이름은 함께 고민한다. 이후 몇 해마다 특색 해결사로서의 행적이 들려온다 */
+  function partnerAliasErr(n){n=(n||'').trim();if(n.length<2)return '2글자부터 쓸 수 있다';if(n.length>12)return '12글자까지 쓸 수 있다';return ''}
+  function setPartnerAlias(ch,name,force){
+    const b=ch.bond;if(!ch.bondColPick||!b||!b.col){ch.bondColPick=false;return false}
+    if(!force&&partnerAliasErr(name))return false;
+    const n=(name||'').trim();b.alias=n.length>=2?n:b.col.adj+' 칼날';b.colAt=ch.year||0;b.deedAt=b.colAt;ch.bondColPick=false;return true;
+  }
+  const partnerFill=(t,ch)=>{const b=ch.bond;return bondFill(t,b).replace(/\{a\}/g,b.alias||'').replace(/\{c\}/g,(b.col&&b.col.adj)||'')};
+  function bondPartnerEvent(G){
+    const ch=G.ch,b=ch.bond,B=D.bond,P=CFG.bond.partner;
+    if(!b||b.route!=='freelance'||!B||!B.partnerRise||ch.distForm||ch.job||!['met','married'].includes(b.st))return null;
+    if(!b.col){
+      if((G.year-(b.since||0))<P.gap)return null;
+      const E_=JSON.parse(JSON.stringify(B.partnerRise));
+      E_.x=bondFill(E_.x,b);E_.c.forEach(c=>{c.h=bondFill(c.h,b);c.ok.t=bondFill(c.ok.t,b);c.ok.fx={bondCol:true}});
+      return E_;
+    }
+    if(!b.alias||G.year-(b.deedAt||0)<P.deedEvery)return null;
+    b.deedAt=G.year;
+    const seen=b.deedSeen=b.deedSeen||[],S=B.partnerDeeds;let pool=S.map((e,i)=>i).filter(i=>!seen.includes(i));
+    if(!pool.length){seen.length=0;pool=S.map((e,i)=>i)}
+    const i=one(pool);seen.push(i);const e=S[i],own=!!(ch.office||(ch.aff&&ch.aff.own));
+    return {t:'특색 해결사 · '+partnerFill(e.t,ch),x:partnerFill(e.x,ch)+(own&&B.partnerOffice?' '+bondFill(B.partnerOffice,b):''),c:[{l:partnerFill(e.a,ch),h:'함께하는 시간',ok:{t:partnerFill(e.at,ch),fx:{}}},{l:partnerFill(e.b,ch),h:'함께하는 시간',ok:{t:partnerFill(e.bt,ch),fx:{}}}]};
+  }
   const bondMarried=ch=>!!(ch.bond&&ch.bond.st==='married');
   function bondMarry(ch,chips){
     const b=ch.bond,R=bondData(ch);b.st='married';b.since=ch.year||0;
@@ -1778,6 +1802,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
     if(mc.wingPick)setWing(mc,'새벽',true);
     if(mc.bondPick)setBondName(mc,'동반자',true);
+    if(mc.bondColPick)setPartnerAlias(mc,'',true);
     if(mc.kidPick)setKidName(mc,'',true);
     if(mc.seongPick)setSeongdo(mc,'무명',true);
     if(mc.starPick)setStar(mc,'',true);
@@ -1796,6 +1821,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.race==='hyeolgwi'&&D.thirstEvents&&!mc.thirstDone&&!mc.distForm){mc.thirstAt=mc.thirstAt||(40+d(31)-1);
       if(G.year>=mc.thirstAt){mc.thirstDone=true;const T_=D.thirstEvents,b=mc.bond,mar=b&&b.st==='married',ev=JSON.parse(JSON.stringify(mar?(spouseHy(mc,b)?T_.hyeol:T_.human):T_.solo)),nm=mar?b.name:'';
         return {type:'event',ev:JSON.parse(JSON.stringify(ev).replace(/\{n\}/g,nm))}}}
+    {const pe=bondPartnerEvent(G);if(pe)return {type:'event',ev:pe}}
     {const sw=bondSweetEvent(G);if(sw)return {type:'event',ev:sw}}
     if(mc.resoPend&&D.familyReso&&G.year>=(mc.resoAt||0)){mc.resoPend=false;mc.resoAsked=true;return {type:'event',ev:D.familyReso}}
     if(mc.familyPend&&D.familyCall){mc.familyPend=false;mc.familyAsked=true;return {type:'event',ev:D.familyCall}}
@@ -2031,6 +2057,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondDecline)ch.bond={st:'declined'};
     if(fx.bondDeath&&ch.bond&&ch.bond.st==='married')bondDeath(ch,chips);
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0,race:kk.race||(ch.race==='hyeolgwi'?'hyeolgwi':'human')};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
+    if(fx.bondCol&&ch.bond&&!ch.bond.col){const ci=one(D.colors.map((c,i)=>i).filter(i=>i!==ch.ci)),C_=D.colors[ci];ch.bond.col={adj:C_.adj,hex:C_.hex};ch.bondColPick=true;chips.push(`${ch.bond.name} · ${C_.adj} 특색`)}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false,race:((ch.o&&ch.o.race==='hyeolgwi')||spouseHy(ch,ch.bond)||(ch.race==='hyeolgwi'&&d(2)===1))?'hyeolgwi':'human'};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
     if(fx.infCentury){const K=CFG.infinite.century;(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
@@ -2984,6 +3011,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
-    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

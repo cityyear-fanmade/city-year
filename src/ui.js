@@ -1323,7 +1323,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.custPick?vCustPick():G.ch.colorPick?vColorPick():G.ch.singPick?vSingPick():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.custPick?vCustPick():G.ch.colorPick?vColorPick():G.ch.singPick?vSingPick():G.ch.bondColPick?vBondCol():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
@@ -1420,6 +1420,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <span class="small bad">${UI.kidErr||''}</span>
       <button class="btn primary" data-a="kidset">이 이름으로 부른다</button></div>`;
   }
+  function vBondCol(){
+    const b=G.ch.bond;
+    return `<div class="panel stack" style="gap:8px;border-color:${esc(b.col.hex)}"><span class="eyebrow">인연 · ${esc(b.name)}의 특색 · <span style="color:${esc(b.col.hex)}">${esc(b.col.adj)}</span></span>
+      <p class="small">${esc(b.col.adj)} 특색을 얻은 ${esc(b.name)}의 이름을 함께 정한다.</p>
+      <div class="row"><span class="small">이름</span><input id="bondalias" maxlength="12" value="${esc(UI.bondAlias||'')}" autocomplete="off" placeholder="2~12글자" style="width:min(14em,60vw)"></div>
+      <span class="small bad">${UI.bondErr||''}</span>
+      <button class="btn primary" data-a="bondaliasset">이 이름으로 부른다</button></div>`;
+  }
   function vBondPick(){
     const b=G.ch.bond,R=E.bondData(G.ch);
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">인연 · ${esc(R.who)}</span>
@@ -1434,6 +1442,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const head=st==='married'?(ch.distForm?'당신을 알아보지 못한다':'배우자'):st==='lost'?'배우자의 죽음':st==='left'?'떠났다':`인연 · ${R.who}`;
     const rows=[];
     if(R.look)rows.push(['특징',R.look]);
+    if(b.alias)rows.push(['특색',`${b.alias} (${b.col.adj})`]);
     if(st==='married'){
       rows.push(['결혼한 해',b.since+'년차']);
       rows.push(['배우자 등급',`${9-E.spouseLevel(b,G.year)}급 (결혼 ${BDc.hunt.spouseYears}년마다 한 단계)`]);
@@ -2118,6 +2127,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       if(err){UI.kidErr=err;UI.kidName=n;render();return}
       const k=(G.ch.bond.kids||[]).find(x=>x.pend),nm=n||(k&&k.n)||'';E.setKidName(G.ch,n);UI.kidErr='';UI.kidName='';resave();
       UI.res.chips=[...UI.res.chips,`아이 · ${nm}`];render();
+    },
+    bondaliasset(){
+      const n=(($('bondalias')||{}).value||'').trim(),err=E.partnerAliasErr(n);
+      if(err){UI.bondErr=err;UI.bondAlias=n;render();return}
+      E.setPartnerAlias(G.ch,n);UI.bondErr='';UI.bondAlias='';resave();
+      UI.res.chips=[...UI.res.chips,`특색 · ${n}`];render();
     },
     bondset(){
       const n=(($('bondname')||{}).value||'').trim(),err=E.bondNameErr(n);
