@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v9.9.2';
+  const VERSION='v9.9.4';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -1013,7 +1013,7 @@ export function startUI(E,app){
         <div class="row between"><span>도달한 위협 등급</span><b class="mono">${r.best.grade>=0?X.grades[r.best.grade]:'—'}</b></div>
         <div class="row between"><span>끝낸 판</span><b class="mono">${r.runs}</b></div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">칭호 · 최고 등급에 오른 횟수</span><div class="stack" style="gap:6px">${TITLE_REC.map(n=>{const c=(r.titles||{})[n]||0;return hintRow(c,`${esc(n)} ×${c}`,TITLE_HINT[n])}).join('')}</div></div>
-      ${(()=>{const LR={office:'사무소',assoc:'협회',wing:'날개',finger:'손가락',thumb:'엄지',pointer:'검지',middle:'중지',ring:'약지',kuro:'흑운회',blade:'검계',awl:'밤의 송곳',hyeolgwi:'혈귀',east:'동부 외곽 출신',highfixer:'고급 해결사',rcorp:'R사',hcorp:'H사'},lov=r.lovers||{},rows=[];
+      ${(()=>{const LR={office:'사무소',assoc:'협회',wing:'날개',finger:'손가락',thumb:'엄지',pointer:'검지',middle:'중지',ring:'약지',kuro:'흑운회',blade:'검계',awl:'밤의 송곳',hyeolgwi:'혈귀',freelance:'무소속',east:'동부 외곽 출신',highfixer:'고급 해결사',rcorp:'R사',hcorp:'H사'},lov=r.lovers||{},rows=[];
         for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++){const V=R.variants?R.variants[vi]:R,lv=lov[rk+':'+vi]||0;rows.push([lv,lv?`${lv>1?'♥':'✓'} ${V.who}`:'???',lv?`${LR[rk]||rk} · ${V.look||''}`:`${LR[rk]||rk} 쪽에서 만난다`])}
         const met=rows.filter(x=>x[0]).length,wed=rows.filter(x=>x[0]>1).length;
         return `<div class="panel stack" style="gap:6px"><span class="eyebrow">인연 · 만난 ${met}/${rows.length} · 결혼 ${wed}</span><div class="stack" style="gap:6px">${rows.map(([lv,l,h])=>`<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${lv?'':' dim'}" style="justify-self:start${lv>1?';color:var(--bleed);border-color:var(--bleed)':''}">${esc(l)}</span><span class="small dim">${esc(h)}</span></div>`).join('')}</div><p class="small dim">✓ 만나 본 인연 · ♥ 결혼까지 간 인연. 소속마다 만나는 사람이 다르다.</p></div>`})()}
@@ -1079,10 +1079,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🔧 그 밖의 버그 수정',['흑수 루트에서 후보 이름이 {c}로 그대로 보이던 문제를 고쳤습니다.','자동 전투가 0코스트 버프 카드(방어막·명중 보정·빛 획득 등)를 쓰지 않던 문제를 고쳤습니다.','재생 조직 등 회복 카드가 덱이 작을 때 매 라운드 손패에 들어오던 문제를 고쳤습니다. 한 번 쓰면 몇 턴 동안 손패에 들어오지 않습니다.','무기 흡수(미미크리 등)의 횟수 제한을 전투당 5번에서 턴당 5번으로 바꿨습니다.','기록실의 "아무것도 없이 시작해 결혼한 채 55년" 엔딩 설명에서 앞부분이 잘려 보이던 문제를 고쳤습니다. 이제 필요한 출생 선택이 그대로 적힙니다.','협회 직원이 2급에서 더 오르지 못하던 문제를 고쳤습니다. 본부 직속에 오르면 1급이 되고 특색 심사도 받을 수 있습니다.','아이폰 무음 모드에서 배경음악·효과음이 나지 않던 문제를 줄이는 수정을 넣었습니다. 연출을 끈 상태에서도 효과음이 납니다.','공방 해결사가 5급부터 사무소를 열 수 없던 문제를 고쳤습니다.']],
       ['📝 문구·보기',['문구를 다듬었습니다. (웃는 가로등, 승급 추천·급수 심사, R사 연인 문구)','배경 테마(단테·검지 단말기·도서관)의 보조 글자 색을 밝혀 읽기 쉽게 했습니다.']]];
   const V987SEC=[['🔧 버그 수정',['무기 주사위가 카드 주사위를 덮어쓰던 문제를 고쳤습니다. 이제 카드 주사위에 더해집니다.']]];
-  const NOTICE={id:'v9.9.2',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v9.9.4',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['⚔ 붉은 안개',['붉은 안개가 돌아옵니다.','붉은 안개와 전용 책장을 강화했습니다.']],
-      ['🔧 그 밖의 변경',['100살이 될 때마다 새 문구가 나옵니다.','엔딩 화면에서 입힌 피해, 받은 피해, 총 회복량, 건 디버프, 얻은 버프를 확인할 수 있습니다.','맨손은 이제 무기로 취급되지 않습니다. 맨손으로 시작하면 무기 칸이 비고, 어떤 강화의 재료로도 쓸 수 없습니다.','엄지의 탄환과 예의 조정','일대기 이미지 저장 버그 수정','PC 전체화면 버튼 추가','장비 표기 정리','연마 이전 및 버그 수정']]]};
+    sec:[['🔥 붉은 머리',['혼자 일하는 해결사에게 새로운 인연이 열립니다.','그 뒤의 이야기는 직접 확인해 보세요.']],
+      ['🩸 혈귀',['「붉은 밤의 초대」가 나오는 조건을 정리했고, 선택지에 얻는 것과 치르는 것을 자세히 적었습니다.','혈찬이 패시브 칸에 표시됩니다.','초대로 혈귀가 된 경우의 인연과 아이 설정을 고쳤습니다.']],
+      ['🔧 그 밖의 변경',['카드 화면에서 같은 카드를 ×N으로 묶어 보고, 정렬할 수 있습니다.','싸우는 이유가 더 많은 적에게 붙습니다.']]]};
   const V944SEC=[['🔧 버그 수정',['별에 선택받은 자가 무기를 강화할 때 처음 가진 "맨손"이 재료로 뜨던 문제를 고쳤습니다. 맨손은 더 이상 보관함에 남지 않습니다.','출생 화면의 "다시 태어난다"가 다시 굴릴 때마다 위쪽 내용 높이가 달라져 움직이던 문제를 고쳤습니다. 이제 제자리에 있습니다.','제 1막 종료 화면에 "여기서 끝낸다" 버튼을 넣었습니다. 제 2막으로 가지 않고 끝낼 수 있고, 이 판의 저장이 지워집니다. "다시 태어난다"를 눌러도 이전 판 저장이 바로 지워집니다.','설정 팝업의 제목이 세로로 쪼개져 보이던 문제를 고쳤습니다.']],
     ['⚖ 조정',['PC 화면(폭 900px 이상)에서 본문, 왼쪽 능력치 칸, 오른쪽 가방 칸, 버튼, 팝업을 함께 키웠습니다. 창이 넓을수록 더 커지고, 창 높이가 낮으면 잘리지 않도록 배율을 낮춥니다. 첫 화면과 휴대폰 화면은 그대로입니다.','금기 실험으로 찾아오는 "강화체"의 이름을 "발톱 · 재시험", "조율자 · 재시험"으로 바꿨습니다.','무한 모드 불순물의 최대 HP 상한을 1000만에서 1500만으로 늘렸습니다.']]];
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
