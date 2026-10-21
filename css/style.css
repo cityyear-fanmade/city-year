@@ -585,9 +585,9 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .bagpeek{position:fixed;top:56px;right:12px;z-index:60;padding:8px 14px;font:600 13px/1 var(--sans);color:var(--fg);background:var(--panel2);border:1px solid var(--gold);border-radius:999px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.5)}
 
 /* 무한 모드 해마다 나오는 어긋난 글: 위쪽에 잠깐 떠서 떨리다 사라진다 */
-.infnote{position:fixed;left:50%;top:calc(56px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:45;max-width:min(92vw,440px);padding:12px 34px 12px 18px;text-align:center;font:italic 15px/1.55 var(--serif,serif);color:var(--fg);background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--gold);box-shadow:0 4px 18px rgba(0,0,0,.5);pointer-events:none;animation:infFade 5.2s ease forwards,infShake .14s steps(2) infinite}
-@keyframes infFade{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}}
+.infnote{position:fixed;left:50%;top:calc(56px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:45;max-width:min(92vw,440px);padding:12px 34px 12px 18px;text-align:center;font:italic 15px/1.55 var(--serif,serif);color:var(--fg);background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--gold);box-shadow:0 4px 18px rgba(0,0,0,.5);pointer-events:none;animation:infIn .5s ease forwards,infShake .14s steps(2) 40}
+@keyframes infIn{from{opacity:0}to{opacity:1}}
 @keyframes infShake{0%{translate:-1.2px 0;rotate:-.25deg}50%{translate:1px .8px;rotate:.2deg}100%{translate:-.6px -.8px;rotate:-.1deg}}
-@media (prefers-reduced-motion:reduce){.infnote{animation:infFade 5.2s ease forwards}}
+@media (prefers-reduced-motion:reduce){.infnote{animation:infIn .5s ease forwards}}
 .infnote-x{position:absolute;top:2px;right:2px;width:28px;height:28px;padding:0;border:0;background:transparent;color:var(--dim);font:600 14px/1 var(--mono);cursor:pointer;pointer-events:auto;animation:none}
 .infnote-x:hover,.infnote-x:focus-visible{color:var(--gold)}
