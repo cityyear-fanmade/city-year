@@ -350,6 +350,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function ensurePacks(ch){
     repairStats(ch);
+    if(ch.wtrain&&!(ch.aff&&ch.aff.name==='W사 날개'))ch.wtrain=false;   // 해고 등으로 날개를 잃었는데 열차 상태만 남은 저장
     if(ch.packKind==='basic'||(ch.packs||[]).some(p=>p.k==='basic'))return;
     ch.packKind=ch.packKind||(ch.deckLocked||ch.cardMoney?'special':'origin');
     ch.packName=ch.packName||(ch.packKind==='special'?'전용 카드팩':'출신 카드팩');
@@ -954,7 +955,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       ch.strikes=(ch.strikes||0)+1;
       if(C_.strikes&&ch.strikes>=C_.strikes){
         ch.strikes=0;
-        if(C_.strike==='fire'){chips.push(`${ch.aff.name} 해고 · 소속을 잃었다`);ch.aff=null;ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;if(ch.rb&&ch.rb.out)rbFlee(ch,chips);
+        if(C_.strike==='fire'){chips.push(`${ch.aff.name} 해고 · 소속을 잃었다`);if(ch.wtrain&&ch.aff.name==='W사 날개'){ch.wtrain=false;chips.push('W사 열차에서도 내려졌다 · 열차 일은 이어지지 않는다')}ch.aff=null;ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;if(ch.rb&&ch.rb.out)rbFlee(ch,chips);
           /* 날개를 잃으면 아직 날개를 세우지 못한 특이점 개발 길도 끊긴다 (대표는 해고된 사람이 될 수 없다) */
           if(ch.corp&&ch.corp.st==='dev'){ch.corp.st='declined';chips.push('특이점 개발 · 날개를 잃어 개발이 중단된다')}}
         if(C_.strike==='purge'){ch.purge=C_.purgeFoe;chips.push('숙청 대상이 되었다')}
@@ -1733,7 +1734,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* W사 열차 직원 전용 사건: 열차 안에서 일어나는 일이라 해가 넘어가지 않는다 (해마다 최대 한 번) */
   function warpEvent(G){
-    const ch=G.ch,L=D.warpEvents;if(!ch.wtrain||!L||!L.length||ch.distForm||ch.warpYear===G.year||d(100)>CFG.warp.chance+(ch.wLead?CFG.warp.leadPlus:0))return null;
+    const ch=G.ch,L=D.warpEvents;if(ch.wtrain&&!(ch.aff&&ch.aff.name==='W사 날개'))ch.wtrain=false;if(!ch.wtrain||!L||!L.length||ch.distForm||ch.warpYear===G.year||d(100)>CFG.warp.chance+(ch.wLead?CFG.warp.leadPlus:0))return null;
     const seen=ch.warpSeen=ch.warpSeen||[];let pool=L.map((e,i)=>i).filter(i=>!seen.includes(i)&&meets(ch,L[i].req)&&!(L[i].once&&(ch.warpOnce||[]).includes(L[i].once)));
     if(!pool.length){seen.length=0;pool=L.map((e,i)=>i).filter(i=>meets(ch,L[i].req)&&!(L[i].once&&(ch.warpOnce||[]).includes(L[i].once)))}
     if(!pool.length)return null;const i=one(pool);seen.push(i);ch.warpYear=G.year;return L[i];
