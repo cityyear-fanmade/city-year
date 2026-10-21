@@ -821,7 +821,7 @@ export function startUI(E,app){
     const nameRow=sl=>`<div class="row" style="gap:6px"><input id="wsn_${sl}" maxlength="12" autocomplete="off" placeholder="이름 짓기 (12자까지)" value="${esc(((ch.ws.names||{})[sl])||'')}" style="flex:1;min-width:0"><button class="chip" data-a="wsname" data-i="${sl}">이름 정하기</button></div>`;
     const rows=['weapon','armor'].map(sl=>{
       const cur=ch.gear[sl];if(!cur||cur.id!=='ws_'+sl)return '';
-      const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&(m.slot===sl||m.id==='hidmat'));
+      const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&!(m.id==='birth'&&m.n==='맨손')&&(m.slot===sl||m.id==='hidmat'));
       const btns=mats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="${sl}:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
       return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow(sl)}<div class="row between"><b>${esc(cur.n)}</b><span class="mono small dim">일반 ${k.p}/${E.wsNeed(k.n)} · 강화 ${k.n}${k.h?' · 히든 '+k.h:''}</span></div><span class="mono small" style="color:var(--gold)">${esc(cur.e)}</span>${btns||`<p class="small dim">녹일 ${nm[sl]}이(가) 보관함에 없다.</p>`}</div>`;
     }).join('');
