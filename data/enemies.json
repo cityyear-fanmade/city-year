@@ -6513,7 +6513,8 @@
     "hp": 1.75,
     "atk": 3,
     "eva": 2
-   }
+   },
+   "race": "hyeolgwi"
   },
   "grate_rat": {
    "n": "하수구 쥐잡이",
