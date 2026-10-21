@@ -611,7 +611,7 @@ export function startUI(E,app){
     const gsum=k=>gear.reduce((a,g)=>a+((g.fx||{})[k]||0),0);
     const row=(l,v,k)=>{const g=k?gsum(k):0;return `<div class="invr"><span>${l}</span><b class="mono">${v}</b><span class="mono small dim">${g?'장비 '+sg(g):''}</span></div>`};
     return `<div>${[row('최대 HP',s.maxHp,'maxHp'),row('공격 (명중 +½ · 피해 6마다 +1, 소수점 버림)',sg(s.atk),'atk'),row('명중',sg(s.hit||0),'hit'),row('회피',sg(s.eva),'eva'),row('속도 (순서 보정)',sg(s.spd),'spd'),
-      row('사건 판정',sg(s.check),'check'),row('피해 주사위 최소',s.dmin+(s.dmin>=CFG.dminCap?' (최대)':''),null),...(s.dr?[row('피해 감소',s.dr+'%',null)]:[]),...(s.regen?[row('라운드마다 HP 회복',s.regen,null)]:[]),row('전투 시작 출혈',s.startBleed,null),row('전투 시작 호흡',s.startBreath,null),
+      row('사건 판정',sg(s.check),'check'),row('1d6 최소치',s.dmin+(s.dmin>=CFG.dminCap?' (최대)':''),null),...(s.dr?[row('피해 감소',s.dr+'%',null)]:[]),...(s.regen?[row('라운드마다 HP 회복',s.regen,null)]:[]),row('전투 시작 출혈',s.startBleed,null),row('전투 시작 호흡',s.startBreath,null),
       ...(s.defUp?[row('방어 카드 회피 추가',sg(s.defUp),null)]:[]),...(s.adv?[row('첫 공격 명중 두 번 굴림',s.adv>=1?'있음':Math.round(s.adv*100)+'% 확률',null)]:[]),
       row('카드 등급',E.cardGrade(ch.year,ch).n||'기본',null),...(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)?[row('특이점 · '+esc(ch.corp.n),`${CFG.corp.types[ch.corp.type].e}${ch.corp.wing?' · '+esc(ch.corp.wing):''}`,null)]:[]),...(E.isN(ch)?[row('N사 · 의체 심판',`의수를 쓰지 않는다 · 신체 강화 공격 +${CFG.nWing.atk} · 회피 +${CFG.nWing.eva} · 속도 +${CFG.nWing.spd} · 의체 상대 적중마다 피해 +${CFG.nWing.augDmg}`,null)]:[]),...(ch.aff&&ch.aff.name==='중지'?[row('중지 · 되갚음','맞을 때마다 1 (최대 5) · 다음 적중 +2×스택',null)]:[]),...(ch.aff&&ch.aff.name==='검지'?[row('검지 · 지령 수행',`☆ 칸 카드를 내면 1 (최대 5) · 호흡 +4 · 받는 피해 −5%×스택 · 가득 찬 뒤 ${CFG.prescPlus.every}번 더 수행할 때마다 카드 수치(피해 · 회피 · 보호막) +1 (최대 +${CFG.prescPlus.max})`,null)]:[]),...(ch.office?[row('내 사무소',esc(ch.office.name)+' · '+E.OKW[ch.office.kw],null)]:[]),...((ch.auth||[]).length?[row('조율자 권한',ch.auth.length+'단계 ('+ch.auth.map(a=>a==='seal'?'봉인':'집행').join('·')+')',null)]:[])].join('')}</div>`;
   }
@@ -662,7 +662,7 @@ export function startUI(E,app){
       ['○타','"(2d6+3) × 3타"는 괄호 안(주사위 2개를 굴려 3을 더한 피해)을 3번 따로 반복한다 (②~⑤를 3번 반복). 명중 굴림도, 피해 주사위도 타마다 새로 굴린다. 출혈이 걸린 쪽은 타마다 피해를 입으므로, 타수가 많은 카드를 낼수록 출혈이 빨리 닳는다.'],
       ['6d8 · 3d6 표기','"6d8"은 8면체 주사위 6개를 굴려 합친다는 뜻이다. "3d6"은 6면체 3개. 앞 숫자가 개수, 뒤 숫자가 면 수다. 개수가 많을수록 결과가 평균 근처로 모이고, 면 수가 클수록 눈의 폭이 커진다. 면 수를 적지 않은 카드는 6면체다.'],
       ['+N (피해 뒤 고정값)','"2d4+2"의 +2는 주사위를 합친 값에 더하는 고정 피해다.'],
-      ['피해 주사위 최소 N',`장비·타고난 것에 쓰인 표기다. 피해 주사위(카드의 "2d6" 같은 주사위) 눈이 N보다 작게 나오면 N으로 친다. 타수와는 상관없다. 여러 곳에서 오는 보정을 합쳐도 최대 ${CFG.dminCap}까지다.`],
+      ['1d6 최소치 N',`장비·타고난 것에 쓰인 표기다. 1d6의 눈이 N보다 작게 나오면 N으로 친다(예: 1d6 최소치 2면 1이 나와도 2). 카드의 "2d6" 같은 주사위도 주사위 한 개마다 눈이 N보다 작게 나오면 N으로 친다. 타수와는 상관없다. 여러 곳에서 오는 보정을 합쳐도 최대 ${CFG.dminCap}까지다.`],
       ['명중 +N / 명중 2회 굴림','카드의 "명중 +N"은 그 카드의 명중 굴림에만 더해지는 값이다(마이너스면 빗나가기 쉽다). "명중 2회 굴림"은 명중 굴림을 두 번 해서 높은 쪽을 쓴다.'],
       ['적중 시 ○○','명중 굴림에 이겼을 때만 일어나는 효과다. 색이 있는 칩이 키워드이고, "출혈 +2"처럼 상대에게 쌓이는 것이 기본이다. 칩 끝에 "자신"이 붙은 것(예: 호흡 +3 자신)은 나에게 쌓인다.'],
       ['보호막 · 회피 · 방어 카드','방어 카드의 "회피 +N"은 이번 라운드 상대의 명중 굴림에 맞서는 내 수치에 더해진다. 보호막은 체력 앞에서 피해를 대신 맞아 주는 수치다. 버프 카드는 피해를 주지 않고 나에게 효과를 건다.'],

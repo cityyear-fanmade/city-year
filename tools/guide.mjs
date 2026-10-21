@@ -15,7 +15,7 @@ const one=(tbl,i)=>(i?tbl[i-1].max+1:1)===tbl[i].max&&(tbl[i].max===1||tbl[i].ma
 const range=(tbl,i)=>`${i?tbl[i-1].max+1:1}–${tbl[i].max}`;
 const table=(head,rows)=>[`| ${head.join(' | ')} |`,`|${head.map(()=>'---').join('|')}|`,...rows.map(r=>`| ${r.join(' | ')} |`)].join('\n');
 const kwText=c=>(c.kw||[]).map(([k,n,to])=>`${K[k].n} +${n}${to==='s'?'(자신)':''}`).join(', ');
-const special=c=>[c.adv&&'명중 2회 굴림',c.rr&&'낮은 피해 주사위 재굴림',c.min&&`피해 주사위 최소 ${c.min}`,c.eva&&`회피 +${c.eva}`].filter(Boolean).join(', ');
+const special=c=>[c.adv&&'명중 2회 굴림',c.rr&&'낮은 피해 주사위 재굴림',c.min&&`1d6 최소치 ${c.min}`,c.eva&&`회피 +${c.eva}`].filter(Boolean).join(', ');
 const cardRow=([id,c])=>[c.n,c.c,{atk:'공격',def:'방어',buff:'버프'}[c.t],c.t==='atk'?`${c.hits>1?c.hits+'타 × ':''}${c.dice}d6${c.b?sg(c.b):''}`:'–',c.t==='atk'?sg(c.hit):'–',kwText(c)||'–',special(c)||(c.t!=='atk'?(c.d||''):'–')];
 const fx=x=>x.e||Object.entries(x.fx||{}).map(([k,v])=>`${k} ${sg(v)}`).join(', ');
 
