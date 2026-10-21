@@ -1677,7 +1677,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const o=UI.dailyCmp;if(!o||!G||!G.ch||G.ch.daily!==o.day)return '';
     const sc=x=>(x.w?1000:0)+x.y,cur=o.cur,pv=o.prev,row=(l,x)=>`<div class="row between" style="gap:10px"><span>${l}</span><b class="small" style="text-align:right">${esc(x.h||'')} · ${x.y}년 · Lv ${x.lv}</b></div>`;
     let cmp='첫 도전이다. 다음 도전부터 이 기록과 견줘 준다.';
-    if(pv){const d=sc(cur)-sc(pv);cmp=cur.w&&!pv.w?'이전 최고보다 나아졌다 (완주).':d>0?`이전 최고보다 ${d}년 더 살았다.`:d===0?'이전 최고와 같다.':`이전 최고보다 ${-d}년 짧다.`}
+    if(pv){const d=cur.y-pv.y;cmp=cur.w&&!pv.w?'이전 최고보다 나아졌다 (완주).':!cur.w&&pv.w?`이전 최고는 완주 기록이다. 완주하지 못한 이번 판은 ${d>0?`${d}년 더 살았어도 `:''}그보다 낮게 친다.`:d>0?`이전 최고보다 ${d}년 더 살았다.`:d===0?'이전 최고와 같다.':`이전 최고보다 ${-d}년 짧다.`}
     return `<div class="panel stack" style="gap:6px"><span class="eyebrow">오늘의 시드 · ${esc(o.day)} · ${o.n}번째 도전</span>${row('이번',cur)}${pv?row('이전 최고',pv):''}<p class="small" style="color:var(--gold)">${cmp}</p></div>`;
   }
   function vEnd(){
