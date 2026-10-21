@@ -263,6 +263,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const egoLvFor=u=>CFG.egoGrow.need.reduce((a,n,i)=>u>=n?i:a,0);
   /* 발현을 낸 직후 확인: 장착 중이든 보관함이든 E.G.O 무기 하나를 올린다. 올렸으면 {old,nw} */
   /* 정비한 장비가 다른 등급 장비로 바뀔 때(E.G.O 성장·보냐텔리 강화) 정비 횟수와 강화분을 넘겨 준다 */
+  /* 승급·계열 변경으로 같은 칸의 장비가 바뀔 때: 장비에 쌓은 연마(공격·회피 +1 시도)를 새 장비로 옮긴다. 옛 장비는 연마가 빠진 채 보관함으로 간다 */
+  function equipUp(ch,nw){const old=ch.gear[nw.slot];if(old&&(old.tries||old.tune)&&old.id!==nw.id){const tn=Object.assign({},old.tune||{}),tr=old.tries||0;carryTune(old,nw);equip(ch,nw);for(const [k,v] of Object.entries(tn))if(old.fx&&k in old.fx)old.fx[k]-=v;delete old.tune;old.tries=0;return}equip(ch,nw)}
   function carryTune(old,nw){if(!old||!(old.tries||old.tune))return nw;nw.tries=old.tries||0;if(old.tune){nw.tune=Object.assign({},old.tune);for(const [k,v] of Object.entries(old.tune))nw.fx[k]=(nw.fx[k]||0)+v}return nw}
   function egoGrow(ch){
     if(ch.egoUses==null)return null;
@@ -711,8 +713,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const C_=CR[ch.aff.type],RK=ch.wtrain&&ch.aff.name==='W사 날개'&&C_.trainRanks||C_.ranks,r=RK[(ch.fi??-1)+1];if(!r)return null;
     ch.fi=(ch.fi??-1)+1;ch.fr=r;addStats(ch.stats,r.fx);
     /* W사 열차 직원: 직급이 오를 때마다 무기가 바뀐다 (이전 무기는 보관함으로) */
-    {const wf=ch.wtrain&&ch.wFam&&D.warpWeapons&&D.warpWeapons[ch.wFam];if(wf&&wf[ch.fi]){equip(ch,structuredClone(wf[ch.fi]));}else if(r.gear&&!ch.wPick)equip(ch,structuredClone(r.gear))}if(r.fx.maxHp)ch.hp+=r.fx.maxHp;
-    if(ch.wtrain&&ch.aff.name==='W사 날개'){if(r.gear2)equip(ch,structuredClone(r.gear2));warpRankCards(ch,r)}
+    {const wf=ch.wtrain&&ch.wFam&&D.warpWeapons&&D.warpWeapons[ch.wFam];if(wf&&wf[ch.fi]){equipUp(ch,structuredClone(wf[ch.fi]));}else if(r.gear&&!ch.wPick)equipUp(ch,structuredClone(r.gear))}if(r.fx.maxHp)ch.hp+=r.fx.maxHp;
+    if(ch.wtrain&&ch.aff.name==='W사 날개'){if(r.gear2)equipUp(ch,structuredClone(r.gear2));warpRankCards(ch,r)}
     /* 협회 직급에 맞는 해결사 급수 (예: 지부장은 최소 4급) */
     if(r.minRank&&ch.licensed&&ch.rank>r.minRank)ch.rank=r.minRank;
     const out=[`${ch.aff.name} · ${r.n}`,...(r.e?[r.e]:[])];
@@ -2008,7 +2010,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.infHome){ch.infHome=1;chips.push('외곽에 작은 집을 지었다')}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
     if(fx.warpChain&&D.warpChains&&D.warpChains[fx.warpChain]){const W=D.warpChains[fx.warpChain];ch.wChain={ids:W.ids.slice(),i:0,label:W.label,done:W.done,doneHid:W.doneHid,hid:W.hid};if(fx.warpChain==='blood')(ch.warpOnce=ch.warpOnce||[]).push('bloodhunt');chips.push(`${W.label} · 연전 ${W.ids.length}판 · 해가 넘어가지 않는다`)}
-    if(fx.warpWpn&&ch.wtrain&&D.warpWeapons&&D.warpWeapons[fx.warpWpn]){ch.wFam=fx.warpWpn;ch.wPick=false;const w0=D.warpWeapons[fx.warpWpn][Math.max(0,Math.min(4,ch.fi||0))];equip(ch,structuredClone(w0));chips.push(`차원 무기 · ${w0.n} (${w0.e})`)}
+    if(fx.warpWpn&&ch.wtrain&&D.warpWeapons&&D.warpWeapons[fx.warpWpn]){ch.wFam=fx.warpWpn;ch.wPick=false;const w0=D.warpWeapons[fx.warpWpn][Math.max(0,Math.min(4,ch.fi||0))];equipUp(ch,structuredClone(w0));chips.push(`차원 무기 · ${w0.n} (${w0.e})`)}
     if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
       if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(D.warpWeapons&&D.warpWeaponPick){ch.wPick=true;chips.push('차원 무기 · 입사 때 계열을 고른다')}else if(r.gear)equip(ch,structuredClone(r.gear));for(let q=0;q<=Math.max(0,ch.fi||0);q++){const g2=C_.trainRanks[q]&&C_.trainRanks[q].gear2;if(g2)equip(ch,structuredClone(g2))}chips.push(`W사 열차 직원 · ${r.n}`)}if(!ch.deckLocked&&!ch.cardMoney&&!ch.packOffer&&D.warpDeck){ch.packOffer={n:'W사 정리 요원 책장',cards:warpDeckFor(ch.fi||0),relic:'정리 요원의 책장'};chips.push('정리 요원 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
       else chips.push('W사 날개 · 본사 근무')}
@@ -2948,6 +2950,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
-    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    cardCost,colorPasv,setColorPick,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,equipUp,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
