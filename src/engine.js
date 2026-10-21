@@ -1079,7 +1079,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
     if(req==='nohyeol')return ch.race!=='hyeolgwi';
-    if(req==='noeast')return !(isEastOuter(ch)||isN(ch));   // 사람을 우대하는 N사·동부 출신은 혈귀의 초대를 받지 않는다
+    if(req==='noeast')return !((ch.o&&ch.o.hidden)||isN(ch));   // 숨은 출생과 N사 같은 특수한 소속은 혈귀의 초대를 받지 않는다
     if(req==='freedeck')return !ch.cardMoney&&!ch.deckLocked&&!ch.packOffer;   // 혈귀 전용 책장을 받을 수 있는 덱 상태
     if(req==='noroute')return !ch.rb&&!ch.hw;
     if(req==='bondmarried')return !!(ch.bond&&ch.bond.st==='married');
