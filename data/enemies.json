@@ -3788,17 +3788,18 @@
   "redmist": {
    "n": "붉은 안개",
    "color": "#b3202f",
-   "hp": 330,
-   "atk": 20,
-   "eva": 16,
-   "spd": 14,
+   "hp": 520,
+   "atk": 26,
+   "eva": 18,
+   "spd": 16,
    "deck": [
     "rm_garo",
     "rm_sero",
     "rm_dash",
     "rm_cut",
     "rm_cut",
-    "rm_guard"
+    "rm_guard",
+    "rm_dash"
    ],
    "hidden": true,
    "tier": "hidden",
@@ -3807,9 +3808,9 @@
    "passive": {
     "id": "mask",
     "n": "붉은 안개",
-    "every": 4,
-    "eva": 10,
-    "d": "4라운드마다 그 라운드 동안 회피 +10"
+    "every": 3,
+    "eva": 12,
+    "d": "3라운드마다 그 라운드 동안 회피 +12"
    },
    "hard": {
     "hp": 1.3,
@@ -3819,9 +3820,9 @@
    "drop": {
     "n": "붉은 안개의 코트",
     "fx": {
-     "maxHp": 40
+     "maxHp": 50
     },
-    "e": "HP+40 (영구) · 무기 미미크리 (프로토타입) · 전용 카드팩 붉은 안개 (적을 쓰러뜨리면 HP 60 회복)",
+    "e": "HP+50 (영구) · 무기 미미크리 (프로토타입) · 전용 카드팩 붉은 안개 (전투 시작 때 최대 HP의 10% 보호막 · 적을 쓰러뜨리면 HP 60 + 최대 HP의 15% 회복)",
     "gear": {
      "id": "w_mimicry_p",
      "slot": "weapon",
@@ -3859,17 +3860,17 @@
     "lockDeck": true,
     "packName": "붉은 안개",
     "packPassive": "redMist",
-    "packE": "적을 쓰러뜨리면 HP 60 회복",
+    "packE": "전투 시작 때 최대 HP의 10% 보호막 · 적을 쓰러뜨리면 HP 60 + 최대 HP의 15% 회복",
     "gears": [
      {
       "id": "a_h_redmist",
       "slot": "armor",
       "n": "붉은 안개의 겉옷",
-      "e": "HP+20 · 회피+3 · 방어 카드 회피+6",
+      "e": "HP+25 · 회피+3 · 방어 카드 회피+7",
       "fx": {
-       "maxHp": 20,
+       "maxHp": 25,
        "eva": 3,
-       "defUp": 6
+       "defUp": 7
       }
      }
     ],
