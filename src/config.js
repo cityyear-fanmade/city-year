@@ -152,7 +152,7 @@ export const CFG = {
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
     /* 결혼 뒤: 금기를 저지른 다음 해부터 해마다 dieChance% 배우자가 세상을 떠난다(최대 정신력 −lossMind). 아이: kid.from년 뒤부터 해마다 chance%, 최대 max명, 간격 gap년, 태어나면 최대 정신력 +mind. adult살이 되면 사무소·해결사·협회 중 한 곳에 들어간다 */
     /* 히든 인연(상대가 처음부터 2~1급 해결사): 해결사 등록자가 rank급 이하일 때 만남이 열리면 chance% 확률로 이 길이 된다 */
-    hidden: {rank: 3, chance: 12},
+    hidden: {rank: 6, chance: 15} /* 해결사 6급 이하(숫자가 작을수록 높다)이면 가끔 처음부터 2~1급 해결사인 상대를 만난다. 예전엔 3급 이하라서 인연을 만나는 24년차까지 거의 닿지 못했다 */, fingerGeneric: 20 /* 엄지·검지·중지·약지 소속도 이 확률로 '조직 안의 낯익은 얼굴'(손가락 공통 인연)을 만난다 */,
     /* 인연과 함께 싸우는 보스: 라운드마다 인연이 추가 공격 (고정 피해 base + per×배우자 급수 레벨, ±3) */
     ally: {base: 8, per: 2}, allyDice: 0.75, allyHit: 10,
     dieChance: 2, riskStep: 0.1, kid: {from: 5, chance: 22, max: 2, gap: 3, mind: 2, adult: 20, oldFrom: 87, oldTo: 140, oldFromLong: 187, oldToLong: 250, oldMind: 3 /* 아이도 나이가 들면 눈을 감는다: oldFrom살부터 해마다 (나이−oldFrom+1)×oldStep% 확률: 보통은 87살부터 140살이면 반드시, 혈귀 종족이면 187살부터 250살이면 반드시 (구간 안에서 해마다 확률이 같은 폭으로 오른다), 정신력 −oldMind */},
