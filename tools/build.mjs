@@ -21,13 +21,15 @@ const BGM_STUB=`function createBgm(){const f=()=>{};return {supported:false,isOn
 /* 악기 샘플 배경음악(assets/bgm/<스타일>_<장면>.mp3)을 data 주소로 넣는다. --nosamples면 넣지 않아 합성음만 쓴다 */
 const noSamples=process.argv.includes('--nosamples');
 const bgmData={};if(!noBgm&&!noSamples){for(const st of ['calm','passion','library'])for(const sc of ['calm','fight']){try{(bgmData[st]=bgmData[st]||{})[sc]='data:audio/mpeg;base64,'+readFileSync(new URL(`../assets/bgm/${st}_${sc}.mp3`,import.meta.url)).toString('base64')}catch(e){}}}try{bgmData.boss={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets/bgm/boss_boss.mp3',import.meta.url)).toString('base64')}}catch(e){}
+/* 이미지 저장용 html2canvas(MIT)를 파일에 넣어 둔다. 인터넷이 막힌 곳에서도 결과 이미지를 만들 수 있게 (없으면 CDN에서 받는다) */
+const h2c=(()=>{try{return r('vendor/html2canvas.min.js').replace(/<\/script/gi,'<\\/script')}catch(e){return ''}})();
 const js0=['src/config.js','src/engine.js','src/bgm.js','src/sfx.js','src/ui.js'].map(p=>`/* ---- ${p} ---- */\n`+(noBgm&&p==='src/bgm.js'?BGM_STUB:strip(r(p)))).join('\n');
 const js=routeTest?js0.replace(/blankFate: \{chance: \d+,/,'blankFate: {chance: 100,'):js0;
 const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[ai+1]):null;
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
   .replace('<link rel="stylesheet" href="css/style.css">',()=>`<style>\n${r('css/style.css')}</style>`)
-  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_BGM=${JSON.stringify(bgmData)};\n(()=>{\n${js}\nconst DATA=${JSON.stringify(D)};\nwindow.CITY=startUI(createEngine(DATA),document.getElementById('app'));\n})();\n</script>`);
+  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\nwindow.CITY_BGM=${JSON.stringify(bgmData)};\n(()=>{\n${js}\nconst DATA=${JSON.stringify(D)};\nwindow.CITY=startUI(createEngine(DATA),document.getElementById('app'));\n})();\n</script>`);
 if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('<script>\nwindow.CITY_BGM=',`<script>\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_BGM=`);
 if(augdemo)html=html.replace('<title>도시의 한 해</title>','<title>의수 의뢰 체험</title>').replace('<script>\nwindow.CITY_BGM=','<script>\nwindow.CITY_AUGDEMO=true;\nwindow.CITY_BGM=');
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');

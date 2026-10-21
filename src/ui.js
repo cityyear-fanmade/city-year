@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v9.9.1';
+  const VERSION='v9.9.2';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -129,6 +129,8 @@ export function startUI(E,app){
     toggle(){const d=document,el=d.documentElement;try{if(FS.on())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else(el.requestFullscreen||el.webkitRequestFullscreen).call(el)}catch(e){}}};
   /* 전체 화면이 켜지거나 꺼져도 화면 전체를 다시 그리지 않고 버튼 글자만 바꾼다 (전투 연출 중에도 끊기지 않게). 설정 창이 열려 있으면 그 창만 갱신 */
   ['fullscreenchange','webkitfullscreenchange'].forEach(t=>document.addEventListener(t,()=>{const on=FS.on(),b=document.querySelector('.fsbtn');if(b){b.textContent=on?'창화면':'전체화면';b.setAttribute('aria-label',on?'전체 화면 끝내기':'전체 화면');b.title=b.getAttribute('aria-label')}if(UI&&UI.cfg&&typeof render==='function')render()}));
+  /* 운영체제 공유 창은 휴대폰(터치 기기)에서만 연다. PC(특히 윈도)의 공유 창에는 로그인한 계정의 이메일 주소가 보여 방송에 노출될 수 있어서, PC에서는 파일을 바로 내려받게 한다 */
+  const touchShare=()=>!!(window.matchMedia&&matchMedia('(pointer: coarse)').matches);
   const HFXK='cityYearHitFx';let HFX=store.get(HFXK)||'mid';
   const HFX_N={off:0,low:1,mid:2,high:3};let HFXFLIP=false;const HFXMK='cityYearHitFxM';let HFXM=store.get(HFXMK)||'each';
   /* 무기 이름으로 타격 모양을 고른다 (플레이어의 공격만. 맨손·기타는 키워드·무작위 모션) */
@@ -361,8 +363,8 @@ export function startUI(E,app){
     if(pv&&X.ledger>0)out.push(`<span class="chip stk" style="--kc:var(--bleed)"><b>${pv.n} ${X.ledger}/${pv.need}</b><small>${X.ledger>=pv.need?'다음 명중 1d110':'다 차면 명중 1d110'}</small></span>`);
     /* 전용 무기 디버프 */
     const pw=G&&G.ch&&G.ch.gear.weapon&&G.ch.gear.weapon.wx||{};
-    const W=[['cloud','구름',v=>`${v}/${CFG.syn['흑운회'].max} · 가득 차면 흑운`],['black','흑운',v=>`주사위마다 +${CFG.syn['흑운회'].die} · 적중 시 출혈 +1`],['prescript','지령',v=>`명중 −${3*v}`],['warp','왜곡',v=>`주는 피해 −${v}`],['shock','감전',v=>`회피 −${3*v}`],['chain','사슬',v=>`회피 −${2*v}`],['web','거미줄',v=>`회피 −${2*v}`],['hunger','오랜 굶주림',v=>`${v}/${CFG.hunger.max} · 다음 공격 카드의 첫 적중 피해 +${v} (쓰면 전부 소진)`],['work','작품',v=>`명중 +${CFG.ring.hit*v} · ${CFG.ring.max}이면 다음 적중 피해 ×${CFG.ring.finish}`],['mk','표적',v=>`${v}/3 · 3이면 피해 2배`],['grudge',pw.grudgeN||'원한',v=>`다음 적중 +${v*(pw.grudge||4)}`],['wecho',pw.echo&&pw.echo.n||'잔향',v=>`${v}/${pw.echo?pw.echo.need:5} · ${pw.echo?pw.echo.need:5}이면 고정 피해 ${pw.echo?pw.echo.dmg:10}`],['shield','보호막',v=>`피해 ${v} 막음`],['matc','재료 수집',v=>'신체관극의 재료가 된다'],['mat','재료',v=>`폐장 주사위 +${v}`],['disp','처분 표식',v=>'처분 주사위 +1'],['serum','혈청',v=>`${v}/3${v>=3?' · 다음 적중 ×1.5':''}`],['ammo','탄환',v=>`${v}발 남음 · 공격마다 1발`],['manner','예의를 지킬 것',v=>`명중 −${v}`],['presc','지령 수행',v=>`${v}/5 · 받는 피해 −${v*5}%`],['revenge','되갚음',v=>`${v}/${X.isP?CFG.middle.cap:5} · 받는 피해 −${v*CFG.middle.def} · 다음 적중 +${v*(X.revMul||CFG.middle.dmg)} · HP +${v*CFG.middle.heal}`],['sealMark','봉인 각인',v=>`${v}/5 · 해제 시 +${v*4}`],['accel','가속',v=>`명중·회피 +${v*5}`]];
-    for(const [k,n,h] of W)if(X[k]>0)out.push(`<span class="chip stk" style="--kc:var(--gold)"><b>${n} ${X[k]}</b><small>${h(X[k])}</small></span>`);
+    const W=[['cloud','구름',v=>`${v}/${CFG.syn['흑운회'].max} · 가득 차면 흑운`],['black','흑운',v=>`주사위마다 +${CFG.syn['흑운회'].die} · 적중 시 출혈 +1`],['prescript','지령',v=>`명중 −${3*v}`],['warp','왜곡',v=>`주는 피해 −${v}`],['shock','감전',v=>`회피 −${3*v}`],['chain','사슬',v=>`회피 −${2*v}`],['web','거미줄',v=>`회피 −${2*v}`],['hunger','오랜 굶주림',v=>`${v}/${CFG.hunger.max} · 다음 공격 카드의 첫 적중 피해 +${v} (쓰면 전부 소진)`],['work','작품',v=>`명중 +${CFG.ring.hit*v} · ${CFG.ring.max}이면 다음 적중 피해 ×${CFG.ring.finish}`],['mk','표적',v=>`${v}/3 · 3이면 피해 2배`],['grudge',pw.grudgeN||'원한',v=>`다음 적중 +${v*(pw.grudge||4)}`],['wecho',pw.echo&&pw.echo.n||'잔향',v=>`${v}/${pw.echo?pw.echo.need:5} · ${pw.echo?pw.echo.need:5}이면 고정 피해 ${pw.echo?pw.echo.dmg:10}`],['shield','보호막',v=>`피해 ${v} 막음`],['matc','재료 수집',v=>'신체관극의 재료가 된다'],['mat','재료',v=>`폐장 주사위 +${v}`],['disp','처분 표식',v=>'처분 주사위 +1'],['serum','혈청',v=>`${v}/3${v>=3?' · 다음 적중 ×1.5':''}`],['ammo','탄환',v=>`${v}발 남음 · 공격마다 1발`],['manner','예의를 지킬 것',(v,X)=>`명중 −${Math.floor(v*(X.mannerPer||(Array.isArray(CFG.thumbManner)?CFG.thumbManner[0]:CFG.thumbManner)))}`],['presc','지령 수행',v=>`${v}/5 · 받는 피해 −${v*5}%`],['revenge','되갚음',v=>`${v}/${X.isP?CFG.middle.cap:5} · 받는 피해 −${v*CFG.middle.def} · 다음 적중 +${v*(X.revMul||CFG.middle.dmg)} · HP +${v*CFG.middle.heal}`],['sealMark','봉인 각인',v=>`${v}/5 · 해제 시 +${v*4}`],['accel','가속',v=>`명중·회피 +${v*5}`]];
+    for(const [k,n,h] of W)if(X[k]>0)out.push(`<span class="chip stk" style="--kc:var(--gold)"><b>${n} ${X[k]}</b><small>${h(X[k],X)}</small></span>`);
     return out.length?out.join(''):'<span class="chip dim">상태 없음</span>';
   }
   function kwChips(c){
@@ -446,7 +448,7 @@ export function startUI(E,app){
       <div class="bar" style="height:4px"><span style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></span></div>`;
   }
   /* 손가락별 지속 패시브 한 줄 (HUD와 가입 선택 화면이 같이 쓴다) */
-  const fingerPassive=(af,fi)=>af==='엄지'?`탄환 · 전투마다 ${CFG.thumbAmmo.base+CFG.thumbAmmo.per*fi}발 (서열마다 +${CFG.thumbAmmo.per}) · 공격마다 1발 소모 · 상대에게 예의를 지킬 것 1 (상대 명중 −${CFG.thumbManner}×스택, 최대 ${CFG.thumbMannerMax}스택) · 탄환이 바닥나도 라운드마다 처음 공격에 ${CFG.thumbRefund}발이 돌아온다`
+  const fingerPassive=(af,fi)=>af==='엄지'?`탄환 · 전투마다 ${CFG.thumbAmmo.base+CFG.thumbAmmo.per*fi}발 (서열마다 +${CFG.thumbAmmo.per}) · 공격마다 1발 소모 · 상대에게 예의를 지킬 것 1 (상대 명중 −${(Array.isArray(CFG.thumbManner)?CFG.thumbManner[Math.min(CFG.thumbManner.length-1,fi||0)]:CFG.thumbManner)}×스택, 전투가 끝날 때까지 유지) · 탄환 수만큼만 쌓이고, 탄환이 바닥나면 더는 쌓이지 않는다`
     :af==='검지'?'지령 수행 · ☆ 칸 카드를 내면 1(최대 5) · 호흡 +4 · 받는 피해 −5%×스택'
     :af==='중지'?'되갚음 · 맞을 때마다 1(최대 10) · 스택 1당 받는 피해 −2 · 다음 적중에서 스택을 모두 써 피해 +스택 · 소모한 스택 1당 HP 1 회복 · 방어 카드를 낸 라운드에 맞으면 스택 × 3의 고정 피해로 반격'
     :af==='약지'?`작품 · 적중할 때마다 +1(전투 한정, 최대 ${CFG.ring.max}) · 스택당 명중 +${CFG.ring.hit} · 최대면 다음 적중 피해 ×${CFG.ring.finish} 후 ${CFG.ring.after}로`
@@ -651,7 +653,7 @@ export function startUI(E,app){
       ['○타','"(2d6+3) × 3타"는 괄호 안(주사위 2개를 굴려 3을 더한 피해)을 3번 따로 반복한다 (②~⑤를 3번 반복). 명중 굴림도, 피해 주사위도 타마다 새로 굴린다. 출혈이 걸린 쪽은 타마다 피해를 입으므로, 타수가 많은 카드를 낼수록 출혈이 빨리 닳는다.'],
       ['6d8 · 3d6 표기','"6d8"은 8면체 주사위 6개를 굴려 합친다는 뜻이다. "3d6"은 6면체 3개. 앞 숫자가 개수, 뒤 숫자가 면 수다. 개수가 많을수록 결과가 평균 근처로 모이고, 면 수가 클수록 눈의 폭이 커진다. 면 수를 적지 않은 카드는 6면체다.'],
       ['+N (피해 뒤 고정값)','"2d4+2"의 +2는 주사위를 합친 값에 더하는 고정 피해다.'],
-      ['피해 주사위 최소 (D6≥N)',`장비·타고난 것에 쓰인 표기다. 주사위 눈이 N보다 작게 나오면 N으로 친다. 여러 곳에서 오는 보정을 합쳐도 최대 ${CFG.dminCap}까지다.`],
+      ['피해 주사위 최소 N',`장비·타고난 것에 쓰인 표기다. 피해 주사위(카드의 "2d6" 같은 주사위) 눈이 N보다 작게 나오면 N으로 친다. 타수와는 상관없다. 여러 곳에서 오는 보정을 합쳐도 최대 ${CFG.dminCap}까지다.`],
       ['명중 +N / 명중 2회 굴림','카드의 "명중 +N"은 그 카드의 명중 굴림에만 더해지는 값이다(마이너스면 빗나가기 쉽다). "명중 2회 굴림"은 명중 굴림을 두 번 해서 높은 쪽을 쓴다.'],
       ['적중 시 ○○','명중 굴림에 이겼을 때만 일어나는 효과다. 색이 있는 칩이 키워드이고, "출혈 +2"처럼 상대에게 쌓이는 것이 기본이다. 칩 끝에 "자신"이 붙은 것(예: 호흡 +3 자신)은 나에게 쌓인다.'],
       ['보호막 · 회피 · 방어 카드','방어 카드의 "회피 +N"은 이번 라운드 상대의 명중 굴림에 맞서는 내 수치에 더해진다. 보호막은 체력 앞에서 피해를 대신 맞아 주는 수치다. 버프 카드는 피해를 주지 않고 나에게 효과를 건다.'],
@@ -872,7 +874,7 @@ export function startUI(E,app){
       <li><b>특이점 강화 · 금기 실험</b> 특이점은 강화를 ${CFG.corp.upMax}번까지만 할 수 있다. 그보다 더 오르지 않는다. 금기 실험은 별개로 ${CFG.corp.forbMax}번까지 할 수 있고, 큰 강화를 주는 대신 정신력이 깎이고 결혼 중이면 위의 배우자 사망 위험이 붙는다. 금기 실험을 ${CFG.corp.forbMax}번 채우면 머리가 ${D.enemies.claw.n}과 ${D.enemies.arbiter.n}를 보낸다. 둘을 이기면 보상을 한 번 받고, 그 뒤로 더 일어나는 일은 없다.</li>
       <li><b>${D.pinky.n}</b> 어느 소속에도 겹쳐 붙는 표식. ${D.pinky.e}.</li>
       <li><b>돈과 공방</b> 해마다 소속 봉급(${T.licensed}는 급수 수당 추가), 전투 현상금, 일부 사건으로 ${D.money.unit}을 번다. 공방은 ${D.workshops.map(w=>w.n).join(' · ')} 3등급이고, 소속과 급수에 따라 들어갈 수 있는 등급이 정해진다. 무기·방어구·의수 칸마다 하나씩 맞춘다.</li>
-      <li><b>장비 표기</b> 공+N 공격(명중 +N÷2, 피해 +N÷6, 모두 소수점 버림) · 명중+N 명중만 올라간다 · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · D6≥N 피해 주사위 d6을 굴려 N보다 작게 나오면 N으로 친다 · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
+      <li><b>장비 표기</b> 공+N 공격(명중 +N÷2, 피해 +N÷6, 모두 소수점 버림) · 명중+N 명중만 올라간다 · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · 피해 주사위 최소 N 피해 주사위 눈이 N보다 작게 나오면 N으로 친다(타수와는 무관) · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
       <li><b>승급</b> 전투 승리(초반 ${CFG.promo.gain.early} · 중반 ${CFG.promo.gain.mid} · 보스 ${CFG.promo.gain.boss} · 히든 ${CFG.promo.gain.hidden})와 판정 성공(+${CFG.promo.gain.check})으로 진로의 포인트를 모은다(해결사 ${T.promoPoints} · 협회 ${D.careers.assoc.pts} · 날개 ${D.careers.wing.pts} · 손가락 ${D.careers.finger.pts}). 필요량에 닿으면 다음 해에 심사가 열리고, 성공하면 한 단계 오른다. 필요량은 단계마다 ×${CFG.promo.mult.join(' → ×')}씩 늘어난다. 실패하면 해결사·협회는 포인트 1/4, 날개·손가락은 1/3을 잃고, 날개는 두 번 연속 실패 시 해고, 손가락은 숙청 전투. 맨 위 단계에 오르면 특수 심사(해결사는 특색)가 한 번 열리고, 실패하면 다시 기회가 없다.</li>
       <li><b>${T.hiddenBoss}</b> 조건을 채우면 고정 전투 대신 나타난다. 금기를 어기면 머리의 집행자가, 초대장을 두 번 받아들이면 도서관이, 지령을 거역하면 대행자가 찾아온다. 특색은 ${D.hiddenBosses.find(h=>h.id==='blue').req.replace('rank<=','')}${T.rankUnit} 이상 해결사만 드물게 마주치며, ${D.hiddenBosses.find(h=>h.id==='blue').penalty.fullRank}${T.rankUnit} 미만이면 급수 부족 보정(명중·회피 ${sg(D.hiddenBosses.find(h=>h.id==='blue').penalty.atk)})을 받는다.</li>
       <li><b>${T.titleLabel}</b> ${CFG.colorRank}${T.rankUnit} ${T.licensed} 가운데 특출난 자만 받는다. ${CFG.colorRank}${T.rankUnit}에 오를 때 1d100 + 판정 보정 ≥ ${CFG.colorDc}이면 내 색과 가장 높은 능력치로 이름이 붙는다.${CFG.colorReward?` 모든 능력치가 ${CFG.colorMul}배가 되며 패시브를 하나 고른다.`:''}</li>
@@ -1060,10 +1062,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🔧 그 밖의 버그 수정',['흑수 루트에서 후보 이름이 {c}로 그대로 보이던 문제를 고쳤습니다.','자동 전투가 0코스트 버프 카드(방어막·명중 보정·빛 획득 등)를 쓰지 않던 문제를 고쳤습니다.','재생 조직 등 회복 카드가 덱이 작을 때 매 라운드 손패에 들어오던 문제를 고쳤습니다. 한 번 쓰면 몇 턴 동안 손패에 들어오지 않습니다.','무기 흡수(미미크리 등)의 횟수 제한을 전투당 5번에서 턴당 5번으로 바꿨습니다.','기록실의 "아무것도 없이 시작해 결혼한 채 55년" 엔딩 설명에서 앞부분이 잘려 보이던 문제를 고쳤습니다. 이제 필요한 출생 선택이 그대로 적힙니다.','협회 직원이 2급에서 더 오르지 못하던 문제를 고쳤습니다. 본부 직속에 오르면 1급이 되고 특색 심사도 받을 수 있습니다.','아이폰 무음 모드에서 배경음악·효과음이 나지 않던 문제를 줄이는 수정을 넣었습니다. 연출을 끈 상태에서도 효과음이 납니다.','공방 해결사가 5급부터 사무소를 열 수 없던 문제를 고쳤습니다.']],
       ['📝 문구·보기',['문구를 다듬었습니다. (웃는 가로등, 승급 추천·급수 심사, R사 연인 문구)','배경 테마(단테·검지 단말기·도서관)의 보조 글자 색을 밝혀 읽기 쉽게 했습니다.']]];
   const V987SEC=[['🔧 버그 수정',['무기 주사위가 카드 주사위를 덮어쓰던 문제를 고쳤습니다. 이제 카드 주사위에 더해집니다.']]];
-  const NOTICE={id:'v9.9.1-2',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v9.9.2',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
     sec:[['⚔ 붉은 안개',['붉은 안개가 돌아옵니다.','붉은 안개와 전용 책장을 강화했습니다.']],
-      ['🔧 그 밖의 변경',['100살이 될 때마다 새 문구가 나옵니다.','엔딩 화면에서 입힌 피해, 받은 피해, 총 회복량, 건 디버프, 얻은 버프를 확인할 수 있습니다.','맨손은 이제 무기로 취급되지 않습니다. 맨손으로 시작하면 무기 칸이 비고, 어떤 강화의 재료로도 쓸 수 없습니다.']]]};
+      ['🔧 그 밖의 변경',['100살이 될 때마다 새 문구가 나옵니다.','엔딩 화면에서 입힌 피해, 받은 피해, 총 회복량, 건 디버프, 얻은 버프를 확인할 수 있습니다.','맨손은 이제 무기로 취급되지 않습니다. 맨손으로 시작하면 무기 칸이 비고, 어떤 강화의 재료로도 쓸 수 없습니다.','엄지의 탄환과 예의 조정','일대기 이미지 저장 버그 수정','PC 전체화면 버튼 추가','장비 표기 정리','연마 이전 및 버그 수정']]]};
   const V944SEC=[['🔧 버그 수정',['별에 선택받은 자가 무기를 강화할 때 처음 가진 "맨손"이 재료로 뜨던 문제를 고쳤습니다. 맨손은 더 이상 보관함에 남지 않습니다.','출생 화면의 "다시 태어난다"가 다시 굴릴 때마다 위쪽 내용 높이가 달라져 움직이던 문제를 고쳤습니다. 이제 제자리에 있습니다.','제 1막 종료 화면에 "여기서 끝낸다" 버튼을 넣었습니다. 제 2막으로 가지 않고 끝낼 수 있고, 이 판의 저장이 지워집니다. "다시 태어난다"를 눌러도 이전 판 저장이 바로 지워집니다.','설정 팝업의 제목이 세로로 쪼개져 보이던 문제를 고쳤습니다.']],
     ['⚖ 조정',['PC 화면(폭 900px 이상)에서 본문, 왼쪽 능력치 칸, 오른쪽 가방 칸, 버튼, 팝업을 함께 키웠습니다. 창이 넓을수록 더 커지고, 창 높이가 낮으면 잘리지 않도록 배율을 낮춥니다. 첫 화면과 휴대폰 화면은 그대로입니다.','금기 실험으로 찾아오는 "강화체"의 이름을 "발톱 · 재시험", "조율자 · 재시험"으로 바꿨습니다.','무한 모드 불순물의 최대 HP 상한을 1000만에서 1500만으로 늘렸습니다.']]];
   const V933SEC=[['🔧 버그 수정',['특이점 루트에서 금기 실험 8/8을 채워도 아무 일도 일어나지 않던 문제를 고쳤습니다. 이미 그 상태로 멈춘 저장도 다음 해로 넘어갈 때 이어집니다.','일부 출생에서 소지와의 거래 사건이 잘못 뜨던 문제를 고쳤습니다.','배경음악에서 "타탁" 하는 잡음과 이어폰에서 들리던 떨림을 줄였습니다.']]];
@@ -1277,7 +1279,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(UI.omen)return vOmen();
     if(UI.fight){
       const e=D.enemies[UI.fight];
-      const rule=(D.hiddenBosses||[]).find(h=>h.id===UI.fight),pen=rule&&rule.penalty&&!(G.ch.licensed&&G.ch.rank<=rule.penalty.fullRank)?rule.penalty:null;
+      const rule=(D.hiddenBosses||[]).find(h=>h.id===UI.fight),pen=rule&&rule.penalty&&!E.rankMet(G.ch,rule.penalty.fullRank)?rule.penalty:null;
       const enc=UI.enc&&UI.enc.hidden?`<div class="check"><b>${UI.enc.rift?'균열 너머의 운명':T.hiddenBoss}</b>${pen?` · <span class="bad">${pen.label} · 명중 ${sg(pen.atk)} · 회피 ${sg(pen.eva)} (${pen.fullRank}${T.rankUnit}이면 보정 없음)</span>`:''}</div>`:UI.enc&&UI.enc.roll?`<div class="check">${UI.enc.label} · 1d100 ${UI.enc.roll} → <b>${e.n}</b></div>`:'';
       const avoid=UI.avoidText?`<p class="small dim">${UI.avoidText}</p>`:'';UI.avoidText=null;
       return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 전투</div>${avoid}${enc}<h2 style="color:${e.color}">${ulName(e.n,e.ul)}</h2>${e.trait&&D.traits&&D.traits[e.trait]?`<div class="check"><b>특성 · ${esc(D.traits[e.trait].n)}</b> · ${esc(D.traits[e.trait].d)}</div>`:''}${e.abno?`<div class="check" style="border-color:#8a7fb8"><b style="color:#8a7fb8">환상체</b> · 마주치면 정신력이 2d3 깎인다${G.ch.ego?` (E.G.O 하한 ${CFG.mind.ego[G.ch.ego.type].floor})`:''}</div>`:''}<p class="lead">${UI.enc&&UI.enc.rift?`갈라진 틈 너머에서 ${esc(e.n)}이(가) 흘러들었다. 이 세계의 사건과는 이어지지 않은 채 다른 운명에서 건너온 존재다. 만날 수 없던 상대가 지금 눈앞에 서 있다.`:e.intro}${UI.fight==='impurity'&&G.ch.infinite&&E.ghostOf(G.ch)?` <span class="dim">그런데 낯익다. 천 살을 넘긴 ${esc(E.ghostOf(G.ch).name||T.you)}. 이름을 잃고 저 자리에 서 있다${E.ghostOf(G.ch).aff?' ('+esc(E.ghostOf(G.ch).aff)+' 출신)':''}.</span>`:''}</p>${e.why&&!(UI.enc&&UI.enc.rift)?`<p class="small dim">싸우는 이유 · ${esc(e.why)}</p>`:''}</div>
@@ -1769,16 +1771,39 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       `${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`난이도 · ${diffOf(c)}`,`시드 ${c.seed}`+(c.daily?` · 오늘의 시드 ${c.daily}`:''),url].filter(Boolean).join('\n');
   }
   /* 엔딩 화면 그대로 찍기: 저장 버튼을 누를 때만 html2canvas를 불러온다. 실패하면 null (카드 이미지로 대신) */
+  const SHOTSRC=['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js','https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'];
   function loadShot(){
     if(window.html2canvas)return Promise.resolve(true);
-    return new Promise(res=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-      sc.onload=()=>res(!!window.html2canvas);sc.onerror=()=>res(false);document.head.appendChild(sc);setTimeout(()=>res(!!window.html2canvas),8000)});
+    /* 파일에 넣어 둔 html2canvas가 있으면 인터넷 없이 바로 쓴다 */
+    if(window.CITY_H2C){try{(0,eval)(window.CITY_H2C);if(window.html2canvas)return Promise.resolve(true)}catch(e){}}
+    /* 한 곳에서 못 받으면 다른 곳에서 한 번 더 받는다 (휴대폰 앱 브라우저·학교·회사 망에서 막히는 경우) */
+    const get=src=>new Promise(res=>{const sc=document.createElement('script');sc.src=src;let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+      sc.onload=()=>fin(!!window.html2canvas);sc.onerror=()=>fin(false);document.head.appendChild(sc);setTimeout(()=>fin(!!window.html2canvas),8000)});
+    return get(SHOTSRC[0]).then(ok=>ok||get(SHOTSRC[1]));
+  }
+  /* 엔딩 화면 그대로 찍기. 실패하면 null이고 UI.shotWhy에 이유('load' 도구를 못 불러옴 · 'draw' 그림을 못 만듦)가 남는다.
+     휴대폰은 캔버스 크기 제한이 작아 긴 화면은 해상도를 낮춰 다시 시도한다 */
+  /* html2canvas 1.4.1은 color-mix()가 계산된 'color(srgb …)' 색을 읽지 못해 통째로 실패한다. 복제본의 그런 색을 rgb로 바꿔 둔다 */
+  function fixShotColors(d,root){
+    try{const cv=d.createElement('canvas');cv.width=cv.height=1;const g=cv.getContext('2d',{willReadFrequently:true});
+      const rgb=m=>{try{g.clearRect(0,0,1,1);g.fillStyle='#000';g.fillStyle=m;g.fillRect(0,0,1,1);const p=g.getImageData(0,0,1,1).data;return `rgba(${p[0]},${p[1]},${p[2]},${(p[3]/255).toFixed(3)})`}catch(e){return 'rgba(0,0,0,0)'}};
+      const props=['color','background-color','background-image','border-top-color','border-right-color','border-bottom-color','border-left-color','outline-color','text-decoration-color','box-shadow','text-shadow','fill','stroke'];
+      const win=d.defaultView||window,els=[root,...root.querySelectorAll('*')];
+      for(const el of els){const cs=win.getComputedStyle(el);for(const pr of props){const v=cs.getPropertyValue(pr);if(v&&/color\(|color-mix\(/.test(v))el.style.setProperty(pr,v.replace(/color\((?:[^()]|\([^()]*\))*\)/g,rgb),'important')}}
+    }catch(e){}
   }
   async function shotEnd(id){
-    id=id||'endShot';const el=$(id);if(!el||!(await loadShot()))return null;
+    id=id||'endShot';UI.shotWhy='';const el=$(id);if(!el){UI.shotWhy='draw';return null}
+    if(!(await loadShot())){UI.shotWhy='load';return null}
     try{await document.fonts.ready}catch(e){}
-    try{const bg=getComputedStyle(document.body).backgroundColor||'#0d0d0f';
-      return await window.html2canvas(el,{backgroundColor:bg,scale:2,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){e.style.padding='28px 22px';e.style.background=bg}}})}catch(e){return null}
+    const bg=getComputedStyle(document.body).backgroundColor||'#0d0d0f',r=el.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);
+    /* 한 변 최대 8000px · 전체 1400만 화소 안에서 가장 큰 배율부터 */
+    const fit=Math.min(2,8000/h,Math.sqrt(14e6/(w*h))),tries=[fit,Math.min(fit,1),Math.min(fit,0.7),Math.min(fit,0.5)].filter((s,k,a)=>s>=0.3&&a.indexOf(s)===k);
+    for(const sc of tries){
+      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg}}});
+        if(cv&&cv.width>0&&cv.height>0)return cv}catch(e){}
+    }
+    UI.shotWhy='draw';return null;
   }
   /* 엔딩 카드 이미지 (1080×1350): 캔버스에 직접 그린다. 외부 라이브러리 없음 */
   async function endCard(){
@@ -2160,7 +2185,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     async saveimg(){
       UI.imgUrl=null;const cv=await shotEnd()||await endCard(),name=`도시의한해_${G.ch.seed}.png`;
       const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
-      try{const f=new File([blob],name,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
+      try{const f=new File([blob],name,{type:'image/png'});if(touchShare()&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
       try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(e){}
       /* 다운로드가 막히는 환경(미리보기 창 등)을 위해 이미지도 화면에 보여 준다 */
       if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');render()}
@@ -2168,7 +2193,6 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testCard:async()=>(await endCard()).toDataURL('image/png'),
     async share(){
       const url=shareLink();UI.shareText=null;UI.shareMsg=null;
-      try{if(navigator.share){await navigator.share({title:'도시의 한 해 · 내 기록',text:shareHead(),url});UI.shareMsg='공유 창을 열었다.';render();return}}catch(e){if(e&&e.name==='AbortError')return}
       try{await navigator.clipboard.writeText(url);UI.shareMsg='기록 링크를 복사했다. 붙여 넣기만 하면 된다.';render();return}catch(e){}
       UI.shareText=url;render();const b=$('shareBox');
       if(b){b.focus();b.select();try{if(document.execCommand('copy')){UI.shareMsg='기록 링크를 복사했다. 붙여 넣기만 하면 된다.';UI.shareText=null;render();return}}catch(e){}}
@@ -2186,9 +2210,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
     async chimg(v){
       const [tab,id]=String(v).split(':'),e=(loadChron()[tab]||[]).find(x=>x.id===id);if(!e)return;
-      const cv=await shotEnd('chShot');if(!cv){UI.chMsg='이미지를 만들 수 없다. 인터넷 연결(이미지 도구 불러오기)을 확인해 주세요.';render();return}
+      const cv=await shotEnd('chShot');if(!cv){UI.chMsg=UI.shotWhy==='load'?'이미지 도구를 불러오지 못했다. 인터넷 연결을 확인하거나 앱 속 브라우저라면 크롬·사파리로 열어 다시 시도해 주세요.':'이 기록은 화면이 너무 길어 이미지로 만들지 못했다. 기록 화면을 직접 캡처해 저장해 주세요.';render();return}
       const name=`도시의한해_일대기_${(e.v||'')}_${e.id}.png`,blob=await new Promise(r=>cv.toBlob(r,'image/png'));
-      try{const f=new File([blob],name,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(er){if(er&&er.name==='AbortError')return}
+      try{const f=new File([blob],name,{type:'image/png'});if(touchShare()&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(er){if(er&&er.name==='AbortError')return}
       try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(er){}
       if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');UI.chMsg='';render()}
     },
