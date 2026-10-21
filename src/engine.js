@@ -1264,11 +1264,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(b.st==='married')cs.push({n:b.name,job:BD.hunt.spouseJob[b.route]||'fixer',lv:spouseLevel(b,y),spouse:true});
     return cs.reduce((a,c)=>!a||c.lv>a.lv?c:a,null);
   }
-  /* 무한 모드: 처음 들어설 때 어긋난 자리 사건 한 번, 그 뒤 100년차마다 능력치·주는 피해가 영구히 오르는 사건 (놓친 백 해는 순서대로 받는다) */
+  /* 무한 모드: 처음 들어설 때 어긋난 자리 사건 한 번, 그 뒤 100살(나이)마다 능력치·주는 피해가 영구히 오르는 사건 (놓친 백 해는 순서대로 받는다) */
   function infiniteEvent(G){
     const ch=G.ch,I=D.infinite,K=CFG.infinite.century;if(!G.infinite||!ch.infinite||!I)return null;
     if(!ch.infIntro){ch.infIntro=1;return {t:I.intro.t,x:I.intro.x,c:[{l:I.intro.a,ok:{t:I.intro.at}}]}}
-    const have=ch.infCent||[],n=(()=>{for(let i=1;i<=Math.floor((G.year||0)/K.every);i++)if(!have.includes(i))return i;return 0})();
+    const have=ch.infCent||[],n=(()=>{for(let i=1;i<=Math.floor(age(G)/K.every);i++)if(!have.includes(i))return i;return 0})();
     if(!n)return null;
     const T=I.century[Math.min(n-1,I.century.length-1)];
     return {t:T.t,x:T.x,c:[{l:T.a,h:`공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100)}% (영구)`,ok:{t:T.at,fx:{infCentury:n}}}]}
@@ -1973,7 +1973,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondDeath&&ch.bond&&ch.bond.st==='married')bondDeath(ch,chips);
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
-    if(fx.infCentury){const K=CFG.infinite.century;(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}년차 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% (누적)`)}
+    if(fx.infCentury){const K=CFG.infinite.century;(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% (누적)`)}
     if(fx.kidOld&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.kidOld&&!k.dead);if(kk){kk.dead='old';chips.push(`${kk.n} · 눈을 감았다`);loseMind(ch,BD.kid.oldMind,m=>chips.push(m))}}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
     if(fx.warpChain&&D.warpChains&&D.warpChains[fx.warpChain]){const W=D.warpChains[fx.warpChain];ch.wChain={ids:W.ids.slice(),i:0,label:W.label,done:W.done,doneHid:W.doneHid,hid:W.hid};if(fx.warpChain==='blood')(ch.warpOnce=ch.warpOnce||[]).push('bloodhunt');chips.push(`${W.label} · 연전 ${W.ids.length}판 · 해가 넘어가지 않는다`)}
@@ -2167,7 +2167,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0):0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,kwPlus:ch.colorPasv==='brand'?2:0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     P.ample=ch.ample||0;P.hitB=s.hit||0;if(P.wx&&P.wx.forms)P.form='a';P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
-    const IFH=CFG.infinite,yH=ch.infinite&&id===CFG.endless.final?Math.min(IFH.hpEnd,(Math.floor((ch.year||0)/IFH.hpStep)+1)*IFH.hpStep):(ch.year||0),growH=e.hidden?0:Math.max(0,yH-S_.from)*(EZ?EZ.grow:1);
+    const IFH=CFG.infinite,yH=ch.infinite&&id===CFG.endless.final?Math.min(IFH.hpEnd,(Math.floor((CFG.startAge+(ch.year||0)-1)/IFH.hpStep)+1)*IFH.hpStep-CFG.startAge+1):(ch.year||0),growH=e.hidden?0:Math.max(0,yH-S_.from)*(EZ?EZ.grow:1);
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;
     const gH=((ch.infinite?gradeRaw(yH):gradeAt(yH))+1)*(EZ?EZ.endless:1);
     const eh=Math.round(((e.hp+s.enemyHp)*(1+S_.hpPerYear*growH)*(e.hidden?H_.hpMul*(EZ?EZ.hidden:1):S_.hpMul)+hy*HL.hpPerYear)*(1+X_.hpMul*gH));
