@@ -909,7 +909,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='fight'){ch.purge=r.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
-    if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push('혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)');
+    if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push(`혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)`);
       if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
     if(fx.redPost){ch.redPost=(ch.redPost||0)+1;chips.push(`붉은 안개 · 책을 덮었다 (${ch.redPost}번째) · 체력 ×${Math.pow(CFG.redBook.hpMul,ch.redPost).toFixed(2)}`)}
     if(fx.hwb&&ch.hw){const r=ch.hw,k=fx.hwb,Z=CFG.hw.beast;
@@ -1079,6 +1079,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
     if(req==='nohyeol')return ch.race!=='hyeolgwi';
+    if(req==='noeast')return !(isEastOuter(ch)||isN(ch));   // 사람을 우대하는 N사·동부 출신은 혈귀의 초대를 받지 않는다
+    if(req==='freedeck')return !ch.cardMoney&&!ch.deckLocked&&!ch.packOffer;   // 혈귀 전용 책장을 받을 수 있는 덱 상태
     if(req==='noroute')return !ch.rb&&!ch.hw;
     if(req==='bondmarried')return !!(ch.bond&&ch.bond.st==='married');
     if(req==='bondlost')return !!(ch.bond&&ch.bond.st==='lost');
@@ -1277,7 +1279,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 결혼한 뒤 금기(도시의 해가 되는 짓)를 저지르면 그때부터 해마다 dieChance%로 배우자가 세상을 떠난다 */
   /* 배우자 사망 확률(%): 금기를 저지른 뒤엔 dieChance, 여기에 히든 보스를 이겨 쌓인 위험(0.1%씩)을 더한다 */
   /* 종족: 혈귀는 오래 산다. 배우자는 주인공이 혈귀이고 변형 1(혈귀 배우자)일 때, 아이는 부모 중 한 쪽이 혈귀면, 손주는 부모(아이)를 따른다 */
-  const spouseHy=(ch,b)=>!!(ch&&b&&ch.race==='hyeolgwi'&&b.variant===1);
+  const spouseHy=(ch,b)=>!!(ch&&b&&ch.race==='hyeolgwi'&&b.route==='hyeolgwi'&&b.variant===1);   // 다른 루트(동부·고급 해결사 등)의 두 번째 변형은 혈귀가 아니다
   const kidHy=(ch,k)=>!!k&&(k.race?k.race==='hyeolgwi':ch.race==='hyeolgwi');
   const lifeFrom=hy=>hy?BD.kid.oldFromLong:BD.kid.oldFrom;
   const lifeTo=hy=>hy?BD.kid.oldToLong:BD.kid.oldTo;
@@ -1792,7 +1794,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(D.relicEvent&&!mc.relicEvt&&!mc.hw&&G.year===CFG.relicEvent.year-1){mc.relicEvt=true;return {type:'event',ev:D.relicEvent}}
     /* 혈귀 종족: 40~70년차 사이 한 번 참을 수 없는 갈증이 온다 (연인이 인간인지 혈귀인지에 따라 다른 사건) */
     if(mc.race==='hyeolgwi'&&D.thirstEvents&&!mc.thirstDone&&!mc.distForm){mc.thirstAt=mc.thirstAt||(40+d(31)-1);
-      if(G.year>=mc.thirstAt){mc.thirstDone=true;const T_=D.thirstEvents,b=mc.bond,mar=b&&b.st==='married',ev=JSON.parse(JSON.stringify(mar?(b.variant===1?T_.hyeol:T_.human):T_.solo)),nm=mar?b.name:'';
+      if(G.year>=mc.thirstAt){mc.thirstDone=true;const T_=D.thirstEvents,b=mc.bond,mar=b&&b.st==='married',ev=JSON.parse(JSON.stringify(mar?(spouseHy(mc,b)?T_.hyeol:T_.human):T_.solo)),nm=mar?b.name:'';
         return {type:'event',ev:JSON.parse(JSON.stringify(ev).replace(/\{n\}/g,nm))}}}
     {const sw=bondSweetEvent(G);if(sw)return {type:'event',ev:sw}}
     if(mc.resoPend&&D.familyReso&&G.year>=(mc.resoAt||0)){mc.resoPend=false;mc.resoAsked=true;return {type:'event',ev:D.familyReso}}
