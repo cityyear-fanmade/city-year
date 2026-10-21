@@ -1341,7 +1341,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
   function bondMeetEvent(ch){
     const B=D.bond;let rt=bondRouteOf(ch);
-    /* 히든: 해결사 3급 이하라면 가끔 처음부터 2~1급 해결사인 상대를 만난다 */
+    /* 히든: 해결사 급수가 BD.hidden.rank급 이상(숫자 rank<=)이면 가끔 처음부터 2~1급 해결사인 상대를 만난다 */
     if(['thumb','pointer','middle','ring'].includes(rt)&&B.routes.finger&&d(100)<=BD.fingerGeneric)rt='finger';
     if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&rt!=='hcorp'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
     const R0=rt&&B&&B.routes[rt];
