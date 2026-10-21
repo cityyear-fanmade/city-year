@@ -225,9 +225,9 @@ export const CFG = {
   /* 특색·상석 심사: 최대 도전 횟수, 실패 후 다시 부르기까지 걸리는 해 */
   top: {tries: 3, wait: 2},
   /* 엄지 패시브 탄환: 전투마다 기본 발수 + 서열 하나 오를 때마다 추가 */
-  thumbAmmo: {base: 9, per: 3},
-  /* 예의 1스택당 상대 명중 −thumbManner (전투가 끝날 때까지 유지) · 탄환이 바닥나도 되돌아오지 않는다 (thumbRefund 0). 대부(서열 3)는 탄환 9+3×3=18발 */
-  thumbManner: 3.5, thumbRefund: 0, thumbMannerMax: 40 /* 예의 스택 최대 */,
+  thumbAmmo: {base: 12, per: 4},
+  /* 예의 1스택당 상대 명중 −thumbManner (전투가 끝날 때까지 유지) · 탄환이 바닥나도 되돌아오지 않는다 (thumbRefund 0). 서열마다 탄환 +4: 솔다토 12 · 카포 16 · 언더보스 20 · 대부 24발 */
+  thumbManner: 3, thumbRefund: 0, thumbMannerMax: 40 /* 예의 스택 최대 */,
   /* 약지 패시브 예술적 감각: 적을 쓰러뜨릴 때 확률, 최대 스택, 스택당 피해 주사위 최대치 */
   artSense: {every: 3, max: 4, die: 5},
   /* 중지 되갚음: 스택 1당 받는 피해 −def, 다음 적중에서 스택을 쓰면 소모한 스택 1당 HP heal 회복, 스택은 keep 비율만 남는다 (내림) */
