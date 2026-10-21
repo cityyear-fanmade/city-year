@@ -1319,7 +1319,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       /* 손주: 성인이 된 아이가 30~50살 사이에 아이를 하나 낳는다. 이름은 무작위로 굴린다 */
       {const GR=BD.grand,gk=kids.find(k=>!k.dead&&!k.pend&&!k.grand&&kidAge(k,y)>=GR.from&&kidAge(k,y)<=GR.to&&d(100)<=GR.chance);
-        if(gk){const used=[...kids.map(k=>k.n),...kids.filter(k=>k.grand).map(k=>k.grand.n),ch.name||''],all=[...B.kidNames,...(D.namePool||[])],pool=all.filter(n=>!used.includes(n));
+        if(gk){const used=[...kids.map(k=>k.n),...kids.filter(k=>k.grand).map(k=>k.grand.n),ch.name||'',...(b.st!=='lost'&&b.name?[b.name]:[])],all=[...B.kidNames,...(D.namePool||[])],pool=all.filter(n=>!used.includes(n));
           /* 일대기에 남은 이름(지난 삶의 나·연인·아이)을 일정 확률로 물려받는다 */
           let gn,lg=null;{const L=(legacyFn?legacyFn():[]).filter(x=>x&&x.n&&!used.includes(x.n));if(L.length&&d(100)<=BD.grand.legacy)lg=one(L)}
           gn=lg?lg.n:one(pool.length?pool:all);
