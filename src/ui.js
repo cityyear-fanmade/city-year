@@ -468,7 +468,7 @@ export function startUI(E,app){
   }
   /* 무한 모드: 외곽에서 나만 어색하다는 짧은 글이 해마다 바뀌고, 천 살에 가까워질수록 넘치려는 쪽으로 간다 */
   function infNote(){const N=D.infinite.notes,y=G.year||0,st=y<300?0:y<600?1:y<900?2:3,L=N[Math.min(st,N.length-1)];return L[y%L.length]}
-  /* 무한 모드: 해가 바뀔 때 어긋난 글이 공지처럼 떠서 한동안 떨린다. 자동으로 넘기는 사람이 놓치지 않도록 약 20초 동안 남고(끝 2초에 흐려짐), ✕를 누르거나 다음 해의 글이 뜨거나 엔딩·첫 화면 등으로 넘어가면 바로 사라진다 (화면 클릭은 막지 않는다) */
+  /* 무한 모드: 해가 바뀔 때 어긋난 글이 공지처럼 떠서 한동안 떨린다. 자동으로 넘기는 사람이 놓치지 않도록 떨림은 2초, 글은 약 20초 동안 남고(끝 2초에 흐려짐), ✕를 누르거나 다음 해의 글이 뜨거나 엔딩·첫 화면 등으로 넘어가면 바로 사라진다 (화면 클릭은 막지 않는다) */
   function showInfNote(text){
     try{const old=document.querySelector('.infnote');if(old)old.remove();const el=document.createElement('div');el.className='infnote';el.setAttribute('role','status');const tx=document.createElement('span');tx.textContent=text;el.appendChild(tx);const x=document.createElement('button');x.type='button';x.className='infnote-x';x.setAttribute('aria-label','닫기');x.textContent='✕';x.addEventListener('click',ev=>{ev.stopPropagation();el.remove()});el.appendChild(x);document.body.appendChild(el);setTimeout(()=>{try{el.remove()}catch(e){}},20200)}catch(e){}
   }
