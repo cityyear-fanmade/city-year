@@ -7615,24 +7615,34 @@
     "check": 5
    },
    "rows": [
-    [],
-    [
-     "lk_hook",
-     "lk_throw"
-    ],
-    [
-     "lk_anchor",
-     "lk_twin"
-    ],
-    [
-     "lk_rip",
-     "lk_haul"
-    ]
+    {},
+    {
+     "up": {
+      "lk_throw": "lk_throw2",
+      "lk_stab": "lk_stab2",
+      "lk_haul": "lk_haul2",
+      "lk_cut": "lk_cut2"
+     }
+    },
+    {
+     "add": [
+      "lk_hook",
+      "lk_anchor"
+     ]
+    },
+    {
+     "add": [
+      "lk_rip",
+      "lk_volley"
+     ]
+    }
    ],
-   "topRow": [
-    "lk_whale",
-    "lk_giant"
-   ]
+   "topRow": {
+    "add": [
+     "lk_whale",
+     "lk_giant"
+    ]
+   }
   }
  },
  "mindEvents": {
