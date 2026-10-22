@@ -875,7 +875,7 @@ export function startUI(E,app){
       return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow(sl)}<div class="row between"><b>${esc(cur.n)}</b><span class="mono small dim">일반 ${k.p}/${E.wsNeed(k.n)} · 강화 ${k.n}${k.h?' · 히든 '+k.h:''}</span></div><span class="mono small" style="color:var(--gold)">${esc(cur.e)}</span>${btns||`<p class="small dim">녹일 ${nm[sl]}이(가) 보관함에 없다.</p>`}</div>`;
     }).join('');
     const ag=ch.gear.aug,done=w.g&&w.g.pick,cands=st.map((m,i)=>[m,i]).filter(([m])=>E.wsAugOk(ch,m));
-    const amats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&(m.id==='hidmat'||(m.slot==='aug'&&!E.wsHidden(m))));
+    const amats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&(m.id==='hidmat'||m.slot==='aug'));
     const abtn=amats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="aug:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
     const K_=W_.cust,cu=UI.cu=UI.cu||{atk:0,eva:0,hp:0,pas:null},spent=cu.atk*K_.atkCost+cu.eva*K_.evaCost+cu.hp*K_.hpCost+(cu.pas?K_.passCost:0),left=K_.pts-spent;
     const stp=(k,l,cost,unit)=>`<div class="row between" style="gap:6px"><span class="small"><b>${l}</b> +${cu[k]*unit} <span class="dim">(${cost}포인트당 +${unit})</span></span><span class="row" style="gap:6px"><button class="chip" data-a="custd" data-i="${k}:-1" ${cu[k]<=0?'disabled':''}>−</button><button class="chip" data-a="custd" data-i="${k}:1" ${left<cost?'disabled':''}>＋</button></span></div>`;
