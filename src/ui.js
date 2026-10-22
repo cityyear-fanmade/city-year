@@ -435,7 +435,9 @@ export function startUI(E,app){
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
   }
-  const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.office&&ch.office.ws?' · 내 사무소 '+esc(ch.office.name):''}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+ch.fr.n:''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
+  /* 호수 선장은 직위표의 맨 위(부선장)가 아니라 선장으로 보인다(칭호 '선장'과 함께 뜨던 부선장 표기 제거) */
+  const frName=c=>c.flags&&c.flags.lake&&c.lake&&c.lake.captain&&c.fr?'선장':(c.fr?c.fr.n:'');
+  const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.office&&ch.office.ws?' · 내 사무소 '+esc(ch.office.name):''}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+frName(ch):''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
     +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
   const innateOne=(c,k)=>k==='mark'&&c.markOn?D.innate.mark.awake:D.innate[k].n;
   const innateName=c=>c.innate?[c.innate,c.innate2].filter(Boolean).map(k=>innateOne(c,k)).join(' · '):null;
@@ -1661,7 +1663,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function careerLine0(c){
     if(c.job)return T.jobs[c.job]+(c.title?' · '+esc(c.title):'');
     if(c.aff&&c.corp&&c.corp.wing)return `${esc(c.corp.wing)} · 대표${c.title?' · '+esc(c.title):''}`;
-    if(c.aff&&c.fr)return `${esc(affName(c))} · ${esc(c.fr.n)}${c.oracle?' · 신탁대행자':''}${c.title?' · '+esc(c.title):''}`;
+    if(c.aff&&c.fr)return `${esc(affName(c))} · ${esc(frName(c))}${c.oracle?' · 신탁대행자':''}${c.title?' · '+esc(c.title):''}`;
     if(c.licensed)return E.rankLabel(c)+(c.aff?' · '+esc(affName(c)):'');
     return c.aff?esc(affName(c)):T.unnamed;
   }
@@ -1709,7 +1711,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     P.push(`${J.eun(E_(nm))} ${(pl=>pl?pl.n+', ':'')(placeOf(c.o,c.r,c.blank))}${J.ro(E_(c.o.n))} 태어났다. ${J.eul(E_(c.t.n))} 타고났고, ${J.eul(E_(c.f.n))} 짊어진 채, ${J.eul(E_(c.w.n))} 손에 쥐고 이 ${c.flags&&c.flags.lake?'호수의 부두':'도시의 골목'}에 섰다.`);
     if(c.job)P.push(`평범한 길은 일찍 닫혔다. ${E_(T.jobs[c.job])}의 자리가 ${E_(nm)}에게 주어졌고, 그 일은 사는 내내 이름을 대신했다.`);
     else if(c.aff&&c.corp&&c.corp.wing)P.push(`담장 안에서 시작해 담장을 스스로 세웠다. ${E_(c.corp.wing)}의 대표로서 이름을 걸었고, 그 이름은 다른 이들의 일자리가 되었다.`);
-    else if(c.aff&&c.fr)P.push(`${E_(affName(c))}에 들어가 ${E_(c.fr.n)}까지 올랐다. 서열은 손이 아니라 버틴 햇수로 정해졌고, ${J.eun(E_(nm))} 그 계단을 하나씩 밟았다.`);
+    else if(c.aff&&c.fr)P.push(`${E_(affName(c))}에 들어가 ${E_(frName(c))}까지 올랐다. 서열은 손이 아니라 버틴 햇수로 정해졌고, ${J.eun(E_(nm))} 그 계단을 하나씩 밟았다.`);
     else if(c.aff)P.push(`${E_(affName(c))}의 일원으로 해를 넘겼다.`);
     else P.push('어디에도 속하지 않았다. 혼자 움직이는 편이 낫다는 말은 처음 한 말 그대로 끝까지 남았다.');
     if(c.licensed&&!c.job)P.push(`해결사로서는 ${c.rank}${T.rankUnit}${c.title?` · ${E_(c.title)}`:''}에 닿았다. 의뢰서에 적힌 이름 하나하나가 ${yr}년 동안 쌓은 기록이다.`);
@@ -1935,7 +1937,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       for(const t of pick){for(const l of wrap(t,W-280,`400 30px ${sans}`).slice(0,4)){T_(l,140,y,`400 30px ${sans}`,ink);y+=46}y+=14}
       y+=6;g.strokeStyle='#2c2b30';g.beginPath();g.moveTo(140,y);g.lineTo(W-140,y);g.stroke();y+=60}
     const rows=[['난이도',diffOf(c)],['산 햇수',`${lived}년 · ${E.age(G)}세`]];
-    if(c.aff||c.job)rows.push(['소속',c.job?T.jobs[c.job]:(c.corp&&c.corp.wing?c.corp.wing+' · 대표':`${affName(c)}${c.fr?' · '+c.fr.n:''}`)]);
+    if(c.aff||c.job)rows.push(['소속',c.job?T.jobs[c.job]:(c.corp&&c.corp.wing?c.corp.wing+' · 대표':`${affName(c)}${c.fr?' · '+frName(c):''}`)]);
     if(c.licensed&&!c.job)rows.push(['해결사',`${c.rank}${T.rankUnit}${c.title?' · '+c.title:''}`]);
     if((c.titles||[]).length)rows.push(['칭호',c.titles.join(' · ')]);
     if(E.bondMarried(c)){const k=(c.bond.kids||[]).map(x=>`${x.n} ${Math.max(0,G.year-x.born)}세`);rows.push(['가족',`${c.bond.name}${k.length?' · 아이 '+k.join(', '):''}`])}
