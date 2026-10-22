@@ -147,7 +147,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
     if(o.hw)ch.hw={fi:0,rv:0};
     if(o.flags&&o.flags.lake)ch.aff={type:'lake',name:'U사 선원'};   // 대호수로 나간 자는 처음부터 선원: 기존 진로(공적·승급·최고 직위) 구조를 쓴다
-    if(o.flags&&o.flags.lake&&D.careers&&D.careers.lake){const r0=D.careers.lake.ranks[0];ch.fi=0;ch.fr=r0;addStats(ch.stats,r0.fx||{})}   // 선원 직위로 시작: 승급은 숙련 선원부터
+    if(o.flags&&o.flags.lake&&D.careers&&D.careers.lake){const r0=D.careers.lake.ranks[0];ch.fi=0;ch.fr=r0;addStats(ch.stats,r0.fx||{});ch.licensed=true;ch.rank=T.rankStart;ch.dom='atk'}   // 선원 직위로 시작: 승급은 숙련 선원부터
     if(o.rb){const Z=CFG.rb,tr=d(100),tm=Z.team.find(t=>tr<=t[0])[1];
       ch.rteam=tm;ch.rb={n:0,chase:0,hides:0,chasers:['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==tm).map(t=>Z.foes[t]))};(ch.relics=ch.relics||[]).push('R사 부화장 · '+tm+' 개체')}
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
@@ -575,7 +575,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 동부 외곽 출신이 N사 날개에 들어가면 해결사 자격을 지키고, N사 승진마다 해결사 급수도 함께 오른다 */
   const eastN=ch=>isN(ch)&&isEastOuter(ch);
   /* 동부 외곽의 N사 직급과 해결사 급수를 맞춘다: 직급에 맞는 급수보다 낮으면(숫자가 크면) 그 급수까지 올린다 */
-  function alignEast(ch,chips){if(!eastN(ch)||!ch.licensed||ch.fi==null)return;const tgt=CFG.eastN.align[ch.fi]??9;while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);chips.push(...p.chips)}}
+  const alignOf=ch=>lakeOn(ch)?CFG.lake.align:CFG.eastN.align;
+  function alignEast(ch,chips){if(!(eastN(ch)||lakeOn(ch))||!ch.licensed||ch.fi==null)return;const tgt=alignOf(ch)[ch.fi]??9;while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);chips.push(...p.chips)}}
   /* ===== 공방 해결사의 작업대: 전용 무기·방어구·의수를 보관함 장비를 녹여 끝없이 강화한다 ===== */
   const WS=CFG.ws,wsKey=sl=>sl==='weapon'?'w':sl==='armor'?'a':'g';
   const wsNeed=n=>1+Math.floor(n/WS.needEvery);
@@ -813,7 +814,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function promoteAny(ch){
     if(canFingerUp(ch))return {chips:fingerStep(ch),finger:true};
     if(isFinger(ch))return null;
-    const k=career(ch);if(k&&k!=='fixer'){const c=careerStep(ch);if(c&&eastN(ch)&&ch.licensed){const tgt=Math.min(ch.rank-1,CFG.eastN.align[ch.fi]??9);while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);c.push(...p.chips)}}return c?{chips:c}:null}
+    const k=career(ch);if(k&&k!=='fixer'){const c=careerStep(ch);if(c&&(eastN(ch)||lakeOn(ch))&&ch.licensed){const tgt=Math.min(ch.rank-1,alignOf(ch)[ch.fi]??9);while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);c.push(...p.chips)}}return c?{chips:c}:null}
     if(ch.licensed&&ch.rank>T.rankTop)return promote(ch);
     return null;
   }
