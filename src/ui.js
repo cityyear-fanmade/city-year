@@ -594,11 +594,18 @@ export function startUI(E,app){
       <div><span class="eyebrow">보관함 ${st.length}</span>${gtabs}${sl||(st.length?'<p class="small dim">이 분류에는 장비가 없다.</p>':'<p class="small dim">보관함이 비어 있다. 새 장비를 얻으면 장착할지 보관할지 고를 수 있고, 장착하면 이전 장비가 여기로 온다.</p>')}</div>
       ${st.length?`<p class="small dim">장착을 누르면 같은 칸의 지금 장비와 자리를 바꾼다. 아무것도 사라지지 않는다.</p>`:''}`;
   }
+  /* 태어난 곳: 출신에서 정해진다. 둥지에서 난 사람은 날개 한 글자(K·R·W·N·J·G)를 함께 적는다. 이미 굴린 값(r.n)으로만 정해 시드를 흔들지 않는다 */
+  function placeOf(o,r,blank){if(blank||!o)return null;const n=o.n,w='KRWNJG'[((r&&r.n)||1)%6];
+    if(n==='외곽 생존자'||n==='동부 출신 외곽 생존자')return {n:'외',t:'도시 밖 외곽에서 났다'};
+    if(n==='뒷골목 태생'||n==='조직 출신')return {n:'뒷',t:'둥지 뒷골목에서 났다'};
+    if(['평범한 둥지 시민','둥지 노동자','날개 직원 집안','몰락한 가문'].includes(n))return {n:'둥 '+w,t:`${w}사 날개의 둥지에서 났다`};
+    return null}
   function vStat(){
     const ch=G.ch,s0=ch.s0,sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(n);
     const eff=x=>x&&x.e?`<span class="mono small" style="color:var(--gold)">${esc(x.e)}</span>`:'';
     const row=(lab,x)=>`<div class="roll"><span class="mono small dim">${lab}</span><div class="n"><b>${esc(x.n)}</b>${x.t?`<span>${esc(x.t)}</span>`:''}${eff(x)}</div></div>`;
-    const kid=(ch.kid||[]).map(k=>row(k.age+'세',k.x)).join('');
+    const place=placeOf(ch.o,ch.r,ch.blank);
+    const kid=(place?row('태어난 곳',place):'')+(ch.kid||[]).map(k=>row(k.age+'세',k.x)).join('');
     const base=s0?[['최대 HP',s0.maxHp],['공격',sgn(s0.atk)],['회피',sgn(s0.eva)],['속도',sgn(s0.spd)],['사건 판정',sgn(s0.check)]].map(([a,b])=>`<div class="invr"><span>${a}</span><b class="mono">${b}</b></div>`).join(''):'';
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
       ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다. 빈손이라 히든 보스 전리품 장비를 더 자주 쥐고(+25%p), 정신이 꺾일 때 E.G.O 형상이 보일 확률이 25%다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${row('무기',ch.w)}</div>`}
@@ -1230,7 +1237,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const row=(lab,r,x,pool)=>`<div class="roll"><span class="mono small dim">${lab}</span>${v(r)}<div class="n"><b${cyc(pool)}>${x.n}</b>${x.t?`<span>${x.t}</span>`:''}<span class="mono small" style="color:var(--gold)">${x.e}</span></div></div>`;
     const sw=D.colors.map((c,i)=>`<button class="sw ${i===b.ci?'on':''}" data-a="color" data-i="${i}" style="background:${c.hex}" aria-label="${c.adj} 색" title="${c.adj}"></button>`).join('');
     const kid=b.kid.length?`<div class="stack" style="gap:6px"><div class="eyebrow">성장기 · 1d100 × ${b.kid.length}</div>
-      <div class="panel">${b.kid.map(k=>row(k.age+'세',k.r,k.x,D.childhood.table)).join('')}</div></div>`:'';
+      <div class="panel">${(()=>{const pl=placeOf(b.o,b.r,b.blank);return pl?`<div class="roll"><span class="mono small dim">태어난 곳</span><span class="v">·</span><div class="n"><b>${pl.n}</b><span>${pl.t}</span></div></div>`:''})()}${b.kid.map(k=>row(k.age+'세',k.r,k.x,D.childhood.table)).join('')}</div></div>`:'';
     return `<div class="row" style="justify-content:flex-start"><button class="btn quiet" data-a="title" style="width:auto;padding:6px 12px"><b>← 첫 화면으로</b></button></div><div class="stack" style="gap:6px"><div class="eyebrow">무작위 출생 · 1d100</div><h2>${b.name?esc(b.name)+'은(는)':'당신은'} 이렇게 태어났다</h2></div>
       <div class="panel stack" style="gap:10px">
         <label class="field" for="nm"><span class="eyebrow">이름</span><input id="nm" maxlength="12" value="${esc(b.name||'')}" placeholder="${T.you}" autocomplete="off"></label>
