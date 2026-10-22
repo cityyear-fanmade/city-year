@@ -7642,7 +7642,8 @@
      "lk_whale",
      "lk_giant"
     ]
-   }
+   },
+   "topMinRank": 1
   }
  },
  "mindEvents": {
