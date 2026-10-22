@@ -978,6 +978,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if((L.crew||[]).length&&d(100)<=W.failCrew){const m=L.crew.splice(Math.floor(Math.random()*L.crew.length),1)[0];chips.push(`선원 · ${m.n} 부상으로 이탈`)}
         if(w.i>=w.max){endW();loseMind(ch,W.driftMind,t=>chips.push('표류 · '+t));const n=Math.floor((L.crew||[]).length/2);if(n){L.crew.splice(0,n);chips.push(`선원 ${n}명 이탈`)}ch.hp=Math.max(1,Math.floor(ch.hp/2));chips.push('배가 반파되어 표류했다 · HP 절반')}
         else chips.push('다음 파도가 온다')}}
+    if(fx.lakeMorph&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{},Mo=CFG.lake.morph,m=(L.crew||[])[L.morphIdx];
+      if(m){if(fx.lakeMorph==='a'){const g=gainMind(ch,Mo.mindA);if(g)chips.push(`정신력 +${g}`)}else{s.atk+=Mo.atkB;chips.push(`공격 +${Mo.atkB}`)}
+        m.mo=(m.mo||0)+1;
+        if(m.mo>=D.lake.infinite.morph.length){L.crew.splice(L.morphIdx,1);L.crewAt=Math.min(L.crewAt||0,(ch.year||0)+1);L.morphed=(L.morphed||0)+1;s.maxHp+=Mo.maxHpFinal;ch.hp+=Mo.maxHpFinal;chips.push(`선원 · ${m.n}이(가) 호수로 돌아갔다 · 젖은 옷만 남았다 · 최대 HP +${Mo.maxHpFinal}`);chips.push('다음 해, 빈자리에 새 선원을 태울 수 있다')}
+        else chips.push(`선원 · ${m.n}에게 변화가 이어진다`)}}
     if(fx.lakeIndigo&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.indigo='done';
       if(fx.lakeIndigo==='fight'){L.indigoFight=true;chips.push('내일, 쪽빛 노인과 싸운다')}
       else if(fx.lakeIndigo==='learn'){const dr=D.enemies.lake_indigo.drop;ch.packOffer={n:dr.packName,cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push('전용 카드팩 · 재앙살해')}
@@ -1485,6 +1490,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!ch.infIntro&&LI){ch.infIntro=1;return {t:LI.intro.t,x:LI.intro.x,c:[{l:LI.intro.a,h:'집은 짓지 않는다 · 호수에서 호수로 항해가 반복된다',ok:{t:LI.intro.at,fx:{lakeOuter:1}}}]}}
     if(!ch.infIntro){ch.infIntro=1;return {t:I.intro.t,x:I.intro.x,c:[{l:I.intro.a,h:'외곽에 작은 집을 짓는다 · 혼자여도, 곁에 사람이 있어도 이 집이 돌아오는 자리가 된다',ok:{t:I.intro.at+(ch.bond&&ch.bond.st==='married'&&ch.bond.name&&I.introWith?I.introWith.replace('{n}',ch.bond.name):''),fx:{infHome:1}}}]}}
     const have=ch.infCent||[],n=(()=>{for(let i=1;i<=Math.floor(age(G)/K.every);i++)if(!have.includes(i))return i;return 0})();
+    /* 선원의 변화: 무한 모드에서 선원이 한 단계씩 호수를 닮아 가다가 어느 날 젖은 옷만 남기고 사라진다. 이름은 붙이지 않고 장면만 보여 준다 */
+    if(!n&&ch.infIntro&&LI&&LI.morph){const L=ch.lake=ch.lake||{},Mo=CFG.lake.morph,crew=L.crew||[];
+      if(L.captain&&crew.length){if(!L.morphAt)L.morphAt=G.year+Mo.every;
+        if(G.year>=L.morphAt){L.morphAt=G.year+Mo.every;let bi=0;crew.forEach((m,i)=>{if((m.mo||0)>(crew[bi].mo||0))bi=i});L.morphIdx=bi;const m=crew[bi],T=LI.morph[Math.min(m.mo||0,LI.morph.length-1)],f=t=>t.replace(/\{n\}(이|을|은)?/g,(_,j)=>{if(!j)return m.n;const c=m.n.charCodeAt(m.n.length-1),b=c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28>0;return m.n+(b?j:({'이':'가','을':'를','은':'는'})[j])});
+          return {t:f(T.t),x:f(T.x),c:[{l:f(T.a),h:`정신력 +${Mo.mindA}`,ok:{t:f(T.at),fx:{lakeMorph:'a'}}},{l:f(T.b),h:`공격 +${Mo.atkB}`,ok:{t:f(T.bt),fx:{lakeMorph:'b'}}}]}}}}
     if(!n&&ch.infIntro){const Lm=CFG.infinite.limit;if(!ch.limAt)ch.limAt=G.year+Lm.every;
       if(G.year>=ch.limAt){ch.limAt=G.year+Lm.every;const m=ch.colorDone?Lm.traitMul:1,pct=x=>Math.round(x*m*1000)/10;
         return {t:'한계 돌파',x:LI?'호수에서 수십 해를 보내자 몸이 물결의 박자를 기억한다. 더 멀리, 더 세게 휘두를 수 있다고 느낀다.':'오래 버틴 몸이 한계 너머를 보기 시작한다. 어느 쪽으로 더 벼릴지 정해야 한다.',c:[
