@@ -818,22 +818,22 @@ export function startUI(E,app){
       if(A.base+A.rankBonus.plus>=g)parts.push(rk);else if(low.length)parts.push(`${low.join('·')} 소속이면서 ${rk}`);
       return parts.join(', 또는 ');
     };
-    const shops=D.workshops.map(w=>{
+    const shops=D.workshops.filter(w=>!lakeHome()||w.grade<3).map(w=>{
       const open=w.grade<=acc||(hwHome()&&w.grade===3);
-      const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade&&(hwHome()?(w.grade<3||it.hw):!it.hw)).filter(([id,it],_i,all)=>!hwHome()||w.grade===3||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
+      const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade&&(lakeHome()?!!it.lake:hwHome()?(w.grade<3||it.hw):(!it.hw&&!it.lake))).filter(([id,it],_i,all)=>!hwHome()||w.grade===3||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
         const note=st==='owned'?(it.hw&&(ch.hwGot||[]).includes(id)&&!(cur&&cur.id===id)?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
         if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span><span class="small dim">${D.slots[it.slot]}${cur?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · 이 장비를 맞출까?</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">${it.perm?'먹는다':it.hw?'받는다':'맞춘다'}</button><button class="btn quiet" data-a="buyno">취소</button></div></div>`;
         return `<button class="btn" data-a="buy" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':(E.isWs(ch)?`<s class="dim">${E.money(it.price)}</s> `:'')+E.money(E.priceOf(ch,id))}</span></span>
           <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${it.perm?'영구 강화':D.slots[it.slot]} · ${note}</span></button>`;
       }).join('');
-      return `<div class="panel stack" style="gap:8px${open?'':';opacity:.6'}"><div class="row between"><b class="serif">${hwHome()?HWSHOP[w.grade-1][0]:w.n}</b><span class="chip${open?'':' dim'}">${w.grade}등급${open?'':' · 잠김'}</span></div>
-        <p class="small dim">${hwHome()?HWSHOP[w.grade-1][1]:w.t}${open?'':' 들어가려면 '+need(w.grade)+'.'}</p>${open?`<div class="stack">${items}</div>`:''}</div>`;
+      return `<div class="panel stack" style="gap:8px${open?'':';opacity:.6'}"><div class="row between"><b class="serif">${hwHome()?HWSHOP[w.grade-1][0]:lakeHome()?LKSHOP[w.grade-1][0]:w.n}</b><span class="chip${open?'':' dim'}">${w.grade}등급${open?'':' · 잠김'}</span></div>
+        <p class="small dim">${hwHome()?HWSHOP[w.grade-1][1]:lakeHome()?LKSHOP[w.grade-1][1]:w.t}${open?'':' 들어가려면 '+need(w.grade)+'.'}</p>${open?`<div class="stack">${items}</div>`:''}</div>`;
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
-    return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">${hwHome()?'홍원의 저잣거리':(G.infinite&&G.ch.infinite)?'외곽의 가게':'공방'} · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
+    return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">${hwHome()?'홍원의 저잣거리':lakeHome()?'U사의 어느 항구':(G.infinite&&G.ch.infinite)?'외곽의 가게':'공방'} · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
       <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vCafe()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
-      <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':'공방을 나간다'}</button>`;
+      <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':lakeHome()?'항구를 나간다':'공방을 나간다'}</button>`;
   }
   /* 공방 해결사: 카드 판매 (장비 판매는 없다) */
   function vSell(){
@@ -2063,14 +2063,17 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   }
   /* H사 홍원 가문 안에 사는 동안은 공방 거리 대신 홍원의 저잣거리 */
   const hwHome=()=>!!(G&&G.ch&&G.ch.hw&&!G.ch.hw.out&&!G.ch.hw.done);
+  /* 대호수로 나간 자는 공방 거리 대신 'U사의 어느 항구' (무한 모드의 외곽 가게는 따로) */
+  const lakeHome=()=>!!(G&&G.ch&&G.ch.flags&&G.ch.flags.lake&&!(G.infinite&&G.ch.infinite));
+  const LKSHOP=[['부두 선구점','U사 항구 끝, 닻줄과 작살을 파는 가게다. 값은 정직하고 주인은 말이 없다.'],['항만 장인방','고래를 잡는 배에 물건을 대는 장인들의 방이다. 배를 타 본 사람에게만 값을 깎아 준다.'],['U사 보급 창고','U사가 고래잡이 배에 내주는 창고다. 오래 배를 탄 사람의 이름을 적어 두었다.']];
   /* W사 열차 직원은 도시의 공방 거리를 쓰지 않는다: 3년마다 승무원 칸(의무실과 쉴 자리)만 지난다 */
   const trainHome=()=>!!(G&&G.ch&&G.ch.wtrain);
   const HWSHOP=[['저잣거리 대장간','홍원 성문 안쪽 골목의 대장간이다. 가문 이름을 대면 값을 속이지 않는다.'],['홍원 장인방','가문에 칼을 대는 장인들이 모여 사는 방이다. 후보라는 이름이 문을 연다.'],['가문의 보물고','선대가 모아 둔 물건을 푸는 방이다. 후보에게는 값을 받지 않고 내린다. 각각 한 번씩만 받을 수 있다.']];
   function vShopAsk(){
     const nb=(G.year-1)+CFG.shop.every+1,hh=hwHome(),tr=trainHome(),rb=G.ch.rb&&G.ch.rb.out?(G.ch.rb.fled?(G.ch.rb.bossDone?null:'alley'):'supply'):null,   /* R사 추적이 끝나면(숙청 집행관까지) '쫓기는 몸' 문구는 평범한 공방으로 돌아온다 */
       of=!!(G.infinite&&G.ch.infinite&&!tr&&!hh&&!rb);
-    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · ${tr?'열차 승무원 칸':hh?'홍원의 저잣거리':rb==='supply'?'R사 보급 구역':rb==='alley'?'뒷골목 공방':of?'외곽의 어긋난 가게':'공방 거리'}</div><h2>${tr?'승무원 칸에 들른다':hh?'홍원의 저잣거리를 지난다':rb==='supply'?'R사 보급 구역을 지난다':rb==='alley'?'뒷골목 공방을 찾는다':of?'집 앞길 끝의 가게에 들른다':'공방 거리를 지난다'}</h2>
-      <p class="lead">${rb==='supply'?'R사 날개 직원에게 열린 보급 구역이다. 손등의 번호표를 보여 주면 장비를 내준다. 들러도 한 해가 지나가지는 않는다. ':rb==='alley'?'번호표를 가리고 뒷골목 공방을 찾았다. 쫓기는 몸이라 아무것도 묻지 않는 곳만 골랐다. 들러도 한 해가 지나가지는 않는다. ':''}${rb?'':tr?'열차 끝 칸의 승무원 칸이다. 팔 물건은 없고, 의무실과 눈 붙일 자리만 있다. 들러도 해는 넘어가지 않는다.':hh?'붉은 대문 안쪽에 가문의 저잣거리가 있다. 장인과 상인은 모두 가문의 이름 아래 있다. 들러도 한 해가 지나가지는 않는다.':of?'외곽에는 거리가 없다. 그런데 집 앞길 끝에 가게가 하나 서 있다. 누가 여는지, 어디서 물건을 들여오는지 아무도 모른다. 이 자리에서는 필요한 사람이 있으면 필요한 가게가 선다. 들러도 한 해가 지나가지는 않는다.':'장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.'}${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
+    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${E.age(G)}세의 해 · ${tr?'열차 승무원 칸':hh?'홍원의 저잣거리':lakeHome()&&!rb?'U사의 어느 항구':rb==='supply'?'R사 보급 구역':rb==='alley'?'뒷골목 공방':of?'외곽의 어긋난 가게':'공방 거리'}</div><h2>${tr?'승무원 칸에 들른다':hh?'홍원의 저잣거리를 지난다':lakeHome()&&!rb?'U사의 어느 항구에 배를 댄다':rb==='supply'?'R사 보급 구역을 지난다':rb==='alley'?'뒷골목 공방을 찾는다':of?'집 앞길 끝의 가게에 들른다':'공방 거리를 지난다'}</h2>
+      <p class="lead">${rb==='supply'?'R사 날개 직원에게 열린 보급 구역이다. 손등의 번호표를 보여 주면 장비를 내준다. 들러도 한 해가 지나가지는 않는다. ':rb==='alley'?'번호표를 가리고 뒷골목 공방을 찾았다. 쫓기는 몸이라 아무것도 묻지 않는 곳만 골랐다. 들러도 한 해가 지나가지는 않는다. ':''}${rb?'':tr?'열차 끝 칸의 승무원 칸이다. 팔 물건은 없고, 의무실과 눈 붙일 자리만 있다. 들러도 해는 넘어가지 않는다.':lakeHome()?'배가 닿는 항구 끝에 가게가 늘어서 있다. 닻줄과 작살, 기름 먹인 천을 파는 곳이다. 들러도 한 해가 지나가지는 않는다.':hh?'붉은 대문 안쪽에 가문의 저잣거리가 있다. 장인과 상인은 모두 가문의 이름 아래 있다. 들러도 한 해가 지나가지는 않는다.':of?'외곽에는 거리가 없다. 그런데 집 앞길 끝에 가게가 하나 서 있다. 누가 여는지, 어디서 물건을 들여오는지 아무도 모른다. 이 자리에서는 필요한 사람이 있으면 필요한 가게가 선다. 들러도 한 해가 지나가지는 않는다.':'장비를 손볼 수 있는 거리다. 들러도 한 해가 지나가지는 않는다.'}${UI.stock.length?' 골목 안쪽에 이번에만 열린 암시장 문도 보인다. 다음에 들를 때는 물건이 바뀐다.':''}</p>
       <p class="small dim">${nb<=E.lastYear(G)?`다음 기회는 ${nb}년차.`:'이번이 마지막 기회다.'}</p>
       ${UI.broker?`<div class="check" style="border-color:var(--gold)"><b>${esc(G.ch.office.name)}</b> · 일감을 알선했다 · ${UI.broker.kind==='gear'?'의수 ':'카드 '}<b>${esc(UI.broker.n)}</b>${UI.broker.locked?' (덱 고정이라 돈으로 받았다)':''}</div>`:''}</div>
       ${UI.rested?`<p class="good small">${UI.rested}</p>`:''}

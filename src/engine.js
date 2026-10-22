@@ -496,6 +496,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.aff&&A.aff[ch.aff.type])g=Math.max(g,A.aff[ch.aff.type]);
     /* H사 홍원 가문은 가문의 저잣거리에서 협력 공방 등급까지 이용한다 */
     if(ch.hw)g=Math.max(g,2);
+    /* 대호수로 나간 자는 U사의 항구에서 협력 공방 등급까지 이용한다 (항구에는 1·2등급 가게만 있다) */
+    if(ch.flags&&ch.flags.lake)g=Math.max(g,2);
     /* 직접 날개를 세운 대표는 소속(aff)이 없어도 날개 최고 직급과 같은 대접 */
     if(isFounder(ch))g=Math.max(g,A.aff.wing);
     const fingerUp=isFinger(ch)&&ch.fr&&ch.fr.tier>=D.fingerRules.shopTier;
@@ -508,6 +510,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function canBuy(ch,id){
     const it=D.items[id];
     if(it.hw&&!(ch.hw&&!ch.hw.out&&!ch.hw.done))return 'locked';
+    if(it.lake&&!(ch.flags&&ch.flags.lake))return 'locked';   // 항구 전용 물건은 대호수 출신만
     if(it.hw&&(ch.hwGot||[]).includes(id))return 'owned';
     if(ch.gear[it.slot]&&ch.gear[it.slot].id===id)return 'owned';
     if(ch.distForm&&!ch.distStable)return 'distort';

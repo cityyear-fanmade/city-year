@@ -217,6 +217,68 @@
     "maxHp": 15
    },
    "perm": true
+  },
+  "lake_harpoon": {
+   "grade": 1,
+   "slot": "weapon",
+   "n": "굵은 작살",
+   "price": 300,
+   "lake": true,
+   "e": "공+2 · 속도-1 · 1d6 최소치 2",
+   "fx": {
+    "atk": 2,
+    "spd": -1,
+    "dmin": 2
+   }
+  },
+  "lake_rope": {
+   "grade": 1,
+   "slot": "aug",
+   "n": "갈고리 의수",
+   "price": 520,
+   "lake": true,
+   "e": "공+1 · 회피+1 · 속도+1 (로프를 거는 갈고리)",
+   "fx": {
+    "atk": 1,
+    "eva": 1,
+    "spd": 1
+   }
+  },
+  "lake_cloak": {
+   "grade": 1,
+   "slot": "armor",
+   "n": "방수 외투",
+   "price": 280,
+   "lake": true,
+   "e": "HP+8 (물을 먹지 않는 기름 먹인 천)",
+   "fx": {
+    "maxHp": 8
+   }
+  },
+  "lake_salt": {
+   "grade": 2,
+   "slot": "armor",
+   "n": "소금 절임 흉갑",
+   "price": 640,
+   "lake": true,
+   "e": "HP+12 · 피해 -4% (소금에 절여 단단해진 가죽)",
+   "fx": {
+    "maxHp": 12,
+    "defUp": 4
+   }
+  },
+  "lake_whale": {
+   "grade": 2,
+   "slot": "weapon",
+   "n": "고래뼈 작살",
+   "price": 700,
+   "lake": true,
+   "e": "공+3 · 1d6 최소치 3 · 속도-2",
+   "fx": {
+    "atk": 3,
+    "dmin": 3,
+    "spd": -2
+   }
   }
  },
  "special": {
