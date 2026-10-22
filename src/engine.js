@@ -917,6 +917,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
     if(fx.lakeHunt&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakeHunt==='fight'){L.hunterFight=true;chips.push('내일 새벽, 사냥꾼과 싸운다')}else chips.push('사냥꾼은 떠났다')}
     if(fx.lakePirate&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakePirate==='fight'){L.pirate='mate';chips.push('내일, 쌍갈고리 해적단과 싸운다')}else{L.pirate=null;L.pirateAt=(ch.year||0)+4;chips.push('해적단은 물러났다 · 몇 해 뒤 다시 온다')}}
+    if(fx.lakeWhale&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.whaleFight=L.whaleTarget;chips.push('내일, 고래와 싸운다')}
     if(fx.lakeFlee&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.phase='enter';L.harbor=true;L.fled=(L.fled||0)+1;chips.push('고래에게서 도망쳤다 · 호수를 벗어나 선박장에 들른다')}
     if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push(`혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)`);
       if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
@@ -1321,7 +1322,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(L.captain&&L.phase!=='whale'&&!L.encRolled){L.encRolled=true;if(d(100)<=CFG.lake.encChance){const r=d(100),id=r<=55?'lake_mermaid':r<=70?'lake_hook':r<=85?'lake_blade':'lake_shield';return {type:'fight',enemy:id,enc:{label:id==='lake_mermaid'?'호수에서 올라온 것':'쌍갈고리 해적단'}}}}
     {const brk=(ch.flags.lakeBreak||0);if(brk>(L.hunted||0)&&!L.huntAt)L.huntAt=G.year+1+d(2);
      if(L.phase!=='whale'&&L.huntAt&&G.year>=L.huntAt&&Lk.hunter){L.hunted=brk;L.huntAt=null;return JSON.parse(JSON.stringify(Lk.hunter))}}
-    if(L.phase==='whale'){return JSON.parse(JSON.stringify(L.captain&&Lk.fleeCap?Lk.fleeCap:Lk.flee))}   // 선장이 되기 전엔 선장의 명령으로 도망, 선장이 된 뒤엔 내가 명령한다
+    if(L.whaleFight){const id=L.whaleFight;L.whaleFight=null;const e=D.enemies[id];return {type:'fight',enemy:id,enc:{hidden:!!e.hidden,label:e.hidden?'대재앙 토벌':'보스급 고래 토벌'}}}
+    if(L.phase==='whale'){
+      /* 선장이 되기 전엔 선장의 명령으로 도망, 선장이 된 뒤엔 내가 명령한다: 어린 고래(보스급) 토벌 → 1막 끝 무렵 성체(대재앙) → 창세치 → 창백한 */
+      if(L.captain){
+        const killed=L.killed||[],W=Lk.whale&&Lk.whale[L.cur];let target=null;
+        if(W&&!killed.includes(W.young))target=W.young;
+        else if(W&&!killed.includes(W.adult)&&G.year>=CFG.years-CFG.lake.adultBefore)target=W.adult;
+        else{const nA=Object.values(Lk.whale||{}).filter(x=>killed.includes(x.adult)).length;
+          if(nA>=CFG.lake.genesisAt&&!killed.includes('lake_whale_genesis'))target='lake_whale_genesis';
+          else if(killed.includes('lake_whale_genesis')&&!killed.includes('lake_whale_pale'))target='lake_whale_pale'}
+        if(target&&Lk.hunt){const e=D.enemies[target],ev=JSON.parse(JSON.stringify(Lk.hunt));ev.t=(e.hidden?'대재앙 · ':'보스급 고래 · ')+e.n;ev.x=e.intro+' 키를 쥔 선장인 당신이 정해야 한다.';L.whaleTarget=target;return ev}
+        return JSON.parse(JSON.stringify(Lk.fleeCap||Lk.flee))
+      }
+      return JSON.parse(JSON.stringify(Lk.flee))
+    }
     if(!L.bag||!L.bag.length)L.bag=sample(ids,ids.length);   // 지난 호수는 나머지를 다 돌 때까지 나오지 않는다
     L.cur=L.bag.pop();L.phase='whale';L.seen=(L.seen||0)+1;L.encRolled=false;
     {const lk=Lk.lakes[L.cur];if(lk.slip&&d(100)<=CFG.lake.slip)return JSON.parse(JSON.stringify(lk.slip))}   // 주인공이 아닌 다른 선원이 금기를 어길 수도 있다
@@ -2160,7 +2175,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function winRewards(G,C){
     const ch=G.ch,chips=[];
-    if(ch.flags&&ch.flags.lake&&ch.lake){if(C.id==='lake_mate')ch.lake.pirate='orca';if(C.id==='lake_orca')ch.lake.pirate='epi'}
+    if(ch.flags&&ch.flags.lake&&ch.lake){if(C.id==='lake_mate')ch.lake.pirate='orca';if(C.id==='lake_orca')ch.lake.pirate='epi';
+      if(/^lake_(ywhale|whale)_/.test(C.id)){const L=ch.lake,K=L.killed=L.killed||[];if(!K.includes(C.id))K.push(C.id);L.phase='enter';L.harbor=true;
+        const ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length;chips.push(`고래 토벌 · 보스급 ${ny}/4 · 대재앙 ${na}/6`)}}
     {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if((C.id==='claw'||C.id==='arbiter')&&!(ch.flags&&ch.flags.spouseAge)){(ch.flags=ch.flags||{}).spouseAge=1;if(ch.bond)ch.bond.risk=0;chips.push('발톱과 조율자 중 하나를 쓰러뜨렸다 · 배우자의 위험이 가라앉고, 이제 나이로 눈을 감는다')}
@@ -2433,6 +2450,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.index){P.starSlot=d(Math.min(CFG.hand,P.hand.length))-1;P.starId=P.hand[P.starSlot]}
     /* 히든 보스 전용 패시브: 라운드 단위 */
     const pv=E.passive&&E.passive.id;
+    /* 대호수 고래 패시브 (라운드 단위) */
+    if(pv==='lkLantern'&&E.lights==null){E.lights=E.passive.lights;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 빛 촉수 ${E.lights}개를 먼저 부숴야 본체에 피해가 들어간다`}
+    if(pv==='lkAnchor'){const add=Math.min(E.passive.per,E.passive.cap-(P.anchorLoss||0));if(add>0){P.eva-=add;P.anchorLoss=(P.anchorLoss||0)+add;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 배가 무거워진다 · 회피 −${P.anchorLoss} (로프 끊기로 푼다)`}}
+    if(pv==='lkTide'){if(E.atk0==null)E.atk0=E.atk;const up=Math.min(E.passive.cap,(C.round-1)+Math.floor((P.bleed||0)/E.passive.per));E.atk=E.atk0+up;if(up>0)C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 피 냄새에 달아오른다 · 공격 +${up}`}
     if(pv==='obey'){P.obey=Math.min(CFG.hw.obey.cap,(P.obey||0)+CFG.hw.obey.gain);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 공허한 순종 ${P.obey}`}
     E.maskOn=pv==='mask'&&C.round%E.passive.every===0;
     /* 카세티(혈귀): 체력이 hp 비율 아래로 처음 내려가면 피할 수 없는 광역 출혈을 걸고 체력을 회복한다 */
@@ -2620,6 +2641,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(c.needBlack&&!A.black){L('sys',`${A.name} · ${c.n} · 흑운이 아니면 쓸 수 없다 · 불발`);return}
     if(c.inkCall){const ids=A.inkIds||[];if(!ids.length){L('sys',`${A.name} · ${c.n} · 곁에 흑수가 없다 · 불발`);return}if(A.obey>0){A.obey=0;L('kw',`${A.name} · 공허한 순종이 모두 풀렸다`)}L('kw',`${A.name} · ${c.n} · 곁의 흑수 ${ids.length}명이 모두 나선다`);for(const id of ids){if(B.hp<=0)break;act(C,A,D.cards[id],L,push)}return}
     if(c.ropeCut&&(A.harpoon||0)>0){L('kw',`  ${A.name} · ${c.n} · 작살 ${A.harpoon}개를 끊어 냈다`);A.harpoon=0}
+    if(c.ropeCut&&(A.anchorLoss||0)>0){A.eva+=A.anchorLoss;L('kw',`  ${A.name} · ${c.n} · 무게를 덜어 회피 +${A.anchorLoss}`);A.anchorLoss=0}
     if(c.needLow&&B.hp>B.maxHp*CFG.raven.low){L('sys',`${A.name} · ${c.n} · 상대 HP가 ${Math.round(CFG.raven.low*100)}% 이하여야 쓸 수 있다 · 불발`);return}
     if(c.t==='buff'&&(c.heal||c.passNext||c.debuffHit||c.cleanseRand)){
       if(c.cleanseRand){const ks=['bleed','rupture','burn','flame'].filter(k=>(A[k]||0)>0);if(ks.length){const k=ks[d(ks.length)-1],n0=A[k];A[k]=Math.max(0,n0-c.cleanseRand);L('kw',`  ${A.name} · ${c.n} · ${D.keywords[k].n} ${n0} → ${A[k]}`)}}
@@ -2805,6 +2827,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.spent>0&&c.fixPer){const fp=c.fixPer+(A.focusOn?A.focus.fix:0),x=A.spent*fp;dmg+=x;note+=` 충전 ${A.spent}×${fp}=고정 +${x}`}
       if(B.kuro&&B.black&&B.synT>=3){dmg=Math.max(1,Math.floor(dmg*CFG.syn['흑운회'].half));note+=' 흑운 ×'+CFG.syn['흑운회'].half}
       if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv,Math.max(0,CFG.drCap-(B.redPct||0))),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
+      if(B.passive&&B.passive.id==='lkLantern'&&(B.lights||0)>0){B.lights--;dmg=0;note+=` 빛 촉수가 부서졌다 (남은 ${B.lights})`}
       if(c.harpoonPull&&(B.harpoon||0)>0){const used=B.harpoon,add=used*c.harpoonPull.per;B.harpoon=0;dmg+=add;note+=` 작살 ${used}개를 당겨 +${add}`}
       if(c.verdict){const x=Math.floor((B.maxHp-B.hp)/10);dmg=Math.max(dmg,rawDmg)+x;note+=` 처형 · 방어·감소 무시 · 잃은 체력 ${B.maxHp-B.hp} → 고정 +${x}`}
       if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const IF_=CFG.infinite,m=B.isP?Math.min(IF_.escMaxP,Math.pow(1+IF_.escPerP,A.escN)):Math.min(IF_.escMaxE,Math.pow(1+IF_.escPerE,A.escN));dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
@@ -2813,6 +2836,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.ch.infinite&&A.isP&&dmg>0&&(C.ch.infBoost||C.ch.infShard||C.ch.famLoss)){const m=1+(C.ch.infBoost||0)*CFG.infinite.century.dmg+(C.ch.infShard||0)*CFG.infinite.shard.dmg+(C.ch.famLoss||0)*CFG.infinite.grief.dmg;dmg=Math.round(dmg*m);note+=` 백 해 ×${m.toFixed(2)}`}
       {const SG=CFG.infinite.surge;if(C.ch.infinite&&A.isP&&dmg>0&&SG&&(C.ch.year||0)>=SG.year&&C.round>SG.round){const m=Math.min(SG.max,Math.pow(SG.per,C.round-SG.round));dmg=Math.round(dmg*m);note+=` 기세 ×${m>=1000?m.toExponential(1):m.toFixed(1)}`}}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
+      if(A.passive&&A.passive.id==='lkPale'&&B.isP&&dmg>0){B.pale=(B.pale||0)+1;if(B.pale>=A.passive.at){B.pale=0;loseMind(C.ch,A.passive.mind,t=>L('kw',`  ${A.name} · 창백화 · ${t}`))}else L('kw',`  ${A.name} · 창백화 ${B.pale}/${A.passive.at}`)}
       hpLoss(C,B,dmg,L);if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
@@ -2890,6 +2914,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
   }
   /* pp, ep: 이번 라운드에 낼 카드 배열 */
+  /* 전투 중 도주 굴림: 적에게 flee가 있으면 라운드마다 시도할 수 있다 (대호수의 고래 전용). 1d100 + (회피+속도)/2 ≥ dc면 전투에서 빠져나간다.
+     실패하면 그 라운드는 카드를 내지 못하고 공격만 받는다(UI가 빈 손으로 라운드를 진행한다) */
+  function fleeCheck(C){
+    const e=D.enemies[C.id],F=e&&e.flee;if(!F||C.over)return null;
+    const r=d(100),mod=Math.floor(((C.P.eva||0)+(C.P.spd||0))/2),tot=r+mod,ok=tot>=F.dc;
+    C.log.push({t:'sys',s:`도주 시도 · 1d100 ${r} + ${mod} = ${tot} / 난이도 ${F.dc} → ${ok?'성공':'실패'}`});
+    if(ok)C.over='flee';
+    return {ok,r,mod,tot,dc:F.dc};
+  }
+  /* 도주에 성공한 뒤: 호수를 벗어나 선박장으로 (피해도 보상도 없다, 고래는 남는다) */
+  function fleeEnd(G,C){
+    const ch=G.ch,L=ch.lake=ch.lake||{};L.phase='enter';L.harbor=true;L.fled=(L.fled||0)+1;(L.fledFrom=L.fledFrom||[]).push(C.id);
+    return {chips:['도주 성공 · 호수를 벗어나 선박장에 들른다'],text:D.enemies[C.id].fleeText||'고래의 그림자가 멀어졌다. 간신히 호수를 벗어났다.'};
+  }
   function resolveRound(C,pp,ep){
     const {P,E}=C;
     C.cur=[];C.evs=[];
@@ -2964,6 +3002,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 인연의 추가 공격 */
     if(C.escort&&C.escort.kind==='fighter'&&E.hp>0&&P.hp>0){const es=C.escort,Z=CFG.escort.fighter,x=Z.base+Z.per*es.lv+d(Z.rand)-1;E.hp=Math.max(0,E.hp-x);L('dmg',`${es.name} · 협공 · ${E.name}에게 고정 피해 ${x}`);push({k:'bleed',side:'E',dmg:x})}
     {const A_=C.round===1?C.allyFirst:null;if(A_&&E.hp>0&&P.hp>0){const x=Math.max(1,CFG.bond.ally.base+CFG.bond.ally.per*A_.lv+d(7)-4);E.hp=Math.max(0,E.hp-x);L('dmg',`${A_.name} · 인연의 추가 공격 · ${E.name}에게 ${x} 피해`);push({k:'bleed',side:'E',dmg:x})}}
+    if(E.passive&&E.passive.id==='lkSilence'&&E.hp>0&&P.hp>0){const R=E.passive,noise=pp.reduce((a,c)=>a+(c.t==='def'?0:c.c+(c.hits>=3?1:0)),0);
+      if(noise>=R.limit){hpLoss(C,P,R.dmg,L);L('dmg',`${E.name} · 소음 ${noise}/${R.limit} · 호수가 울렸다 · ${P.name} 고정 피해 ${R.dmg}`)}else L('kw',`${E.name} · 소음 ${noise}/${R.limit} · 호수가 조용하다`)}
     /* 연주(피아니스트): 라운드마다 악장 1. every에 닿으면 고정 피해 dmg, 그 라운드에 방어 자세였으면 절반 */
     if(E.passive&&E.passive.id==='recital'&&E.hp>0&&P.hp>0){
       const R=E.passive;E.recital=(E.recital||0)+1;
@@ -2995,7 +3035,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       for(const X of [P,E]){if(X.dealtR===C.round){X.dry=0;continue}X.dry=(X.dry||0)+1;if(X.dry<F.miss)continue;
         const r=!X.isP&&X.maxHp>=CFG.infinite.hpMax?F.capRate.reduce((q,[at,v])=>n>at?v:q,F.capRate[0][1]):Math.min(F.max,F.per*(X.dry-F.miss+1)),x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · ${X.dry}라운드째 피해를 주지 못했다 · 고정 피해 ${x}`)}}}
     ampUse(C,L);
-    if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
+    if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0&&E.passive&&E.passive.id==='lkGenesis'&&(E.reborn||0)<E.passive.times){E.reborn=(E.reborn||0)+1;E.hp=Math.round(E.maxHp*E.passive.back);E.bleed=0;E.rupture=0;E.harpoon=0;L('kw',`${E.name} · 쓰러진 줄 알았던 몸이 호수에서 다시 일어선다 · HP ${E.hp}`)}else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
   }
   /* K사 엠플: 살아 있고 HP가 최대 HP의 belowPct 이하이면 자동으로 쓴다 (한 번에 1개, 전투당 제한 없음) */
   /* HP를 잃는다. 플레이어가 한 번에 쓰러질 피해(공격·출혈·화상·고정 피해 모두)를 받으면, 쓰러지기 전에 K사 엠플이 먼저 쓰이고 받은 피해만큼 회복이 깎인다 (HP − 피해 + 회복) */
@@ -3055,6 +3095,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
-    cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

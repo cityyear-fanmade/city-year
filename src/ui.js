@@ -1598,14 +1598,19 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
         :`${entHtml('E',X,PRE.E)}${arenaHtml(true)}${entHtml('P',P,PRE.P)}${vOrder()}${lg}`;
     }
     const log=logBox(logLines(C.log.slice(-60))||'<div class="sys">전투가 시작되었다.</div>');
+    if(C.over==='flee'){
+      UI.cbar=`<button class="btn primary" data-a="finflee">호수를 벗어난다</button>`;
+      return `${M?duo({E:X,P}):entHtml('E',X,X)+entHtml('P',P,P)}<div class="panel stack"><h2 class="good">도주 성공 · ${esc(X.name)}에게서 벗어났다</h2></div>${log}`;
+    }
     if(C.over){
       const w=C.over==='win';
       UI.cbar=`<button class="btn primary" data-a="fin">${w?'전리품을 챙긴다':'결말을 본다'}</button>`;
       return `${M?duo({E:X,P}):entHtml('E',X,X)+entHtml('P',P,P)}<div class="panel stack"><h2 class="${w?'good':'bad'}">${w?'승리 · '+esc(X.name)+'을(를) 꺾었다':'당신은 쓰러졌다'}</h2></div>${log}`;
     }
     /* 전투 버튼은 화면 아래에 고정한 막대에 둔다: 내용 길이가 바뀌어도 버튼 자리는 움직이지 않는다 */
-    UI.cbar=FIGHT==='auto'?`<button class="btn${UI.paused?' primary':''}" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button><button class="btn quiet" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button>`
-      :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button><button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`;
+    const fleeBtn=X.name&&D.enemies[C.id]&&D.enemies[C.id].flee?`<button class="btn" data-a="flee"><b>도주를 시도한다</b><span class="mono small dim">1d100 + 회피·속도 보정 ≥ ${D.enemies[C.id].flee.dc} · 실패하면 이번 라운드는 공격만 받는다</span></button>`:'';
+    UI.cbar=FIGHT==='auto'?`<button class="btn${UI.paused?' primary':''}" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button>${fleeBtn}<button class="btn quiet" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button>`
+      :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button>${fleeBtn}<button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`;
     /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
     const cost=UI.sel.reduce((a,i)=>a+E.cardCost(P,D.cards[P.hand[i]])-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
     const cards=P.hand.map((id,i)=>{
@@ -2384,6 +2389,15 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       if(C.over==='lose')store.del(SAVE);
       if(MODE==='off'){if(!C.over)E.newRound(C);render();return}
       C.logBefore=lb;PLAYING=true;render();if(isMobile())window.scrollTo(0,0);runPlayback(C.evs);
+    },
+    flee(){
+      if(!C||C.over||UI.screen!=='combat')return;
+      UI.paused=false;const r=E.fleeCheck(C);if(!r)return;
+      if(r.ok){UI.sel=[];render();return}
+      UI.sel=[];ACT.go()
+    },
+    finflee(){
+      const r=E.fleeEnd(G,C);UI.res={t:r.text,chips:r.chips,title:null,roll:null};saveGame({after:true,pending:null});UI.screen='result';render()
     },
     tri(k){if(E.setTri(C,k))render()},
     form(k){if(E.setForm(C,k))render()},
