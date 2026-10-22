@@ -1282,10 +1282,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
         <div class="row between"><span class="eyebrow">${CFG.startAge-1}세의 능력치</span></div>
         <div class="stat"><div><b>${s.maxHp}</b><span>HP</span></div><div><b>${sg(s.atk)}</b><span>공격</span></div><div><b>${sg(s.eva)}</b><span>회피</span></div><div><b>${sg(s.spd)}</b><span>속도</span></div></div>
         <div class="chips">${b.deck.map(id=>`<span class="chip">${D.cards[id].n}</span>`).join('')}</div></div>
+      ${b.teamPick?`<div class="panel stack" style="gap:8px"><span class="eyebrow">부화장 팀 · 하나를 고른다</span><p class="small dim">어느 팀의 개체로 길러졌는지에 따라 몸이 다르다. 고르지 않은 두 팀의 추격자가 나중에 쫓아온다.</p>${Object.entries(CFG.rb.teamBonus).map(([t,B])=>`<button class="btn${UI.team===t?' primary':''}" data-a="rbteam" data-i="${t}"><b>${esc(t)}</b><span class="mono small" style="color:var(--gold)">${Object.entries(B).map(([k,v])=>`${{spd:'속도',maxHp:'최대 HP',eva:'회피'}[k]} +${v}`).join(' · ')}</span></button>`).join('')}</div>`:''}
       ${b.relicPick?`<div class="panel stack" style="gap:8px"><span class="eyebrow">유물 적성 · 하나를 고른다</span><p class="small dim">적성은 가지고 있으나 온전히 다루기 어렵다.</p>${Object.entries(D.relics).map(([k,r])=>`<button class="btn${UI.relic===k?' primary':''}" data-a="relic" data-i="${k}"><b>${esc(r.n)}</b><span class="mono small" style="color:var(--gold)">${esc(r.e)}</span></button>`).join('')}</div>`:''}
       ${vJobRoll()}${vJobPick()}
       ${b.fateChoices&&!b.fated?`<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">운명이 찾아왔다 · 하나를 고르거나 거절한다</span><span class="small">아무것도 쥐지 않고 태어났지만, 이름 없는 존재에게도 길이 두 갈래로 놓였다.</span>${b.fateChoices.map(r_=>{const h=D.hiddenOrigins.find(x=>x.roll===r_);return `<button class="btn" data-a="fate" data-i="${r_}"><b>${esc(h.n)}</b><span class="small">${esc(h.t)}</span><span class="mono small" style="color:var(--gold)">${esc(h.e)}</span></button>`}).join('')}<button class="btn" data-a="nofate"><b>운명을 거절한다</b><span class="small">아무것도 쥐지 않은 채 그대로 시작한다. 이름 없는 삶, 솔로 엔딩을 노리는 길이다.</span></button></div>`:''}
-      <div class="stack"><button class="btn primary" data-a="live" ${(b.relicPick&&!UI.relic)||(b.fateChoices&&!b.fated)?'disabled':''}>${b.fateChoices&&!b.fated?'운명을 먼저 고른다':b.relicPick&&!UI.relic?'유물을 먼저 고른다':'이 삶을 산다'}</button>
+      <div class="stack"><button class="btn primary" data-a="live" ${(b.relicPick&&!UI.relic)||(b.teamPick&&!UI.team)||(b.fateChoices&&!b.fated)?'disabled':''}>${b.fateChoices&&!b.fated?'운명을 먼저 고른다':b.relicPick&&!UI.relic?'유물을 먼저 고른다':b.teamPick&&!UI.team?'팀을 먼저 고른다':'이 삶을 산다'}</button>
       ${b.blank||UI.job?'':'<button class="btn quiet" data-a="blank">어떤 출생 보정도 없이 시작한다</button>'}<button class="btn quiet" data-a="title"><b>첫 화면으로</b><span class="dim small">출생 굴림을 접고 처음으로 돌아간다</span></button></div>${vSettings()}`;
   }
   /* 6시즌: 출생 규칙 설명 + 표 전체 (이번에 나온 칸 표시) */
@@ -2352,9 +2353,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     seed(){UI.relic=null;UI.daily=null;if(UI.jobAuto){UI.job=null;UI.jobAuto=false}const v=parseInt(($('seedIn')||{}).value,10);if(!(v>=0)){const i=$('seedIn');if(i){i.value='';i.placeholder='숫자만 넣을 수 있다'}return}born(v,BC&&BC.name);render()},
     color(i){E.setColor(BC,+i);BC.fresh=false;render()},
     relic(k){UI.relic=k;render()},
+    rbteam(t){UI.team=t;render()},
     job(k){UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
+    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.wsMsg=null;E.wsEnsure(G.ch);UI.showIncome=false;UI.screen='shop';render()},
@@ -2472,7 +2474,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
   /* 오늘의 시드와 같은 시드(지나간 날의 시드를 번호로 입력한 경우 포함)면 그날의 출신·타고난 것 지정을 그대로 쓴다 */
   const dailyKeyOf=seed=>UI.daily&&seed===dailySeed(UI.daily)?UI.daily:(Object.keys(CFG.dailyPlan||{}).find(k=>dailySeed(k)===seed)||null);
-  function born(seed,name,daily){const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,dly?(pl&&pl.origin)||CFG.dailyOrigin:null);if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;BC.seed=seed;BC.name=name||'';BC.fresh=true}
+  function born(seed,name,daily){UI.team=null;const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,dly?(pl&&pl.origin)||CFG.dailyOrigin:null);if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;BC.seed=seed;BC.name=name||'';BC.fresh=true}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
   window.addEventListener('resize',()=>{if(UI.screen==='combat'&&!PLAYING&&UI.wasMobile!==isMobile())render()});
   app.addEventListener('toggle',e=>{const t=e.target;if(!t.classList)return;

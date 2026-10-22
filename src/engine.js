@@ -148,7 +148,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.hw)ch.hw={fi:0,rv:0};
     if(o.flags&&o.flags.lake)ch.aff={type:'lake',name:'U사 선원'};   // 대호수로 나간 자는 처음부터 선원: 기존 진로(공적·승급·최고 직위) 구조를 쓴다
     if(o.flags&&o.flags.lake&&D.careers&&D.careers.lake){const r0=D.careers.lake.ranks[0];ch.fi=0;ch.fr=r0;addStats(ch.stats,r0.fx||{});ch.licensed=true;ch.rank=T.rankStart;ch.dom='atk'}   // 선원 직위로 시작: 승급은 숙련 선원부터
-    if(o.rb){const Z=CFG.rb,tr=d(100),rr=rbTeamBy(ch,Z.team.map(t=>t[1])),tm=rr?rr.team:Z.team.find(t=>tr<=t[0])[1];
+    if(o.rb){const Z=CFG.rb,tr=d(100),tm=Z.team.find(t=>tr<=t[0])[1];ch.teamPick=true;   // 팀은 출생 화면에서 고른다(임시값만 굴려 둔다)
+      
       ch.rteam=tm;ch.rb={n:0,chase:0,hides:0,chasers:['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==tm).map(t=>Z.foes[t]))};(ch.relics=ch.relics||[]).push('R사 부화장 · '+tm+' 개체')}
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
     const IN=CFG.innate,h=(r.o*7919+r.t*104729+r.f*1299709+r.w*15485863+r.n*32452843+ch.kid.reduce((a,k)=>a*31+k.r,7))%1000003;
@@ -172,6 +173,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
     ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;ch.packKind=ch.deckLocked||ch.cardMoney?'special':'origin';ch.packName=ch.packName||(ch.o&&ch.o.packName)||(ch.packKind==='special'?(ch.o&&ch.o.n?ch.o.n+' 전용 카드팩':'전용 카드팩'):(ch.o&&ch.o.n?ch.o.n+' 출신 카드팩':'출신 카드팩'));ch.birthPack=ch.packName;ch.packs=newBasicPacks();
     return ch;
+  }
+  /* R사 부화장: 출생 때 고른 팀으로 바꾸고 보정을 준다(토끼 속도 · 코뿔소 체력 · 순록 회피) */
+  function setRbTeam(ch,team){
+    const Z=CFG.rb,B=Z.teamBonus&&Z.teamBonus[team];if(!ch.teamPick||!ch.rb||!B||!Z.foes[team])return false;
+    const old=ch.rteam;ch.rteam=team;ch.teamPick=false;
+    ch.rb.chasers=['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==team).map(t=>Z.foes[t]));
+    ch.relics=(ch.relics||[]).map(r=>r==='R사 부화장 · '+old+' 개체'?'R사 부화장 · '+team+' 개체':r);
+    addStats(ch.stats,B);if(B.maxHp)ch.hp+=B.maxHp;if(B.spd!=null)ch.spd0=ch.stats.spd;
+    return true;
   }
   /* 유물 적성자: 출생 때 고른 유물 지급 */
   function giveRelic(ch,id,late){
@@ -3149,5 +3159,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
     cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,bondTx,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
