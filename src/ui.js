@@ -819,13 +819,14 @@ export function startUI(E,app){
     if(trainHome())return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">열차 승무원 칸</div><h2>잠시 숨을 돌린다</h2><p class="small dim">열차 안에는 공방이 없다. 의무실만 문을 열어 둔다.</p></div>${vClinic()}<button class="btn primary" data-a="unshop">칸을 나간다</button>`;
     /* 입장 조건 문구: 그 등급을 주는 소속 / (한 등급 낮은 소속 또는 무소속) + 해결사 급수 보너스 */
     const need=g=>{
+      if(g>A.base+A.rankBonus.plus+1&&A.top)return `${T.licensed} ${A.top}${T.rankUnit} 이상(또는 진로 최고 직위)`;
       const nm=f=>Object.entries(A.aff).filter(([,v])=>f(v)).map(([k])=>T.affTypes[k]);
       const direct=nm(v=>v>=g),low=nm(v=>v<g&&v+A.rankBonus.plus>=g),rk=`${T.licensed} ${A.rankBonus.rank}${T.rankUnit} 이상`;
       const parts=[];if(direct.length)parts.push(direct.join('·')+' 소속');
       if(A.base+A.rankBonus.plus>=g)parts.push(rk);else if(low.length)parts.push(`${low.join('·')} 소속이면서 ${rk}`);
       return parts.join(', 또는 ');
     };
-    const shops=D.workshops.filter(w=>!lakeHome()||w.grade<3).map(w=>{
+    const shops=D.workshops.filter(w=>lakeHome()?w.grade<3:hwHome()?w.grade<=3:true).map(w=>{
       const open=w.grade<=acc||(hwHome()&&w.grade===3);
       const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade&&(lakeHome()?!!it.lake:hwHome()?(w.grade<3||it.hw):(!it.hw&&!it.lake))).filter(([id,it],_i,all)=>!hwHome()||w.grade===3||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
