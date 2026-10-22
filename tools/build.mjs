@@ -28,7 +28,7 @@ try{bgmData.boss={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets
 const h2c=(()=>{try{return r('vendor/html2canvas.min.js').replace(/<\/script/gi,'<\\/script')}catch(e){return ''}})();
 const js0=['src/config.js','src/engine.js','src/bgm.js','src/sfx.js','src/ui.js'].map(p=>`/* ---- ${p} ---- */\n`+(noBgm&&p==='src/bgm.js'?BGM_STUB:strip(r(p)))).join('\n');
 const js1=routeTest?js0.replace(/blankFate: \{chance: \d+,/,'blankFate: {chance: 100,'):js0;
-const js=lakeTest?js1.replace(/dailyOrigin: \d+,/,'dailyOrigin: 40,').replace(/dailyPlan: \{[^\n]*\},\n/,'dailyPlan: {},\n'):js1;
+const js=lakeTest?js1.replace(/dailyOrigin: \d+,/,'dailyOrigin: 40,').replace(/dailyPlan: \{[^\n]*\},\n/,'dailyPlan: {},\n').replace('<b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다','<b>바다로 나가기</b><span class="dim small">${todayKey()} · 대호수의 선원으로 시작한다 (시험용)').replace("${UI.confirmNew==='daily'?'오늘의 시드':'새로 시작하기'}","${UI.confirmNew==='daily'?'바다로 나가기':'새로 시작하기'}"):js1;
 const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[ai+1]):null;
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
