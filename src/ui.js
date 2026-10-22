@@ -1803,6 +1803,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const PAGES='https://cityyear-fanmade.github.io/city-year/';
   const b64e=o=>{const u=new TextEncoder().encode(JSON.stringify(o));let x='';u.forEach(c=>x+=String.fromCharCode(c));return btoa(x).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
   const b64d=t=>{const x=atob(t.replace(/-/g,'+').replace(/_/g,'/'));return JSON.parse(new TextDecoder().decode(Uint8Array.from(x,c=>c.charCodeAt(0))))};
+  /* 링크 압축용 사전: 순서를 바꾸지 말고 끝에만 덧붙인다(옛 링크가 깨진다) */
+  const SHFOES=["claw", "arbiter", "library", "proxy", "blue", "black", "godfather", "bigsis", "yan", "leihuang", "pianist", "freischutz", "wolf", "bigwolf", "bigbird", "knight", "araya", "ryoshu", "barber", "priest", "dulcinea", "rat_father", "sc_master", "iron_boss", "pb_boss", "ch_boss", "ob_boss", "zw_boss", "sv_boss", "liu_boss", "shi_boss", "kuro_boss", "judgebird", "redhood", "queenhate", "kinggreed", "servantwrath", "queenbee", "nothing", "orchestra", "matthias", "hongwon", "punishbird", "apocalypse", "abel", "redmist", "elena", "godmother", "twistedjun", "jeoldosa", "baral", "zena", "pil1", "pil2", "pil_hunter1", "pil_hunter2", "pil_matthias", "matthias2", "pil_trial", "jester", "rc13", "rh1", "rh2", "rh3", "rh4", "rcorp_boss", "rh5", "hr_0", "hr_1", "hr_2", "hr_3", "hr_4", "hr_5", "hw_elder", "hongru", "hw_kamo", "claw_x", "arbiter_x", "scarlet", "violet", "kasetti", "hf_1", "hf_2", "hf_3", "hf_4", "lake_whale_silence", "lake_whale_lamp", "lake_whale_anchor", "lake_whale_tide", "lake_whale_genesis", "lake_whale_pale", "lake_ricardo"];
+  const SHHEADS=["오버플로우", "외곽에서 이야기를 끝냈다", "늙었다는 것은 살아남았다는 것", "발톱과 조율자를 넘어섰다", "나는 존재한다", "아무것도 없던 존재", "홍원에 군주가 태어났다", "사랑하던 이의 손에", "뒤틀렸다", "도시는 나를 기억하지 않는다", "호수는 나를 기억하지 않는다"];
+  const shHeadK=h=>{const i=SHHEADS.indexOf(h);return i>=0?'#'+i:h};
+  const shHeadV=h=>/^#\d+$/.test(h)?(SHHEADS[+h.slice(1)]||h):h;
+  const foeEnc=ids=>{const u=new Uint8Array(Math.ceil(SHFOES.length/8)),x=[];for(const id of ids){const i=SHFOES.indexOf(id);if(i>=0)u[i>>3]|=1<<(i&7);else x.push(id)}let m=u.length;while(m>0&&!u[m-1])m--;return u8b64(u.slice(0,m))+(x.length?'~'+x.join(','):'')};
+  const foeDec=t=>{const [b,x]=String(t||'').split('~'),u=b?b64u8(b):new Uint8Array(0),o=[];for(let i=0;i<SHFOES.length;i++)if(u[i>>3]&(1<<(i&7)))o.push(SHFOES[i]);return o.concat(x?x.split(','):[])};
   function shareHead(){const w=UI.endWin,dt=UI.death;return UI.overflowEnd?'오버플로우':UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)==='rcorp'?'나는 존재한다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'사랑하던 이의 손에':dt&&dt.id==='hongru'?'홍원에 군주가 태어났다':dt&&dt.cause==='distort'?'뒤틀렸다':cityN()+'는 나를 기억하지 않는다'}
   /* 링크용 기록: 이름이 아니라 id를 담아 짧게 만든다(받는 쪽에서 이름으로 바꾼다) */
   function shareRec(){
@@ -1817,9 +1824,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const canZip=typeof CompressionStream==='function'&&typeof DecompressionStream==='function';
   const zipB=async(u,Cls,fmt)=>{const st=new Cls(fmt),wr=st.writable.getWriter();wr.write(u);wr.close();return new Uint8Array(await new Response(st.readable).arrayBuffer())};
   /* 배열로 줄여 담는다(키 이름 생략). 순서를 바꾸지 말고 끝에만 덧붙인다 */
-  const shArr=o=>[2,o.h,o.w,o.n,o.k,o.t,String(o.col||'').replace(/^#/,''),o.y,o.a,o.g,o.d,o.fi.join(','),o.e,o.i,o.o,o.lv,o.st.join(','),o.s,o.dy,o.df,o.ver];
-  const shObj=a=>({v:2,h:a[1],w:a[2],n:a[3],k:a[4],t:a[5],col:/^[0-9a-f]{3,8}$/i.test(a[6])?'#'+a[6]:a[6],y:a[7],a:a[8],g:a[9],d:a[10],
-    f:String(a[11]||'').split(',').filter(Boolean).map(id=>(D.enemies[id]&&D.enemies[id].n)||id),e:a[12],i:a[13],o:a[14],lv:a[15],st:String(a[16]||'0,0,0').split(',').map(Number),s:a[17],dy:a[18],df:a[19],ver:a[20]});
+  const shArr=o=>[3,shHeadK(o.h),o.w,o.n,o.k,o.t,String(o.col||'').replace(/^#/,''),o.y,o.a,o.g,o.d,foeEnc(o.fi),o.e,o.i,o.o,o.lv,o.st.join(','),o.s,o.dy,o.df,o.ver];
+  const shObj=a=>({v:a[0],h:a[0]>=3?shHeadV(a[1]):a[1],w:a[2],n:a[3],k:a[4],t:a[5],col:/^[0-9a-f]{3,8}$/i.test(a[6])?'#'+a[6]:a[6],y:a[7],a:a[8],g:a[9],d:a[10],
+    f:(a[0]>=3?foeDec(a[11]):String(a[11]||'').split(',').filter(Boolean)).map(id=>(D.enemies[id]&&D.enemies[id].n)||id),e:a[12],i:a[13],o:a[14],lv:a[15],st:String(a[16]||'0,0,0').split(',').map(Number),s:a[17],dy:a[18],df:a[19],ver:a[20]});
   /* 기록 링크: #c= 압축(deflate) 배열, #a= 압축 없는 배열(압축을 못 쓰는 브라우저), #r= 예전 형식(그대로 읽는다) */
   async function shareLinkAsync(){
     const j=new TextEncoder().encode(JSON.stringify(shArr(shareRec()))),a='#a='+u8b64(j);
