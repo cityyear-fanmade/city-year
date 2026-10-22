@@ -506,6 +506,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 협회·날개처럼 직급표가 있는 진로는 해결사 급수가 오르지 않으므로, 최고 직급(날개 임원 등)에 오르면 급수 보너스와 같은 +1 */
     const CR_=D.careers&&ch.aff&&D.careers[ch.aff.type],topRank=isFounder(ch)||!!(CR_&&CR_.ranks&&ch.fi!=null&&ch.fi>=CR_.ranks.length-1);
     if((ch.licensed&&ch.rank<=A.rankBonus.rank)||fingerUp||topRank)g=Math.min(3,g+A.rankBonus.plus);
+    /* 홍원의 자제가 가문 밖(외부 임무·가주 이후)에서 공방 거리에 들르면 1급 대접: 최고 등급(명장의 공방)까지 이용한다 */
+    if(ch.hw&&(ch.hw.out||ch.hw.done))return A.max;
     /* 최상위 명장의 공방: 해결사 1급 이상이거나 진로 최고 직위(1급 대접)일 때만. 항구·저잣거리(대호수·홍원)에는 없다 */
     if(!ch.hw&&!(ch.flags&&ch.flags.lake)&&rankMet(ch,A.top))g=A.max;
     return g;
@@ -850,6 +852,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 사건·성장·보상 효과를 적용하고 화면용 칩을 돌려준다 */
   /* 소속에 들어간다: 소속·직급 기록을 새로 쓰고 첫 직급의 보정을 받는다 */
   function joinAff(ch,J,name,chips){
+    /* 홍원의 자제는 어디에 몸을 둬도 홍원 소속이다: 다른 곳에 입사·입회하지 않는다(정보를 빼 오는 것뿐) */
+    if(ch.hw){chips.push('홍원의 자제는 다른 곳에 소속되지 않는다 · 홍원 소속으로 남는다');return}
     ch.aff={type:J.type,name};(ch.affLog=ch.affLog||[]).includes(name)||ch.affLog.push(name);chips.push(((D.fingers[name]&&D.fingers[name].kind)||T.affTypes[J.type]||'소속')+' · '+name);
     if(isN(ch)&&ch.gear.aug){chips.push(`의체를 버린다 · ${ch.gear.aug.n} → 보관함`);unequip(ch,'aug')}
     ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0;
@@ -2064,12 +2068,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const fi=G.pool.findIndex(i=>D.events[i].first&&meets(G.ch,D.events[i].req));
     if(fi>=0)return evOut(G.pool.splice(fi,1)[0]);
     /* 출신 진로 보정이 있으면 그 진로의 권유 사건(tag)이 보정값 × pathEventMul % 확률로 먼저 나온다 */
-    const tagged=G.pool.filter(i=>{const e=D.events[i];return e.tag&&(G.ch.paths[e.tag]||0)>0&&meets(G.ch,e.req)});
+    const tagged=G.pool.filter(i=>{const e=D.events[i];return !(G.ch.hw&&e.noHw)&&e.tag&&(G.ch.paths[e.tag]||0)>0&&meets(G.ch,e.req)});
     if(tagged.length){
       const ti=one(tagged);
       if(d(100)<=(G.ch.paths[D.events[ti].tag]||0)*CFG.pathEventMul){G.pool.splice(G.pool.indexOf(ti),1);return evOut(ti)}
     }
-    while(G.pool.length){const pi=G.pool.pop(),ev=D.events[pi];if(meets(G.ch,ev.req)&&(!ev.chance||d(100)<=ev.chance))return evOut(pi)}
+    while(G.pool.length){const pi=G.pool.pop(),ev=D.events[pi];if(!(G.ch.hw&&ev.noHw)&&meets(G.ch,ev.req)&&(!ev.chance||d(100)<=ev.chance))return evOut(pi)}
     return {type:'event',ev:D.events.find(e=>e.fallback)||D.events[0]};
   }
   /* 불길한 예감에 대한 답: go면 히든 보스, 아니면 원래 고정 전투 지정대로 조우 */

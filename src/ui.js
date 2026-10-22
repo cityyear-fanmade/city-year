@@ -437,7 +437,7 @@ export function startUI(E,app){
   }
   /* 호수 선장은 직위표의 맨 위(부선장)가 아니라 선장으로 보인다(칭호 '선장'과 함께 뜨던 부선장 표기 제거) */
   const frName=c=>c.flags&&c.flags.lake&&c.lake&&c.lake.captain&&c.fr?'선장':(c.fr?c.fr.n:'');
-  const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.office&&ch.office.ws?' · 내 사무소 '+esc(ch.office.name):''}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+frName(ch):''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
+  const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.office&&ch.office.ws?' · 내 사무소 '+esc(ch.office.name):''}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+frName(ch):''}</span>`:ch.hw?`<span class="chip" style="color:var(--gold);border-color:var(--gold)">H사 홍원${ch.hw.done?' · 가주':ch.hw.out?' · 외부 임무':''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
     +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
   const innateOne=(c,k)=>k==='mark'&&c.markOn?D.innate.mark.awake:D.innate[k].n;
   const innateName=c=>c.innate?[c.innate,c.innate2].filter(Boolean).map(k=>innateOne(c,k)).join(' · '):null;
