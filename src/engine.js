@@ -912,6 +912,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='fight'){ch.purge=r.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
+    if(fx.lakeFlee&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.phase='enter';L.harbor=true;L.fled=(L.fled||0)+1;chips.push('고래에게서 도망쳤다 · 호수를 벗어나 선박장에 들른다')}
     if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push(`혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)`);
       if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
     if(fx.redPost){ch.redPost=(ch.redPost||0)+1;chips.push(`붉은 안개 · 책을 덮었다 (${ch.redPost}번째) · 체력 ×${Math.pow(CFG.redBook.hpMul,ch.redPost).toFixed(2)}`)}
@@ -1290,6 +1291,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const i=one(pool);seen.push(i);const e=S[i],own=!!(ch.office||(ch.aff&&ch.aff.own));
     return {t:'특색 해결사 · '+partnerFill(e.t,ch),x:partnerFill(e.x,ch)+(own&&B.partnerOffice?' '+bondFill(B.partnerOffice,b):''),c:[{l:partnerFill(e.a,ch),h:'함께하는 시간',ok:{t:partnerFill(e.at,ch),fx:{}}},{l:partnerFill(e.b,ch),h:'함께하는 시간',ok:{t:partnerFill(e.bt,ch),fx:{}}}]};
   }
+  /* ===== 대호수로 나간 자: 호수 하나마다 [금기 사건 → 고래(선장 이전엔 선장의 명령으로 도망) → 선박장 정비] ===== */
+  const lakeOn=ch=>!!(ch.flags&&ch.flags.lake);
+  function lakeYear(G){
+    const ch=G.ch,Lk=D.lake;if(!Lk||!lakeOn(ch)||G.year>CFG.years||ch.distForm)return null;
+    const L=ch.lake=ch.lake||{},ids=Object.keys(Lk.lakes);
+    if(L.phase==='whale'){return JSON.parse(JSON.stringify(Lk.flee))}
+    if(!L.bag||!L.bag.length)L.bag=sample(ids,ids.length);   // 지난 호수는 나머지를 다 돌 때까지 나오지 않는다
+    L.cur=L.bag.pop();L.phase='whale';L.seen=(L.seen||0)+1;
+    return JSON.parse(JSON.stringify(Lk.lakes[L.cur]));
+  }
   const bondMarried=ch=>!!(ch.bond&&ch.bond.st==='married');
   function bondMarry(ch,chips){
     const b=ch.bond,R=bondData(ch);b.st='married';b.since=ch.year||0;
@@ -1446,7 +1457,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const DL=CFG.daily;
   function dailyEvent(G){
     const ch=G.ch,y=G.year,L=D.dailyLife;
-    if(!L||!L.length||ch.distForm||ch.job||y<DL.from)return null;
+    if(!L||!L.length||ch.distForm||ch.job||y<DL.from||(lakeOn(ch)&&y<=CFG.years))return null;   // 대호수 항해 중에는 뭍의 일상 사건이 끼어들지 않는다
     const late=!ch.bond&&y>=BD.by&&!!bondRouteOf(ch);
     if(!late&&d(100)>DL.chance)return null;
     if(!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&(late||d(100)<=BD.meetChance)){const e=bondMeetEvent(ch);if(e)return e}
@@ -1895,7 +1906,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* R사 루트처럼 마지막 등급 전투 전에 이미 바랄을 쓰러뜨렸다면 같은 상대를 다시 세우지 않는다: 제나가 남았으면 제나가 나서고, 둘 다 쓰러뜨렸다면 평소 해로 넘어간다 */
     if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1&&G.ch.beaten.includes(X_.finalFirst))f=G.ch.beaten.includes(X_.finalNext)?null:X_.finalNext;
     if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1)return {type:'fight',enemy:f,enc:{label:X_.grades[gradeAt(G.year)]+' · 마지막 등급 전투'}};
-    if(f){
+    if(f&&!(lakeOn(G.ch)&&G.year<=CFG.years)){
       /* 히든 보스: 목록 위에서부터 조건(과 확률)이 맞는 첫 보스가 불길한 예감(omen)으로 먼저 나타난다.
          맞서면 그 보스와 싸우고(다시 나오지 않음), 돌아서면 평소 조우로 넘어간다(조건이 맞으면 다음에 또 나올 수 있다) */
       /* 제 2막 무한 모드의 세계의 균열: 조건과 상관없이 아직 이기지 못한 히든 보스 중 무엇이든 나타난다 */
@@ -1920,7 +1931,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const e=encounter(G.ch,f);return {type:'fight',enemy:e.id,enc:e};
     }
     /* 갈림길: 공방 해결사 제안이 가끔(WF.chance%) 끼어든다 */
-    if(G.year===CFG.affiliationYear&&!G.ch.aff&&!G.ch.hw){
+    if(G.year===CFG.affiliationYear&&!G.ch.aff&&!G.ch.hw&&!lakeOn(G.ch)){
       if(D.workshopChoice&&!noFixer(G.ch)&&d(100)<=WF.chance)return {type:'event',ev:Object.assign({},D.affiliation,{x:D.affiliation.x+(D.workshopIntro||''),c:[...D.affiliation.c,D.workshopChoice]})};
       return {type:'event',ev:D.affiliation};
     }
@@ -1950,10 +1961,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const c3=G.ch;if(c3.colorDone&&!c3.custDone&&!c3.custPick&&!c3.distForm&&!c3.job){if(c3.colorYear==null)c3.colorYear=G.year;if(G.year>=c3.colorYear+CFG.custEvent.gap&&G.year>=(c3.custNext||0)){c3.custNext=G.year+CFG.custEvent.retry;return {type:'event',ev:custEvent(c3)}}}}
     {const ch2=G.ch;if(D.redBook&&ch2.flags&&ch2.flags.redBook&&!ch2.beaten.includes('redmist')&&G.year>=(ch2.bookNext||0)){ch2.bookNext=G.year+CFG.redBook.every;{const n=ch2.redPost||0,RB=CFG.redBook,m=Math.pow(RB.hpMul,n).toFixed(2),ev=structuredClone(D.redBook);ev.c[0].h=`붉은 안개와 싸운다 · 이기면 더는 요동치지 않는다${n?` · 미뤄 온 만큼 체력 ×${m} (${n}번 미뤘다)`:''}`;ev.c[1].h=`${RB.every}년 뒤 다시 요동친다 · 붉은 안개의 체력이 ×${RB.hpMul}배로 커진다${n?` (지금 ×${m})`:''}`;ev.c[1].ok=Object.assign({},ev.c[1].ok,{fx:{redPost:true}});return {type:'event',ev}}}}
     /* 6시즌: 격리 실패 (환상체 보스는 조우 표가 아니라 이 사건으로만 나온다) */
-    if(D.abnoBreach&&G.year>=CFG.abnoBreach.from&&abnoLeft(ch).length&&d(100)<=CFG.abnoBreach.chance)return {type:'event',ev:D.abnoBreach};
+    if(D.abnoBreach&&!(lakeOn(ch)&&G.year<=CFG.years)&&G.year>=CFG.abnoBreach.from&&abnoLeft(ch).length&&d(100)<=CFG.abnoBreach.chance)return {type:'event',ev:D.abnoBreach};
     /* 6시즌: 내 사무소 개설(5급 이상, 5년마다 다시 묻는다) · 소속 없는 해결사는 4년마다 급수에 맞는 사무소 문을 두드린다 */
     if(D.officeFound&&canFound(ch)&&G.year>=(ch.officeNext||0)){ch.officeNext=G.year+CFG.office.foundEvery;return {type:'event',ev:isWs(ch)?Object.assign({},D.officeFound,{x:D.officeFound.x+' 공방의 작업대는 그대로 두고, 그 옆에 간판을 하나 더 건다.'}):D.officeFound}}
     if(D.officeKnock&&ch.licensed&&!ch.aff&&!ch.job&&!noFixer(ch)&&G.year>CFG.affiliationYear&&G.year>=(ch.knockNext||0)){ch.knockNext=G.year+CFG.office.knockEvery;return {type:'event',ev:D.officeKnock}}
+    {const lk=lakeYear(G);if(lk)return {type:'event',ev:lk}}
     /* 사건을 다 쓰면 다시 섞는다 */
     if(!G.pool.length){G.pool=sample(D.events.map((_,i)=>i),D.events.length);
       /* 무한 모드처럼 풀을 여러 번 돌 때는 많이 본 사건이 뒤로 가서 덜 본 사건부터 나온다 (풀은 끝에서부터 뽑는다) */
@@ -2122,8 +2134,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function winRewards(G,C){
     const ch=G.ch,chips=[];
-    /* 대호수로 나간 자: 항해 하나(지금은 전투 승리)를 마칠 때마다 셈하고, harborEvery번째면 대호수를 벗어나 선박장에 들른다 (해마다의 주기는 없다) */
-    if(ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.wins=(L.wins||0)+1;if(L.wins%CFG.lake.harborEvery===0)L.harbor=true}
     {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if((C.id==='claw'||C.id==='arbiter')&&!(ch.flags&&ch.flags.spouseAge)){(ch.flags=ch.flags||{}).spouseAge=1;if(ch.bond)ch.bond.risk=0;chips.push('발톱과 조율자 중 하나를 쓰러뜨렸다 · 배우자의 위험이 가라앉고, 이제 나이로 눈을 감는다')}
