@@ -93,7 +93,7 @@ export const CFG = {
     deck: ['d_jackpot', 'd_jackpot', 'd_jackpot', 'd_rend', 'd_rend', 'd_rend', 'd_maw', 'd_maw', 'd_thrash', 'd_thrash', 'd_coin', 'd_curl'],
     deck2: ['d2_strike', 'd2_strike', 'd2_strike', 'd2_twist', 'd2_twist', 'd2_surge', 'd2_surge', 'd2_flurry', 'd2_flurry', 'd2_gamble', 'd2_final', 'd2_guard']},
   /* 대호수로 나간 자: 침묵·시선의 호수에서 주인공이 아니라 다른 선원이 금기를 어기는 사건이 나올 확률(%) */
-  lake: {slip: 30, encChance: 55 /* 선장이 된 뒤 새 호수에 들어서기 전 인어·해적 조우가 나올 확률 */, pirateAfter: 6 /* 선장이 된 지 이만큼 지나면 쌍갈고리 해적단과 얽힌다 */, adultBefore: 12 /* 1막이 끝나기 이만큼 전부터 같은 호수의 대재앙(성체)이 나온다 */, genesisAt: 2 /* 성체 대재앙을 이만큼 쓰러뜨리면 창세치 고래가 나온다 */},
+  lake: {slip: 30, encChance: 55 /* 선장이 된 뒤 새 호수에 들어서기 전 인어·해적 조우가 나올 확률 */, pirateAfter: 6 /* 선장이 된 지 이만큼 지나면 쌍갈고리 해적단과 얽힌다 */, adultBefore: 12 /* 1막이 끝나기 이만큼 전부터 같은 호수의 대재앙(성체)이 나온다 */, ricardoAfter: 4 /* 해적단 반파 뒤 이만큼 지나면 중지의 큰형님 리카르도가 찾아온다 */, crewMax: 4 /* 선장이 되면 모집할 수 있는 선원 수 */, crewW: 0.75 /* 선원 합산 굴림의 가중 */, crewEvery: 3 /* 모집 사건 간격(해) */, signEvery: 8 /* 변모의 징후 사건 간격(해) */, meetMul: 2 /* 일상 사건이 없는 대신 인연을 만날 확률을 배로(해마다) */, infFight: 35 /* 무한 모드에서 해마다 전투가 나올 확률(%) */, genesisAt: 2 /* 성체 대재앙을 이만큼 쓰러뜨리면 창세치 고래가 나온다 */},
   shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4, restMind: 5,
     /* v6.1: 카드 교환(덱 카드 1장을 일반 보상 카드 무작위 1장으로, 방문마다 swapMax장까지) · 장비 정비(장착 장비마다 최대 tune.max번 시도, chance% 확률로 공격 또는 회피 +1, 시도 비용 base+step×지금까지 시도) */
     swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150, zenaPlus: 10, noPlus: ['w_baralclaw', 'a_baralcoat', 'w_zenafairy', 'a_zenaarmor']}},
@@ -148,7 +148,7 @@ export const CFG = {
   /* 외곽 동행 의뢰(무한 모드 2막 이후): 결혼한 배우자와 gap년 간격으로 chance% 확률로 함께 외곽 의뢰를 나선다. 배우자 소속에 따라
      전투형(협공: 라운드마다 base+per×급수+1d(rand)−1 고정 피해) · 비전투형(지원: 라운드마다 보호막·HP 회복) · 수비형(첫 피격마다 cut% 줄이고 반격) */
   escort: {chance: 35, gap: 6, money: 300, moneyPer: 100,
-    kinds: {fighter: ['hyeolgwi', 'east', 'highfixer', 'blade', 'awl', 'ring', 'kuro', 'finger'], support: ['office', 'assoc', 'wing', 'pointer'], guard: ['thumb', 'middle', 'hcorp']},
+    kinds: {fighter: ['hyeolgwi', 'east', 'highfixer', 'lake', 'blade', 'awl', 'ring', 'kuro', 'finger'], support: ['office', 'assoc', 'wing', 'pointer'], guard: ['thumb', 'middle', 'hcorp']},
     fighter: {base: 6, per: 2, rand: 4}, support: {shield: 12, shieldPer: 4, heal: 4, healPer: 1}, guard: {cut: 35, cutPer: 4, cutMax: 70, counter: 5, counterPer: 2}},
   bond: {partner: {gap: 10 /* 붉은 머리 인연: 만난 뒤 이 해가 지나면 상대가 1급이 되어 특색을 받는다 */, deedEvery: 10 /* 이후 이 해마다 특색 해결사의 행적 */}, sweetEvery: 7, sweetEvery2: 12, routes: ['office', 'assoc', 'wing', 'freelance', 'finger', 'thumb', 'pointer', 'middle', 'ring', 'kuro', 'blade', 'awl'], from: 11, by: 24 /* 24년차(40세)까지 못 만났으면 이후 해는 일상 사건 확률과 무관하게 만난다 */, meetChance: 90, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], marryNeed: 5 /* 청혼 판정: 1d4 + 쌓은 인연(인연 이벤트 최대 3 + '인연을 더 쌓는다' 성공 횟수)이 5 이상이면 결혼 */, tries: 2, waitDc: 24, waitDie: 60 /* 청혼을 미루는 "기다린다": 보정 없이 1d60이 waitDc 이상이면 기회를 쓰지 않는다 */,
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
@@ -163,7 +163,7 @@ export const CFG = {
     grand: {from: 30, to: 50, chance: 7, legacy: 40},
     hunt: {mind: 8, gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1, mul: 1.1, mulTop: 1.5, topLv: 8,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
-      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1, hcorp: 1, freelance: 7}, spouseYears: 3, spouseJob: {rcorp: 'fixer', hcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer', freelance: 'fixer'}}},
+      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1, hcorp: 1, freelance: 7, lake: 4}, spouseYears: 3, spouseJob: {rcorp: 'fixer', hcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer', freelance: 'fixer'}}},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
   /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */

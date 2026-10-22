@@ -279,6 +279,51 @@
     "dmin": 3,
     "spd": -2
    }
+  },
+  "lake_t_wax": {
+   "grade": 1,
+   "slot": "tool",
+   "n": "밀랍 귀마개",
+   "price": 90,
+   "lake": true,
+   "tool": "silence",
+   "e": "소모형 · 육중한 침묵의 호수에서 귀를 막아 소리를 견딘다"
+  },
+  "lake_t_lamp": {
+   "grade": 1,
+   "slot": "tool",
+   "n": "붉은 항해등",
+   "price": 120,
+   "lake": true,
+   "tool": "glow",
+   "e": "소모형 · 기만하는 인광의 호수에서 붉은 등만 보고 항로를 지킨다"
+  },
+  "lake_t_barrel": {
+   "grade": 1,
+   "slot": "tool",
+   "n": "밀폐 나무통",
+   "price": 100,
+   "lake": true,
+   "tool": "tide",
+   "e": "소모형 · 혈향이 끓어오르는 적조의 호수에서 부상자를 격리한다"
+  },
+  "lake_t_weight": {
+   "grade": 1,
+   "slot": "tool",
+   "n": "무게 추",
+   "price": 110,
+   "lake": true,
+   "tool": "anchor",
+   "e": "소모형 · 탐욕스러운 닻줄의 호수에서 값을 치르는 데 쓴다"
+  },
+  "lake_t_compass": {
+   "grade": 1,
+   "slot": "tool",
+   "n": "특수 나침반",
+   "price": 150,
+   "lake": true,
+   "tool": "absurd",
+   "e": "소모형 · 얽히고설킨 부조리의 호수에서 방향을 잃지 않는다"
   }
  },
  "special": {
