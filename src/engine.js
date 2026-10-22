@@ -2122,6 +2122,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function winRewards(G,C){
     const ch=G.ch,chips=[];
+    /* 대호수로 나간 자: 항해 하나(지금은 전투 승리)를 마칠 때마다 셈하고, harborEvery번째면 대호수를 벗어나 선박장에 들른다 (해마다의 주기는 없다) */
+    if(ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.wins=(L.wins||0)+1;if(L.wins%CFG.lake.harborEvery===0)L.harbor=true}
     {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if((C.id==='claw'||C.id==='arbiter')&&!(ch.flags&&ch.flags.spouseAge)){(ch.flags=ch.flags||{}).spouseAge=1;if(ch.bond)ch.bond.risk=0;chips.push('발톱과 조율자 중 하나를 쓰러뜨렸다 · 배우자의 위험이 가라앉고, 이제 나이로 눈을 감는다')}

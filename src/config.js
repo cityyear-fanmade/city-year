@@ -92,6 +92,8 @@ export const CFG = {
   distort: {fx: {maxHp: 40, atk: 6, eva: 0, spd: 0}, packN: '뒤틀린 카드팩', packN2: '더 강해진 뒤틀린 카드팩', stable: {every: 2, chance: 40},
     deck: ['d_jackpot', 'd_jackpot', 'd_jackpot', 'd_rend', 'd_rend', 'd_rend', 'd_maw', 'd_maw', 'd_thrash', 'd_thrash', 'd_coin', 'd_curl'],
     deck2: ['d2_strike', 'd2_strike', 'd2_strike', 'd2_twist', 'd2_twist', 'd2_surge', 'd2_surge', 'd2_flurry', 'd2_flurry', 'd2_gamble', 'd2_final', 'd2_guard']},
+  /* 대호수로 나간 자: 항해를 이만큼 마칠 때마다 대호수를 벗어나 근처 선박장(항구)에 들른다. 공방 거리의 3년 주기는 쓰지 않는다 */
+  lake: {harborEvery: 3},
   shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4, restMind: 5,
     /* v6.1: 카드 교환(덱 카드 1장을 일반 보상 카드 무작위 1장으로, 방문마다 swapMax장까지) · 장비 정비(장착 장비마다 최대 tune.max번 시도, chance% 확률로 공격 또는 회피 +1, 시도 비용 base+step×지금까지 시도) */
     swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150, zenaPlus: 10, noPlus: ['w_baralclaw', 'a_baralcoat', 'w_zenafairy', 'a_zenaarmor']}},
