@@ -146,6 +146,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
     if(o.hw)ch.hw={fi:0,rv:0};
+    if(o.flags&&o.flags.lake)ch.aff={type:'lake',name:'U사 선원'};   // 대호수로 나간 자는 처음부터 선원: 기존 진로(공적·승급·최고 직위) 구조를 쓴다
     if(o.rb){const Z=CFG.rb,tr=d(100),tm=Z.team.find(t=>tr<=t[0])[1];
       ch.rteam=tm;ch.rb={n:0,chase:0,hides:0,chasers:['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==tm).map(t=>Z.foes[t]))};(ch.relics=ch.relics||[]).push('R사 부화장 · '+tm+' 개체')}
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
@@ -988,7 +989,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(C_.strike==='purge'){ch.purge=C_.purgeFoe;chips.push('숙청 대상이 되었다')}
       }
     }
-    if(fx.topPass){const C_=CR[career(ch)];ch.title=isN(ch)&&isEastOuter(ch)?CFG.nWing.eastTitle:C_.topTitle;ch.titleKind='top';ch.topTries=0;ch.topNext=0;(ch.titleLog=ch.titleLog||[]).push(ch.title);addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
+    if(fx.topPass){const C_=CR[career(ch)];ch.title=isN(ch)&&isEastOuter(ch)?CFG.nWing.eastTitle:C_.topTitle;ch.titleKind='top';ch.topTries=0;ch.topNext=0;(ch.titleLog=ch.titleLog||[]).push(ch.title);addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(lakeOn(ch)){ch.lake=ch.lake||{};ch.lake.captain=true;chips.push('목표 · 대재앙 토벌');}if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
     if(fx.colorPass){if(ch.titleKind==='top'){ch.title2=ch.title;ch.topTries=0}ch.colorDone=true;ch.colorYear=ch.year||0;if(CFG.colorReward){const up=k=>{const b=s[k];s[k]=Math.max(b+1,Math.round(b*CFG.colorMul));return s[k]-b},mh=Math.round(s.maxHp*CFG.colorMul)-s.maxHp;const ga=up('atk'),ge=up('eva'),gs=up('spd');s.maxHp+=mh;ch.hp+=mh;chips.push(`특색 · 모든 능력치 ×${CFG.colorMul} (공격 +${ga} · 회피 +${ge} · 속도 +${gs} · 최대 HP +${mh})`);ch.colorPick=true;chips.push('특색 패시브 · 셋 중 하나를 고른다')}ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';(ch.titleLog=ch.titleLog||[]).push('특색');ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 발현자 · 특색 · 모든 능력치 +5')}}
@@ -1296,7 +1297,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function lakeYear(G){
     const ch=G.ch,Lk=D.lake;if(!Lk||!lakeOn(ch)||G.year>CFG.years||ch.distForm)return null;
     const L=ch.lake=ch.lake||{},ids=Object.keys(Lk.lakes);
-    if(L.phase==='whale'){return JSON.parse(JSON.stringify(Lk.flee))}
+    if(L.phase==='whale'){return JSON.parse(JSON.stringify(L.captain&&Lk.fleeCap?Lk.fleeCap:Lk.flee))}   // 선장이 되기 전엔 선장의 명령으로 도망, 선장이 된 뒤엔 내가 명령한다
     if(!L.bag||!L.bag.length)L.bag=sample(ids,ids.length);   // 지난 호수는 나머지를 다 돌 때까지 나오지 않는다
     L.cur=L.bag.pop();L.phase='whale';L.seen=(L.seen||0)+1;
     return JSON.parse(JSON.stringify(Lk.lakes[L.cur]));
