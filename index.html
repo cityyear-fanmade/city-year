@@ -384,7 +384,7 @@ button.chip{cursor:pointer;background:transparent}
 /* 굴림: 이름이 돌아가는 동안은 설명을 가린다 */
 .cycling [data-cyc]{color:var(--dim)}
 .cycling .n>span,.cycling.grow>span.mono{visibility:hidden}
-@media (max-width:899px){.dock{flex-wrap:nowrap;gap:6px}.dock .tile{width:60px;height:60px;border-radius:11px}.dock .tile span{font-size:11px}}
+@media (max-width:899px){.dock{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%}.dock .tile{width:auto;min-width:0;height:60px;padding:6px 2px;border-radius:11px}.dock .tile span{font-size:11px;white-space:nowrap}}
 .endgrp{padding:8px 10px;border-left:3px solid var(--kc);background:var(--panel2)}
 .endgrp summary{cursor:pointer;display:flex;align-items:center;gap:8px;list-style:none}
 .endgrp summary::-webkit-details-marker{display:none}
