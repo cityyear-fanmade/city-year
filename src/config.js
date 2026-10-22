@@ -26,6 +26,11 @@ export const CFG = {
   /* 암시장 응급 카드: 방문마다 chance% 확률로 진열, 덱·카드함·제안 합쳐 최대 max장 */
   /* 공방 치유소: 한 번에 hp 회복, 방문마다 max번 */
   /* 치유소: 치료를 받을 때마다 값이 step씩 오른다 (한 판 전체 누적, 방문마다 최대 max번) */
+  /* 소모품(소지품): 종류마다 최대 max개까지 지닌다. 전투 중에도 라운드마다 한 번 쓸 수 있다. 인연 도시락은 전투를 이긴 뒤 인연이 있으면 가끔 받는다 */
+  supply: {max: 3, priceEvery: 10, priceStep: 100, priceMax: 5000 /* 값은 priceEvery해마다 priceStep안씩 오른다(최대 priceMax) */, lunchChance: 25, lunch: {hpPct: 20, mind: 20},
+    items: {bandage: {n: '지혈대·붕대', hp: 20, bleed: true, price: 300, e: 'HP +20 · 출혈 해제'},
+      snack: {n: '꼬치', hp: 15, mind: 5, price: 150, e: 'HP +15 · 정신력 +5'},
+      calm: {n: '진정제', mind: 15, price: 400, e: '정신력 +15'}}},
   clinic: {price: 500, step: 500, hp: 30, max: 3, mind: 10, mindPrice: 400, mindStep: 200, mindMaxBuy: 3} /* 마음 치료: 한 번에 정신력 mind 회복, 방문마다 mindMaxBuy번, 값은 이번 판에 받은 횟수만큼 mindStep씩 오른다 */,
   /* 암시장 K사 엠플: 전투 중 HP가 최대 HP의 belowPct 이하가 되면 자동으로 heal 회복(전투당 사용 횟수 제한 없음, 한 번에 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
   ample: {name: 'K사 엠플', price: 5000, priceInf: 8000, carry: 3, limit: 5, /* 2막 무한 모드에 들어서면 구매 횟수 제한(limit)이 없어진다(carry는 그대로) */ belowPct: 0.2, healPct: 0.5},
@@ -77,7 +82,7 @@ export const CFG = {
   serpent: {max: 7} /* 보라눈물: 뱀의 장벽 스택 최대 */, vform: {exec: '익스큐셔너 소드', rapier: '레이피어', katana: '카타나'} /* 옛 보랏빛 사복검 */, form: {names: {a: '참격 자세', d: '방어 자세', p: '관통 자세', s: '타격 자세'}, weapon: {a: '보랏빛 사복검', d: '보랏빛 사복검', p: '보랏빛 사복검', s: '보랏빛 사복검'}, atkDmg: 1, defCut: 15, stagger: 1, bleed: 1, burstLight: 5, burstRounds: 2} /* 보랏빛 사복검: 자세 */ /* 보랏빛 사복검의 이름 */,
   warp: {winHealPct: 0.2, chance: 40, leadPlus: 20, laterYears: 5, lead: {maxHp: 8, atk: 1}, rival: {stats: {spd: 1, check: 1}, money: 1500}, after: {bonus: {2: {atk: 2, eva: 2, maxHp: 10}, 5: {atk: 1, eva: 1, maxHp: 4}}}} /* W사 열차 직원: 해마다 이 확률로 열차 안 사건(해가 넘어가지 않음)이 하나 온다. 무한 모드(2막)에서 열차를 내릴지 정하는 서류가 한 번 놓이고, 남아 정리 요원장이 되면 확률이 leadPlus만큼 오르고 lead 보너스를 받는다 */,
   drainCap: 5 /* 무기 흡수(미미크리 등): 한 라운드(턴)에 적중 흡수는 최대 5번까지 */,
-  infinite: {grief: {atk: 2, maxHp: 30, dmg: 0.03} /* 100살을 넘긴 뒤 가족이 눈을 감으면: 슬픔이 몸에 굳어 영구히 강해진다 */, shard: {atk: 1, maxHp: 20, dmg: 0.015, heal: 0.5} /* 불순물을 쓰러뜨릴 때마다 얻는 조각: 공격·최대 HP·주는 피해가 영구히 오르고, HP를 최대의 50%+조각 최대 HP 회복한다 */, century: {every: 100, atk: 6, eva: 1, spd: 1, maxHp: 150, dmg: 0.35, enemyDmg: 0.25} /* 무한 모드에서 100살(나이)마다: 능력치 영구 증가 + 주는 피해 +35%(합산, 영구). 대신 적의 공격 피해도 같이 +25%씩(합산, 영구): 회복 수단을 늘리는 대신 한 대 한 대가 아프게 */, atkCap: 320 /* 무한 모드 적 공격(명중) 상한 */, surge: {year: 200, round: 50, per: 1.5, max: 1e9}, echoXp: 3 /* 다시 나온 히든(불순물)을 이기면 불순물의 조각과 함께 주는 경험치 */ /* 200년차부터 한 전투가 50라운드를 넘기면 라운드마다 내가 주는 피해 ×1.5 복리(최대 ×1e9). 나에게만 붙는다 */, erodeFrom: 90, erodePer: 0.5, erodeMax: 30, enemyMax: 260, atkMax: 260 /* 균열을 닫은 뒤의 적 공격 상한 (enemyMax와 같다) */, midCut: 1, midCutMax: 20 /* 누적 최대 20%p */ /* 중지: 무한 모드에서 맞을 때마다 받는 피해 −1%p (전투 내 누적, 상대의 몰아침 배율 대신) */, every: 10 /* 불순물은 10년마다 (예전 8년) */, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 99999999, hpTable: [[0, 5000], [100, 11000], [200, 45000], [300, 450000], [400, 2800000], [500, 9000000], [600, 20000000], [700, 34000000], [800, 50000000], [900, 70000000]] /* 불순물 체력표: [나이, 최대 HP]. 그 나이부터 다음 칸 나이 전까지 쓴다 */, hpPerKill: 0.025, hpBandMax: 0.4 /* 같은 100살 구간에서 불순물을 쓰러뜨릴 때마다 표의 값에 +2.5%씩 (구간 안에서 최대 +40%) */, hpStep: 100, hpEnd: 984 /* 불순물 체력은 100살(나이)마다 계단식으로 오른다: 그 100살 구간이 끝나는 나이(최대 984년차=1000살)의 기존 곡선 값을 그 구간 동안 쓴다. 1000살 오버플로우 전 마지막 불순물 전투는 체력이 딱 hpMax */, legacyNeed: 40 /* 최고 직위 뒤: 포인트 40마다 연륜 1단계(능력치 +1) */, legacyMax: 40, atkGrow: 1, evaGrow: 0.5, evaDown: 0.5 /* 무한 모드 2해마다 양쪽 회피 −1 (소수는 버린다) */, escPerP: 0.03, escPerE: 0.03, infLvEvery: 5 /* 무한 모드에서 전투 승리 5번마다 레벨 +1 */, atkEvery: 2 /* 무한 모드 적 명중(공격) 보정 +1이 붙는 햇수 간격 */, escMaxP: 2, escMaxE: 30 /* 한 전투에서 맞을 때마다 받는 피해가 복리로 증가: 양쪽 모두 ×1.03씩, 상한은 플레이어 ×4, 적 ×30 */},
+  infinite: {limit:{every:10,atkPct:0.05,dmgPct:0.04,strikePct:0.005,traitMul:1.5,traitYearEvery:5},grief: {atk: 2, maxHp: 30, dmg: 0.03} /* 100살을 넘긴 뒤 가족이 눈을 감으면: 슬픔이 몸에 굳어 영구히 강해진다 */, shard: {atk: 1, maxHp: 20, dmg: 0.015, heal: 0.5} /* 불순물을 쓰러뜨릴 때마다 얻는 조각: 공격·최대 HP·주는 피해가 영구히 오르고, HP를 최대의 50%+조각 최대 HP 회복한다 */, century: {every: 100, atk: 6, eva: 1, spd: 1, maxHp: 150, dmg: 0.35, enemyDmg: 0.25} /* 무한 모드에서 100살(나이)마다: 능력치 영구 증가 + 주는 피해 +35%(합산, 영구). 대신 적의 공격 피해도 같이 +25%씩(합산, 영구): 회복 수단을 늘리는 대신 한 대 한 대가 아프게 */, atkCap: 320 /* 무한 모드 적 공격(명중) 상한 */, surge: {year: 200, round: 50, per: 1.5, max: 1e9}, echoXp: 3 /* 다시 나온 히든(불순물)을 이기면 불순물의 조각과 함께 주는 경험치 */ /* 200년차부터 한 전투가 50라운드를 넘기면 라운드마다 내가 주는 피해 ×1.5 복리(최대 ×1e9). 나에게만 붙는다 */, erodeFrom: 90, erodePer: 0.5, erodeMax: 30, enemyMax: 260, atkMax: 260 /* 균열을 닫은 뒤의 적 공격 상한 (enemyMax와 같다) */, midCut: 1, midCutMax: 20 /* 누적 최대 20%p */ /* 중지: 무한 모드에서 맞을 때마다 받는 피해 −1%p (전투 내 누적, 상대의 몰아침 배율 대신) */, every: 10 /* 불순물은 10년마다 (예전 8년) */, impPer: 0.15, impAtk: 2, hiddenAdd: 30, crack: 40, hpGrow: 0.02, hpGrowCap: 100, hpMax: 99999999, hpTable: [[0, 5000], [100, 11000], [200, 45000], [300, 450000], [400, 2800000], [500, 9000000], [600, 20000000], [700, 34000000], [800, 50000000], [900, 70000000]] /* 불순물 체력표: [나이, 최대 HP]. 그 나이부터 다음 칸 나이 전까지 쓴다 */, hpPerKill: 0.025, hpBandMax: 0.4 /* 같은 100살 구간에서 불순물을 쓰러뜨릴 때마다 표의 값에 +2.5%씩 (구간 안에서 최대 +40%) */, hpStep: 100, hpEnd: 984 /* 불순물 체력은 100살(나이)마다 계단식으로 오른다: 그 100살 구간이 끝나는 나이(최대 984년차=1000살)의 기존 곡선 값을 그 구간 동안 쓴다. 1000살 오버플로우 전 마지막 불순물 전투는 체력이 딱 hpMax */, legacyNeed: 40 /* 최고 직위 뒤: 포인트 40마다 연륜 1단계(능력치 +1) */, legacyMax: 40, atkGrow: 1, evaGrow: 0.5, evaDown: 0.5 /* 무한 모드 2해마다 양쪽 회피 −1 (소수는 버린다) */, escPerP: 0.03, escPerE: 0.03, infLvEvery: 5 /* 무한 모드에서 전투 승리 5번마다 레벨 +1 */, atkEvery: 2 /* 무한 모드 적 명중(공격) 보정 +1이 붙는 햇수 간격 */, escMaxP: 2, escMaxE: 30 /* 한 전투에서 맞을 때마다 받는 피해가 복리로 증가: 양쪽 모두 ×1.03씩, 상한은 플레이어 ×4, 적 ×30 */},
   /* 정신력: 최대 max. healEvery년마다 +yearHeal. 선택지·환상체 조우 2d3 감소, 회피 실패 시 1d evadeDie에서 1이면 1 감소(E.G.O 장비 1개당 +1).
      voiceAt 이하에서 한 번 "들리는 목소리": 1d voiceDie를 voiceRolls번, 모두 voiceDc 이상이면 개화, 실패하면 1d failLoss 감소.
      0이면 사망, 1이면 뒤틀림 판정 1d2 (1이면 개화하고 가득 회복, 2면 뒤틀림 엔딩). tiers: 전투 시작 때 호흡·회피 보정 */
@@ -92,6 +97,8 @@ export const CFG = {
   distort: {fx: {maxHp: 40, atk: 6, eva: 0, spd: 0}, packN: '뒤틀린 카드팩', packN2: '더 강해진 뒤틀린 카드팩', stable: {every: 2, chance: 40},
     deck: ['d_jackpot', 'd_jackpot', 'd_jackpot', 'd_rend', 'd_rend', 'd_rend', 'd_maw', 'd_maw', 'd_thrash', 'd_thrash', 'd_coin', 'd_curl'],
     deck2: ['d2_strike', 'd2_strike', 'd2_strike', 'd2_twist', 'd2_twist', 'd2_surge', 'd2_surge', 'd2_flurry', 'd2_flurry', 'd2_gamble', 'd2_final', 'd2_guard']},
+  /* 대호수로 나간 자: 침묵·시선의 호수에서 주인공이 아니라 다른 선원이 금기를 어기는 사건이 나올 확률(%) */
+  lake: {hullMax:100,hullWear:1,repairCost:700,trait:{hp:40,atk:20,eva:20},wave:{basePct:10,perBreak:15,maxPct:70,stage:3,maxStage:5,wallCost:200,wallDc:35,helmDc:55,helmNav:10,failMind:6,failMindStep:2,failHp:3,failCrew:50,driftMind:20,rewardPts:2,rewardMind:10,hullLoss:80},handShield: 6, cookHeal: 4, navEva: 4, navFlee: 10, harpStack: 1, loot: {silence: '무음의 고래 심장 · 피격 시 상대 왜곡 +1', lamp: '거짓 등대 고래 심장 · 매 라운드 시작 빛 +1', anchor: '닻을 삼킨 고래 심장 · 피격 시 상대 사슬 +1 · 무게 절반', tide: '적조의 고래 심장 · 피격 시 상대 출혈 +2', genesis: '창세치 고래 심장 · 3타마다 1타 추가', pale: '창백한 고래 심장 · 피격 시 상대 침잠 +1 · 창백화 절반'}, align: [9, 7, 5, 3], mindYear: 2, mindSail: 3, mindKeep: 26, harborMind: 10, slip: 30, encChance: 55 /* 선장이 된 뒤 새 호수에 들어서기 전 인어·해적 조우가 나올 확률 */, pirateAfter: 6 /* 선장이 된 지 이만큼 지나면 쌍갈고리 해적단과 얽힌다 */, adultBefore: 12 /* 1막이 끝나기 이만큼 전부터 같은 호수의 대재앙(성체)이 나온다 */, ricardoAfter: 4 /* 해적단 반파 뒤 이만큼 지나면 중지의 큰형님 리카르도가 찾아온다 */, crewMax: 4 /* 선장이 되면 모집할 수 있는 선원 수 */, crewW: 1 /* 선원 합산 굴림의 가중 */, crewEvery: 3 /* 모집 사건 간격(해) */, signEvery: 8 /* 변모의 징후 사건 간격(해) */, meetMul: 2 /* 일상 사건이 없는 대신 인연을 만날 확률을 배로(해마다) */, infFight: 35 /* 무한 모드에서 해마다 전투가 나올 확률(%) */, genesisAt: 2 /* 성체 대재앙을 이만큼 쓰러뜨리면 창세치 고래가 나온다 */},
   shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4, restMind: 5,
     /* v6.1: 카드 교환(덱 카드 1장을 일반 보상 카드 무작위 1장으로, 방문마다 swapMax장까지) · 장비 정비(장착 장비마다 최대 tune.max번 시도, chance% 확률로 공격 또는 회피 +1, 시도 비용 base+step×지금까지 시도) */
     swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150, zenaPlus: 10, noPlus: ['w_baralclaw', 'a_baralcoat', 'w_zenafairy', 'a_zenaarmor']}},
@@ -135,7 +142,7 @@ export const CFG = {
   /* 오늘의 시드로 시작하면 출신 굴림을 이 숫자로 고정한다 (null이면 시드 그대로). 1 = 혈귀 */
   dailyOrigin: 1,
   /* 날짜별 오늘의 시드 지정 (한국 시간 기준 날짜): origin = 출신 굴림(80 = 동부 출신 외곽 생존자), innate = 타고난 것 */
-  dailyPlan: {'2026-10-22': {origin: 20}, '2026-10-20': {origin: 10, innate: 'will'}, '2026-10-21': {origin: 30}, '2026-10-19': {origin: 50}, '2026-10-15': {origin: 80, innate: 'mark'}, '2026-10-16': {origin: 20, innate: 'growth'}, '2026-10-17': {origin: 1, innate: 'psycho'}, '2026-10-18': {origin: 90, innate: 'mark'}},
+  dailyPlan: {'2026-10-23': {origin: 40}, '2026-10-22': {origin: 40}, '2026-10-20': {origin: 10, innate: 'will'}, '2026-10-21': {origin: 30}, '2026-10-19': {origin: 50}, '2026-10-15': {origin: 80, innate: 'mark'}, '2026-10-16': {origin: 20, innate: 'growth'}, '2026-10-17': {origin: 1, innate: 'psycho'}, '2026-10-18': {origin: 90, innate: 'mark'}},
   /* 혈귀 1권속 카드팩 패시브 '오랜 굶주림': HP를 회복할 때마다 HP 1당 스택 +1(최대 max). 공격 카드를 내면 스택을 모두 써서 그 카드의 첫 적중 피해가 스택만큼 늘고, 스택은 비운다 */
   hunger: {max: 15},
   /* 일상 사건: from년차부터 사건이 있는 해에 chance% 확률로 일상이 온다 (선택지 3개 중 능력치 +1~3 하나, 판당 max번). 인연이 없는 소속 캐릭터는 일상 중 meetChance%가 인연(조우자)을 만나는 사건이 된다 */
@@ -146,7 +153,7 @@ export const CFG = {
   /* 외곽 동행 의뢰(무한 모드 2막 이후): 결혼한 배우자와 gap년 간격으로 chance% 확률로 함께 외곽 의뢰를 나선다. 배우자 소속에 따라
      전투형(협공: 라운드마다 base+per×급수+1d(rand)−1 고정 피해) · 비전투형(지원: 라운드마다 보호막·HP 회복) · 수비형(첫 피격마다 cut% 줄이고 반격) */
   escort: {chance: 35, gap: 6, money: 300, moneyPer: 100,
-    kinds: {fighter: ['hyeolgwi', 'east', 'highfixer', 'blade', 'awl', 'ring', 'kuro', 'finger'], support: ['office', 'assoc', 'wing', 'pointer'], guard: ['thumb', 'middle', 'hcorp']},
+    kinds: {fighter: ['hyeolgwi', 'east', 'highfixer', 'lake', 'blade', 'awl', 'ring', 'kuro', 'finger'], support: ['office', 'assoc', 'wing', 'pointer'], guard: ['thumb', 'middle', 'hcorp']},
     fighter: {base: 6, per: 2, rand: 4}, support: {shield: 12, shieldPer: 4, heal: 4, healPer: 1}, guard: {cut: 35, cutPer: 4, cutMax: 70, counter: 5, counterPer: 2}},
   bond: {partner: {gap: 10 /* 붉은 머리 인연: 만난 뒤 이 해가 지나면 상대가 1급이 되어 특색을 받는다 */, deedEvery: 10 /* 이후 이 해마다 특색 해결사의 행적 */}, sweetEvery: 7, sweetEvery2: 12, routes: ['office', 'assoc', 'wing', 'freelance', 'finger', 'thumb', 'pointer', 'middle', 'ring', 'kuro', 'blade', 'awl'], from: 11, by: 24 /* 24년차(40세)까지 못 만났으면 이후 해는 일상 사건 확률과 무관하게 만난다 */, meetChance: 90, gap: [3, 4], steps: 3, die: 4, ok: [3, 4], marryNeed: 5 /* 청혼 판정: 1d4 + 쌓은 인연(인연 이벤트 최대 3 + '인연을 더 쌓는다' 성공 횟수)이 5 이상이면 결혼 */, tries: 2, waitDc: 24, waitDie: 60 /* 청혼을 미루는 "기다린다": 보정 없이 1d60이 waitDc 이상이면 기회를 쓰지 않는다 */,
     marry: {maxHp: 8, mindMax: 6, check: 2}, yearMind: 1, saveMind: 10, lossMind: 5, leaveMind: 2, loveMind: 2,
@@ -161,7 +168,7 @@ export const CFG = {
     grand: {from: 30, to: 50, chance: 7, legacy: 40},
     hunt: {mind: 8, gap: 3, chance: 45, years: 2, job: {office: 0, assoc: 1, fixer: 2}, hp: 10, atk: 1, eva: 1, spd: 1, mul: 1.1, mulTop: 1.5, topLv: 8,
       /* 배우자 급수: 만난 루트별 시작 level + 결혼 spouseYears년마다 +1 (최대 8) */
-      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1, hcorp: 1, freelance: 7}, spouseYears: 3, spouseJob: {rcorp: 'fixer', hcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer', freelance: 'fixer'}}},
+      spouse: {office: 0, assoc: 1, wing: 1, finger: 2, thumb: 2, pointer: 2, middle: 2, ring: 2, kuro: 2, blade: 2, awl: 2, hyeolgwi: 3, east: 1, highfixer: 7, rcorp: 1, hcorp: 1, freelance: 7, lake: 4}, spouseYears: 3, spouseJob: {rcorp: 'fixer', hcorp: 'fixer', office: 'office', assoc: 'assoc', wing: 'assoc', finger: 'fixer', thumb: 'fixer', pointer: 'fixer', middle: 'fixer', ring: 'fixer', kuro: 'fixer', blade: 'fixer', awl: 'fixer', hyeolgwi: 'fixer', east: 'fixer', highfixer: 'fixer', freelance: 'fixer'}}},
   /* 보호막은 몇 장을 쌓아도 이 값을 넘지 않는다 (혈갑처럼 0코스트로 쌓는 카드가 최대 체력보다 많은 보호막을 만들던 문제) */
   shieldCap: 150,
   /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */
@@ -205,6 +212,8 @@ export const CFG = {
   nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastTitle: '금기사냥꾼'},
   /* N사 날개 · 못(상대에게 쌓임, 최대 cap): 적중마다 hit(의체 적은 augHit). 3·4코스트 망치 카드가 못을 모두 흐트러짐으로 바꾼다 (nailBurst.mul배).
      흐트러짐: 단계(stages)마다 상대의 명중 −hit · 주는 피해 −dmg · 받는 피해 +take, 라운드 끝에 decay씩 줄고, stun(적 등급별) 이상이면 다음 라운드 기절 */
+  /* 대호수 작살: 작살 카드가 적중하면 쌓이고, 당기는 카드(harpoonPull)가 모두 소모해 스택당 per 피해를 더한다 */
+  harpoon: {cap: 10},
   nail: {cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */
   /* 별에 선택받은 자의 성도: 단계별 공격·회피·추가 피해. fastFrom 단계부터 별 잇기가 3번째 적중마다, max 단계에서 빛 +1 */
@@ -265,7 +274,7 @@ export const CFG = {
       {n: '후보의 장도', fx: {atk: 5, eva: 4}, dice: [2, 5], wx: {hitInk: 1}, e: '공+5 · 회피+4 · 피해 2d5 · 적중 시 수흔 +1'}],
       host: {n: '가주의 장도', fx: {atk: 8, eva: 4}, dice: [2, 6], wx: {hitInk: 1, lightUp: 1}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 수흔 +1 · 전투 시작 빛 +1'},
       free: {n: '가주의 장도', fx: {atk: 5, eva: 7}, dice: [2, 6], wx: {hitInk: 1, inkCap: 4}, e: '공+5 · 회피+7 · 피해 2d6 · 적중 시 수흔 +1 · 수흔 스택 한도 +4'}}},
-  /* R사 팀 배치 기준(R사 날개 입사): 위에서부터 맞는 것이 있으면 그 팀으로 고정(속도형 토끼 · 회피형 순록 · 체력형 코뿔소), 없으면 무작위 */
+  /* R사 팀 배치 기준: 위에서부터 맞는 것이 있으면 그 팀으로 고정(속도형 토끼 · 체력형 코뿔소 · 회피형 순록), 없으면 무작위 */
   rbTeamRule: [['spd', 4, '토끼팀'], ['eva', 3, '순록팀'], ['maxHp', 71, '코뿔소팀']],
   rb: {teamBonus: {'토끼팀': {spd: 3}, '코뿔소팀': {maxHp: 10}, '순록팀': {eva: 3}} /* 부화장 출생 때 고르는 팀 보정 */, total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, team: [[34, '토끼팀'], [67, '순록팀'], [100, '코뿔소팀']], foes: {'까마귀팀': 'rh2', '코뿔소팀': 'rh3', '순록팀': 'rh4', '토끼팀': 'rh5'}, headFrom: 64, headGap: 1, bossGap: 3, head: ['baral'], boss: 'rcorp_boss', xp: 4, trial: {baral: {hp: 0.75, atk: -1}, zena: {hp: 0.75, atk: -1}}},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */
