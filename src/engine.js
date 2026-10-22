@@ -500,6 +500,24 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const K=CFG.clinic,p=clinicPrice(ch);if(ch.money<p||ch.hp>=ch.stats.maxHp)return 0;
     const h=Math.min(K.hp,ch.stats.maxHp-ch.hp);ch.money-=p;ch.hp+=h;ch.healBought=(ch.healBought||0)+1;return h;
   }
+  /* ===== 소모품(소지품): 지혈대·붕대 / 도시 음식 / 진정제. 종류마다 CFG.supply.max개까지 ===== */
+  const supplyName=(ch,id)=>id==='snack'?(ch.hw?'회복환':lakeOn(ch)?'생선구이':'꼬치'):CFG.supply.items[id].n;
+  const supplyCount=ch=>Object.values(ch.supply||{}).reduce((a,b)=>a+(b||0),0);
+  function buySupply(ch,id){const K=CFG.supply,it=K.items[id];if(!it||ch.money<it.price||((ch.supply||{})[id]||0)>=K.max)return false;ch.money-=it.price;(ch.supply=ch.supply||{})[id]=((ch.supply||{})[id]||0)+1;return true}
+  /* 쓸 수 있으면 결과 문장, 아니면 null. 전투 중이면 C를 넘기고(HP는 전투 중 값에 더한다) 라운드마다 한 번만 쓴다 */
+  function useSupply(ch,id,C){
+    const it=CFG.supply.items[id];if(!it||!((ch.supply||{})[id]>0)||ch.distForm&&it.mind)return null;
+    const P=C&&!C.over?C.P:null;if(C&&C.over)return null;if(P&&C.supplyRound===C.round)return null;
+    const hp=P?P.hp:ch.hp,mx=P?P.maxHp:ch.stats.maxHp,bleed=P?(P.bleed||0)>0:false;
+    const needHp=it.hp&&hp<mx,needMind=it.mind&&ch.mind<mindMax(ch);
+    if(!needHp&&!needMind&&!(it.bleed&&bleed))return null;
+    ch.supply[id]--;const out=[];
+    if(it.hp){const h=Math.min(it.hp,mx-hp);if(h>0){if(P)P.hp+=h;else ch.hp+=h;out.push('HP +'+h)}}
+    if(it.mind){const g=gainMind(ch,it.mind);if(g)out.push('정신력 +'+g)}
+    if(it.bleed&&P&&P.bleed>0){out.push('출혈 해제');P.bleed=0}
+    if(P)C.supplyRound=C.round;
+    return `${supplyName(ch,id)} 사용 · ${out.join(' · ')||'효과 없음'}`;
+  }
   /* 공방 치유소 · 마음 치료: 돈을 내고 정신력을 회복한다 (뒤틀린 몸은 마음을 쓰지 못해 받을 수 없다) */
   const mindClinicPrice=ch=>CFG.clinic.mindPrice+CFG.clinic.mindStep*(ch.mindBought||0);
   function buyMind(ch){
@@ -2246,6 +2264,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function winRewards(G,C){
     const ch=G.ch,chips=[];
+    /* 인연 도시락: 인연이 있으면 전투를 이긴 뒤 가끔 받는다 */
+    if(ch.bond&&['met','married'].includes(ch.bond.st)&&!ch.distForm&&d(100)<=CFG.supply.lunchChance){const L_=CFG.supply.lunch,hp0=C.P.hp,hh=Math.min(Math.round(ch.stats.maxHp*L_.hpPct/100),ch.stats.maxHp-C.P.hp);if(hh>0)C.P.hp+=hh;const g_=gainMind(ch,L_.mind);chips.push(`인연 도시락 · ${ch.bond.name||'인연'}이(가) 도시락을 건넸다${hh>0?' · HP +'+hh:''}${g_?' · 정신력 +'+g_:''}`)}
     /* 대호수: 호수에서 싸울 때마다(항해) 정신이 닳는다. mindKeep 밑으로는 항해만으로 내려가지 않는다 */
     if(ch.flags&&ch.flags.lake&&/^lake_/.test(C.id)&&!ch.distForm&&ch.mind>CFG.lake.mindKeep){loseMind(ch,Math.min(CFG.lake.mindSail,ch.mind-CFG.lake.mindKeep),m=>chips.push('항해의 피로 · '+m))}
     if(ch.flags&&ch.flags.lake&&ch.lake){if(C.id==='lake_mate')ch.lake.pirate='orca';if(C.id==='lake_orca')ch.lake.pirate='epi';
@@ -3173,5 +3193,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
     cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

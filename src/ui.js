@@ -506,7 +506,7 @@ export function startUI(E,app){
   }
   /* ===== 6시즌: 가방 =====
      HUD 오른쪽의 네모 칸(능력치·장비·카드·전리품)을 누르면 가방을 열듯 화면이 펼쳐진다 */
-  const ICON={family:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/>',stat:'<path d="M4 20V11M10 20V4M16 20v-8M21 20H3"/>',gear:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  const ICON={supply:'<path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M12 12v5M9.5 14.5h5"/>',family:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/>',stat:'<path d="M4 20V11M10 20V4M16 20v-8M21 20H3"/>',gear:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
     pack:'<rect x="5" y="9" width="14" height="12" rx="2"/><path d="M7 6h10M9 3h6M9 14h6M9 17.500h4"/>',
     card:'<rect x="3" y="7" width="12" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/>',relic:'<path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6"/>',title:'<path d="M12 3l2.600 5.400 5.900.8-4.300 4.100 1 5.800L12 16.300 6.800 19.100l1-5.800L3.500 9.200l5.900-.8z"/>'};
   const icon=k=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${ICON[k]}</svg>`;
@@ -519,7 +519,7 @@ export function startUI(E,app){
   const eqTitle=ch=>ch.equipTitle&&titleList(ch).some(t=>t[0]===ch.equipTitle)?ch.equipTitle:'';
   const titledName=ch=>{const t=eqTitle(ch);return (t?`<span class="ctitle">[${esc(t)}]</span><br>`:'')+esc(ch.name||T.you)};
   const entName=X=>X.tt&&X.name.startsWith(`[${X.tt}] `)?`<span class="ctitle">[${esc(X.tt)}]</span><br>${ulName(X.name.slice(X.tt.length+3),X.ul)}`:ulName(X.name,X.ul);
-  function bagTabs(ch){return [['stat','출생',''],['pack','카드팩',(ch.packs||[]).length?'보관 '+ch.packs.length:''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):'']].concat([['title','칭호',titleList(ch).length?String(titleList(ch).length):'']]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
+  function bagTabs(ch){return [['stat','출생',''],['pack','카드팩',(ch.packs||[]).length?'보관 '+ch.packs.length:''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):''],['supply','소모품',E.supplyCount(ch)?String(E.supplyCount(ch)):'']].concat([['title','칭호',titleList(ch).length?String(titleList(ch).length):'']]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
   /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
   /* 무한 모드의 연차 감소: 회피는 해마다 깎여 0에서 멈춘다. 표시도 깎인 뒤의 값으로 보이고, 깎인 양은 괄호로 알린다 */
   const evaNow=(ch,e)=>{const c=ch.infinite?E.infEvaCut(ch):0;return c>0?`${sg(e-c)} (무한 −${c}${e-c<=0?' · 0에서 멈춤':''})`:sg(e)};
@@ -732,9 +732,18 @@ export function startUI(E,app){
       ${ps.length?ps.map((t,i)=>{const can=E.packCan(ch,i),ask=UI.packSwAsk===i;return `<div class="panel stack" style="gap:6px"><div class="row between"><b>${esc(t.n)}</b><span class="mono small dim">덱 ${t.deck.length}장${t.side.length?' · 카드함 '+t.side.length+'장':''}</span></div>${flag(1,t.deckLocked||t.cardMoney)}${chips(t.deck)}${t.k==='basic'?rn(i,t.n):''}
         ${can==='ok'?`<button class="btn${ask?' primary':''}" data-a="packsw" data-i="${i}"><b>이 팩으로 바꾼다</b><span class="dim small">지금 팩은 보관함으로 간다</span></button>`:`<p class="small dim">${why[can]||''}</p>`}</div>`}).join(''):'<div class="panel"><p class="small dim">보관한 팩이 없다. 전용 카드팩을 받아 덱이 통째로 바뀌면 이전 덱이 여기에 남는다.</p></div>'}`;
   }
+  /* 소모품 칸: 가방 탭(밖에서 쓴다)과 공방 거리 구입 칸 */
+  function vSupply(){
+    const ch=G.ch,K=CFG.supply;
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소모품 · 종류마다 최대 ${K.max}개</span><p class="small dim">전투 밖에서는 여기서, 전투 중에는 행동을 고르는 화면에서 쓴다(라운드마다 한 번). 공방 거리에서 살 수 있다.</p>${Object.entries(K.items).map(([id,it])=>{const n=(ch.supply||{})[id]||0;return `<div class="row between" style="gap:8px;flex-wrap:nowrap"><div class="stack" style="gap:2px"><b>${esc(E.supplyName(ch,id))} <span class="mono small dim">${n}/${K.max}</span></b><span class="mono small" style="color:var(--gold)">${esc(it.e)}</span></div><button class="chip" data-a="usesupply" data-i="${id}" ${n>0?'':'disabled'}>쓴다</button></div>`}).join('')}${UI.supMsg?`<p class="good small">${esc(UI.supMsg)}</p>`:''}</div>`;
+  }
+  function vSupplyShop(){
+    const ch=G.ch,K=CFG.supply;
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">소지품</b><span class="mono small dim">종류마다 최대 ${K.max}개</span></div><p class="small dim">가방의 소모품 칸에 들어간다. 전투 중에도 쓸 수 있다.</p>${Object.entries(K.items).map(([id,it])=>{const n=(ch.supply||{})[id]||0,ok=n<K.max&&ch.money>=it.price;return `<button class="btn" data-a="buysupply" data-i="${id}" ${ok?'':'disabled'}><span class="row between"><b>${esc(E.supplyName(ch,id))}</b><span class="mono" style="color:var(--gold)">${E.money(it.price)}</span></span><span class="mono small dim">${esc(it.e)} · 지닌 수 ${n}/${K.max}${n>=K.max?' · 더는 지닐 수 없다':ch.money<it.price?' · 돈이 모자란다':''}</span></button>`}).join('')}</div>`;
+  }
   function vBag(){
     const ch=G.ch,t=UI.bag;
-    const body={stat:vStat,pack:vPacks,gear:vGear,card:vCards,relic:vRelic,family:vFamily,title:vTitleBag}[t]();
+    const body={stat:vStat,pack:vPacks,gear:vGear,card:vCards,relic:vRelic,supply:vSupply,family:vFamily,title:vTitleBag}[t]();
     return sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">가방</b><span class="mono small" style="color:var(--gold);margin-left:auto">자산 ${E.money(ch.money)}</span><button class="chip" data-a="bagclose">닫기 ✕</button></div>
       <div class="bagtabs">${bagTabs(ch).map(([k,n,b])=>`<button class="tile sm${t===k?' on':''}" data-a="bag" data-i="${k}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>
       <div class="stack" style="gap:10px">${body}</div>`,'bag',true);
@@ -845,7 +854,7 @@ export function startUI(E,app){
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
     return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">${hwHome()?'홍원의 저잣거리':lakeHome()?'U사의 어느 항구':(G.infinite&&G.ch.infinite)?'외곽의 가게':'공방'} · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
-      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vCafe()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
+      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vSupplyShop()}${vCafe()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
       <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':lakeHome()?'항구를 나간다':'공방을 나간다'}</button>`;
   }
   /* 공방 해결사: 카드 판매 (장비 판매는 없다) */
@@ -1620,9 +1629,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       return `${M?duo({E:X,P}):entHtml('E',X,X)+entHtml('P',P,P)}<div class="panel stack"><h2 class="${w?'good':'bad'}">${w?'승리 · '+esc(X.name)+'을(를) 꺾었다':'당신은 쓰러졌다'}</h2></div>${log}`;
     }
     /* 전투 버튼은 화면 아래에 고정한 막대에 둔다: 내용 길이가 바뀌어도 버튼 자리는 움직이지 않는다 */
+    const supBtns=(()=>{const ch=G.ch,K=CFG.supply,have=Object.keys(K.items).filter(id=>((ch.supply||{})[id]||0)>0);if(!have.length||C.supplyRound===C.round)return '';return `<div class="row" style="gap:6px;flex-wrap:wrap">${have.map(id=>`<button class="chip" data-a="csupply" data-i="${id}">${esc(E.supplyName(ch,id))} ×${ch.supply[id]} · ${esc(K.items[id].e)}</button>`).join('')}</div>`})();
     const fleeBtn=X.name&&D.enemies[C.id]&&D.enemies[C.id].flee?`<button class="btn" data-a="flee"><b>도주를 시도한다</b><span class="mono small dim">1d100 + 회피·속도 보정 ≥ ${D.enemies[C.id].flee.dc} · 실패하면 이번 라운드는 공격만 받는다</span></button>`:'';
     UI.cbar=FIGHT==='auto'?`<button class="btn${UI.paused?' primary':''}" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button>${fleeBtn}<button class="btn quiet" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button>`
-      :`<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button>${fleeBtn}<button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`;
+      :`${supBtns}<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button>${fleeBtn}<button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`;
     /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
     const cost=UI.sel.reduce((a,i)=>a+E.cardCost(P,D.cards[P.hand[i]])-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
     const cards=P.hand.map((id,i)=>{
@@ -2417,6 +2427,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     mindcare(){if((UI.mindHealed||0)>=CFG.clinic.mindMaxBuy)return;const g=E.buyMind(G.ch);if(g){UI.mindHealed=(UI.mindHealed||0)+1;UI.mindMsg=`정신력 +${g}`;resave();render()}},
     heal(){if((UI.healed||0)>=CFG.clinic.max)return;const h=E.buyHeal(G.ch);if(h){UI.healed=(UI.healed||0)+1;UI.healMsg=`HP +${h}`;resave();render()}},
     ample(){if(E.buyAmple(G.ch)){resave();render()}},
+    buysupply(id){if(E.buySupply(G.ch,id)){resave();render()}},
+    usesupply(id){const m=E.useSupply(G.ch,id,null);UI.supMsg=m||'지금은 쓸 데가 없다.';if(m)resave();render()},
+    csupply(id){const m=E.useSupply(G.ch,id,C);if(!m)return;C.log.push({t:'kw',s:`${C.P.name} · ${m}`});resave();render()},
     box(t){if(UI.boxDone)return;const c=E.cardBox(G.ch,t);if(c){UI.boxDone=Array.isArray(c)?`상자에서 카드 ${c.length}장이 나왔다. 하나를 고른다.`:'상자에서 카드가 나왔다.';render()}},
     unshop(){UI.buyAsk=null;saveGame({st:UI.curSt,stock:[],shopDone:true});UI.screen='event';render()},
     omen(i){

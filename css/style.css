@@ -346,7 +346,7 @@ html[data-skin="ruina"] .seg button.on{background:linear-gradient(180deg,#f0d38f
 @media (min-width:1020px){
   .dock-in{display:none}
   .dock-out{display:flex}
-  .dock{position:fixed;right:20px;top:50%;transform:translateY(-50%);flex-direction:column;z-index:20;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:16px;padding:10px}
+  .dock{position:fixed;right:20px;top:calc(50% + 60px);transform:translateY(-50%);flex-direction:column;z-index:20;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:16px;padding:10px}
 }
 html.ovopen,html.ovopen body{overflow:hidden}
 .ov{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
@@ -594,3 +594,6 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 @media (prefers-reduced-motion:reduce){.infnote{animation:infIn .4s ease forwards,infOut 2s ease 18s forwards}}
 .infnote-x{position:absolute;top:2px;right:2px;width:28px;height:28px;padding:0;border:0;background:transparent;color:var(--dim);font:600 14px/1 var(--mono);cursor:pointer;pointer-events:auto;animation:none}
 .infnote-x:hover,.infnote-x:focus-visible{color:var(--gold)}
+
+/* 낮은 창에서는 오른쪽 가방칸이 위쪽 옵션 버튼을 가리지 않게 줄인다 */
+@media (min-width:900px) and (max-height:760px){.dock{zoom:.82}}
