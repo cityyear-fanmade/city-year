@@ -626,7 +626,7 @@ export function startUI(E,app){
     const row=(lab,x)=>`<div class="roll"><span class="mono small dim">${lab}</span><div class="n"><b>${esc(x.n)}</b>${x.t?`<span>${esc(x.t)}</span>`:''}${eff(x)}</div></div>`;
     const place=placeOf(ch.o,ch.r,ch.blank);
     const lk_=ch.flags&&ch.flags.lake&&ch.lake?ch.lake:null,lakeLog=lk_?(()=>{const K=lk_.killed||[],ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length,cr=(lk_.crew||[]).map(m=>m.n).join(' · ')||'없음',tl=lk_.tools||{},tn=Object.entries(tl).filter(([,v])=>v>0).map(([k,v])=>`${(D.lake&&D.lake.tools&&D.lake.tools[k]||{}).n||k} ×${v}`).join(' · ')||'없음';
-      return `<div class="eyebrow">항해 기록</div><div class="panel stack" style="gap:4px"><div class="invr"><span>지나온 호수</span><b class="mono">${lk_.seen||0}번</b></div><div class="invr"><span>고래에게서 도망</span><b class="mono">${lk_.fled||0}번</b></div>${lk_.captain?`<div class="invr"><span>목표 · 대재앙 토벌</span><b class="mono">보스급 ${ny}/4 · 대재앙 ${na}/6</b></div><div class="invr"><span>배 내구도</span><b class="mono">${E.hullOf(ch)}/${CFG.lake.hullMax} · 전투마다 -${CFG.lake.hullWear} · 항구에서 ${E.money(CFG.lake.repairCost)} 수리 · 0이면 침몰</b></div><div class="invr"><span>선원</span><b class="mono">${esc(cr)}</b></div>`:'<p class="small dim">선장이 되면 대재앙 토벌이 목표가 된다.</p>'}<div class="invr"><span>방지 도구</span><b class="mono">${esc(tn)}</b></div></div>`})():'';
+      return `<div class="eyebrow">항해 기록</div><div class="panel stack" style="gap:4px"><div class="invr"><span>지나온 호수</span><b class="mono">${lk_.seen||0}번</b></div><div class="invr"><span>고래에게서 도망</span><b class="mono">${lk_.fled||0}번</b></div>${lk_.captain?`<div class="invr"><span>목표 · 대재앙 토벌</span><b class="mono">보스급 ${ny}/4 · 대재앙 ${na}/6</b></div><div class="invr"><span>배 내구도</span><b class="mono">${E.hullOf(ch)}/${CFG.lake.hullMax}</b></div><p class="small dim">전투마다 -${CFG.lake.hullWear} · 항구에서 ${E.money(CFG.lake.repairCost)} 수리 · 0이 되면 침몰</p><div class="invr"><span>선원</span><b class="mono">${esc(cr)}</b></div>`:'<p class="small dim">선장이 되면 대재앙 토벌이 목표가 된다.</p>'}<div class="invr"><span>방지 도구</span><b class="mono">${esc(tn)}</b></div></div>`})():'';
     const kid=(place?row('태어난 곳',place):'')+(ch.kid||[]).map(k=>row(k.age+'세',k.x)).join('');
     const base=s0?[['최대 HP',s0.maxHp],['공격',sgn(s0.atk)],['회피',sgn(s0.eva)],['속도',sgn(s0.spd)],['사건 판정',sgn(s0.check)]].map(([a,b])=>`<div class="invr"><span>${a}</span><b class="mono">${b}</b></div>`).join(''):'';
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
@@ -2569,6 +2569,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testRecordEnd(){recordEnd()},
     testCent(n){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infIntro=1;G.ch.infCent=Array.from({length:n-1},(_,i)=>i+1);G.year=G.ch.year=n*100-16;const ev=E.infiniteEvent(G);if(!ev)return;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvent(k,lic){if(!G)return;G.ch.licensed=lic!==false;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
+    testShip(mode){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.flags.lake=1;c.lake={captain:true,hull:63,crew:[{role:'cook',n:'요리사'},{role:'navigator',n:'항해사'}],seen:7,killed:[],wave:mode==='wave'?{i:1,max:4}:null};c.money=2000;
+      if(mode==='wave'){UI.ev=E.waveEv(c,c.lake);UI.fight=null;UI.omen=null;UI.screen='event'}
+      else if(mode==='shop'){UI.stock=[];UI.bought=null;UI.screen='shop'}
+      else{UI.bag='stat';UI.screen='event';UI.ev=D.hunter||UI.ev}
+      render()},
     testEvT(t){if(!G)return;const ev=D.events.find(e=>e.t===t);if(!ev)return;G.ch.licensed=true;G.ch.rank=G.ch.rank||9;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testPreFight(id){if(!G||!D.enemies[id])return;UI.fight=id;UI.enc=null;UI.omen=null;UI.ev=null;UI.screen='event';render()},
     testShopAsk(){if(!G)return;UI.stock=[];UI.screen='shopask';render()},
