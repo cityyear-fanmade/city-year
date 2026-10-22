@@ -913,6 +913,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='fight'){ch.purge=r.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
+    if(fx.lakeHunt&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakeHunt==='fight'){L.hunterFight=true;chips.push('내일 새벽, 사냥꾼과 싸운다')}else chips.push('사냥꾼은 떠났다')}
     if(fx.lakeFlee&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.phase='enter';L.harbor=true;L.fled=(L.fled||0)+1;chips.push('고래에게서 도망쳤다 · 호수를 벗어나 선박장에 들른다')}
     if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push(`혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)`);
       if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
@@ -1297,6 +1298,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function lakeYear(G){
     const ch=G.ch,Lk=D.lake;if(!Lk||!lakeOn(ch)||G.year>CFG.years||ch.distForm)return null;
     const L=ch.lake=ch.lake||{},ids=Object.keys(Lk.lakes);
+    /* 금기 사냥꾼: 금기를 어기면 몇 해 뒤 대호수 금기 사냥꾼이 먼저 찾아온다 (조율자는 오지 않는다). 새 호수에 들어서기 전에 경고 사건 → 맞서면 다음 해 전투 */
+    if(L.hunterFight){L.hunterFight=false;return {type:'fight',enemy:'lake_hunter',enc:{hidden:true,label:'대호수 금기 사냥꾼'}}}
+    {const brk=(ch.flags.lakeBreak||0);if(brk>(L.hunted||0)&&!L.huntAt)L.huntAt=G.year+1+d(2);
+     if(L.phase!=='whale'&&L.huntAt&&G.year>=L.huntAt&&Lk.hunter){L.hunted=brk;L.huntAt=null;return JSON.parse(JSON.stringify(Lk.hunter))}}
     if(L.phase==='whale'){return JSON.parse(JSON.stringify(L.captain&&Lk.fleeCap?Lk.fleeCap:Lk.flee))}   // 선장이 되기 전엔 선장의 명령으로 도망, 선장이 된 뒤엔 내가 명령한다
     if(!L.bag||!L.bag.length)L.bag=sample(ids,ids.length);   // 지난 호수는 나머지를 다 돌 때까지 나오지 않는다
     L.cur=L.bag.pop();L.phase='whale';L.seen=(L.seen||0)+1;
@@ -1966,7 +1971,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 6시즌: 내 사무소 개설(5급 이상, 5년마다 다시 묻는다) · 소속 없는 해결사는 4년마다 급수에 맞는 사무소 문을 두드린다 */
     if(D.officeFound&&canFound(ch)&&G.year>=(ch.officeNext||0)){ch.officeNext=G.year+CFG.office.foundEvery;return {type:'event',ev:isWs(ch)?Object.assign({},D.officeFound,{x:D.officeFound.x+' 공방의 작업대는 그대로 두고, 그 옆에 간판을 하나 더 건다.'}):D.officeFound}}
     if(D.officeKnock&&ch.licensed&&!ch.aff&&!ch.job&&!noFixer(ch)&&G.year>CFG.affiliationYear&&G.year>=(ch.knockNext||0)){ch.knockNext=G.year+CFG.office.knockEvery;return {type:'event',ev:D.officeKnock}}
-    {const lk=lakeYear(G);if(lk)return {type:'event',ev:lk}}
+    {const lk=lakeYear(G);if(lk)return lk.type==='fight'?lk:{type:'event',ev:lk}}
     /* 사건을 다 쓰면 다시 섞는다 */
     if(!G.pool.length){G.pool=sample(D.events.map((_,i)=>i),D.events.length);
       /* 무한 모드처럼 풀을 여러 번 돌 때는 많이 본 사건이 뒤로 가서 덜 본 사건부터 나온다 (풀은 끝에서부터 뽑는다) */
