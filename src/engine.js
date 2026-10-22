@@ -2246,6 +2246,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function winRewards(G,C){
     const ch=G.ch,chips=[];
+    /* 대호수: 호수에서 싸울 때마다(항해) 정신이 닳는다. mindKeep 밑으로는 항해만으로 내려가지 않는다 */
+    if(ch.flags&&ch.flags.lake&&/^lake_/.test(C.id)&&!ch.distForm&&ch.mind>CFG.lake.mindKeep){loseMind(ch,Math.min(CFG.lake.mindSail,ch.mind-CFG.lake.mindKeep),m=>chips.push('항해의 피로 · '+m))}
     if(ch.flags&&ch.flags.lake&&ch.lake){if(C.id==='lake_mate')ch.lake.pirate='orca';if(C.id==='lake_orca')ch.lake.pirate='epi';
       if(/^lake_(ywhale|whale)_/.test(C.id)){const L=ch.lake,K=L.killed=L.killed||[];if(!K.includes(C.id))K.push(C.id);L.phase='enter';L.harbor=true;gainMind(ch,CFG.lake.harborMind);
         const ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length;chips.push(`고래 토벌 · 보스급 ${ny}/4 · 대재앙 ${na}/6`)}}
