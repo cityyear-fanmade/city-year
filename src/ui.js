@@ -1043,6 +1043,15 @@ export function startUI(E,app){
     if(!ev||!ev.t)return;const ks=[];for(const h of HINT_TRIG)if(ev.t===h.t&&(!h.l||(ev.c||[]).some(c=>c.l===h.l)))ks.push(...h.k);
     if(!ks.length)return;const r=loadRec();r.hints=r.hints||{};let ch=false;for(const k of ks)if(!r.hints[k]){r.hints[k]=1;ch=true}if(ch)store.set(REC,JSON.stringify(r))}
   const hintRow=(open,label,hint)=>`<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${open?'':' dim'}" style="justify-self:start">${open?label:'???'}</span><span class="small dim">${esc(hint||'')}</span></div>`;
+  /* 기록실: 대호수 도감. 대호수로 태어났거나 호수의 적을 한 번이라도 만난 기록이 있으면 보인다 */
+  function vLakeRec(r){
+    const ids=Object.keys(D.enemies).filter(id=>/^lake_(ywhale|whale|indigo)/.test(id));
+    if(!ids.length||!(r.births||[]).concat(r.seen).some(x=>x==='대호수로 나간 자'||/^lake_/.test(x)))return '';
+    const rows=(list,title)=>`<div><span class="small dim">${title}</span><div class="stack" style="gap:6px">${list.map(id=>{const e=D.enemies[id],seen=r.seen.includes(id),won=r.beaten.includes(id);
+      return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${seen?'':' dim'}"${won?` style="color:${e.color};border-color:${e.color}"`:''}>${seen?esc(e.n)+(won?' ✓':''):'???'}</span><span class="small dim">${won&&e.drop?esc(e.drop.e):seen?'아직 이기지 못했다':'아직 만나지 못했다'}</span></div>`}).join('')}</div></div>`;
+    const y=ids.filter(id=>/^lake_ywhale/.test(id)),w=ids.filter(id=>/^lake_whale/.test(id)),o=ids.filter(id=>/^lake_indigo/.test(id));
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">대호수 도감 · 대재앙 ${w.filter(id=>r.beaten.includes(id)).length}/${w.length} · 어린 고래 ${y.filter(id=>r.beaten.includes(id)).length}/${y.length}</span>${rows(w,'대재앙')}${rows(y,'보스급 고래')}${rows(o,'그 밖에')}</div>`
+  }
   function vRecords(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
     const ends0=[['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
@@ -1076,6 +1085,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
         <div class="row between"><span>가장 짧게 · 길게</span><b class="mono">${S.min}년 · ${S.max}년</b></div>
         ${line('엔딩',top(S.ends,6).map(([k,v])=>[en[k]||k,v]))}${line('자주 쓴 소속',top(S.aff,3))}${line('자주 나온 출신',top(S.ori,3))}${line('자주 나온 타고난 것',top(S.inn,3))}</div>`})()}
       ${vJobs()}
+      ${vLakeRec(r)}
       <div class="panel stack" style="gap:8px"><span class="eyebrow">만난 상대 ${r.seen.filter(id=>D.enemies[id]).length}/${total} · 이긴 상대 ${r.beaten.filter(id=>D.enemies[id]).length}</span>
         ${groups.map(([n,g])=>{const l=foes(g);return l.length?`<div><span class="small dim">${n}</span><div class="chips">${l.map(([id,e])=>`<span class="chip${r.seen.includes(id)?'':' dim'}" ${r.beaten.includes(id)?`style="color:${e.color};border-color:${e.color}"`:''}>${r.seen.includes(id)?esc(e.n)+(r.beaten.includes(id)?' ✓':''):'???'}</span>`).join('')}</div></div>`:''}).join('')}
         <p class="small dim">✓ 표시는 한 번 이상 이긴 상대. 기록은 이 브라우저에만 남는다.</p></div>
