@@ -20,12 +20,15 @@ const routeTest=process.argv.includes('--routetest'),lab=process.argv.includes('
 const BGM_STUB=`function createBgm(){const f=()=>{};return {supported:false,isOn:()=>false,set:f,setMood:f,setScene:f,setVol:f,setStyle:f,style:()=>'calm',extOn:()=>false,ext:()=>({calm:1,fight:1}),setExt:f,vol:()=>0,level:()=>0,debug:()=>null}}`;
 /* 악기 샘플 배경음악(assets/bgm/<스타일>_<장면>.mp3)을 data 주소로 넣는다. --nosamples면 넣지 않아 합성음만 쓴다 */
 const noSamples=process.argv.includes('--nosamples');
+/* --lake: 대호수 출생 시험용. 오늘의 시드가 언제나 히든 출생 40(대호수로 나간 자)으로 태어난다 */
+const lakeTest=process.argv.includes('--lake');
 const bgmData={};if(!noBgm&&!noSamples){for(const st of ['calm','passion','library'])for(const sc of ['calm','fight','fight1','fight2','fight3','fight4','fight5']){try{(bgmData[st]=bgmData[st]||{})[sc]='data:audio/mpeg;base64,'+readFileSync(new URL(`../assets/bgm/${st}_${sc}.mp3`,import.meta.url)).toString('base64')}catch(e){}}}{const td=(process.argv.find(x=>x.startsWith('--bgmtest='))||'').slice(10);if(td&&!noBgm){bgmData.ext={};for(let i=1;i<=5;i++)for(const sc of ['calm','fight']){bgmData.ext['t'+i+'_'+sc]=`assets/bgm/ext/t${i}_${sc}.mp3`}if(bgmData.passion)for(const k of ['fight1','fight2','fight3','fight4','fight5'])delete bgmData.passion[k]}}
 try{bgmData.boss={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets/bgm/boss_boss.mp3',import.meta.url)).toString('base64')}}catch(e){}
 /* 이미지 저장용 html2canvas(MIT)를 파일에 넣어 둔다. 인터넷이 막힌 곳에서도 결과 이미지를 만들 수 있게 (없으면 CDN에서 받는다) */
 const h2c=(()=>{try{return r('vendor/html2canvas.min.js').replace(/<\/script/gi,'<\\/script')}catch(e){return ''}})();
 const js0=['src/config.js','src/engine.js','src/bgm.js','src/sfx.js','src/ui.js'].map(p=>`/* ---- ${p} ---- */\n`+(noBgm&&p==='src/bgm.js'?BGM_STUB:strip(r(p)))).join('\n');
-const js=routeTest?js0.replace(/blankFate: \{chance: \d+,/,'blankFate: {chance: 100,'):js0;
+const js1=routeTest?js0.replace(/blankFate: \{chance: \d+,/,'blankFate: {chance: 100,'):js0;
+const js=lakeTest?js1.replace(/dailyOrigin: \d+,/,'dailyOrigin: 40,').replace(/dailyPlan: \{[^\n]*\},\n/,'dailyPlan: {},\n'):js1;
 const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[ai+1]):null;
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
@@ -34,10 +37,11 @@ let html=r('dev.html')
 if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('<script>\nwindow.CITY_BGM=',`<script>\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_BGM=`);
 if(augdemo)html=html.replace('<title>도시의 한 해</title>','<title>의수 의뢰 체험</title>').replace('<script>\nwindow.CITY_BGM=','<script>\nwindow.CITY_AUGDEMO=true;\nwindow.CITY_BGM=');
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');
+if(lakeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 대호수 테스트</title>');
 if(expires)html=html.replace(routeTest?'<title>도시의 한 해 · R사·H사 테스트</title>':'<title>도시의 한 해</title>',routeTest?'<title>도시의 한 해 R사 H사 테스트</title>':'<title>도시의 한 해 플레이테스트</title>')
   .replace('<script>\nwindow.CITY_BGM=',`<script>\nwindow.CITY_EXPIRES=${expires};\nwindow.CITY_BGM=`);
 const pages=process.argv.includes('--pages')&&!expires;
-const out=augdemo?'aug-demo.html':lab?'motion-lab.html':pages?'index.html':routeTest&&expires?'city-year-route-playtest.html':routeTest?'city-year-route-test.html':expires?'city-year-playtest.html':'city-year.html';
+const out=augdemo?'aug-demo.html':lab?'motion-lab.html':lakeTest?'city-year-lake-test.html':pages?'index.html':routeTest&&expires?'city-year-route-playtest.html':routeTest?'city-year-route-test.html':expires?'city-year-playtest.html':'city-year.html';
 mkdirSync(new URL('../dist/',import.meta.url),{recursive:true});
 writeFileSync(new URL((pages?'../':'../dist/')+out,import.meta.url),html);
 console.log(`${pages?'':'dist/'}${out} · ${(html.length/1024).toFixed(0)}KB${expires?' · 종료 '+new Date(expires).toISOString():''}`);
