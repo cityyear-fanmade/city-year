@@ -1476,6 +1476,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!ch.infIntro&&LI){ch.infIntro=1;return {t:LI.intro.t,x:LI.intro.x,c:[{l:LI.intro.a,h:'집은 짓지 않는다 · 호수에서 호수로 항해가 반복된다',ok:{t:LI.intro.at,fx:{lakeOuter:1}}}]}}
     if(!ch.infIntro){ch.infIntro=1;return {t:I.intro.t,x:I.intro.x,c:[{l:I.intro.a,h:'외곽에 작은 집을 짓는다 · 혼자여도, 곁에 사람이 있어도 이 집이 돌아오는 자리가 된다',ok:{t:I.intro.at+(ch.bond&&ch.bond.st==='married'&&ch.bond.name&&I.introWith?I.introWith.replace('{n}',ch.bond.name):''),fx:{infHome:1}}}]}}
     const have=ch.infCent||[],n=(()=>{for(let i=1;i<=Math.floor(age(G)/K.every);i++)if(!have.includes(i))return i;return 0})();
+    if(!n&&ch.infIntro){const Lm=CFG.infinite.limit;if(!ch.limAt)ch.limAt=G.year+Lm.every;
+      if(G.year>=ch.limAt){ch.limAt=G.year+Lm.every;const m=ch.colorDone?Lm.traitMul:1,pct=x=>Math.round(x*m*1000)/10;
+        return {t:'한계 돌파',x:LI?'호수에서 수십 해를 보내자 몸이 물결의 박자를 기억한다. 더 멀리, 더 세게 휘두를 수 있다고 느낀다.':'오래 버틴 몸이 한계 너머를 보기 시작한다. 어느 쪽으로 더 벼릴지 정해야 한다.',c:[
+          {l:'공세를 벼린다',h:`공격 +${pct(Lm.atkPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'휘두르는 팔이 한결 무거워졌다.',fx:{limit:'atk'}}},
+          {l:'맹공을 익힌다',h:`주는 피해 +${pct(Lm.dmgPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'맞는 쪽이 먼저 물러서는 것이 느껴진다.',fx:{limit:'dmg'}}},
+          {l:'일격을 벼린다',h:`적중마다 최대 HP의 ${pct(Lm.strikePct)}% 추가 피해 (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'몸 전체의 무게가 한 번의 타격에 실린다.',fx:{limit:'strike'}}}]}}}
     if(!n)return null;
     const T=(LI||I).century[Math.min(n-1,(LI||I).century.length-1)];
     return {t:T.t,x:T.x,c:[{l:T.a,h:`공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100)}% (영구) · 적의 공격 피해도 +${Math.round(K.enemyDmg*100)}% (영구)`,ok:{t:T.at,fx:{infCentury:n}}}]}
@@ -2018,7 +2024,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
       /* 대호수: 호수에 오래 떠 있을수록 정신이 닳는다. 해마다 mindYear씩 깎이지만 mindKeep 밑으로는 이 깎임만으로 내려가지 않는다(뒤틀림·사망으로 곧장 가지 않게) */
-      if(lakeOn(G.ch)&&!G.ch.distForm&&G.ch.mind>CFG.lake.mindKeep)loseMind(G.ch,Math.min(CFG.lake.mindYear,G.ch.mind-CFG.lake.mindKeep));if(hasInn(G.ch,'will'))gainMind(G.ch,CFG.innate.willHeal);
+      if(G.infinite&&G.ch.infinite&&G.ch.colorDone){const Lm=CFG.infinite.limit;if(G.year%Lm.traitYearEvery===0)G.ch.stats.atk+=1}
+    if(lakeOn(G.ch)&&!G.ch.distForm&&G.ch.mind>CFG.lake.mindKeep)loseMind(G.ch,Math.min(CFG.lake.mindYear,G.ch.mind-CFG.lake.mindKeep));if(hasInn(G.ch,'will'))gainMind(G.ch,CFG.innate.willHeal);
       {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+corpLv(G.ch)*(mt.yearPer||0))}
       if(bondMarried(G.ch))gainMind(G.ch,BD.yearMind);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
@@ -2224,6 +2231,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0,race:kk.race||(ch.race==='hyeolgwi'?'hyeolgwi':'human')};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondCol&&ch.bond&&!ch.bond.col){const ci=one(D.colors.map((c,i)=>i).filter(i=>i!==ch.ci)),C_=D.colors[ci];ch.bond.col={adj:C_.adj,hex:C_.hex};ch.bondColPick=true;chips.push(`${ch.bond.name} · ${C_.adj} 특색`)}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false,race:((ch.o&&ch.o.race==='hyeolgwi')||spouseHy(ch,ch.bond)||(ch.race==='hyeolgwi'&&d(2)===1))?'hyeolgwi':'human'};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
+    if(fx.limit){const Lm=CFG.infinite.limit,m=ch.colorDone?Lm.traitMul:1;
+      if(fx.limit==='atk'){const g=Math.max(1,Math.round(s.atk*Lm.atkPct*m));s.atk+=g;chips.push(`한계 돌파 · 공격 +${g}`)}
+      else if(fx.limit==='dmg'){ch.limDmg=(ch.limDmg||0)+Lm.dmgPct*m;chips.push(`한계 돌파 · 주는 피해 +${Math.round(Lm.dmgPct*m*1000)/10}% (누적 ${Math.round(ch.limDmg*1000)/10}%)`)}
+      else{ch.limStrike=(ch.limStrike||0)+Lm.strikePct*m;chips.push(`한계 돌파 · 적중마다 최대 HP의 ${Math.round(Lm.strikePct*m*1000)/10}% 추가 피해 (누적 ${Math.round(ch.limStrike*1000)/10}%)`)}}
     if(fx.infCentury){const K=CFG.infinite.century;(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
     if(fx.kidOld&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.kidOld&&!k.dead);if(kk){kk.dead='old';chips.push(`${kk.n} · 눈을 감았다`);loseMind(ch,BD.kid.oldMind,m=>chips.push(m))}}
@@ -2291,7 +2302,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.flags&&ch.flags.lake&&/^lake_/.test(C.id)&&!ch.distForm&&ch.mind>CFG.lake.mindKeep){loseMind(ch,Math.min(CFG.lake.mindSail,ch.mind-CFG.lake.mindKeep),m=>chips.push('항해의 피로 · '+m))}
     if(ch.flags&&ch.flags.lake&&ch.lake){if(C.id==='lake_mate')ch.lake.pirate='orca';if(C.id==='lake_orca')ch.lake.pirate='epi';
       if(/^lake_(ywhale|whale)_/.test(C.id)){const L=ch.lake,K=L.killed=L.killed||[];if(!K.includes(C.id))K.push(C.id);L.phase='enter';L.harbor=true;gainMind(ch,CFG.lake.harborMind);
-        const ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length;chips.push(`고래 토벌 · 보스급 ${ny}/4 · 대재앙 ${na}/6`)}}
+        const ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length;chips.push(`고래 토벌 · 보스급 ${ny}/4 · 대재앙 ${na}/6`);
+        if(/^lake_whale_/.test(C.id)&&L.captain&&!ch.colorDone){const T_=CFG.lake.trait,s_=ch.stats;s_.maxHp+=T_.hp;ch.hp+=T_.hp;s_.atk+=T_.atk;s_.eva+=T_.eva;
+          ch.colorDone=true;ch.colorYear=ch.year||0;ch.custDone=true;L.trait=true;ch.colorPick=true;ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';(ch.titleLog=ch.titleLog||[]).push('특색');ch.titlePick=true;
+          chips.push('대재앙을 잡았다. 도시는 당신에게 특색을 부여했다');chips.push('하지만 내가 있을 곳은 대호수다');chips.push(`특색 · 최대 HP +${T_.hp} · 공격 +${T_.atk} · 회피 +${T_.eva}`);chips.push('특색 패시브 · 셋 중 하나를 고른다');chips.push(T.titleLabel+' · '+ch.title)}}}
     {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if((C.id==='claw'||C.id==='arbiter')&&!(ch.flags&&ch.flags.spouseAge)){(ch.flags=ch.flags||{}).spouseAge=1;if(ch.bond)ch.bond.risk=0;chips.push('발톱과 조율자 중 하나를 쓰러뜨렸다 · 배우자의 위험이 가라앉고, 이제 나이로 눈을 감는다')}
@@ -2956,7 +2970,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const IF_=CFG.infinite,m=B.isP?Math.min(IF_.escMaxP,Math.pow(1+IF_.escPerP,A.escN)):Math.min(IF_.escMaxE,Math.pow(1+IF_.escPerE,A.escN));dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
       if(C.ch.infinite&&!A.isP&&B.isP&&dmg>0&&C.id===CFG.endless.final&&CFG.infinite.impDmgMul!=null&&CFG.infinite.impDmgMul!==1){dmg=Math.max(1,Math.round(dmg*CFG.infinite.impDmgMul))}
       if(C.ch.infinite&&!A.isP&&B.isP&&dmg>0&&C.ch.infBoost){const m=1+C.ch.infBoost*CFG.infinite.century.enemyDmg;dmg=Math.round(dmg*m);note+=` 어긋남 ×${m.toFixed(2)}`}
-      if(C.ch.infinite&&A.isP&&dmg>0&&(C.ch.infBoost||C.ch.infShard||C.ch.famLoss)){const m=1+(C.ch.infBoost||0)*CFG.infinite.century.dmg+(C.ch.infShard||0)*CFG.infinite.shard.dmg+(C.ch.famLoss||0)*CFG.infinite.grief.dmg;dmg=Math.round(dmg*m);note+=` 백 해 ×${m.toFixed(2)}`}
+      if(C.ch.infinite&&A.isP&&dmg>0&&C.ch.limStrike){const x=Math.round(A.maxHp*C.ch.limStrike);dmg+=x;note+=` 일격 +${x}`}
+      if(C.ch.infinite&&A.isP&&dmg>0&&(C.ch.infBoost||C.ch.infShard||C.ch.famLoss||C.ch.limDmg)){const m=1+(C.ch.limDmg||0)+(C.ch.infBoost||0)*CFG.infinite.century.dmg+(C.ch.infShard||0)*CFG.infinite.shard.dmg+(C.ch.famLoss||0)*CFG.infinite.grief.dmg;dmg=Math.round(dmg*m);note+=` 백 해 ×${m.toFixed(2)}`}
       {const SG=CFG.infinite.surge;if(C.ch.infinite&&A.isP&&dmg>0&&SG&&(C.ch.year||0)>=SG.year&&C.round>SG.round){const m=Math.min(SG.max,Math.pow(SG.per,C.round-SG.round));dmg=Math.round(dmg*m);note+=` 기세 ×${m>=1000?m.toExponential(1):m.toFixed(1)}`}}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
       if(A.passive&&A.passive.id==='lkPale'&&B.isP&&dmg>0){B.pale=(B.pale||0)+1;if(B.pale>=A.passive.at){B.pale=0;loseMind(C.ch,Math.ceil(A.passive.mind/(B.lk&&B.lk.pale?2:1)),t=>L('kw',`  ${A.name} · 창백화 · ${t}`))}else L('kw',`  ${A.name} · 창백화 ${B.pale}/${A.passive.at}`)}
