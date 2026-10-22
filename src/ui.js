@@ -594,11 +594,11 @@ export function startUI(E,app){
       <div><span class="eyebrow">보관함 ${st.length}</span>${gtabs}${sl||(st.length?'<p class="small dim">이 분류에는 장비가 없다.</p>':'<p class="small dim">보관함이 비어 있다. 새 장비를 얻으면 장착할지 보관할지 고를 수 있고, 장착하면 이전 장비가 여기로 온다.</p>')}</div>
       ${st.length?`<p class="small dim">장착을 누르면 같은 칸의 지금 장비와 자리를 바꾼다. 아무것도 사라지지 않는다.</p>`:''}`;
   }
-  /* 태어난 곳: 출신에서 정해진다. 둥지에서 난 사람은 날개 한 글자(K·R·W·N·J·G)를 함께 적는다. 이미 굴린 값(r.n)으로만 정해 시드를 흔들지 않는다 */
+  /* 태어난 곳: 출신에서 정해진다. 날개 글자(K·R·W·N·J·G)와 둥지·뒷골목·외곽으로 적는다. 이미 굴린 값(r.n)으로만 정해 시드를 흔들지 않는다 */
   function placeOf(o,r,blank){if(blank||!o)return null;const n=o.n,w='KRWNJG'[((r&&r.n)||1)%6];
-    if(n==='외곽 생존자'||n==='동부 출신 외곽 생존자')return {n:'외',t:'도시 밖 외곽에서 났다'};
-    if(n==='뒷골목 태생'||n==='조직 출신')return {n:'골',t:'둥지 뒷골목에서 났다'};
-    if(['평범한 둥지 시민','둥지 노동자','날개 직원 집안','몰락한 가문'].includes(n))return {n:'둥 '+w,t:`${w}사 날개의 둥지에서 났다`};
+    if(n==='외곽 생존자'||n==='동부 출신 외곽 생존자')return {n:'외곽 출신',t:'도시 밖 외곽에서 났다'};
+    if(n==='뒷골목 태생'||n==='조직 출신')return {n:`${w}사 뒷골목 출신`,t:`${w}사 날개 둥지의 뒷골목에서 났다`};
+    if(['평범한 둥지 시민','둥지 노동자','날개 직원 집안','몰락한 가문'].includes(n))return {n:`${w}사 둥지 출신`,t:`${w}사 날개의 둥지에서 났다`};
     return null}
   function vStat(){
     const ch=G.ch,s0=ch.s0,sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(n);
