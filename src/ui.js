@@ -739,7 +739,7 @@ export function startUI(E,app){
   }
   function vSupplyShop(){
     const ch=G.ch,K=CFG.supply;
-    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">소지품</b><span class="mono small dim">종류마다 최대 ${K.max}개</span></div><p class="small dim">가방의 소모품 칸에 들어간다. 전투 중에도 쓸 수 있다.</p>${Object.entries(K.items).map(([id,it])=>{const n=(ch.supply||{})[id]||0,ok=n<K.max&&ch.money>=it.price;return `<button class="btn" data-a="buysupply" data-i="${id}" ${ok?'':'disabled'}><span class="row between"><b>${esc(E.supplyName(ch,id))}</b><span class="mono" style="color:var(--gold)">${E.money(it.price)}</span></span><span class="mono small dim">${esc(it.e)} · 지닌 수 ${n}/${K.max}${n>=K.max?' · 더는 지닐 수 없다':ch.money<it.price?' · 돈이 모자란다':''}</span></button>`}).join('')}</div>`;
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">소지품</b><span class="mono small dim">종류마다 최대 ${K.max}개</span></div><p class="small dim">가방의 소모품 칸에 들어간다. 전투 중에도 쓸 수 있다. 값은 ${K.priceEvery}해마다 ${E.money(K.priceStep)}씩 오른다(최대 ${E.money(K.priceMax)}).</p>${Object.entries(K.items).map(([id,it])=>{const n=(ch.supply||{})[id]||0,pr=E.supplyPrice(ch,id),ok=n<K.max&&ch.money>=pr;return `<button class="btn" data-a="buysupply" data-i="${id}" ${ok?'':'disabled'}><span class="row between"><b>${esc(E.supplyName(ch,id))}</b><span class="mono" style="color:var(--gold)">${E.money(pr)}</span></span><span class="mono small dim">${esc(it.e)} · 지닌 수 ${n}/${K.max}${n>=K.max?' · 더는 지닐 수 없다':ch.money<pr?' · 돈이 모자란다':''}</span></button>`}).join('')}</div>`;
   }
   function vBag(){
     const ch=G.ch,t=UI.bag;

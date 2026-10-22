@@ -27,10 +27,10 @@ export const CFG = {
   /* 공방 치유소: 한 번에 hp 회복, 방문마다 max번 */
   /* 치유소: 치료를 받을 때마다 값이 step씩 오른다 (한 판 전체 누적, 방문마다 최대 max번) */
   /* 소모품(소지품): 종류마다 최대 max개까지 지닌다. 전투 중에도 라운드마다 한 번 쓸 수 있다. 인연 도시락은 전투를 이긴 뒤 인연이 있으면 가끔 받는다 */
-  supply: {max: 3, lunchChance: 25, lunch: {hpPct: 20, mind: 20},
-    items: {bandage: {n: '지혈대·붕대', hp: 20, bleed: true, price: 120, e: 'HP +20 · 출혈 해제'},
-      snack: {n: '꼬치', hp: 15, mind: 5, price: 70, e: 'HP +15 · 정신력 +5'},
-      calm: {n: '진정제', mind: 15, price: 150, e: '정신력 +15'}}},
+  supply: {max: 3, priceEvery: 10, priceStep: 100, priceMax: 5000 /* 값은 priceEvery해마다 priceStep안씩 오른다(최대 priceMax) */, lunchChance: 25, lunch: {hpPct: 20, mind: 20},
+    items: {bandage: {n: '지혈대·붕대', hp: 20, bleed: true, price: 300, e: 'HP +20 · 출혈 해제'},
+      snack: {n: '꼬치', hp: 15, mind: 5, price: 150, e: 'HP +15 · 정신력 +5'},
+      calm: {n: '진정제', mind: 15, price: 400, e: '정신력 +15'}}},
   clinic: {price: 500, step: 500, hp: 30, max: 3, mind: 10, mindPrice: 400, mindStep: 200, mindMaxBuy: 3} /* 마음 치료: 한 번에 정신력 mind 회복, 방문마다 mindMaxBuy번, 값은 이번 판에 받은 횟수만큼 mindStep씩 오른다 */,
   /* 암시장 K사 엠플: 전투 중 HP가 최대 HP의 belowPct 이하가 되면 자동으로 heal 회복(전투당 사용 횟수 제한 없음, 한 번에 1개). 값은 항상 price, carry개까지 지니고 한 판에 limit개까지만 살 수 있다 */
   ample: {name: 'K사 엠플', price: 5000, priceInf: 8000, carry: 3, limit: 5, /* 2막 무한 모드에 들어서면 구매 횟수 제한(limit)이 없어진다(carry는 그대로) */ belowPct: 0.2, healPct: 0.5},
