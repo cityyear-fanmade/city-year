@@ -1683,7 +1683,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const jp=(x,a,b)=>{const ch=String(x).replace(/[^가-힣]+$/,'').slice(-1).charCodeAt(0),f=ch>=0xAC00&&ch<=0xD7A3?(ch-0xAC00)%28:0;return x+(a==='으로'?(f&&f!==8?'으로':'로'):f?a:b)};
     const J={eun:x=>jp(x,'은','는'),eul:x=>jp(x,'을','를'),i:x=>jp(x,'이','가'),gwa:x=>jp(x,'과','와'),ro:x=>jp(x,'으로','로')};
     const E_=esc;
-    P.push(`${J.eun(E_(nm))} ${J.ro(E_(c.o.n))} 태어났다. ${J.eul(E_(c.t.n))} 타고났고, ${J.eul(E_(c.f.n))} 짊어진 채, ${J.eul(E_(c.w.n))} 손에 쥐고 이 도시의 골목에 섰다.`);
+    P.push(`${J.eun(E_(nm))} ${(pl=>pl?pl.n+', ':'')(placeOf(c.o,c.r,c.blank))}${J.ro(E_(c.o.n))} 태어났다. ${J.eul(E_(c.t.n))} 타고났고, ${J.eul(E_(c.f.n))} 짊어진 채, ${J.eul(E_(c.w.n))} 손에 쥐고 이 도시의 골목에 섰다.`);
     if(c.job)P.push(`평범한 길은 일찍 닫혔다. ${E_(T.jobs[c.job])}의 자리가 ${E_(nm)}에게 주어졌고, 그 일은 사는 내내 이름을 대신했다.`);
     else if(c.aff&&c.corp&&c.corp.wing)P.push(`담장 안에서 시작해 담장을 스스로 세웠다. ${E_(c.corp.wing)}의 대표로서 이름을 걸었고, 그 이름은 다른 이들의 일자리가 되었다.`);
     else if(c.aff&&c.fr)P.push(`${E_(affName(c))}에 들어가 ${E_(c.fr.n)}까지 올랐다. 서열은 손이 아니라 버틴 햇수로 정해졌고, ${J.eun(E_(nm))} 그 계단을 하나씩 밟았다.`);
@@ -1761,7 +1761,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${c.beaten.map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
       <div class="panel stack"><div class="stat"><div><b>${c.lv}</b><span>레벨</span></div><div><b>${sg(c.stats.atk)}</b><span>공격</span></div><div><b>${sg(c.stats.eva-E.infEvaCut(c))}</b><span>회피${c.infinite&&E.infEvaCut(c)>0?` (무한 −${E.infEvaCut(c)})`:''}</span></div><div><b>${sg(c.stats.spd)}</b><span>속도</span></div></div>
       ${endDeck(c)}
-      <div class="mono small dim">${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(affName(c)):c.licensed?' · '+T.licensed:''}</div></div>
+      <div class="mono small dim">${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(affName(c)):c.licensed?' · '+T.licensed:''}</div></div>
       <div class="mono small dim" style="text-align:center">도시의 한 해 · cityyear-fanmade.github.io/city-year · Project Moon 팬메이드</div></div>
       ${vDailyCmp()}
       ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 1막 종료</span><p class="small">여기서 끝내도 된다. 제 2막이 시작되면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 제 2막의 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">제 2막 시작</button></div>`:''}
@@ -1892,7 +1892,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     rows.push(['정신력',c.distForm?'???':`${c.mind}/${E.mindMax(c)}`]);
     if(c.rs&&(c.rs.dealt||c.rs.taken)){const n_=v=>(v||0).toLocaleString('ko-KR');rows.push(['입힌 피해',n_(c.rs.dealt)],['받은 피해',n_(c.rs.taken)],['총 회복량',n_(c.rs.heal)],['건 디버프 · 얻은 버프',`${n_(c.rs.debuff)} · ${n_(c.rs.buff)}`]);if(c.rs.debuffTaken)rows.push(['받은 디버프',n_(c.rs.debuffTaken)])}
     rows.push(['레벨',`Lv ${c.lv} · 공격 ${sg(c.stats.atk)} · 회피 ${sg(c.stats.eva)} · 속도 ${sg(c.stats.spd)}`]);
-    rows.push(['출신',`${c.o.n} · ${c.t.n}`]);
+    rows.push(['출신',`${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n}`]);
     {const gw=c.gear&&c.gear.weapon,ga=c.gear&&c.gear.armor,ge=[gw&&gw.n,ga&&ga.n].filter(Boolean).join(' · ');if(ge)rows.push(['장비',ge])}
     for(const [k,v] of rows){T_(k,140,y,`400 32px ${sans}`,dim);g.font=fit(v,W-480,36,sans,'500');
       if(g.measureText(v).width>W-480){const vf=`500 30px ${sans}`,ls=wrapW(v,W-480,vf);g.font=vf;g.fillStyle=ink;g.textAlign='right';ls.forEach((l,i)=>g.fillText(l,W-140,y+i*42));y+=72+(ls.length-1)*42}
