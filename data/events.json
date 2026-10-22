@@ -7613,7 +7613,26 @@
    "topFx": {
     "atk": 2,
     "check": 5
-   }
+   },
+   "rows": [
+    [],
+    [
+     "lk_hook",
+     "lk_throw"
+    ],
+    [
+     "lk_anchor",
+     "lk_twin"
+    ],
+    [
+     "lk_rip",
+     "lk_haul"
+    ]
+   ],
+   "topRow": [
+    "lk_whale",
+    "lk_giant"
+   ]
   }
  },
  "mindEvents": {
