@@ -1305,6 +1305,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(L.phase==='whale'){return JSON.parse(JSON.stringify(L.captain&&Lk.fleeCap?Lk.fleeCap:Lk.flee))}   // 선장이 되기 전엔 선장의 명령으로 도망, 선장이 된 뒤엔 내가 명령한다
     if(!L.bag||!L.bag.length)L.bag=sample(ids,ids.length);   // 지난 호수는 나머지를 다 돌 때까지 나오지 않는다
     L.cur=L.bag.pop();L.phase='whale';L.seen=(L.seen||0)+1;
+    {const lk=Lk.lakes[L.cur];if(lk.slip&&d(100)<=CFG.lake.slip)return JSON.parse(JSON.stringify(lk.slip))}   // 주인공이 아닌 다른 선원이 금기를 어길 수도 있다
     return JSON.parse(JSON.stringify(Lk.lakes[L.cur]));
   }
   const bondMarried=ch=>!!(ch.bond&&ch.bond.st==='married');
