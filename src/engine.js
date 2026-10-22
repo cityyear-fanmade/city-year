@@ -504,6 +504,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const supplyName=(ch,id)=>id==='snack'?(ch.hw?'회복환':lakeOn(ch)?'생선구이':'꼬치'):CFG.supply.items[id].n;
   const supplyCount=ch=>Object.values(ch.supply||{}).reduce((a,b)=>a+(b||0),0);
   const supplyPrice=(ch,id)=>{const K=CFG.supply,it=K.items[id];return it?Math.min(K.priceMax,it.price+Math.floor((ch.year||0)/K.priceEvery)*K.priceStep):0};
+  /* 배 내구도: 선장이 되면 배를 얻는다. 전투마다 닳고 항구에서 돈으로 고친다. 0이 되면 침몰 */
+  const hullOf=ch=>{const L=ch.lake||{};return L.hull==null?CFG.lake.hullMax:L.hull};
+  function hullLose(ch,n,chips){const L=ch.lake=ch.lake||{};L.hull=Math.max(0,hullOf(ch)-n);chips.push(`배 내구도 -${n} (남은 ${L.hull}/${CFG.lake.hullMax})`);if(L.hull<=0){ch.sunk=true;chips.push('배가 가라앉는다')}}
+  function repairHull(ch){const K=CFG.lake;if(!ch.lake||!ch.lake.captain||hullOf(ch)>=K.hullMax||ch.money<K.repairCost)return false;ch.money-=K.repairCost;ch.lake.hull=K.hullMax;return true}
   function buySupply(ch,id){const K=CFG.supply,it=K.items[id],p=supplyPrice(ch,id);if(!it||ch.money<p||((ch.supply||{})[id]||0)>=K.max)return false;ch.money-=p;(ch.supply=ch.supply||{})[id]=((ch.supply||{})[id]||0)+1;return true}
   /* 쓸 수 있으면 결과 문장, 아니면 null. 전투 중이면 C를 넘기고(HP는 전투 중 값에 더한다) 라운드마다 한 번만 쓴다 */
   function useSupply(ch,id,C){
@@ -972,7 +976,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const endW=()=>{L.wave=null;L.crewAt=Math.max(L.crewAt||0,(ch.year||0)+2)};
       if(w&&fx.lakeWave!=='fail'){endW();if(fx.lakeWave==='sac'&&(L.crew||[]).length){const m=L.crew.splice(Math.floor(Math.random()*L.crew.length),1)[0];chips.push(`선원 · ${m.n} 실종`)}
         addPts(ch,W.rewardPts*CFG.promo.gain.check,chips);chips.push("파도를 넘었다");const g=gainMind(ch,W.rewardMind);if(g)chips.push(`정신력 +${g}`)}
-      else if(w){w.i++;const lose=W.failMind+w.i*W.failMindStep;loseMind(ch,lose,t=>chips.push(t));ch.hp=clamp(ch.hp-W.failHp*w.i,1,s.maxHp);chips.push(`HP -${W.failHp*w.i}`);
+      else if(w){w.i++;hullLose(ch,Math.round(W.hullLoss/w.max*(0.7+Math.random()*0.6)),chips);const lose=W.failMind+w.i*W.failMindStep;loseMind(ch,lose,t=>chips.push(t));ch.hp=clamp(ch.hp-W.failHp*w.i,1,s.maxHp);chips.push(`HP -${W.failHp*w.i}`);
         if((L.crew||[]).length&&d(100)<=W.failCrew){const m=L.crew.splice(Math.floor(Math.random()*L.crew.length),1)[0];chips.push(`선원 · ${m.n} 부상으로 이탈`)}
         if(w.i>=w.max){endW();loseMind(ch,W.driftMind,t=>chips.push('표류 · '+t));const n=Math.floor((L.crew||[]).length/2);if(n){L.crew.splice(0,n);chips.push(`선원 ${n}명 이탈`)}ch.hp=Math.max(1,Math.floor(ch.hp/2));chips.push('배가 반파되어 표류했다 · HP 절반')}
         else chips.push('다음 파도가 온다')}}
@@ -1964,6 +1968,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.custPick)custBuild(mc,{name:'',atk:4,eva:4,hp:3,pas:'absorb'});
     if(mc.colorPick)setColorPick(mc,'brand');
     if(mc.namePend)mc.namePend=null;
+    if(mc.sunk)return {type:'end',win:false,cause:'sunk'};
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
@@ -2169,7 +2174,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const c=[{l:'방벽을 세운다',h:`돈 ${W.wallCost} · 판정 쉬움`,check:{s:null,dc:W.wallDc},ok:{t:'널빤지와 돛천으로 뱃전을 막았다. 파도가 방벽을 때리고 부서졌다.',fx:{lakeWave:'ok',money:-W.wallCost}},fail:{t:'방벽이 첫 파도에 뜯겨 나갔다.',fx:{lakeWave:'fail',money:-W.wallCost}}},
       {l:'키를 잡고 파도 사이로 빠져나간다',h:`판정${nv?` · 항해사 ${nv}명 보정`:''}`,check:{s:null,dc:W.helmDc-W.helmNav*nv},ok:{t:'파도의 결을 읽고 키를 꺾었다. 배가 벽 사이로 미끄러져 나갔다.',fx:{lakeWave:'ok'}},fail:{t:'키가 손에서 튕겨 나갔다. 배가 옆으로 눕는다.',fx:{lakeWave:'fail'}}}];
     if((L.crew||[]).length)c.push({l:'선원 한 사람이 뛰어내려 밧줄을 끊는다',h:'선원 1명을 잃는다 · 자동 탈출',ok:{t:'누군가 고개를 끄덕이고 파도 속으로 뛰어들었다. 밧줄이 끊기고 배가 풀려났다.',fx:{lakeWave:'sac'}}});
-    return {t:`대형 파도 ${i+1}/${w.max}`,x:lines[Math.min(i,lines.length-1)]+(last?' 이번이 마지막이다.':''),shake:true,c}}
+    return {t:`대형 파도 ${i+1}/${w.max}`,x:lines[Math.min(i,lines.length-1)]+(last?' 이번이 마지막이다.':'')+`\n배 내구도 ${hullOf(ch)}/${CFG.lake.hullMax} · 판정에 실패할 때마다 내구도를 잃는다 (최대 ${W.hullLoss}). 0이 되면 배가 가라앉는다.`,shake:true,c}}
   function choose(G,ev,i){
     const ch=G.ch,c=ev.c[i];let res=c.ok,roll=null,xp=CFG.xp.plain,xpNote=null;
     if(c.check){
@@ -2300,6 +2305,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.bond&&['met','married'].includes(ch.bond.st)&&!ch.distForm&&d(100)<=CFG.supply.lunchChance){const L_=CFG.supply.lunch,hp0=C.P.hp,hh=Math.min(Math.round(ch.stats.maxHp*L_.hpPct/100),ch.stats.maxHp-C.P.hp);if(hh>0)C.P.hp+=hh;const g_=gainMind(ch,L_.mind);chips.push(`인연 도시락 · ${ch.bond.name||'인연'}이(가) 도시락을 건넸다${hh>0?' · HP +'+hh:''}${g_?' · 정신력 +'+g_:''}`)}
     /* 대호수: 호수에서 싸울 때마다(항해) 정신이 닳는다. mindKeep 밑으로는 항해만으로 내려가지 않는다 */
     if(ch.flags&&ch.flags.lake&&/^lake_/.test(C.id)&&!ch.distForm&&ch.mind>CFG.lake.mindKeep){loseMind(ch,Math.min(CFG.lake.mindSail,ch.mind-CFG.lake.mindKeep),m=>chips.push('항해의 피로 · '+m))}
+    if(ch.flags&&ch.flags.lake&&ch.lake&&ch.lake.captain&&/^lake_/.test(C.id))hullLose(ch,CFG.lake.hullWear,chips);
     if(ch.flags&&ch.flags.lake&&ch.lake){if(C.id==='lake_mate')ch.lake.pirate='orca';if(C.id==='lake_orca')ch.lake.pirate='epi';
       if(/^lake_(ywhale|whale)_/.test(C.id)){const L=ch.lake,K=L.killed=L.killed||[];if(!K.includes(C.id))K.push(C.id);L.phase='enter';L.harbor=true;gainMind(ch,CFG.lake.harborMind);
         const ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length;chips.push(`고래 토벌 · 보스급 ${ny}/4 · 대재앙 ${na}/6`);
@@ -3237,5 +3243,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
     cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
