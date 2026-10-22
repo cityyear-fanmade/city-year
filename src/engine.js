@@ -1585,8 +1585,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 선택 결과 문구: 그 사건(S.at/S.bt)에 적힌 것이 먼저, 없으면 단계별 문구 목록에서 무작위로 */
       const resT=(own,pool,gen)=>bondFill(own||(pool&&pool[si]&&pool[si].length?one(pool[si]):gen),b);
       return {t:S.t,x:bondFill(S.x,b),c:[
-        {l:S.a,h:`인연 +1 · 정신력 +${BD.loveMind}`,ok:{t:resT(S.at,B.stepATs,B.stepAT),fx:{bondLove:1}}},
-        {l:S.b,h:'변화 없음',ok:{t:resT(S.bt,B.stepBTs,B.stepBT),fx:{}}}]};
+        {l:bondFill(S.a,b),h:`인연 +1 · 정신력 +${BD.loveMind}`,ok:{t:resT(S.at,B.stepATs,B.stepAT),fx:{bondLove:1}}},
+        {l:bondFill(S.b,b),h:'변화 없음',ok:{t:resT(S.bt,B.stepBTs,B.stepBT),fx:{}}}]};
     }
     /* 인연 이벤트를 하나도 쌓지 않았다면 상대는 관심이 없다: 청혼 자리가 열리지 않고 조용히 떠난다 */
     if(!(b.love||0)&&!(b.extra||0))return {t:'말없이 떠난 사람',x:bondFill(R.left,b)+' 함께한 시간은 있었지만 쌓인 것은 없었다.',c:[{l:'떠나는 뒷모습을 본다',h:`최대 정신력 −${BD.leaveMind} (영구)`,ok:{t:bondFill('{n}의 이름을 한 번 불러 보았다. 대답은 돌아오지 않았다.',b),fx:{bondLeave:true}}}]};
