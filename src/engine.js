@@ -968,6 +968,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='fight'){ch.purge=r.chasers[r.chase];r.chase++;r.cnext=y+Z.chaseGap}
         else if(k==='hide'){r.hides++;r.cnext=y+Z.chaseGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
         else if(k==='boss'){ch.purge=Z.boss;r.bossSeen=1}}}
+    if(fx.lakeWave&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{},W=CFG.lake.wave,w=L.wave;
+      const endW=()=>{L.wave=null;L.crewAt=Math.max(L.crewAt||0,(ch.year||0)+2)};
+      if(w&&fx.lakeWave!=='fail'){endW();if(fx.lakeWave==='sac'&&(L.crew||[]).length){const m=L.crew.splice(Math.floor(Math.random()*L.crew.length),1)[0];chips.push(`선원 · ${m.n} 실종`)}
+        addPts(ch,W.rewardPts*CFG.promo.gain.check,chips);chips.push("파도를 넘었다");const g=gainMind(ch,W.rewardMind);if(g)chips.push(`정신력 +${g}`)}
+      else if(w){w.i++;const lose=W.failMind+w.i*W.failMindStep;loseMind(ch,lose,t=>chips.push(t));ch.hp=clamp(ch.hp-W.failHp*w.i,1,s.maxHp);chips.push(`HP -${W.failHp*w.i}`);
+        if((L.crew||[]).length&&d(100)<=W.failCrew){const m=L.crew.splice(Math.floor(Math.random()*L.crew.length),1)[0];chips.push(`선원 · ${m.n} 부상으로 이탈`)}
+        if(w.i>=w.max){endW();loseMind(ch,W.driftMind,t=>chips.push('표류 · '+t));const n=Math.floor((L.crew||[]).length/2);if(n){L.crew.splice(0,n);chips.push(`선원 ${n}명 이탈`)}ch.hp=Math.max(1,Math.floor(ch.hp/2));chips.push('배가 반파되어 표류했다 · HP 절반')}
+        else chips.push('다음 파도가 온다')}}
     if(fx.lakeHunt&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakeHunt==='fight'){L.hunterFight=true;chips.push('내일 새벽, 사냥꾼과 싸운다')}else chips.push('사냥꾼은 떠났다')}
     if(fx.lakePirate&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakePirate==='fight'){L.pirate='mate';chips.push('내일, 쌍갈고리 해적단과 싸운다')}else{L.pirate=null;L.pirateAt=(ch.year||0)+4;chips.push('해적단은 물러났다 · 몇 해 뒤 다시 온다')}}
     if(fx.lakeCrew&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{},R_=D.lake.crew.roles[fx.lakeCrew];(L.crew=L.crew||[]).push({role:fx.lakeCrew,n:R_.n,die:R_.die});chips.push(`선원 · ${R_.n} (${L.crew.length}/${CFG.lake.crewMax}) · ${R_.e}`)}
@@ -1387,7 +1395,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const i=one(pool);sg.push(i);const s_=Lk.crewSign[i];return {t:s_.t,x:s_.x,c:[{l:s_.a,h:'변모의 징후 · 항해 공적 +1',ok:{t:s_.at,fx:{pts:1}}},{l:s_.b,h:'변모의 징후 · 항해 공적 +1',ok:{t:s_.bt,fx:{pts:1}}}]}}
     }
     {const brk=(ch.flags.lakeBreak||0);if(brk>(L.hunted||0)&&!L.huntAt)L.huntAt=G.year+1+d(2);
-     if(L.phase!=='whale'&&L.huntAt&&G.year>=L.huntAt&&Lk.hunter){L.hunted=brk;L.huntAt=null;return JSON.parse(JSON.stringify(Lk.hunter))}}
+     if(L.wave&&L.phase!=='whale')return waveEv(ch,L);
+     if(L.phase!=='whale'&&L.huntAt&&G.year>=L.huntAt&&Lk.hunter){L.hunted=brk;L.huntAt=null;
+       const W=CFG.lake.wave,r=d(100),pw=Math.min(W.maxPct,W.basePct+brk*W.perBreak),ev0=JSON.parse(JSON.stringify(Lk.hunter));
+       if(r<=pw){L.wave={i:0,max:Math.min(W.maxStage,W.stage+Math.floor(brk/3))};const e=waveEv(ch,L);e.x=`금기를 어긴 값을 호수가 묻는다 · 1d100 ${r} (${pw} 이하 · 대형 파도)\n`+e.x;return e}
+       ev0.x=`금기를 어긴 값을 호수가 묻는다 · 1d100 ${r} (${pw} 초과 · 파도는 오지 않았다)\n`+ev0.x;return ev0}}
     if(L.ricardoFight){L.ricardoFight=false;return {type:'fight',enemy:'lake_ricardo',enc:{hidden:true,label:'중지의 큰형님'}}}
     if(L.captain&&L.pirate==='end'&&!ch.beaten.includes('lake_ricardo')&&L.phase!=='whale'&&G.year>=(L.ricardoAt||(L.pirateEndYear||0)+CFG.lake.ricardoAfter)&&Lk.ricardo){L.ricardoAt=G.year+CFG.lake.ricardoAfter;return JSON.parse(JSON.stringify(Lk.ricardo))}
     if(L.whaleFight){const id=L.whaleFight;L.whaleFight=null;const e=D.enemies[id];return {type:'fight',enemy:id,enc:{hidden:!!e.hidden,label:e.hidden?'대재앙 토벌':'보스급 고래 토벌'}}}
@@ -2143,6 +2155,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const checkDie=ch=>Math.min(CFG.checkMax,100+(ch.artSense||0)*CFG.artSense.die+(hasInn(ch,'miracle')?Math.floor((ch.year||0)/CFG.innate.miracleEvery)*CFG.innate.miracleDie:0));
   function checkMod(ch,check){if(check.pure)return 0;return (check.s?ch.stats[check.s]:0)+ch.stats.check+mindStat(ch)+pathMod(ch,check)+(check.dc==='color'?ch.colorBonus||0:0)}
   /* 선택: 판정이 있으면 1d100 + 능력치 + 판정 보정 ≥ 난이도 */
+  /* 대형 파도: 금기를 어기면 일정 확률로 오는 생존 판정. 한 번 성공하면 탈출, 실패할 때마다 손실이 커진다 */
+  function waveEv(ch,L){
+    const W=CFG.lake.wave,w=L.wave,i=w.i,last=i+1>=w.max,nv=(L.crew||[]).filter(m=>m.role==='navigator').length;
+    const lines=['호수가 한쪽으로 기울었다. 하늘 끝에서 벽 같은 물이 선다.','첫 파도가 갑판을 덮쳤다. 밧줄이 끊어지고 사람들이 서로를 붙잡았다.','두 번째 파도는 더 높다. 돛대가 비명을 지른다.','돛이 찢어졌다. 호수는 아직 물러날 기색이 없다.','마지막 힘으로 버티고 있다. 이 파도 뒤에 호수가 잠잠해진다는 보장은 없다.'];
+    const c=[{l:'방벽을 세운다',h:`돈 ${W.wallCost} · 판정 쉬움`,check:{s:null,dc:W.wallDc},ok:{t:'널빤지와 돛천으로 뱃전을 막았다. 파도가 방벽을 때리고 부서졌다.',fx:{lakeWave:'ok',money:-W.wallCost}},fail:{t:'방벽이 첫 파도에 뜯겨 나갔다.',fx:{lakeWave:'fail',money:-W.wallCost}}},
+      {l:'키를 잡고 파도 사이로 빠져나간다',h:`판정${nv?` · 항해사 ${nv}명 보정`:''}`,check:{s:null,dc:W.helmDc-W.helmNav*nv},ok:{t:'파도의 결을 읽고 키를 꺾었다. 배가 벽 사이로 미끄러져 나갔다.',fx:{lakeWave:'ok'}},fail:{t:'키가 손에서 튕겨 나갔다. 배가 옆으로 눕는다.',fx:{lakeWave:'fail'}}}];
+    if((L.crew||[]).length)c.push({l:'선원 한 사람이 뛰어내려 밧줄을 끊는다',h:'선원 1명을 잃는다 · 자동 탈출',ok:{t:'누군가 고개를 끄덕이고 파도 속으로 뛰어들었다. 밧줄이 끊기고 배가 풀려났다.',fx:{lakeWave:'sac'}}});
+    return {t:`대형 파도 ${i+1}/${w.max}`,x:lines[Math.min(i,lines.length-1)]+(last?' 이번이 마지막이다.':''),shake:true,c}}
   function choose(G,ev,i){
     const ch=G.ch,c=ev.c[i];let res=c.ok,roll=null,xp=CFG.xp.plain,xpNote=null;
     if(c.check){
