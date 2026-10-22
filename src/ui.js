@@ -38,6 +38,7 @@ export function startUI(E,app){
     if(!now.length)return [];r.unl=open.concat(now);store.set(REC,JSON.stringify(r));E.setInnateOpen(r.unl);return now.map(k=>D.innate[k].n);
   }
   const recAdd=(k,v)=>{const r=loadRec();if(!r[k].includes(v)){r[k].push(v);store.set(REC,JSON.stringify(r))}};
+  let INFNOTE=store.get('cityYearInfNote')!=='off';
   let MODE=store.get('cityYearMode')||((window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?'off':'slow');
   const SKINS=[{k:'base',n:'기본'},{k:'dante',n:'단테의 노트'},{k:'terminal',n:'검지 단말기'},{k:'ruina',n:'도서관 초대장'}];
   const SKIN_TAB={base:'도시 기록',dante:'단테의 노트',terminal:'TERMINAL · 대행',ruina:'오늘의 책'};
@@ -419,6 +420,8 @@ export function startUI(E,app){
         <span class="small dim">자동 전투에서 라운드와 라운드 사이를 얼마나 쉬는지 · 전투 중 일시정지도 할 수 있다</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">인생 주사위</span><div class="seg">${b('dice','free','매번 다르게',DICE)}${b('dice','fixed','시드 고정(재현)',DICE)}</div>
         <span class="small dim">${DICE==='fixed'?'시드가 같고 선택이 같으면 인생 전체의 주사위가 똑같이 나온다 (공유·재현용)':'출생만 시드로 정해지고, 태어난 뒤의 사건 주사위는 판마다 달라진다'}</span></div>
+      <div class="stack" style="gap:6px"><span class="eyebrow">무한 모드 문구</span><div class="seg">${b('infnote','on','켬',INFNOTE?'on':'off')}${b('infnote','off','끔',INFNOTE?'on':'off')}</div>
+        <span class="small dim">무한 모드에서 해마다 위쪽에 뜨는 문구와 상태창 아래의 작은 글을 보일지 정한다</span></div>
       ${BGM.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">배경음악</span><div class="seg">${b('bgm','off','끔',BGM.isOn()?'on':'off')}${b('bgm','on','켬',BGM.isOn()?'on':'off')}</div><div class="stack" style="gap:4px"><span class="small">스타일 · 전투에 들어가면 템포가 오른다</span><div class="seg">${b('bgmstyle','calm','고요',BGM.style())}${b('bgmstyle','passion','불길',BGM.style())}${b('bgmstyle','library','도서관',BGM.style())}</div></div>
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">음량</span><b class="mono" id="bgmPct">${Math.round(BGM.vol()*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="bgmstep" data-i="-10" aria-label="음량 10 줄이기">−10</button><input type="range" id="bgmRange" min="0" max="100" step="1" value="${Math.round(BGM.vol()*100)}" aria-label="배경음악 음량"><button class="chip" data-a="bgmstep" data-i="10" aria-label="음량 10 올리기">+10</button></div></div>
@@ -488,7 +491,7 @@ export function startUI(E,app){
       <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${titledName(ch)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
       <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${G.infinite&&G.year>CFG.years+CFG.endless.span*CFG.endless.grades.length?'제 2막 무한 모드 · '+(E.gradeRaw(G.year)-CFG.endless.grades.length+1)+'단계':'제 2막 · '+CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
       ${bar(ch.hp,s.maxHp)}
-      ${G.infinite&&ch.infinite&&D.infinite&&D.infinite.notes?`<div class="small dim" style="font-style:italic;line-height:1.55">${esc(infNote())}</div>`:''}
+      ${INFNOTE&&G.infinite&&ch.infinite&&D.infinite&&D.infinite.notes?`<div class="small dim" style="font-style:italic;line-height:1.55">${esc(infNote())}</div>`:''}
       ${vMind(ch)}${egoBar(ch)}${G.infinite&&UI.screen!=='end'?`<button class="btn quiet" data-a="outerend">외곽에서 이야기를 끝낸다</button>`:''}
       ${vPassive(ch)}
       <div class="mono small dim hud-dup">HP ${ch.hp}/${s.maxHp} · 공격 ${sg(s.atk)} · 회피 ${sg(s.eva)} · 속도 ${sg(s.spd)} · 판정 ${sg(s.check)} · 카드 ${ch.deck.length}장</div>
@@ -1983,8 +1986,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(window.CITY_AUGDEMO){augDemoDraw();return}
     const s=UI.screen;
     app.classList.toggle('barhide',barHidden());
-    if(G&&G.infinite&&G.ch&&G.ch.infinite&&D.infinite&&D.infinite.notes&&!['title','birth','end','records','chron','chronview'].includes(s)&&UI.noteYear!==G.year){UI.noteYear=G.year;showInfNote(infNote())}
-    if(['title','birth','end','records','chron','chronview'].includes(s)||!(G&&G.infinite)){const o=document.querySelector('.infnote');if(o)o.remove();if(['title','birth'].includes(s))UI.noteYear=null}
+    if(INFNOTE&&G&&G.infinite&&G.ch&&G.ch.infinite&&D.infinite&&D.infinite.notes&&!['title','birth','end','records','chron','chronview'].includes(s)&&UI.noteYear!==G.year){UI.noteYear=G.year;showInfNote(infNote())}
+    if(['title','birth','end','records','chron','chronview'].includes(s)||!(G&&G.infinite)||!INFNOTE){const o=document.querySelector('.infnote');if(o)o.remove();if(['title','birth'].includes(s))UI.noteYear=null}
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
     const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
@@ -2192,6 +2195,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     },
     finish(){store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.screen='title';render()},
     title(){UI.confirmNew=null;if(UI.shared){UI.shared=null;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}UI.screen='title';render()},
+    infnote(i){INFNOTE=i!=='off';store.set('cityYearInfNote',i==='off'?'off':'on');render()},
     mode(i){MODE=i;store.set('cityYearMode',i);render()},
     hitfx(i){HFX=i;store.set(HFXK,i);render()},
     hitfxm(i){HFXM=i;store.set(HFXMK,i);render()},
