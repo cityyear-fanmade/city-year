@@ -6,7 +6,7 @@ import {createSfx} from './sfx.js';
 
 export function startUI(E,app){
   const D=E.D,T=D.text;
-  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',harpoon:'#6fa3b8',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',obey:'#8a7fb8'};
+  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',harpoon:'#6fa3b8',wspear:'#3f7fb0',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',obey:'#8a7fb8'};
   const kwc=k=>KWC[k]||'var(--gold)';
 
   /* ===== 설정 저장 (연출 속도, 배경 테마) ===== */
@@ -666,6 +666,7 @@ export function startUI(E,app){
       [K.flame.n,'flame',`(레바테인 전용) 최대 ${CFG.stackCap}스택. 받는 피해 ×1.5, 라운드 끝에 1 감소. ${CFG.laev.blueAt}스택 이상이면 푸른 화염이 되어 받는 피해 ×${CFG.laev.blueMul}, 라운드 끝에 스택당 ${CFG.laev.blueDot} 피해를 주고 1 감소한다.`],
       [K.charge.n,'charge',`자신에게 쌓는 스택. 기본 최대 ${CFG.charge.cap}스택(소속마다 다르다: R사 토끼팀 8, 순록·코뿔소팀 20). 카드가 정한 만큼 소모하면, 소모한 1당 고정 피해(피해 감소 무시, 보호막은 깎임)를 적중마다 더한다. 라운드가 바뀌어도 줄지 않고, 맞으면 줄어든다. 쌓이는 방식도 소속마다 다르다.`],
       [K.sink.n,'sink',`상대에게 쌓는 스택. 최대 ${CFG.stackCap}스택. ${CFG.sink.per}스택마다 한 단계, 단계마다 침잠이 걸린 쪽의 명중 −${CFG.sink.hit} · 주는 피해 −${CFG.sink.dmg}. 라운드마다 1 줄어든다.`],
+      [K.wspear.n,'wspear','창세치 고래작살(전용 무기)이 적중하면 상대에게 쌓인다. 최대 5스택. 스택 하나마다 상대가 입는 출혈 피해가 ×1.2로 곱해진다(5스택이면 약 ×2.5). 한 번의 싸움 동안 유지된다.'],
       [K.harpoon.n,'harpoon',`대호수: 작살 카드가 적중하면 상대에게 쌓인다. 최대 ${CFG.harpoon.cap}스택. 당기는 카드(감아올리기·당겨 뜯기·고래 사냥)가 쌓인 작살을 모두 소모해 스택당 고정 피해를 더한다. 로프 끊기는 내게 걸린 작살을 푼다.`],
       [K.nail.n,'nail',`N사 날개: 적중할 때마다 상대에게 쌓인다. 최대 ${CFG.nail.cap}스택. 망치 카드가 쌓인 못을 흐트러짐으로 바꾼다.`],
       [K.stagger.n,'stagger',`쌓일수록 상대가 약해진다. 최대 ${CFG.nail.staggerCap}스택. ${N}. 주는 피해는 줄고 받는 피해는 늘며, 기준을 넘으면 기절한다.`],
@@ -1797,14 +1798,38 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const b64e=o=>{const u=new TextEncoder().encode(JSON.stringify(o));let x='';u.forEach(c=>x+=String.fromCharCode(c));return btoa(x).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
   const b64d=t=>{const x=atob(t.replace(/-/g,'+').replace(/_/g,'/'));return JSON.parse(new TextDecoder().decode(Uint8Array.from(x,c=>c.charCodeAt(0))))};
   function shareHead(){const w=UI.endWin,dt=UI.death;return UI.overflowEnd?'오버플로우':UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)==='rcorp'?'나는 존재한다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'사랑하던 이의 손에':dt&&dt.id==='hongru'?'홍원에 군주가 태어났다':dt&&dt.cause==='distort'?'뒤틀렸다':'도시는 나를 기억하지 않는다'}
-  function shareLink(){
+  /* 링크용 기록: 이름이 아니라 id를 담아 짧게 만든다(받는 쪽에서 이름으로 바꾼다) */
+  function shareRec(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
-    const o={v:1,h:shareHead(),w:w?1:0,n:c.name||'',k:careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&'),t:shTitle(c),col:c.color,y:lived,a:E.age(G),
-      g:G.endless&&gi>=0?X.grades[gi]:'',d:!w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:'',f:[...c.beaten,...(c.minis||[])].map(id=>D.enemies[id].n),
+    return {v:2,h:shareHead(),w:w?1:0,n:c.name||'',k:careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&'),t:shTitle(c),col:c.color,y:lived,a:E.age(G),
+      g:G.endless&&gi>=0?X.grades[gi]:'',d:!w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:'',fi:[...new Set([...c.beaten,...(c.minis||[])])],
       e:c.ego?c.ego.n:'',i:innateName(c)||'',o:`${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n}`,lv:c.lv,st:[c.stats.atk,c.stats.eva,c.stats.spd],s:c.seed,dy:c.daily||'',df:diffOf(c),ver:UPDATES.v};
-    const base=/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.origin+location.pathname:PAGES;
-    return base+'#r='+b64e(o);
   }
+  const shBase=()=>/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.origin+location.pathname:PAGES;
+  const u8b64=u=>{let x='';u.forEach(c=>x+=String.fromCharCode(c));return btoa(x).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
+  const b64u8=t=>Uint8Array.from(atob(t.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+  const canZip=typeof CompressionStream==='function'&&typeof DecompressionStream==='function';
+  const zipB=async(u,Cls,fmt)=>{const st=new Cls(fmt),wr=st.writable.getWriter();wr.write(u);wr.close();return new Uint8Array(await new Response(st.readable).arrayBuffer())};
+  /* 배열로 줄여 담는다(키 이름 생략). 순서를 바꾸지 말고 끝에만 덧붙인다 */
+  const shArr=o=>[2,o.h,o.w,o.n,o.k,o.t,String(o.col||'').replace(/^#/,''),o.y,o.a,o.g,o.d,o.fi.join(','),o.e,o.i,o.o,o.lv,o.st.join(','),o.s,o.dy,o.df,o.ver];
+  const shObj=a=>({v:2,h:a[1],w:a[2],n:a[3],k:a[4],t:a[5],col:/^[0-9a-f]{3,8}$/i.test(a[6])?'#'+a[6]:a[6],y:a[7],a:a[8],g:a[9],d:a[10],
+    f:String(a[11]||'').split(',').filter(Boolean).map(id=>(D.enemies[id]&&D.enemies[id].n)||id),e:a[12],i:a[13],o:a[14],lv:a[15],st:String(a[16]||'0,0,0').split(',').map(Number),s:a[17],dy:a[18],df:a[19],ver:a[20]});
+  /* 기록 링크: #c= 압축(deflate) 배열, #a= 압축 없는 배열(압축을 못 쓰는 브라우저), #r= 예전 형식(그대로 읽는다) */
+  async function shareLinkAsync(){
+    const j=new TextEncoder().encode(JSON.stringify(shArr(shareRec()))),a='#a='+u8b64(j);
+    if(canZip){try{const c='#c='+u8b64(await zipB(j,CompressionStream,'deflate-raw'));return shBase()+(c.length<a.length?c:a)}catch(e){}}
+    return shBase()+a;
+  }
+  async function readShared(h){
+    const m=/#([rac])=([\w-]+)/.exec(h||'');if(!m)return null;
+    if(m[1]==='r')return b64d(m[2]);
+    let u=b64u8(m[2]);if(m[1]==='c')u=await zipB(u,DecompressionStream,'deflate-raw');
+    return shObj(JSON.parse(new TextDecoder().decode(u)));
+  }
+  /* 끝 화면에서 미리 만들어 둔다: 복사 버튼을 누를 때 기다리지 않게(일부 브라우저는 클릭 직후에만 복사를 허용한다) */
+  function prepShare(){const k=JSON.stringify(shareRec());if(UI.shK===k)return;UI.shK=k;UI.shU=null;shareLinkAsync().then(u=>{if(UI.shK===k)UI.shU=u}).catch(()=>{})}
+  /* 예전 형식 링크(#r=): 시험용으로만 남긴다 */
+  function shareLink(){const o=shareRec();o.v=1;o.f=o.fi.map(id=>D.enemies[id].n);delete o.fi;return shBase()+'#r='+b64e(o)}
   function vShared(){
     const r=UI.shared;
     const row=(k,v)=>v?`<div class="row between"><span class="dim">${k}</span><b class="mono" style="text-align:right">${esc(String(v))}</b></div>`:'';
@@ -2026,6 +2051,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
+    if(s==='end'&&G&&G.ch){try{prepShare()}catch(e){}}
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
     const ov=UI.help&&!UI.cfg?vHelp():UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif" style="white-space:nowrap">설정</b><button class="btn quiet" style="width:auto;flex:none;padding:8px 16px" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):ok&&UI.bag?vBag():pend?vOffer():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeTop()}${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const bagOver=ok&&UI.bag&&pend;
@@ -2266,7 +2292,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     },
     testCard:async()=>(await endCard()).toDataURL('image/png'),
     async share(){
-      const url=shareLink();UI.shareText=null;UI.shareMsg=null;
+      UI.shareText=null;UI.shareMsg=null;
+      const url=UI.shU&&UI.shK===JSON.stringify(shareRec())?UI.shU:await shareLinkAsync();
       try{await navigator.clipboard.writeText(url);UI.shareMsg='기록 링크를 복사했다. 붙여 넣기만 하면 된다.';render();return}catch(e){}
       UI.shareText=url;render();const b=$('shareBox');
       if(b){b.focus();b.select();try{if(document.execCommand('copy')){UI.shareMsg='기록 링크를 복사했다. 붙여 넣기만 하면 된다.';UI.shareText=null;render();return}}catch(e){}}
@@ -2457,13 +2484,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     ACT[b.dataset.a](b.dataset.i,b);
   });
   /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */
-  try{const m=/#r=([\w-]+)/.exec(location.hash||'');if(m){const r=b64d(m[1]);if(r&&r.s!=null){UI.shared=r;UI.screen='shared'}}}catch(e){}
+  try{const h=location.hash||'';if(/#r=/.test(h)){const r=b64d(/#r=([\w-]+)/.exec(h)[1]);if(r&&r.s!=null){UI.shared=r;UI.screen='shared'}}
+    else if(/#[ac]=/.test(h))readShared(h).then(r=>{if(r&&r.s!=null){UI.shared=r;UI.screen='shared';render()}}).catch(()=>{})}catch(e){}
   render();
   /* 자동 테스트용 상태 조회 */
   return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff}),
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
     testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testBgmStage:n=>BGM.setStage(n),testInfNote:y=>{if(G)G.year=y||300;showInfNote(G?infNote():D.infinite.notes[2][3])},testBgmPos:()=>BGM.pos(),testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
-    testShareLink:()=>shareLink(),
+    testShareLink:()=>shareLinkAsync(),testShareLinkOld:()=>shareLink(),
     testDistort(){if(!G)return;UI.ev=D.mindEvents.distort;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},

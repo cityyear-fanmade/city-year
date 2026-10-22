@@ -2293,7 +2293,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         ch.packOffer={n:'엄지 검술',cards:td.deck.slice(),relic:'엄지 검술'};chips.push(`전리품 · ${td.n} (${td.gear.e}) · 장착할지 고른다`);chips.push('엄지 검술 · 덱을 바꿀지 고른다')}
       /* 특수환: 승리하면 능력치 하나를 골라 영구 증가 (전리품보다 먼저, 전리품이 맨 끝) */
       if(foe.pill){ch.pillPick=true;chips.push(`${foe.pill.n} · 능력치 하나를 골라 +${foe.pill.v} (영구)`)}
-      if(foe.drop&&!td){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
+      if(foe.drop&&!td&&!(foe.drop.once&&(ch.relics||[]).includes(foe.drop.n))){const dr=foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
         if(dr.flag)ch.flags[dr.flag]=1;
         if(dr.promote&&ch.fi===(dr.promoteFrom||1)&&canFingerUp(ch))chips.push(...fingerStep(ch))
         if(dr.title){ch.titles=ch.titles||[];if(!ch.titles.includes(dr.title)){ch.titles.push(dr.title);(ch.titleLog=ch.titleLog||[]).push(dr.title)}chips.push('칭호 · '+dr.title)}
@@ -2702,8 +2702,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.hp<=0||B.hp<=0)return;
       /* 출혈: 공격할 때마다(명중 여부 무관) 스택만큼 피해, 그 뒤 1 감소 */
       if(A.bleed>0){
-        const bd=A.bleed;hpLoss(C,A,bd,L);A.bleed--;
-        L('dmg',`${A.name} ${D.keywords.bleed.n} ${bd} 피해 (공격하며 상처가 벌어진다)`);
+        const wm=(A.wspear||0)>0?Math.pow(A.wspearMul||1.2,A.wspear):1,bd=Math.round(A.bleed*wm);hpLoss(C,A,bd,L);A.bleed--;
+        L('dmg',`${A.name} ${D.keywords.bleed.n} ${bd} 피해 (공격하며 상처가 벌어진다)${wm>1?` · ${D.keywords.wspear.n} ${A.wspear}개 ×${(Math.round(wm*100)/100)}`:''}`);
         push({k:'bleed',side:A.uid,dmg:bd});
         /* 혈귀 패시브 혈찬: 상대의 출혈이 5번 발동할 때마다 HP 15 회복 */
         if(B.hyeolchan){B.hc=(B.hc||0)+1;if(B.hc>=5){B.hc-=5;if(B.hp>0){const h=hcHeal(B);B.hp+=h;HG(B,h);L('kw',`  ${B.name} · 혈찬 · HP +${h}`)}}}
@@ -2822,7 +2822,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.wx&&A.wx.finish&&B.hp<=B.maxHp*A.wx.finish.at){dmg+=A.wx.finish.dmg;note+=` 마무리+${A.wx.finish.dmg}`}
       if(A.triDmg){dmg+=A.triDmg;note+=` 건+${A.triDmg}`}
       if(A.hungerUse>0){dmg+=A.hungerUse;note+=` 굶주림+${A.hungerUse}`;A.hungerUse=0}
-      if(c.bleedDmg&&B.bleed>0){const x=B.bleed*c.bleedDmg;dmg+=x;note+=` 출혈 ${B.bleed}×${c.bleedDmg}+${x}`}
+      if(c.bleedDmg&&B.bleed>0){const wm=(B.wspear||0)>0?Math.pow(B.wspearMul||1.2,B.wspear):1,x=Math.round(B.bleed*c.bleedDmg*wm);dmg+=x;note+=` 출혈 ${B.bleed}×${c.bleedDmg}${wm>1?`×${Math.round(wm*100)/100}(${D.keywords.wspear.n})`:''}+${x}`}
       if(c.sinkDmg&&(B.sink||0)>=CFG.sink.per){const n_=Math.floor(B.sink/CFG.sink.per),x=n_*c.sinkDmg;dmg+=x;note+=` 침잠 ${n_}단계+${x}`}
       if(C.duel){dmg+=C.duel;note+=` 결투+${C.duel}`}
       if(A.augHunt&&B.aug){dmg+=A.augHunt;note+=` 의체 심판+${A.augHunt}`}
@@ -2888,6 +2888,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(A.form==='p')applyKw(A,B,{kw:[['bleed',F_.bleed,'t']]},L);
         if(A.form==='s'){addStagger(C,B,F_.stagger,L);if((A.stagger||0)>0)A.stagger=Math.max(0,A.stagger-F_.stagger)}}
       if(A.passive&&A.passive.id==='forms'&&A.stance==='strike'&&B.hp>0){addStagger(C,B,A.passive.stagger,L);if((A.stagger||0)>0){A.stagger=Math.max(0,A.stagger-A.passive.recover);L('kw',`  ${A.name} · 타격 태세 · 자신의 흐트러짐 −${A.passive.recover}`)}}
+      if(A.wx&&A.wx.whaleSpear&&B.hp>0&&!B.formImmune){const W_=A.wx.whaleSpear;B.wspear=Math.min(W_.cap,(B.wspear||0)+1);B.wspearMul=W_.mul;L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 ${D.keywords.wspear.n} +1 (지금 ${B.wspear}/${W_.cap}) · 출혈 피해 ×${Math.round(Math.pow(W_.mul,B.wspear)*100)/100}`)}
       if(A.wx&&A.wx.hitBleed&&B.hp>0&&!B.formImmune){B.bleed=Math.min(bleedCap(B),B.bleed+A.wx.hitBleed);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 출혈 +${A.wx.hitBleed} (지금 ${B.bleed})`)}
       if(A.inkIds&&A.inkIds.length&&!c.inkFollow&&B.hp>0){const id=A.inkIds[(A.inkI=A.inkI||0)%A.inkIds.length],K=CFG.ink;if(A.obey>0)A.obey--;A.inkI++;let x=K.follow+Math.max(0,A.inkIds.length-1)*K.followPer;if(B.shield>0){const ab=Math.min(B.shield,x);B.shield-=ab;x-=ab}hpLoss(C,B,x,L);B.ink=Math.min(K.cap+(A.wx&&A.wx.inkCap||0),(B.ink||0)+K.followInk);L('hit',`  ${A.name}의 ${D.cards[id].n.replace('흑수 · ','')} 흑수가 거든다 · ${B.name}에게 ${x} · 수흔 +${K.followInk} (지금 ${B.ink})`)}
       if(A.wx&&A.wx.hitInk&&B.hp>0){B.ink=Math.min(CFG.ink.cap+(A.wx.inkCap||0),(B.ink||0)+A.wx.hitInk);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 수흔 +${A.wx.hitInk} (지금 ${B.ink})`)}
