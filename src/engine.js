@@ -2473,6 +2473,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const CB=CFG.colorBuff;
       if(CB.on&&isC){const k=one(['dmg','hit','eva']);P.cb={k,v:CB[k]};mindNote.push(`특색 위력 · ${({dmg:'피해',hit:'명중',eva:'회피'})[k]} +${CB[k]} (HP ${Math.round(CB.hpMin*100)}% 이상일 때)`)}}
     if(ch.hw&&ch.hw.host)P.lightUp=(P.lightUp||0)+CFG.hw.hostLight;
+    /* 대호수 대재앙 심장 전리품 패시브 */
+    {const f=ch.flags||{};P.lk={silence:!!f.lkL_silence,lamp:!!f.lkL_lamp,anchor:!!f.lkL_anchor,tide:!!f.lkL_tide,genesis:!!f.lkL_genesis,pale:!!f.lkL_pale};if(P.lk.lamp)P.lightUp=(P.lightUp||0)+1}
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.lightUp=(P.lightUp||0)+CFG.lvLight.up*n}
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
     P.inkIds=ch.hw&&ch.hw.mission&&hwHave(ch).length?hwHave(ch).map(k=>'zp_'+k):null;
@@ -2488,6 +2490,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const echo=ch.echoFoe===id;ch.echoFoe=null;if(echo)E.name+=' · 불순물';
     const C={ch,P,E,id,echo,ally,allyFirst,penalty,duel:assocOf(ch)===CFG.duel.org?CFG.duel.dmg:0,round:0,log:[],cur:[],evs:[],logBefore:0,over:null,order:[],quiet:!!quiet,mindNote};
     C.crew=ch.lake&&ch.lake.crew?ch.lake.crew.map(m=>({role:m.role,n:m.n,die:m.die})):[];
+    {const nv=C.crew.filter(m=>m.role==='navigator').length;if(nv&&C.P)C.P.eva+=CFG.lake.navEva*nv}
     {const R=ch.rs=ch.rs||{};RS_=R;let hv=P.hp;Object.defineProperty(P,'hp',{get(){return hv},set(v){if(v>hv)R.heal=(R.heal||0)+(v-hv);hv=v},enumerable:true,configurable:true})}
     {const fl=ch.flags||{};if(fl.escortNext){fl.escortNext=0;if(ch.bond&&ch.bond.st==='married')C.escort={name:ch.bond.name,kind:escortKind(ch.bond.route),lv:spouseLevel(ch.bond,ch.year||0)}}}
     activeC=C;
@@ -2546,9 +2549,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 히든 보스 전용 패시브: 라운드 단위 */
     const pv=E.passive&&E.passive.id;
     /* 대호수 고래 패시브 (라운드 단위) */
-    {const cooks=(C.crew||[]).filter(m=>m.role==='cook').length;if(cooks&&C.round>1&&P.hp>0){const h=Math.min(3*cooks,P.maxHp-P.hp);if(h>0){P.hp+=h;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`요리사가 통조림을 데워 준다 · HP +${h}`}}}
+    {const hands=(C.crew||[]).filter(m=>m.role==='hand').length;if(hands&&P.hp>0){P.shield=Math.min(CFG.shieldCap,(P.shield||0)+CFG.lake.handShield*hands);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`갑판원이 돛을 잡아 준다 · 보호막 +${CFG.lake.handShield*hands}`}}
+    {const cooks=(C.crew||[]).filter(m=>m.role==='cook').length;if(cooks&&C.round>1&&P.hp>0){const h=Math.min(CFG.lake.cookHeal*cooks,P.maxHp-P.hp);if(h>0){P.hp+=h;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`요리사가 통조림을 데워 준다 · HP +${h}`}}}
     if(pv==='lkLantern'&&E.lights==null){E.lights=E.passive.lights;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 빛 촉수 ${E.lights}개를 먼저 부숴야 본체에 피해가 들어간다`}
-    if(pv==='lkAnchor'){const navN=(C.crew||[]).filter(m=>m.role==='navigator').length,add=Math.min(Math.max(1,E.passive.per-navN),E.passive.cap-(P.anchorLoss||0));if(add>0){P.eva-=add;P.anchorLoss=(P.anchorLoss||0)+add;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 배가 무거워진다 · 회피 −${P.anchorLoss} (로프 끊기로 푼다)`}}
+    if(pv==='lkAnchor'){const navN=(C.crew||[]).filter(m=>m.role==='navigator').length,add=Math.min(Math.max(1,E.passive.per-navN),E.passive.cap-(P.anchorLoss||0));if(P.lk&&P.lk.anchor)add=Math.floor(add/2);if(add>0){P.eva-=add;P.anchorLoss=(P.anchorLoss||0)+add;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 배가 무거워진다 · 회피 −${P.anchorLoss} (로프 끊기로 푼다)`}}
     if(pv==='lkTide'){if(E.atk0==null)E.atk0=E.atk;const up=Math.min(E.passive.cap,(C.round-1)+Math.floor((P.bleed||0)/E.passive.per));E.atk=E.atk0+up;if(up>0)C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 피 냄새에 달아오른다 · 공격 +${up}`}
     if(pv==='obey'){P.obey=Math.min(CFG.hw.obey.cap,(P.obey||0)+CFG.hw.obey.gain);C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${E.name} · 공허한 순종 ${P.obey}`}
     E.maskOn=pv==='mask'&&C.round%E.passive.every===0;
@@ -2746,7 +2750,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.debuffHit){B.passHitNext=(B.passHitNext||0)+c.debuffHit;L('kw',`  ${B.name} · 다음 라운드 명중 ${sg(c.debuffHit)} (1라운드)`)}
     }
     if(c.t==='buff'){if(c.serum)addSerum(A,c,L);if(c.shield)A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.shield+(A.prescPlus||0)+(A.isP&&A.cg?5*CFG.cardGrade.indexOf(A.cg):0));L('sys',`${A.name} · ${c.n} (버프)${c.gain?` · 빛 +${c.gain}`:''}${c.shield?` · 보호막 ${A.shield}`:''}`);applyKw(A,B,c,L);push({k:'buff',side:A.uid,card:c});return}
-    const hits=c.hits+(c.t==='atk'&&A.wx&&A.wx.extraHit?A.wx.extraHit:0);
+    let hits=c.hits+(c.t==='atk'&&A.wx&&A.wx.extraHit?A.wx.extraHit:0);
+    /* 창세치 고래 심장: 3타마다 1타 추가. 추가타는 다음 3타 세기에 들어가지 않는다 */
+    if(A.isP&&A.lk&&A.lk.genesis&&c.t==='atk'){const b3=c.hits;A.h3=A.h3||0;const ex=Math.floor((A.h3+b3)/3)-Math.floor(A.h3/3);A.h3+=b3;if(ex>0){hits+=ex;L('kw',`  ${A.name} · 창세치 고래 심장 · 추가타 +${ex}`)}}
     /* 가속: 라운드마다 처음 공격할 때 1스택 (전투당 최대 3) */
     /* 엄지 패시브 탄환: 공격 카드마다 1발 소모 · 상대에게 '예의를 지킬 것' 1 (상대 명중 −1×스택) */
     if(c.t==='atk'&&A.thumb&&!A.distorted&&CFG.thumbRefund>0&&A.ammo<=0&&A.ammoRound!==C.round){A.ammoRound=C.round;A.ammo=CFG.thumbRefund;L('kw',`${A.name} · 탄환 ${CFG.thumbRefund}발 되돌아온다 (이번 라운드 한 번)`)}
@@ -2933,7 +2939,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.ch.infinite&&A.isP&&dmg>0&&(C.ch.infBoost||C.ch.infShard||C.ch.famLoss)){const m=1+(C.ch.infBoost||0)*CFG.infinite.century.dmg+(C.ch.infShard||0)*CFG.infinite.shard.dmg+(C.ch.famLoss||0)*CFG.infinite.grief.dmg;dmg=Math.round(dmg*m);note+=` 백 해 ×${m.toFixed(2)}`}
       {const SG=CFG.infinite.surge;if(C.ch.infinite&&A.isP&&dmg>0&&SG&&(C.ch.year||0)>=SG.year&&C.round>SG.round){const m=Math.min(SG.max,Math.pow(SG.per,C.round-SG.round));dmg=Math.round(dmg*m);note+=` 기세 ×${m>=1000?m.toExponential(1):m.toFixed(1)}`}}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
-      if(A.passive&&A.passive.id==='lkPale'&&B.isP&&dmg>0){B.pale=(B.pale||0)+1;if(B.pale>=A.passive.at){B.pale=0;loseMind(C.ch,A.passive.mind,t=>L('kw',`  ${A.name} · 창백화 · ${t}`))}else L('kw',`  ${A.name} · 창백화 ${B.pale}/${A.passive.at}`)}
+      if(A.passive&&A.passive.id==='lkPale'&&B.isP&&dmg>0){B.pale=(B.pale||0)+1;if(B.pale>=A.passive.at){B.pale=0;loseMind(C.ch,Math.ceil(A.passive.mind/(B.lk&&B.lk.pale?2:1)),t=>L('kw',`  ${A.name} · 창백화 · ${t}`))}else L('kw',`  ${A.name} · 창백화 ${B.pale}/${A.passive.at}`)}
       hpLoss(C,B,dmg,L);if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
@@ -2943,6 +2949,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(A.form==='p')applyKw(A,B,{kw:[['bleed',F_.bleed,'t']]},L);
         if(A.form==='s'){addStagger(C,B,F_.stagger,L);if((A.stagger||0)>0)A.stagger=Math.max(0,A.stagger-F_.stagger)}}
       if(A.passive&&A.passive.id==='forms'&&A.stance==='strike'&&B.hp>0){addStagger(C,B,A.passive.stagger,L);if((A.stagger||0)>0){A.stagger=Math.max(0,A.stagger-A.passive.recover);L('kw',`  ${A.name} · 타격 태세 · 자신의 흐트러짐 −${A.passive.recover}`)}}
+      if(A.isP&&C.crew&&C.crew.length&&B.hp>0&&A.harpRound!==C.round){const nh=C.crew.filter(m=>m.role==='harpooner').length;if(nh){A.harpRound=C.round;applyKw(A,B,{kw:[['harpoon',CFG.lake.harpStack*nh,'t']]},L)}}
       if(A.wx&&A.wx.whaleSpear&&B.hp>0&&!B.formImmune){const W_=A.wx.whaleSpear;B.wspear=Math.min(W_.cap,(B.wspear||0)+1);B.wspearMul=W_.mul;L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 ${D.keywords.wspear.n} +1 (지금 ${B.wspear}/${W_.cap}) · 출혈 피해 ×${Math.round(Math.pow(W_.mul,B.wspear)*100)/100}`)}
       if(A.wx&&A.wx.hitBleed&&B.hp>0&&!B.formImmune){B.bleed=Math.min(bleedCap(B),B.bleed+A.wx.hitBleed);L('kw',`  ${A.name} · 전용 무기 · ${B.name}에게 출혈 +${A.wx.hitBleed} (지금 ${B.bleed})`)}
       if(A.inkIds&&A.inkIds.length&&!c.inkFollow&&B.hp>0){const id=A.inkIds[(A.inkI=A.inkI||0)%A.inkIds.length],K=CFG.ink;if(A.obey>0)A.obey--;A.inkI++;let x=K.follow+Math.max(0,A.inkIds.length-1)*K.followPer;if(B.shield>0){const ab=Math.min(B.shield,x);B.shield-=ab;x-=ab}hpLoss(C,B,x,L);B.ink=Math.min(K.cap+(A.wx&&A.wx.inkCap||0),(B.ink||0)+K.followInk);L('hit',`  ${A.name}의 ${D.cards[id].n.replace('흑수 · ','')} 흑수가 거든다 · ${B.name}에게 ${x} · 수흔 +${K.followInk} (지금 ${B.ink})`)}
@@ -2982,6 +2989,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.execute&&B.hp>0&&B.hp<=B.maxHp*X.execute.below){hpLoss(C,B,X.execute.dmg,L);L('dmg',`  조율 · ${B.name} 고정 피해 ${X.execute.dmg}`)}}
       if(B.wx&&B.wx.grudge&&B.hp>0){B.grudge=Math.min(5,(B.grudge||0)+1)}
       if(B.fleshRound===C.round&&B.isP&&!B.boneNext){B.boneNext=true;L('kw',`  ${B.name} · 육참 · 맞았다 · 다음 손패에 골단`)}
+      if(B.isP&&B.lk&&dmg>0&&A.hp>0){const LK=B.lk;if(LK.silence){A.warp=Math.min(5,(A.warp||0)+1);L('kw',`  ${B.name} · 무음의 고래 심장 · ${A.name}에게 왜곡 ${A.warp}`)}if(LK.anchor){A.chain=Math.min(5,(A.chain||0)+1);L('kw',`  ${B.name} · 닻을 삼킨 고래 심장 · ${A.name}에게 사슬 ${A.chain}`)}if(LK.tide)applyKw(B,A,{kw:[['bleed',2,'t']]},L);if(LK.pale)applyKw(B,A,{kw:[['sink',1,'t']]},L)}
       if(B.kuro&&B.hp>0&&dmg>0)addCloud(B,L);
       if(A.passive&&A.passive.id==='stance')A.sal=Math.min(A.passive.salMax,A.sal+1);
       if(B.passive&&B.passive.id==='stance')B.sal=Math.max(0,B.sal-1);
@@ -3016,7 +3024,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      실패하면 그 라운드는 카드를 내지 못하고 공격만 받는다(UI가 빈 손으로 라운드를 진행한다) */
   function fleeCheck(C){
     const e=D.enemies[C.id],F=e&&e.flee;if(!F||C.over)return null;
-    const r=d(100),mod=Math.floor(((C.P.eva||0)+(C.P.spd||0))/2),tot=r+mod,ok=tot>=F.dc;
+    const r=d(100),mod=Math.floor(((C.P.eva||0)+(C.P.spd||0))/2)+CFG.lake.navFlee*(C.crew||[]).filter(m=>m.role==='navigator').length,tot=r+mod,ok=tot>=F.dc;
     C.log.push({t:'sys',s:`도주 시도 · 1d100 ${r} + ${mod} = ${tot} / 난이도 ${F.dc} → ${ok?'성공':'실패'}`});
     if(ok)C.over='flee';
     return {ok,r,mod,tot,dc:F.dc};
