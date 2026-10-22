@@ -23,7 +23,8 @@
     "hg_8",
     "hg_9"
    ],
-   "cardMoney": true
+   "cardMoney": true,
+   "secret": 1
   },
   {
    "max": 15,
@@ -131,7 +132,8 @@
     "check": 3
    },
    "card": "breathe",
-   "relicPick": true
+   "relicPick": true,
+   "secret": 1
   }
  ],
  "talents": [
