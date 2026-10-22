@@ -148,7 +148,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.hw)ch.hw={fi:0,rv:0};
     if(o.flags&&o.flags.lake)ch.aff={type:'lake',name:'U사 선원'};   // 대호수로 나간 자는 처음부터 선원: 기존 진로(공적·승급·최고 직위) 구조를 쓴다
     if(o.flags&&o.flags.lake&&D.careers&&D.careers.lake){const r0=D.careers.lake.ranks[0];ch.fi=0;ch.fr=r0;addStats(ch.stats,r0.fx||{});ch.licensed=true;ch.rank=T.rankStart;ch.dom='atk'}   // 선원 직위로 시작: 승급은 숙련 선원부터
-    if(o.rb){const Z=CFG.rb,tr=d(100),tm=Z.team.find(t=>tr<=t[0])[1];
+    if(o.rb){const Z=CFG.rb,tr=d(100),rr=rbTeamBy(ch,Z.team.map(t=>t[1])),tm=rr?rr.team:Z.team.find(t=>tr<=t[0])[1];
       ch.rteam=tm;ch.rb={n:0,chase:0,hides:0,chasers:['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==tm).map(t=>Z.foes[t]))};(ch.relics=ch.relics||[]).push('R사 부화장 · '+tm+' 개체')}
     /* 타고난 것 (히든): 출생 굴림 값의 해시로 정한다 */
     const IN=CFG.innate,h=(r.o*7919+r.t*104729+r.f*1299709+r.w*15485863+r.n*32452843+ch.kid.reduce((a,k)=>a*31+k.r,7))%1000003;
@@ -404,7 +404,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return true;
   }
   /* 히든 보스 전용 책장: 받으면 덱이 통째로 바뀌고 영구 고정, 거절하면 지금 덱 유지 (이전 덱은 카드팩 보관함에 남는다) */
-  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}stashPack(ch,P.n);ch.extra=[];ch.finalGiven=false;ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;ch.offers=[];ch.picks=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
+  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}stashPack(ch,P.n);ch.extra=[];ch.finalGiven=false;ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;if(P.orgPack)ch.orgPack=P.orgPack;ch.offers=[];ch.picks=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
   /* 흑수 카드: 덱이 고정된 흑수 전용 책장이면 카드를 바로 덱에 넣는다 (돈으로 바뀌지 않게) */
   function hwCard(ch,id,chips){if(ch.deckLocked||ch.cardMoney){forceAdd(ch,id);chips&&chips.push('흑수 카드 · '+D.cards[id].n)}else addCard(ch,id,chips,'흑수 카드')}
   /* 흑수 섞기: 후보 시절 카드(hc_)를 덜어내고 일반 책장에 흑수의 첫 카드를 더한다. 덱은 고정하지 않는다 */
@@ -770,13 +770,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(r.cardSwap&&ch.deck.includes(r.cardSwap.from))ch.deck=ch.deck.map(id=>id===r.cardSwap.from?r.cardSwap.to:id);
     if(r.cardAdd)for(const id of r.cardAdd)if(ch.deck.length<deckMax(ch))ch.deck.push(id);
   }
+  /* R사 팀 배치: 능력치가 기준을 넘으면 그 팀으로 고정(CFG.rbTeamRule), 아니면 null(무작위) */
+  const rbTeamBy=(ch,teams)=>{for(const [k,min,team] of CFG.rbTeamRule||[])if(teams.includes(team)&&(ch.stats[k]||0)>=min)return {team,why:`${{spd:'속도',maxHp:'최대 HP',eva:'회피',atk:'공격'}[k]} ${ch.stats[k]} ≥ ${min}`};return null};
   function giveOrgCards(ch,C_,at,out){
     const T_=C_.teams&&C_.teams[ch.aff.name];
-    if(at===0&&T_&&!ch.rteam){const r=d(T_.length);ch.rteam=T_[r-1];out.push(`${ch.aff.name} · ${ch.rteam} 배정 (1d${T_.length} · ${r})`)}
+    if(at===0&&T_&&!ch.rteam){const rr=rbTeamBy(ch,T_);if(rr){ch.rteam=rr.team;out.push(`${ch.aff.name} · ${ch.rteam} 고정 배치 (${rr.why})`)}else{const r=d(T_.length);ch.rteam=T_[r-1];out.push(`${ch.aff.name} · ${ch.rteam} 배정 (기준에 맞지 않아 1d${T_.length} · ${r})`)}}
     const rows=orgRows(ch,C_);
     ch.assocName=ch.aff.name;
     if(at!==0||!rows||ch.deckLocked||ch.cardMoney)return;
     const ids=(C_.finalRow?rows.slice(0,-1):rows).flat();
+    /* R사 날개: 팀 전용 책장은 통째로 강제하지 않고 받을지 고르게 한다(거절하면 지금 덱 유지, 이전 덱은 카드팩 보관함) */
+    if(ch.aff.name==='R사 날개'&&ch.rteam&&!ch.packOffer){ch.packOffer={n:ch.rteam+' 전용 책장',cards:ids.slice(),relic:'R사 날개 · '+ch.rteam,cm:true,orgPack:ch.aff.name};out.push(`전용 카드팩 · ${ch.rteam} 책장 ${ids.length}장 · 받을지 고른다 (받으면 덱이 통째로 바뀌고 이후 카드는 얻지 못하고 대신 돈 · 거절하면 지금 덱 유지)`);return}
     ch.deck=ids.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];stashPack(ch,ch.aff.name+' 전용 카드팩');ch.extra=[];ch.packOffer=null;ch.cardMoney=true;ch.orgPack=ch.aff.name;
     out.push(`전용 카드팩 · ${ch.aff.name} ${ids.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈 · 이전 덱은 가방의 카드팩 보관함에 남는다)`);
   }
