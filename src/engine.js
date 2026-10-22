@@ -371,7 +371,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return fixed;
   }
   function ensurePacks(ch){
-    repairStats(ch);
+    repairStats(ch);syncPackFlags(ch);
     /* 예전 표기 'D6≥N'·'피해 주사위 최소 N'을 '1d6 최소치 N'으로: 이미 가진 장비·출생 설명도 새 표기로 */
     {const fix=o=>{if(o&&typeof o.e==='string'&&(o.e.includes('D6≥')||o.e.includes('피해 주사위 최소')))o.e=o.e.replace(/D6≥(\d+)/g,'1d6 최소치 $1').replace(/피해 주사위 최소/g,'1d6 최소치')};Object.values(ch.gear||{}).forEach(fix);(ch.stash||[]).forEach(fix);(ch.gearOffers||[]).forEach(fix);[ch.w,ch.t,ch.f,ch.o].forEach(fix)}
     if(ch.wtrain&&!(ch.aff&&ch.aff.name==='W사 날개'))ch.wtrain=false;   // 해고 등으로 날개를 잃었는데 열차 상태만 남은 저장
@@ -404,6 +404,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if((ch.offers||[]).length||(ch.picks||[]).length||ch.packOffer||(ch.gearOffers||[]).length)return 'busy';
     return 'ok';
   }
+  /* 책장 패시브(붉은 안개·1권속 등)는 그 책장을 쓰는 동안에만 켜진다. 보관함으로 빼 둔 책장의 패시브가 다른 책장에서 남아 있지 않게 맞춘다 */
+  const PACKPASS=(()=>{const m={};for(const e of Object.values(D.enemies||{})){const dr=e.drop;if(dr&&dr.packPassive&&dr.packName)m[dr.packName]=dr.packPassive}return m})();
+  function syncPackFlags(ch){
+    ch.flags=ch.flags||{};
+    for(const [n,f] of Object.entries(PACKPASS)){
+      if(ch.packName===n)ch.flags[f]=ch.flags[f]||1;
+      else if(ch.flags[f]&&(ch.packs||[]).some(p=>p.n===n))delete ch.flags[f];
+    }
+  }
   function switchPack(ch,i){
     if(packCan(ch,i)!=='ok')return false;
     const ps=ch.packs,t=ps[i],cur=packSnap(ch),fx=ch.deck.filter(id=>D.cards[id].fixed);
@@ -411,10 +420,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.deck=t.deck.filter(id=>!D.cards[id].fixed).concat(fx);ch.side=t.side.filter(id=>!D.cards[id].fixed);ch.extra=t.extra.slice();
     ch.deckLocked=t.deckLocked;ch.cardMoney=t.cardMoney;ch.orgPack=t.orgPack;ch.finalGiven=t.finalGiven;ch.packName=t.n;ch.packKind=t.k||'origin';
     while(ch.deck.length>deckMax(ch)){const k=ch.deck.map(id=>D.cards[id].fixed).lastIndexOf(false);if(k<0)break;(ch.side=ch.side||[]).push(ch.deck.splice(k,1)[0])}
+    syncPackFlags(ch);
     return true;
   }
   /* 히든 보스 전용 책장: 받으면 덱이 통째로 바뀌고 영구 고정, 거절하면 지금 덱 유지 (이전 덱은 카드팩 보관함에 남는다) */
-  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}stashPack(ch,P.n);ch.extra=[];ch.finalGiven=false;ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;if(P.orgPack)ch.orgPack=P.orgPack;ch.offers=[];ch.picks=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;return true}
+  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}stashPack(ch,P.n);ch.extra=[];ch.finalGiven=false;ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;if(P.orgPack)ch.orgPack=P.orgPack;ch.offers=[];ch.picks=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;syncPackFlags(ch);return true}
   /* 흑수 카드: 덱이 고정된 흑수 전용 책장이면 카드를 바로 덱에 넣는다 (돈으로 바뀌지 않게) */
   function hwCard(ch,id,chips){if(ch.deckLocked||ch.cardMoney){forceAdd(ch,id);chips&&chips.push('흑수 카드 · '+D.cards[id].n)}else addCard(ch,id,chips,'흑수 카드')}
   /* 흑수 섞기: 후보 시절 카드(hc_)를 덜어내고 일반 책장에 흑수의 첫 카드를 더한다. 덱은 고정하지 않는다 */
