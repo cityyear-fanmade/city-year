@@ -980,6 +980,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if((L.crew||[]).length&&d(100)<=W.failCrew){const m=L.crew.splice(Math.floor(Math.random()*L.crew.length),1)[0];chips.push(`선원 · ${m.n} 부상으로 이탈`)}
         if(w.i>=w.max){endW();loseMind(ch,W.driftMind,t=>chips.push('표류 · '+t));const n=Math.floor((L.crew||[]).length/2);if(n){L.crew.splice(0,n);chips.push(`선원 ${n}명 이탈`)}ch.hp=Math.max(1,Math.floor(ch.hp/2));chips.push('배가 반파되어 표류했다 · HP 절반')}
         else chips.push('다음 파도가 온다')}}
+    if(fx.lakeIndigo&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.indigo='done';
+      if(fx.lakeIndigo==='fight'){L.indigoFight=true;chips.push('내일, 쪽빛 노인과 싸운다')}
+      else if(fx.lakeIndigo==='learn'){const dr=D.enemies.lake_indigo.drop;ch.packOffer={n:dr.packName,cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push('전용 카드팩 · 재앙살해')}
+      else chips.push('쪽빛 노인은 다시 오지 않는다')}
     if(fx.lakeHunt&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakeHunt==='fight'){L.hunterFight=true;chips.push('내일 새벽, 사냥꾼과 싸운다')}else chips.push('사냥꾼은 떠났다')}
     if(fx.lakePirate&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakePirate==='fight'){L.pirate='mate';chips.push('내일, 쌍갈고리 해적단과 싸운다')}else{L.pirate=null;L.pirateAt=(ch.year||0)+4;chips.push('해적단은 물러났다 · 몇 해 뒤 다시 온다')}}
     if(fx.lakeCrew&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{},R_=D.lake.crew.roles[fx.lakeCrew];(L.crew=L.crew||[]).push({role:fx.lakeCrew,n:R_.n,die:R_.die});chips.push(`선원 · ${R_.n} (${L.crew.length}/${CFG.lake.crewMax}) · ${R_.e}`)}
@@ -1404,6 +1408,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
        const W=CFG.lake.wave,r=d(100),pw=Math.min(W.maxPct,W.basePct+brk*W.perBreak),ev0=JSON.parse(JSON.stringify(Lk.hunter));
        if(r<=pw){L.wave={i:0,max:Math.min(W.maxStage,W.stage+Math.floor(brk/3))};const e=waveEv(ch,L);e.x=`금기를 어긴 값을 호수가 묻는다 · 1d100 ${r} (${pw} 이하 · 대형 파도)\n`+e.x;return e}
        ev0.x=`금기를 어긴 값을 호수가 묻는다 · 1d100 ${r} (${pw} 초과 · 파도는 오지 않았다)\n`+ev0.x;return ev0}}
+    if(L.indigoFight){L.indigoFight=false;return {type:'fight',enemy:'lake_indigo',enc:{hidden:true,label:'쪽빛 노인'}}}
     if(L.ricardoFight){L.ricardoFight=false;return {type:'fight',enemy:'lake_ricardo',enc:{hidden:true,label:'중지의 큰형님'}}}
     if(L.captain&&L.pirate==='end'&&!ch.beaten.includes('lake_ricardo')&&L.phase!=='whale'&&G.year>=(L.ricardoAt||(L.pirateEndYear||0)+CFG.lake.ricardoAfter)&&Lk.ricardo){L.ricardoAt=G.year+CFG.lake.ricardoAfter;return JSON.parse(JSON.stringify(Lk.ricardo))}
     if(L.whaleFight){const id=L.whaleFight;L.whaleFight=null;const e=D.enemies[id];return {type:'fight',enemy:id,enc:{hidden:!!e.hidden,label:e.hidden?'대재앙 토벌':'보스급 고래 토벌'}}}
@@ -1422,6 +1427,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       return JSON.parse(JSON.stringify(Lk.flee))
     }
+    /* 쪽빛 노인: 대재앙을 둘 눕힌 선장이 다른 항구로 넘어가기 전에 나룻배로 찾아와 가르침을 제안한다 (한 번만) */
+    if(L.captain&&!L.indigo&&Lk.indigo&&(L.killed||[]).filter(x=>x.startsWith('lake_whale_')).length>=2){L.indigo='ev';return JSON.parse(JSON.stringify(Lk.indigo))}
     if(!L.bag||!L.bag.length)L.bag=sample(ids,ids.length);   // 지난 호수는 나머지를 다 돌 때까지 나오지 않는다
     L.cur=L.bag.pop();L.phase='whale';L.seen=(L.seen||0)+1;L.encRolled=false;if(!(L.seenLakes=L.seenLakes||[]).includes(L.cur))L.seenLakes.push(L.cur);
     {const lk=Lk.lakes[L.cur];if(lk.slip&&d(100)<=CFG.lake.slip)return JSON.parse(JSON.stringify(lk.slip))}   // 주인공이 아닌 다른 선원이 금기를 어길 수도 있다
