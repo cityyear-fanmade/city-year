@@ -2077,7 +2077,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(G.year<=CFG.years)f=null;
       else if(G.year<=baseEnd){const order=['lake_whale_silence','lake_whale_lamp','lake_whale_anchor','lake_whale_tide','lake_whale_genesis','lake_whale_pale'],gi_=gradeAt(G.year),id=[0,1,2,3,4,5].map(i=>order[(gi_+i)%order.length]).find(x=>!K_.includes(x))||order[gi_%order.length];return {type:'fight',enemy:id,enc:{hidden:true,label:'대재앙 토벌 · '+X_.grades[gi_]}}}
       else if(d(100)>CFG.lake.infFight)f=null;   // 무한 모드의 대호수: 전투보다 호수를 건너는 항해가 중심
-      else{const pool=['lake_mermaid','lake_hook','lake_blade','lake_shield','lake_whale_silence','lake_whale_lamp','lake_whale_anchor','lake_whale_tide'],id=one(pool),e_=D.enemies[id];return {type:'fight',enemy:id,enc:{hidden:!!e_.hidden,label:'외곽 호수의 '+e_.n}}}
+      /* 그 밖에는 일반 무한 모드처럼 아직 이기지 못한 히든 보스가 호수의 틈으로 올라온다 (잡았던 고래는 다시 나오지 않는다). 아무도 없으면 호수의 적 */
     }
     if(f){
       /* 히든 보스: 목록 위에서부터 조건(과 확률)이 맞는 첫 보스가 불길한 예감(omen)으로 먼저 나타난다.
@@ -2086,10 +2086,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(G.infinite&&G.year>baseEnd&&d(100)<=INF.crack){
         const pool=riftBosses().filter(h=>!G.ch.beaten.includes(h.id)&&!(G.met||[]).includes(h.id));
         if(pool.length){const h=one(pool),nm=D.enemies[h.id].n;
-          return {type:'omen',boss:h.id,omen:riftOmen(nm),rift:true,escape:true,spec:f}}
+          return {type:'omen',boss:h.id,omen:riftOmenFor(G.ch,nm),rift:true,escape:true,spec:f}}
         /* 만날 수 있는 히든을 모두 만났다면, 이미 이긴 상대가 '불순물'이 되어 다시 나타난다 (전리품 대신 불순물의 조각과 경험치) */
         {const all=riftBosses();if(all.length){const h=one(all),nm=D.enemies[h.id].n;
-          return {type:'omen',boss:h.id,omen:riftEchoOmen(nm),rift:true,echo:true,escape:true,spec:f}}}
+          return {type:'omen',boss:h.id,omen:riftEchoOmenFor(G.ch,nm),rift:true,echo:true,escape:true,spec:f}}}
       }
       for(const h of D.hiddenBosses||[]){
         if(h.infOnly&&!G.infinite)continue;
@@ -2098,9 +2098,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         /* chanceBonus: 조건이 맞으면 확률 가산 (예: 검지 소속은 대행자 +30%) */
         const ch_=h.chance?Math.min(95,h.chance+[].concat(h.chanceBonus||[]).reduce((t_,b_)=>t_+(meets(G.ch,b_.req)?b_.add:0),0)+(G.infinite?INF.hiddenAdd:0)):0;
         if(ch_&&d(100)>ch_)continue;
-        if(G.infinite&&G.year>baseEnd)return {type:'omen',boss:h.id,omen:riftOmen(D.enemies[h.id].n),rift:true,escape:!h.noEscape,spec:f};
+        if(G.infinite&&G.year>baseEnd)return {type:'omen',boss:h.id,omen:riftOmenFor(G.ch,D.enemies[h.id].n),rift:true,escape:!h.noEscape,spec:f};
         return {type:'omen',boss:h.id,omen:omenOf(G.ch,h.omen),escape:!h.noEscape,spec:f};
       }
+      if(lakeOn(G.ch)&&G.infinite&&G.year>baseEnd){const id=one(['lake_mermaid','lake_hook','lake_blade','lake_shield']),e_=D.enemies[id];return {type:'fight',enemy:id,enc:{label:'외곽 호수의 '+e_.n}}}
       const e=encounter(G.ch,f);return {type:'fight',enemy:e.id,enc:e};
     }
     /* 갈림길: 공방 해결사 제안이 가끔(WF.chance%) 끼어든다 */
@@ -2167,11 +2168,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 불길한 예감에 대한 답: go면 히든 보스, 아니면 원래 고정 전투 지정대로 조우 */
   /* 인연이 걸린 전조 문구의 {n}을 이름으로 채운다 */
   /* 제 2막 무한 모드: 이 세계에서는 만날 수 없던 히든도 균열을 통해 나타난다 */
+  const riftOmenLake=nm=>({x:`호수의 수면이 갈라진다. 물 밑에서 ${nm}의 기척이 올라온다. 이 호수에서는 만날 수 없던 운명이 갈라진 틈을 타고 떠오른다.`,go:'갈라진 물속으로 들어간다',away:'눈을 돌린다',awayT:'수면은 소리 없이 닫혔다. 만날 수 없던 운명은 다음 기회를 기다린다.'});
+  const riftEchoOmenLake=nm=>({x:`갈라진 물 위에 ${nm}이(가) 서 있다. 예전에 상대한 적이 있는 모습이다. 하지만 불순물과 같은 느낌이 든다.`,go:'마주한다',away:'눈을 돌린다',awayT:'눈을 돌리자 수면이 닫혔다. 같은 얼굴이 다시 떠오를 것이라는 예감만 남았다.'});
+  const riftOmenFor=(ch,nm)=>lakeOn(ch)?riftOmenLake(nm):riftOmen(nm),riftEchoOmenFor=(ch,nm)=>lakeOn(ch)?riftEchoOmenLake(nm):riftEchoOmen(nm);
   const riftEchoOmen=nm=>({x:`갈라진 틈 너머에 ${nm}이(가) 서 있다. 예전에 상대한 적이 있는 모습이다. 하지만 불순물과 같은 느낌이 든다.`,go:'마주한다',away:'눈을 돌린다',awayT:'눈을 돌리자 틈이 닫혔다. 같은 얼굴이 다시 나타날 것이라는 예감만 남았다.'});
   const riftOmen=nm=>({x:`세계에 균열이 갔다. 갈라진 틈 너머에서 ${nm}의 기척이 느껴진다. 이 세계에서는 만날 수 없던 운명이 균열을 타고 흘러든다.`,go:'균열 속으로 들어간다',away:'눈을 돌린다',awayT:'균열은 소리 없이 닫혔다. 만날 수 없던 운명은 다음 기회를 기다린다.'});
   const omenOf=(ch,o)=>{if(o&&o.alt){const a=o.alt.find(a=>meets(ch,a.req));if(a)o=Object.assign({},o,{x:a.x})}if(!o||!ch.bond||!ch.bond.name)return o||{};const f=t=>t&&bondFill(t,ch.bond);return Object.assign({},o,{x:f(o.x),go:f(o.go),away:f(o.away),awayT:f(o.awayT)})};
+  /* 대호수 판에서 균열(호수의 틈)로 나타나는 히든 보스는 도시 배경의 등장 문구 대신 호수의 파도로 나타난다 */
+  const gaI=n=>{const c=String(n).charCodeAt(String(n).length-1);return c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28>0?'이':'가'};
+  const LAKE_INTRO=[n=>`대호수의 파도가 몰아닥친다. 물 밑에서 ${n}${gaI(n)} 모습을 드러낸다.`,n=>`호수가 크게 일렁인다. 갈라진 수면 위로 ${n}${gaI(n)} 올라선다. 배가 한쪽으로 기운다.`,n=>`거센 파도가 뱃전을 때린다. 그 너머에 ${n}${gaI(n)} 서 있다.`];
+  function lakeIntroFor(G,id){const E_=D.enemies[id];if(!E_)return;if(E_.intro0===undefined)E_.intro0=E_.intro;E_.intro=(lakeOn(G.ch)&&G.infinite)?one(LAKE_INTRO)(E_.n):E_.intro0}
   function answerOmen(G,st,go){
-    if(go||!st.escape){if(st.echo){G.ch.echoFoe=st.boss;return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:true,echo:true,label:'균열 너머의 불순물'}}}(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:!!st.rift,label:st.rift?'균열 너머의 운명':T.hiddenBoss}}}
+    if(go||!st.escape)lakeIntroFor(G,st.boss);
+    if(go||!st.escape){if(st.echo){G.ch.echoFoe=st.boss;return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:true,echo:true,label:lakeOn(G.ch)?'호수 밑의 불순물':'균열 너머의 불순물'}}}(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:!!st.rift,label:st.rift?(lakeOn(G.ch)?'호수 밑의 운명':'균열 너머의 운명'):T.hiddenBoss}}}
+    if(lakeOn(G.ch)&&G.infinite){const id=one(['lake_mermaid','lake_hook','lake_blade','lake_shield']);return {type:'fight',enemy:id,enc:{id,label:'외곽 호수의 '+D.enemies[id].n},avoided:st.boss}}
     const e=encounter(G.ch,st.spec);return {type:'fight',enemy:e.id,enc:e,avoided:st.boss};
   }
   /* 고를 수 있는 선택지 (조건이 맞지 않는 선택지는 빠진다). i는 원래 번호 */
