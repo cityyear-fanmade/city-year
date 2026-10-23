@@ -986,16 +986,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(m.mo>=D.lake.infinite.morph.length){L.crew.splice(L.morphIdx,1);L.crewAt=Math.min(L.crewAt||0,(ch.year||0)+1);L.morphed=(L.morphed||0)+1;s.maxHp+=Mo.maxHpFinal;ch.hp+=Mo.maxHpFinal;chips.push(`선원 · ${m.n}이(가) 호수로 돌아갔다 · 젖은 옷만 남았다 · 최대 HP +${Mo.maxHpFinal}`);chips.push('다음 해, 빈자리에 새 선원을 태울 수 있다')}
         else chips.push(`선원 · ${m.n}에게 변화가 이어진다`)}}
     if(fx.lakeIndigo&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.indigo='done';
-      if(fx.lakeIndigo==='fight'){L.indigoFight=true;chips.push('내일, 쪽빛 노인과 싸운다')}
+      if(fx.lakeIndigo==='fight'){ch.lakeNow={id:'lake_indigo',hidden:true,label:'쪽빛 노인'};chips.push('이어서 쪽빛 노인과 싸운다')}
       else if(fx.lakeIndigo==='learn'){const dr=D.enemies.lake_indigo.drop;ch.packOffer={n:dr.packName,cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push('전용 카드팩 · 재앙살해')}
       else chips.push('쪽빛 노인은 다시 오지 않는다')}
-    if(fx.lakeHunt&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakeHunt==='fight'){L.hunterFight=true;chips.push('내일 새벽, 사냥꾼과 싸운다')}else chips.push('사냥꾼은 떠났다')}
-    if(fx.lakePirate&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakePirate==='fight'){L.pirate='mate';chips.push('내일, 쌍갈고리 해적단과 싸운다')}else{L.pirate=null;L.pirateAt=(ch.year||0)+4;chips.push('해적단은 물러났다 · 몇 해 뒤 다시 온다')}}
+    if(fx.lakeHunt&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakeHunt==='fight'){ch.lakeNow={id:'lake_hunter',hidden:true,label:'대호수 금기 사냥꾼'};chips.push('이어서 사냥꾼과 싸운다')}else chips.push('사냥꾼은 떠났다')}
+    if(fx.lakePirate&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakePirate==='fight'){L.pirate='matefight';ch.lakeNow={id:'lake_mate',hidden:true,label:'쌍갈고리 해적단 부선장'};chips.push('이어서 쌍갈고리 해적단과 싸운다')}else{L.pirate=null;L.pirateAt=(ch.year||0)+4;chips.push('해적단은 물러났다 · 몇 해 뒤 다시 온다')}}
     if(fx.lakeCrew&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{},R_=D.lake.crew.roles[fx.lakeCrew];(L.crew=L.crew||[]).push({role:fx.lakeCrew,n:R_.n,die:R_.die});chips.push(`선원 · ${R_.n} (${L.crew.length}/${CFG.lake.crewMax}) · ${R_.e}`)}
     if(fx.lakePaleAlly&&ch.flags&&ch.flags.lake){D.enemies.lake_whale_pale.ally=true;chips.push('곁의 사람이 함께 싸운다')}
     if(fx.lakeTool&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if((L.tools||{})[fx.lakeTool]>0){L.tools[fx.lakeTool]--;chips.push(`도구 하나를 썼다 · 남은 ${L.tools[fx.lakeTool]}개`)}}
-    if(fx.lakeRicardo&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.ricardoFight=true;chips.push('내일, 중지의 큰형님과 싸운다')}
-    if(fx.lakeWhale&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.whaleFight=L.whaleTarget;chips.push('내일, 고래와 싸운다')}
+    if(fx.lakeRicardo&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};ch.lakeNow={id:'lake_ricardo',hidden:true,label:'중지의 큰형님'};chips.push('이어서 중지의 큰형님과 싸운다')}
+    if(fx.lakeWhale&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};{const wt=L.whaleTarget,we=D.enemies[wt];if(we)ch.lakeNow={id:wt,hidden:!!we.hidden,label:we.hidden?'대재앙 토벌':'보스급 고래 토벌'}}chips.push('이어서 고래와 싸운다')}
     if(fx.lakeFlee&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.phase='enter';L.harbor=true;gainMind(ch,CFG.lake.harborMind);L.fled=(L.fled||0)+1;chips.push('고래에게서 도망쳤다 · 호수를 벗어나 선박장에 들른다')}
     if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push(`혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)`);
       if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
@@ -2285,6 +2285,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const up=gainXp(ch,xp);chips.push('경험치 +'+xp);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     let enc=fx.combat?encounter(ch,fx.combat):null;
     if(ch.purge){enc={id:ch.purge};delete ch.purge;chips.push('숙청 · '+D.enemies[enc.id].n)}
+    if(ch.lakeNow){const n_=ch.lakeNow;delete ch.lakeNow;enc={id:n_.id,roll:null,table:null,hidden:n_.hidden,label:n_.label}}
     if(enc&&enc.roll)chips.push(`조우 1d100 ${enc.roll} · ${D.enemies[enc.id].n}`);
     return {t:res.t,roll,chips,title:licensed?rankLabel(ch):null,tlabel:licensed?T.licenseGained:null,combat:enc?enc.id:null,enc};
   }

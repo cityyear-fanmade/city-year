@@ -2588,6 +2588,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testEvent(k,lic){if(!G)return;G.ch.licensed=lic!==false;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testShip(mode){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.flags.lake=1;c.lake={captain:true,hull:63,crew:[{role:'cook',n:'요리사'},{role:'navigator',n:'항해사'}],seen:7,killed:[],wave:mode==='wave'?{i:1,max:4}:null};c.money=2000;if(mode==='anchor')c.flags.lkL_anchor=1;
       if(mode==='wave'){UI.ev=E.waveEv(c,c.lake);UI.fight=null;UI.omen=null;UI.screen='event'}
+      else if(mode==='hunt'){c.lake.captain=true;c.lake.whaleTarget='lake_whale_anchor';UI.ev=D.lake.hunt;UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='limit'){G.infinite=true;c.infinite=true;c.infIntro=1;c.limAt=1;c.lake.crew=[];UI.ev=E.infiniteEvent(G);UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='morph'){G.infinite=true;c.infinite=true;c.infIntro=1;c.limAt=9999;c.lake.morphAt=1;c.lake.crew[0].mo=3;UI.ev=E.infiniteEvent(G);UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='indigo'){c.lake.killed=['lake_whale_silence','lake_whale_lamp'];c.lake.phase='enter';UI.ev=D.lake.indigo;UI.fight=null;UI.omen=null;UI.screen='event'}
