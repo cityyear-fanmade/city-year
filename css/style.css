@@ -600,3 +600,6 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 
 @keyframes waveShake{0%,100%{transform:translate(0,0) rotate(0)}15%{transform:translate(-4px,2px) rotate(-.6deg)}35%{transform:translate(5px,-2px) rotate(.7deg)}55%{transform:translate(-3px,3px) rotate(-.5deg)}75%{transform:translate(4px,-1px) rotate(.4deg)}}
 .wave-shake{animation:waveShake .7s ease-in-out 3}
+
+.dsum .rl{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;line-height:1.5}.dsum .rl.pl b{color:#7fc88a}.dsum .rl.mi b{color:#e07a6a}.dsum .rn{font-size:11px;color:var(--dim)}
+.dsum{min-width:0;max-width:170px}
