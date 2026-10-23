@@ -2960,6 +2960,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.breath>0||c.forceCrit){
         if(c.forceCrit||d(100)<=critPct(A.breath)){const cm=(A.blade?(A.bladeBoost?CFG.syn['검계'].boostCrit:CFG.syn['검계'].crit):CFG.critMult)+(A.hwando?0.1*Math.min(A.breath,CFG.breath.hwandoCap):0);dmg=Math.floor(dmg*cm);note+=A.hwando?` 치명(환도 ×${cm.toFixed(1)})`:' 치명'}
       }
+      if(A.blade&&A.breath>=CFG.syn['검계'].burst.at&&(A.bbRound==null||C.round-A.bbRound>=CFG.syn['검계'].burst.every)){const bs=CFG.syn['검계'].burst,sp=Math.min(A.breath,bs.max),x=Math.floor(sp*bs.per[A.synT||0]);A.bbRound=C.round;A.breath-=sp;dmg+=x;note+=` 호흡 폭발 · 호흡 ${sp} 소모 → +${x}`}
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.ring&&A.work>0){dmg+=CFG.ring.dmg*A.work;note+=` 작품 ${A.work}+${CFG.ring.dmg*A.work}`;if(A.work>=CFG.ring.max){dmg=Math.floor(dmg*CFG.ring.finish);A.work=CFG.ring.after;note+=` 완성×${CFG.ring.finish}`}}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
@@ -3077,7 +3078,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.wx&&B.wx.grudge&&B.hp>0){B.grudge=Math.min(5,(B.grudge||0)+1)}
       if(B.fleshRound===C.round&&B.isP&&!B.boneNext){B.boneNext=true;L('kw',`  ${B.name} · 육참 · 맞았다 · 다음 손패에 골단`)}
       if(B.isP&&B.lk&&dmg>0&&A.hp>0){const LK=B.lk;if(LK.silence){A.warp=Math.min(5,(A.warp||0)+1);L('kw',`  ${B.name} · 무음의 고래 심장 · ${A.name}에게 왜곡 ${A.warp}`)}if(LK.anchor){A.chain=Math.min(5,(A.chain||0)+1);L('kw',`  ${B.name} · 닻을 삼킨 고래 심장 · ${A.name}에게 사슬 ${A.chain}`)}if(LK.tide)applyKw(B,A,{kw:[['bleed',2,'t']]},L);if(LK.pale)applyKw(B,A,{kw:[['sink',1,'t']]},L)}
-      if(B.kuro&&B.hp>0&&dmg>0)addCloud(B,L);
+      if(B.kuro&&B.hp>0&&dmg>0){const K=CFG.syn['흑운회'],cl=B.black?K.max:(B.cloud||0),x=Math.floor(cl*K.counter[B.synT||0]);
+        if(x>0&&A.hp>0){A.hp=Math.max(0,A.hp-x);B.dealtR=C.round;L('dmg',`  ${B.name} · 흑운 반격 · 구름 ${cl} → ${A.name} 고정 피해 ${x}`)}
+        addCloud(B,L)}
       if(A.passive&&A.passive.id==='stance')A.sal=Math.min(A.passive.salMax,A.sal+1);
       if(B.passive&&B.passive.id==='stance')B.sal=Math.max(0,B.sal-1);
       if(B.middle&&B.hp>0){B.revenge=Math.min(B.isP?CFG.middle.cap:5,(B.revenge||0)+1+(B.wx&&B.wx.revUp||0)+(B.odinMid&&B.odinMidRound!==C.round?(B.odinMidRound=C.round,CFG.odin.midHit):0))}
