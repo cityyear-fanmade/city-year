@@ -275,7 +275,7 @@ export function startUI(E,app){
     ]);
     $('fA').textContent=e.sa;$('fD').textContent=e.sd;
     $('fA').className='dfinal '+(e.hit?'good':'');$('fD').className='dfinal '+(e.hit?'':'good');
-    {const rl=(r,list,note)=>`<div class="rl"><span>눈</span><b>${r}</b></div>${(list||[]).map(([n,v])=>`<div class="rl ${v>0?'pl':'mi'}"><span>${esc(n)}</span><b>${v>0?'+':'−'}${Math.abs(v)}</b></div>`).join('')}${note?`<div class="rn">${note}</div>`:''}`;
+    {const rl=(r,list,note)=>`<div class="rl"><span>눈</span><b>${r}</b></div>${(()=>{const L=list||[],ps=L.filter(x=>x[1]>0),ms=L.filter(x=>x[1]<0),row=(c,sg,arr)=>arr.length?`<div class="rl ${c}" title="${esc(arr.map(([n,v])=>n+' '+(v>0?'+':'−')+Math.abs(v)).join(' · '))}"><span>${sg==='+'?'버프':'디버프'}</span><b>${sg}${Math.abs(arr.reduce((t,x)=>t+x[1],0))}</b></div>`:'';return row('pl','+',ps)+row('mi','−',ms)})()}${note?`<div class="rn">${note}</div>`:''}`;
       $('sA').innerHTML=rl(e.ra,e.amL,e.ra2?`(2회 굴림, ${e.ra2} 버림)`:'');$('sD').innerHTML=rl(e.rd,e.dmL,'')}
     dA.classList.add(e.hit?'win':'lose');dD.classList.add(e.hit?'lose':'win');
     await holdTap();
