@@ -603,3 +603,16 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 
 .dsum .rl{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;line-height:1.5}.dsum .rl.pl b{color:#7fc88a}.dsum .rl.mi b{color:#e07a6a}.dsum .rn{font-size:11px;color:var(--dim)}
 .dsum{min-width:0;max-width:170px}
+
+/* 들리는 목소리: 기존 화면 위 연출 (정신력 10 이하) */
+#vo{position:fixed;inset:0;z-index:999;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,.62),rgba(0,0,0,.9));animation:voIn 1.2s ease forwards;overflow:hidden}
+@keyframes voIn{from{opacity:0}to{opacity:1}}
+#vo .vv{position:absolute;width:var(--w);transform:translate(-50%,-50%);text-align:center;font:500 var(--fs)/1.55 var(--serif,'Noto Serif KR',serif);color:#f1e6bd;text-shadow:0 0 10px rgba(255,226,140,.65),0 0 2px #000;opacity:0;animation:vv 4s ease-in-out forwards;pointer-events:none}
+#vo .vv i{display:block;font:normal 500 9px/1 var(--mono,monospace);letter-spacing:.14em;color:#c9a85a;margin-bottom:4px;opacity:.8}
+@keyframes vv{0%{opacity:0;filter:blur(7px);transform:translate(-50%,-46%)}16%{opacity:1;filter:none;transform:translate(-50%,-50%)}78%{opacity:1}100%{opacity:0;filter:blur(5px)}}
+#vo .vt{position:absolute;left:50%;top:8%;transform:translateX(-50%);text-align:center;color:#c9a85a;font:600 13px/1.5 inherit;text-shadow:0 0 8px #000;white-space:nowrap}
+#vo .vc{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);width:min(520px,92vw);display:flex;gap:10px;opacity:0;animation:vcIn 1s ease 7.4s forwards}
+#vo.seen .vc{animation:none;opacity:1}
+@keyframes vcIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+#vo .vc .btn{flex:1;margin:0;background:rgba(8,7,5,.94)}
+@media (max-width:600px){#vo .vc{flex-direction:column;gap:8px}}

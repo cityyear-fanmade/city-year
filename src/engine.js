@@ -1205,13 +1205,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 전투 중 정신력이 0이 되면: 50% E.G.O 개화, 아니면 육신 뒤틀림 (둘 다 그 자리에서 전투에 반영) =====
      이름은 전투가 끝난 뒤 정한다 (ch.namePend) */
   let activeC=null;
+  /* 목소리 선택(듣기 좋다/싫다)에 따른 개화 확률 보정: 좋다 −20%p, 싫다 +20%p */
+  const biasOf=ch=>ch.voiceBias==='good'?-CFG.mind.voiceBias:ch.voiceBias==='bad'?CFG.mind.voiceBias:0;
   const clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
   function mindBreak(C){
     const ch=C.ch,P=C.P,s=ch.stats;
     if(ch.ego||ch.distForm||C.mindHandled)return;
     C.mindHandled=true;
     const L=(t,x)=>{if(C.quiet)return;C.log.push({t,s:x});C.cur.push({t,s:x})};
-    const r=d(100),ok=r<=50;L('sys',`${P.name} · 정신력 0 · 마음이 한계에 닿았다 · 1d100 ${r} (50 이하면 E.G.O 개화, 아니면 뒤틀림)`);
+    const th_=50+biasOf(ch),r=d(100),ok=r<=th_;L('sys',`${P.name} · 정신력 0 · 마음이 한계에 닿았다 · 1d100 ${r} (${th_} 이하면 E.G.O 개화, 아니면 뒤틀림)`);
     const b={atk:s.atk,eva:s.eva,spd:s.spd,maxHp:s.maxHp};
     ch.mindDead=false;
     if(ok){
@@ -2253,14 +2255,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else{chips.push('공방 주인이 고개를 젓는다 · 다른 길을 고른다');ch.affRetry=true}
     }
     if(fx.voice){
+      if(fx.voiceBias)ch.voiceBias=fx.voiceBias;
+      const dc_=fx.voiceBias==='good'?M.voiceGoodDc:fx.voiceBias==='bad'?M.voiceBadDc:M.voiceDc;
       const rs=[];for(let i=0;i<M.voiceRolls;i++)rs.push(d(M.voiceDie));
-      const ok=rs.every(r=>r>=M.voiceDc);chips.push(`1d${M.voiceDie} × ${M.voiceRolls} · ${rs.join(' / ')} (${M.voiceDc} 이상 ${rs.filter(r=>r>=M.voiceDc).length}/${M.voiceRolls})`);
+      const ok=rs.every(r=>r>=dc_);chips.push(`1d${M.voiceDie} × ${M.voiceRolls} · ${rs.join(' / ')} (${dc_} 이상 ${rs.filter(r=>r>=dc_).length}/${M.voiceRolls})`);
       const sight=!ok&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight;if(sight)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);
       if(ok||sight){ch.egoPick=true;chips.push('E.G.O 개화')}else{const x=d(M.failLoss);chips.push('개화 실패');loseMind(ch,x,t=>chips.push(t+` · 1d${M.failLoss}`))}
     }
     if(fx.distort){
-      const r=d(2);chips.push(`뒤틀림 판정 1d2 · ${r}`);
-      if(r===1){ch.egoPick=true;ch.mind=mindMax(ch);chips.push('뒤틀리기 직전, E.G.O 개화 · 정신력 회복')}else{ch.distPick=true;chips.push('육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
+      const th_=50+biasOf(ch),r=d(100);chips.push(`뒤틀림 판정 1d100 · ${r} (${th_} 이하면 E.G.O 개화)`);
+      if(r<=th_){ch.egoPick=true;ch.mind=mindMax(ch);chips.push('뒤틀리기 직전, E.G.O 개화 · 정신력 회복')}else{ch.distPick=true;chips.push('육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
     }
     if(fx.distStable&&setStable(ch))chips.push('뒤틀림이 안정되었다 · 장비와 카드팩을 다시 쓸 수 있다 · 더 강해진 뒤틀린 카드팩을 얻었다');
     if(fx.distortAccept){ch.distPick=true;chips.push('목소리를 받아들였다 · 뒤틀림의 이름을 정한다')
