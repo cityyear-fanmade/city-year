@@ -984,16 +984,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(m.mo>=D.lake.infinite.morph.length){L.crew.splice(L.morphIdx,1);L.crewAt=Math.min(L.crewAt||0,(ch.year||0)+1);L.morphed=(L.morphed||0)+1;s.maxHp+=Mo.maxHpFinal;ch.hp+=Mo.maxHpFinal;chips.push(`선원 · ${m.n}이(가) 호수로 돌아갔다 · 젖은 옷만 남았다 · 최대 HP +${Mo.maxHpFinal}`);chips.push('다음 해, 빈자리에 새 선원을 태울 수 있다')}
         else chips.push(`선원 · ${m.n}에게 변화가 이어진다`)}}
     if(fx.lakeIndigo&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.indigo='done';
-      if(fx.lakeIndigo==='fight'){L.indigoFight=true;chips.push('내일, 쪽빛 노인과 싸운다')}
+      if(fx.lakeIndigo==='fight'){ch.lakeNow={id:'lake_indigo',hidden:true,label:'쪽빛 노인'};chips.push('이어서 쪽빛 노인과 싸운다')}
       else if(fx.lakeIndigo==='learn'){const dr=D.enemies.lake_indigo.drop;ch.packOffer={n:dr.packName,cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push('전용 카드팩 · 재앙살해')}
       else chips.push('쪽빛 노인은 다시 오지 않는다')}
-    if(fx.lakeHunt&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakeHunt==='fight'){L.hunterFight=true;chips.push('내일 새벽, 사냥꾼과 싸운다')}else chips.push('사냥꾼은 떠났다')}
-    if(fx.lakePirate&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakePirate==='fight'){L.pirate='mate';chips.push('내일, 쌍갈고리 해적단과 싸운다')}else{L.pirate=null;L.pirateAt=(ch.year||0)+4;chips.push('해적단은 물러났다 · 몇 해 뒤 다시 온다')}}
+    if(fx.lakeHunt&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakeHunt==='fight'){ch.lakeNow={id:'lake_hunter',hidden:true,label:'대호수 금기 사냥꾼'};chips.push('이어서 사냥꾼과 싸운다')}else chips.push('사냥꾼은 떠났다')}
+    if(fx.lakePirate&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if(fx.lakePirate==='fight'){L.pirate='matefight';ch.lakeNow={id:'lake_mate',hidden:true,label:'쌍갈고리 해적단 부선장'};chips.push('이어서 쌍갈고리 해적단과 싸운다')}else{L.pirate=null;L.pirateAt=(ch.year||0)+4;chips.push('해적단은 물러났다 · 몇 해 뒤 다시 온다')}}
     if(fx.lakeCrew&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{},R_=D.lake.crew.roles[fx.lakeCrew];(L.crew=L.crew||[]).push({role:fx.lakeCrew,n:R_.n,die:R_.die});chips.push(`선원 · ${R_.n} (${L.crew.length}/${CFG.lake.crewMax}) · ${R_.e}`)}
     if(fx.lakePaleAlly&&ch.flags&&ch.flags.lake){D.enemies.lake_whale_pale.ally=true;chips.push('곁의 사람이 함께 싸운다')}
     if(fx.lakeTool&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};if((L.tools||{})[fx.lakeTool]>0){L.tools[fx.lakeTool]--;chips.push(`도구 하나를 썼다 · 남은 ${L.tools[fx.lakeTool]}개`)}}
-    if(fx.lakeRicardo&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.ricardoFight=true;chips.push('내일, 중지의 큰형님과 싸운다')}
-    if(fx.lakeWhale&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.whaleFight=L.whaleTarget;chips.push('내일, 고래와 싸운다')}
+    if(fx.lakeRicardo&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};ch.lakeNow={id:'lake_ricardo',hidden:true,label:'중지의 큰형님'};chips.push('이어서 중지의 큰형님과 싸운다')}
+    if(fx.lakeWhale&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};{const wt=L.whaleTarget,we=D.enemies[wt];if(we)ch.lakeNow={id:wt,hidden:!!we.hidden,label:we.hidden?'대재앙 토벌':'보스급 고래 토벌'}}chips.push('이어서 고래와 싸운다')}
     if(fx.lakeFlee&&ch.flags&&ch.flags.lake){const L=ch.lake=ch.lake||{};L.phase='enter';L.harbor=true;gainMind(ch,CFG.lake.harborMind);L.fled=(L.fled||0)+1;chips.push('고래에게서 도망쳤다 · 호수를 벗어나 선박장에 들른다')}
     if(fx.hyeol&&ch.race!=='hyeolgwi'){ch.race='hyeolgwi';s.maxHp+=10;ch.hp+=10;s.atk+=2;(ch.relics=ch.relics||[]).push('혈귀');chips.push(`혈귀가 되었다 · 최대 HP +10 · 공격 +2 · 패시브 혈찬(상대 출혈 5번 발동마다 HP ${CFG.hyeolchan.heal} 회복)`);
       if(!ch.cardMoney&&!ch.deckLocked&&!ch.packOffer&&D.hgDeck){ch.packOffer={n:'혈귀 전용 책장',cards:D.hgDeck.slice(),relic:'혈귀의 책장',cm:true};chips.push('혈귀 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
@@ -1287,7 +1287,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function setColorPick(ch,k){
     if(!ch.colorPick||!colorPasv[k])return false;
     ch.colorPick=false;ch.colorPasv=k;if(k==='regen')ch.stats.regen+=5;else if(k==='strike')ch.stats.dmgB+=3;
-    (ch.relics=ch.relics||[]).push(`특색 패시브 · ${colorPasv[k].n}`);return true;
+    (ch.relics=ch.relics||[]).push(`특색 패시브 · ${colorPasv[k].n} · ${colorPasv[k].e}`);return true;
   }
   const pillStats={atk:'공격',eva:'회피',spd:'속도',check:'사건 판정'};
   function setPill(ch,k,v){
@@ -1384,7 +1384,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       for(const id of row.add){if(ch.deck.length<deckMax(ch)){ch.deck.push(id);into.push(id)}else{(ch.side=ch.side||[]).push(id);side.push(id)}}
       if(into.length||side.length)out.push(`전용 카드 · ${[...into,...side].map(id=>D.cards[id].n).join(', ')} (${why})${side.length?` · 덱이 가득 차 ${side.length}장은 카드함으로`:''}`)}
   }
-  function lakeYear(G){
+  /* 내가 선장이면 호수 사건 속 "선장"은 나다: 제3자로 쓰인 선장 문구를 내가 하는 말과 행동으로 바꾼다 */
+  const CAPSUB=[[/선장에게 (손짓|눈짓)으로 알린다/g,'직접 $1으로 지시한다'],[/선장이 처리한다/g,'내가 처리한다'],[/선장도 아직 모르는 것 같다/g,'아직 아무도 수습하지 못했다'],[/선장의 명령/g,'내 명령'],[/선장이/g,'당신이'],[/선장은/g,'당신은'],[/선장도/g,'당신도'],[/선장의 /g,'당신의 '],[/선장에게/g,'당신에게']];
+  const capView=o=>{if(typeof o==='string'){let t=o;for(const [a,b] of CAPSUB)t=t.replace(a,b);return t}if(Array.isArray(o))return o.map(capView);if(o&&typeof o==='object'){const r={};for(const k of Object.keys(o))r[k]=k==='fx'||k==='check'?o[k]:capView(o[k]);return r}return o};
+  function lakeYear(G){const r=lakeYear0(G);return r&&r.type!=='fight'&&G.ch.lake&&G.ch.lake.captain?capView(r):r}
+  function lakeYear0(G){
     const ch=G.ch,Lk=D.lake;if(!Lk||!lakeOn(ch)||ch.distForm)return null;
     const L=ch.lake=ch.lake||{},ids=Object.keys(Lk.lakes);
     /* 금기 사냥꾼: 금기를 어기면 몇 해 뒤 대호수 금기 사냥꾼이 먼저 찾아온다 (조율자는 오지 않는다). 새 호수에 들어서기 전에 경고 사건 → 맞서면 다음 해 전투 */
@@ -1500,7 +1504,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         return {t:'한계 돌파',x:LI?'호수에서 수십 해를 보내자 몸이 물결의 박자를 기억한다. 더 멀리, 더 세게 휘두를 수 있다고 느낀다.':'오래 버틴 몸이 한계 너머를 보기 시작한다. 어느 쪽으로 더 벼릴지 정해야 한다.',c:[
           {l:'공세를 벼린다',h:`공격 +${pct(Lm.atkPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'휘두르는 팔이 한결 무거워졌다.',fx:{limit:'atk'}}},
           {l:'맹공을 익힌다',h:`주는 피해 +${pct(Lm.dmgPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'맞는 쪽이 먼저 물러서는 것이 느껴진다.',fx:{limit:'dmg'}}},
-          {l:'일격을 벼린다',h:`적중마다 최대 HP의 ${pct(Lm.strikePct)}% 추가 피해 (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'몸 전체의 무게가 한 번의 타격에 실린다.',fx:{limit:'strike'}}}]}}}
+          {l:'일격을 벼린다',h:`적중 시 상대에게 추가 피해 (내 최대 HP의 ${pct(Lm.strikePct)}%) (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'몸 전체의 무게가 한 번의 타격에 실린다.',fx:{limit:'strike'}}}]}}}
     if(!n)return null;
     const T=(LI||I).century[Math.min(n-1,(LI||I).century.length-1)];
     return {t:T.t,x:T.x,c:[{l:T.a,h:`공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100)}% (영구) · 적의 공격 피해도 +${Math.round(K.enemyDmg*100)}% (영구)`,ok:{t:T.at,fx:{infCentury:n}}}]}
@@ -2058,7 +2062,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 제 2막 무한 모드: 위협 등급 전투는 후반 조우, every년마다 강화 불순물 */
       if((G.year-baseEnd)%INF.every===0){
         /* 무한 모드에 들어설 때 외곽에 지은 집(혼자여도), 또는 인연 이야기의 외곽의 작은 집이 있다면 불순물은 그 집으로 찾아온다 */
-        const H_=D.infinite&&D.infinite.home,E_=D.enemies[X_.final],home=H_&&(G.ch.infHome||(G.ch.outSeen&&G.ch.outSeen.settle));
+        const LH_=lakeOn(G.ch)&&D.lake&&D.lake.infinite&&D.lake.infinite.impurity,H_=LH_||(D.infinite&&D.infinite.home),E_=D.enemies[X_.final],home=H_&&(LH_||G.ch.infHome||(G.ch.outSeen&&G.ch.outSeen.settle));
         if(E_){if(E_.intro0===undefined)E_.intro0=E_.intro;E_.intro=home?H_.intro[((G.ch.infImp||1)-1)%H_.intro.length]:E_.intro0}
         return {type:'fight',enemy:X_.final,enc:{hidden:true,label:`${home?H_.label:'외곽의 괴수'} · ${(G.ch.infImp||1)}번째`}}}
       f=k_%X_.span?null:'table:late';
@@ -2254,7 +2258,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.limit){const Lm=CFG.infinite.limit,m=ch.colorDone?Lm.traitMul:1;
       if(fx.limit==='atk'){const g=Math.max(1,Math.round(ch.stats.atk*Lm.atkPct*m));ch.stats.atk+=g;chips.push(`한계 돌파 · 공격 +${g}`)}
       else if(fx.limit==='dmg'){ch.limDmg=(ch.limDmg||0)+Lm.dmgPct*m;chips.push(`한계 돌파 · 주는 피해 +${Math.round(Lm.dmgPct*m*1000)/10}% (누적 ${Math.round(ch.limDmg*1000)/10}%)`)}
-      else{ch.limStrike=(ch.limStrike||0)+Lm.strikePct*m;chips.push(`한계 돌파 · 적중마다 최대 HP의 ${Math.round(Lm.strikePct*m*1000)/10}% 추가 피해 (누적 ${Math.round(ch.limStrike*1000)/10}%)`)}}
+      else{ch.limStrike=(ch.limStrike||0)+Lm.strikePct*m;chips.push(`한계 돌파 · 적중 시 상대에게 추가 피해 (내 최대 HP의 ${Math.round(Lm.strikePct*m*1000)/10}%) (누적 ${Math.round(ch.limStrike*1000)/10}%)`)}}
     if(fx.infCentury){const K=CFG.infinite.century;(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
     if(fx.kidOld&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.kidOld&&!k.dead);if(kk){kk.dead='old';chips.push(`${kk.n} · 눈을 감았다`);loseMind(ch,BD.kid.oldMind,m=>chips.push(m))}}
@@ -2283,6 +2287,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const up=gainXp(ch,xp);chips.push('경험치 +'+xp);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     let enc=fx.combat?encounter(ch,fx.combat):null;
     if(ch.purge){enc={id:ch.purge};delete ch.purge;chips.push('숙청 · '+D.enemies[enc.id].n)}
+    if(ch.lakeNow){const n_=ch.lakeNow;delete ch.lakeNow;enc={id:n_.id,roll:null,table:null,hidden:n_.hidden,label:n_.label}}
     if(enc&&enc.roll)chips.push(`조우 1d100 ${enc.roll} · ${D.enemies[enc.id].n}`);
     return {t:res.t,roll,chips,title:licensed?rankLabel(ch):null,tlabel:licensed?T.licenseGained:null,combat:enc?enc.id:null,enc};
   }
@@ -2314,7 +2319,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     else{addStats(ch.stats,fx);if(fx.maxHp)ch.hp+=fx.maxHp;ch.custPas=pas;ch.custNote=txt;(ch.relics=ch.relics||[]).push(`${noun} · ${nm}`);chips.push(`${kind==='eye'?'전용 의안':'전용 신체 개조'} · ${nm} · ${txt}`)}
     return {chips,kind,nm,txt}
   }
-  function winRewards(G,C){
+  /* 인연 도시락은 일이 다 끝난 뒤 챙겨 주는 것이라 결과 줄의 맨 끝에 둔다 */
+  function winRewards(G,C){const r=winRewards0(G,C);if(r&&Array.isArray(r.chips)){const i=r.chips.findIndex(c=>String(c).startsWith('인연 도시락'));if(i>=0&&i<r.chips.length-1)r.chips.push(r.chips.splice(i,1)[0])}return r}
+  function winRewards0(G,C){
     const ch=G.ch,chips=[];
     /* 인연 도시락: 인연이 있으면 전투를 이긴 뒤 가끔 받는다 */
     if(ch.bond&&['met','married'].includes(ch.bond.st)&&!ch.distForm&&d(100)<=CFG.supply.lunchChance){const L_=CFG.supply.lunch,hp0=C.P.hp,hh=Math.min(Math.round(ch.stats.maxHp*L_.hpPct/100),ch.stats.maxHp-C.P.hp);if(hh>0)C.P.hp+=hh;const g_=gainMind(ch,L_.mind);chips.push(`인연 도시락 · ${ch.bond.name||'인연'}이(가) 도시락을 건넸다${hh>0?' · HP +'+hh:''}${g_?' · 정신력 +'+g_:''}`)}
@@ -2332,7 +2339,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if((C.id==='claw'||C.id==='arbiter')&&!(ch.flags&&ch.flags.spouseAge)){(ch.flags=ch.flags||{}).spouseAge=1;if(ch.bond)ch.bond.risk=0;chips.push('발톱과 조율자 중 하나를 쓰러뜨렸다 · 배우자의 위험이 가라앉고, 이제 나이로 눈을 감는다')}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
     /* 불순물을 쓰러뜨릴 때마다 얻는 전용 강화: 조각이 몸에 남아 능력치와 주는 피해가 영구히 오르고, 상처가 한 번에 아문다 (모두에게 같은 회복 수단) */
-    if(ch.infinite&&(C.id===CFG.endless.final||C.echo)&&C.over!=='lose'){const SH=CFG.infinite.shard;if(C.echo){gainXp(ch,CFG.infinite.echoXp||3);chips.push(`불순물이 된 ${D.enemies[C.id].n} · 경험치 +${CFG.infinite.echoXp||3} (전리품은 없다)`)}ch.infShard=(ch.infShard||0)+1;addStats(ch.stats,{atk:SH.atk,maxHp:SH.maxHp});const mh=ch.stats.maxHp,h0=ch.hp;ch.hp=Math.min(mh,ch.hp+SH.maxHp+Math.round(mh*SH.heal));chips.push(`불순물의 조각 ${ch.infShard}개 · 공격 +${SH.atk} · 최대 HP +${SH.maxHp} · 주는 피해 +${(SH.dmg*100*ch.infShard).toFixed(1).replace(/\.0$/,'')}% (누적)`+(ch.hp>h0?` · HP +${ch.hp-h0}`:''))}
+    if(ch.infinite&&(C.id===CFG.endless.final||C.echo)&&C.over!=='lose'){const SH=CFG.infinite.shard;if(C.echo){gainXp(ch,CFG.infinite.echoXp||3);chips.push(`불순물이 된 ${D.enemies[C.id].n} · 경험치 +${CFG.infinite.echoXp||3} (전리품은 없다)`)}ch.infShard=(ch.infShard||0)+1;const ex_=(!C.echo&&D.enemies[C.id].bonus&&D.enemies[C.id].bonus.fx)||{},ga_=SH.atk+(ex_.atk||0),gh_=SH.maxHp+(ex_.maxHp||0);if(!C.echo)C.bonusMerged=true;addStats(ch.stats,{atk:ga_,maxHp:gh_});const mh=ch.stats.maxHp,h0=ch.hp;ch.hp=Math.min(mh,ch.hp+gh_+Math.round(mh*SH.heal));chips.push(`불순물의 조각 ${ch.infShard}개 · 공격 +${ga_} · 최대 HP +${gh_} · 주는 피해 +${(SH.dmg*100*ch.infShard).toFixed(1).replace(/\.0$/,'')}% (누적)`+(ch.hp>h0?` · HP +${ch.hp-h0}`:''))}
     if(C.P&&C.P.sm){const SM=CFG.shinmang,g=gainMind(ch,SM.winMind);if(g)chips.push(`신(心)을 거둔다 · 정신력 +${g} (${ch.mind}/${mindMax(ch)})`)}
     /* 공방 해결사: 전투를 두 번 이길 때마다 재료용 장비를 하나 얻는다 (무한 모드는 5해마다 한 번) */
     if(isWs(ch)&&ch.ws){let give=false;
@@ -2367,7 +2374,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}}}ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
     offerPick(ch,D.rewards,chips,null);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
-    {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.xp){gainXp(ch,BN.xp);chips.push(`${BN.n||'전리품'} · 경험치 +${BN.xp}`)}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
+    {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.xp){gainXp(ch,BN.xp);chips.push(`${BN.n||'전리품'} · 경험치 +${BN.xp}`)}if(BN.fx&&!C.bonusMerged){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
     let up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);
     /* 무한 모드: 경험치 표가 끝난 뒤에도 전투 승리 infLvEvery번마다 레벨이 1 오른다 (성장 선택 1회) */
     if(ch.infinite&&CFG.infinite.infLvEvery){ch.infWins=(ch.infWins||0)+1;if(ch.infWins>=CFG.infinite.infLvEvery){ch.infWins=0;ch.lvBonus=(ch.lvBonus||0)+1;ch.lv++;ch.lvPend++;up++}}
@@ -2387,7 +2394,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!foe.hidden&&!foe.abno&&ch.kids<KD.max){ch.kids++;chips.push(`피의 각인된 갈망 · ${foe.n}이(가) 혈귀가 되어 자식이 된다 (${ch.kids}/${KD.max})`)}
     }
     if(foe.hidden&&!C.echo){
-      ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
+      if(!ch.beaten.includes(C.id))ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
       if(C.id==='kasetti'){ch.titles=ch.titles||[];if(!ch.titles.includes('혈귀를 잠재운 자')){ch.titles.push('혈귀를 잠재운 자');(ch.titleLog=ch.titleLog||[]).push('혈귀를 잠재운 자');chips.push('칭호 · 혈귀를 잠재운 자')}}
       if(C.id==='hongru'&&ch.hw&&ch.hw.accept&&!ch.hw.maker){ch.hw.maker=1;ch.hw.done=1;chips.push('홍루를 쓰러뜨렸다 · 선황충을 품은 가주 곁의 필두로 남는다')}
       if(foe.chain){ch.flags.zenaPend=1;chips.push('연전 · 쉴 틈 없이 다음 상대가 나선다')}else if(C.id===CFG.endless.finalNext)ch.flags.zenaPend=0;
@@ -2459,6 +2466,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const hcHeal=X=>Math.max(0,Math.min(CFG.hyeolchan.heal,X.maxHp-X.hp));
   /* 균열에 나타날 수 있는 히든 보스: 조건과 상관없이 나타나지만, 이기는 것이 아니라 버티는 시험(trial)이나 noRift 표시가 있는 보스는 뺀다 */
   const riftBosses=()=>{const seen=new Set();return (D.hiddenBosses||[]).filter(h=>{const e=D.enemies[h.id];if(!e||h.noRift||(e.passive&&e.passive.id==='trial')||seen.has(h.id))return false;seen.add(h.id);return true})};
+  /* 무한 모드 성장 요약: 가방에 항상 보여 준다 (적용되는 수치를 눈으로 확인할 수 있게) */
+  function infGrowth(ch){
+    if(!ch.infinite)return [];const IL=CFG.infinite,pc=x=>Math.round(x*1000)/10+'%',rows=[];
+    const dm=(ch.infBoost||0)*IL.century.dmg,sh=(ch.infShard||0)*IL.shard.dmg,gr=(ch.famLoss||0)*IL.grief.dmg,lm=ch.limDmg||0,tot=dm+sh+gr+lm;
+    rows.push(['주는 피해',`+${pc(tot)}`,tot?[dm&&`백 해마다 ${pc(dm)}`,sh&&`불순물의 조각 ${pc(sh)}`,gr&&`가족의 슬픔 ${pc(gr)}`,lm&&`한계 돌파 ${pc(lm)}`].filter(Boolean).join(' · '):'백 해를 넘기거나 불순물을 쓰러뜨리면 오른다']);
+    if(ch.limStrike)rows.push(['일격 추가 피해',`적중 시 +${Math.round(ch.stats.maxHp*ch.limStrike)}`,`적중 시 상대에게 주는 추가 피해 (내 최대 HP의 ${pc(ch.limStrike)}) · 최대 HP가 늘면 함께 커진다 · 한계 돌파로 쌓임`]);
+    if(ch.infBoost)rows.push(['받는 피해',`+${pc(ch.infBoost*IL.century.enemyDmg)}`,'백 해마다 적의 공격도 함께 강해진다']);
+    const cut=infEvaCut(ch);if(cut>0)rows.push(['무한 회피 감소',`−${cut}`,'해가 갈수록 회피가 깎인다 · 0에서 멈춘다']);
+    const SG=IL.surge;if(SG&&(ch.year||0)>=SG.year)rows.push(['기세',`${SG.round}라운드 이후`,`전투가 ${SG.round}라운드를 넘기면 라운드마다 주는 피해 ×${SG.per}`]);
+    if(IL.legacyNeed){const t=ch.legacyTier||0;rows.push(['연륜',`${t}/${IL.legacyMax}단계`,`최고 직위에 오른 뒤 전공이 연륜으로 쌓인다 · 단계마다 ${({atk:'공격',eva:'회피',spd:'속도'})[ch.dom]||'최대 HP(+4)'} +1 · 다음 단계까지 ${ch.legacyPts||0}/${IL.legacyNeed}`])}
+    return rows
+  }
   const infEvaCut=ch=>Math.min(Math.max(0,ch.stats.eva),Math.floor(infYears(ch)*CFG.infinite.evaDown));
   const infYears=ch=>ch.infinite?Math.max(0,(ch.year||0)-(CFG.years+CFG.endless.span*CFG.endless.grades.length)):0;
   function mkCombat(ch,id,quiet){
@@ -3078,7 +3097,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* pp, ep: 이번 라운드에 낼 카드 배열 */
   /* 전투 중 도주 굴림: 적에게 flee가 있으면 라운드마다 시도할 수 있다 (대호수의 고래 전용). 1d100 + (회피+속도)/2 ≥ dc면 전투에서 빠져나간다.
      실패하면 그 라운드는 카드를 내지 못하고 공격만 받는다(UI가 빈 손으로 라운드를 진행한다) */
+  /* 선장이 된 뒤의 대호수 전투는 도망칠 수 없다 (도망은 1막 초반 선원일 때만) */
+  const lakeNoFlee=(ch,id)=>!!(ch&&ch.flags&&ch.flags.lake&&ch.lake&&ch.lake.captain&&/^lake_/.test(id));
   function fleeCheck(C){
+    if(lakeNoFlee(C.ch,C.id))return null;
     const e=D.enemies[C.id],F=e&&e.flee;if(!F||C.over)return null;
     const r=d(100),mod=Math.floor(((C.P.eva||0)+(C.P.spd||0))/2)+CFG.lake.navFlee*(C.crew||[]).filter(m=>m.role==='navigator').length,tot=r+mod,ok=tot>=F.dc;
     C.log.push({t:'sys',s:`도주 시도 · 1d100 ${r} + ${mod} = ${tot} / 난이도 ${F.dc} → ${ok?'성공':'실패'}`});
@@ -3258,5 +3280,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
     cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

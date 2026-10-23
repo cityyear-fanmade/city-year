@@ -470,6 +470,7 @@ export function startUI(E,app){
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 '+CFG.artSense.every+'번 쓰러뜨릴 때마다 +1 (영구)':''}`);
     if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];
       P.push(`특이점 ${c.n} (${t.n}) · ${t.e.split(' (')[0]} · ${c.st==='dev'?`개발 ${c.stack}/${CFG.corp.devMax}`:`강화 ${c.up}/${CFG.corp.upMax} · 금기 실험 ${c.forb}/${CFG.corp.forbMax}`}`)}
+    if(ch.colorPasv&&E.colorPasv[ch.colorPasv])P.push(`특색 패시브 · ${E.colorPasv[ch.colorPasv].n} · ${E.colorPasv[ch.colorPasv].e}`);
     if(ch.race==='hyeolgwi')P.push(`혈귀 · 혈찬 · 상대의 출혈이 5번 발동할 때마다 HP ${CFG.hyeolchan.heal} 회복`);
     if(ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea'))P.push(`피의 각인된 갈망 · 자식 ${ch.kids||0}/${CFG.kids.max} · 라운드마다 혈찬 +${CFG.kids.per}×자식 · 전투가 끝나면 자식마다 ${CFG.kids.lose}% 흩어짐`);
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.push(`레벨 ${CFG.lvLight.at}마다 · 전투 중 빛과 빛 최대치 +${CFG.lvLight.up*n} (지금 레벨 ${ch.lv})`)}
@@ -627,11 +628,12 @@ export function startUI(E,app){
     const row=(lab,x)=>`<div class="roll"><span class="mono small dim">${lab}</span><div class="n"><b>${esc(x.n)}</b>${x.t?`<span>${esc(x.t)}</span>`:''}${eff(x)}</div></div>`;
     const place=placeOf(ch.o,ch.r,ch.blank);
     const lk_=ch.flags&&ch.flags.lake&&ch.lake?ch.lake:null,lakeLog=lk_?(()=>{const K=lk_.killed||[],ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length,cr=(lk_.crew||[]).map(m=>m.n).join(' · ')||'없음',tl=lk_.tools||{},tn=Object.entries(tl).filter(([,v])=>v>0).map(([k,v])=>`${(D.lake&&D.lake.tools&&D.lake.tools[k]||{}).n||k} ×${v}`).join(' · ')||'없음';
-      return `<div class="eyebrow">항해 기록</div><div class="panel stack" style="gap:4px"><div class="invr"><span>지나온 호수</span><b class="mono">${lk_.seen||0}번</b></div><div class="invr"><span>고래에게서 도망</span><b class="mono">${lk_.fled||0}번</b></div>${lk_.captain?`<div class="invr"><span>목표 · 대재앙 토벌</span><b class="mono">보스급 ${ny}/4 · 대재앙 ${na}/6</b></div><div class="invr"><span>배 내구도</span><b class="mono">${E.hullOf(ch)}/${CFG.lake.hullMax}</b></div><p class="small dim">전투마다 -${CFG.lake.hullWear} · 항구에서 ${E.money(CFG.lake.repairCost)} 수리 · 0이 되면 침몰</p><div class="invr"><span>선원</span><b class="mono">${esc(cr)}</b></div>`:'<p class="small dim">선장이 되면 대재앙 토벌이 목표가 된다.</p>'}<div class="invr"><span>방지 도구</span><b class="mono">${esc(tn)}</b></div></div>`})():'';
+      return `<div class="eyebrow">항해 기록</div><div class="panel stack" style="gap:4px"><div class="invr"><span>지나온 호수</span><b class="mono">${lk_.seen||0}번</b></div><div class="invr"><span>고래에게서 도망</span><b class="mono">${lk_.fled||0}번</b></div>${lk_.captain?`<div class="invr"><span>목표 · 대재앙 토벌</span><b class="mono">보스급 ${ny}/4 · 대재앙 ${na}/6</b></div><div class="invr"><span>배 내구도</span><b class="mono">${E.hullOf(ch)}/${CFG.lake.hullMax}</b></div><p class="small dim">전투마다 -${CFG.lake.hullWear} · 항구에서 ${E.money(CFG.lake.repairCost)} 수리 · 0이 되면 침몰</p><div class="invr"><span>선원</span><b class="mono">${esc(cr)}</b></div>`:'<p class="small dim">선장이 되면 대재앙 토벌이 목표가 된다.</p>'}</div>`})():'';
     const kid=(place?row('태어난 곳',place):'')+(ch.kid||[]).map(k=>row(k.age+'세',k.x)).join('');
     const base=s0?[['최대 HP',s0.maxHp],['공격',sgn(s0.atk)],['회피',sgn(s0.eva)],['속도',sgn(s0.spd)],['사건 판정',sgn(s0.check)]].map(([a,b])=>`<div class="invr"><span>${a}</span><b class="mono">${b}</b></div>`).join(''):'';
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
       ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다. 빈손이라 히든 보스 전리품 장비를 더 자주 쥐고(+25%p), 정신이 꺾일 때 E.G.O 형상이 보일 확률이 25%다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${row('무기',ch.w)}</div>`}
+      ${(()=>{const g=E.infGrowth(ch);return g.length?`<div class="eyebrow">무한 모드 성장</div><div class="panel stack" style="gap:6px">${g.map(([k,v,d_])=>`<div class="invr"><span>${esc(k)}</span><b class="mono">${esc(v)}</b></div><p class="small dim" style="margin:0 0 4px">${esc(d_)}</p>`).join('')}</div>`:''})()}
       ${lakeLog}${kid?`<div class="eyebrow">성장기</div><div class="panel">${kid}</div>`:''}
       ${base?`<div class="eyebrow">태어났을 때의 능력치 (변하지 않음)</div><div class="panel">${base}</div>`:''}
       <div class="eyebrow">지금 · 장비 보정과 특수 상태</div>${vStatNow()}</div>`;
@@ -735,9 +737,14 @@ export function startUI(E,app){
         ${can==='ok'?`<button class="btn${ask?' primary':''}" data-a="packsw" data-i="${i}"><b>이 팩으로 바꾼다</b><span class="dim small">지금 팩은 보관함으로 간다</span></button>`:`<p class="small dim">${why[can]||''}</p>`}</div>`}).join(''):'<div class="panel"><p class="small dim">보관한 팩이 없다. 전용 카드팩을 받아 덱이 통째로 바뀌면 이전 덱이 여기에 남는다.</p></div>'}`;
   }
   /* 소모품 칸: 가방 탭(밖에서 쓴다)과 공방 거리 구입 칸 */
+  /* 호수별 방지 도구: 소모품과 같은 칸에서 확인한다 */
+  function vTools(){
+    const ch=G.ch,L=ch.flags&&ch.flags.lake&&ch.lake?ch.lake:null;if(!L)return '';
+    const tl=L.tools||{},list=Object.entries(tl).filter(([,v])=>v>0).map(([k,v])=>`${(D.lake&&D.lake.tools&&D.lake.tools[k]||{}).n||k} ×${v}`);
+    return `<div class="panel stack" style="gap:6px;margin-top:8px"><span class="eyebrow">방지 도구</span><p class="small dim">호수의 금기를 안전하게 지나가는 데 쓰는 소모형 도구다. 항구에서 산다. 해당 호수에서 선택지로 쓰면 하나가 사라진다.</p><div class="mono">${list.length?esc(list.join(' · ')):'없음'}</div></div>`}
   function vSupply(){
     const ch=G.ch,K=CFG.supply;
-    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소모품 · 종류마다 최대 ${K.max}개</span><p class="small dim">전투 밖에서는 여기서, 전투 중에는 행동을 고르는 화면에서 쓴다(라운드마다 한 번). 공방 거리에서 살 수 있다.</p>${Object.entries(K.items).map(([id,it])=>{const n=(ch.supply||{})[id]||0;return `<div class="row between" style="gap:8px;flex-wrap:nowrap"><div class="stack" style="gap:2px"><b>${esc(E.supplyName(ch,id))} <span class="mono small dim">${n}/${K.max}</span></b><span class="mono small" style="color:var(--gold)">${esc(it.e)}</span></div><button class="chip" data-a="usesupply" data-i="${id}" ${n>0?'':'disabled'}>쓴다</button></div>`}).join('')}${UI.supMsg?`<p class="good small">${esc(UI.supMsg)}</p>`:''}</div>`;
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소모품 · 종류마다 최대 ${K.max}개</span><p class="small dim">전투 밖에서는 여기서, 전투 중에는 행동을 고르는 화면에서 쓴다(라운드마다 한 번). 공방 거리에서 살 수 있다.</p>${Object.entries(K.items).map(([id,it])=>{const n=(ch.supply||{})[id]||0;return `<div class="row between" style="gap:8px;flex-wrap:nowrap"><div class="stack" style="gap:2px"><b>${esc(E.supplyName(ch,id))} <span class="mono small dim">${n}/${K.max}</span></b><span class="mono small" style="color:var(--gold)">${esc(it.e)}</span></div><button class="chip" data-a="usesupply" data-i="${id}" ${n>0?'':'disabled'}>쓴다</button></div>`}).join('')}${UI.supMsg?`<p class="good small">${esc(UI.supMsg)}</p>`:''}</div>${vTools()}`;
   }
   function vHull(){
     const ch=G.ch,L=ch.lake,K=CFG.lake;if(!L||!L.captain)return '';const h=E.hullOf(ch),ok=h<K.hullMax&&ch.money>=K.repairCost;
@@ -937,6 +944,7 @@ export function startUI(E,app){
       <li><b>${D.pinky.n}</b> 어느 소속에도 겹쳐 붙는 표식. ${D.pinky.e}.</li>
       <li><b>돈과 공방</b> 해마다 소속 봉급(${T.licensed}는 급수 수당 추가), 전투 현상금, 일부 사건으로 ${D.money.unit}을 번다. 공방은 ${D.workshops.map(w=>w.n).join(' · ')} 3등급이고, 소속과 급수에 따라 들어갈 수 있는 등급이 정해진다. 무기·방어구·의수 칸마다 하나씩 맞춘다.</li>
       <li><b>장비 표기</b> 공+N 공격(명중 +N÷2, 피해 +N÷6, 모두 소수점 버림) · 명중+N 명중만 올라간다 · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · 피해 주사위 최소 N 피해 주사위 눈이 N보다 작게 나오면 N으로 친다(타수와는 무관) · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
+      <li><b>무한 모드 성장</b> 무한 모드에서는 주는 피해 · 일격 · 받는 피해 · 회피 감소 · 연륜이 쌓인다. 늘어난 값은 가방의 출생 칸 "무한 모드 성장"에서 언제든 볼 수 있다. 백 해마다 주는 피해와 적의 피해가 함께 늘고, 불순물을 쓰러뜨리면 조각이 쌓이며, 10년마다 한계 돌파로 공세·맹공·일격 중 하나를 고른다. <b>연륜</b>은 최고 직위에 오른 뒤 쌓이는 전공이 바뀐 것으로, 단계마다 주력 능력치가 1 오르고(최대 ${CFG.infinite.legacyMax}단계, 직위를 올릴 곳이 없을 때만 쌓인다) 직위 줄에 "연륜 N단계"로 표시된다.</li>
       <li><b>승급</b> 전투 승리(초반 ${CFG.promo.gain.early} · 중반 ${CFG.promo.gain.mid} · 보스 ${CFG.promo.gain.boss} · 히든 ${CFG.promo.gain.hidden})와 판정 성공(+${CFG.promo.gain.check})으로 진로의 포인트를 모은다(해결사 ${T.promoPoints} · 협회 ${D.careers.assoc.pts} · 날개 ${D.careers.wing.pts} · 손가락 ${D.careers.finger.pts}). 필요량에 닿으면 다음 해에 심사가 열리고, 성공하면 한 단계 오른다. 필요량은 단계마다 ×${CFG.promo.mult.join(' → ×')}씩 늘어난다. 실패하면 해결사·협회는 포인트 1/4, 날개·손가락은 1/3을 잃고, 날개는 두 번 연속 실패 시 해고, 손가락은 숙청 전투. 맨 위 단계에 오르면 특수 심사(해결사는 특색)가 한 번 열리고, 실패하면 다시 기회가 없다.</li>
       <li><b>${T.hiddenBoss}</b> 조건을 채우면 고정 전투 대신 나타난다. 금기를 어기면 머리의 집행자가, 초대장을 두 번 받아들이면 도서관이, 지령을 거역하면 대행자가 찾아온다. 특색은 ${D.hiddenBosses.find(h=>h.id==='blue').req.replace('rank<=','')}${T.rankUnit} 이상 해결사만 드물게 마주치며, ${D.hiddenBosses.find(h=>h.id==='blue').penalty.fullRank}${T.rankUnit} 미만이면 급수 부족 보정(명중·회피 ${sg(D.hiddenBosses.find(h=>h.id==='blue').penalty.atk)})을 받는다.</li>
       <li><b>${T.titleLabel}</b> ${CFG.colorRank}${T.rankUnit} ${T.licensed} 가운데 특출난 자만 받는다. ${CFG.colorRank}${T.rankUnit}에 오를 때 1d100 + 판정 보정 ≥ ${CFG.colorDc}이면 내 색과 가장 높은 능력치로 이름이 붙는다.${CFG.colorReward?` 모든 능력치가 ${CFG.colorMul}배가 되며 패시브를 하나 고른다.`:''}</li>
@@ -1648,7 +1656,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     }
     /* 전투 버튼은 화면 아래에 고정한 막대에 둔다: 내용 길이가 바뀌어도 버튼 자리는 움직이지 않는다 */
     const supBtns=(()=>{const ch=G.ch,K=CFG.supply,have=Object.keys(K.items).filter(id=>((ch.supply||{})[id]||0)>0);if(!have.length)return FIGHT==='auto'&&!UI.paused?'':'<div class="small dim" style="flex:1 1 100%">소모품 없음 · 공방 거리의 소지품에서 살 수 있다</div>';if(C.supplyRound===C.round)return '';return `<div class="row" style="gap:6px;flex-wrap:wrap;flex:1 1 100%">${have.map(id=>`<button class="chip" data-a="csupply" data-i="${id}">${esc(E.supplyName(ch,id))} ×${ch.supply[id]} · ${esc(K.items[id].e)}</button>`).join('')}</div>`})();
-    const fleeBtn=X.name&&D.enemies[C.id]&&D.enemies[C.id].flee?`<button class="btn" data-a="flee"><b>도주를 시도한다</b><span class="mono small dim">1d100 + 회피·속도 보정 ≥ ${D.enemies[C.id].flee.dc} · 실패하면 이번 라운드는 공격만 받는다</span></button>`:'';
+    const fleeBtn=X.name&&D.enemies[C.id]&&D.enemies[C.id].flee&&!E.lakeNoFlee(G.ch,C.id)?`<button class="btn" data-a="flee"><b>도주를 시도한다</b><span class="mono small dim">1d100 + 회피·속도 보정 ≥ ${D.enemies[C.id].flee.dc} · 실패하면 이번 라운드는 공격만 받는다</span></button>`:'';
     UI.cbar=FIGHT==='auto'?`${UI.paused?supBtns:''}<button class="btn${UI.paused?' primary':''}" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button>${fleeBtn}<button class="btn quiet" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button>`
       :`${supBtns}<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button>${fleeBtn}<button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`;
     /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
@@ -1745,7 +1753,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     else P.push('어디에도 속하지 않았다. 혼자 움직이는 편이 낫다는 말은 처음 한 말 그대로 끝까지 남았다.');
     if(c.licensed&&!c.job)P.push(`해결사로서는 ${c.rank}${T.rankUnit}${c.title?` · ${E_(c.title)}`:''}에 닿았다. 의뢰서에 적힌 이름 하나하나가 ${yr}년 동안 쌓은 기록이다.`);
     else if(c.title)P.push(`${jp(E_(c.title),'이라는','라는')} 이름이 붙었다. 누가 먼저 불렀는지는 아무도 기억하지 못한다.`);
-    if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${c.beaten.map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
+    if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${[...new Set(c.beaten)].map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
     /* 은원 장부: 도운 일·등 돌린 일·지나친 일이 쌓였으면 한 줄씩 남긴다 */
     {const L=c.ledger||{};
       if((L.help||0)>=4)P.push('은혜는 갚는 쪽이 먼저 기억한다고 했다. 도운 이들의 얼굴이 도시 곳곳에 남아, 낯선 길에서도 고개를 끄덕여 주었다.');
@@ -1812,7 +1820,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${kinLine(c,w,dt)}
       ${w?`<div class="panel stack" style="gap:8px"><span class="eyebrow">행적</span>${epilogue(c,w,tr).map(t=>`<p class="small" style="line-height:1.65">${t}</p>`).join('')}</div>`:''}
       ${vRecord(c,w,gi)}
-      ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${c.beaten.map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
+      ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${[...new Set(c.beaten)].map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
       <div class="panel stack"><div class="stat"><div><b>${c.lv}</b><span>레벨</span></div><div><b>${sg(c.stats.atk)}</b><span>공격</span></div><div><b>${sg(c.stats.eva-E.infEvaCut(c))}</b><span>회피${c.infinite&&E.infEvaCut(c)>0?` (무한 −${E.infEvaCut(c)}${c.stats.eva-E.infEvaCut(c)<=0?' · 0에서 멈춤':''})`:''}</span></div><div><b>${sg(c.stats.spd)}</b><span>속도</span></div></div>
       ${endDeck(c)}
       <div class="mono small dim">${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(affName(c)):c.licensed?' · '+T.licensed:''}</div></div>
@@ -1927,10 +1935,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const bg=getComputedStyle(document.body).backgroundColor||'#0d0d0f',r=el.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);
     /* 한 변 최대 8000px · 전체 1400만 화소 안에서 가장 큰 배율부터 */
     const fit=Math.min(2,8000/h,Math.sqrt(14e6/(w*h))),tries=[fit,Math.min(fit,1),Math.min(fit,0.7),Math.min(fit,0.5)].filter((s,k,a)=>s>=0.3&&a.indexOf(s)===k);
+    const tmp=document.createElement('style');tmp.textContent='#'+id+' summary::after,#'+id+' summary::before{content:none!important;display:none!important}#'+id+' summary{list-style:none!important}';document.head.appendChild(tmp);
+    try{
     for(const sc of tries){
-      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg}}});
+      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg;e.querySelectorAll('summary,summary *').forEach(x=>{x.style.whiteSpace='nowrap'})}}});
         if(cv&&cv.width>0&&cv.height>0)return cv}catch(e){}
     }
+    }finally{tmp.remove()}
     UI.shotWhy='draw';return null;
   }
   /* 엔딩 카드 이미지 (1080×1350): 캔버스에 직접 그린다. 외부 라이브러리 없음 */
@@ -2209,7 +2220,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       UI.res.chips=[...UI.res.chips,`내 사무소 · ${G.ch.office.name} (${E.OKW[kw]})`];render();
     },
     cpick(k){
-      if(E.setColorPick(G.ch,k)){resave();UI.res.chips=[...UI.res.chips,`특색 패시브 · ${E.colorPasv[k].n}`];render()}
+      if(E.setColorPick(G.ch,k)){resave();UI.res.chips=[...UI.res.chips,`특색 패시브 · ${E.colorPasv[k].n} · ${E.colorPasv[k].e}`];render()}
     },
     pill(k){
       const P=Object.values(D.enemies).find(e=>e.pill).pill;
@@ -2579,8 +2590,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testRecordEnd(){recordEnd()},
     testCent(n){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infIntro=1;G.ch.infCent=Array.from({length:n-1},(_,i)=>i+1);G.year=G.ch.year=n*100-16;const ev=E.infiniteEvent(G);if(!ev)return;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvent(k,lic){if(!G)return;G.ch.licensed=lic!==false;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
-    testShip(mode){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.flags.lake=1;c.lake={captain:true,hull:63,crew:[{role:'cook',n:'요리사'},{role:'navigator',n:'항해사'}],seen:7,killed:[],wave:mode==='wave'?{i:1,max:4}:null};c.money=2000;if(mode==='anchor')c.flags.lkL_anchor=1;
+    testShip(mode){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.flags.lake=1;c.lake={captain:true,hull:63,crew:[{role:'cook',n:'요리사'},{role:'navigator',n:'항해사'}],seen:7,killed:[],wave:mode==='wave'?{i:1,max:4}:null};c.money=2000;if(mode==='anchor')c.flags.lkL_anchor=1;if(mode==='nocap')c.lake.captain=false;
       if(mode==='wave'){UI.ev=E.waveEv(c,c.lake);UI.fight=null;UI.omen=null;UI.screen='event'}
+      else if(mode==='hunt'){c.lake.captain=true;c.lake.whaleTarget='lake_whale_anchor';UI.ev=D.lake.hunt;UI.fight=null;UI.omen=null;UI.screen='event'}
+      else if(mode==='inf'){G.infinite=true;c.infinite=true;c.infBoost=3;c.infShard=2;c.famLoss=1;c.limDmg=0.08;c.limStrike=0.01;c.legacyTier=5;c.legacyPts=12;c.year=G.year=300;UI.bag='stat';UI.screen='event';UI.ev=D.lake.indigo}
+      else if(mode==='limit'){G.infinite=true;c.infinite=true;c.infIntro=1;c.limAt=1;c.lake.crew=[];UI.ev=E.infiniteEvent(G);UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='morph'){G.infinite=true;c.infinite=true;c.infIntro=1;c.limAt=9999;c.lake.morphAt=1;c.lake.crew[0].mo=3;UI.ev=E.infiniteEvent(G);UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='indigo'){c.lake.killed=['lake_whale_silence','lake_whale_lamp'];c.lake.phase='enter';UI.ev=D.lake.indigo;UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='shop'){UI.stock=[];UI.bought=null;UI.screen='shop'}
