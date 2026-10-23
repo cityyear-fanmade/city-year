@@ -192,7 +192,7 @@ export const CFG = {
      소속별 규칙(orgs): cap 상한, round 라운드 시작마다 +n, hit 적중마다 +n, loss 피격 시 −n */
   /* 침잠(상대에게 쌓는 스택): per스택마다 한 단계, 단계마다 침잠 걸린 쪽의 명중 −hit · 주는 피해 −dmg. 라운드마다 1 감소 */
   sink: {per: 3, hit: 6, dmg: 1},
-  charge: {cap: 10, loss: 1, orgs: {'W사 날개': {cap: 25, round: 2, loss: 0}, 'R사 날개/토끼팀': {cap: 8, hit: 1, loss: 2, spd: 5, boost: {low: [0.5, 3], charge: [5, 3]}},
+  charge: {cap: 10, loss: 1, orgs: {'W사 날개': {cap: 25, round: 2, loss: 0, start: 4, express: {at: 15, mul: 1.3}}, 'R사 날개/토끼팀': {cap: 8, hit: 1, loss: 2, spd: 5, boost: {low: [0.5, 3], charge: [5, 3]}},
     /* 순록팀: 충전 20까지. 최대 체력 step만큼 잃을 때마다(최대 max번) 공격 피해 +dmg · 충전 at 이상이면 소모 카드의 충전 1당 고정 피해 +fix */
     'R사 날개/순록팀': {cap: 20, loss: 1, power: {step: 0.3, max: 2, dmg: 3}, focus: {at: 10, fix: 2}},
     /* 코뿔소팀: 충전 20까지. 최대 체력 step만큼 잃을 때마다(최대 max번) 방어 회피 +def · 충전 at 이상이면 받는 피해 −dr% */
