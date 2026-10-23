@@ -450,15 +450,14 @@ export function startUI(E,app){
   /* 선장의 배 내구도: 가방을 열지 않아도 정신력 아래에 항상 보인다 */
   function vShip(ch){
     const L=ch.lake;if(!(ch.flags&&ch.flags.lake&&L&&L.captain))return '';
-    const h=E.hullOf(ch),mx=CFG.lake.hullMax,low=h<=mx*0.25;
-    return `<div class="row between small"><span class="mono" style="color:${low?'#c46a5a':'var(--gold)'}">배 내구도 ${h}/${mx}</span><span class="mono dim">${low?'곧 가라앉는다 · 항구에서 수리':'전투마다 -'+CFG.lake.hullWear+' · 항구에서 수리'}</span></div>
-      <div class="bar" style="height:4px"><span style="width:${Math.round(h/mx*100)}%;background:${low?'#c46a5a':'#5f9fc0'}"></span></div>`;
+    const h=E.hullOf(ch),mx=CFG.lake.hullMax,low=h<=mx*0.25,col=low?'#e0705a':'#6fb4d8';
+    return `<div class="panel stack" style="gap:5px;padding:8px 10px;border-color:${col}"><div class="row between"><b style="color:${col};font-size:15px">⚓ 배 내구도 ${h}/${mx}</b><span class="mono small dim">${low?'곧 가라앉는다':'전투마다 -'+CFG.lake.hullWear}</span></div><div class="bar" style="height:10px"><i style="width:${Math.round(h/mx*100)}%;background:${col}"></i></div><span class="mono small dim">${low?'항구에서 700안으로 수리하지 않으면 침몰한다':'항구에서 '+CFG.lake.repairCost+'안으로 수리'}</span></div>`;
   }
   function vMind(ch){
     if(ch.distForm)return `<div class="row between small"><span class="mono" style="color:#c25050">정신력 ???</span><span class="mono dim">이점도 불이익도 없다</span></div>`;
     const m=ch.mind,mx=E.mindMax(ch),t=E.mindTier(ch),low=m<=CFG.mind.voiceAt;
     return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor} · 빛 +${CFG.mind.light}(처음 ${CFG.mind.lightRounds}라운드)`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}${E.mindStat(ch)?` · 모든 능력치 +${E.mindStat(ch)}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}${egoGrowTag(ch)}${ch.innate?` · <span style="color:var(--gold)">${esc(innateName(ch))}</span>`:''}${E.cardGrade(ch.year,ch).n?` · 카드 등급 <b style="color:var(--gold)">${E.cardGrade(ch.year,ch).n}</b>`:''}</span></div>
-      <div class="bar" style="height:4px"><span style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></span></div>`;
+      <div class="bar" style="height:4px"><i style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></i></div>`;
   }
   /* 손가락별 지속 패시브 한 줄 (HUD와 가입 선택 화면이 같이 쓴다) */
   const fingerPassive=(af,fi)=>af==='엄지'?`탄환 · 전투마다 ${CFG.thumbAmmo.base+CFG.thumbAmmo.per*fi}발 (서열마다 +${CFG.thumbAmmo.per}) · 공격마다 1발 소모 · 상대에게 예의를 지킬 것 1 (상대 명중 −${(Array.isArray(CFG.thumbManner)?CFG.thumbManner[Math.min(CFG.thumbManner.length-1,fi||0)]:CFG.thumbManner)}×스택, 전투가 끝날 때까지 유지) · 탄환 수만큼만 쌓이고, 탄환이 바닥나면 더는 쌓이지 않는다`
@@ -2573,7 +2572,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testPatch(o){if(!G)return;Object.assign(G.ch,o);render()},
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
     testInfLake(n){if(!G)return null;const c=G.ch,X=CFG.endless,be=CFG.years+X.span*X.grades.length,out={};G.infinite=true;c.infinite=true;c.infIntro=1;c.flags=c.flags||{};c.flags.lake=1;c.lake=c.lake||{};c.lake.captain=true;
-      for(let i=0;i<(n||300);i++){G.year=c.year=be+1+i;c.hp=c.stats.maxHp;c.mind=E.mindMax(c);try{const st=E.advanceYear(G);const k=st.type==='omen'?'omen:'+st.boss+(st.echo?'(echo)':''):st.type==='fight'?'fight:'+st.enemy:st.type;out[k]=(out[k]||0)+1}catch(e){out['ERR '+e.message]=(out['ERR '+e.message]||0)+1}}return out},
+      for(let i=0;i<(n||300);i++){G.year=c.year=be+1+i;c.hp=c.stats.maxHp;c.mind=E.mindMax(c);try{const st=E.advanceYear(G);const k=st.type==='omen'?'omen:'+st.boss+(st.echo?'(echo)':''):st.type==='fight'?'fight:'+st.enemy:st.type;out[k]=(out[k]||0)+1}catch(e){out['ERR '+e.message]=(out['ERR '+e.message]||0)+1}}try{E.answerOmen(G,{boss:'hongwon',rift:true,escape:true,spec:'table:late'},true);out._intro=D.enemies.hongwon.intro}catch(e){out._intro='ERR '+e.message}return out},
     testEnd(y,t,o){if(!G)return;G.year=G.ch.year=y||CFG.years;UI.endWin=true;UI.trueEnd=!!t;UI.oldEnd=!!o;UI.death=null;UI.screen='end';render()},
     testFight(id,hp,php){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;if(php){C.P.hp=C.P.maxHp=php}render()},
     /* 자동 테스트용: 특색 심사 통과 직후 화면 */

@@ -2176,7 +2176,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const riftEchoOmen=nm=>({x:`갈라진 틈 너머에 ${nm}이(가) 서 있다. 예전에 상대한 적이 있는 모습이다. 하지만 불순물과 같은 느낌이 든다.`,go:'마주한다',away:'눈을 돌린다',awayT:'눈을 돌리자 틈이 닫혔다. 같은 얼굴이 다시 나타날 것이라는 예감만 남았다.'});
   const riftOmen=nm=>({x:`세계에 균열이 갔다. 갈라진 틈 너머에서 ${nm}의 기척이 느껴진다. 이 세계에서는 만날 수 없던 운명이 균열을 타고 흘러든다.`,go:'균열 속으로 들어간다',away:'눈을 돌린다',awayT:'균열은 소리 없이 닫혔다. 만날 수 없던 운명은 다음 기회를 기다린다.'});
   const omenOf=(ch,o)=>{if(o&&o.alt){const a=o.alt.find(a=>meets(ch,a.req));if(a)o=Object.assign({},o,{x:a.x})}if(!o||!ch.bond||!ch.bond.name)return o||{};const f=t=>t&&bondFill(t,ch.bond);return Object.assign({},o,{x:f(o.x),go:f(o.go),away:f(o.away),awayT:f(o.awayT)})};
+  /* 대호수 판에서 균열(호수의 틈)로 나타나는 히든 보스는 도시 배경의 등장 문구 대신 호수의 파도로 나타난다 */
+  const gaI=n=>{const c=String(n).charCodeAt(String(n).length-1);return c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28>0?'이':'가'};
+  const LAKE_INTRO=[n=>`대호수의 파도가 몰아닥친다. 물 밑에서 ${n}${gaI(n)} 모습을 드러낸다.`,n=>`호수가 크게 일렁인다. 갈라진 수면 위로 ${n}${gaI(n)} 올라선다. 배가 한쪽으로 기운다.`,n=>`거센 파도가 뱃전을 때린다. 그 너머에 ${n}${gaI(n)} 서 있다.`];
+  function lakeIntroFor(G,id){const E_=D.enemies[id];if(!E_)return;if(E_.intro0===undefined)E_.intro0=E_.intro;E_.intro=(lakeOn(G.ch)&&G.infinite)?one(LAKE_INTRO)(E_.n):E_.intro0}
   function answerOmen(G,st,go){
+    if(go||!st.escape)lakeIntroFor(G,st.boss);
     if(go||!st.escape){if(st.echo){G.ch.echoFoe=st.boss;return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:true,echo:true,label:lakeOn(G.ch)?'호수 밑의 불순물':'균열 너머의 불순물'}}}(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:!!st.rift,label:st.rift?(lakeOn(G.ch)?'호수 밑의 운명':'균열 너머의 운명'):T.hiddenBoss}}}
     if(lakeOn(G.ch)&&G.infinite){const id=one(['lake_mermaid','lake_hook','lake_blade','lake_shield']);return {type:'fight',enemy:id,enc:{id,label:'외곽 호수의 '+D.enemies[id].n},avoided:st.boss}}
     const e=encounter(G.ch,st.spec);return {type:'fight',enemy:e.id,enc:e,avoided:st.boss};
