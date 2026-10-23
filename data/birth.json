@@ -1011,7 +1011,7 @@
    "n": "E.G.O 발현자",
    "hidden": true,
    "t": "뒷골목에서 마음이 한 번 부서졌다. 그 조각을 붙잡은 채 살아남았고, 손에는 마음의 모양을 한 무기가 남았다.",
-   "e": "해결사 9급으로 시작 · E.G.O 개화 상태 · 무작위 TETH급 E.G.O 무기 (발현을 쌓으면 HE·WAW·ALEPH로 성장) · 전용 카드 발현·정신 집중 (뺄 수 없음) · 특색 심사 +20 · 특색이 되면 모든 능력치 +5 · 해결사 진로 +20",
+   "e": "해결사 9급으로 시작 · E.G.O 개화 상태 · 무작위 TETH급 E.G.O 무기와 전용 책장 (발현을 쌓으면 무기와 책장이 함께 HE·WAW·ALEPH로 성장, ALEPH에서 4코스트 마무리 카드) · 전용 카드 발현·정신 집중 (뺄 수 없음) · 발현하면 그 전투 동안 공격·회피가 늘고 책장 카드가 강해진다 · 특색 심사 +20 · 특색이 되면 모든 능력치 +5 · 해결사 진로 +20",
    "fx": {},
    "paths": {
     "fixer": 20
@@ -1028,10 +1028,6 @@
     "check": 5
    },
    "deck": [
-    "slash",
-    "thrust",
-    "smash",
-    "guard",
     "e_manifest",
     "e_focus"
    ],
@@ -1085,10 +1081,11 @@
        }
       },
       {
-       "e": "E.G.O (ALEPH) · 공+16 · 회피+8 · 피해 3d4 · 징벌: 맞을 때마다 1 (최대 5), 적중 시 징벌 × 7 추가 피해 후 비움",
+       "e": "E.G.O (ALEPH) · 공+28 · 회피+8 · 피해 +4 · 피해 3d4 · 징벌: 맞을 때마다 1 (최대 5), 적중 시 징벌 × 7 추가 피해 후 비움",
        "fx": {
-        "atk": 16,
-        "eva": 8
+        "atk": 28,
+        "eva": 8,
+        "dmgB": 4
        },
        "wx": {
         "dice": [
@@ -1156,10 +1153,11 @@
        }
       },
       {
-       "e": "E.G.O (ALEPH) · 공+18 · 회피+13 · 피해 3d4 · 적중 시 거미줄 5 (스택당 상대 회피 −2, 최대 5)",
+       "e": "E.G.O (ALEPH) · 공+30 · 회피+13 · 피해 +4 · 피해 3d4 · 적중 시 거미줄 5 (스택당 상대 회피 −2, 최대 5)",
        "fx": {
-        "atk": 18,
-        "eva": 13
+        "atk": 30,
+        "eva": 13,
+        "dmgB": 4
        },
        "wx": {
         "dice": [
@@ -1232,10 +1230,11 @@
        }
       },
       {
-       "e": "E.G.O (ALEPH) · 공+16 · 회피+7 · 피해 3d4 · 적중마다 우주의 노래 1, 3가 되면 고정 피해 14",
+       "e": "E.G.O (ALEPH) · 공+28 · 회피+7 · 피해 +4 · 피해 3d4 · 적중마다 우주의 노래 1, 3가 되면 고정 피해 14",
        "fx": {
-        "atk": 16,
-        "eva": 7
+        "atk": 28,
+        "eva": 7,
+        "dmgB": 4
        },
        "wx": {
         "dice": [
@@ -1300,10 +1299,11 @@
        }
       },
       {
-       "e": "E.G.O (ALEPH) · 공+16 · 회피+7 · 피해 3d4 · 짓누름: 라운드마다 첫 적중 피해 +8",
+       "e": "E.G.O (ALEPH) · 공+28 · 회피+7 · 피해 +4 · 피해 3d4 · 짓누름: 라운드마다 첫 적중 피해 +8",
        "fx": {
-        "atk": 16,
-        "eva": 7
+        "atk": 28,
+        "eva": 7,
+        "dmgB": 4
        },
        "wx": {
         "dice": [
@@ -1316,7 +1316,177 @@
       }
      ]
     }
-   ]
+   ],
+   "egoBooks": {
+    "ego_beak": {
+     "decks": [
+      [
+       "eg_beak_a0",
+       "eg_beak_a0",
+       "eg_beak_a0",
+       "eg_beak_g0"
+      ],
+      [
+       "eg_beak_a1",
+       "eg_beak_a1",
+       "eg_beak_a1",
+       "eg_beak_b1",
+       "eg_beak_b1",
+       "eg_beak_b1",
+       "eg_beak_g1"
+      ],
+      [
+       "eg_beak_a2",
+       "eg_beak_a2",
+       "eg_beak_a2",
+       "eg_beak_b2",
+       "eg_beak_b2",
+       "eg_beak_b2",
+       "eg_beak_c2",
+       "eg_beak_c2",
+       "eg_beak_g2"
+      ],
+      [
+       "eg_beak_a3",
+       "eg_beak_a3",
+       "eg_beak_a3",
+       "eg_beak_b3",
+       "eg_beak_b3",
+       "eg_beak_b3",
+       "eg_beak_c3",
+       "eg_beak_c3",
+       "eg_beak_d3",
+       "eg_beak_g3"
+      ]
+     ]
+    },
+    "ego_redeyes": {
+     "decks": [
+      [
+       "eg_eyes_a0",
+       "eg_eyes_a0",
+       "eg_eyes_a0",
+       "eg_eyes_g0"
+      ],
+      [
+       "eg_eyes_a1",
+       "eg_eyes_a1",
+       "eg_eyes_a1",
+       "eg_eyes_b1",
+       "eg_eyes_b1",
+       "eg_eyes_b1",
+       "eg_eyes_g1"
+      ],
+      [
+       "eg_eyes_a2",
+       "eg_eyes_a2",
+       "eg_eyes_a2",
+       "eg_eyes_b2",
+       "eg_eyes_b2",
+       "eg_eyes_b2",
+       "eg_eyes_c2",
+       "eg_eyes_c2",
+       "eg_eyes_g2"
+      ],
+      [
+       "eg_eyes_a3",
+       "eg_eyes_a3",
+       "eg_eyes_a3",
+       "eg_eyes_b3",
+       "eg_eyes_b3",
+       "eg_eyes_b3",
+       "eg_eyes_c3",
+       "eg_eyes_c3",
+       "eg_eyes_d3",
+       "eg_eyes_g3"
+      ]
+     ]
+    },
+    "ego_universe": {
+     "decks": [
+      [
+       "eg_univ_a0",
+       "eg_univ_a0",
+       "eg_univ_a0",
+       "eg_univ_g0"
+      ],
+      [
+       "eg_univ_a1",
+       "eg_univ_a1",
+       "eg_univ_a1",
+       "eg_univ_b1",
+       "eg_univ_b1",
+       "eg_univ_b1",
+       "eg_univ_g1"
+      ],
+      [
+       "eg_univ_a2",
+       "eg_univ_a2",
+       "eg_univ_a2",
+       "eg_univ_b2",
+       "eg_univ_b2",
+       "eg_univ_b2",
+       "eg_univ_c2",
+       "eg_univ_c2",
+       "eg_univ_g2"
+      ],
+      [
+       "eg_univ_a3",
+       "eg_univ_a3",
+       "eg_univ_a3",
+       "eg_univ_b3",
+       "eg_univ_b3",
+       "eg_univ_b3",
+       "eg_univ_c3",
+       "eg_univ_c3",
+       "eg_univ_d3",
+       "eg_univ_g3"
+      ]
+     ]
+    },
+    "ego_regret": {
+     "decks": [
+      [
+       "eg_regret_a0",
+       "eg_regret_a0",
+       "eg_regret_a0",
+       "eg_regret_g0"
+      ],
+      [
+       "eg_regret_a1",
+       "eg_regret_a1",
+       "eg_regret_a1",
+       "eg_regret_b1",
+       "eg_regret_b1",
+       "eg_regret_b1",
+       "eg_regret_g1"
+      ],
+      [
+       "eg_regret_a2",
+       "eg_regret_a2",
+       "eg_regret_a2",
+       "eg_regret_b2",
+       "eg_regret_b2",
+       "eg_regret_b2",
+       "eg_regret_c2",
+       "eg_regret_c2",
+       "eg_regret_g2"
+      ],
+      [
+       "eg_regret_a3",
+       "eg_regret_a3",
+       "eg_regret_a3",
+       "eg_regret_b3",
+       "eg_regret_b3",
+       "eg_regret_b3",
+       "eg_regret_c3",
+       "eg_regret_c3",
+       "eg_regret_d3",
+       "eg_regret_g3"
+      ]
+     ]
+    }
+   }
   },
   {
    "roll": 30,

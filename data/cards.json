@@ -7236,6 +7236,867 @@
      "t"
     ]
    ]
+  },
+  "eg_beak_a0": {
+   "n": "쪼기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 0,
+   "hit": 10,
+   "eg": {
+    "mf": {
+     "gain": 1
+    }
+   },
+   "egBook": true,
+   "d": "TETH · 1d6+0 · 발현 시 징벌 +1"
+  },
+  "eg_beak_g0": {
+   "n": "가시 깃",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "shield": 2,
+   "egBrace": 2,
+   "egBraceMf": 1,
+   "d": "TETH · 보호막 2 · 이번 라운드 맞으면 징벌 +2 (발현 시 +3)"
+  },
+  "eg_beak_a1": {
+   "n": "쪼기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 1,
+   "hit": 10,
+   "eg": {
+    "mf": {
+     "gain": 1
+    }
+   },
+   "egBook": true,
+   "d": "HE · 1d6+1 · 발현 시 징벌 +1"
+  },
+  "eg_beak_b1": {
+   "n": "되갚는 부리",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 6,
+   "b": 1,
+   "hit": 8,
+   "eg": {
+    "per": 1,
+    "mf": {
+     "per": 1
+    }
+   },
+   "egBook": true,
+   "d": "HE · 2d6+1 · 징벌 1당 피해 +1 (발현 시 +1)"
+  },
+  "eg_beak_g1": {
+   "n": "가시 깃",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "shield": 4,
+   "egBrace": 2,
+   "egBraceMf": 1,
+   "d": "HE · 보호막 4 · 이번 라운드 맞으면 징벌 +2 (발현 시 +3)"
+  },
+  "eg_beak_a2": {
+   "n": "쪼기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 1,
+   "hit": 10,
+   "eg": {
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 1d6+1 · 발현 시 징벌 +2"
+  },
+  "eg_beak_b2": {
+   "n": "되갚는 부리",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 6,
+   "b": 2,
+   "hit": 8,
+   "eg": {
+    "per": 1,
+    "mf": {
+     "per": 2
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 2d6+2 · 징벌 1당 피해 +1 (발현 시 +2)"
+  },
+  "eg_beak_c2": {
+   "n": "응징의 일격",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 6,
+   "b": 4,
+   "hit": 8,
+   "eg": {
+    "per": 3,
+    "mf": {
+     "per": 5
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 3d6+4 · 징벌 1당 피해 +3 (발현 시 +5)"
+  },
+  "eg_beak_g2": {
+   "n": "가시 깃",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "shield": 6,
+   "egBrace": 2,
+   "egBraceMf": 1,
+   "d": "WAW · 보호막 6 · 이번 라운드 맞으면 징벌 +2 (발현 시 +3)"
+  },
+  "eg_beak_a3": {
+   "n": "쪼기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 2,
+   "hit": 10,
+   "eg": {
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 1d6+2 · 발현 시 징벌 +2"
+  },
+  "eg_beak_b3": {
+   "n": "되갚는 부리",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 6,
+   "b": 4,
+   "hit": 8,
+   "eg": {
+    "per": 2,
+    "mf": {
+     "per": 3
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 2d6+4 · 징벌 1당 피해 +2 (발현 시 +3)"
+  },
+  "eg_beak_c3": {
+   "n": "응징의 일격",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 6,
+   "b": 6,
+   "hit": 8,
+   "eg": {
+    "per": 5,
+    "mf": {
+     "per": 7
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 3d6+6 · 징벌 1당 피해 +5 (발현 시 +7)"
+  },
+  "eg_beak_d3": {
+   "n": "징벌의 심판",
+   "c": 4,
+   "t": "atk",
+   "hits": 1,
+   "dice": 5,
+   "die": 8,
+   "b": 6,
+   "hit": 23,
+   "eg": {
+    "per": 6,
+    "gain": 1,
+    "mf": {
+     "per": 9
+    }
+   },
+   "egBook": true,
+   "adv": true,
+   "d": "ALEPH · 5d8+6 · 징벌 1당 피해 +6 (발현 시 +9) · 징벌 +1"
+  },
+  "eg_beak_g3": {
+   "n": "가시 깃",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "shield": 8,
+   "egBrace": 2,
+   "egBraceMf": 1,
+   "d": "ALEPH · 보호막 8 · 이번 라운드 맞으면 징벌 +2 (발현 시 +3)"
+  },
+  "eg_eyes_a0": {
+   "n": "실 뽑기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 0,
+   "hit": 10,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 1
+    }
+   },
+   "egBook": true,
+   "d": "TETH · 1d6+0 · 거미줄 +1 (발현 시 +2)"
+  },
+  "eg_eyes_g0": {
+   "n": "실 방패",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "eva": 20,
+   "d": "TETH · 회피 +20 · 이번 라운드 회피를 높인다"
+  },
+  "eg_eyes_a1": {
+   "n": "실 뽑기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 1,
+   "hit": 10,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 1
+    }
+   },
+   "egBook": true,
+   "d": "HE · 1d6+1 · 거미줄 +1 (발현 시 +2)"
+  },
+  "eg_eyes_b1": {
+   "n": "엮는 눈",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 6,
+   "b": 1,
+   "hit": 8,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "HE · 2d6+1 · 거미줄 +1 (발현 시 +2)"
+  },
+  "eg_eyes_g1": {
+   "n": "실 방패",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "eva": 25,
+   "d": "HE · 회피 +25 · 이번 라운드 회피를 높인다"
+  },
+  "eg_eyes_a2": {
+   "n": "실 뽑기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 1,
+   "hit": 10,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 1d6+1 · 거미줄 +1 (발현 시 +2)"
+  },
+  "eg_eyes_b2": {
+   "n": "엮는 눈",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 6,
+   "b": 2,
+   "hit": 8,
+   "eg": {
+    "gain": 2,
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 2d6+2 · 거미줄 +2 (발현 시 +2)"
+  },
+  "eg_eyes_c2": {
+   "n": "포박",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 6,
+   "b": 4,
+   "hit": 8,
+   "eg": {
+    "per": 3,
+    "mf": {
+     "per": 4
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 3d6+4 · 거미줄 1당 피해 +3 (발현 시 +4)"
+  },
+  "eg_eyes_g2": {
+   "n": "실 방패",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "eva": 30,
+   "d": "WAW · 회피 +30 · 이번 라운드 회피를 높인다"
+  },
+  "eg_eyes_a3": {
+   "n": "실 뽑기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 2,
+   "hit": 10,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 1d6+2 · 거미줄 +1 (발현 시 +2)"
+  },
+  "eg_eyes_b3": {
+   "n": "엮는 눈",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 6,
+   "b": 4,
+   "hit": 8,
+   "eg": {
+    "gain": 2,
+    "mf": {
+     "gain": 3
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 2d6+4 · 거미줄 +2 (발현 시 +3)"
+  },
+  "eg_eyes_c3": {
+   "n": "포박",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 6,
+   "b": 6,
+   "hit": 8,
+   "eg": {
+    "per": 5,
+    "mf": {
+     "per": 6
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 3d6+6 · 거미줄 1당 피해 +5 (발현 시 +6)"
+  },
+  "eg_eyes_d3": {
+   "n": "붉은 누에고치",
+   "c": 4,
+   "t": "atk",
+   "hits": 1,
+   "dice": 5,
+   "die": 8,
+   "b": 6,
+   "hit": 23,
+   "eg": {
+    "per": 6,
+    "mf": {
+     "per": 9
+    }
+   },
+   "egBook": true,
+   "adv": true,
+   "d": "ALEPH · 5d8+6 · 거미줄 1당 피해 +6 (발현 시 +9)"
+  },
+  "eg_eyes_g3": {
+   "n": "실 방패",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "eva": 35,
+   "d": "ALEPH · 회피 +35 · 이번 라운드 회피를 높인다"
+  },
+  "eg_univ_a0": {
+   "n": "별 부스러기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 0,
+   "hit": 10,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 1
+    }
+   },
+   "egBook": true,
+   "d": "TETH · 1d6+0 · 우주의 노래 +1 (발현 시 +2)"
+  },
+  "eg_univ_g0": {
+   "n": "공전",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "eva": 20,
+   "d": "TETH · 회피 +20 · 이번 라운드 회피를 높인다"
+  },
+  "eg_univ_a1": {
+   "n": "별 부스러기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 1,
+   "hit": 10,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 1
+    }
+   },
+   "egBook": true,
+   "d": "HE · 1d6+1 · 우주의 노래 +1 (발현 시 +2)"
+  },
+  "eg_univ_b1": {
+   "n": "성운 흩뿌리기",
+   "c": 2,
+   "t": "atk",
+   "hits": 2,
+   "dice": 1,
+   "die": 6,
+   "b": 1,
+   "hit": 8,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 1
+    }
+   },
+   "egBook": true,
+   "d": "HE · 1d6+1 ×2 · 두 번 · 적중마다 우주의 노래 +1 (발현 시 +2)"
+  },
+  "eg_univ_g1": {
+   "n": "공전",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "eva": 25,
+   "d": "HE · 회피 +25 · 이번 라운드 회피를 높인다"
+  },
+  "eg_univ_a2": {
+   "n": "별 부스러기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 1,
+   "hit": 10,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 1d6+1 · 우주의 노래 +1 (발현 시 +2)"
+  },
+  "eg_univ_b2": {
+   "n": "성운 흩뿌리기",
+   "c": 2,
+   "t": "atk",
+   "hits": 2,
+   "dice": 1,
+   "die": 6,
+   "b": 2,
+   "hit": 8,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 1d6+2 ×2 · 두 번 · 적중마다 우주의 노래 +1 (발현 시 +2)"
+  },
+  "eg_univ_c2": {
+   "n": "궤도 이탈",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 6,
+   "b": 4,
+   "hit": 8,
+   "eg": {
+    "gain": 2,
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 3d6+4 · 우주의 노래 +2 (발현 시 +3)"
+  },
+  "eg_univ_g2": {
+   "n": "공전",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "eva": 30,
+   "d": "WAW · 회피 +30 · 이번 라운드 회피를 높인다"
+  },
+  "eg_univ_a3": {
+   "n": "별 부스러기",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 2,
+   "hit": 10,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 1d6+2 · 우주의 노래 +1 (발현 시 +2)"
+  },
+  "eg_univ_b3": {
+   "n": "성운 흩뿌리기",
+   "c": 2,
+   "t": "atk",
+   "hits": 2,
+   "dice": 1,
+   "die": 6,
+   "b": 4,
+   "hit": 8,
+   "eg": {
+    "gain": 1,
+    "mf": {
+     "gain": 2
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 1d6+4 ×2 · 두 번 · 적중마다 우주의 노래 +1 (발현 시 +2)"
+  },
+  "eg_univ_c3": {
+   "n": "궤도 이탈",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 6,
+   "b": 6,
+   "hit": 8,
+   "eg": {
+    "gain": 2,
+    "mf": {
+     "gain": 3
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 3d6+6 · 우주의 노래 +2 (발현 시 +3)"
+  },
+  "eg_univ_d3": {
+   "n": "우주의 합창",
+   "c": 4,
+   "t": "atk",
+   "hits": 1,
+   "dice": 5,
+   "die": 8,
+   "b": 6,
+   "hit": 23,
+   "eg": {
+    "gain": 4,
+    "mf": {
+     "gain": 6
+    }
+   },
+   "egBook": true,
+   "adv": true,
+   "d": "ALEPH · 5d8+6 · 우주의 노래 +4 (발현 시 +6)"
+  },
+  "eg_univ_g3": {
+   "n": "공전",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "eva": 35,
+   "d": "ALEPH · 회피 +35 · 이번 라운드 회피를 높인다"
+  },
+  "eg_regret_a0": {
+   "n": "억눌린 한숨",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 0,
+   "hit": 15,
+   "eg": {
+    "first": 1,
+    "mf": {
+     "first": 1
+    }
+   },
+   "egBook": true,
+   "d": "TETH · 1d6+0 · 라운드 첫 적중 피해 +1 (발현 시 +1)"
+  },
+  "eg_regret_g0": {
+   "n": "되새김",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "shield": 2,
+   "mindGain": 2,
+   "d": "TETH · 보호막 2 · 정신 +2"
+  },
+  "eg_regret_a1": {
+   "n": "억눌린 한숨",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 1,
+   "hit": 15,
+   "eg": {
+    "first": 2,
+    "mf": {
+     "first": 2
+    }
+   },
+   "egBook": true,
+   "d": "HE · 1d6+1 · 라운드 첫 적중 피해 +2 (발현 시 +2)"
+  },
+  "eg_regret_b1": {
+   "n": "무거운 발걸음",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 6,
+   "b": 1,
+   "hit": 8,
+   "eg": {
+    "first": 2,
+    "mf": {
+     "first": 4
+    }
+   },
+   "egBook": true,
+   "d": "HE · 2d6+1 · 라운드 첫 적중 피해 +2 (발현 시 +4)"
+  },
+  "eg_regret_g1": {
+   "n": "되새김",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "shield": 4,
+   "mindGain": 2,
+   "d": "HE · 보호막 4 · 정신 +2"
+  },
+  "eg_regret_a2": {
+   "n": "억눌린 한숨",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 1,
+   "hit": 15,
+   "eg": {
+    "first": 3,
+    "mf": {
+     "first": 5
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 1d6+1 · 라운드 첫 적중 피해 +3 (발현 시 +5)"
+  },
+  "eg_regret_b2": {
+   "n": "무거운 발걸음",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 6,
+   "b": 2,
+   "hit": 8,
+   "eg": {
+    "first": 5,
+    "mf": {
+     "first": 7
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 2d6+2 · 라운드 첫 적중 피해 +5 (발현 시 +7)"
+  },
+  "eg_regret_c2": {
+   "n": "뒤늦은 사과",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 6,
+   "b": 4,
+   "hit": 8,
+   "eg": {
+    "first": 7,
+    "mf": {
+     "first": 10
+    }
+   },
+   "egBook": true,
+   "d": "WAW · 3d6+4 · 라운드 첫 적중 피해 +7 (발현 시 +10)"
+  },
+  "eg_regret_g2": {
+   "n": "되새김",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "shield": 6,
+   "mindGain": 2,
+   "d": "WAW · 보호막 6 · 정신 +2"
+  },
+  "eg_regret_a3": {
+   "n": "억눌린 한숨",
+   "c": 1,
+   "t": "atk",
+   "hits": 1,
+   "dice": 1,
+   "die": 6,
+   "b": 2,
+   "hit": 15,
+   "eg": {
+    "first": 5,
+    "mf": {
+     "first": 8
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 1d6+2 · 라운드 첫 적중 피해 +5 (발현 시 +8)"
+  },
+  "eg_regret_b3": {
+   "n": "무거운 발걸음",
+   "c": 2,
+   "t": "atk",
+   "hits": 1,
+   "dice": 2,
+   "die": 6,
+   "b": 4,
+   "hit": 8,
+   "eg": {
+    "first": 8,
+    "mf": {
+     "first": 12
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 2d6+4 · 라운드 첫 적중 피해 +8 (발현 시 +12)"
+  },
+  "eg_regret_c3": {
+   "n": "뒤늦은 사과",
+   "c": 3,
+   "t": "atk",
+   "hits": 1,
+   "dice": 3,
+   "die": 6,
+   "b": 6,
+   "hit": 8,
+   "eg": {
+    "first": 12,
+    "mf": {
+     "first": 18
+    }
+   },
+   "egBook": true,
+   "d": "ALEPH · 3d6+6 · 라운드 첫 적중 피해 +12 (발현 시 +18)"
+  },
+  "eg_regret_d3": {
+   "n": "돌이킬 수 없는",
+   "c": 4,
+   "t": "atk",
+   "hits": 1,
+   "dice": 5,
+   "die": 8,
+   "b": 6,
+   "hit": 23,
+   "eg": {
+    "first": 20,
+    "mf": {
+     "first": 30
+    }
+   },
+   "egBook": true,
+   "adv": true,
+   "d": "ALEPH · 5d8+6 · 라운드 첫 적중 피해 +20 (발현 시 +30)"
+  },
+  "eg_regret_g3": {
+   "n": "되새김",
+   "c": 1,
+   "t": "def",
+   "egBook": true,
+   "shield": 8,
+   "mindGain": 2,
+   "d": "ALEPH · 보호막 8 · 정신 +2"
   }
  },
  "rewards": [

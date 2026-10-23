@@ -169,7 +169,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.weapon==='star'){equip(ch,starItem(0,''));ch.starPick=true}
     if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e}}
     /* E.G.O 발현자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
-    if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
+    if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;egoDeck(ch,g.id,0);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
     ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;ch.packKind=ch.deckLocked||ch.cardMoney?'special':'origin';ch.packName=ch.packName||(ch.o&&ch.o.packName)||(ch.packKind==='special'?(ch.o&&ch.o.n?ch.o.n+' 전용 카드팩':'전용 카드팩'):(ch.o&&ch.o.n?ch.o.n+' 출신 카드팩':'출신 카드팩'));ch.birthPack=ch.packName;ch.packs=newBasicPacks();
     return ch;
@@ -273,6 +273,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return Object.assign(it,{grade:L>=2?5:4,egoLv:L});
   }
   const egoLvFor=u=>CFG.egoGrow.need.reduce((a,n,i)=>u>=n?i:a,0);
+  /* E.G.O 책장: 등급(L)마다 덱의 E.G.O 전용 카드가 그 등급의 카드로 바뀐다. 장수·구성은 birth.json egoBooks[무기 id].decks[L] */
+  const egoBook=id=>{for(const o of D.hiddenOrigins||[])if(o.egoBooks&&o.egoBooks[id])return o.egoBooks[id];return null};
+  function egoDeck(ch,id,L){const bk=egoBook(id);if(!bk)return;const all=new Set(bk.decks.flat());ch.deck=ch.deck.filter(c=>!all.has(c)).concat(bk.decks[Math.min(L,bk.decks.length-1)])}
+  /* E.G.O 카드의 무기 자원: 징벌(내 쪽)·거미줄·우주의 노래(상대 쪽). get/add는 현재 무기 기준 */
+  function egRes(A,B,add){const w=A.wx||{};
+    if(w.grudge){if(add)A.grudge=Math.min(5,(A.grudge||0)+add);return A.grudge||0}
+    if(w.debuff&&w.debuff.k==='web'){if(add)B.web=Math.min(5,(B.web||0)+add);return B.web||0}
+    if(w.echo){if(add)B.wecho=(B.wecho||0)+add;return B.wecho||0}
+    return 0}
   /* 발현을 낸 직후 확인: 장착 중이든 보관함이든 E.G.O 무기 하나를 올린다. 올렸으면 {old,nw} */
   /* 정비한 장비가 다른 등급 장비로 바뀔 때(E.G.O 성장·보냐텔리 강화) 정비 횟수와 강화분을 넘겨 준다 */
   /* 승급·계열 변경으로 같은 칸의 장비가 바뀔 때: 장비에 쌓은 연마(공격·회피 +1 시도)를 새 장비로 옮긴다.
@@ -288,6 +297,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!own||(own.egoLv||0)>=L)return null;
     const nw=carryTune(own,egoItem(own.id,L));
     if(own===w){equip(ch,nw);ch.stash=ch.stash.filter(x=>x!==own)}else st[st.indexOf(own)]=nw;
+    egoDeck(ch,nw.id,L);
     ch.egoNote=`E.G.O ${CFG.egoGrow.tier[L]} · ${nw.n} (${nw.e})`;
     return {old:own,nw,worn:own===w};
   }
@@ -3003,9 +3013,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 중지 패시브 되갚음: 맞을 때마다 1 (최대 5), 다음 적중 피해 +2×스택 */
       if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
       if(A.isP&&A.angry>0&&dmg>0){dmg+=A.angry;note+=` 분노+${A.angry}`;A.angry=0}
+      const EG_=A.isP&&c.eg?(A.mf&&c.eg.mf?Object.assign({},c.eg,c.eg.mf):c.eg):null;
+      if(EG_){if(EG_.first&&A.egFR!==C.round){A.egFR=C.round;dmg+=EG_.first;note+=` 첫 적중+${EG_.first}`}
+        if(EG_.per){const n_=egRes(A,B);if(n_>0){const x=n_*EG_.per;dmg+=x;note+=` ${(A.wx&&(A.wx.grudgeN||(A.wx.echo&&A.wx.echo.n)))||(A.wx&&A.wx.debuff?'거미줄':'')}+${x}`}}}
       if(A.wx&&A.wx.grudge&&A.grudge>0){const x=A.grudge*A.wx.grudge;dmg+=x;note+=` ${A.wx.grudgeN||'원한'}+${x}`;A.grudge=0}
       if(A.wx&&A.wx.scythe&&A.scRound!==C.round&&C.round%A.wx.scythe.every===0&&A.charge>=A.wx.scythe.cost){A.scRound=C.round;A.charge-=A.wx.scythe.cost;const nh=A.wx.scythe.hits||1;let x=0;for(let q=0;q<nh;q++)x+=A.wx.scythe.bonus+d(A.wx.dice?A.wx.dice[1]:6);dmg+=x;note+=` 첫 공격 추가 피해+${x}${nh>1?` (${nh}연타)`:''} (충전 ${A.wx.scythe.cost} 소모)`}
       if(A.wx&&A.wx.crush&&A.crRound!==C.round){A.crRound=C.round;dmg+=A.wx.crush;note+=` ${A.wx.crushN||'짓누름'}+${A.wx.crush}`}
+      if(EG_&&EG_.gain){const b4=egRes(A,B);egRes(A,B,EG_.gain);const a4=egRes(A,B);if(a4>b4)L('kw',`  ${A.name} · ${c.n} · ${(A.wx.grudgeN||(A.wx.echo&&A.wx.echo.n)||'거미줄')} +${a4-b4} (지금 ${a4})`)}
       if(B.middle&&B.isP&&(B.revenge||0)>0&&CFG.middle.def){const r_=Math.min(dmg-1,B.revenge*CFG.middle.def);if(r_>0){dmg-=r_;note+=` 되갚음 방어−${r_}`}}
       if(B.wx&&B.wx.ward){dmg=Math.max(1,dmg-B.wx.ward);note+=` 책장−${B.wx.ward}`}
       if(A.swift){const x=Math.floor(A.spd/CFG.innate.swiftPer);if(x>0){dmg+=x;note+=` 질풍 속도 ${A.spd}→+${x}`}}
@@ -3085,7 +3099,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.drain&&A.hp>0){if(A.drainRd!==C.round){A.drainRd=C.round;A.drainN=0}if(A.drainN<CFG.drainCap){A.drainN++;const h=Math.min(X.drain,A.maxHp-A.hp);if(h>0){A.hp+=h;HG(A,h);L('kw',`  ${A.name} · 흡수 ${A.drainN}/${CFG.drainCap} · HP +${h}`)}}}
         if(X.movement&&C.round%X.movement.every===0&&A.mvRound!==C.round&&B.hp>0){A.mvRound=C.round;hpLoss(C,B,X.movement.dmg,L);L('dmg',`  다 카포 · 악장 · ${B.name} 고정 피해 ${X.movement.dmg}`)}
         if(X.execute&&B.hp>0&&B.hp<=B.maxHp*X.execute.below){hpLoss(C,B,X.execute.dmg,L);L('dmg',`  조율 · ${B.name} 고정 피해 ${X.execute.dmg}`)}}
-      if(B.wx&&B.wx.grudge&&B.hp>0){B.grudge=Math.min(5,(B.grudge||0)+1)}
+      if(B.wx&&B.wx.grudge&&B.hp>0){B.grudge=Math.min(5,(B.grudge||0)+1+(B.egBrace===C.round?B.egBraceN:0))}
       if(B.fleshRound===C.round&&B.isP&&!B.boneNext){B.boneNext=true;L('kw',`  ${B.name} · 육참 · 맞았다 · 다음 손패에 골단`)}
       if(B.isP&&B.lk&&dmg>0&&A.hp>0){const LK=B.lk;if(LK.silence){A.warp=Math.min(5,(A.warp||0)+1);L('kw',`  ${B.name} · 무음의 고래 심장 · ${A.name}에게 왜곡 ${A.warp}`)}if(LK.anchor){A.chain=Math.min(5,(A.chain||0)+1);L('kw',`  ${B.name} · 닻을 삼킨 고래 심장 · ${A.name}에게 사슬 ${A.chain}`)}if(LK.tide)applyKw(B,A,{kw:[['bleed',2,'t']]},L);if(LK.pale)applyKw(B,A,{kw:[['sink',1,'t']]},L)}
       if(B.kuro&&B.hp>0&&dmg>0){const K=CFG.syn['흑운회'],cl=B.black?K.max:(B.cloud||0),x=Math.floor(cl*K.counter[B.synT||0]);
@@ -3183,6 +3197,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.next){const nx_=!A.isP&&A.zChain?zNext(A,c):c.next;if(A.isP)giveNext(A,c.next);else A.forceNext=nx_;L('sys',`${A.name} · ${c.n} · 다음 라운드 ${D.cards[nx_].n} 준비`)}
       if(A.isP&&c.t==='atk'&&(c.shield||c.lightNext)){if(c.shield){A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.shield);L('kw',`  ${A.name} · ${c.n} · 보호막 +${c.shield} (지금 ${A.shield})`)}if(c.lightNext){A.lightNext=(A.lightNext||0)+c.lightNext;L('kw',`  ${A.name} · ${c.n} · 다음 라운드 빛 +${c.lightNext}`)}}
       if(A.isP&&c.bloomGrant&&D.cards[c.bloomGrant]){A.bloomUses=(A.bloomUses||0)+1;L('sys',`  ${A.name} · 개화 ${A.bloomUses}회${A.bloomUses%CFG.bloom.every?` · ${CFG.bloom.every-A.bloomUses%CFG.bloom.every}회 더 쓰면 1회용 스킬`:''}`);if(A.bloomUses%CFG.bloom.every===0){giveNext(A,c.bloomGrant);L('sys',`  ${A.name} · ${c.n} · 다음 라운드 손패에 ${D.cards[c.bloomGrant].n} (1회용)`)}}
+      if(A.isP&&c.egoGrow&&!A.mf){A.mf=true;const M_=CFG.egoGrow.mf[egoLvFor(C.ch.egoUses||0)];A.atk=Math.round(A.atk*(1+M_));A.eva=Math.round(A.eva*(1+M_));L('kw',`${A.name} · E.G.O 발현 · 이번 전투 동안 공격·회피 +${Math.round(M_*100)}% · 책장 카드가 강해진다`)}
       if(A.isP&&c.egoGrow){C.ch.egoUses=(C.ch.egoUses||0)+1;const up=egoGrow(C.ch);
         /* 특수 강화는 그 자리에서: 장착 중이면 이번 전투 수치도 바로 바꾼다 */
         if(up&&up.worn){for(const k of ['atk','eva'])A[k]+=(up.nw.fx[k]||0)-(up.old.fx[k]||0);A.wx=up.nw.wx}
@@ -3202,7 +3217,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.cd&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.cdUntil=C.cdUntil||{})[id_]=C.round+c.cd+1}
       A.focusOn=!!(A.focus&&A.charge>=A.focus.at);A.expOn=!!(A.chargeExp&&A.charge>=A.chargeExp.at);A.spent=0;if(c.spend&&A.charge>0){A.spent=Math.min(A.charge,c.spend+(A.wx&&A.wx.edge?A.wx.edge.spend:0));A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · 충전 ${A.spent} 소모 (남은 ${A.charge})`)}
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
-      if(c.t==='def'){A.defRound=C.round;cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){const sh_=c.shield+(A.prescPlus||0);A.shield=Math.min(CFG.shieldCap,(A.shield||0)+sh_);L('kw',`${A.name} · ${c.n} · 보호막 +${sh_} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp+(A.prescPlus||0);A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
+      if(c.t==='def'){A.defRound=C.round;if(c.egBrace){A.egBrace=C.round;A.egBraceN=c.egBrace+(A.mf&&c.egBraceMf||0)}cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){const sh_=c.shield+(A.prescPlus||0);A.shield=Math.min(CFG.shieldCap,(A.shield||0)+sh_);L('kw',`${A.name} · ${c.n} · 보호막 +${sh_} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp+(A.prescPlus||0);A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
       if(P.hp<=0||E.hp<=0)return;
       act(C,A,c,L,push);
       ampUse(C,L);
@@ -3305,5 +3320,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
     cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
