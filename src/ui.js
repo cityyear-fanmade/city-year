@@ -632,6 +632,7 @@ export function startUI(E,app){
     const base=s0?[['최대 HP',s0.maxHp],['공격',sgn(s0.atk)],['회피',sgn(s0.eva)],['속도',sgn(s0.spd)],['사건 판정',sgn(s0.check)]].map(([a,b])=>`<div class="invr"><span>${a}</span><b class="mono">${b}</b></div>`).join(''):'';
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
       ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다. 빈손이라 히든 보스 전리품 장비를 더 자주 쥐고(+25%p), 정신이 꺾일 때 E.G.O 형상이 보일 확률이 25%다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${row('무기',ch.w)}</div>`}
+      ${(()=>{const g=E.infGrowth(ch);return g.length?`<div class="eyebrow">무한 모드 성장</div><div class="panel stack" style="gap:6px">${g.map(([k,v,d_])=>`<div class="invr"><span>${esc(k)}</span><b class="mono">${esc(v)}</b></div><p class="small dim" style="margin:0 0 4px">${esc(d_)}</p>`).join('')}</div>`:''})()}
       ${lakeLog}${kid?`<div class="eyebrow">성장기</div><div class="panel">${kid}</div>`:''}
       ${base?`<div class="eyebrow">태어났을 때의 능력치 (변하지 않음)</div><div class="panel">${base}</div>`:''}
       <div class="eyebrow">지금 · 장비 보정과 특수 상태</div>${vStatNow()}</div>`;
@@ -938,6 +939,7 @@ export function startUI(E,app){
       <li><b>${D.pinky.n}</b> 어느 소속에도 겹쳐 붙는 표식. ${D.pinky.e}.</li>
       <li><b>돈과 공방</b> 해마다 소속 봉급(${T.licensed}는 급수 수당 추가), 전투 현상금, 일부 사건으로 ${D.money.unit}을 번다. 공방은 ${D.workshops.map(w=>w.n).join(' · ')} 3등급이고, 소속과 급수에 따라 들어갈 수 있는 등급이 정해진다. 무기·방어구·의수 칸마다 하나씩 맞춘다.</li>
       <li><b>장비 표기</b> 공+N 공격(명중 +N÷2, 피해 +N÷6, 모두 소수점 버림) · 명중+N 명중만 올라간다 · HP+N 최대 HP · 회피·속도·판정+N 그 능력치 · 피해 주사위 최소 N 피해 주사위 눈이 N보다 작게 나오면 N으로 친다(타수와는 무관) · 방어 카드 회피+N 방어 카드를 쓸 때 회피 추가.</li>
+      <li><b>무한 모드 성장</b> 무한 모드에서는 주는 피해 · 일격 · 받는 피해 · 회피 감소 · 연륜이 쌓인다. 늘어난 값은 가방의 출생 칸 "무한 모드 성장"에서 언제든 볼 수 있다. 백 해마다 주는 피해와 적의 피해가 함께 늘고, 불순물을 쓰러뜨리면 조각이 쌓이며, 10년마다 한계 돌파로 공세·맹공·일격 중 하나를 고른다. <b>연륜</b>은 최고 직위에 오른 뒤 쌓이는 전공이 바뀐 것으로, 단계마다 주력 능력치가 1 오르고(최대 ${CFG.infinite.legacyMax}단계, 직위를 올릴 곳이 없을 때만 쌓인다) 직위 줄에 "연륜 N단계"로 표시된다.</li>
       <li><b>승급</b> 전투 승리(초반 ${CFG.promo.gain.early} · 중반 ${CFG.promo.gain.mid} · 보스 ${CFG.promo.gain.boss} · 히든 ${CFG.promo.gain.hidden})와 판정 성공(+${CFG.promo.gain.check})으로 진로의 포인트를 모은다(해결사 ${T.promoPoints} · 협회 ${D.careers.assoc.pts} · 날개 ${D.careers.wing.pts} · 손가락 ${D.careers.finger.pts}). 필요량에 닿으면 다음 해에 심사가 열리고, 성공하면 한 단계 오른다. 필요량은 단계마다 ×${CFG.promo.mult.join(' → ×')}씩 늘어난다. 실패하면 해결사·협회는 포인트 1/4, 날개·손가락은 1/3을 잃고, 날개는 두 번 연속 실패 시 해고, 손가락은 숙청 전투. 맨 위 단계에 오르면 특수 심사(해결사는 특색)가 한 번 열리고, 실패하면 다시 기회가 없다.</li>
       <li><b>${T.hiddenBoss}</b> 조건을 채우면 고정 전투 대신 나타난다. 금기를 어기면 머리의 집행자가, 초대장을 두 번 받아들이면 도서관이, 지령을 거역하면 대행자가 찾아온다. 특색은 ${D.hiddenBosses.find(h=>h.id==='blue').req.replace('rank<=','')}${T.rankUnit} 이상 해결사만 드물게 마주치며, ${D.hiddenBosses.find(h=>h.id==='blue').penalty.fullRank}${T.rankUnit} 미만이면 급수 부족 보정(명중·회피 ${sg(D.hiddenBosses.find(h=>h.id==='blue').penalty.atk)})을 받는다.</li>
       <li><b>${T.titleLabel}</b> ${CFG.colorRank}${T.rankUnit} ${T.licensed} 가운데 특출난 자만 받는다. ${CFG.colorRank}${T.rankUnit}에 오를 때 1d100 + 판정 보정 ≥ ${CFG.colorDc}이면 내 색과 가장 높은 능력치로 이름이 붙는다.${CFG.colorReward?` 모든 능력치가 ${CFG.colorMul}배가 되며 패시브를 하나 고른다.`:''}</li>
@@ -2589,6 +2591,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testShip(mode){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.flags.lake=1;c.lake={captain:true,hull:63,crew:[{role:'cook',n:'요리사'},{role:'navigator',n:'항해사'}],seen:7,killed:[],wave:mode==='wave'?{i:1,max:4}:null};c.money=2000;if(mode==='anchor')c.flags.lkL_anchor=1;
       if(mode==='wave'){UI.ev=E.waveEv(c,c.lake);UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='hunt'){c.lake.captain=true;c.lake.whaleTarget='lake_whale_anchor';UI.ev=D.lake.hunt;UI.fight=null;UI.omen=null;UI.screen='event'}
+      else if(mode==='inf'){G.infinite=true;c.infinite=true;c.infBoost=3;c.infShard=2;c.famLoss=1;c.limDmg=0.08;c.limStrike=0.01;c.legacyTier=5;c.legacyPts=12;c.year=G.year=300;UI.bag='stat';UI.screen='event';UI.ev=D.lake.indigo}
       else if(mode==='limit'){G.infinite=true;c.infinite=true;c.infIntro=1;c.limAt=1;c.lake.crew=[];UI.ev=E.infiniteEvent(G);UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='morph'){G.infinite=true;c.infinite=true;c.infIntro=1;c.limAt=9999;c.lake.morphAt=1;c.lake.crew[0].mo=3;UI.ev=E.infiniteEvent(G);UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='indigo'){c.lake.killed=['lake_whale_silence','lake_whale_lamp'];c.lake.phase='enter';UI.ev=D.lake.indigo;UI.fight=null;UI.omen=null;UI.screen='event'}

@@ -2335,7 +2335,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if((C.id==='claw'||C.id==='arbiter')&&!(ch.flags&&ch.flags.spouseAge)){(ch.flags=ch.flags||{}).spouseAge=1;if(ch.bond)ch.bond.risk=0;chips.push('발톱과 조율자 중 하나를 쓰러뜨렸다 · 배우자의 위험이 가라앉고, 이제 나이로 눈을 감는다')}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
     /* 불순물을 쓰러뜨릴 때마다 얻는 전용 강화: 조각이 몸에 남아 능력치와 주는 피해가 영구히 오르고, 상처가 한 번에 아문다 (모두에게 같은 회복 수단) */
-    if(ch.infinite&&(C.id===CFG.endless.final||C.echo)&&C.over!=='lose'){const SH=CFG.infinite.shard;if(C.echo){gainXp(ch,CFG.infinite.echoXp||3);chips.push(`불순물이 된 ${D.enemies[C.id].n} · 경험치 +${CFG.infinite.echoXp||3} (전리품은 없다)`)}ch.infShard=(ch.infShard||0)+1;addStats(ch.stats,{atk:SH.atk,maxHp:SH.maxHp});const mh=ch.stats.maxHp,h0=ch.hp;ch.hp=Math.min(mh,ch.hp+SH.maxHp+Math.round(mh*SH.heal));chips.push(`불순물의 조각 ${ch.infShard}개 · 공격 +${SH.atk} · 최대 HP +${SH.maxHp} · 주는 피해 +${(SH.dmg*100*ch.infShard).toFixed(1).replace(/\.0$/,'')}% (누적)`+(ch.hp>h0?` · HP +${ch.hp-h0}`:''))}
+    if(ch.infinite&&(C.id===CFG.endless.final||C.echo)&&C.over!=='lose'){const SH=CFG.infinite.shard;if(C.echo){gainXp(ch,CFG.infinite.echoXp||3);chips.push(`불순물이 된 ${D.enemies[C.id].n} · 경험치 +${CFG.infinite.echoXp||3} (전리품은 없다)`)}ch.infShard=(ch.infShard||0)+1;const ex_=(!C.echo&&D.enemies[C.id].bonus&&D.enemies[C.id].bonus.fx)||{},ga_=SH.atk+(ex_.atk||0),gh_=SH.maxHp+(ex_.maxHp||0);if(!C.echo)C.bonusMerged=true;addStats(ch.stats,{atk:ga_,maxHp:gh_});const mh=ch.stats.maxHp,h0=ch.hp;ch.hp=Math.min(mh,ch.hp+gh_+Math.round(mh*SH.heal));chips.push(`불순물의 조각 ${ch.infShard}개 · 공격 +${ga_} · 최대 HP +${gh_} · 주는 피해 +${(SH.dmg*100*ch.infShard).toFixed(1).replace(/\.0$/,'')}% (누적)`+(ch.hp>h0?` · HP +${ch.hp-h0}`:''))}
     if(C.P&&C.P.sm){const SM=CFG.shinmang,g=gainMind(ch,SM.winMind);if(g)chips.push(`신(心)을 거둔다 · 정신력 +${g} (${ch.mind}/${mindMax(ch)})`)}
     /* 공방 해결사: 전투를 두 번 이길 때마다 재료용 장비를 하나 얻는다 (무한 모드는 5해마다 한 번) */
     if(isWs(ch)&&ch.ws){let give=false;
@@ -2370,7 +2370,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}}}ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
     offerPick(ch,D.rewards,chips,null);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
-    {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.xp){gainXp(ch,BN.xp);chips.push(`${BN.n||'전리품'} · 경험치 +${BN.xp}`)}if(BN.fx){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
+    {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.xp){gainXp(ch,BN.xp);chips.push(`${BN.n||'전리품'} · 경험치 +${BN.xp}`)}if(BN.fx&&!C.bonusMerged){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
     let up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);
     /* 무한 모드: 경험치 표가 끝난 뒤에도 전투 승리 infLvEvery번마다 레벨이 1 오른다 (성장 선택 1회) */
     if(ch.infinite&&CFG.infinite.infLvEvery){ch.infWins=(ch.infWins||0)+1;if(ch.infWins>=CFG.infinite.infLvEvery){ch.infWins=0;ch.lvBonus=(ch.lvBonus||0)+1;ch.lv++;ch.lvPend++;up++}}
@@ -2462,6 +2462,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const hcHeal=X=>Math.max(0,Math.min(CFG.hyeolchan.heal,X.maxHp-X.hp));
   /* 균열에 나타날 수 있는 히든 보스: 조건과 상관없이 나타나지만, 이기는 것이 아니라 버티는 시험(trial)이나 noRift 표시가 있는 보스는 뺀다 */
   const riftBosses=()=>{const seen=new Set();return (D.hiddenBosses||[]).filter(h=>{const e=D.enemies[h.id];if(!e||h.noRift||(e.passive&&e.passive.id==='trial')||seen.has(h.id))return false;seen.add(h.id);return true})};
+  /* 무한 모드 성장 요약: 가방에 항상 보여 준다 (적용되는 수치를 눈으로 확인할 수 있게) */
+  function infGrowth(ch){
+    if(!ch.infinite)return [];const IL=CFG.infinite,pc=x=>Math.round(x*1000)/10+'%',rows=[];
+    const dm=(ch.infBoost||0)*IL.century.dmg,sh=(ch.infShard||0)*IL.shard.dmg,gr=(ch.famLoss||0)*IL.grief.dmg,lm=ch.limDmg||0,tot=dm+sh+gr+lm;
+    rows.push(['주는 피해',`+${pc(tot)}`,tot?[dm&&`백 해마다 ${pc(dm)}`,sh&&`불순물의 조각 ${pc(sh)}`,gr&&`가족의 슬픔 ${pc(gr)}`,lm&&`한계 돌파 ${pc(lm)}`].filter(Boolean).join(' · '):'백 해를 넘기거나 불순물을 쓰러뜨리면 오른다']);
+    if(ch.limStrike)rows.push(['일격 추가 피해',`최대 HP의 ${pc(ch.limStrike)}`,`적중마다 · 한계 돌파로 쌓임 · 현재 약 ${Math.round(ch.stats.maxHp*ch.limStrike)}`]);
+    if(ch.infBoost)rows.push(['받는 피해',`+${pc(ch.infBoost*IL.century.enemyDmg)}`,'백 해마다 적의 공격도 함께 강해진다']);
+    const cut=infEvaCut(ch);if(cut>0)rows.push(['무한 회피 감소',`−${cut}`,'해가 갈수록 회피가 깎인다 · 0에서 멈춘다']);
+    const SG=IL.surge;if(SG&&(ch.year||0)>=SG.year)rows.push(['기세',`${SG.round}라운드 이후`,`전투가 ${SG.round}라운드를 넘기면 라운드마다 주는 피해 ×${SG.per}`]);
+    if(IL.legacyNeed){const t=ch.legacyTier||0;rows.push(['연륜',`${t}/${IL.legacyMax}단계`,`최고 직위에 오른 뒤 전공이 연륜으로 쌓인다 · 단계마다 ${({atk:'공격',eva:'회피',spd:'속도'})[ch.dom]||'최대 HP(+4)'} +1 · 다음 단계까지 ${ch.legacyPts||0}/${IL.legacyNeed}`])}
+    return rows
+  }
   const infEvaCut=ch=>Math.min(Math.max(0,ch.stats.eva),Math.floor(infYears(ch)*CFG.infinite.evaDown));
   const infYears=ch=>ch.infinite?Math.max(0,(ch.year||0)-(CFG.years+CFG.endless.span*CFG.endless.grades.length)):0;
   function mkCombat(ch,id,quiet){
@@ -3261,5 +3273,5 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
     cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    isFounder,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    isFounder,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
