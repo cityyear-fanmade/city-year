@@ -1213,8 +1213,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.ego||ch.distForm||C.mindHandled)return;
     C.mindHandled=true;
     const L=(t,x)=>{if(C.quiet)return;C.log.push({t,s:x});C.cur.push({t,s:x})};
-    const th_=50+biasOf(ch),r=d(100),ok=r<=th_;L('sys',`${P.name} · 정신력 0 · 마음이 한계에 닿았다 · 1d100 ${r} (${th_} 이하면 E.G.O 개화, 아니면 뒤틀림)`);
-    if(!C.quiet)C.rollPend={k:'break',r,th:th_,ok,at:0};
+    const th_=50+biasOf(ch),r=d(100),sg_=r>th_&&(s.egoSight||0)>0&&d(100)<=s.egoSight,ok=r<=th_||sg_;L('sys',`${P.name} · 정신력 0 · 마음이 한계에 닿았다 · 1d100 ${r} (${th_} 이하면 E.G.O 개화, 아니면 뒤틀림)`);if(sg_)L('kw',`  장비의 형상이 보였다 · ${s.egoSight}% · E.G.O 개화`);
+    if(!C.quiet)C.rollPend={k:'break',r,th:th_,ok,sight:sg_,at:0};
     const b={atk:s.atk,eva:s.eva,spd:s.spd,maxHp:s.maxHp};
     ch.mindDead=false;
     if(ok){
@@ -2264,8 +2264,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ok||sight){ch.egoPick=true;chips.push('E.G.O 개화')}else{const x=d(M.failLoss);chips.push('개화 실패');loseMind(ch,x,t=>chips.push(t+` · 1d${M.failLoss}`))}
     }
     if(fx.distort){
-      const th_=50+biasOf(ch),r=d(100);chips.push(`뒤틀림 판정 1d100 · ${r} (${th_} 이하면 E.G.O 개화)`);ch.rollFx={k:'distort',r,th:th_,ok:r<=th_,seq:(ch.rollSeq=(ch.rollSeq||0)+1),at:1};
-      if(r<=th_){ch.egoPick=true;ch.mind=mindMax(ch);chips.push('뒤틀리기 직전, E.G.O 개화 · 정신력 회복')}else{ch.distPick=true;chips.push('육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
+      const th_=50+biasOf(ch),r=d(100),sg_=r>th_&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight;chips.push(`뒤틀림 판정 1d100 · ${r} (${th_} 이하면 E.G.O 개화)`);if(sg_)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);ch.rollFx={k:'distort',r,th:th_,ok:r<=th_||sg_,sight:sg_,seq:(ch.rollSeq=(ch.rollSeq||0)+1),at:1};
+      if(r<=th_||sg_){ch.egoPick=true;ch.mind=mindMax(ch);chips.push('뒤틀리기 직전, E.G.O 개화 · 정신력 회복')}else{ch.distPick=true;chips.push('육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
     }
     if(fx.distStable&&setStable(ch))chips.push('뒤틀림이 안정되었다 · 장비와 카드팩을 다시 쓸 수 있다 · 더 강해진 뒤틀린 카드팩을 얻었다');
     if(fx.distortAccept){ch.distPick=true;chips.push('목소리를 받아들였다 · 뒤틀림의 이름을 정한다')
