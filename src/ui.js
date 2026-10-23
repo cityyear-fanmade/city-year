@@ -24,7 +24,15 @@ export function startUI(E,app){
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
   /* 연인·히든 출생 기록: 연인은 만나본 적(1)·결혼까지 간 적(2), 히든 출생은 그 출생으로 시작한 적이 있는지를 남긴다 */
+  /* 기록실 도감: 히든 보스 전리품·출신 전용 장비와 전용 카드팩. 이름을 직접 정하는 것(성도·개화/뒤틀림 이름)은 넣지 않는다 */
+  const specCat=(()=>{let c=null;return()=>{if(c)return c;c={g:{},p:{}};const add=x=>{if(x&&x.id&&x.n&&x.id!=='star'&&!x.virt)c.g[x.id]=x.n};
+    for(const e of Object.values(D.enemies)){const d=e.drop;if(!d)continue;add(d.gear);(d.gears||[]).forEach(add);if(d.packName&&d.cards)c.p[d.packName]=d.cards.length;if(e.thumbDrop)add(e.thumbDrop.gear)}
+    for(const o of D.hiddenOrigins||[]){add(o.gear);(o.egoWeapons||[]).forEach(add)}
+    for(const r of Object.values(D.relics||{}))add(r.gear);return c}})();
   const syncKin=()=>{const c=G&&G.ch;if(!c)return;const r=loadRec();let ch=false;
+    {const cat=specCat();r.gears=r.gears||[];r.packs=r.packs||[];
+      for(const it of [...Object.values(c.gear||{}),...(c.stash||[])])if(it&&it.id&&cat.g[it.id]&&!r.gears.includes(it.id)){r.gears.push(it.id);ch=true}
+      for(const n of [c.packName,c.birthPack,...(c.packs||[]).map(p=>p&&p.n)])if(n&&cat.p[n]!=null&&!r.packs.includes(n)){r.packs.push(n);ch=true}}
     const b=c.bond;if(b&&b.route&&['met','married','lost','left'].includes(b.st)){const k=b.route+':'+(b.variant||0),lv=(b.st==='married'||b.st==='lost'||b.wed)?2:1;r.lovers=r.lovers||{};if((r.lovers[k]||0)<lv){r.lovers[k]=lv;ch=true}}
     if(c.o&&(D.hiddenOrigins||[]).some(x=>x.n===c.o.n)){r.births=r.births||[];if(!r.births.includes(c.o.n)){r.births.push(c.o.n);ch=true}}
     if(ch)store.set(REC,JSON.stringify(r))};
@@ -1094,6 +1102,9 @@ export function startUI(E,app){
       ${(()=>{const GR=[['날개','wing'],['협회','assoc'],['사무소','office'],['손가락','finger'],['조직','syn']],all=GR.flatMap(([,k])=>D.orgs[k]||[]),got=(r.affs||[]).filter(n=>all.includes(n));
         return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소속 ${got.length}/${all.length}</span>${GR.map(([n,k])=>`<div><span class="small dim">${n}</span><div class="chips">${(D.orgs[k]||[]).map(o=>`<span class="chip${(r.affs||[]).includes(o)?'':' dim'}">${(r.affs||[]).includes(o)?esc(o):'???'}</span>`).join('')}</div></div>`).join('')}<p class="small dim">한 번이라도 들어간 소속이 열린다.</p></div>`})()}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span><div class="stack" style="gap:6px">${ends.map(([k,n])=>{const op=r.endings.includes(k),pass=!!(r.hints&&r.hints[k])&&END_EXACT[k];return hintRow(op,esc(n),(op||pass)&&END_EXACT[k]?(pass&&!op?'[갈림길을 지나쳤다] ':'')+END_EXACT[k]:END_HINT[k])}).join('')}</div></div>
+      ${(()=>{const cat=specCat(),ids=Object.keys(cat.g),gs=r.gears||[],pk=Object.keys(cat.p),pg=r.packs||[];return `<div class="panel stack" style="gap:8px"><span class="eyebrow">특수 장비 ${ids.filter(k=>gs.includes(k)).length}/${ids.length}</span><div class="chips">${ids.filter(k=>gs.includes(k)).map(k=>`<span class="chip">${esc(cat.g[k])}</span>`).join('')}<span class="chip dim">???${ids.some(k=>!gs.includes(k))?' × '+ids.filter(k=>!gs.includes(k)).length:''}</span></div>
+        <span class="eyebrow">전용 카드팩 ${pk.filter(k=>pg.includes(k)).length}/${pk.length}</span><div class="chips">${pk.map(k=>`<span class="chip${pg.includes(k)?'':' dim'}">${pg.includes(k)?esc(k)+' · '+cat.p[k]+'장':'???'}</span>`).join('')}</div>
+        <p class="small dim">히든 보스 전리품, 출신 전용 장비, 전용 카드팩이 쌓인다. 이름을 직접 정하는 것(성도 · 개화 · 뒤틀림)은 넣지 않았다.</p></div>`})()}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">타고난 것 ${r.innate.length}/${Object.keys(D.innate).length}</span><div class="chips">${Object.entries(D.innate).map(([k,v])=>`<span class="chip${r.innate.includes(k)?'':' dim'}">${r.innate.includes(k)?esc(v.n):'???'}</span>`).join('')}</div>${Object.entries(D.innate).filter(([k,v])=>v.unlock&&!(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small dim">잠김 · ${r.innate.includes(k)?esc(v.n):'???'} — 해금: ${esc(v.unlock)}</span>`).join('')}${Object.entries(D.innate).filter(([k,v])=>v.unlock&&(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small" style="color:var(--gold)">해금됨 · ${r.innate.includes(k)?esc(v.n):'???'} — 이제 태어날 때 1%로 나올 수 있다${r.innate.includes(k)?'':' (만나면 이름이 열린다)'}</span>`).join('')}</div>
 ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px"><span class="eyebrow">판 통계</span><p class="small dim">v8.2.0부터 집계한다. 이야기가 끝나면 여기에 쌓인다.</p></div>`;
         const top=(m,n)=>Object.entries(m||{}).sort((a,b)=>b[1]-a[1]).slice(0,n),line=(l,arr)=>arr.length?`<div class="row between" style="align-items:flex-start;gap:10px"><span>${l}</span><span class="small" style="text-align:right">${arr.map(([k,v])=>`${esc(k)} ×${v}`).join(' · ')}</span></div>`:'',en=Object.fromEntries(ends);
