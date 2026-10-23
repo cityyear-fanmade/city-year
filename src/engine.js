@@ -2894,7 +2894,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const ps=[['공격',atkP],['카드',c.hit],['선공',fsb],['속도 우위',spdP],['무기',wpP],['가속',acA],['그 자세',A.passHit||0],['표식·노림',exH+(A.awl&&B.bleed>0?CFG.syn['밤의 송곳'].bleedHit:0)],['동료',(!A.isP&&C.ally?CFG.bond.allyHit:0)],['작품',(A.ring?CFG.ring.hit*A.work:0)],['장갑 무기',(sub?sub.atk:0)],['명중 보정',(gr?gr.hit:0)],['침잠',-sk],['지령',-pr],['예법',-mn],['복종',-ob],['흐트러짐',-sgP]];
         const known=ps.reduce((t,x)=>t+x[1],0),rest=am-known;for(const [n_,v_] of ps)if(v_)amL.push([n_,v_]);if(rest)amL.push(['그 밖',rest]);
         const evP=B.eva+B.evaB-(B.evaPen||0),brP=(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0),shP=3*(B.shock||0),chP=2*((B.chain||0)+(B.web||0));
-        const pd=[['회피',evP],['호흡',brP],['감전',-shP],['사슬·거미줄',-chP]];
+        const pd=[['회피',evP],['호흡',brP],['가속',acB],['겁쟁이',trE],['색 버프',(B.cb&&B.cb.k==='eva'&&B.hp>=B.maxHp*CFG.colorBuff.hpMin)?B.cb.v:0],['첫 반응',(B.augPas==='react'&&C.round<=2)?10:0],['가면',B.maskOn?B.passive.eva:0],['오딘',B.odin?odinEva(C.round,B):0],['감전',-shP],['사슬·거미줄',-chP]];
         const kd=pd.reduce((t,x)=>t+x[1],0),rd_=dm-kd;for(const [n_,v_] of pd)if(v_)dmL.push([n_,v_]);if(rd_)dmL.push(['그 밖',rd_])}
       const base={k:'atk',att:A.uid,def:B.uid,card:c,ra,ra2,rd,rdMax,am,dm,sa,sd,b:c.b,guard:B.guarding,amL,dmL};
       /* 방어 자세: 막아도 피해 guardHit는 받는다 (키워드는 붙지 않음) */
