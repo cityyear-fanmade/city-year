@@ -3983,6 +3983,7 @@
     },
     "e": "HP+8 · 인연이 죽음에 이를 위험이 절반 · 칭호 피의 왈츠",
     "flag": "bondGuard",
+    "needBond": true,
     "extra": [
      {
       "n": "핏빛 밤의 증표",
