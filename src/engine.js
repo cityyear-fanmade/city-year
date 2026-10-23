@@ -2260,6 +2260,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const rs=[];for(let i=0;i<M.voiceRolls;i++)rs.push(d(M.voiceDie));
       const ok=rs.every(r=>r>=dc_);chips.push(`1d${M.voiceDie} × ${M.voiceRolls} · ${rs.join(' / ')} (${dc_} 이상 ${rs.filter(r=>r>=dc_).length}/${M.voiceRolls})`);
       const sight=!ok&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight;if(sight)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);
+      ch.rollFx={k:'voice',rs,dc:dc_,die:M.voiceDie,ok:ok||sight,sight,seq:(ch.rollSeq=(ch.rollSeq||0)+1),at:ch.mind};
       if(ok||sight){ch.egoPick=true;chips.push('E.G.O 개화')}else{const x=d(M.failLoss);chips.push('개화 실패');loseMind(ch,x,t=>chips.push(t+` · 1d${M.failLoss}`))}
     }
     if(fx.distort){
