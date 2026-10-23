@@ -2255,8 +2255,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else{chips.push('공방 주인이 고개를 젓는다 · 다른 길을 고른다');ch.affRetry=true}
     }
     if(fx.voice){
-      if(fx.voiceBias)ch.voiceBias=fx.voiceBias;
-      const dc_=fx.voiceBias==='good'?M.voiceGoodDc:fx.voiceBias==='bad'?M.voiceBadDc:M.voiceDc;
+      const dc_=ch.voiceBias==='good'?M.voiceGoodDc:ch.voiceBias==='bad'?M.voiceBadDc:M.voiceDc;
       const rs=[];for(let i=0;i<M.voiceRolls;i++)rs.push(d(M.voiceDie));
       const ok=rs.every(r=>r>=dc_);chips.push(`1d${M.voiceDie} × ${M.voiceRolls} · ${rs.join(' / ')} (${dc_} 이상 ${rs.filter(r=>r>=dc_).length}/${M.voiceRolls})`);
       const sight=!ok&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight;if(sight)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);

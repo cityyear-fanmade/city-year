@@ -1386,12 +1386,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${u.map(k=>{const J=D.hiddenJobs[k];return `<button class="btn${cur===k?' primary':''}" data-a="job" data-i="${k}"><b>${esc(J.n)}</b><span class="small">${esc(J.t)}</span><span class="mono small" style="color:var(--gold)">${esc(J.e)}</span></button>`}).join('')}</div>`;
   }
   /* 정신력 10 이하 "들리는 목소리": 기존 화면 위에 목소리가 하나씩 떠올랐다 4초 뒤 사라지고, 마지막에 선택지(듣기 좋다/싫다)가 열린다 */
-  function voiceOverlay(ev,btns){
+  function voiceOverlay(ev){
     const seen=UI.voiceSeen===ev;
     if(UI.voicePlay!==ev){UI.voicePlay=ev;setTimeout(()=>{if(UI.ev===ev){UI.voiceSeen=ev}},9500)}
     const mob=innerWidth<700,W=innerWidth,H=innerHeight,cx=W/2,cy=H*0.46,rx=mob?W*0.30:Math.min(W*0.34,380),ry=mob?H*0.33:H*0.34,bw=mob?150:250,fs=mob?12:14.5,slots=[0,3,6,2,5,1,4];
     const vs=seen?'':ev.voices.map((t,i)=>{const a=0.35+slots[i%7]*2*Math.PI/7+Math.sin(i*7.1)*.12;return `<div class="vv" style="left:${(cx+Math.cos(a)*rx).toFixed(0)}px;top:${(cy+Math.sin(a)*ry).toFixed(0)}px;--w:${bw}px;--fs:${fs}px;animation-delay:${(i*1.0+0.8).toFixed(1)}s"><i>빛 속의 목소리</i>${esc(t)}</div>`}).join('');
-    return `<div id="vo" class="${seen?'seen':''}" data-a="voiceskip"><div class="vt">정신력 ${G.ch.mind} · 마음이 한계에 닿았다</div>${vs}<div class="vc">${btns}</div></div>`;
+    return `<div id="vo" class="${seen?'seen':''}" data-a="voiceskip"><div class="vt">정신력 ${G.ch.mind} · 마음이 한계에 닿았다</div>${vs}<div class="vc"><button class="btn vbtn" data-a="voicepick" data-i="good"><b>듣기 좋다</b><span class="mono small dim">목소리에 마음이 기운다</span></button><button class="btn vbtn" data-a="voicepick" data-i="bad"><b>듣기 싫다</b><span class="mono small dim">목소리를 밀어낸다</span></button></div></div>`;
   }
   function vEvent(){
     if(UI.omen)return vOmen();
@@ -1412,7 +1412,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       return {i,html:`<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`};
     }).concat(lockBtns).sort((a,b)=>a.i-b.i).map(x=>x.html).join('');
     const page=`${vHud()}<div class="stack${ev.shake?' wave-shake':''}" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead" style="white-space:pre-line">${ev.x}</p></div><div class="stack">${btns}</div>`;
-    return ev.voices&&G.ch.mind<=CFG.mind.voiceAt?page+voiceOverlay(ev,btns.replace(/class="btn"/g,'class="btn vbtn"')):page;
+    return ev.voices&&G.ch.mind<=CFG.mind.voiceAt&&UI.voicePicked!==ev?page+voiceOverlay(ev):page;
   }
   function nextLabel(){
     if(G.ch.lvPend>0)return '성장 굴림';
@@ -2361,6 +2361,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
     qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:BGM.extOn()?'ext':'calm',ext:'calm'}[BGM.style()]||'calm');bgmSave();render()},
     qvol(){UI.volOpen=!UI.volOpen;render()},
+    voicepick(k){if(!UI.ev||!UI.ev.voices||(k!=='good'&&k!=='bad'))return;G.ch.voiceBias=k;UI.voicePicked=UI.ev;resave();render()},
     voiceskip(){if(UI.ev&&UI.ev.voices&&UI.voiceSeen!==UI.ev){UI.voiceSeen=UI.ev;render()}},
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
     bgmext(i){BGM.setExt(+i);BGM.setStyle('ext');bgmSave();render()},
@@ -2595,7 +2596,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
     testTitles(a){if(G)G.ch.titles=a},
-    testVoice(mind){if(!G)return null;G.ch.mind=mind||6;UI.ev=D.mindEvents.voice;UI.voicePlay=null;UI.voiceSeen=null;UI.screen='event';render();return true},
+    testVoice(mind){if(!G)return null;G.ch.mind=mind||6;UI.ev=D.mindEvents.voice;UI.voicePlay=null;UI.voiceSeen=null;UI.voicePicked=null;G.ch.voiceBias=null;UI.screen='event';render();return true},
     testEgo(L){if(!G||!E.egoItem)return null;const c=G.ch,w=c.gear.weapon;if(!w)return null;const it=E.egoItem(w.id,L);E.equip(c,it);E.egoDeck(c,w.id,L);c.egoUses=[0,5,15,30][L];render();return c.deck.length},
     async testCard(){if(!G)return null;const cv=await endCard();return cv.toDataURL('image/png')},
     testPatch(o){if(!G)return;Object.assign(G.ch,o);render()},
