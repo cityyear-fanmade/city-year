@@ -2090,8 +2090,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(pool.length){const h=one(pool),nm=D.enemies[h.id].n;
           return {type:'omen',boss:h.id,omen:riftOmenFor(G.ch,nm),rift:true,escape:true,spec:f}}
         /* 만날 수 있는 히든을 모두 만났다면, 이미 이긴 상대가 '불순물'이 되어 다시 나타난다 (전리품 대신 불순물의 조각과 경험치) */
-        {const all=riftBosses();if(all.length){const h=one(all),nm=D.enemies[h.id].n;
-          return {type:'omen',boss:h.id,omen:riftEchoOmenFor(G.ch,nm),rift:true,echo:true,escape:true,spec:f}}}
+        {const all=riftBosses().map(h=>h.id);if(lakeOn(G.ch))for(const k of (G.ch.lake&&G.ch.lake.killed)||[])if(/^lake_whale_/.test(k)&&!all.includes(k))all.push(k);if(all.length){const bid=one(all),nm=D.enemies[bid].n;
+          return {type:'omen',boss:bid,omen:riftEchoOmenFor(G.ch,nm),rift:true,echo:true,escape:true,spec:f}}}
       }
       for(const h of D.hiddenBosses||[]){
         if(h.infOnly&&!G.infinite)continue;
@@ -2520,7 +2520,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const lastImp=ch.infinite&&id===X_.final&&(ch.year||0)+CFG.infinite.every>CFG.overflowAge-CFG.startAge+1;   // 1000살 오버플로우 전의 마지막 불순물 전투
     const ehh0=lastImp?CFG.infinite.hpMax:ehhCap,ehh1=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0,ehh=id==='redmist'&&(ch.redPost||0)>0?Math.round(ehh1*Math.pow(CFG.redBook.hpMul,ch.redPost)):ehh1;
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
-    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:ehh,maxHp:ehh,atk:Math.max(1,e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,kali:e.kali||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
+    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),maxHp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),atk:Math.max(1,((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.atk:0)+e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,kali:e.kali||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 무한 모드에서도 적의 회피는 enemyMax에서 멈춘다. 공격(명중)도 enemyMax에서 멈추지만, 균열을 닫은(균열 엔딩을 본) 뒤에는 균열 피해가 없어지므로 atkMax까지 올라 플레이어 회피가 아무리 높아도 결국 맞게 한다 */
     E.atk+=Math.floor(infYears(ch)/CFG.infinite.atkEvery);E.atk=Math.min(E.atk,CFG.infinite.atkCap||(ch.outSeen&&ch.outSeen.seal?(CFG.infinite.atkMax||CFG.infinite.enemyMax):CFG.infinite.enemyMax));E.eva=Math.max(0,Math.min(E.eva,CFG.infinite.enemyMax)-Math.floor(infYears(ch)*CFG.infinite.evaDown));
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
