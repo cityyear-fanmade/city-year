@@ -442,10 +442,10 @@ export function startUI(E,app){
     +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
   const innateOne=(c,k)=>k==='mark'&&c.markOn?D.innate.mark.awake:D.innate[k].n;
   const innateName=c=>c.innate?[c.innate,c.innate2].filter(Boolean).map(k=>innateOne(c,k)).join(' · '):null;
-  /* E.G.O 발현자: 무기 등급과 다음 등급까지 남은 발현 횟수 */
+  /* E.G.O 적성자: 무기 등급과 다음 등급까지 남은 발현 횟수 */
   const egoGrowTag=ch=>{if(ch.egoUses==null)return '';const G=CFG.egoGrow,L=E.egoLvFor(ch.egoUses),nx=G.need[L+1];
     return ` · <span style="color:var(--gold)">${G.tier[L]}</span>${nx!=null?` · 발현 ${ch.egoUses}/${nx}`:''}`};
-  /* E.G.O 발현자: 다음 등급까지의 진행 막대 (정신력 아래 · 전투 화면에도) */
+  /* E.G.O 적성자: 다음 등급까지의 진행 막대 (정신력 아래 · 전투 화면에도) */
   const egoBar=ch=>{if(ch.egoUses==null)return '';const G=CFG.egoGrow,u=ch.egoUses,L=E.egoLvFor(u),nx=G.need[L+1],pct=nx==null?100:Math.round((u-G.need[L])/(nx-G.need[L])*100);
     return `<div class="egobar"><div class="row between small"><b style="color:var(--gold)">E.G.O 성장 · ${G.tier[L]}${nx!=null?` → ${G.tier[L+1]}`:' (최대)'}</b><span class="mono">${nx!=null?`발현 ${u}/${nx}`:`발현 ${u}회`}</span></div><div class="bar"><i style="width:${pct}%"></i></div>${nx!=null?`<div class="small dim">전용 카드 '발현'을 ${nx-u}번 더 쓰면 ${G.tier[L+1]}로 자란다</div>`:''}</div>`};
   /* 선장의 배 내구도: 가방을 열지 않아도 정신력 아래에 항상 보인다 */
@@ -619,7 +619,7 @@ export function startUI(E,app){
     /* 세계관상 날개가 정해진 출신은 고정한다 (R사 복제 부화장, H사 홍원) */
     if(n==='부화장에서 태어난 자')return {n:'R사 둥지 출신',t:'R사 날개의 부화장에서 났다'};
     if(n==='홍원의 자제')return {n:'H사 둥지 출신',t:'H사 홍원의 가문에서 났다'};
-    if(n==='E.G.O 발현자')return {n:'L사 둥지 출신',t:'L사 날개의 둥지에서 났다'};
+    if(n==='E.G.O 적성자')return {n:'L사 둥지 출신',t:'L사 날개의 둥지에서 났다'};
     if(n==='대호수로 나간 자')return {n:'U사 둥지 출신',t:'U사 날개의 둥지에서 났다'};
     if(n==='혈귀'||n==='별에 선택받은 자')return {n:'출신 불명',t:'어디서 났는지 아무도 모른다'};
     if(n==='도서관의 손님'||n==='유물 적성자'){const k=((r&&r.f)||1)%3;   // 둥지·뒷골목·외곽 중 하나 (굴린 값으로 정함)
