@@ -103,7 +103,7 @@ th{color:var(--dim);font-weight:400;border-top:0}
 .die.lose{opacity:.6}
 .dsum{font:400 12px/1.4 var(--mono);color:var(--dim);min-height:17px;text-align:center;max-width:150px}
 .vs{align-self:center;font:500 12px/1 var(--mono);color:var(--dim);padding-top:14px}
-.d6s{display:flex;gap:6px;min-height:64px;align-items:center}
+.d6s{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-height:64px;align-items:center;max-width:100%}
 .d6{width:42px;height:42px;border-radius:9px;border:2px solid var(--gold);display:grid;place-items:center;background:var(--panel2)}
 .d6 b{font:500 20px/1 var(--mono)}
 .float{position:absolute;right:14px;top:8px;font:700 22px/1 var(--mono);pointer-events:none;animation:flt .95s ease-out forwards;text-shadow:0 1px 6px #000}
@@ -600,3 +600,6 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 
 @keyframes waveShake{0%,100%{transform:translate(0,0) rotate(0)}15%{transform:translate(-4px,2px) rotate(-.6deg)}35%{transform:translate(5px,-2px) rotate(.7deg)}55%{transform:translate(-3px,3px) rotate(-.5deg)}75%{transform:translate(4px,-1px) rotate(.4deg)}}
 .wave-shake{animation:waveShake .7s ease-in-out 3}
+
+.dsum .rl{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;line-height:1.5}.dsum .rl.pl b{color:#7fc88a}.dsum .rl.mi b{color:#e07a6a}.dsum .rn{font-size:11px;color:var(--dim)}
+.dsum{min-width:0;max-width:170px}
