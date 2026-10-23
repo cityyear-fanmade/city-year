@@ -1449,7 +1449,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const btns=E.options(G,ev).map(({c,i})=>{
       let hint=c.h||'판정 없음 · 결과 확정';
       if(c.ok&&c.ok.fx&&c.ok.fx.relicRoll)hint=`1d100 · ${E.relicChance(ch)} 이하가 나오면 유물을 고른다${ch.relicBase?' (출신 보정 '+ch.relicBase+'%)':''}${(ch.stats.relicApt||0)>0?' (유물 적성 +'+ch.stats.relicApt+')':''}`;
-      if(c.ok&&c.ok.fx&&c.ok.fx.voice){const M_=CFG.mind,dc=ch.voiceBias==='good'?M_.voiceGoodDc:ch.voiceBias==='bad'?M_.voiceBadDc:M_.voiceDc;hint=`1d${M_.voiceDie} × ${M_.voiceRolls} · 모두 ${dc} 이상이면 E.G.O 개화 · 실패하면 정신력 감소`}
+      if(c.ok&&c.ok.fx&&c.ok.fx.voice){const M_=CFG.mind,dc=ch.voiceBias==='good'?M_.voiceGoodDc:ch.voiceBias==='bad'?M_.voiceBadDc:M_.voiceDc;hint=`1d${M_.voiceDie} × ${M_.voiceRolls} · 모두 ${dc} 이상이면 E.G.O 개화${ch.voiceBias==='bad'&&(ch.stats.egoSight||0)>=M_.sureSight?' (장비의 형상이 또렷해 실패해도 개화한다)':''} · 실패하면 정신력 감소`}
       if(c.check){const pm=E.pathMod(ch,c.check);hint=`${c.check.s?STAT[c.check.s]+' 판정':'운 판정'} · 1d${c.check.die||(c.check.pure?100:E.checkDie(ch))} ${sg(E.checkMod(ch,c.check))} ≥ ${E.checkDc(ch,c.check)}${pm?` (출신 ${T.paths[c.check.path]} 보정 +${pm})`:''}${c.h?' · '+c.h:''}`}
       return {i,html:`<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`};
     }).concat(lockBtns).sort((a,b)=>a.i-b.i).map(x=>x.html).join('');
