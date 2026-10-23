@@ -98,7 +98,7 @@ export const CFG = {
     deck: ['d_jackpot', 'd_jackpot', 'd_jackpot', 'd_rend', 'd_rend', 'd_rend', 'd_maw', 'd_maw', 'd_thrash', 'd_thrash', 'd_coin', 'd_curl'],
     deck2: ['d2_strike', 'd2_strike', 'd2_strike', 'd2_twist', 'd2_twist', 'd2_surge', 'd2_surge', 'd2_flurry', 'd2_flurry', 'd2_gamble', 'd2_final', 'd2_guard']},
   /* 대호수로 나간 자: 침묵·시선의 호수에서 주인공이 아니라 다른 선원이 금기를 어기는 사건이 나올 확률(%) */
-  lake: {morph:{every:15,mindA:5,atkB:1,maxHpFinal:10},hullMax:100,hullWear:1,repairCost:700,trait:{hp:40,atk:20,eva:20},wave:{basePct:10,perBreak:15,maxPct:70,stage:3,maxStage:5,wallCost:200,wallDc:35,helmDc:55,helmNav:10,failMind:6,failMindStep:2,failHp:3,failCrew:50,driftMind:20,rewardPts:2,rewardMind:10,hullLoss:80},handShield: 6, cookHeal: 4, navEva: 4, navFlee: 10, harpStack: 1, loot: {silence: '무음의 고래 심장 · 피격 시 상대 왜곡 +1', lamp: '거짓 등대 고래 심장 · 매 라운드 시작 빛 +1', anchor: '닻을 삼킨 고래 심장 · 피격 시 상대 사슬 +1 · 무게 절반', tide: '적조의 고래 심장 · 피격 시 상대 출혈 +2', genesis: '창세치 고래 심장 · 3타마다 1타 추가', pale: '창백한 고래 심장 · 피격 시 상대 침잠 +1 · 창백화 절반'}, align: [9, 7, 5, 3], mindYear: 2, mindSail: 3, mindKeep: 26, harborMind: 10, slip: 30, encChance: 55 /* 선장이 된 뒤 새 호수에 들어서기 전 인어·해적 조우가 나올 확률 */, pirateAfter: 6 /* 선장이 된 지 이만큼 지나면 쌍갈고리 해적단과 얽힌다 */, adultBefore: 12 /* 1막이 끝나기 이만큼 전부터 같은 호수의 대재앙(성체)이 나온다 */, ricardoAfter: 4 /* 해적단 반파 뒤 이만큼 지나면 중지의 큰형님 리카르도가 찾아온다 */, crewMax: 4 /* 선장이 되면 모집할 수 있는 선원 수 */, crewW: 1 /* 선원 합산 굴림의 가중 */, crewEvery: 3 /* 모집 사건 간격(해) */, signEvery: 8 /* 변모의 징후 사건 간격(해) */, meetMul: 2 /* 일상 사건이 없는 대신 인연을 만날 확률을 배로(해마다) */, infFight: 35 /* 무한 모드에서 해마다 전투가 나올 확률(%) */, genesisAt: 2 /* 성체 대재앙을 이만큼 쓰러뜨리면 창세치 고래가 나온다 */},
+  lake: {infMob:{hp:2.2,atk:2},morph:{every:15,mindA:5,atkB:1,maxHpFinal:10},hullMax:100,hullWear:1,repairCost:700,trait:{hp:40,atk:20,eva:20},wave:{basePct:10,perBreak:15,maxPct:70,stage:3,maxStage:5,wallCost:200,wallDc:35,helmDc:55,helmNav:10,failMind:6,failMindStep:2,failHp:3,failCrew:50,driftMind:20,rewardPts:2,rewardMind:10,hullLoss:80},handShield: 6, cookHeal: 4, navEva: 4, navFlee: 10, harpStack: 1, loot: {silence: '무음의 고래 심장 · 피격 시 상대 왜곡 +1', lamp: '거짓 등대 고래 심장 · 매 라운드 시작 빛 +1', anchor: '닻을 삼킨 고래 심장 · 피격 시 상대 사슬 +1 · 무게 절반', tide: '적조의 고래 심장 · 피격 시 상대 출혈 +2', genesis: '창세치 고래 심장 · 3타마다 1타 추가', pale: '창백한 고래 심장 · 피격 시 상대 침잠 +1 · 창백화 절반'}, align: [9, 7, 5, 3], mindYear: 2, mindSail: 3, mindKeep: 26, harborMind: 10, slip: 30, encChance: 55 /* 선장이 된 뒤 새 호수에 들어서기 전 인어·해적 조우가 나올 확률 */, pirateAfter: 6 /* 선장이 된 지 이만큼 지나면 쌍갈고리 해적단과 얽힌다 */, adultBefore: 12 /* 1막이 끝나기 이만큼 전부터 같은 호수의 대재앙(성체)이 나온다 */, ricardoAfter: 4 /* 해적단 반파 뒤 이만큼 지나면 중지의 큰형님 리카르도가 찾아온다 */, crewMax: 4 /* 선장이 되면 모집할 수 있는 선원 수 */, crewW: 1 /* 선원 합산 굴림의 가중 */, crewEvery: 3 /* 모집 사건 간격(해) */, signEvery: 8 /* 변모의 징후 사건 간격(해) */, meetMul: 2 /* 일상 사건이 없는 대신 인연을 만날 확률을 배로(해마다) */, infFight: 35 /* 무한 모드에서 해마다 전투가 나올 확률(%) */, genesisAt: 2 /* 성체 대재앙을 이만큼 쓰러뜨리면 창세치 고래가 나온다 */},
   shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4, restMind: 5,
     /* v6.1: 카드 교환(덱 카드 1장을 일반 보상 카드 무작위 1장으로, 방문마다 swapMax장까지) · 장비 정비(장착 장비마다 최대 tune.max번 시도, chance% 확률로 공격 또는 회피 +1, 시도 비용 base+step×지금까지 시도) */
     swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150, zenaPlus: 10, noPlus: ['w_baralclaw', 'a_baralcoat', 'w_zenafairy', 'a_zenaarmor']}},
@@ -179,8 +179,8 @@ export const CFG = {
   /* 무한 모드 추가 엔딩(죽는 것 말고): 균열로 흘러드는 히든 보스를 모두 쓰러뜨리면 균열이 닫힌다(sealBeasts는 더 쓰지 않음) · 히든 보스 starHidden마리를 이기면 별 · 가족이 있고 무한 모드 settleYears년이 지나면 정착. 각각 한 번, 끝낸 뒤에도 이어서 살 수 있다 */
   outEnds: {sealBeasts: 3, starHidden: 16, settleYears: 12},
   syn: {at: [8, 10],
-    '흑운회': {key: 'kuro', start: [1, 2, 3, 4], max: 5, reset: 2, die: 2, bleedPlus: 1, half: 0.5},
-    '검계': {key: 'blade', decay: [2, 1, 1, 0], per: 4, crit: 1.25, boostPer: 3, boostCrit: 1.5},
+    '흑운회': {key: 'kuro', start: [1, 2, 3, 4], max: 5, reset: 2, die: 2, bleedPlus: 1, half: 0.5, counter: [0.3, 0.5, 0.7, 0.9]},
+    '검계': {key: 'blade', decay: [2, 1, 1, 0], per: 4, crit: 1.25, boostPer: 3, boostCrit: 1.5, burst: {at: 10, max: 12, per: [0.6, 0.8, 1, 1.2], every: 3}},
     '밤의 송곳': {key: 'awl', init: [0, 5, 10, 15], bleedHit: 10}},
   /* 검지 지령 수행: 스택이 가득 찬 뒤 지령 카드를 every번 더 수행할 때마다 카드 수치(피해 · 회피 · 보호막) +1, 최대 max */
   prescPlus: {every: 2, max: 5},
@@ -192,7 +192,7 @@ export const CFG = {
      소속별 규칙(orgs): cap 상한, round 라운드 시작마다 +n, hit 적중마다 +n, loss 피격 시 −n */
   /* 침잠(상대에게 쌓는 스택): per스택마다 한 단계, 단계마다 침잠 걸린 쪽의 명중 −hit · 주는 피해 −dmg. 라운드마다 1 감소 */
   sink: {per: 3, hit: 6, dmg: 1},
-  charge: {cap: 10, loss: 1, orgs: {'W사 날개': {cap: 25, round: 2, loss: 0}, 'R사 날개/토끼팀': {cap: 8, hit: 1, loss: 2, spd: 5, boost: {low: [0.5, 3], charge: [5, 3]}},
+  charge: {cap: 10, loss: 1, orgs: {'W사 날개': {cap: 25, round: 2, loss: 0, start: 4, express: {at: 15, mul: 1.3}}, 'R사 날개/토끼팀': {cap: 8, hit: 1, loss: 2, spd: 5, boost: {low: [0.5, 3], charge: [5, 3]}},
     /* 순록팀: 충전 20까지. 최대 체력 step만큼 잃을 때마다(최대 max번) 공격 피해 +dmg · 충전 at 이상이면 소모 카드의 충전 1당 고정 피해 +fix */
     'R사 날개/순록팀': {cap: 20, loss: 1, power: {step: 0.3, max: 2, dmg: 3}, focus: {at: 10, fix: 2}},
     /* 코뿔소팀: 충전 20까지. 최대 체력 step만큼 잃을 때마다(최대 max번) 방어 회피 +def · 충전 at 이상이면 받는 피해 −dr% */
