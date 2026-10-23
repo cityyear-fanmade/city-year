@@ -1746,7 +1746,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     else P.push('어디에도 속하지 않았다. 혼자 움직이는 편이 낫다는 말은 처음 한 말 그대로 끝까지 남았다.');
     if(c.licensed&&!c.job)P.push(`해결사로서는 ${c.rank}${T.rankUnit}${c.title?` · ${E_(c.title)}`:''}에 닿았다. 의뢰서에 적힌 이름 하나하나가 ${yr}년 동안 쌓은 기록이다.`);
     else if(c.title)P.push(`${jp(E_(c.title),'이라는','라는')} 이름이 붙었다. 누가 먼저 불렀는지는 아무도 기억하지 못한다.`);
-    if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${c.beaten.map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
+    if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${[...new Set(c.beaten)].map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
     /* 은원 장부: 도운 일·등 돌린 일·지나친 일이 쌓였으면 한 줄씩 남긴다 */
     {const L=c.ledger||{};
       if((L.help||0)>=4)P.push('은혜는 갚는 쪽이 먼저 기억한다고 했다. 도운 이들의 얼굴이 도시 곳곳에 남아, 낯선 길에서도 고개를 끄덕여 주었다.');
@@ -1813,7 +1813,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${kinLine(c,w,dt)}
       ${w?`<div class="panel stack" style="gap:8px"><span class="eyebrow">행적</span>${epilogue(c,w,tr).map(t=>`<p class="small" style="line-height:1.65">${t}</p>`).join('')}</div>`:''}
       ${vRecord(c,w,gi)}
-      ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${c.beaten.map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
+      ${c.beaten.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${T.hiddenWin}</span><b>${[...new Set(c.beaten)].map(id=>D.enemies[id].n).join(' · ')}</b>${UI.endText?`<p class="small">${UI.endText}</p>`:''}${c.unlocks.length?`<p class="small" style="color:var(--gold)">해금 · ${c.unlocks.map(k=>T.jobs[k]).join(', ')}</p>`:''}</div>`:''}</div>
       <div class="panel stack"><div class="stat"><div><b>${c.lv}</b><span>레벨</span></div><div><b>${sg(c.stats.atk)}</b><span>공격</span></div><div><b>${sg(c.stats.eva-E.infEvaCut(c))}</b><span>회피${c.infinite&&E.infEvaCut(c)>0?` (무한 −${E.infEvaCut(c)}${c.stats.eva-E.infEvaCut(c)<=0?' · 0에서 멈춤':''})`:''}</span></div><div><b>${sg(c.stats.spd)}</b><span>속도</span></div></div>
       ${endDeck(c)}
       <div class="mono small dim">${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(affName(c)):c.licensed?' · '+T.licensed:''}</div></div>
@@ -1928,10 +1928,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const bg=getComputedStyle(document.body).backgroundColor||'#0d0d0f',r=el.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);
     /* 한 변 최대 8000px · 전체 1400만 화소 안에서 가장 큰 배율부터 */
     const fit=Math.min(2,8000/h,Math.sqrt(14e6/(w*h))),tries=[fit,Math.min(fit,1),Math.min(fit,0.7),Math.min(fit,0.5)].filter((s,k,a)=>s>=0.3&&a.indexOf(s)===k);
+    const tmp=document.createElement('style');tmp.textContent='#'+id+' summary::after,#'+id+' summary::before{content:none!important;display:none!important}#'+id+' summary{list-style:none!important}';document.head.appendChild(tmp);
+    try{
     for(const sc of tries){
-      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg}}});
+      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg;e.querySelectorAll('summary,summary *').forEach(x=>{x.style.whiteSpace='nowrap'})}}});
         if(cv&&cv.width>0&&cv.height>0)return cv}catch(e){}
     }
+    }finally{tmp.remove()}
     UI.shotWhy='draw';return null;
   }
   /* 엔딩 카드 이미지 (1080×1350): 캔버스에 직접 그린다. 외부 라이브러리 없음 */

@@ -2389,7 +2389,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!foe.hidden&&!foe.abno&&ch.kids<KD.max){ch.kids++;chips.push(`피의 각인된 갈망 · ${foe.n}이(가) 혈귀가 되어 자식이 된다 (${ch.kids}/${KD.max})`)}
     }
     if(foe.hidden&&!C.echo){
-      ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
+      if(!ch.beaten.includes(C.id))ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
       if(C.id==='kasetti'){ch.titles=ch.titles||[];if(!ch.titles.includes('혈귀를 잠재운 자')){ch.titles.push('혈귀를 잠재운 자');(ch.titleLog=ch.titleLog||[]).push('혈귀를 잠재운 자');chips.push('칭호 · 혈귀를 잠재운 자')}}
       if(C.id==='hongru'&&ch.hw&&ch.hw.accept&&!ch.hw.maker){ch.hw.maker=1;ch.hw.done=1;chips.push('홍루를 쓰러뜨렸다 · 선황충을 품은 가주 곁의 필두로 남는다')}
       if(foe.chain){ch.flags.zenaPend=1;chips.push('연전 · 쉴 틈 없이 다음 상대가 나선다')}else if(C.id===CFG.endless.finalNext)ch.flags.zenaPend=0;
