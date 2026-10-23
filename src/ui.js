@@ -1657,7 +1657,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     }
     /* 전투 버튼은 화면 아래에 고정한 막대에 둔다: 내용 길이가 바뀌어도 버튼 자리는 움직이지 않는다 */
     const supBtns=(()=>{const ch=G.ch,K=CFG.supply,have=Object.keys(K.items).filter(id=>((ch.supply||{})[id]||0)>0);if(!have.length)return FIGHT==='auto'&&!UI.paused?'':'<div class="small dim" style="flex:1 1 100%">소모품 없음 · 공방 거리의 소지품에서 살 수 있다</div>';if(C.supplyRound===C.round)return '';return `<div class="row" style="gap:6px;flex-wrap:wrap;flex:1 1 100%">${have.map(id=>`<button class="chip" data-a="csupply" data-i="${id}">${esc(E.supplyName(ch,id))} ×${ch.supply[id]} · ${esc(K.items[id].e)}</button>`).join('')}</div>`})();
-    const fleeBtn=X.name&&D.enemies[C.id]&&D.enemies[C.id].flee?`<button class="btn" data-a="flee"><b>도주를 시도한다</b><span class="mono small dim">1d100 + 회피·속도 보정 ≥ ${D.enemies[C.id].flee.dc} · 실패하면 이번 라운드는 공격만 받는다</span></button>`:'';
+    const fleeBtn=X.name&&D.enemies[C.id]&&D.enemies[C.id].flee&&!E.lakeNoFlee(G.ch,C.id)?`<button class="btn" data-a="flee"><b>도주를 시도한다</b><span class="mono small dim">1d100 + 회피·속도 보정 ≥ ${D.enemies[C.id].flee.dc} · 실패하면 이번 라운드는 공격만 받는다</span></button>`:'';
     UI.cbar=FIGHT==='auto'?`${UI.paused?supBtns:''}<button class="btn${UI.paused?' primary':''}" data-a="pause"><b>${UI.paused?'이어서 진행':'일시정지'}</b></button>${fleeBtn}<button class="btn quiet" data-a="fightmode" data-i="pick">직접 고르기로 바꾸기</button>`
       :`${supBtns}<button class="btn primary" data-a="go">${UI.sel.length?'행동 개시':'카드 없이 방어 자세'}</button>${fleeBtn}<button class="btn quiet" data-a="fightmode" data-i="auto">자동 전투로 바꾸기</button>`;
     /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
@@ -2594,7 +2594,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testRecordEnd(){recordEnd()},
     testCent(n){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infIntro=1;G.ch.infCent=Array.from({length:n-1},(_,i)=>i+1);G.year=G.ch.year=n*100-16;const ev=E.infiniteEvent(G);if(!ev)return;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvent(k,lic){if(!G)return;G.ch.licensed=lic!==false;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
-    testShip(mode){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.flags.lake=1;c.lake={captain:true,hull:63,crew:[{role:'cook',n:'요리사'},{role:'navigator',n:'항해사'}],seen:7,killed:[],wave:mode==='wave'?{i:1,max:4}:null};c.money=2000;if(mode==='anchor')c.flags.lkL_anchor=1;
+    testShip(mode){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.flags.lake=1;c.lake={captain:true,hull:63,crew:[{role:'cook',n:'요리사'},{role:'navigator',n:'항해사'}],seen:7,killed:[],wave:mode==='wave'?{i:1,max:4}:null};c.money=2000;if(mode==='anchor')c.flags.lkL_anchor=1;if(mode==='nocap')c.lake.captain=false;
       if(mode==='wave'){UI.ev=E.waveEv(c,c.lake);UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='hunt'){c.lake.captain=true;c.lake.whaleTarget='lake_whale_anchor';UI.ev=D.lake.hunt;UI.fight=null;UI.omen=null;UI.screen='event'}
       else if(mode==='inf'){G.infinite=true;c.infinite=true;c.infBoost=3;c.infShard=2;c.famLoss=1;c.limDmg=0.08;c.limStrike=0.01;c.legacyTier=5;c.legacyPts=12;c.year=G.year=300;UI.bag='stat';UI.screen='event';UI.ev=D.lake.indigo}
