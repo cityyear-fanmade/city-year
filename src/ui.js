@@ -251,10 +251,24 @@ export function startUI(E,app){
   }
   const who=s=>`<b style="color:${C[s].color}">${esc(C[s].name)}</b>`;
   function setVerdict(t,cls){const v=$('verdict');if(v){v.textContent=t;v.className='verdict '+(cls||'')}}
+  /* 정신력 1·0의 판정 연출: 1d100이 굴러 멈추고, 기준선(개화 N 이하)과 결과를 보여 준다. 개화=금빛 파동, 뒤틀림=붉은 번쩍임·떨림 */
+  function rollFx({r,th,ok,at}){
+    return new Promise(res=>{
+      if(MODE==='off'||document.getElementById('rv')){res();return}
+      const o=document.createElement('div');o.id='rv';
+      o.innerHTML=`<div class="rv-t">정신력 ${at} · 마음이 한계에 닿았다</div><div class="rv-n" id="rvn">–</div><div class="rv-bar"><i class="rv-ok" style="width:${th}%"></i><i class="rv-mk" id="rvm" style="left:0"></i><span class="rv-l" style="left:0">1</span><span class="rv-l" style="left:${th}%">${th}</span><span class="rv-l" style="right:0">100</span></div><div class="rv-s">1d100 · ${th} 이하면 E.G.O 개화, 넘으면 육신이 뒤틀린다</div><div class="rv-r" id="rvr"></div>`;
+      document.body.appendChild(o);
+      const n=document.getElementById('rvn'),m=document.getElementById('rvm'),rr=document.getElementById('rvr');let t=0,done=false;
+      const iv=setInterval(()=>{t+=70;const v=1+Math.floor(Math.random()*100);n.textContent=v;m.style.left=v+'%';if(t>=1300){clearInterval(iv);n.textContent=r;m.style.left=r+'%';o.classList.add(ok?'good':'bad');rr.textContent=ok?'E.G.O 개화':'육신이 뒤틀린다';setTimeout(end,1500)}},70);
+      function end(){if(done)return;done=true;clearInterval(iv);o.classList.add('out');setTimeout(()=>{o.remove();res()},400)}
+      o.addEventListener('click',()=>{if(t>=1300)end()});
+    });
+  }
   async function playEvent(e){
     const nm=s=>C[s].name;
     if(e.step!=null&&e.step>=0)markStep(e.step);
     markSides(e.att||e.side||null,e.def||null);setVerdict('');
+    {const rl=(e.lines||[]).find(l=>l.roll);if(rl)await rollFx(rl.roll)}
     if(e.k==='head'){setLabel(e.lines[0]?e.lines[0].s:'');appendLog(e.lines);await wait(500);return}
     if(e.k==='def'){setLabel(`${nm(e.side)} · ${e.card.n}`);anim($('ent-'+e.side),'guard',700);appendLog(e.lines);await wait(450);return}
     if(e.k==='buff'){setLabel(`${nm(e.side)} · ${e.card.n}`);anim($('ent-'+e.side),'guard',700);appendLog(e.lines);applySnap(e.snap);await wait(500);return}
@@ -978,10 +992,20 @@ export function startUI(E,app){
     const left=Math.max(0,Math.ceil((EXP-Date.now())/60000)),t=left>=120?`약 ${Math.floor(left/60)}시간`:`약 ${left}분`;
     return `<div class="check" style="border-color:var(--bleed)"><b>테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
+  const MINDTEST=false; /* build --mind: 정신력 10 이하 연출만 시험하는 판 */
+  function vMindTest(){
+    if(!MINDTEST)return '';
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">정신력 시험 · 새 캐릭터로 바로 시작한다</span>
+      <button class="btn primary" data-a="mindtest" data-i="voice"><b>① 정신력 8 · 들리는 목소리</b><span class="dim small">목소리 연출 → 듣기 좋다/싫다 → 기존 개화 판정</span></button>
+      <button class="btn" data-a="mindtest" data-i="distort"><b>② 정신력 1 · 뒤틀림 사건</b><span class="dim small">정신을 붙잡는다 → 판정 연출 (기준선 표시)</span></button>
+      <button class="btn" data-a="mindtest" data-i="break"><b>③ 전투 중 정신력 0</b><span class="dim small">전투가 시작되자마자 개화/뒤틀림 판정 연출</span></button>
+      <button class="btn quiet" data-a="mindtest" data-i="voice-good"><b>①-a 듣기 좋다를 고른 상태로 ②·③ 시험</b><span class="dim small">개화 기준선이 30으로 내려간다</span></button>
+      <button class="btn quiet" data-a="mindtest" data-i="voice-bad"><b>①-b 듣기 싫다를 고른 상태로 ②·③ 시험</b><span class="dim small">개화 기준선이 70으로 올라간다</span></button></div>`}
   function vTitle(){
     return `${chronBtn('chron-in')}<div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
+      ${vMindTest()}
       ${vUpdates()}
       ${vPlaytest()}
       <div class="stack">${vContinue()}${vHardToggle()}<button class="btn ${loadSave()?'':'primary'}" data-a="start" ${expired()?'disabled':''}>${loadSave()?'<b>새로 시작하기</b><span class="dim small">저장된 판은 지워진다</span>':'태어난다'}</button>
@@ -2362,6 +2386,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:BGM.extOn()?'ext':'calm',ext:'calm'}[BGM.style()]||'calm');bgmSave();render()},
     qvol(){UI.volOpen=!UI.volOpen;render()},
     voicepick(k){if(!UI.ev||!UI.ev.voices||(k!=='good'&&k!=='bad'))return;G.ch.voiceBias=k;UI.voicePicked=UI.ev;resave();render()},
+    mindtest(k){
+      const sd=newSeed();E.reseed(sd);let c=E.newChar(),g=0;while((c.o.hidden||c.ego||c.o.secret)&&g++<200)c=E.newChar();BC=c;BC.seed=sd;BC.name='';BC.fresh=false;
+      ACT.live();const ch=G.ch;ch.year=G.year=Math.max(G.year||0,12);ch.hp=ch.stats.maxHp;ch.voiceUsed=false;ch.distortDone=false;ch.voicePend=false;ch.distortPend=false;ch.voiceBias=null;UI.voicePicked=null;UI.voicePlay=null;UI.voiceSeen=null;
+      if(k==='voice-good'||k==='voice-bad')ch.voiceBias=k==='voice-good'?'good':'bad';
+      if(k==='voice'){ch.mind=8;ch.voicePend=true}
+      else if(k==='distort'||k==='voice-good'||k==='voice-bad'){ch.mind=1;ch.distortPend=true}
+      else if(k==='break'){ch.mind=0;ch.mindDead=true;ch.distortDone=true;UI.pending='thug'}
+      UI.ev=null;UI.res=null;flow()},
     voiceskip(){if(UI.ev&&UI.ev.voices&&UI.voiceSeen!==UI.ev){UI.voiceSeen=UI.ev;render()}},
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
     bgmext(i){BGM.setExt(+i);BGM.setStyle('ext');bgmSave();render()},
@@ -2505,7 +2537,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       {const un=checkInnateUnlock();if(un.length)r.chips=[...(r.chips||[]),`타고난 것 해금 · ${un.join(', ')} (이제 태어날 때 1%로 나온다)`]}
       UI.pending=r.combat;saveGame({after:true,pending:UI.pending});
       UI.res=Object.assign(r,{anim:!!r.roll&&MODE!=='off'});
-      UI.screen='result';render();
+      UI.screen='result';
+      {const rf=G.ch.rollFx;if(rf&&rf.seq!==UI.rollSeen&&MODE!=='off'){UI.rollSeen=rf.seq;rollFx(rf).then(render);return}}
+      render();
     },
     grow(i){const ch=G.ch;E.applyGrowth(ch,ch.lvOpts[+i].g.fx);ch.lvPend--;ch.lvOpts=null;flow()},
     pick(i){i=+i;const at=UI.sel.indexOf(i);if(at>=0){UI.sel.splice(at,1);
@@ -2596,6 +2630,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
     testTitles(a){if(G)G.ch.titles=a},
+    testRoll(r,th,ok,at){rollFx({r:r||38,th:th||50,ok:ok!==false&&(r||38)<=(th||50),at:at==null?1:at});return true},
     testVoice(mind){if(!G)return null;G.ch.mind=mind||6;UI.ev=D.mindEvents.voice;UI.voicePlay=null;UI.voiceSeen=null;UI.voicePicked=null;G.ch.voiceBias=null;UI.screen='event';render();return true},
     testEgo(L){if(!G||!E.egoItem)return null;const c=G.ch,w=c.gear.weapon;if(!w)return null;const it=E.egoItem(w.id,L);E.equip(c,it);E.egoDeck(c,w.id,L);c.egoUses=[0,5,15,30][L];render();return c.deck.length},
     async testCard(){if(!G)return null;const cv=await endCard();return cv.toDataURL('image/png')},
