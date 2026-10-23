@@ -390,6 +390,7 @@ export function startUI(E,app){
     if(c.nailBurst)x.push(`못을 모두 흐트러짐으로 ×${c.nailBurst.mul}${c.nailBurst.add?' +'+c.nailBurst.add:''}`);
     if(c.spdDice)x.push(`속도 ${c.spdDice[0]} 이상이면 주사위마다 +${c.spdDice[1]}`);
     if(c.sinkDmg)x.push(`침잠 ${CFG.sink.per}당 +${c.sinkDmg}`);
+    if(c.egT)x.push(c.egT);
     if(c.rr)x.push('낮은 피해 재굴림');
     if(c.min)x.push('피해 최소 '+c.min);
     if(c.next)x.push('사용 후 다음 라운드 '+D.cards[c.next].n);
@@ -2573,6 +2574,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
     testTitles(a){if(G)G.ch.titles=a},
+    testEgo(L){if(!G||!E.egoItem)return null;const c=G.ch,w=c.gear.weapon;if(!w)return null;const it=E.egoItem(w.id,L);E.equip(c,it);E.egoDeck(c,w.id,L);c.egoUses=[0,5,15,30][L];render();return c.deck.length},
     async testCard(){if(!G)return null;const cv=await endCard();return cv.toDataURL('image/png')},
     testPatch(o){if(!G)return;Object.assign(G.ch,o);render()},
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
