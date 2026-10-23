@@ -629,21 +629,23 @@ export function startUI(E,app){
     if(n==='뒷골목 태생'||n==='조직 출신')return {n:`${w}사 뒷골목 출신`,t:`${w}사 날개 둥지의 뒷골목에서 났다`};
     if(['평범한 둥지 시민','둥지 노동자','날개 직원 집안','몰락한 가문'].includes(n))return {n:`${w}사 둥지 출신`,t:`${w}사 날개의 둥지에서 났다`};
     return null}
+  /* 가방 정보 칸의 접이식 구역: 열고 닫은 상태는 다시 그려도 유지한다 */
+  const stSec=(k,title,body,openDef)=>{const o=(UI.stOpen||{})[k];const open=o===undefined?!!openDef:!!o;return `<details class="stsec panel" data-k="${k}"${open?' open':''} style="padding:8px 10px"><summary style="cursor:pointer"><span class="eyebrow">${title}</span></summary><div class="stack" style="gap:6px;margin-top:8px">${body}</div></details>`};
   function vStat(){
     const ch=G.ch,s0=ch.s0,sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(n);
     const eff=x=>x&&x.e?`<span class="mono small" style="color:var(--gold)">${esc(x.e)}</span>`:'';
     const row=(lab,x)=>`<div class="roll"><span class="mono small dim">${lab}</span><div class="n"><b>${esc(x.n)}</b>${x.t?`<span>${esc(x.t)}</span>`:''}${eff(x)}</div></div>`;
     const place=placeOf(ch.o,ch.r,ch.blank);
     const lk_=ch.flags&&ch.flags.lake&&ch.lake?ch.lake:null,lakeLog=lk_?(()=>{const K=lk_.killed||[],ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length,cr=(lk_.crew||[]).map(m=>m.n).join(' · ')||'없음',tl=lk_.tools||{},tn=Object.entries(tl).filter(([,v])=>v>0).map(([k,v])=>`${(D.lake&&D.lake.tools&&D.lake.tools[k]||{}).n||k} ×${v}`).join(' · ')||'없음';
-      return `<div class="eyebrow">항해 기록</div><div class="panel stack" style="gap:4px"><div class="invr"><span>지나온 호수</span><b class="mono">${lk_.seen||0}번</b></div><div class="invr"><span>고래에게서 도망</span><b class="mono">${lk_.fled||0}번</b></div>${lk_.captain?`<div class="invr"><span>목표 · 대재앙 토벌</span><b class="mono">보스급 ${ny}/4 · 대재앙 ${na}/6</b></div><div class="invr"><span>배 내구도</span><b class="mono">${E.hullOf(ch)}/${CFG.lake.hullMax}</b></div><p class="small dim">전투마다 -${CFG.lake.hullWear} · 항구에서 ${E.money(CFG.lake.repairCost)} 수리 · 0이 되면 침몰</p><div class="invr"><span>선원</span><b class="mono">${esc(cr)}</b></div>`:'<p class="small dim">선장이 되면 대재앙 토벌이 목표가 된다.</p>'}</div>`})():'';
+      return stSec('lake','항해 기록 · 배 내구도',`<div class="invr"><span>지나온 호수</span><b class="mono">${lk_.seen||0}번</b></div><div class="invr"><span>고래에게서 도망</span><b class="mono">${lk_.fled||0}번</b></div>${lk_.captain?`<div class="invr"><span>목표 · 대재앙 토벌</span><b class="mono">보스급 ${ny}/4 · 대재앙 ${na}/6</b></div><div class="invr"><span>배 내구도</span><b class="mono">${E.hullOf(ch)}/${CFG.lake.hullMax}</b></div><p class="small dim">전투마다 -${CFG.lake.hullWear} · 항구에서 ${E.money(CFG.lake.repairCost)} 수리 · 0이 되면 침몰</p><div class="invr"><span>선원</span><b class="mono">${esc(cr)}</b></div>`:'<p class="small dim">선장이 되면 대재앙 토벌이 목표가 된다.</p>'}`,false)})():'';
     const kid=(place?row('태어난 곳',place):'')+(ch.kid||[]).map(k=>row(k.age+'세',k.x)).join('');
     const base=s0?[['최대 HP',s0.maxHp],['공격',sgn(s0.atk)],['회피',sgn(s0.eva)],['속도',sgn(s0.spd)],['사건 판정',sgn(s0.check)]].map(([a,b])=>`<div class="invr"><span>${a}</span><b class="mono">${b}</b></div>`).join(''):'';
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
       ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다. 빈손이라 히든 보스 전리품 장비를 더 자주 쥐고(+25%p), 정신이 꺾일 때 E.G.O 형상이 보일 확률이 25%다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${row('무기',ch.w)}</div>`}
       ${(()=>{const g=E.infGrowth(ch);return g.length?`<div class="eyebrow">무한 모드 성장</div><div class="panel stack" style="gap:6px">${g.map(([k,v,d_])=>`<div class="invr"><span>${esc(k)}</span><b class="mono">${esc(v)}</b></div><p class="small dim" style="margin:0 0 4px">${esc(d_)}</p>`).join('')}</div>`:''})()}
-      ${lakeLog}${kid?`<div class="eyebrow">성장기</div><div class="panel">${kid}</div>`:''}
-      ${base?`<div class="eyebrow">태어났을 때의 능력치 (변하지 않음)</div><div class="panel">${base}</div>`:''}
-      <div class="eyebrow">지금 · 장비 보정과 특수 상태</div>${vStatNow()}</div>`;
+      ${lakeLog}${kid?stSec('kid','성장기',kid,false):''}
+      ${base?stSec('base','태어났을 때의 능력치 (변하지 않음)',base,false):''}
+      ${stSec('now','지금 · 장비 보정과 특수 상태',vStatNow(),true)}</div>`;
   }
   function vStatNow(){
     const ch=G.ch,s=ch.stats,gear=Object.values(ch.gear);
@@ -2534,7 +2536,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(t.classList.contains('logbox')&&t.querySelector('#log'))UI.logOpen=t.open;
     if(t.classList.contains('roundbox'))UI.roundOpen=t.open;
     if(t.classList.contains('inv'))UI.invOpen=t.open;
-    if(t.classList.contains('bhelp'))UI.helpOpen=t.open},true);
+    if(t.classList.contains('bhelp'))UI.helpOpen=t.open;
+    if(t.classList.contains('stsec')&&t.dataset.k){UI.stOpen=UI.stOpen||{};UI.stOpen[t.dataset.k]=t.open}},true);
   /* 휴대폰 키보드의 이동·완료(Enter)로도 시드 적용 */
   app.addEventListener('change',e=>{if(e.target.id!=='xfileIn')return;const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{UI.xask=null;xApply(String(r.result||''))};r.readAsText(f)});
   app.addEventListener('input',e=>{if(e.target.id==='cuname'){(UI.cu=UI.cu||{name:'',atk:0,eva:0,hp:0,pas:null}).name=e.target.value}});
