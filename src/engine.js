@@ -1386,7 +1386,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       for(const id of row.add){if(ch.deck.length<deckMax(ch)){ch.deck.push(id);into.push(id)}else{(ch.side=ch.side||[]).push(id);side.push(id)}}
       if(into.length||side.length)out.push(`전용 카드 · ${[...into,...side].map(id=>D.cards[id].n).join(', ')} (${why})${side.length?` · 덱이 가득 차 ${side.length}장은 카드함으로`:''}`)}
   }
-  function lakeYear(G){
+  /* 내가 선장이면 호수 사건 속 "선장"은 나다: 제3자로 쓰인 선장 문구를 내가 하는 말과 행동으로 바꾼다 */
+  const CAPSUB=[[/선장에게 (손짓|눈짓)으로 알린다/g,'직접 $1으로 지시한다'],[/선장이 처리한다/g,'내가 처리한다'],[/선장도 아직 모르는 것 같다/g,'아직 아무도 수습하지 못했다'],[/선장의 명령/g,'내 명령'],[/선장이/g,'당신이'],[/선장은/g,'당신은'],[/선장도/g,'당신도'],[/선장의 /g,'당신의 '],[/선장에게/g,'당신에게']];
+  const capView=o=>{if(typeof o==='string'){let t=o;for(const [a,b] of CAPSUB)t=t.replace(a,b);return t}if(Array.isArray(o))return o.map(capView);if(o&&typeof o==='object'){const r={};for(const k of Object.keys(o))r[k]=k==='fx'||k==='check'?o[k]:capView(o[k]);return r}return o};
+  function lakeYear(G){const r=lakeYear0(G);return r&&r.type!=='fight'&&G.ch.lake&&G.ch.lake.captain?capView(r):r}
+  function lakeYear0(G){
     const ch=G.ch,Lk=D.lake;if(!Lk||!lakeOn(ch)||ch.distForm)return null;
     const L=ch.lake=ch.lake||{},ids=Object.keys(Lk.lakes);
     /* 금기 사냥꾼: 금기를 어기면 몇 해 뒤 대호수 금기 사냥꾼이 먼저 찾아온다 (조율자는 오지 않는다). 새 호수에 들어서기 전에 경고 사건 → 맞서면 다음 해 전투 */
