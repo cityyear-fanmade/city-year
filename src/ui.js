@@ -275,8 +275,8 @@ export function startUI(E,app){
     ]);
     $('fA').textContent=e.sa;$('fD').textContent=e.sd;
     $('fA').className='dfinal '+(e.hit?'good':'');$('fD').className='dfinal '+(e.hit?'':'good');
-    $('sA').textContent=`눈 ${e.ra}${e.am?' '+sg(e.am):''}${e.ra2?` (2회 굴림, ${e.ra2} 버림)`:''}`;
-    $('sD').textContent=`눈 ${e.rd}${e.dm?' '+sg(e.dm):''}`;
+    $('sA').textContent=`눈 ${e.ra}${e.am?' '+sg(e.am):''}${e.ra2?` (2회 굴림, ${e.ra2} 버림)`:''}${e.amN?` · 깎인 이유: ${e.amN}`:''}`;
+    $('sD').textContent=`눈 ${e.rd}${e.dm?' '+sg(e.dm):''}${e.dmN?` · 깎인 이유: ${e.dmN}`:''}`;
     dA.classList.add(e.hit?'win':'lose');dD.classList.add(e.hit?'lose':'win');
     await holdTap();
     await wait(350);
@@ -2578,7 +2578,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testInfLake(n){if(!G)return null;const c=G.ch,X=CFG.endless,be=CFG.years+X.span*X.grades.length,out={};G.infinite=true;c.infinite=true;c.infIntro=1;c.flags=c.flags||{};c.flags.lake=1;c.lake=c.lake||{};c.lake.captain=true;
       for(let i=0;i<(n||300);i++){G.year=c.year=be+1+i;c.hp=c.stats.maxHp;c.mind=E.mindMax(c);try{const st=E.advanceYear(G);const k=st.type==='omen'?'omen:'+st.boss+(st.echo?'(echo)':''):st.type==='fight'?'fight:'+st.enemy:st.type;out[k]=(out[k]||0)+1}catch(e){out['ERR '+e.message]=(out['ERR '+e.message]||0)+1}}try{E.answerOmen(G,{boss:'hongwon',rift:true,escape:true,spec:'table:late'},true);out._intro=D.enemies.hongwon.intro}catch(e){out._intro='ERR '+e.message}return out},
     testEnd(y,t,o){if(!G)return;G.year=G.ch.year=y||CFG.years;UI.endWin=true;UI.trueEnd=!!t;UI.oldEnd=!!o;UI.death=null;UI.screen='end';render()},
-    testFight(id,hp,php){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;if(php){C.P.hp=C.P.maxHp=php}render()},
+    testFight(id,hp,php,sink){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;if(php){C.P.hp=C.P.maxHp=php}if(sink){C.E.sink=sink;C.P.sink=sink}render()},
     /* 자동 테스트용: 특색 심사 통과 직후 화면 */
     testColor(){if(!G)return;G.ch.licensed=true;G.ch.rank=1;const r=E.applyFx(G.ch,{colorPass:true});UI.res={t:'심사 통과',chips:r.chips,roll:null};UI.screen='result';render()},
     testBond(k,kids,dist){if(!G)return;const c=G.ch;c.aff=c.aff||{type:'office',name:'윤 사무소'};

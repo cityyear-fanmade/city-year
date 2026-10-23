@@ -2887,7 +2887,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.middle&&B.isP&&B.midEff<1&&!B.stunned)dm-=Math.floor(Math.max(0,B.eva+B.evaB-(B.evaPen||0)+(B.odin?Math.max(0,odinEva(C.round,B)):0))*(1-B.midEff));
       {const ev_=Math.max(0,B.eva+B.evaB-(B.evaPen||0));if(c.ignoreEva)dm-=ev_;else if(A.awl&&A.lead)dm-=Math.floor(ev_/2)}
       const sa=sub&&sub.sure?Math.max(ra+am,rd+dm+1):ra+am,sd=rd+dm,G_=CFG.guard;
-      const base={k:'atk',att:A.uid,def:B.uid,card:c,ra,ra2,rd,rdMax,am,dm,sa,sd,b:c.b,guard:B.guarding};
+      /* 판정에서 깎인 이유를 눈 아래에 보여 준다 (침잠·지령·예법·복종·흐트러짐 / 감전·사슬·거미줄) */
+      const amR=[],dmR=[];{const sk=Math.floor((B.middle?CFG.middle.sinkHit:1)*CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per));if(sk>0)amR.push(`침잠 −${sk}`);
+        const pr=3*(A.prescript||0);if(pr>0)amR.push(`지령 −${pr}`);const mn=Math.floor((A.manner||0)*(A.mannerPer||thumbPer(B)));if(mn>0)amR.push(`예법 −${mn}`);const ob=(A.obey||0)*CFG.hw.obey.hit;if(ob>0)amR.push(`복종 −${ob}`);const sg_=((staggerStage(A)||{}).hit||0);if(sg_>0)amR.push(`흐트러짐 −${sg_}`);
+        if(B.shock)dmR.push(`감전 −${3*B.shock}`);const ch_=2*((B.chain||0)+(B.web||0));if(ch_>0)dmR.push(`사슬·거미줄 −${ch_}`)}
+      const base={k:'atk',att:A.uid,def:B.uid,card:c,ra,ra2,rd,rdMax,am,dm,sa,sd,b:c.b,guard:B.guarding,amN:amR.join(' · '),dmN:dmR.join(' · ')};
       /* 방어 자세: 막아도 피해 guardHit는 받는다 (키워드는 붙지 않음) */
       if(B.guarding&&sa<=sd){
         const dmg=G_.guardHit;hpLoss(C,B,dmg,L);
