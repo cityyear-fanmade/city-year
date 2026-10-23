@@ -470,6 +470,7 @@ export function startUI(E,app){
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 '+CFG.artSense.every+'번 쓰러뜨릴 때마다 +1 (영구)':''}`);
     if(ch.corp&&ch.corp.type&&['dev','wing'].includes(ch.corp.st)){const c=ch.corp,t=CFG.corp.types[c.type];
       P.push(`특이점 ${c.n} (${t.n}) · ${t.e.split(' (')[0]} · ${c.st==='dev'?`개발 ${c.stack}/${CFG.corp.devMax}`:`강화 ${c.up}/${CFG.corp.upMax} · 금기 실험 ${c.forb}/${CFG.corp.forbMax}`}`)}
+    if(ch.colorPasv&&E.colorPasv[ch.colorPasv])P.push(`특색 패시브 · ${E.colorPasv[ch.colorPasv].n} · ${E.colorPasv[ch.colorPasv].e}`);
     if(ch.race==='hyeolgwi')P.push(`혈귀 · 혈찬 · 상대의 출혈이 5번 발동할 때마다 HP ${CFG.hyeolchan.heal} 회복`);
     if(ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea'))P.push(`피의 각인된 갈망 · 자식 ${ch.kids||0}/${CFG.kids.max} · 라운드마다 혈찬 +${CFG.kids.per}×자식 · 전투가 끝나면 자식마다 ${CFG.kids.lose}% 흩어짐`);
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.push(`레벨 ${CFG.lvLight.at}마다 · 전투 중 빛과 빛 최대치 +${CFG.lvLight.up*n} (지금 레벨 ${ch.lv})`)}
@@ -627,7 +628,7 @@ export function startUI(E,app){
     const row=(lab,x)=>`<div class="roll"><span class="mono small dim">${lab}</span><div class="n"><b>${esc(x.n)}</b>${x.t?`<span>${esc(x.t)}</span>`:''}${eff(x)}</div></div>`;
     const place=placeOf(ch.o,ch.r,ch.blank);
     const lk_=ch.flags&&ch.flags.lake&&ch.lake?ch.lake:null,lakeLog=lk_?(()=>{const K=lk_.killed||[],ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length,cr=(lk_.crew||[]).map(m=>m.n).join(' · ')||'없음',tl=lk_.tools||{},tn=Object.entries(tl).filter(([,v])=>v>0).map(([k,v])=>`${(D.lake&&D.lake.tools&&D.lake.tools[k]||{}).n||k} ×${v}`).join(' · ')||'없음';
-      return `<div class="eyebrow">항해 기록</div><div class="panel stack" style="gap:4px"><div class="invr"><span>지나온 호수</span><b class="mono">${lk_.seen||0}번</b></div><div class="invr"><span>고래에게서 도망</span><b class="mono">${lk_.fled||0}번</b></div>${lk_.captain?`<div class="invr"><span>목표 · 대재앙 토벌</span><b class="mono">보스급 ${ny}/4 · 대재앙 ${na}/6</b></div><div class="invr"><span>배 내구도</span><b class="mono">${E.hullOf(ch)}/${CFG.lake.hullMax}</b></div><p class="small dim">전투마다 -${CFG.lake.hullWear} · 항구에서 ${E.money(CFG.lake.repairCost)} 수리 · 0이 되면 침몰</p><div class="invr"><span>선원</span><b class="mono">${esc(cr)}</b></div>`:'<p class="small dim">선장이 되면 대재앙 토벌이 목표가 된다.</p>'}<div class="invr"><span>방지 도구</span><b class="mono">${esc(tn)}</b></div></div>`})():'';
+      return `<div class="eyebrow">항해 기록</div><div class="panel stack" style="gap:4px"><div class="invr"><span>지나온 호수</span><b class="mono">${lk_.seen||0}번</b></div><div class="invr"><span>고래에게서 도망</span><b class="mono">${lk_.fled||0}번</b></div>${lk_.captain?`<div class="invr"><span>목표 · 대재앙 토벌</span><b class="mono">보스급 ${ny}/4 · 대재앙 ${na}/6</b></div><div class="invr"><span>배 내구도</span><b class="mono">${E.hullOf(ch)}/${CFG.lake.hullMax}</b></div><p class="small dim">전투마다 -${CFG.lake.hullWear} · 항구에서 ${E.money(CFG.lake.repairCost)} 수리 · 0이 되면 침몰</p><div class="invr"><span>선원</span><b class="mono">${esc(cr)}</b></div>`:'<p class="small dim">선장이 되면 대재앙 토벌이 목표가 된다.</p>'}</div>`})():'';
     const kid=(place?row('태어난 곳',place):'')+(ch.kid||[]).map(k=>row(k.age+'세',k.x)).join('');
     const base=s0?[['최대 HP',s0.maxHp],['공격',sgn(s0.atk)],['회피',sgn(s0.eva)],['속도',sgn(s0.spd)],['사건 판정',sgn(s0.check)]].map(([a,b])=>`<div class="invr"><span>${a}</span><b class="mono">${b}</b></div>`).join(''):'';
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
@@ -736,9 +737,14 @@ export function startUI(E,app){
         ${can==='ok'?`<button class="btn${ask?' primary':''}" data-a="packsw" data-i="${i}"><b>이 팩으로 바꾼다</b><span class="dim small">지금 팩은 보관함으로 간다</span></button>`:`<p class="small dim">${why[can]||''}</p>`}</div>`}).join(''):'<div class="panel"><p class="small dim">보관한 팩이 없다. 전용 카드팩을 받아 덱이 통째로 바뀌면 이전 덱이 여기에 남는다.</p></div>'}`;
   }
   /* 소모품 칸: 가방 탭(밖에서 쓴다)과 공방 거리 구입 칸 */
+  /* 호수별 방지 도구: 소모품과 같은 칸에서 확인한다 */
+  function vTools(){
+    const ch=G.ch,L=ch.flags&&ch.flags.lake&&ch.lake?ch.lake:null;if(!L)return '';
+    const tl=L.tools||{},list=Object.entries(tl).filter(([,v])=>v>0).map(([k,v])=>`${(D.lake&&D.lake.tools&&D.lake.tools[k]||{}).n||k} ×${v}`);
+    return `<div class="panel stack" style="gap:6px;margin-top:8px"><span class="eyebrow">방지 도구</span><p class="small dim">호수의 금기를 안전하게 지나가는 데 쓰는 소모형 도구다. 항구에서 산다. 해당 호수에서 선택지로 쓰면 하나가 사라진다.</p><div class="mono">${list.length?esc(list.join(' · ')):'없음'}</div></div>`}
   function vSupply(){
     const ch=G.ch,K=CFG.supply;
-    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소모품 · 종류마다 최대 ${K.max}개</span><p class="small dim">전투 밖에서는 여기서, 전투 중에는 행동을 고르는 화면에서 쓴다(라운드마다 한 번). 공방 거리에서 살 수 있다.</p>${Object.entries(K.items).map(([id,it])=>{const n=(ch.supply||{})[id]||0;return `<div class="row between" style="gap:8px;flex-wrap:nowrap"><div class="stack" style="gap:2px"><b>${esc(E.supplyName(ch,id))} <span class="mono small dim">${n}/${K.max}</span></b><span class="mono small" style="color:var(--gold)">${esc(it.e)}</span></div><button class="chip" data-a="usesupply" data-i="${id}" ${n>0?'':'disabled'}>쓴다</button></div>`}).join('')}${UI.supMsg?`<p class="good small">${esc(UI.supMsg)}</p>`:''}</div>`;
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소모품 · 종류마다 최대 ${K.max}개</span><p class="small dim">전투 밖에서는 여기서, 전투 중에는 행동을 고르는 화면에서 쓴다(라운드마다 한 번). 공방 거리에서 살 수 있다.</p>${Object.entries(K.items).map(([id,it])=>{const n=(ch.supply||{})[id]||0;return `<div class="row between" style="gap:8px;flex-wrap:nowrap"><div class="stack" style="gap:2px"><b>${esc(E.supplyName(ch,id))} <span class="mono small dim">${n}/${K.max}</span></b><span class="mono small" style="color:var(--gold)">${esc(it.e)}</span></div><button class="chip" data-a="usesupply" data-i="${id}" ${n>0?'':'disabled'}>쓴다</button></div>`}).join('')}${UI.supMsg?`<p class="good small">${esc(UI.supMsg)}</p>`:''}</div>${vTools()}`;
   }
   function vHull(){
     const ch=G.ch,L=ch.lake,K=CFG.lake;if(!L||!L.captain)return '';const h=E.hullOf(ch),ok=h<K.hullMax&&ch.money>=K.repairCost;
@@ -2217,7 +2223,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       UI.res.chips=[...UI.res.chips,`내 사무소 · ${G.ch.office.name} (${E.OKW[kw]})`];render();
     },
     cpick(k){
-      if(E.setColorPick(G.ch,k)){resave();UI.res.chips=[...UI.res.chips,`특색 패시브 · ${E.colorPasv[k].n}`];render()}
+      if(E.setColorPick(G.ch,k)){resave();UI.res.chips=[...UI.res.chips,`특색 패시브 · ${E.colorPasv[k].n} · ${E.colorPasv[k].e}`];render()}
     },
     pill(k){
       const P=Object.values(D.enemies).find(e=>e.pill).pill;

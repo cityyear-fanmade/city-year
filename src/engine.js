@@ -1289,7 +1289,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function setColorPick(ch,k){
     if(!ch.colorPick||!colorPasv[k])return false;
     ch.colorPick=false;ch.colorPasv=k;if(k==='regen')ch.stats.regen+=5;else if(k==='strike')ch.stats.dmgB+=3;
-    (ch.relics=ch.relics||[]).push(`특색 패시브 · ${colorPasv[k].n}`);return true;
+    (ch.relics=ch.relics||[]).push(`특색 패시브 · ${colorPasv[k].n} · ${colorPasv[k].e}`);return true;
   }
   const pillStats={atk:'공격',eva:'회피',spd:'속도',check:'사건 판정'};
   function setPill(ch,k,v){
@@ -2060,7 +2060,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 제 2막 무한 모드: 위협 등급 전투는 후반 조우, every년마다 강화 불순물 */
       if((G.year-baseEnd)%INF.every===0){
         /* 무한 모드에 들어설 때 외곽에 지은 집(혼자여도), 또는 인연 이야기의 외곽의 작은 집이 있다면 불순물은 그 집으로 찾아온다 */
-        const H_=D.infinite&&D.infinite.home,E_=D.enemies[X_.final],home=H_&&(G.ch.infHome||(G.ch.outSeen&&G.ch.outSeen.settle));
+        const LH_=lakeOn(G.ch)&&D.lake&&D.lake.infinite&&D.lake.infinite.impurity,H_=LH_||(D.infinite&&D.infinite.home),E_=D.enemies[X_.final],home=H_&&(LH_||G.ch.infHome||(G.ch.outSeen&&G.ch.outSeen.settle));
         if(E_){if(E_.intro0===undefined)E_.intro0=E_.intro;E_.intro=home?H_.intro[((G.ch.infImp||1)-1)%H_.intro.length]:E_.intro0}
         return {type:'fight',enemy:X_.final,enc:{hidden:true,label:`${home?H_.label:'외곽의 괴수'} · ${(G.ch.infImp||1)}번째`}}}
       f=k_%X_.span?null:'table:late';
@@ -2317,7 +2317,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     else{addStats(ch.stats,fx);if(fx.maxHp)ch.hp+=fx.maxHp;ch.custPas=pas;ch.custNote=txt;(ch.relics=ch.relics||[]).push(`${noun} · ${nm}`);chips.push(`${kind==='eye'?'전용 의안':'전용 신체 개조'} · ${nm} · ${txt}`)}
     return {chips,kind,nm,txt}
   }
-  function winRewards(G,C){
+  /* 인연 도시락은 일이 다 끝난 뒤 챙겨 주는 것이라 결과 줄의 맨 끝에 둔다 */
+  function winRewards(G,C){const r=winRewards0(G,C);if(r&&Array.isArray(r.chips)){const i=r.chips.findIndex(c=>String(c).startsWith('인연 도시락'));if(i>=0&&i<r.chips.length-1)r.chips.push(r.chips.splice(i,1)[0])}return r}
+  function winRewards0(G,C){
     const ch=G.ch,chips=[];
     /* 인연 도시락: 인연이 있으면 전투를 이긴 뒤 가끔 받는다 */
     if(ch.bond&&['met','married'].includes(ch.bond.st)&&!ch.distForm&&d(100)<=CFG.supply.lunchChance){const L_=CFG.supply.lunch,hp0=C.P.hp,hh=Math.min(Math.round(ch.stats.maxHp*L_.hpPct/100),ch.stats.maxHp-C.P.hp);if(hh>0)C.P.hp+=hh;const g_=gainMind(ch,L_.mind);chips.push(`인연 도시락 · ${ch.bond.name||'인연'}이(가) 도시락을 건넸다${hh>0?' · HP +'+hh:''}${g_?' · 정신력 +'+g_:''}`)}
