@@ -1937,7 +1937,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     let pool=S.items.map((e,i)=>i).filter(i=>ok(S.items[i])&&!seen.includes(i));
     if(!pool.length){seen.length=0;pool=S.items.map((e,i)=>i).filter(i=>ok(S.items[i]))}
     const own=pool.filter(i=>S.items[i].route===b.route),gen=pool.filter(i=>!S.items[i].route);
-    const i=one(own.length&&(!gen.length||d(100)<=60)?own:gen.length?gen:pool);seen.push(i);const e=S.items[i];
+    const i=one(own.length&&(!gen.length||d(100)<=(own.length>=4?85:60))?own:gen.length?gen:pool);seen.push(i);const e=S.items[i];
     const x=bondFill(e.x,b)+(act2&&S.old&&S.old.length?' '+one(S.old):'');
     return {t:'달달한 한때 · '+e.t,x,c:[{l:bondFill(e.a,b),h:'함께하는 시간',ok:{t:bondFill(e.at,b),fx:{}}},{l:bondFill(e.b,b),h:'함께하는 시간',ok:{t:bondFill(e.bt,b),fx:{}}}]};
   }
