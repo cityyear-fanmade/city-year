@@ -2469,7 +2469,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!ch.infinite)return [];const IL=CFG.infinite,pc=x=>Math.round(x*1000)/10+'%',rows=[];
     const dm=(ch.infBoost||0)*IL.century.dmg,sh=(ch.infShard||0)*IL.shard.dmg,gr=(ch.famLoss||0)*IL.grief.dmg,lm=ch.limDmg||0,tot=dm+sh+gr+lm;
     rows.push(['주는 피해',`+${pc(tot)}`,tot?[dm&&`백 해마다 ${pc(dm)}`,sh&&`불순물의 조각 ${pc(sh)}`,gr&&`가족의 슬픔 ${pc(gr)}`,lm&&`한계 돌파 ${pc(lm)}`].filter(Boolean).join(' · '):'백 해를 넘기거나 불순물을 쓰러뜨리면 오른다']);
-    if(ch.limStrike)rows.push(['일격 추가 피해',`최대 HP의 ${pc(ch.limStrike)}`,`적중마다 · 한계 돌파로 쌓임 · 현재 약 ${Math.round(ch.stats.maxHp*ch.limStrike)}`]);
+    if(ch.limStrike)rows.push(['일격 추가 피해',`내 최대 HP의 ${pc(ch.limStrike)}`,`적중마다 붙는다 · 상대 체력과 상관없이 내 최대 HP 기준 · 한계 돌파로 쌓임 · 지금 약 ${Math.round(ch.stats.maxHp*ch.limStrike)}`]);
     if(ch.infBoost)rows.push(['받는 피해',`+${pc(ch.infBoost*IL.century.enemyDmg)}`,'백 해마다 적의 공격도 함께 강해진다']);
     const cut=infEvaCut(ch);if(cut>0)rows.push(['무한 회피 감소',`−${cut}`,'해가 갈수록 회피가 깎인다 · 0에서 멈춘다']);
     const SG=IL.surge;if(SG&&(ch.year||0)>=SG.year)rows.push(['기세',`${SG.round}라운드 이후`,`전투가 ${SG.round}라운드를 넘기면 라운드마다 주는 피해 ×${SG.per}`]);
