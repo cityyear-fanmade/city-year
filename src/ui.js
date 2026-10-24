@@ -449,7 +449,7 @@ export function startUI(E,app){
   function quickAudio(){
     if(!BGM.supported)return '';
     const on=BGM.isOn(),v=Math.round(BGM.vol()*100),ic=v===0?'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="none"/>':'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none"/>';
-    return `<div class="qaudio"><div class="qrow"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><button class="qb" data-a="qstyle" aria-label="배경음악 스타일 바꾸기" title="스타일">${{passion:'불길',library:'도서관',ext:'시험곡'}[BGM.style()]||'고요'}</button></div>${SFX.supported?`<div class="qrow"><button class="qb${SFXS.on?' on':''}" data-a="qsfx" aria-label="효과음 ${SFXS.on?'끄기':'켜기'}" title="효과음">${SFXS.on?'효과음 켬':'효과음 끔'}</button></div>`:''}</div>
+    return `<div class="qaudio"><div class="qrow"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><button class="qb" data-a="qstyle" aria-label="배경음악 스타일 바꾸기" title="스타일">${{passion:'불길',library:'도서관',wave:'물결',ext:'시험곡'}[BGM.style()]||'고요'}</button></div>${SFX.supported?`<div class="qrow"><button class="qb${SFXS.on?' on':''}" data-a="qsfx" aria-label="효과음 ${SFXS.on?'끄기':'켜기'}" title="효과음">${SFXS.on?'효과음 켬':'효과음 끔'}</button></div>`:''}</div>
       <div class="volbox"><button class="qb${UI.volOpen?' on':''}" data-a="qvol" aria-label="음량 조절" title="음량"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ic}</svg></button>${UI.volOpen?`<div class="volpop"><input type="range" id="bgmQuick" min="0" max="100" step="1" value="${v}" aria-label="배경음악 음량"><b class="mono" id="bgmQuickPct">${v}%</b></div>`:''}</div>`;
   }
   /* 엔딩 화면에서 이어서 살 수 있는 경우(여기서 끝낸다 버튼이 있는 경우). 이때 다시 태어나면 이어 살 판이 사라지므로 한 번 더 누르게 한다 */
@@ -1219,7 +1219,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const NOTICE={id:'v10.0.7',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
     sec:[['🎵 배경음악',['BGM이 변경 및 추가됩니다. 불길이 새 곡으로 변경되고, 물결이 추가됩니다.']],
-      ['🔧 조정',['일대기 항목이 보강됩니다.']]]};
+      ['🆕 추가',['내 사무소의 전문 분야에 침잠이 추가됩니다.']],
+      ['🔧 조정',['일대기 항목이 보강됩니다.','공방 해결사의 장비 강화와 유물이 조정됩니다.','별에 선택받은 자의 소지 소속이 조정됩니다.']]]};
   const V1002SEC=[['🔧 조정',['인연 캐릭터의 성격과 말투를 조정하고, 루트별 전용 이벤트를 늘렸습니다.']]];
   const V1001SEC=[['🔧 개선 및 수정',['무한 모드 성장(주는 피해·일격·받는 피해·연륜)을 가방의 "정보" 칸에서 항상 볼 수 있습니다. 규칙 요약에 연륜 설명을 넣었습니다.','한계 돌파의 공격 선택지가 눌리지 않던 문제를 고쳤습니다. 일격 설명 문구도 알기 쉽게 바꿨습니다.','새로운 이야기에서 싸우기로 하면 다음 해로 미루지 않고 바로 전투가 시작됩니다.','무한 모드에서 이미 이긴 상대가 반복해서 나오던 것을 줄였습니다.','불순물을 쓰러뜨리면 받는 조각과 잔재 보상을 한 줄로 합쳤습니다.','정신력 막대의 채움이 보이지 않던 문제를 고쳤습니다.','엔딩 이미지에서 같은 히든 보스가 반복해 찍히거나 카드 장수가 줄바꿈되던 문제를 고쳤습니다.','가방의 첫 칸 이름을 "출생"에서 "정보"로 바꿨습니다.']]];
   const V1000SEC=[['🆕 소모품',['공방 거리의 "소지품"에서 붕대·간식·진정제를 살 수 있습니다. 종류마다 최대 3개까지 지닙니다.','소모품은 가방의 "소모품" 칸에 들어가고, 전투 중에도 쓸 수 있습니다.','가격은 10해마다 100안씩 오르고 최대 5,000안입니다.','인연이 있으면 전투를 이긴 뒤 가끔 도시락을 받아 HP와 정신력을 회복합니다.']],
@@ -2414,7 +2415,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     sfxstep(i){const p=Math.round(SFXS.vol*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;SFXS.vol=clamp(n,0,100)/100;sfxSave();SFX.play('hit');render()},
     bartog(){try{localStorage.setItem('cy_barhide',barHidden()?'0':'1')}catch(e){}render()},
     qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
-    qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:BGM.extOn()?'ext':'calm',ext:'calm'}[BGM.style()]||'calm');bgmSave();render()},
+    qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:'wave',wave:BGM.extOn()?'ext':'calm',ext:'calm'}[BGM.style()]||'calm');bgmSave();render()},
     qvol(){UI.volOpen=!UI.volOpen;render()},
     voicepick(k){if(!UI.ev||!UI.ev.voices||(k!=='good'&&k!=='bad'))return;G.ch.voiceBias=k;UI.voicePicked=UI.ev;resave();render()},
     mindbias(k){UI.mindBias=k||'';render()},
