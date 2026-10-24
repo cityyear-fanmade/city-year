@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.0.6';
+  const VERSION='v10.0.7';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -468,7 +468,7 @@ export function startUI(E,app){
       ${BGM.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">배경음악</span><div class="seg">${b('bgm','off','끔',BGM.isOn()?'on':'off')}${b('bgm','on','켬',BGM.isOn()?'on':'off')}</div><div class="stack" style="gap:4px"><span class="small">스타일 · 전투에 들어가면 템포가 오른다</span><div class="seg">${b('bgmstyle','calm','고요',BGM.style())}${b('bgmstyle','passion','불길',BGM.style())}${b('bgmstyle','library','도서관',BGM.style())}${b('bgmstyle','wave','물결',BGM.style())}${BGM.extOn()?b('bgmstyle','ext','시험곡',BGM.style()):''}</div>${BGM.extOn()?`<div class="stack" style="gap:6px;margin-top:6px"><span class="small">시험곡 · 한 곡이 평시에 나오고, 전투에서는 같은 곡이 템포만 빨라진다 (히든 보스는 기존 곡)</span><div class="row" style="gap:6px;flex-wrap:wrap">${['강철','냉철','차선','사서','자정'].map((nm,k)=>`<button class="${BGM.ext()===k+1?'on':''}" data-a="bgmext" data-i="${k+1}">${k+1} ${nm}</button>`).join('')}</div><span class="small dim">1 Steel Core Conflict · 2 Weight of Cold Iron · 3 The Penultimate Gambit · 4 The Librarian's Gambit · 5 Midnight Manuscript Duel</span></div>`:''}</div>
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">음량</span><b class="mono" id="bgmPct">${Math.round(BGM.vol()*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="bgmstep" data-i="-10" aria-label="음량 10 줄이기">−10</button><input type="range" id="bgmRange" min="0" max="100" step="1" value="${Math.round(BGM.vol()*100)}" aria-label="배경음악 음량"><button class="chip" data-a="bgmstep" data-i="10" aria-label="음량 10 올리기">+10</button></div></div>
-        <span class="small dim">고요 · 불길 · 도서관 · 물결 중에서 고른다. 불길과 물결은 전투에서도 같은 곡이 이어진다. 켜면 소리가 서서히 커지고, 언제든 끌 수 있다. 처음 음량은 30%이고, 막대를 끌거나 −10 · +10 버튼으로 0~100%까지 조절한다</span></div>`:''}
+        <span class="small dim">고요 · 불길 · 도서관 · 물결 중에서 고른다. 불길과 물결은 전투에 들어가면 같은 곡이 빨라져 이어진다. 켜면 소리가 서서히 커지고, 언제든 끌 수 있다. 처음 음량은 30%이고, 막대를 끌거나 −10 · +10 버튼으로 0~100%까지 조절한다</span></div>`:''}
       ${SFX.supported?`<div class="stack" style="gap:6px"><span class="eyebrow">효과음</span><div class="seg">${b('sfx','off','끔',SFXS.on?'on':'off')}${b('sfx','on','켬',SFXS.on?'on':'off')}</div>
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">효과음 음량</span><b class="mono" id="sfxPct">${Math.round(SFXS.vol*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="sfxstep" data-i="-10" aria-label="효과음 10 줄이기">−10</button><input type="range" id="sfxRange" min="0" max="100" step="1" value="${Math.round(SFXS.vol*100)}" aria-label="효과음 음량"><button class="chip" data-a="sfxstep" data-i="10" aria-label="효과음 10 올리기">+10</button></div></div>
@@ -1215,9 +1215,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const V1005SEC=[['🆕 기록실',['기록실에 특수 장비와 전용 카드팩 도감이 추가됩니다.']],
       ['🔧 조정',['몇몇 연출이 보강됩니다.','일부 히든 보스의 무기와 책장이 조정됩니다.','일부 출생이 조정됩니다.','일부 전리품의 조건이 조정됩니다.','카드 설명이 보강됩니다.']],
       ['🐛 수정',['연출을 꺼도 판정 결과가 표시됩니다.','카드팩 관련 오류가 수정됩니다.']]];
-  const NOTICE={id:'v10.0.6',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const V1006SEC=[['🔧 조정',['일대기 항목이 보강됩니다.']]];
+  const NOTICE={id:'v10.0.7',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🔧 조정',['일대기 항목이 보강됩니다.']]]};
+    sec:[['🎵 배경음악',['BGM이 변경 및 추가됩니다. 불길이 새 곡으로 변경되고, 물결이 추가됩니다.']]]};
   const V1002SEC=[['🔧 조정',['인연 캐릭터의 성격과 말투를 조정하고, 루트별 전용 이벤트를 늘렸습니다.']]];
   const V1001SEC=[['🔧 개선 및 수정',['무한 모드 성장(주는 피해·일격·받는 피해·연륜)을 가방의 "정보" 칸에서 항상 볼 수 있습니다. 규칙 요약에 연륜 설명을 넣었습니다.','한계 돌파의 공격 선택지가 눌리지 않던 문제를 고쳤습니다. 일격 설명 문구도 알기 쉽게 바꿨습니다.','새로운 이야기에서 싸우기로 하면 다음 해로 미루지 않고 바로 전투가 시작됩니다.','무한 모드에서 이미 이긴 상대가 반복해서 나오던 것을 줄였습니다.','불순물을 쓰러뜨리면 받는 조각과 잔재 보상을 한 줄로 합쳤습니다.','정신력 막대의 채움이 보이지 않던 문제를 고쳤습니다.','엔딩 이미지에서 같은 히든 보스가 반복해 찍히거나 카드 장수가 줄바꿈되던 문제를 고쳤습니다.','가방의 첫 칸 이름을 "출생"에서 "정보"로 바꿨습니다.']]];
   const V1000SEC=[['🆕 소모품',['공방 거리의 "소지품"에서 붕대·간식·진정제를 살 수 있습니다. 종류마다 최대 3개까지 지닙니다.','소모품은 가방의 "소모품" 칸에 들어가고, 전투 중에도 쓸 수 있습니다.','가격은 10해마다 100안씩 오르고 최대 5,000안입니다.','인연이 있으면 전투를 이긴 뒤 가끔 도시락을 받아 HP와 정신력을 회복합니다.']],
@@ -1337,7 +1338,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v10.0.5',V1005SEC],['v10.0.4',V1004SEC],['v10.0.3',V1003SEC],['v10.0.2',V1002SEC],['v10.0.1',V1001SEC],['v10.0.0',V1000SEC],['v9.9.4',V994SEC],['v9.8.7',V987SEC],['v9.8.6',V986SEC],['v9.8.5',V985SEC],['v9.8.4',V984SEC],['v9.4.4',V944SEC],['v9.4.3',V943SEC],['v9.4.2',V942SEC],['v9.4.0',V940SEC],['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v10.0.6',V1006SEC],['v10.0.5',V1005SEC],['v10.0.4',V1004SEC],['v10.0.3',V1003SEC],['v10.0.2',V1002SEC],['v10.0.1',V1001SEC],['v10.0.0',V1000SEC],['v9.9.4',V994SEC],['v9.8.7',V987SEC],['v9.8.6',V986SEC],['v9.8.5',V985SEC],['v9.8.4',V984SEC],['v9.4.4',V944SEC],['v9.4.3',V943SEC],['v9.4.2',V942SEC],['v9.4.0',V940SEC],['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};

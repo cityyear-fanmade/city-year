@@ -62,8 +62,8 @@ export function createBgm(){
   let stage=1;
   /* 시험곡(ext): 외부에서 받은 곡을 평시·전투에 하나씩 배정해 들어 본다. 같은 곡을 둘 다에 배정하면 장면이 바뀌어도 끊기지 않고 이어진다 */
   const ext={idx:1},extOn=()=>typeof window!=='undefined'&&!!(window.CITY_BGM&&window.CITY_BGM.ext);
-  const ONE={passion:1,wave:1},smpKey=(st,sc)=>sc==='boss'?'boss_boss':st==='ext'?'ext_t'+ext.idx+'_'+sc:st+'_'+(ONE[st]&&sc==='fight'?'calm':sc),BOSS_LOOP=4*4*60/66;
-  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;if(ONE[st]&&sc==='fight')sc='calm';const M=window.CITY_BGM;if(sc==='boss'){st='boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext.idx+'_'+sc])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
+  const ONE={passion:1,wave:1},smpKey=(st,sc)=>sc==='boss'?'boss_boss':st==='ext'?'ext_t'+ext.idx+'_'+sc:st+'_'+sc,BOSS_LOOP=4*4*60/66;
+  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st='boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext.idx+'_'+sc])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
   const smpUsable=(st,sc)=>!!smpSrc(st,sc)&&!smp.bad[smpKey(st,sc)];
   function smpLoad(key,src){
     if(smp.loading[key])return;
@@ -107,12 +107,12 @@ export function createBgm(){
     if(!smp.buf[key]){smpLoad(key,smpSrc(style,scene));return !smp.bad[key]}   // 읽는 동안은 조용히 기다린다
     /* 시험곡: 같은 곡의 평시본과 전투본(템포만 빠름)은 길이 비율만큼 위치를 옮겨 같은 곳에서 이어 붙인다 */
     let off=0;const o0=smp.node,buf=smp.buf[key];
-    if(style==='ext'&&scene!=='boss'&&o0&&o0.ext===ext.idx&&o0.scene&&o0.scene!==scene&&o0.dur){const pos=((o0.off+(ctx.currentTime-o0.t0))%o0.dur+o0.dur)%o0.dur;off=pos*buf.duration/o0.dur}
-    if(style==='ext'&&scene!=='boss'){const ok=smpKey(style,scene==='fight'?'calm':'fight');if(!smp.buf[ok]&&smpSrc(style,scene==='fight'?'calm':'fight'))smpLoad(ok,smpSrc(style,scene==='fight'?'calm':'fight'))}   // 반대 장면도 미리 읽어 둔다
+    if((style==='ext'||ONE[style])&&scene!=='boss'&&o0&&o0.ext===(style==='ext'?ext.idx:style)&&o0.scene&&o0.scene!==scene&&o0.dur){const pos=((o0.off+(ctx.currentTime-o0.t0))%o0.dur+o0.dur)%o0.dur;off=pos*buf.duration/o0.dur}
+    if((style==='ext'||ONE[style])&&scene!=='boss'){const ok=smpKey(style,scene==='fight'?'calm':'fight');if(!smp.buf[ok]&&smpSrc(style,scene==='fight'?'calm':'fight'))smpLoad(ok,smpSrc(style,scene==='fight'?'calm':'fight'))}   // 반대 장면도 미리 읽어 둔다
     smpStop(0.6);
     const now=ctx.currentTime,src=ctx.createBufferSource(),g=ctx.createGain();
     src.buffer=buf;src.loop=true;if(scene==='boss'){src.loopStart=BOSS_LOOP;src.loopEnd=buf.duration}g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
-    src.connect(g);g.connect(master);src.start(now,off);smp.cur=key;smp.node={src,g,ext:style==='ext'&&scene!=='boss'?ext.idx:0,scene,off,t0:now,dur:buf.duration};return true;
+    src.connect(g);g.connect(master);src.start(now,off);smp.cur=key;smp.node={src,g,ext:scene==='boss'?0:style==='ext'?ext.idx:ONE[style]?style:0,scene,off,t0:now,dur:buf.duration};return true;
   }
   let barT=0,barN=0,lastScene='calm',lastStyle='calm',cur=null,duckUntil=0;
   const AC=typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext);
