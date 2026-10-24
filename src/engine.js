@@ -486,7 +486,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const bad=!w||(!o.space&&/\s/.test(w))||!NAME_CH.test(w)||!w.replace(/\s/g,'')||[...w].length<min||[...w].length>lim;
     return bad?`${min}~${max}글자로 적어 주세요 (한글·영문·숫자·일본어${o.space?'':', 띄어쓰기 없이'})`:null;
   }
-  const OKW={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상'};
+  const OKW={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상',sink:'침잠'};
   const canFound=ch=>ch.licensed&&ch.rank<=CFG.office.rank&&!ch.job&&!noFixer(ch)&&!ch.officePick&&(!ch.aff||(ch.aff.type==='office'&&!ch.aff.own)||(isWs(ch)&&!ch.office));
   function officeNameErr(n){
     {const e=nameErr(n);if(e)return e}
