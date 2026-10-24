@@ -310,7 +310,8 @@ export const CFG = {
     /* 재료 가치: 녹이는 일반 재료의 등급(상점 가격)에 따라 강화 점수가 달라진다 (비싼 장비를 녹일수록 많이 오른다). 한 단계에 필요한 점수는 wsNeed */
     matValue: {1: 1, 2: 2, 3: 3, 4: 5, 5: 7},
     weapon: {n: '작업대의 칼날', base: {atk: 2, spd: 1}, dice: [1, 6], normal: {atk: 2}, hidden: {dmgB: 3, atk: 2}},
-    armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 4}, hidden: {dr: 3, eva: 3, maxHp: 4}},
+    /* 방어구의 받는 피해 감소는 drMax%까지만 (전체 합계 상한 drCap 70% 안에서 다른 감소량이 밀려나지 않게). 체력·회피·재생은 상한 없이 계속 오른다 */
+    armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 4}, hidden: {dr: 3, eva: 3, maxHp: 4}, drMax: 30},
     /* 의수: 일반 강화 한 단계마다 명중 +1, 5·10·15단계마다 공격·회피·명중 중 하나를 골라 올린다 (pickAmt). pick은 예전 저장의 히든 의수 개조 값 */
     aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {hit: 1}, hidden: {hit: 2}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'}},
     /* 커스텀 의수: 공방 해결사가 한 번 포인트(pts)를 나눠 만든다. 공격은 atkCost 포인트에 +atkPer, 회피는 evaCost 포인트에 +1, 체력은 hpCost 포인트에 +hpPer, 패시브 하나는 passCost 포인트 */
