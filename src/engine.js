@@ -187,10 +187,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function giveRelic(ch,id,late){
     const R=D.relics[id];if(!R)return;
     (ch.relics=ch.relics||[]).push(R.n);(ch.relicIds=ch.relicIds||[]).push(id);ch.relicPick=false;ch.relicPickLate=false;
+    if(isWs(ch)&&CFG.wsRelic[id])return wsAbsorb(ch,id);
     if(R.odin){ch.odin=true;if(ch.o&&ch.o.n==='보냐텔리 가문')ch.yeji=true}
     /* 환도 + 궁니르: 공명 패시브와 전용 카드 2장 */
     if(id==='gungnir'&&ch.hwando&&!ch.resonance){ch.resonance=true;ch.relics.push('궁니르 공명');for(const gid of ['g_gungnir','g_gungnir'])if(!routeBirthCard(ch,gid))forceAdd(ch,gid)}
     if(R.gear){const g=Object.assign({id:R.gear.id||id,grade:5},R.gear);if(late)offerGear(ch,g);else{equip(ch,g);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth')}}
+  }
+  /* 공방 해결사: 유물은 장비로 쓰지 않고 공방 무기에 효과로 깃든다 (보관함의 유물 장비는 사라진다) */
+  function wsAbsorb(ch,id){
+    const W=CFG.wsRelic[id],R=D.relics[id];if(!W||!R)return '';
+    ch.wsRelic=ch.wsRelic||{};if(ch.wsRelic[id])return '';ch.wsRelic[id]=true;
+    if(id==='odin'){ch.odin=false;ch.yeji=false}
+    ch.stash=(ch.stash||[]).filter(x=>!(x.id==='gungnir'&&id==='gungnir')&&!(String(x.id).startsWith('laev')&&id==='laev'));
+    const note=`공방 무기에 깃든다 · ${W.n} · ${W.e}`;(ch.relics=ch.relics||[]).push(`${R.n} → ${W.n}`);
+    return note;
   }
   /* 이미 가진 유물은 다시 고를 수 없다 */
   /* 잊힌 유물 확률: 기본 + 유물 적성 (성장기 '무너진 유적 탐험') */
@@ -638,6 +648,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 공방 해결사의 작업대: 전용 무기·방어구·의수를 보관함 장비를 녹여 끝없이 강화한다 ===== */
   const WS=CFG.ws,wsKey=sl=>sl==='weapon'?'w':sl==='armor'?'a':'g';
   const wsNeed=n=>1+Math.floor(n/WS.needEvery);
+  const wsMatVal=m=>WS.matValue[Math.max(1,Math.min(5,(m&&m.grade)|0||1))]||1;
   /* 일반 재료: 공방 물건이거나 등급이 4 이하. 히든 재료: 그 밖의 전리품·유물 (5등급 이상이나 등급이 없는 전용 장비) */
   const wsHidden=m=>!(D.items&&D.items[m.id])&&!((m.grade||0)>=1&&(m.grade||0)<=4)&&!(m.id==='birth'||m.n==='맨손');
   function wsItem(ch,slot){
@@ -647,8 +658,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const tiers=n=>B_.at.map((t,i)=>n>=t?i:-1).filter(i=>i>=0),bigFx=(sl,n)=>{const o={};for(const i of tiers(n))for(const [x,v] of Object.entries(B_[sl][i]))o[x]=(o[x]||0)+v;return o};
     if(slot==='weapon'){const C_=WS.weapon,bf=bigFx('weapon',k.n),atk=C_.base.atk+k.n*C_.normal.atk+(bf.atk||0)+k.h*(C_.hidden.atk||0),dmg=k.h*C_.hidden.dmgB+(bf.dmgB||0),spd=(C_.base.spd||0)+(bf.spd||0),bg=tiers(k.n).length;
       return {id:'ws_weapon',slot,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{atk,spd,dmgB:dmg},wx:{dice:C_.dice.slice()}}}
-    if(slot==='armor'){const C_=WS.armor,bf=bigFx('armor',k.n),hp=C_.base.maxHp+k.n*C_.normal.maxHp+(bf.maxHp||0)+k.h*(C_.hidden.maxHp||0),rg=bf.regen||0,dr=k.h*C_.hidden.dr+(bf.dr||0),eva=k.h*C_.hidden.eva,bg=tiers(k.n).length;
-      return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
+    if(slot==='armor'){const C_=WS.armor,bf=bigFx('armor',k.n),hp=C_.base.maxHp+k.n*C_.normal.maxHp+(bf.maxHp||0)+k.h*(C_.hidden.maxHp||0),rg=bf.regen||0,dr=Math.min(C_.drMax,k.h*C_.hidden.dr+(bf.dr||0)),eva=k.h*C_.hidden.eva,bg=tiers(k.n).length;
+      return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%${dr>=C_.drMax?' (최대)':''}`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
     const A_=WS.aug,g=w.g,fx=Object.assign({},A_.base),pk=g.picks||[];
     fx.hit=(fx.hit||0)+(g.n||0)*A_.normal.hit+(g.h||0)*A_.hidden.hit;fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);
     for(const x of pk)fx[x]=(fx[x]||0)+A_.pickAmt[x];
@@ -707,11 +718,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const k=w[wsKey(slot)],hid=wsHidden(m);let step=0;
     st.splice(i,1);
     if(D.items&&D.items[m.id]){w.used=w.used||{};w.used[m.id]=(w.used[m.id]||0)+1}
-    if(hid){k.h++;step=1}else{k.p++;if(k.p>=wsNeed(k.n)){k.p=0;k.n++;step=1}}
-    if(step)w.ups++;
-    if(slot==='aug'&&step&&!hid&&WS.big.at.includes(k.n))k.pend=(k.pend||0)+1;
+    const val=hid?0:wsMatVal(m);
+    if(hid){k.h++;step=1}else{k.p+=val;while(k.p>=wsNeed(k.n)){k.p-=wsNeed(k.n);k.n++;step++;if(slot==='aug'&&WS.big.at.includes(k.n))k.pend=(k.pend||0)+1}}
+    if(step)w.ups+=step;
     equip(ch,carryTune(cur,wsItem(ch,slot)));ch.stash=ch.stash.filter(x=>x!==cur);
-    return {hidden:hid,step,n:k.n,h:k.h,p:k.p,need:wsNeed(k.n),m:m.n};
+    return {hidden:hid,step,n:k.n,h:k.h,p:k.p,need:wsNeed(k.n),m:m.n,val};
   }
   const noFixer=ch=>!!ch.hw||isFinger(ch)||isFounder(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
   function license(ch){
@@ -935,7 +946,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function chooseFinger(ch,name){
     if(!ch.fingerPick)return null;
     /* 별에 선택받은 자만: 소지 루트 (손가락 서열 대신 인의예지 별을 이을 때마다 성도가 강해진다) */
-    if(name==='소지'&&ch.flags.starborn&&!ch.pinky){ch.fingerPick=false;ch.pinky=true;ch.pinkyYear=ch.year||0;addStats(ch.stats,D.pinky.fx);return [D.pinky.n+' 표식 · '+D.pinky.e,'인의예지 별을 이을 때마다 그 별이 성도에 새겨진다 (추가 강화)']}
+    if(name==='소지'&&ch.flags.starborn&&!ch.pinkyFull){ch.fingerPick=false;ch.pinkyFull=true;if(!ch.pinky){ch.pinky=true;ch.pinkyYear=ch.year||0;addStats(ch.stats,D.pinky.fx)}return ['정식 소지 · 다른 손가락 서열 없이 소지 한 곳에만 선다 · '+D.pinky.e,'인의예지 별을 이을 때마다 그 별이 성도에 새겨진다 (추가 강화)']}
     if(!D.orgs.finger.includes(name))return null;
     const chips=[];ch.fingerPick=false;joinAff(ch,{type:'finger',from:'finger'},name,chips);return chips;
   }
@@ -1841,6 +1852,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:T_.pick,h:`1d100 · ${O.dc} 이상이면 신탁대행자 (남은 기회 ${O.tries-(ch.oracleTries||0)}번)`,check:{s:null,dc:O.dc,pure:true},ok:{t:T_.okT,fx:{oracle:true}},fail:{t:T_.failT,fx:{oracleFail:true}}},
       {l:T_.skip,h:'다시 만나지 않는다',ok:{t:T_.skipT,fx:{oracleDecline:true}}}]};
   }
+  /* 별에 선택받은 자: 소지(성도의 별 잇기)는 출신에 붙은 도다. 소지 표식을 처음부터 가지고 다른 소속과 겸한다(+소지).
+     손가락 가입에서 소지를 고르면 정식 소지(소지 한 곳에만 선다). 옛 판에서 소지를 골라 가입한 경우는 정식 소지로 이어 준다 */
+  function starPinky(ch){
+    if(!ch.flags||!ch.flags.starborn||ch.distForm)return;
+    if(!ch.pinky){ch.pinky=true;ch.pinkyAuto=true;ch.pinkyYear=ch.year||0;addStats(ch.stats,D.pinky.fx)}
+    else if(ch.pinkyFull==null&&!ch.pinkyAuto)ch.pinkyFull=true;
+  }
   /* 소지의 도: 표식이 생긴 뒤 CFG.pinky.every년차마다 인·의·예·지 사건이 차례로 온다 (판정 1d100 ≥ dc) */
   function pinkyEvent(G){
     const ch=G.ch,y=G.year,P_=CFG.pinky;
@@ -1987,7 +2005,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function advanceYear(G){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
-    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
+    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);starPinky(mc);if(isWs(mc))for(const id of (mc.relicIds||[]))if(!(mc.wsRelic&&mc.wsRelic[id]))wsAbsorb(mc,id);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
     if(mc.distPick)setDistort(mc,'');
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
@@ -2249,7 +2267,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ok){ch.relicPickLate=true;chips.push('유물이 손에 감긴다 · 하나를 고른다')}else{chips.push('손끝에 먼지만 묻었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.familyAsked)ch.familyPend=true}}
     /* 보냐텔리 가문: 잊힌 유물을 놓치면 가문의 부름 · 오딘의 눈 */
     if(fx.odinRoll){const r=d(100),ok=r<=fx.odinRoll&&!(ch.relicIds||[]).includes('odin');chips.push(`1d100 · ${r} (${fx.odinRoll} 이하)`);
-      if(ok){giveRelic(ch,'odin',true);chips.push('유물 · '+D.relics.odin.n+' ('+D.relics.odin.e+')');if(ch.yeji)chips.push('패시브 · 가속하는 미래 · 버프 · 예지안 (전용 검술 카드 피해 +'+CFG.odin.yeji+')');else chips.push('버프 · 순간의 예지 · 첫 라운드 회피 +'+CFG.odin.first+' · 이후 +'+CFG.odin.after)}else{chips.push(ch.resoAsked?'유물고의 울림이 잦아들었다':'보물고는 비어 있었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.resoAsked){ch.resoPend=true;ch.resoAt=(ch.year||0)+3}}}
+      if(ok){const wn_=giveRelic(ch,'odin',true);if(wn_)chips.push('유물 · '+D.relics.odin.n+' · '+wn_);else chips.push('유물 · '+D.relics.odin.n+' ('+D.relics.odin.e+')');if(wn_){}else if(ch.yeji)chips.push('패시브 · 가속하는 미래 · 버프 · 예지안 (전용 검술 카드 피해 +'+CFG.odin.yeji+')');else chips.push('버프 · 순간의 예지 · 첫 라운드 회피 +'+CFG.odin.first+' · 이후 +'+CFG.odin.after)}else{chips.push(ch.resoAsked?'유물고의 울림이 잦아들었다':'보물고는 비어 있었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.resoAsked){ch.resoPend=true;ch.resoAt=(ch.year||0)+3}}}
     if(fx.wsRoll){
       const r=d(WF.die);chips.push(`1d${WF.die} · ${r} (${WF.minRoll} 이상)`);
       if(r>=WF.minRoll){const was=ch.licensed;if(!was)license(ch);ch.aff={type:'workshop',name:'공방 해결사'};
@@ -2557,6 +2575,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
     let hpNote=null;
     if(P.laev==='open'){P.flame=1}
+    /* 공방 해결사의 유물: 공방 무기에 깃든 효과 */
+    if(P.isP&&ch.wsRelic&&isWs(ch)){P.wsRelic=ch.wsRelic;if(ch.wsRelic.laev){P.wsFlame=true;P.burnHit=Math.max(P.burnHit||0,CFG.wsRelic.laev.hit)}if(ch.wsRelic.odin)P.runes=0}
     if(e.hidden&&P.hp<Math.min(CFG.hidden.minHp,P.maxHp)){const t=Math.min(CFG.hidden.minHp,P.maxHp);hpNote=`불길한 예감에 숨을 고른다 · HP ${P.hp} → ${t}`;P.hp=t;ch.hp=t}
     /* 정신력: 환상체와 마주치면 2d3 감소, 그다음 정신력 구간 보정(호흡·회피) */
     let mindNote=hpNote?[hpNote]:[];
@@ -2573,7 +2593,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       P.breath+=br;P.eva+=ev+st;P.atk+=st;P.spd+=st;P.maxHp+=hp;P.hp+=hp;mindNote.push(`굳은 정신 · 정신력 ${ch.mind} (${n}단계) · 호흡 +${br} · 회피 +${ev+st} · 최대 HP +${hp}${st?` · 공격·속도 +${st}`:''}`)}
     /* 특색 + 소지: 신(心) — 전투를 시작할 때 정신력을 쓰고 받는 피해를 줄이며 주는 피해를 늘린다. 3라운드마다 망이 하나씩 감긴다 (newRound) */
     {const SM=CFG.shinmang,isC=ch.titleKind==='color'||ch.colorDone;
-      if(SM.on&&ch.pinky&&isC&&!ch.distForm&&ch.mind>SM.shinCost){ch.mind-=SM.shinCost;P.sm={rings:0,limit:Math.min(SM.maxRings,(ch.pinkyKeys||[]).length)};
+      if(SM.on&&ch.pinky&&isC&&!ch.distForm&&ch.mind-SM.shinCost>=Math.max(1,mindFloor(ch))){ch.mind-=SM.shinCost;P.sm={rings:0,limit:Math.min(SM.maxRings,(ch.pinkyKeys||[]).length)};
         mindNote.push(`신(心) · 정신력 −${SM.shinCost} (지금 ${ch.mind}) · 받는 피해 −${Math.round(SM.takeShin*100)}% · 주는 피해 +${Math.round(SM.dealShin*100)}%${P.sm.limit?` · ${SM.ringEvery}라운드마다 망 하나 (최대 ${P.sm.limit}망)`:' · 소지의 별이 없어 망은 감기지 않는다'}`)}
       P.augPas=(ch.gear&&ch.gear.aug&&ch.gear.aug.cust&&ch.gear.aug.cust.pas)||ch.custPas||((ch.ws&&ch.ws.cust&&ch.ws.cust.done&&isWs(ch))?ch.ws.cust.pas:null);
       if(P.augPas)mindNote.push(`커스텀 의수 · ${CFG.ws.cust.pass[P.augPas].n} · ${CFG.ws.cust.pass[P.augPas].e}`);
@@ -2617,7 +2637,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.augPas==='absorb'&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(3,P.maxHp-P.hp);P.hp+=h;const m={t:'kw',s:`${P.name} · 흡수 코어 · HP +${h}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     /* 망(望): 3라운드마다 정신력을 쓰고 빛의 고리 하나가 감긴다. 최대 3망, 9라운드 이후에는 더 쓰지 않는다. 정신력이 모자라면 감기지 않는다 */
     {const SM=CFG.shinmang;if(P.sm&&C.round%SM.ringEvery===0&&P.sm.rings<P.sm.limit){const cost=SM.ringCost[P.sm.rings]||SM.ringCost[SM.ringCost.length-1];
-      if(C.ch.mind>cost){C.ch.mind-=cost;P.sm.rings++;const m={t:'kw',s:`망(望) ${P.sm.rings}망 · 정신력 −${cost} (지금 ${C.ch.mind}) · 주는 피해 +${Math.round((SM.dealShin+P.sm.rings*SM.dealRing)*100)}% · 명중 +${P.sm.rings*SM.ringHit}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}}
+      if(C.ch.mind-cost>=Math.max(1,mindFloor(C.ch))){C.ch.mind-=cost;P.sm.rings++;const m={t:'kw',s:`망(望) ${P.sm.rings}망 · 정신력 −${cost} (지금 ${C.ch.mind}) · 주는 피해 +${Math.round((SM.dealShin+P.sm.rings*SM.dealRing)*100)}% · 명중 +${P.sm.rings*SM.ringHit}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}}
     P.evaPen=P.evaPenNext||0;P.evaPenNext=0;
     /* 토끼 강화·충전 자극 근력: 체력이 낮거나 충전이 충분하면 라운드 동안 속도가 오른다 */
     if(P.spdBoost){const B_=P.spdBoost;P.spd=P.spdBase+(P.hp<=P.maxHp*B_.low[0]?B_.low[1]:0)+(P.charge>=B_.charge[0]?B_.charge[1]:0)}
@@ -3023,6 +3043,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 중지 패시브 되갚음: 맞을 때마다 1 (최대 5), 다음 적중 피해 +2×스택 */
       if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
       if(A.isP&&A.angry>0&&dmg>0){dmg+=A.angry;note+=` 분노+${A.angry}`;A.angry=0}
+      if(A.isP&&A.wsRelic&&A.wsRelic.odin&&dmg>0){const R_=CFG.wsRelic.odin;
+        if((A.runes||0)>=R_.need){const dd=A.wx&&A.wx.dice?A.wx.dice[1]:(A.pdie||6);let x=0;for(let q=0;q<R_.extra;q++)x+=d(dd);dmg+=x;note+=` 룬 ${R_.need} 소모 · 주사위 +${R_.extra}개(+${x})`;A.runes=0}
+        else{A.runes=(A.runes||0)+1;L('kw',`  ${A.name} · 룬 ${A.runes}/${R_.need}`)}}
       const EG_=A.isP&&c.eg?(A.mf&&c.eg.mf?Object.assign({},c.eg,c.eg.mf):c.eg):null;
       if(EG_){if(EG_.first&&A.egFR!==C.round){A.egFR=C.round;dmg+=EG_.first;note+=` 첫 적중+${EG_.first}`}
         if(EG_.per){const n_=egRes(A,B);if(n_>0){const x=n_*EG_.per;dmg+=x;note+=` ${(A.wx&&(A.wx.grudgeN||(A.wx.echo&&A.wx.echo.n)))||(A.wx&&A.wx.debuff?'거미줄':'')}+${x}`}}}
@@ -3129,8 +3152,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.isP&&d(M.evadeDie)===1&&!(corpType(C.ch)&&corpType(C.ch).year))loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
       /* 레바테인 계열: 적중 시 화상 */
       if(A.burnHit&&B.hp>0){
-        if(A.laev){B.flame=Math.min(CFG.stackCap,(B.flame||0)+A.burnHit);if(A.laev==='open'){B.blue=true;B.blueM=1+(CFG.laev.blueMul-1)*(A.laevF||1);B.blueD=Math.max(1,Math.round(CFG.laev.blueDot*(A.laevF||1)))}
-          L('kw',`  ${B.name}에게 ${A.laev==='open'||isBlue(B)?'푸른 화염':'붉은 화염'} +${A.burnHit} (지금 ${B.flame})`);laevCount(A,A.burnHit,L)}
+        if(A.laev||A.wsFlame){B.flame=Math.min(CFG.stackCap,(B.flame||0)+A.burnHit);if(A.wsFlame&&!A.laev)B.wsKeep=true;if(A.laev==='open'){B.blue=true;B.blueM=1+(CFG.laev.blueMul-1)*(A.laevF||1);B.blueD=Math.max(1,Math.round(CFG.laev.blueDot*(A.laevF||1)))}
+          L('kw',`  ${B.name}에게 ${A.laev==='open'||isBlue(B)?'푸른 화염':'붉은 화염'} +${A.burnHit} (지금 ${B.flame})`);if(A.laev)laevCount(A,A.burnHit,L)}
         else{const bp=A.burnHit+(A.wx&&A.wx.burnPlus||0);B.burn=Math.min(Math.round(CFG.burn.max*((A.wx&&A.wx.burnCap)||1)),(B.burn||0)+bp);L('kw',`  ${B.name}에게 화상 +${bp} (지금 ${B.burn})`)}}
       /* 주사위마다 무작위 디버프 1 (Furioso): 출혈 또는 파열 */
       if(c.rngDebuff&&B.hp>0){const got={};for(let i=0;i<c.dice;i++){const k=one(c.rngDebuff);B[k]=Math.min(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):CFG.stackCap,B[k]+1);got[k]=(got[k]||0)+1}
@@ -3167,6 +3190,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 궁니르 공명: 궁니르 카드를 낸 라운드는 받는 피해 60% 감소 */
     if(P.resonance&&pp.some(c=>c.gungnir))P.drRound=C.round;
     const L=(t,s)=>{if(C.quiet)return;C.log.push({t,s});C.cur.push({t,s})};
+    if(P.isP&&P.wsRelic&&P.wsRelic.gungnir&&(C.round-1)%CFG.wsRelic.gungnir.every===0){P.drRound=C.round;L('kw',`${P.name} · 궁니르 · 강제 공명 · 이번 라운드 받는 피해 60% 감소`)}
     /* 보랏빛 사복검: 서로 다른 자세의 4코스트 카드를 두 가지 쓰면 다음 손패에 환영난무, 몇 라운드 동안 최대 빛 증가 (전투에 한 번) */
     if(P.isP&&P.wx&&P.wx.forms){C.vsTop=C.vsTop||[];pp.forEach(c=>{if(c.vsTop&&!C.vsTop.includes(c.vsTop))C.vsTop.push(c.vsTop)});if(C.vsTop.length>=2&&!C.vsGiven){C.vsGiven=true;giveNext(P,'x_vs_ego');P.burstLight=CFG.form.burstLight;P.burstTo=C.round+CFG.form.burstRounds;L('sys',`  ${P.name} · 3코스트 이상 두 자세 · 다음 손패에 환영난무 · 최대 빛 +${CFG.form.burstLight} (${CFG.form.burstRounds}라운드)`)}}
     const push=ev=>{if(C.quiet)return;if(C.rollPend){C.cur.unshift({t:'sys',s:`  판정 1d100 ${C.rollPend.r} / 개화 ${C.rollPend.th} 이하`,roll:C.rollPend});C.rollPend=null}ev.lines=C.cur;C.cur=[];ev.snap=snap(C);ev.step=C.step;C.evs.push(ev)};
@@ -3248,7 +3272,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 푸른 화염: 라운드 끝에 스택 × blueDot 피해, 그 뒤 1 감소. 해방 레바테인 소지자의 일반 화상은 줄지 않는다 */
     for(const X of [P,E]){
       if(isBlue(X)&&X.hp>0){const x=X.flame*(X.blueD||CFG.laev.blueDot);hpLoss(C,X,x,L);X.flame--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.flame})`)}
-      else if(X.flame>0&&!(X.isP&&X.laev==='open'))X.flame--;
+      else if(X.flame>0&&!(X.isP&&X.laev==='open')&&!X.wsKeep)X.flame--;
       /* 화상: 라운드 끝에 스택만큼 피해, 그 뒤 스택은 keep 비율만 남는다 (내림) */
       if(X.oracleMiss){X.oracleMiss=false;X.passHitNext=(X.passHitNext||0)-CFG.oracle.missHit;X.evaPenNext=CFG.oracle.missEva}
       if(X.stunned){X.stunned=false;X.stagger=0;X.stunImmune=C.round+3}else if(X.stagger>0)X.stagger=Math.max(0,X.stagger-CFG.nail.decay);
@@ -3328,7 +3352,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
+    wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,equip,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

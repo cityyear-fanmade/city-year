@@ -480,7 +480,7 @@ export function startUI(E,app){
   /* 호수 선장은 직위표의 맨 위(부선장)가 아니라 선장으로 보인다(칭호 '선장'과 함께 뜨던 부선장 표기 제거) */
   const frName=c=>c.flags&&c.flags.lake&&c.lake&&c.lake.captain&&c.fr?'선장':(c.fr?c.fr.n:'');
   const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.office&&ch.office.ws?' · 내 사무소 '+esc(ch.office.name):''}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+frName(ch):''}</span>`:ch.hw?`<span class="chip" style="color:var(--gold);border-color:var(--gold)">H사 홍원${ch.hw.done?' · 가주':ch.hw.out?' · 외부 임무':''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
-    +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
+    +(ch.pinky?`<span class="chip" title="${D.pinky.t}">${ch.pinkyFull?D.pinky.n:ch.aff?'+'+D.pinky.n:D.pinky.n+' 표식'}</span>`:'');
   const innateOne=(c,k)=>k==='mark'&&c.markOn?D.innate.mark.awake:D.innate[k].n;
   const innateName=c=>c.innate?[c.innate,c.innate2].filter(Boolean).map(k=>innateOne(c,k)).join(' · '):null;
   /* E.G.O 적성자: 무기 등급과 다음 등급까지 남은 발현 횟수 */
@@ -949,12 +949,12 @@ export function startUI(E,app){
     const rows=['weapon','armor'].map(sl=>{
       const cur=ch.gear[sl];if(!cur||cur.id!=='ws_'+sl)return '';
       const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&!(m.id==='birth'&&m.n==='맨손')&&(m.slot===sl||m.id==='hidmat'));
-      const btns=mats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="${sl}:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
+      const btns=mats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="${sl}:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든 · 한 단계':'일반 · 강화 점수 +'+E.wsMatVal(m)}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
       return `<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow(sl)}<div class="row between"><b>${esc(cur.n)}</b><span class="mono small dim">일반 ${k.p}/${E.wsNeed(k.n)} · 강화 ${k.n}${k.h?' · 히든 '+k.h:''}</span></div><span class="mono small" style="color:var(--gold)">${esc(cur.e)}</span>${btns||`<p class="small dim">녹일 ${nm[sl]}이(가) 보관함에 없다.</p>`}</div>`;
     }).join('');
     const ag=ch.gear.aug,done=w.g&&w.g.pick,cands=st.map((m,i)=>[m,i]).filter(([m])=>E.wsAugOk(ch,m));
     const amats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&(m.id==='hidmat'||m.slot==='aug'));
-    const abtn=amats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="aug:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든':'일반'}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
+    const abtn=amats.map(([m,i])=>{const hid=E.wsHidden(m);return `<button class="btn" data-a="wsmelt" data-i="aug:${i}" ${dead?'disabled':''}><span class="row between"><b>${esc(m.n)}</b><span class="chip${hid?' warn':''}">${hid?'히든 · 한 단계':'일반 · 강화 점수 +'+E.wsMatVal(m)}</span></span><span class="mono small dim">${esc(m.e||'')}</span></button>`}).join('');
     const K_=W_.cust,cu=UI.cu=UI.cu||{atk:0,eva:0,hp:0,pas:null},spent=cu.atk*K_.atkCost+cu.eva*K_.evaCost+cu.hp*K_.hpCost+(cu.pas?K_.passCost:0),left=K_.pts-spent;
     const stp=(k,l,cost,unit)=>`<div class="row between" style="gap:6px"><span class="small"><b>${l}</b> +${cu[k]*unit} <span class="dim">(${cost}포인트당 +${unit})</span></span><span class="row" style="gap:6px"><button class="chip" data-a="custd" data-i="${k}:-1" ${cu[k]<=0?'disabled':''}>−</button><button class="chip" data-a="custd" data-i="${k}:1" ${left<cost?'disabled':''}>＋</button></span></div>`;
     const custRow=(!ag||ag.id!=='ws_aug'||(w.cust&&w.cust.done))?'':`<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>커스텀 의수 만들기</b><span class="chip warn">남은 포인트 ${left}/${K_.pts}</span></div><p class="small dim">포인트를 나눠 의수를 한 번 만든다. 만들고 나면 바꿀 수 없다.</p>${stp('atk','공격',K_.atkCost,K_.atkPer)}${stp('eva','회피',K_.evaCost,1)}${stp('hp','체력',K_.hpCost,K_.hpPer)}<div class="stack" style="gap:4px"><span class="small"><b>패시브</b> <span class="dim">(${K_.passCost}포인트, 하나만)</span></span><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-items:stretch">${Object.entries(K_.pass).map(([k,v])=>`<button class="btn${cu.pas===k?' primary':''}" style="min-height:96px;justify-content:flex-start;word-break:keep-all" data-a="custp" data-i="${k}" ${cu.pas!==k&&!cu.pas&&left<K_.passCost?'disabled':''}><b>${v.n}</b><span class="small dim">${v.e}</span></button>`).join('')}</div></div><button class="btn primary" data-a="custok" ${spent<=0||dead?'disabled':''}>이 설계로 만든다</button></div>`;
@@ -1119,7 +1119,7 @@ export function startUI(E,app){
     const ids=Object.keys(D.enemies).filter(id=>/^lake_(ywhale|whale|indigo)/.test(id));
     if(!ids.length||!(r.births||[]).concat(r.seen).some(x=>x==='대호수로 나간 자'||/^lake_/.test(x)))return '';
     const rows=(list,title)=>`<div><span class="small dim">${title}</span><div class="stack" style="gap:6px">${list.map(id=>{const e=D.enemies[id],seen=r.seen.includes(id),won=r.beaten.includes(id);
-      return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${seen?'':' dim'}"${won?` style="color:${e.color};border-color:${e.color}"`:''}>${seen?esc(e.n)+(won?' ✓':''):'???'}</span><span class="small dim">${won&&e.drop?esc(e.drop.e):seen?'아직 이기지 못했다':'아직 만나지 못했다'}</span></div>`}).join('')}</div></div>`;
+      return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${seen?'':' dim'}"${won?` style="color:${e.color};border-color:${e.color}"`:''}>${seen?esc(e.n)+(won?' ✓':''):'???'}</span><span class="small dim">${won?(e.drop?esc(e.drop.e):'쓰러뜨렸다'):seen?'아직 이기지 못했다':'아직 만나지 못했다'}</span></div>`}).join('')}</div></div>`;
     const y=ids.filter(id=>/^lake_ywhale/.test(id)),w=ids.filter(id=>/^lake_whale/.test(id)),o=ids.filter(id=>/^lake_indigo/.test(id));
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">대호수 도감 · 대재앙 ${w.filter(id=>r.beaten.includes(id)).length}/${w.length} · 어린 고래 ${y.filter(id=>r.beaten.includes(id)).length}/${y.length}</span>${rows(w,'대재앙')}${rows(y,'보스급 고래')}${rows(o,'그 밖에')}</div>`
   }
@@ -1626,7 +1626,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function vFingerPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">손가락 가입</span>
       <p class="small">어느 손가락에 설지 고른다. 정하면 그 손가락의 서열표를 따른다.</p>
-      ${G.ch.flags&&G.ch.flags.starborn&&!G.ch.pinky?`<button class="btn" data-a="fingerset" data-i="소지"><b>소지</b><span class="small">${esc(D.pinky.t)}</span><span class="mono small" style="color:var(--gold)">서열 없음 · 인 → 의 → 예 → 지 (5년마다 별을 잇는다)</span><span class="small dim">${esc(D.pinky.e)} · 별을 하나 이을 때마다 성도에 그 별을 새긴다 (재료 강화와 별개인 추가 강화: 인 HP · 의 공격 · 예 회피 · 지 피해와 별 잇기) · 네 별을 모두 이으면 '별을 잇다' 한 장 더</span></button>`:''}
+      ${G.ch.flags&&G.ch.flags.starborn&&!G.ch.pinkyFull?`<button class="btn" data-a="fingerset" data-i="소지"><b>정식 소지</b><span class="small">${esc(D.pinky.t)}</span><span class="mono small" style="color:var(--gold)">서열 없음 · 소지 한 곳에만 선다 (다른 손가락을 고르면 그 서열을 쌓으면서 +소지로 겸한다) · 인 → 의 → 예 → 지 (5년마다 별을 잇는다)</span><span class="small dim">${esc(D.pinky.e)} · 별을 하나 이을 때마다 성도에 그 별을 새긴다 (재료 강화와 별개인 추가 강화: 인 HP · 의 공격 · 예 회피 · 지 피해와 별 잇기) · 네 별을 모두 이으면 '별을 잇다' 한 장 더</span></button>`:''}
       ${D.orgs.finger.map(n=>{const F=D.fingers[n];return `<button class="btn" data-a="fingerset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small">${esc(F.trait)}</span><span class="mono small" style="color:var(--gold)">${F.ranks.map(r=>esc(r.n||(r.branch||[]).map(b=>b.n).join(' / '))).join(' → ')}</span><span class="small dim">${esc(fingerPassive(n,0)||'')}</span></button>`}).join('')}</div>`;
   }
   function vStarPick(){
@@ -2295,7 +2295,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function startCombat(id){recAdd('seen',id);C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.paused=false;UI.screen='combat';render()}
 
   const ACT={
-    lrelic(k){if(!E.relicChoices(G.ch).includes(k))return;E.giveRelic(G.ch,k,true);UI.res.chips=[...UI.res.chips,'유물 · '+D.relics[k].n];render()},
+    lrelic(k){if(!E.relicChoices(G.ch).includes(k))return;const wn=E.giveRelic(G.ch,k,true);UI.res.chips=[...UI.res.chips,'유물 · '+D.relics[k].n+(wn?' · '+wn:'')];render()},
     offkw(k){UI.offName=(($('offname')||{}).value||UI.offName||'');UI.offKw=k;render()},
     offset(){
       const n=(($('offname')||{}).value||'').trim(),err=E.officeNameErr(n);
@@ -2380,7 +2380,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     },
     sellcard(i){if((UI.soldN||0)>=CFG.workshopFixer.cardMax)return;const r=E.sellCard(G.ch,+i);if(r){UI.soldN=(UI.soldN||0)+1;UI.sold=`${D.cards[r.id].n}을(를) ${E.money(r.v)}에 팔았다.`;resave();render()}},
     swapcard(i){if((UI.swapped||[]).length>=CFG.shop.swapMax)return;const r=E.swapCard(G.ch,+i);if(r){(UI.swapped=UI.swapped||[]).push([D.cards[r.old].n,D.cards[r.nid].n]);render()}},
-    wsmelt(i){const [sl,ix]=String(i).split(':'),r=E.wsMelt(G.ch,sl,+ix);if(r){UI.wsMsg=`${r.m}을(를) 녹였다 · ${r.hidden?'히든 재료 · 한 단계 상승':r.step?'일반 재료 · 한 단계 상승 ('+r.n+'단계)':'일반 재료 · '+r.p+'/'+r.need}`;resave();render()}},
+    wsmelt(i){const [sl,ix]=String(i).split(':'),r=E.wsMelt(G.ch,sl,+ix);if(r){UI.wsMsg=`${r.m}을(를) 녹였다 · ${r.hidden?'히든 재료 · 한 단계 상승':r.step?'일반 재료 +'+r.val+' · '+(r.step>1?r.step+'단계 한꺼번에 ':'한 단계 ')+'상승 ('+r.n+'단계)':'일반 재료 +'+r.val+' · '+r.p+'/'+r.need}`;resave();render()}},
     wsname(sl){const el=document.getElementById('wsn_'+sl),n=E.wsRename(G.ch,sl,el?el.value:'');if(n){UI.wsMsg=`이름을 '${n}'(으)로 정했다.`;resave();render()}},
     wsaugc(i){const r=E.wsAugChoose(G.ch,i);if(r){UI.wsMsg=`의수 특수 강화 · ${CFG.ws.aug.stats[r.stat]} +${r.amt}`;resave();render()}},
     wsaug(i){const [ix,k]=String(i).split(':'),r=E.wsAugPick(G.ch,+ix,k);if(r){UI.wsMsg=`${r.m}을(를) 녹여 의수를 개조했다 · ${CFG.ws.aug.stats[r.stat]} +${CFG.ws.aug.pick}`;resave();render()}},
@@ -2665,7 +2665,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
     testInfLake(n){if(!G)return null;const c=G.ch,X=CFG.endless,be=CFG.years+X.span*X.grades.length,out={};G.infinite=true;c.infinite=true;c.infIntro=1;c.flags=c.flags||{};c.flags.lake=1;c.lake=c.lake||{};c.lake.captain=true;
       for(let i=0;i<(n||300);i++){G.year=c.year=be+1+i;c.hp=c.stats.maxHp;c.mind=E.mindMax(c);try{const st=E.advanceYear(G);const k=st.type==='omen'?'omen:'+st.boss+(st.echo?'(echo)':''):st.type==='fight'?'fight:'+st.enemy:st.type;out[k]=(out[k]||0)+1}catch(e){out['ERR '+e.message]=(out['ERR '+e.message]||0)+1}}try{E.answerOmen(G,{boss:'hongwon',rift:true,escape:true,spec:'table:late'},true);out._intro=D.enemies.hongwon.intro}catch(e){out._intro='ERR '+e.message}return out},
-    testWs(){if(!G)return;const c=G.ch;c.aff={type:'workshop',name:'공방 해결사'};c.gear.weapon={id:'ws_weapon',slot:'weapon',n:'녹슨 쇠의 칼',e:'공+9',fx:{atk:9}};c.gear.armor={id:'ws_armor',slot:'armor',n:'두꺼운 가죽 갑',e:'',fx:{}};return true},
+    testWsMat(){if(!G)return;const c=G.ch;c.aff={type:'workshop',name:'공방 해결사'};c.gear.weapon={id:'ws_weapon',slot:'weapon',n:'녹슨 쇠의 칼',e:'공+9',fx:{atk:9}};c.gear.armor={id:'ws_armor',slot:'armor',n:'두꺼운 가죽 갑',e:'',fx:{}};E.wsOpen&&E.wsEnsure(c);c.stash=[{id:'t1',slot:'weapon',n:'낡은 단검',grade:1,e:'공+2'},{id:'t3',slot:'weapon',n:'강철 장검',grade:3,e:'공+9'},{id:'t4',slot:'weapon',n:'명가의 검',grade:4,e:'공+16'},{id:'h1',slot:'weapon',n:'히든 전리품 검',grade:5,e:'공+30'}];UI.wsMsg=null;UI.screen='shop';render();return true},
     testKin(by){if(!G)return;const c=G.ch;c.bond={st:'lost',route:'office',name:'하나',variant:0,kids:[],dieBy:by||'age',dieYear:44,step:2,tries:1,love:2,since:20};return true},
     testEnd(y,t,o){if(!G)return;G.year=G.ch.year=y||CFG.years;UI.endWin=true;UI.trueEnd=!!t;UI.oldEnd=!!o;UI.death=null;UI.screen='end';render()},
     testFight(id,hp,php,sink){if(!G)return;startCombat(id);if(hp)C.E.hp=hp;if(php){C.P.hp=C.P.maxHp=php}if(sink){C.E.sink=sink;C.P.sink=sink}render()},
