@@ -758,7 +758,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function promoNeed(ch){
     const k=career(ch),n=Math.max(1,steps(k,ch));let sum=0,m=1;
     for(let i=0;i<n;i++){sum+=m;m*=multAt(i)}
-    let need=CFG.promo.total*(k==='fixer'?CFG.promo.fixerMul:(CR[k].totalMul||1))/sum;
+    let need=CFG.promo.total*(k==='fixer'?CFG.promo.fixerMul:(CR[k].totalMul||1)*(k==='finger'&&D.fingers[ch.aff.name].promoMul||1))/sum;
     for(let i=0;i<promoDone(ch);i++)need*=multAt(i);
     return Math.round(need);
   }
