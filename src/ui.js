@@ -252,7 +252,7 @@ export function startUI(E,app){
   const who=s=>`<b style="color:${C[s].color}">${esc(C[s].name)}</b>`;
   function setVerdict(t,cls){const v=$('verdict');if(v){v.textContent=t;v.className='verdict '+(cls||'')}}
   /* 들리는 목소리 판정(1d50 세 번, 모두 기준 이상): 주사위 세 개가 차례로 멈추고, 기준 이상이면 금빛으로 켜진다 */
-  function rollFxVoice({rs,dc,die,ok,sight,at}){
+  function rollFxVoice({rs,dc,die,ok,sight,at,twist}){
     return new Promise(res=>{
       if(document.getElementById('rv')){res();return}
       const still=MODE==='off'||SKIP;
@@ -262,7 +262,7 @@ export function startUI(E,app){
       const bs=[...o.querySelectorAll('.rv-d b')],rr=document.getElementById('rvr');let t=still?9000:0,stop=0,done=false;
       const iv=setInterval(()=>{t+=70;bs.forEach((b,i)=>{if(i>=stop)b.textContent=1+Math.floor(Math.random()*die)});
         if(t>=900+stop*500&&stop<rs.length){bs[stop].textContent=rs[stop];bs[stop].className=rs[stop]>=dc?'on':'off';stop++}
-        if(stop>=rs.length){clearInterval(iv);const all=rs.every(x=>x>=dc);o.classList.add(ok?'good':'bad');rr.textContent=ok?(all?'E.G.O 개화':'장비의 형상이 보였다 · E.G.O 개화'):'개화하지 못했다';setTimeout(end,1500)}},70);
+        if(stop>=rs.length){clearInterval(iv);const all=rs.every(x=>x>=dc);o.classList.add(ok?'good':'bad');rr.textContent=ok?(all?'E.G.O 개화':'장비의 형상이 보였다 · E.G.O 개화'):twist?'목소리를 밀어내지 못했다 · 육신이 뒤틀린다':'개화하지 못했다 · 아직 마음이 버틴다';setTimeout(end,1500)}},70);
       function end(){if(done)return;done=true;clearInterval(iv);o.classList.add('out');setTimeout(()=>{o.remove();res()},400)}
       o.addEventListener('click',()=>{if(stop>=rs.length)end()});
     });
@@ -1454,7 +1454,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const btns=E.options(G,ev).map(({c,i})=>{
       let hint=c.h||'판정 없음 · 결과 확정';
       if(c.ok&&c.ok.fx&&c.ok.fx.relicRoll)hint=`1d100 · ${E.relicChance(ch)} 이하가 나오면 유물을 고른다${ch.relicBase?' (출신 보정 '+ch.relicBase+'%)':''}${(ch.stats.relicApt||0)>0?' (유물 적성 +'+ch.stats.relicApt+')':''}`;
-      if(c.ok&&c.ok.fx&&c.ok.fx.voice){const M_=CFG.mind,dc=ch.voiceBias==='good'?M_.voiceGoodDc:ch.voiceBias==='bad'?M_.voiceBadDc:M_.voiceDc;hint=`1d${M_.voiceDie} × ${M_.voiceRolls} · 모두 ${dc} 이상이면 E.G.O 개화${ch.voiceBias==='bad'&&(ch.stats.egoSight||0)>=M_.sureSight?' (장비의 형상이 또렷해 실패해도 개화한다)':''} · 실패하면 정신력 감소`}
+      if(c.ok&&c.ok.fx&&c.ok.fx.voice){const M_=CFG.mind,dc=ch.voiceBias==='good'?M_.voiceGoodDc:ch.voiceBias==='bad'?M_.voiceBadDc:M_.voiceDc;hint=`1d${M_.voiceDie} × ${M_.voiceRolls} · 모두 ${dc} 이상이면 E.G.O 개화 · 셋 다 실패하면 바로 뒤틀린다${ch.voiceBias==='bad'&&(ch.stats.egoSight||0)>=M_.sureSight?' (장비의 형상이 또렷해 실패해도 개화한다)':''} · 실패하면 정신력 감소`}
       if(c.check){const pm=E.pathMod(ch,c.check);hint=`${c.check.s?STAT[c.check.s]+' 판정':'운 판정'} · 1d${c.check.die||(c.check.pure?100:E.checkDie(ch))} ${sg(E.checkMod(ch,c.check))} ≥ ${E.checkDc(ch,c.check)}${pm?` (출신 ${T.paths[c.check.path]} 보정 +${pm})`:''}${c.h?' · '+c.h:''}`}
       return {i,html:`<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`};
     }).concat(lockBtns).sort((a,b)=>a.i-b.i).map(x=>x.html).join('');

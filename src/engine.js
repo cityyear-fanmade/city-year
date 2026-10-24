@@ -2261,7 +2261,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const ok=rs.every(r=>r>=dc_);chips.push(`1d${M.voiceDie} × ${M.voiceRolls} · ${rs.join(' / ')} (${dc_} 이상 ${rs.filter(r=>r>=dc_).length}/${M.voiceRolls})`);
       const sure=!ok&&ch.voiceBias==='bad'&&(ch.stats.egoSight||0)>=CFG.mind.sureSight,sight=sure||(!ok&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight);if(sure)chips.push('장비의 형상이 또렷하다 · 목소리를 밀어낸 마음이 흔들리지 않는다 · 개화 확정');else if(sight)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);
       ch.rollFx={k:'voice',rs,dc:dc_,die:M.voiceDie,ok:ok||sight,sight,seq:(ch.rollSeq=(ch.rollSeq||0)+1),at:ch.mind};
-      if(ok||sight){ch.egoPick=true;chips.push('E.G.O 개화')}else{const x=d(M.failLoss);chips.push('개화 실패');loseMind(ch,x,t=>chips.push(t+` · 1d${M.failLoss}`))}
+      const allFail=rs.every(r=>r<dc_);
+      if(ch.rollFx&&ch.rollFx.k==='voice')ch.rollFx.twist=!ok&&!sight&&allFail;
+      if(ok||sight){ch.egoPick=true;chips.push('E.G.O 개화')}
+      else if(allFail){ch.distPick=true;chips.push('목소리를 전혀 밀어내지 못했다 · 개화하지 못했다 · 육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
+      else{const x=d(M.failLoss);chips.push('개화 실패 · 아직 마음이 버티고 있다');loseMind(ch,x,t=>chips.push(t+` · 1d${M.failLoss}`))}
     }
     if(fx.distort){
       const th_=50+biasOf(ch),r=d(100),sg_=r>th_&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight;chips.push(`뒤틀림 판정 1d100 · ${r} (${th_} 이하면 E.G.O 개화)`);if(sg_)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);ch.rollFx={k:'distort',r,th:th_,ok:r<=th_||sg_,sight:sg_,seq:(ch.rollSeq=(ch.rollSeq||0)+1),at:1};
