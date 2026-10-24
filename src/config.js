@@ -86,7 +86,7 @@ export const CFG = {
   /* 정신력: 최대 max. healEvery년마다 +yearHeal. 선택지·환상체 조우 2d3 감소, 회피 실패 시 1d evadeDie에서 1이면 1 감소(E.G.O 장비 1개당 +1).
      voiceAt 이하에서 한 번 "들리는 목소리": 1d voiceDie를 voiceRolls번, 모두 voiceDc 이상이면 개화, 실패하면 1d failLoss 감소.
      0이면 사망, 1이면 뒤틀림 판정 1d2 (1이면 개화하고 가득 회복, 2면 뒤틀림 엔딩). tiers: 전투 시작 때 호흡·회피 보정 */
-  mind: {max: 45, cap: 110, yearHeal: 1, healEvery: 2, voiceAt: 10, voiceDie: 50, voiceDc: 14, voiceRolls: 3, failLoss: 9, evadeDie: 5,
+  mind: {max: 45, cap: 110, yearHeal: 1, healEvery: 2, voiceAt: 10, voiceGoodDc: 38, voiceBadDc: 9, voiceBias: 20, sureSight: 60, voiceDie: 50, voiceDc: 14, voiceRolls: 3, failLoss: 9, evadeDie: 5,
     stat: {at: [20, 25, 30, 35, 40, 45]},
     tiers: [{at: 40, breath: 5, eva: 5}, {at: 32, breath: 4, eva: 4}, {at: 26, breath: 3, eva: 3}, {at: 20, breath: 2, eva: 2}, {at: 15, breath: 1, eva: 1}, {at: 11, breath: 1, eva: 0}],
     ego: {atk: {n: '공격용', hit: 14, floor: 20, card: 'e_bloom_atk'}, def: {n: '방어용', hp: 45, eva: 3, floor: 11, card: 'e_bloom_def'}},
@@ -116,8 +116,8 @@ export const CFG = {
   deck: {max: 12, bonus: {from: 6, per: 2, atk: 2}},
   blackCard: {chance: 50, price: 250},
   /* 6시즌 사무소: 개설 가능 급수(이상), 개설 사건을 다시 묻는 간격, 소속 없는 해결사가 사무소 문을 두드리는 간격 */
-  /* 6시즌 E.G.O 발현자: 전용 카드 '발현'을 낸 누적 횟수(need)가 차는 순간 E.G.O 무기 등급이 오른다. 등급별 수치는 birth.json egoWeapons[].grow */
-  egoGrow: {need: [0, 5, 15, 30], tier: ['TETH', 'HE', 'WAW', 'ALEPH']},
+  /* 6시즌 E.G.O 적성자: 전용 카드 '발현'을 낸 누적 횟수(need)가 차는 순간 E.G.O 무기 등급이 오른다. 등급별 수치는 birth.json egoWeapons[].grow */
+  egoGrow: {need: [0, 5, 15, 30], tier: ['TETH', 'HE', 'WAW', 'ALEPH'], mf: [0.05, 0.1, 0.17, 0.25]},
   /* 6시즌 새 시리즈: 격리 실패로 birds를 모두 이기면 '종말의 예언'(flag)을 얻고 종말새와 싸우러 갈 수 있다.
      birds 중 하나라도 이긴 뒤에는 격리 실패가 남은 새를 pref% 확률로 먼저 고른다 */
   apoc: {birds: ['bigbird', 'punishbird', 'judgebird'], flag: 'prophecy', pref: 60},

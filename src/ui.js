@@ -19,12 +19,20 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.0.4';
+  const VERSION='v10.0.5';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
   /* 연인·히든 출생 기록: 연인은 만나본 적(1)·결혼까지 간 적(2), 히든 출생은 그 출생으로 시작한 적이 있는지를 남긴다 */
+  /* 기록실 도감: 히든 보스 전리품·출신 전용 장비와 전용 카드팩. 이름을 직접 정하는 것(성도·개화/뒤틀림 이름)은 넣지 않는다 */
+  const specCat=(()=>{let c=null;return()=>{if(c)return c;c={g:{},p:{}};const add=x=>{if(x&&x.id&&x.n&&x.id!=='star'&&!x.virt)c.g[x.id]=x.n};
+    for(const e of Object.values(D.enemies)){const d=e.drop;if(!d)continue;add(d.gear);(d.gears||[]).forEach(add);if(d.packName&&d.cards)c.p[d.packName]=d.cards.length;if(e.thumbDrop)add(e.thumbDrop.gear)}
+    for(const o of D.hiddenOrigins||[]){add(o.gear);(o.egoWeapons||[]).forEach(add)}
+    for(const r of Object.values(D.relics||{}))add(r.gear);return c}})();
   const syncKin=()=>{const c=G&&G.ch;if(!c)return;const r=loadRec();let ch=false;
+    {const cat=specCat();r.gears=r.gears||[];r.packs=r.packs||[];
+      for(const it of [...Object.values(c.gear||{}),...(c.stash||[])])if(it&&it.id&&cat.g[it.id]&&!r.gears.includes(it.id)){r.gears.push(it.id);ch=true}
+      for(const n of [c.packName,c.birthPack,...(c.packs||[]).map(p=>p&&p.n)])if(n&&cat.p[n]!=null&&!r.packs.includes(n)){r.packs.push(n);ch=true}}
     const b=c.bond;if(b&&b.route&&['met','married','lost','left'].includes(b.st)){const k=b.route+':'+(b.variant||0),lv=(b.st==='married'||b.st==='lost'||b.wed)?2:1;r.lovers=r.lovers||{};if((r.lovers[k]||0)<lv){r.lovers[k]=lv;ch=true}}
     if(c.o&&(D.hiddenOrigins||[]).some(x=>x.n===c.o.n)){r.births=r.births||[];if(!r.births.includes(c.o.n)){r.births.push(c.o.n);ch=true}}
     if(ch)store.set(REC,JSON.stringify(r))};
@@ -243,10 +251,43 @@ export function startUI(E,app){
   }
   const who=s=>`<b style="color:${C[s].color}">${esc(C[s].name)}</b>`;
   function setVerdict(t,cls){const v=$('verdict');if(v){v.textContent=t;v.className='verdict '+(cls||'')}}
+  /* 들리는 목소리 판정(1d50 세 번, 모두 기준 이상): 주사위 세 개가 차례로 멈추고, 기준 이상이면 금빛으로 켜진다 */
+  function rollFxVoice({rs,dc,die,ok,sight,at,twist}){
+    return new Promise(res=>{
+      if(document.getElementById('rv')){res();return}
+      const still=MODE==='off'||SKIP;
+      const o=document.createElement('div');o.id='rv';
+      o.innerHTML=`<div class="rv-t">정신력 ${at} · 목소리가 가깝다</div><div class="rv-d">${rs.map(()=>'<b>–</b>').join('')}</div><div class="rv-s">1d${die} × ${rs.length} · 모두 ${dc} 이상이어야 E.G.O 개화</div><div class="rv-r" id="rvr"></div>`;
+      document.body.appendChild(o);
+      const bs=[...o.querySelectorAll('.rv-d b')],rr=document.getElementById('rvr');let t=still?9000:0,stop=0,done=false;
+      const iv=setInterval(()=>{t+=70;bs.forEach((b,i)=>{if(i>=stop)b.textContent=1+Math.floor(Math.random()*die)});
+        if(t>=900+stop*500&&stop<rs.length){bs[stop].textContent=rs[stop];bs[stop].className=rs[stop]>=dc?'on':'off';stop++}
+        if(stop>=rs.length){clearInterval(iv);const all=rs.every(x=>x>=dc);o.classList.add(ok?'good':'bad');rr.textContent=ok?(all?'E.G.O 개화':'장비의 형상이 보였다 · E.G.O 개화'):twist?'목소리를 밀어내지 못했다 · 육신이 뒤틀린다':'개화하지 못했다 · 아직 마음이 버틴다';setTimeout(end,1500)}},70);
+      function end(){if(done)return;done=true;clearInterval(iv);o.classList.add('out');setTimeout(()=>{o.remove();res()},400)}
+      o.addEventListener('click',()=>{if(stop>=rs.length)end()});
+    });
+  }
+  /* 정신력 1·0의 판정 연출: 1d100이 굴러 멈추고, 기준선(개화 N 이하)과 결과를 보여 준다. 개화=금빛 파동, 뒤틀림=붉은 번쩍임·떨림 */
+  function rollFx(a){
+    if(a.rs)return rollFxVoice(a);
+    const {r,th,ok,at,sight}=a;
+    return new Promise(res=>{
+      if(document.getElementById('rv')){res();return}
+      const still=MODE==='off'||SKIP;
+      const o=document.createElement('div');o.id='rv';
+      o.innerHTML=`<div class="rv-t">정신력 ${at} · 마음이 한계에 닿았다</div><div class="rv-n" id="rvn">–</div><div class="rv-bar"><i class="rv-ok" style="width:${th}%"></i><i class="rv-mk" id="rvm" style="left:0"></i><span class="rv-l" style="left:0">1</span><span class="rv-l" style="left:${th}%">${th}</span><span class="rv-l" style="right:0">100</span></div><div class="rv-s">1d100 · ${th} 이하면 E.G.O 개화, 넘으면 육신이 뒤틀린다</div><div class="rv-r" id="rvr"></div>`;
+      document.body.appendChild(o);
+      const n=document.getElementById('rvn'),m=document.getElementById('rvm'),rr=document.getElementById('rvr');let t=still?1300:0,done=false;
+      const iv=setInterval(()=>{t+=70;const v=1+Math.floor(Math.random()*100);n.textContent=v;m.style.left=v+'%';if(t>=1300){clearInterval(iv);n.textContent=r;m.style.left=r+'%';o.classList.add(ok?'good':'bad');rr.textContent=ok?(sight?'장비의 형상이 보였다 · E.G.O 개화':'E.G.O 개화'):'육신이 뒤틀린다';setTimeout(end,1500)}},70);
+      function end(){if(done)return;done=true;clearInterval(iv);o.classList.add('out');setTimeout(()=>{o.remove();res()},400)}
+      o.addEventListener('click',()=>{if(t>=1300)end()});
+    });
+  }
   async function playEvent(e){
     const nm=s=>C[s].name;
     if(e.step!=null&&e.step>=0)markStep(e.step);
     markSides(e.att||e.side||null,e.def||null);setVerdict('');
+    {const rl=(e.lines||[]).find(l=>l.roll);if(rl)await rollFx(rl.roll)}
     if(e.k==='head'){setLabel(e.lines[0]?e.lines[0].s:'');appendLog(e.lines);await wait(500);return}
     if(e.k==='def'){setLabel(`${nm(e.side)} · ${e.card.n}`);anim($('ent-'+e.side),'guard',700);appendLog(e.lines);await wait(450);return}
     if(e.k==='buff'){setLabel(`${nm(e.side)} · ${e.card.n}`);anim($('ent-'+e.side),'guard',700);appendLog(e.lines);applySnap(e.snap);await wait(500);return}
@@ -390,6 +431,7 @@ export function startUI(E,app){
     if(c.nailBurst)x.push(`못을 모두 흐트러짐으로 ×${c.nailBurst.mul}${c.nailBurst.add?' +'+c.nailBurst.add:''}`);
     if(c.spdDice)x.push(`속도 ${c.spdDice[0]} 이상이면 주사위마다 +${c.spdDice[1]}`);
     if(c.sinkDmg)x.push(`침잠 ${CFG.sink.per}당 +${c.sinkDmg}`);
+    if(c.egT)x.push(c.egT);
     if(c.rr)x.push('낮은 피해 재굴림');
     if(c.min)x.push('피해 최소 '+c.min);
     if(c.next)x.push('사용 후 다음 라운드 '+D.cards[c.next].n);
@@ -441,10 +483,10 @@ export function startUI(E,app){
     +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
   const innateOne=(c,k)=>k==='mark'&&c.markOn?D.innate.mark.awake:D.innate[k].n;
   const innateName=c=>c.innate?[c.innate,c.innate2].filter(Boolean).map(k=>innateOne(c,k)).join(' · '):null;
-  /* E.G.O 발현자: 무기 등급과 다음 등급까지 남은 발현 횟수 */
+  /* E.G.O 적성자: 무기 등급과 다음 등급까지 남은 발현 횟수 */
   const egoGrowTag=ch=>{if(ch.egoUses==null)return '';const G=CFG.egoGrow,L=E.egoLvFor(ch.egoUses),nx=G.need[L+1];
     return ` · <span style="color:var(--gold)">${G.tier[L]}</span>${nx!=null?` · 발현 ${ch.egoUses}/${nx}`:''}`};
-  /* E.G.O 발현자: 다음 등급까지의 진행 막대 (정신력 아래 · 전투 화면에도) */
+  /* E.G.O 적성자: 다음 등급까지의 진행 막대 (정신력 아래 · 전투 화면에도) */
   const egoBar=ch=>{if(ch.egoUses==null)return '';const G=CFG.egoGrow,u=ch.egoUses,L=E.egoLvFor(u),nx=G.need[L+1],pct=nx==null?100:Math.round((u-G.need[L])/(nx-G.need[L])*100);
     return `<div class="egobar"><div class="row between small"><b style="color:var(--gold)">E.G.O 성장 · ${G.tier[L]}${nx!=null?` → ${G.tier[L+1]}`:' (최대)'}</b><span class="mono">${nx!=null?`발현 ${u}/${nx}`:`발현 ${u}회`}</span></div><div class="bar"><i style="width:${pct}%"></i></div>${nx!=null?`<div class="small dim">전용 카드 '발현'을 ${nx-u}번 더 쓰면 ${G.tier[L+1]}로 자란다</div>`:''}</div>`};
   /* 선장의 배 내구도: 가방을 열지 않아도 정신력 아래에 항상 보인다 */
@@ -618,7 +660,7 @@ export function startUI(E,app){
     /* 세계관상 날개가 정해진 출신은 고정한다 (R사 복제 부화장, H사 홍원) */
     if(n==='부화장에서 태어난 자')return {n:'R사 둥지 출신',t:'R사 날개의 부화장에서 났다'};
     if(n==='홍원의 자제')return {n:'H사 둥지 출신',t:'H사 홍원의 가문에서 났다'};
-    if(n==='E.G.O 발현자')return {n:'L사 둥지 출신',t:'L사 날개의 둥지에서 났다'};
+    if(n==='E.G.O 적성자')return {n:'L사 둥지 출신',t:'L사 날개의 둥지에서 났다'};
     if(n==='대호수로 나간 자')return {n:'U사 둥지 출신',t:'U사 날개의 둥지에서 났다'};
     if(n==='혈귀'||n==='별에 선택받은 자')return {n:'출신 불명',t:'어디서 났는지 아무도 모른다'};
     if(n==='도서관의 손님'||n==='유물 적성자'){const k=((r&&r.f)||1)%3;   // 둥지·뒷골목·외곽 중 하나 (굴린 값으로 정함)
@@ -641,7 +683,7 @@ export function startUI(E,app){
     const kid=(place?row('태어난 곳',place):'')+(ch.kid||[]).map(k=>row(k.age+'세',k.x)).join('');
     const base=s0?[['최대 HP',s0.maxHp],['공격',sgn(s0.atk)],['회피',sgn(s0.eva)],['속도',sgn(s0.spd)],['사건 판정',sgn(s0.check)]].map(([a,b])=>`<div class="invr"><span>${a}</span><b class="mono">${b}</b></div>`).join(''):'';
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
-      ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다. 빈손이라 히든 보스 전리품 장비를 더 자주 쥐고(+25%p), 정신이 꺾일 때 E.G.O 형상이 보일 확률이 25%다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${row('무기',ch.w)}</div>`}
+      ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다. 빈손이라 히든 보스 전리품 장비를 더 자주 쥐고(+25%p), 정신이 꺾일 때 E.G.O 형상이 보일 확률이 25%다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${ch.egoUses!=null&&ch.o&&ch.o.egoWeapons?(()=>{const w=[ch.gear.weapon,...(ch.stash||[])].find(x=>x&&x.egoLv!=null);return row('무기',w?{n:'E.G.O · '+w.n,t:'환상체에게서 얻은 무기',e:w.e}:ch.w)})():row('무기',ch.w)}</div>`}
       ${(()=>{const g=E.infGrowth(ch);return g.length?`<div class="eyebrow">무한 모드 성장</div><div class="panel stack" style="gap:6px">${g.map(([k,v,d_])=>`<div class="invr"><span>${esc(k)}</span><b class="mono">${esc(v)}</b></div><p class="small dim" style="margin:0 0 4px">${esc(d_)}</p>`).join('')}</div>`:''})()}
       ${lakeLog}${kid?stSec('kid','성장기',kid,false):''}
       ${base?stSec('base','태어났을 때의 능력치 (변하지 않음)',base,false):''}
@@ -968,10 +1010,23 @@ export function startUI(E,app){
     const left=Math.max(0,Math.ceil((EXP-Date.now())/60000)),t=left>=120?`약 ${Math.floor(left/60)}시간`:`약 ${left}분`;
     return `<div class="check" style="border-color:var(--bleed)"><b>테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
+  const MINDTEST=false; /* build --mind: 정신력 10 이하 연출만 시험하는 판 */
+  function vMindTest(){
+    if(!MINDTEST)return '';
+    const mb=UI.mindBias||'',ms=UI.mindSight||0,seg=(a,cur,arr)=>`<div class="seg">${arr.map(([k,l])=>`<button class="${String(cur)===String(k)?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`).join('')}</div>`;
+    const dcs=mb==='good'?CFG.mind.voiceGoodDc:mb==='bad'?CFG.mind.voiceBadDc:CFG.mind.voiceDc,th=50+(mb==='good'?-20:mb==='bad'?20:0);
+    return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">정신력 시험 · 새 캐릭터로 바로 시작한다</span>
+      <span class="small dim">목소리 선택 (②·③에 적용)</span>${seg('mindbias',mb,[['','선택 안 함'],['good','듣기 좋다'],['bad','듣기 싫다']])}
+      <span class="small dim">성장기 "장비의 형상이 보임" 개수 (개화 구제 ${15*ms}%)</span>${seg('mindsight',ms,[[0,'0'],[1,'1'],[2,'2'],[3,'3'],[4,'4']])}
+      <span class="mono small" style="color:var(--gold)">정신력 1·0 개화 기준 ${th} 이하 · 목소리 판정 ${dcs} 이상 × 3 · 구제 ${15*ms}%${mb==='bad'&&ms>=4?' · 목소리 판정 개화 확정':''}</span>
+      <button class="btn primary" data-a="mindtest" data-i="voice"><b>① 정신력 8 · 들리는 목소리</b><span class="dim small">목소리 연출 → 듣기 좋다/싫다 → 기존 개화 판정 (목소리 선택은 직접 고른다 · 성장기 개수는 위 값 적용)</span></button>
+      <button class="btn" data-a="mindtest" data-i="distort"><b>② 정신력 1 · 뒤틀림 사건</b><span class="dim small">정신을 붙잡는다 → 판정 연출 (기준선 표시)</span></button>
+      <button class="btn" data-a="mindtest" data-i="break"><b>③ 전투 중 정신력 0</b><span class="dim small">전투가 시작되자마자 개화/뒤틀림 판정 연출</span></button></div>`}
   function vTitle(){
     return `${chronBtn('chron-in')}<div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
+      ${vMindTest()}
       ${vUpdates()}
       ${vPlaytest()}
       <div class="stack">${vContinue()}${vHardToggle()}<button class="btn ${loadSave()?'':'primary'}" data-a="start" ${expired()?'disabled':''}>${loadSave()?'<b>새로 시작하기</b><span class="dim small">저장된 판은 지워진다</span>':'태어난다'}</button>
@@ -1092,6 +1147,9 @@ export function startUI(E,app){
       ${(()=>{const GR=[['날개','wing'],['협회','assoc'],['사무소','office'],['손가락','finger'],['조직','syn']],all=GR.flatMap(([,k])=>D.orgs[k]||[]),got=(r.affs||[]).filter(n=>all.includes(n));
         return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소속 ${got.length}/${all.length}</span>${GR.map(([n,k])=>`<div><span class="small dim">${n}</span><div class="chips">${(D.orgs[k]||[]).map(o=>`<span class="chip${(r.affs||[]).includes(o)?'':' dim'}">${(r.affs||[]).includes(o)?esc(o):'???'}</span>`).join('')}</div></div>`).join('')}<p class="small dim">한 번이라도 들어간 소속이 열린다.</p></div>`})()}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span><div class="stack" style="gap:6px">${ends.map(([k,n])=>{const op=r.endings.includes(k),pass=!!(r.hints&&r.hints[k])&&END_EXACT[k];return hintRow(op,esc(n),(op||pass)&&END_EXACT[k]?(pass&&!op?'[갈림길을 지나쳤다] ':'')+END_EXACT[k]:END_HINT[k])}).join('')}</div></div>
+      ${(()=>{const cat=specCat(),ids=Object.keys(cat.g),gs=r.gears||[],pk=Object.keys(cat.p),pg=r.packs||[];return `<div class="panel stack" style="gap:8px"><span class="eyebrow">특수 장비 ${ids.filter(k=>gs.includes(k)).length}/${ids.length}</span><div class="chips">${ids.filter(k=>gs.includes(k)).map(k=>`<span class="chip">${esc(cat.g[k])}</span>`).join('')}<span class="chip dim">???${ids.some(k=>!gs.includes(k))?' × '+ids.filter(k=>!gs.includes(k)).length:''}</span></div>
+        <span class="eyebrow">전용 카드팩 ${pk.filter(k=>pg.includes(k)).length}/${pk.length}</span><div class="chips">${pk.map(k=>`<span class="chip${pg.includes(k)?'':' dim'}">${pg.includes(k)?esc(k)+' · '+cat.p[k]+'장':'???'}</span>`).join('')}</div>
+        <p class="small dim">히든 보스 전리품, 출신 전용 장비, 전용 카드팩이 쌓인다. 이름을 직접 정하는 것(성도 · 개화 · 뒤틀림)은 넣지 않았다.</p></div>`})()}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">타고난 것 ${r.innate.length}/${Object.keys(D.innate).length}</span><div class="chips">${Object.entries(D.innate).map(([k,v])=>`<span class="chip${r.innate.includes(k)?'':' dim'}">${r.innate.includes(k)?esc(v.n):'???'}</span>`).join('')}</div>${Object.entries(D.innate).filter(([k,v])=>v.unlock&&!(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small dim">잠김 · ${r.innate.includes(k)?esc(v.n):'???'} — 해금: ${esc(v.unlock)}</span>`).join('')}${Object.entries(D.innate).filter(([k,v])=>v.unlock&&(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small" style="color:var(--gold)">해금됨 · ${r.innate.includes(k)?esc(v.n):'???'} — 이제 태어날 때 1%로 나올 수 있다${r.innate.includes(k)?'':' (만나면 이름이 열린다)'}</span>`).join('')}</div>
 ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px"><span class="eyebrow">판 통계</span><p class="small dim">v8.2.0부터 집계한다. 이야기가 끝나면 여기에 쌓인다.</p></div>`;
         const top=(m,n)=>Object.entries(m||{}).sort((a,b)=>b[1]-a[1]).slice(0,n),line=(l,arr)=>arr.length?`<div class="row between" style="align-items:flex-start;gap:10px"><span>${l}</span><span class="small" style="text-align:right">${arr.map(([k,v])=>`${esc(k)} ×${v}`).join(' · ')}</span></div>`:'',en=Object.fromEntries(ends);
@@ -1152,9 +1210,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['📝 문구·보기',['문구를 다듬었습니다. (웃는 가로등, 승급 추천·급수 심사, R사 연인 문구)','배경 테마(단테·검지 단말기·도서관)의 보조 글자 색을 밝혀 읽기 쉽게 했습니다.']]];
   const V987SEC=[['🔧 버그 수정',['무기 주사위가 카드 주사위를 덮어쓰던 문제를 고쳤습니다. 이제 카드 주사위에 더해집니다.']]];
   const V1003SEC=[['🔧 조정',['가방의 "정보" 칸이 길어서, 항해 기록 · 성장기 · 태어났을 때의 능력치를 접어 둘 수 있게 했습니다. 열고 닫은 상태는 그대로 유지됩니다.']]];
-  const NOTICE={id:'v10.0.4',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const V1004SEC=[['🔧 개선',['전투 판정에서 주사위 눈 아래에 명중·회피를 올린 요소(버프 +)와 깎은 요소(디버프 −)의 합계가 표시됩니다. 줄을 길게 누르면(PC는 마우스를 올리면) 세부 내역을 볼 수 있습니다.','한 번에 굴리는 피해 주사위가 많아도 화면 밖으로 넘치지 않고 줄바꿈됩니다.']]];
+  const NOTICE={id:'v10.0.5',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[['🔧 개선',['전투 판정에서 주사위 눈 아래에 명중·회피를 올린 요소(버프 +)와 깎은 요소(디버프 −)의 합계가 표시됩니다. 줄을 길게 누르면(PC는 마우스를 올리면) 세부 내역을 볼 수 있습니다.','한 번에 굴리는 피해 주사위가 많아도 화면 밖으로 넘치지 않고 줄바꿈됩니다.']]]};
+    sec:[['🆕 기록실',['기록실에 특수 장비와 전용 카드팩 도감이 추가됩니다.']],
+      ['🔧 조정',['몇몇 연출이 보강됩니다.','일부 히든 보스의 무기와 책장이 조정됩니다.','일부 출생이 조정됩니다.','일부 전리품의 조건이 조정됩니다.','카드 설명이 보강됩니다.']],
+      ['🐛 수정',['연출을 꺼도 판정 결과가 표시됩니다.','카드팩 관련 오류가 수정됩니다.']]]};
   const V1002SEC=[['🔧 조정',['인연 캐릭터의 성격과 말투를 조정하고, 루트별 전용 이벤트를 늘렸습니다.']]];
   const V1001SEC=[['🔧 개선 및 수정',['무한 모드 성장(주는 피해·일격·받는 피해·연륜)을 가방의 "정보" 칸에서 항상 볼 수 있습니다. 규칙 요약에 연륜 설명을 넣었습니다.','한계 돌파의 공격 선택지가 눌리지 않던 문제를 고쳤습니다. 일격 설명 문구도 알기 쉽게 바꿨습니다.','새로운 이야기에서 싸우기로 하면 다음 해로 미루지 않고 바로 전투가 시작됩니다.','무한 모드에서 이미 이긴 상대가 반복해서 나오던 것을 줄였습니다.','불순물을 쓰러뜨리면 받는 조각과 잔재 보상을 한 줄로 합쳤습니다.','정신력 막대의 채움이 보이지 않던 문제를 고쳤습니다.','엔딩 이미지에서 같은 히든 보스가 반복해 찍히거나 카드 장수가 줄바꿈되던 문제를 고쳤습니다.','가방의 첫 칸 이름을 "출생"에서 "정보"로 바꿨습니다.']]];
   const V1000SEC=[['🆕 소모품',['공방 거리의 "소지품"에서 붕대·간식·진정제를 살 수 있습니다. 종류마다 최대 3개까지 지닙니다.','소모품은 가방의 "소모품" 칸에 들어가고, 전투 중에도 쓸 수 있습니다.','가격은 10해마다 100안씩 오르고 최대 5,000안입니다.','인연이 있으면 전투를 이긴 뒤 가끔 도시락을 받아 HP와 정신력을 회복합니다.']],
@@ -1274,7 +1335,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v10.0.3',V1003SEC],['v10.0.2',V1002SEC],['v10.0.1',V1001SEC],['v10.0.0',V1000SEC],['v9.9.4',V994SEC],['v9.8.7',V987SEC],['v9.8.6',V986SEC],['v9.8.5',V985SEC],['v9.8.4',V984SEC],['v9.4.4',V944SEC],['v9.4.3',V943SEC],['v9.4.2',V942SEC],['v9.4.0',V940SEC],['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v10.0.4',V1004SEC],['v10.0.3',V1003SEC],['v10.0.2',V1002SEC],['v10.0.1',V1001SEC],['v10.0.0',V1000SEC],['v9.9.4',V994SEC],['v9.8.7',V987SEC],['v9.8.6',V986SEC],['v9.8.5',V985SEC],['v9.8.4',V984SEC],['v9.4.4',V944SEC],['v9.4.3',V943SEC],['v9.4.2',V942SEC],['v9.4.0',V940SEC],['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -1318,7 +1379,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
           <button class="chip" data-a="seed">이 시드로</button></div>
       </div>
       ${b.o.hidden||(b.o.secret&&!b.blank)?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">${b.fated?'운명이 강제된 출생':'숨은 출생 · 출신 '+b.r.o}</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">${esc(b.o.e)}</span>${b.starPick?`<div class="row"><span class="small">성도의 이름</span><input id="starname" maxlength="12" value="${esc(UI.starName||'')}" autocomplete="off" placeholder="1~12글자 · 뒤에 '성도'가 붙는다" style="width:min(14em,60vw)"></div><span class="small bad">${UI.starErr||''}</span>`:''}</div>`:''}
-      ${b.fated?`<div class="panel stack" style="gap:6px"><span class="mono small" style="color:var(--gold)">재능 · 결점 · 무기 · 타고난 것 없음 · 출신과 성장기 보정만 가진다</span></div>`:b.blank?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">출생 보정 없음</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">출신 · 재능 · 결점 · 무기 · 타고난 것 없음 · 맨손 · 성장기 보정만 가진다</span><span class="mono small">빈손 · 히든 보스 전리품 장비 확률 +25%p · 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%</span></div>`:`<div class="panel brows">${row('출신',b.r.o,b.o,UI.job?null:D.origins)}${row('재능',b.r.t,b.t,D.talents)}${row('결점',b.r.f,b.f,D.flaws)}${row('무기',b.r.w,b.w,D.weapons)}</div>`}
+      ${b.fated?`<div class="panel stack" style="gap:6px"><span class="mono small" style="color:var(--gold)">재능 · 결점 · 무기 · 타고난 것 없음 · 출신과 성장기 보정만 가진다</span></div>`:b.blank?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">출생 보정 없음</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">출신 · 재능 · 결점 · 무기 · 타고난 것 없음 · 맨손 · 성장기 보정만 가진다</span><span class="mono small">빈손 · 히든 보스 전리품 장비 확률 +25%p · 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%</span></div>`:`<div class="panel brows">${row('출신',b.r.o,b.o,UI.job?null:D.origins)}${row('재능',b.r.t,b.t,D.talents)}${row('결점',b.r.f,b.f,D.flaws)}${b.o.egoWeapons&&b.gear&&b.gear.weapon&&b.gear.weapon.egoLv!=null?row('무기',b.r.w,{n:'E.G.O · '+b.gear.weapon.n,t:'환상체에게서 얻은 무기 · 전용 카드 발현을 쌓으면 무기와 책장이 함께 자란다',e:b.gear.weapon.e},null):row('무기',b.r.w,b.w,D.weapons)}</div>`}
       ${b.innate?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">타고난 것 · 1%${b.innate2?' · 둘이 함께':''}</span>${[b.innate,b.innate2].filter(Boolean).map(k=>`<b class="serif">${esc(D.innate[k].n)}</b><span class="mono small" style="color:var(--gold)">${esc(D.innate[k].e)}</span>`).join('')}</div>`:''}
       <button class="btn quiet" data-a="reroll">다시 태어난다</button>
       ${kid}
@@ -1372,6 +1433,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <button class="btn${!cur?' primary':''}" data-a="job" data-i="">평범하게 태어난다</button>
       ${u.map(k=>{const J=D.hiddenJobs[k];return `<button class="btn${cur===k?' primary':''}" data-a="job" data-i="${k}"><b>${esc(J.n)}</b><span class="small">${esc(J.t)}</span><span class="mono small" style="color:var(--gold)">${esc(J.e)}</span></button>`}).join('')}</div>`;
   }
+  /* 정신력 10 이하 "들리는 목소리": 기존 화면 위에 목소리가 하나씩 떠올랐다 4초 뒤 사라지고, 마지막에 선택지(듣기 좋다/싫다)가 열린다 */
+  function voiceOverlay(ev){
+    const seen=UI.voiceSeen===ev;
+    if(UI.voicePlay!==ev){UI.voicePlay=ev;setTimeout(()=>{if(UI.ev===ev){UI.voiceSeen=ev}},9500)}
+    const mob=innerWidth<700,W=innerWidth,H=innerHeight,cx=W/2,cy=H*0.46,rx=mob?W*0.30:Math.min(W*0.34,380),ry=mob?H*0.33:H*0.34,bw=mob?150:250,fs=mob?12:14.5,slots=[0,3,6,2,5,1,4];
+    const vs=seen?'':ev.voices.map((t,i)=>{const a=0.35+slots[i%7]*2*Math.PI/7+Math.sin(i*7.1)*.12;return `<div class="vv" style="left:${(cx+Math.cos(a)*rx).toFixed(0)}px;top:${(cy+Math.sin(a)*ry).toFixed(0)}px;--w:${bw}px;--fs:${fs}px;animation-delay:${(i*1.0+0.8).toFixed(1)}s"><i>빛 속의 목소리</i>${esc(t)}</div>`}).join('');
+    return `<div id="vo" class="${seen?'seen':''}" data-a="voiceskip"><div class="vt">정신력 ${G.ch.mind} · 마음이 한계에 닿았다</div>${vs}<div class="vc"><button class="btn vbtn" data-a="voicepick" data-i="good"><b>듣기 좋다</b><span class="mono small dim">목소리에 마음이 기운다</span></button><button class="btn vbtn" data-a="voicepick" data-i="bad"><b>듣기 싫다</b><span class="mono small dim">목소리를 밀어낸다</span></button></div></div>`;
+  }
   function vEvent(){
     if(UI.omen)return vOmen();
     if(UI.fight){
@@ -1387,10 +1456,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const btns=E.options(G,ev).map(({c,i})=>{
       let hint=c.h||'판정 없음 · 결과 확정';
       if(c.ok&&c.ok.fx&&c.ok.fx.relicRoll)hint=`1d100 · ${E.relicChance(ch)} 이하가 나오면 유물을 고른다${ch.relicBase?' (출신 보정 '+ch.relicBase+'%)':''}${(ch.stats.relicApt||0)>0?' (유물 적성 +'+ch.stats.relicApt+')':''}`;
+      if(c.ok&&c.ok.fx&&c.ok.fx.voice){const M_=CFG.mind,dc=ch.voiceBias==='good'?M_.voiceGoodDc:ch.voiceBias==='bad'?M_.voiceBadDc:M_.voiceDc;hint=`1d${M_.voiceDie} × ${M_.voiceRolls} · 모두 ${dc} 이상이면 E.G.O 개화 · 셋 다 실패하면 바로 뒤틀린다${ch.voiceBias==='bad'&&(ch.stats.egoSight||0)>=M_.sureSight?' (장비의 형상이 또렷해 실패해도 개화한다)':''} · 실패하면 정신력 감소`}
       if(c.check){const pm=E.pathMod(ch,c.check);hint=`${c.check.s?STAT[c.check.s]+' 판정':'운 판정'} · 1d${c.check.die||(c.check.pure?100:E.checkDie(ch))} ${sg(E.checkMod(ch,c.check))} ≥ ${E.checkDc(ch,c.check)}${pm?` (출신 ${T.paths[c.check.path]} 보정 +${pm})`:''}${c.h?' · '+c.h:''}`}
       return {i,html:`<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`};
     }).concat(lockBtns).sort((a,b)=>a.i-b.i).map(x=>x.html).join('');
-    return `${vHud()}<div class="stack${ev.shake?' wave-shake':''}" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead" style="white-space:pre-line">${ev.x}</p></div><div class="stack">${btns}</div>`;
+    const page=`${vHud()}<div class="stack${ev.shake?' wave-shake':''}" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead" style="white-space:pre-line">${ev.x}</p></div><div class="stack">${btns}</div>`;
+    return ev.voices&&G.ch.mind<=CFG.mind.voiceAt&&UI.voicePicked!==ev?page+voiceOverlay(ev):page;
   }
   function nextLabel(){
     if(G.ch.lvPend>0)return '성장 굴림';
@@ -2337,6 +2408,17 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
     qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:'calm'}[BGM.style()]||'calm');bgmSave();render()},
     qvol(){UI.volOpen=!UI.volOpen;render()},
+    voicepick(k){if(!UI.ev||!UI.ev.voices||(k!=='good'&&k!=='bad'))return;G.ch.voiceBias=k;UI.voicePicked=UI.ev;resave();render()},
+    mindbias(k){UI.mindBias=k||'';render()},
+    mindsight(k){UI.mindSight=+k||0;render()},
+    mindtest(k){
+      const sd=newSeed();E.reseed(sd);let c=E.newChar(),g=0;while((c.o.hidden||c.ego||c.o.secret)&&g++<200)c=E.newChar();BC=c;BC.seed=sd;BC.name='';BC.fresh=false;
+      ACT.live();const ch=G.ch;ch.year=G.year=Math.max(G.year||0,12);ch.hp=ch.stats.maxHp;ch.voiceUsed=false;ch.distortDone=false;ch.voicePend=false;ch.distortPend=false;ch.voiceBias=k==='voice'?null:(UI.mindBias||null);ch.stats.egoSight=15*(UI.mindSight||0);UI.voicePicked=null;UI.voicePlay=null;UI.voiceSeen=null;
+      if(k==='voice'){ch.mind=8;ch.voicePend=true}
+      else if(k==='distort'){ch.mind=1;ch.distortPend=true}
+      else if(k==='break'){ch.mind=0;ch.mindDead=true;ch.distortDone=true;UI.pending='thug'}
+      UI.ev=null;UI.res=null;flow()},
+    voiceskip(){if(UI.ev&&UI.ev.voices&&UI.voiceSeen!==UI.ev){UI.voiceSeen=UI.ev;render()}},
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
@@ -2474,11 +2556,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const m=UI.omen.omen;UI.omen=null;UI.fight=st.enemy;UI.enc=st.enc;UI.avoidText=st.avoided?m.awayT:null;render();
     },
     choose(i){
-      const r=E.choose(G,UI.ev,+i);syncTitles();
+      const ev0=UI.ev,r=E.choose(G,UI.ev,+i);syncTitles();
+      if(ev0&&ev0.voices&&r&&r.t){const vb=G.ch.voiceBias;if(vb==='good'&&ev0.tGood)r.t=ev0.tGood;else if(vb==='bad'&&ev0.tBad)r.t=ev0.tBad}
       {const un=checkInnateUnlock();if(un.length)r.chips=[...(r.chips||[]),`타고난 것 해금 · ${un.join(', ')} (이제 태어날 때 1%로 나온다)`]}
       UI.pending=r.combat;saveGame({after:true,pending:UI.pending});
       UI.res=Object.assign(r,{anim:!!r.roll&&MODE!=='off'});
-      UI.screen='result';render();
+      UI.screen='result';
+      {const rf=G.ch.rollFx;if(rf&&rf!==UI.rollSeen){UI.rollSeen=rf;rollFx(rf).then(render);return}}
+      render();
     },
     grow(i){const ch=G.ch;E.applyGrowth(ch,ch.lvOpts[+i].g.fx);ch.lvPend--;ch.lvOpts=null;flow()},
     pick(i){i=+i;const at=UI.sel.indexOf(i);if(at>=0){UI.sel.splice(at,1);
@@ -2569,6 +2654,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
     testTitles(a){if(G)G.ch.titles=a},
+    testRoll(r,th,ok,at){rollFx({r:r||38,th:th||50,ok:ok!==false&&(r||38)<=(th||50),at:at==null?1:at});return true},
+    testVoice(mind){if(!G)return null;G.ch.mind=mind||6;UI.ev=D.mindEvents.voice;UI.voicePlay=null;UI.voiceSeen=null;UI.voicePicked=null;G.ch.voiceBias=null;UI.screen='event';render();return true},
+    testEgo(L){if(!G||!E.egoItem)return null;const c=G.ch,w=c.gear.weapon;if(!w)return null;const it=E.egoItem(w.id,L);E.equip(c,it);E.egoDeck(c,w.id,L,true);c.egoUses=[0,5,15,30][L];render();return c.deck.length},
     async testCard(){if(!G)return null;const cv=await endCard();return cv.toDataURL('image/png')},
     testPatch(o){if(!G)return;Object.assign(G.ch,o);render()},
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
