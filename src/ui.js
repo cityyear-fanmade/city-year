@@ -480,7 +480,7 @@ export function startUI(E,app){
   /* 호수 선장은 직위표의 맨 위(부선장)가 아니라 선장으로 보인다(칭호 '선장'과 함께 뜨던 부선장 표기 제거) */
   const frName=c=>c.flags&&c.flags.lake&&c.lake&&c.lake.captain&&c.fr?'선장':(c.fr?c.fr.n:'');
   const affLabel=ch=>(ch.aff?`<span class="chip"${ch.aff.own?' style="color:var(--gold);border-color:var(--gold)"':''}>${ch.aff.own?'내 사무소 · ':''}${esc(ch.aff.name)}${ch.office&&ch.office.ws?' · 내 사무소 '+esc(ch.office.name):''}${ch.corp&&ch.corp.wing?' · 설립 '+esc(ch.corp.wing):''}${ch.aff.own&&ch.office?' · '+E.OKW[ch.office.kw]:''}${ch.fr&&!['wing','finger'].includes(E.career(ch))?' · '+frName(ch):''}</span>`:ch.hw?`<span class="chip" style="color:var(--gold);border-color:var(--gold)">H사 홍원${ch.hw.done?' · 가주':ch.hw.out?' · 외부 임무':''}</span>`:ch.licensed?`<span class="chip">${T.licensed}</span>`:'')
-    +(ch.pinky?`<span class="chip" title="${D.pinky.t}">+${D.pinky.n}</span>`:'');
+    +(ch.pinky?`<span class="chip" title="${D.pinky.t}">${ch.pinkyFull?D.pinky.n:ch.aff?'+'+D.pinky.n:D.pinky.n+' 표식'}</span>`:'');
   const innateOne=(c,k)=>k==='mark'&&c.markOn?D.innate.mark.awake:D.innate[k].n;
   const innateName=c=>c.innate?[c.innate,c.innate2].filter(Boolean).map(k=>innateOne(c,k)).join(' · '):null;
   /* E.G.O 적성자: 무기 등급과 다음 등급까지 남은 발현 횟수 */
@@ -1627,7 +1627,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function vFingerPick(){
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">손가락 가입</span>
       <p class="small">어느 손가락에 설지 고른다. 정하면 그 손가락의 서열표를 따른다.</p>
-      ${G.ch.flags&&G.ch.flags.starborn&&!G.ch.pinky?`<button class="btn" data-a="fingerset" data-i="소지"><b>소지</b><span class="small">${esc(D.pinky.t)}</span><span class="mono small" style="color:var(--gold)">서열 없음 · 인 → 의 → 예 → 지 (5년마다 별을 잇는다)</span><span class="small dim">${esc(D.pinky.e)} · 별을 하나 이을 때마다 성도에 그 별을 새긴다 (재료 강화와 별개인 추가 강화: 인 HP · 의 공격 · 예 회피 · 지 피해와 별 잇기) · 네 별을 모두 이으면 '별을 잇다' 한 장 더</span></button>`:''}
+      ${G.ch.flags&&G.ch.flags.starborn&&!G.ch.pinkyFull?`<button class="btn" data-a="fingerset" data-i="소지"><b>정식 소지</b><span class="small">${esc(D.pinky.t)}</span><span class="mono small" style="color:var(--gold)">서열 없음 · 소지 한 곳에만 선다 (다른 손가락을 고르면 그 서열을 쌓으면서 +소지로 겸한다) · 인 → 의 → 예 → 지 (5년마다 별을 잇는다)</span><span class="small dim">${esc(D.pinky.e)} · 별을 하나 이을 때마다 성도에 그 별을 새긴다 (재료 강화와 별개인 추가 강화: 인 HP · 의 공격 · 예 회피 · 지 피해와 별 잇기) · 네 별을 모두 이으면 '별을 잇다' 한 장 더</span></button>`:''}
       ${D.orgs.finger.map(n=>{const F=D.fingers[n];return `<button class="btn" data-a="fingerset" data-i="${esc(n)}"><b>${esc(n)}</b><span class="small">${esc(F.trait)}</span><span class="mono small" style="color:var(--gold)">${F.ranks.map(r=>esc(r.n||(r.branch||[]).map(b=>b.n).join(' / '))).join(' → ')}</span><span class="small dim">${esc(fingerPassive(n,0)||'')}</span></button>`}).join('')}</div>`;
   }
   function vStarPick(){

@@ -937,7 +937,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function chooseFinger(ch,name){
     if(!ch.fingerPick)return null;
     /* 별에 선택받은 자만: 소지 루트 (손가락 서열 대신 인의예지 별을 이을 때마다 성도가 강해진다) */
-    if(name==='소지'&&ch.flags.starborn&&!ch.pinky){ch.fingerPick=false;ch.pinky=true;ch.pinkyYear=ch.year||0;addStats(ch.stats,D.pinky.fx);return [D.pinky.n+' 표식 · '+D.pinky.e,'인의예지 별을 이을 때마다 그 별이 성도에 새겨진다 (추가 강화)']}
+    if(name==='소지'&&ch.flags.starborn&&!ch.pinkyFull){ch.fingerPick=false;ch.pinkyFull=true;if(!ch.pinky){ch.pinky=true;ch.pinkyYear=ch.year||0;addStats(ch.stats,D.pinky.fx)}return ['정식 소지 · 다른 손가락 서열 없이 소지 한 곳에만 선다 · '+D.pinky.e,'인의예지 별을 이을 때마다 그 별이 성도에 새겨진다 (추가 강화)']}
     if(!D.orgs.finger.includes(name))return null;
     const chips=[];ch.fingerPick=false;joinAff(ch,{type:'finger',from:'finger'},name,chips);return chips;
   }
@@ -1843,6 +1843,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:T_.pick,h:`1d100 · ${O.dc} 이상이면 신탁대행자 (남은 기회 ${O.tries-(ch.oracleTries||0)}번)`,check:{s:null,dc:O.dc,pure:true},ok:{t:T_.okT,fx:{oracle:true}},fail:{t:T_.failT,fx:{oracleFail:true}}},
       {l:T_.skip,h:'다시 만나지 않는다',ok:{t:T_.skipT,fx:{oracleDecline:true}}}]};
   }
+  /* 별에 선택받은 자: 소지(성도의 별 잇기)는 출신에 붙은 도다. 소지 표식을 처음부터 가지고 다른 소속과 겸한다(+소지).
+     손가락 가입에서 소지를 고르면 정식 소지(소지 한 곳에만 선다). 옛 판에서 소지를 골라 가입한 경우는 정식 소지로 이어 준다 */
+  function starPinky(ch){
+    if(!ch.flags||!ch.flags.starborn||ch.distForm)return;
+    if(!ch.pinky){ch.pinky=true;ch.pinkyAuto=true;ch.pinkyYear=ch.year||0;addStats(ch.stats,D.pinky.fx)}
+    else if(ch.pinkyFull==null&&!ch.pinkyAuto)ch.pinkyFull=true;
+  }
   /* 소지의 도: 표식이 생긴 뒤 CFG.pinky.every년차마다 인·의·예·지 사건이 차례로 온다 (판정 1d100 ≥ dc) */
   function pinkyEvent(G){
     const ch=G.ch,y=G.year,P_=CFG.pinky;
@@ -1989,7 +1996,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function advanceYear(G){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
-    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
+    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);starPinky(mc);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
     if(mc.distPick)setDistort(mc,'');
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
