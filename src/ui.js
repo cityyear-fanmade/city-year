@@ -254,11 +254,12 @@ export function startUI(E,app){
   /* 들리는 목소리 판정(1d50 세 번, 모두 기준 이상): 주사위 세 개가 차례로 멈추고, 기준 이상이면 금빛으로 켜진다 */
   function rollFxVoice({rs,dc,die,ok,sight,at}){
     return new Promise(res=>{
-      if(MODE==='off'||document.getElementById('rv')){res();return}
+      if(document.getElementById('rv')){res();return}
+      const still=MODE==='off'||SKIP;
       const o=document.createElement('div');o.id='rv';
       o.innerHTML=`<div class="rv-t">정신력 ${at} · 목소리가 가깝다</div><div class="rv-d">${rs.map(()=>'<b>–</b>').join('')}</div><div class="rv-s">1d${die} × ${rs.length} · 모두 ${dc} 이상이어야 E.G.O 개화</div><div class="rv-r" id="rvr"></div>`;
       document.body.appendChild(o);
-      const bs=[...o.querySelectorAll('.rv-d b')],rr=document.getElementById('rvr');let t=0,stop=0,done=false;
+      const bs=[...o.querySelectorAll('.rv-d b')],rr=document.getElementById('rvr');let t=still?9000:0,stop=0,done=false;
       const iv=setInterval(()=>{t+=70;bs.forEach((b,i)=>{if(i>=stop)b.textContent=1+Math.floor(Math.random()*die)});
         if(t>=900+stop*500&&stop<rs.length){bs[stop].textContent=rs[stop];bs[stop].className=rs[stop]>=dc?'on':'off';stop++}
         if(stop>=rs.length){clearInterval(iv);const all=rs.every(x=>x>=dc);o.classList.add(ok?'good':'bad');rr.textContent=ok?(all?'E.G.O 개화':'장비의 형상이 보였다 · E.G.O 개화'):'개화하지 못했다';setTimeout(end,1500)}},70);
@@ -271,11 +272,12 @@ export function startUI(E,app){
     if(a.rs)return rollFxVoice(a);
     const {r,th,ok,at,sight}=a;
     return new Promise(res=>{
-      if(MODE==='off'||document.getElementById('rv')){res();return}
+      if(document.getElementById('rv')){res();return}
+      const still=MODE==='off'||SKIP;
       const o=document.createElement('div');o.id='rv';
       o.innerHTML=`<div class="rv-t">정신력 ${at} · 마음이 한계에 닿았다</div><div class="rv-n" id="rvn">–</div><div class="rv-bar"><i class="rv-ok" style="width:${th}%"></i><i class="rv-mk" id="rvm" style="left:0"></i><span class="rv-l" style="left:0">1</span><span class="rv-l" style="left:${th}%">${th}</span><span class="rv-l" style="right:0">100</span></div><div class="rv-s">1d100 · ${th} 이하면 E.G.O 개화, 넘으면 육신이 뒤틀린다</div><div class="rv-r" id="rvr"></div>`;
       document.body.appendChild(o);
-      const n=document.getElementById('rvn'),m=document.getElementById('rvm'),rr=document.getElementById('rvr');let t=0,done=false;
+      const n=document.getElementById('rvn'),m=document.getElementById('rvm'),rr=document.getElementById('rvr');let t=still?1300:0,done=false;
       const iv=setInterval(()=>{t+=70;const v=1+Math.floor(Math.random()*100);n.textContent=v;m.style.left=v+'%';if(t>=1300){clearInterval(iv);n.textContent=r;m.style.left=r+'%';o.classList.add(ok?'good':'bad');rr.textContent=ok?(sight?'장비의 형상이 보였다 · E.G.O 개화':'E.G.O 개화'):'육신이 뒤틀린다';setTimeout(end,1500)}},70);
       function end(){if(done)return;done=true;clearInterval(iv);o.classList.add('out');setTimeout(()=>{o.remove();res()},400)}
       o.addEventListener('click',()=>{if(t>=1300)end()});
@@ -2556,7 +2558,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       UI.pending=r.combat;saveGame({after:true,pending:UI.pending});
       UI.res=Object.assign(r,{anim:!!r.roll&&MODE!=='off'});
       UI.screen='result';
-      {const rf=G.ch.rollFx;if(rf&&rf.seq!==UI.rollSeen&&MODE!=='off'){UI.rollSeen=rf.seq;rollFx(rf).then(render);return}}
+      {const rf=G.ch.rollFx;if(rf&&rf.seq!==UI.rollSeen){UI.rollSeen=rf.seq;rollFx(rf).then(render);return}}
       render();
     },
     grow(i){const ch=G.ch;E.applyGrowth(ch,ch.lvOpts[+i].g.fx);ch.lvPend--;ch.lvOpts=null;flow()},
