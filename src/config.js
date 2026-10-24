@@ -142,7 +142,7 @@ export const CFG = {
   /* 오늘의 시드로 시작하면 출신 굴림을 이 숫자로 고정한다 (null이면 시드 그대로). 1 = 혈귀 */
   dailyOrigin: 1,
   /* 날짜별 오늘의 시드 지정 (한국 시간 기준 날짜): origin = 출신 굴림(80 = 동부 출신 외곽 생존자), innate = 타고난 것 */
-  dailyPlan: {'2026-10-22': {origin: 20}, '2026-10-20': {origin: 10, innate: 'will'}, '2026-10-21': {origin: 30}, '2026-10-19': {origin: 50}, '2026-10-15': {origin: 80, innate: 'mark'}, '2026-10-16': {origin: 20, innate: 'growth'}, '2026-10-17': {origin: 1, innate: 'psycho'}, '2026-10-18': {origin: 90, innate: 'mark'}},
+  dailyPlan: {'2026-10-22': {origin: 20}, '2026-10-20': {origin: 10, innate: 'will'}, '2026-10-21': {origin: 30}, '2026-10-19': {origin: 50}, '2026-10-15': {origin: 80, innate: 'mark'}, '2026-10-16': {origin: 20, innate: 'growth'}, '2026-10-17': {origin: 1, innate: 'psycho'}, '2026-10-18': {origin: 90, innate: 'mark'}, '2026-10-24': {origin: 20}, '2026-10-25': {origin: 80, innate: 'swift'}, '2026-10-26': {origin: 90}, '2026-10-27': {origin: 30, innate: 'iron'}, '2026-10-28': {origin: 10}, '2026-10-29': {origin: 50, innate: 'scholar'}, '2026-10-30': {origin: 1, innate: 'miracle'}, '2026-10-31': {origin: 20, innate: 'intuition'}},
   /* 혈귀 1권속 카드팩 패시브 '오랜 굶주림': HP를 회복할 때마다 HP 1당 스택 +1(최대 max). 공격 카드를 내면 스택을 모두 써서 그 카드의 첫 적중 피해가 스택만큼 늘고, 스택은 비운다 */
   hunger: {max: 15},
   /* 일상 사건: from년차부터 사건이 있는 해에 chance% 확률로 일상이 온다 (선택지 3개 중 능력치 +1~3 하나, 판당 max번). 인연이 없는 소속 캐릭터는 일상 중 meetChance%가 인연(조우자)을 만나는 사건이 된다 */
