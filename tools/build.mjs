@@ -20,7 +20,7 @@ const routeTest=process.argv.includes('--routetest'),lab=process.argv.includes('
 const BGM_STUB=`function createBgm(){const f=()=>{};return {supported:false,isOn:()=>false,set:f,setMood:f,setScene:f,setVol:f,setStyle:f,style:()=>'calm',vol:()=>0,level:()=>0,debug:()=>null}}`;
 /* 악기 샘플 배경음악(assets/bgm/<스타일>_<장면>.mp3)을 data 주소로 넣는다. --nosamples면 넣지 않아 합성음만 쓴다 */
 const noSamples=process.argv.includes('--nosamples');
-const bgmData={};if(!noBgm&&!noSamples){for(const st of ['calm','passion','library'])for(const sc of ['calm','fight']){try{(bgmData[st]=bgmData[st]||{})[sc]='data:audio/mpeg;base64,'+readFileSync(new URL(`../assets/bgm/${st}_${sc}.mp3`,import.meta.url)).toString('base64')}catch(e){}}}try{bgmData.boss={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets/bgm/boss_boss.mp3',import.meta.url)).toString('base64')}}catch(e){}
+const bgmData={};if(!noBgm&&!noSamples){for(const st of ['calm','passion','library','wave'])for(const sc of ['calm','fight']){try{(bgmData[st]=bgmData[st]||{})[sc]='data:audio/mpeg;base64,'+readFileSync(new URL(`../assets/bgm/${st}_${sc}.mp3`,import.meta.url)).toString('base64')}catch(e){}}}try{bgmData.boss={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets/bgm/boss_boss.mp3',import.meta.url)).toString('base64')}}catch(e){}
 /* 이미지 저장용 html2canvas(MIT)를 파일에 넣어 둔다. 인터넷이 막힌 곳에서도 결과 이미지를 만들 수 있게 (없으면 CDN에서 받는다) */
 const h2c=(()=>{try{return r('vendor/html2canvas.min.js').replace(/<\/script/gi,'<\\/script')}catch(e){return ''}})();
 const js0=['src/config.js','src/engine.js','src/bgm.js','src/sfx.js','src/ui.js'].map(p=>`/* ---- ${p} ---- */\n`+(noBgm&&p==='src/bgm.js'?BGM_STUB:strip(r(p)))).join('\n');
