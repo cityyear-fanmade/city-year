@@ -2562,7 +2562,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       UI.pending=r.combat;saveGame({after:true,pending:UI.pending});
       UI.res=Object.assign(r,{anim:!!r.roll&&MODE!=='off'});
       UI.screen='result';
-      {const rf=G.ch.rollFx;if(rf&&rf.seq!==UI.rollSeen){UI.rollSeen=rf.seq;rollFx(rf).then(render);return}}
+      {const rf=G.ch.rollFx;if(rf&&rf!==UI.rollSeen){UI.rollSeen=rf;rollFx(rf).then(render);return}}
       render();
     },
     grow(i){const ch=G.ch;E.applyGrowth(ch,ch.lvOpts[+i].g.fx);ch.lvPend--;ch.lvOpts=null;flow()},
