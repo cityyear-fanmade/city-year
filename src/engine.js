@@ -1846,9 +1846,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 소지의 도: 표식이 생긴 뒤 CFG.pinky.every년차마다 인·의·예·지 사건이 차례로 온다 (판정 1d100 ≥ dc) */
   function pinkyEvent(G){
     const ch=G.ch,y=G.year,P_=CFG.pinky;
-    /* 별에 선택받은 자: 손가락 가입에서 소지를 고르지 않아도(협회 등 다른 소속이어도) 소지 표식을 받는다. 별 잇기는 소속과 함께 이어진다 */
-    if(!ch.pinky&&ch.flags&&ch.flags.starborn&&!ch.distForm&&!ch.fingerPick&&y>=1)
-      return {t:'소지의 표식',x:'태어난 밤의 네 별이 손끝에서 한 줄로 이어질 자리를 기다린다. 어느 조직에 서든, 이 도는 당신을 떠나지 않는다.',c:[{l:'별을 잇는 길을 받아들인다',h:'소지 표식 · 사건 판정 +5 · 회피 +2 · 해마다 정보값 +100안 · 5년마다 별을 잇는다 (소속과 함께 · 서열은 그대로)',ok:{t:'네 개의 별이 이어질 자리가 생겼다.',fx:{pinky:true}}}]};
     if(!ch.pinky||ch.distForm||ch.seongPick||(ch.pinkyKeys||[]).length>=D.pinky.keys.length||y<(ch.pinkyNext??((ch.pinkyYear||0)+P_.every)))return null;
     ch.pinkyNext=y+P_.every;
     const n=(ch.pinkyKeys||[]).length,K=D.pinky.keys[n];
