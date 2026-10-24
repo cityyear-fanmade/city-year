@@ -8147,8 +8147,11 @@
   },
   {
    "id": "violet",
-   "req": "rank<=2",
-   "chance": 15,
+   "req": [
+    "rank<=2",
+    "beat:black"
+   ],
+   "chance": 25,
    "penalty": {
     "fullRank": 1,
     "atk": -15,
