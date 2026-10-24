@@ -650,6 +650,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 공방 해결사의 작업대: 전용 무기·방어구·의수를 보관함 장비를 녹여 끝없이 강화한다 ===== */
   const WS=CFG.ws,wsKey=sl=>sl==='weapon'?'w':sl==='armor'?'a':'g';
   const wsNeed=n=>1+Math.floor(n/WS.needEvery);
+  const wsMatVal=m=>WS.matValue[Math.max(1,Math.min(5,(m&&m.grade)|0||1))]||1;
   /* 일반 재료: 공방 물건이거나 등급이 4 이하. 히든 재료: 그 밖의 전리품·유물 (5등급 이상이나 등급이 없는 전용 장비) */
   const wsHidden=m=>!(D.items&&D.items[m.id])&&!((m.grade||0)>=1&&(m.grade||0)<=4)&&!(m.id==='birth'||m.n==='맨손');
   function wsItem(ch,slot){
@@ -719,11 +720,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const k=w[wsKey(slot)],hid=wsHidden(m);let step=0;
     st.splice(i,1);
     if(D.items&&D.items[m.id]){w.used=w.used||{};w.used[m.id]=(w.used[m.id]||0)+1}
-    if(hid){k.h++;step=1}else{k.p++;if(k.p>=wsNeed(k.n)){k.p=0;k.n++;step=1}}
-    if(step)w.ups++;
-    if(slot==='aug'&&step&&!hid&&WS.big.at.includes(k.n))k.pend=(k.pend||0)+1;
+    const val=hid?0:wsMatVal(m);
+    if(hid){k.h++;step=1}else{k.p+=val;while(k.p>=wsNeed(k.n)){k.p-=wsNeed(k.n);k.n++;step++;if(slot==='aug'&&WS.big.at.includes(k.n))k.pend=(k.pend||0)+1}}
+    if(step)w.ups+=step;
     equip(ch,carryTune(cur,wsItem(ch,slot)));ch.stash=ch.stash.filter(x=>x!==cur);
-    return {hidden:hid,step,n:k.n,h:k.h,p:k.p,need:wsNeed(k.n),m:m.n};
+    return {hidden:hid,step,n:k.n,h:k.h,p:k.p,need:wsNeed(k.n),m:m.n,val};
   }
   const noFixer=ch=>!!ch.hw||isFinger(ch)||isFounder(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
   function license(ch){
@@ -3353,7 +3354,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsHidden,
+    wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,equip,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

@@ -307,8 +307,10 @@ export const CFG = {
   ws: {
     needEvery: 10, priceUp: 0.25 /* 재료로 쓴 공방 물건은 쓸 때마다 다시 살 때의 값이 원래 값의 priceUp 비율씩 오른다 */,
     /* 기본값은 공방 1등급 물건 중 가장 낮은 것 수준 (날 세운 단검 · 누빈 작업복 · 중고 의수) */
-    weapon: {n: '작업대의 칼날', base: {atk: 2, spd: 1}, dice: [1, 6], normal: {atk: 1}, hidden: {dmgB: 2}},
-    armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 2}, hidden: {dr: 2, eva: 2}},
+    /* 재료 가치: 녹이는 일반 재료의 등급(상점 가격)에 따라 강화 점수가 달라진다 (비싼 장비를 녹일수록 많이 오른다). 한 단계에 필요한 점수는 wsNeed */
+    matValue: {1: 1, 2: 2, 3: 3, 4: 5, 5: 7},
+    weapon: {n: '작업대의 칼날', base: {atk: 2, spd: 1}, dice: [1, 6], normal: {atk: 2}, hidden: {dmgB: 3, atk: 2}},
+    armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 4}, hidden: {dr: 3, eva: 3, maxHp: 4}},
     /* 의수: 일반 강화 한 단계마다 명중 +1, 5·10·15단계마다 공격·회피·명중 중 하나를 골라 올린다 (pickAmt). pick은 예전 저장의 히든 의수 개조 값 */
     aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {hit: 1}, hidden: {hit: 2}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'}},
     /* 커스텀 의수: 공방 해결사가 한 번 포인트(pts)를 나눠 만든다. 공격은 atkCost 포인트에 +atkPer, 회피는 evaCost 포인트에 +1, 체력은 hpCost 포인트에 +hpPer, 패시브 하나는 passCost 포인트 */
@@ -318,8 +320,8 @@ export const CFG = {
     matWins: 2, matGapInf: 5,
     /* 특수 강화(대강화): 강화 5·10·15단계에서만 한 번씩 크게 오른다. 15단계 뒤로는 일반 강화(단계당 수치)만 끝없이 이어진다 */
     big: {at: [5, 10, 15],
-      weapon: [{dmgB: 2}, {atk: 3}, {dmgB: 3, spd: 2}],
-      armor: [{maxHp: 10, regen: 1}, {maxHp: 10, dr: 2}, {maxHp: 20, regen: 2}]}
+      weapon: [{dmgB: 3}, {atk: 5}, {dmgB: 4, spd: 3}],
+      armor: [{maxHp: 14, regen: 1}, {maxHp: 14, dr: 3}, {maxHp: 28, regen: 2}]}
   },
   /* 특색 + 소지: 신(心)·망(望). 신: 전투 시작에 정신력 shinCost, 받는 피해 −takeShin · 주는 피해 +dealShin. 망: ringEvery라운드마다 하나(정신력 ringCost 순서대로), 망마다 주는 피해 +dealRing · 명중 +ringHit, 최대 maxRings(소지의 별 수 이내). 전투를 이기면 정신력 winMind 회복 */
   shinmang: {on: true, shinCost: 2, ringEvery: 3, ringCost: [3, 4, 5], maxRings: 3, takeShin: 0.10, dealShin: 0.10, dealRing: 0.08, ringHit: 3, winMind: 3},
