@@ -1124,7 +1124,10 @@ export function startUI(E,app){
     const y=ids.filter(id=>/^lake_ywhale/.test(id)),w=ids.filter(id=>/^lake_whale/.test(id)),o=ids.filter(id=>/^lake_indigo/.test(id));
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">대호수 도감 · 대재앙 ${w.filter(id=>r.beaten.includes(id)).length}/${w.length} · 어린 고래 ${y.filter(id=>r.beaten.includes(id)).length}/${y.length}</span>${rows(w,'대재앙')}${rows(y,'보스급 고래')}${rows(o,'그 밖에')}</div>`
   }
-  function vRecords(){
+  /* 기록실: 칸 제목을 누르면 그 칸이 접히고 펼쳐진다 (브라우저에 기억) */
+  const RFK='cy_recfold',recFold=()=>{try{return JSON.parse(localStorage.getItem(RFK)||'[]')||[]}catch(e){return []}};
+  const vRecords=()=>{const f=recFold();return vRecords0().replace(/<div class="panel stack"( style="[^"]*")?><span class="eyebrow">([^<]*)<\/span>/g,(m,st,t)=>{const k=t.replace(/\s*·.*$/,'').replace(/\s*[0-9].*$/,'')||t,c=f.includes(k);return `<div class="panel stack rfold${c?' closed':''}"${st||''}><span class="eyebrow rfh" data-a="rfold" data-i="${esc(k)}" role="button" aria-expanded="${!c}">${c?'▸':'▾'} ${t}</span>`})};
+  function vRecords0(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
     const ends0=[['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
     /* 오버플로우(무한 모드 1000살)는 달성하기 전에는 칸도 개수도 보이지 않는다 */
@@ -1148,9 +1151,9 @@ export function startUI(E,app){
       ${(()=>{const GR=[['날개','wing'],['협회','assoc'],['사무소','office'],['손가락','finger'],['조직','syn']],all=GR.flatMap(([,k])=>D.orgs[k]||[]),got=(r.affs||[]).filter(n=>all.includes(n));
         return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소속 ${got.length}/${all.length}</span>${GR.map(([n,k])=>`<div><span class="small dim">${n}</span><div class="chips">${(D.orgs[k]||[]).map(o=>`<span class="chip${(r.affs||[]).includes(o)?'':' dim'}">${(r.affs||[]).includes(o)?esc(o):'???'}</span>`).join('')}</div></div>`).join('')}<p class="small dim">한 번이라도 들어간 소속이 열린다.</p></div>`})()}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span><div class="stack" style="gap:6px">${ends.map(([k,n])=>{const op=r.endings.includes(k),pass=!!(r.hints&&r.hints[k])&&END_EXACT[k];return hintRow(op,esc(n),(op||pass)&&END_EXACT[k]?(pass&&!op?'[갈림길을 지나쳤다] ':'')+END_EXACT[k]:END_HINT[k])}).join('')}</div></div>
-      ${(()=>{const cat=specCat(),ids=Object.keys(cat.g),gs=r.gears||[],pk=Object.keys(cat.p),pg=r.packs||[];return `<div class="panel stack" style="gap:8px"><span class="eyebrow">특수 장비 ${ids.filter(k=>gs.includes(k)).length}/${ids.length}</span><div class="chips">${ids.filter(k=>gs.includes(k)).map(k=>`<span class="chip">${esc(cat.g[k])}</span>`).join('')}<span class="chip dim">???${ids.some(k=>!gs.includes(k))?' × '+ids.filter(k=>!gs.includes(k)).length:''}</span></div>
+      ${(()=>{const cat=specCat(),ids=Object.keys(cat.g),gs=r.gears||[],pk=Object.keys(cat.p),pg=r.packs||[];return `<div class="panel stack" style="gap:8px"><span class="eyebrow">특수 장비 ${ids.filter(k=>gs.includes(k)).length}/${ids.length}</span><div class="chips">${ids.map(k=>`<span class="chip${gs.includes(k)?'':' dim'}">${gs.includes(k)?esc(cat.g[k]):'???'}</span>`).join('')}</div>
         <span class="eyebrow">전용 카드팩 ${pk.filter(k=>pg.includes(k)).length}/${pk.length}</span><div class="chips">${pk.map(k=>`<span class="chip${pg.includes(k)?'':' dim'}">${pg.includes(k)?esc(k)+' · '+cat.p[k]+'장':'???'}</span>`).join('')}</div>
-        <p class="small dim">히든 보스 전리품, 출신 전용 장비, 전용 카드팩이 쌓인다. 이름을 직접 정하는 것(성도 · 개화 · 뒤틀림)은 넣지 않았다.</p></div>`})()}
+        <p class="small dim">히든 보스 전리품, 출신 전용 장비, 전용 카드팩이 쌓인다. 이름을 직접 정하는 것(성도 · 개화 · 뒤틀림)은 넣지 않았다. 아직 얻지 못한 것은 ???로 제자리에 두어, 어디쯤 있는 장비인지 짐작할 수 있다.</p></div>`})()}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">타고난 것 ${r.innate.length}/${Object.keys(D.innate).length}</span><div class="chips">${Object.entries(D.innate).map(([k,v])=>`<span class="chip${r.innate.includes(k)?'':' dim'}">${r.innate.includes(k)?esc(v.n):'???'}</span>`).join('')}</div>${Object.entries(D.innate).filter(([k,v])=>v.unlock&&!(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small dim">잠김 · ${r.innate.includes(k)?esc(v.n):'???'} — 해금: ${esc(v.unlock)}</span>`).join('')}${Object.entries(D.innate).filter(([k,v])=>v.unlock&&(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small" style="color:var(--gold)">해금됨 · ${r.innate.includes(k)?esc(v.n):'???'} — 이제 태어날 때 1%로 나올 수 있다${r.innate.includes(k)?'':' (만나면 이름이 열린다)'}</span>`).join('')}</div>
 ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px"><span class="eyebrow">판 통계</span><p class="small dim">v8.2.0부터 집계한다. 이야기가 끝나면 여기에 쌓인다.</p></div>`;
         const top=(m,n)=>Object.entries(m||{}).sort((a,b)=>b[1]-a[1]).slice(0,n),line=(l,arr)=>arr.length?`<div class="row between" style="align-items:flex-start;gap:10px"><span>${l}</span><span class="small" style="text-align:right">${arr.map(([k,v])=>`${esc(k)} ×${v}`).join(' · ')}</span></div>`:'',en=Object.fromEntries(ends);
@@ -2472,6 +2475,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');UI.chMsg='';render()}
     },
     chron(){UI.delAsk=null;UI.screen='chron';render()},
+    rfold(k){const f=recFold(),i=f.indexOf(k);if(i<0)f.push(k);else f.splice(i,1);try{localStorage.setItem(RFK,JSON.stringify(f))}catch(e){}render()},
     chtab(k){UI.delAsk=null;UI.chTab=k==='fame'?'fame':'life';UI.screen='chron';render()},
     chview(v){const [tab,id]=String(v).split(':');UI.delAsk=null;UI.imgUrl=null;UI.chSel={tab,id};UI.screen='chronview';render()},
     chfame(id){const o=loadChron(),e=o.life.find(x=>x.id===id);if(!e)return;
