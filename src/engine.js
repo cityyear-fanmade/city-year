@@ -187,10 +187,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function giveRelic(ch,id,late){
     const R=D.relics[id];if(!R)return;
     (ch.relics=ch.relics||[]).push(R.n);(ch.relicIds=ch.relicIds||[]).push(id);ch.relicPick=false;ch.relicPickLate=false;
+    if(isWs(ch)&&CFG.wsRelic[id])return wsAbsorb(ch,id);
     if(R.odin){ch.odin=true;if(ch.o&&ch.o.n==='보냐텔리 가문')ch.yeji=true}
     /* 환도 + 궁니르: 공명 패시브와 전용 카드 2장 */
     if(id==='gungnir'&&ch.hwando&&!ch.resonance){ch.resonance=true;ch.relics.push('궁니르 공명');for(const gid of ['g_gungnir','g_gungnir'])if(!routeBirthCard(ch,gid))forceAdd(ch,gid)}
     if(R.gear){const g=Object.assign({id:R.gear.id||id,grade:5},R.gear);if(late)offerGear(ch,g);else{equip(ch,g);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth')}}
+  }
+  /* 공방 해결사: 유물은 장비로 쓰지 않고 공방 무기에 효과로 깃든다 (보관함의 유물 장비는 사라진다) */
+  function wsAbsorb(ch,id){
+    const W=CFG.wsRelic[id],R=D.relics[id];if(!W||!R)return '';
+    ch.wsRelic=ch.wsRelic||{};if(ch.wsRelic[id])return '';ch.wsRelic[id]=true;
+    if(id==='odin'){ch.odin=false;ch.yeji=false}
+    ch.stash=(ch.stash||[]).filter(x=>!(x.id==='gungnir'&&id==='gungnir')&&!(String(x.id).startsWith('laev')&&id==='laev'));
+    const note=`공방 무기에 깃든다 · ${W.n} · ${W.e}`;(ch.relics=ch.relics||[]).push(`${R.n} → ${W.n}`);
+    return note;
   }
   /* 이미 가진 유물은 다시 고를 수 없다 */
   /* 잊힌 유물 확률: 기본 + 유물 적성 (성장기 '무너진 유적 탐험') */
@@ -1996,7 +2006,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function advanceYear(G){
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
-    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);starPinky(mc);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
+    G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);starPinky(mc);if(isWs(mc))for(const id of (mc.relicIds||[]))if(!(mc.wsRelic&&mc.wsRelic[id]))wsAbsorb(mc,id);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
     if(mc.distPick)setDistort(mc,'');
     /* 기업 루트: 이름 고르기를 건너뛴 채(자동 진행) 넘어오면 기본값으로 정한다 */
     if(mc.singPick)setSing(mc,one(Object.keys(CP.types)),'제로',true);
@@ -2258,7 +2268,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ok){ch.relicPickLate=true;chips.push('유물이 손에 감긴다 · 하나를 고른다')}else{chips.push('손끝에 먼지만 묻었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.familyAsked)ch.familyPend=true}}
     /* 보냐텔리 가문: 잊힌 유물을 놓치면 가문의 부름 · 오딘의 눈 */
     if(fx.odinRoll){const r=d(100),ok=r<=fx.odinRoll&&!(ch.relicIds||[]).includes('odin');chips.push(`1d100 · ${r} (${fx.odinRoll} 이하)`);
-      if(ok){giveRelic(ch,'odin',true);chips.push('유물 · '+D.relics.odin.n+' ('+D.relics.odin.e+')');if(ch.yeji)chips.push('패시브 · 가속하는 미래 · 버프 · 예지안 (전용 검술 카드 피해 +'+CFG.odin.yeji+')');else chips.push('버프 · 순간의 예지 · 첫 라운드 회피 +'+CFG.odin.first+' · 이후 +'+CFG.odin.after)}else{chips.push(ch.resoAsked?'유물고의 울림이 잦아들었다':'보물고는 비어 있었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.resoAsked){ch.resoPend=true;ch.resoAt=(ch.year||0)+3}}}
+      if(ok){const wn_=giveRelic(ch,'odin',true);if(wn_)chips.push('유물 · '+D.relics.odin.n+' · '+wn_);else chips.push('유물 · '+D.relics.odin.n+' ('+D.relics.odin.e+')');if(wn_){}else if(ch.yeji)chips.push('패시브 · 가속하는 미래 · 버프 · 예지안 (전용 검술 카드 피해 +'+CFG.odin.yeji+')');else chips.push('버프 · 순간의 예지 · 첫 라운드 회피 +'+CFG.odin.first+' · 이후 +'+CFG.odin.after)}else{chips.push(ch.resoAsked?'유물고의 울림이 잦아들었다':'보물고는 비어 있었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.resoAsked){ch.resoPend=true;ch.resoAt=(ch.year||0)+3}}}
     if(fx.wsRoll){
       const r=d(WF.die);chips.push(`1d${WF.die} · ${r} (${WF.minRoll} 이상)`);
       if(r>=WF.minRoll){const was=ch.licensed;if(!was)license(ch);ch.aff={type:'workshop',name:'공방 해결사'};
@@ -2566,6 +2576,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
     let hpNote=null;
     if(P.laev==='open'){P.flame=1}
+    /* 공방 해결사의 유물: 공방 무기에 깃든 효과 */
+    if(P.isP&&ch.wsRelic&&isWs(ch)){P.wsRelic=ch.wsRelic;if(ch.wsRelic.laev){P.wsFlame=true;P.burnHit=Math.max(P.burnHit||0,CFG.wsRelic.laev.hit)}if(ch.wsRelic.odin)P.runes=0}
     if(e.hidden&&P.hp<Math.min(CFG.hidden.minHp,P.maxHp)){const t=Math.min(CFG.hidden.minHp,P.maxHp);hpNote=`불길한 예감에 숨을 고른다 · HP ${P.hp} → ${t}`;P.hp=t;ch.hp=t}
     /* 정신력: 환상체와 마주치면 2d3 감소, 그다음 정신력 구간 보정(호흡·회피) */
     let mindNote=hpNote?[hpNote]:[];
@@ -3032,6 +3044,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 중지 패시브 되갚음: 맞을 때마다 1 (최대 5), 다음 적중 피해 +2×스택 */
       if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
       if(A.isP&&A.angry>0&&dmg>0){dmg+=A.angry;note+=` 분노+${A.angry}`;A.angry=0}
+      if(A.isP&&A.wsRelic&&A.wsRelic.odin&&dmg>0){const R_=CFG.wsRelic.odin;
+        if((A.runes||0)>=R_.need){const dd=A.wx&&A.wx.dice?A.wx.dice[1]:(A.pdie||6);let x=0;for(let q=0;q<R_.extra;q++)x+=d(dd);dmg+=x;note+=` 룬 ${R_.need} 소모 · 주사위 +${R_.extra}개(+${x})`;A.runes=0}
+        else{A.runes=(A.runes||0)+1;L('kw',`  ${A.name} · 룬 ${A.runes}/${R_.need}`)}}
       const EG_=A.isP&&c.eg?(A.mf&&c.eg.mf?Object.assign({},c.eg,c.eg.mf):c.eg):null;
       if(EG_){if(EG_.first&&A.egFR!==C.round){A.egFR=C.round;dmg+=EG_.first;note+=` 첫 적중+${EG_.first}`}
         if(EG_.per){const n_=egRes(A,B);if(n_>0){const x=n_*EG_.per;dmg+=x;note+=` ${(A.wx&&(A.wx.grudgeN||(A.wx.echo&&A.wx.echo.n)))||(A.wx&&A.wx.debuff?'거미줄':'')}+${x}`}}}
@@ -3138,8 +3153,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.isP&&d(M.evadeDie)===1&&!(corpType(C.ch)&&corpType(C.ch).year))loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
       /* 레바테인 계열: 적중 시 화상 */
       if(A.burnHit&&B.hp>0){
-        if(A.laev){B.flame=Math.min(CFG.stackCap,(B.flame||0)+A.burnHit);if(A.laev==='open'){B.blue=true;B.blueM=1+(CFG.laev.blueMul-1)*(A.laevF||1);B.blueD=Math.max(1,Math.round(CFG.laev.blueDot*(A.laevF||1)))}
-          L('kw',`  ${B.name}에게 ${A.laev==='open'||isBlue(B)?'푸른 화염':'붉은 화염'} +${A.burnHit} (지금 ${B.flame})`);laevCount(A,A.burnHit,L)}
+        if(A.laev||A.wsFlame){B.flame=Math.min(CFG.stackCap,(B.flame||0)+A.burnHit);if(A.wsFlame&&!A.laev)B.wsKeep=true;if(A.laev==='open'){B.blue=true;B.blueM=1+(CFG.laev.blueMul-1)*(A.laevF||1);B.blueD=Math.max(1,Math.round(CFG.laev.blueDot*(A.laevF||1)))}
+          L('kw',`  ${B.name}에게 ${A.laev==='open'||isBlue(B)?'푸른 화염':'붉은 화염'} +${A.burnHit} (지금 ${B.flame})`);if(A.laev)laevCount(A,A.burnHit,L)}
         else{const bp=A.burnHit+(A.wx&&A.wx.burnPlus||0);B.burn=Math.min(Math.round(CFG.burn.max*((A.wx&&A.wx.burnCap)||1)),(B.burn||0)+bp);L('kw',`  ${B.name}에게 화상 +${bp} (지금 ${B.burn})`)}}
       /* 주사위마다 무작위 디버프 1 (Furioso): 출혈 또는 파열 */
       if(c.rngDebuff&&B.hp>0){const got={};for(let i=0;i<c.dice;i++){const k=one(c.rngDebuff);B[k]=Math.min(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):CFG.stackCap,B[k]+1);got[k]=(got[k]||0)+1}
@@ -3176,6 +3191,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 궁니르 공명: 궁니르 카드를 낸 라운드는 받는 피해 60% 감소 */
     if(P.resonance&&pp.some(c=>c.gungnir))P.drRound=C.round;
     const L=(t,s)=>{if(C.quiet)return;C.log.push({t,s});C.cur.push({t,s})};
+    if(P.isP&&P.wsRelic&&P.wsRelic.gungnir&&(C.round-1)%CFG.wsRelic.gungnir.every===0){P.drRound=C.round;L('kw',`${P.name} · 궁니르 · 강제 공명 · 이번 라운드 받는 피해 60% 감소`)}
     /* 보랏빛 사복검: 서로 다른 자세의 4코스트 카드를 두 가지 쓰면 다음 손패에 환영난무, 몇 라운드 동안 최대 빛 증가 (전투에 한 번) */
     if(P.isP&&P.wx&&P.wx.forms){C.vsTop=C.vsTop||[];pp.forEach(c=>{if(c.vsTop&&!C.vsTop.includes(c.vsTop))C.vsTop.push(c.vsTop)});if(C.vsTop.length>=2&&!C.vsGiven){C.vsGiven=true;giveNext(P,'x_vs_ego');P.burstLight=CFG.form.burstLight;P.burstTo=C.round+CFG.form.burstRounds;L('sys',`  ${P.name} · 3코스트 이상 두 자세 · 다음 손패에 환영난무 · 최대 빛 +${CFG.form.burstLight} (${CFG.form.burstRounds}라운드)`)}}
     const push=ev=>{if(C.quiet)return;if(C.rollPend){C.cur.unshift({t:'sys',s:`  판정 1d100 ${C.rollPend.r} / 개화 ${C.rollPend.th} 이하`,roll:C.rollPend});C.rollPend=null}ev.lines=C.cur;C.cur=[];ev.snap=snap(C);ev.step=C.step;C.evs.push(ev)};
@@ -3257,7 +3273,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 푸른 화염: 라운드 끝에 스택 × blueDot 피해, 그 뒤 1 감소. 해방 레바테인 소지자의 일반 화상은 줄지 않는다 */
     for(const X of [P,E]){
       if(isBlue(X)&&X.hp>0){const x=X.flame*(X.blueD||CFG.laev.blueDot);hpLoss(C,X,x,L);X.flame--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.flame})`)}
-      else if(X.flame>0&&!(X.isP&&X.laev==='open'))X.flame--;
+      else if(X.flame>0&&!(X.isP&&X.laev==='open')&&!X.wsKeep)X.flame--;
       /* 화상: 라운드 끝에 스택만큼 피해, 그 뒤 스택은 keep 비율만 남는다 (내림) */
       if(X.oracleMiss){X.oracleMiss=false;X.passHitNext=(X.passHitNext||0)-CFG.oracle.missHit;X.evaPenNext=CFG.oracle.missEva}
       if(X.stunned){X.stunned=false;X.stagger=0;X.stunImmune=C.round+3}else if(X.stagger>0)X.stagger=Math.max(0,X.stagger-CFG.nail.decay);
