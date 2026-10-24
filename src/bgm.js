@@ -16,10 +16,10 @@ export function createBgm(){
     maxGain:2,          // 음량 100%일 때 마스터 음량 (컴프레서가 최고점을 눌러 준다)
     fadeIn:3,           // 켤 때 서서히 커지는 시간(초)
     fadeOut:0.8,        // 끌 때 서서히 줄어드는 시간(초)
-    bpm:{calm:{calm:100,fight:132},passion:{calm:150,fight:168},library:{calm:116,fight:176},ext:{calm:100,fight:132}},   // [스타일][장면]
+    bpm:{calm:{calm:100,fight:132},passion:{calm:150,fight:168},library:{calm:116,fight:176},wave:{calm:100,fight:132},ext:{calm:100,fight:132}},   // [스타일][장면]
     bossBpm:{intro:66,main:144},bossGain:0.62,bossCut:2400,
-    styleGain:{calm:0.7,passion:0.6,library:1.0,ext:1.0},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
-    cutMul:{calm:{calm:0.8,fight:1},passion:{calm:1.1,fight:1.3},library:{calm:1.9,fight:2.3},ext:{calm:1.5,fight:1.5}}, // 장면별 밝기
+    styleGain:{calm:0.7,passion:0.6,library:1.0,wave:1.0,ext:1.0},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
+    cutMul:{calm:{calm:0.8,fight:1},passion:{calm:1.1,fight:1.3},library:{calm:1.9,fight:2.3},wave:{calm:1.5,fight:1.5},ext:{calm:1.5,fight:1.5}}, // 장면별 밝기
     /* 코드(C=0 기준 반음): b=베이스 근음, t=구성음(피아노 · 현), sc=선율 음계 */
     /* 코드(C=0 기준 반음): b=베이스 근음, f=베이스 5음(근음 기준), t=반주 구성음 (가운데 도=0) */
     /* 불길(D 단조): Dm → Bb → F → C → Dm → Bb → Gm → A */
@@ -62,8 +62,8 @@ export function createBgm(){
   let stage=1;
   /* 시험곡(ext): 외부에서 받은 곡을 평시·전투에 하나씩 배정해 들어 본다. 같은 곡을 둘 다에 배정하면 장면이 바뀌어도 끊기지 않고 이어진다 */
   const ext={idx:1},extOn=()=>typeof window!=='undefined'&&!!(window.CITY_BGM&&window.CITY_BGM.ext);
-  const smpKey=(st,sc)=>sc==='boss'?'boss_boss':st==='ext'?'ext_t'+ext.idx+'_'+sc:st+'_'+sc,BOSS_LOOP=4*4*60/66;
-  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st='boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext.idx+'_'+sc])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
+  const ONE={passion:1,wave:1},smpKey=(st,sc)=>sc==='boss'?'boss_boss':st==='ext'?'ext_t'+ext.idx+'_'+sc:st+'_'+(ONE[st]&&sc==='fight'?'calm':sc),BOSS_LOOP=4*4*60/66;
+  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;if(ONE[st]&&sc==='fight')sc='calm';const M=window.CITY_BGM;if(sc==='boss'){st='boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext.idx+'_'+sc])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
   const smpUsable=(st,sc)=>!!smpSrc(st,sc)&&!smp.bad[smpKey(st,sc)];
   function smpLoad(key,src){
     if(smp.loading[key])return;
@@ -460,7 +460,7 @@ export function createBgm(){
     setStage(n){n=Math.max(1,Math.min(5,Math.round(+n)||1));if(n===stage)return;stage=n;stemsApply()},
     stage:()=>stage,
     style:()=>style,
-    setStyle(k){if(k==='calm'||k==='passion'||k==='library'||(k==='ext'&&extOn()))style=k},
+    setStyle(k){if(k==='calm'||k==='passion'||k==='library'||k==='wave'||(k==='ext'&&extOn()))style=k},
     extOn,ext:()=>ext.idx,
     setExt(i){if(i>=1&&i<=5)ext.idx=i}
   };
