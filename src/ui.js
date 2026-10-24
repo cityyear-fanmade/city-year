@@ -1120,7 +1120,7 @@ export function startUI(E,app){
     const ids=Object.keys(D.enemies).filter(id=>/^lake_(ywhale|whale|indigo)/.test(id));
     if(!ids.length||!(r.births||[]).concat(r.seen).some(x=>x==='대호수로 나간 자'||/^lake_/.test(x)))return '';
     const rows=(list,title)=>`<div><span class="small dim">${title}</span><div class="stack" style="gap:6px">${list.map(id=>{const e=D.enemies[id],seen=r.seen.includes(id),won=r.beaten.includes(id);
-      return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${seen?'':' dim'}"${won?` style="color:${e.color};border-color:${e.color}"`:''}>${seen?esc(e.n)+(won?' ✓':''):'???'}</span><span class="small dim">${won&&e.drop?esc(e.drop.e):seen?'아직 이기지 못했다':'아직 만나지 못했다'}</span></div>`}).join('')}</div></div>`;
+      return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${seen?'':' dim'}"${won?` style="color:${e.color};border-color:${e.color}"`:''}>${seen?esc(e.n)+(won?' ✓':''):'???'}</span><span class="small dim">${won?(e.drop?esc(e.drop.e):'쓰러뜨렸다'):seen?'아직 이기지 못했다':'아직 만나지 못했다'}</span></div>`}).join('')}</div></div>`;
     const y=ids.filter(id=>/^lake_ywhale/.test(id)),w=ids.filter(id=>/^lake_whale/.test(id)),o=ids.filter(id=>/^lake_indigo/.test(id));
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">대호수 도감 · 대재앙 ${w.filter(id=>r.beaten.includes(id)).length}/${w.length} · 어린 고래 ${y.filter(id=>r.beaten.includes(id)).length}/${y.length}</span>${rows(w,'대재앙')}${rows(y,'보스급 고래')}${rows(o,'그 밖에')}</div>`
   }
