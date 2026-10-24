@@ -1014,12 +1014,15 @@ export function startUI(E,app){
   const MINDTEST=false; /* build --mind: 정신력 10 이하 연출만 시험하는 판 */
   function vMindTest(){
     if(!MINDTEST)return '';
+    const mb=UI.mindBias||'',ms=UI.mindSight||0,seg=(a,cur,arr)=>`<div class="seg">${arr.map(([k,l])=>`<button class="${String(cur)===String(k)?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`).join('')}</div>`;
+    const dcs=mb==='good'?CFG.mind.voiceGoodDc:mb==='bad'?CFG.mind.voiceBadDc:CFG.mind.voiceDc,th=50+(mb==='good'?-20:mb==='bad'?20:0);
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">정신력 시험 · 새 캐릭터로 바로 시작한다</span>
-      <button class="btn primary" data-a="mindtest" data-i="voice"><b>① 정신력 8 · 들리는 목소리</b><span class="dim small">목소리 연출 → 듣기 좋다/싫다 → 기존 개화 판정</span></button>
+      <span class="small dim">목소리 선택 (②·③에 적용)</span>${seg('mindbias',mb,[['','선택 안 함'],['good','듣기 좋다'],['bad','듣기 싫다']])}
+      <span class="small dim">성장기 "장비의 형상이 보임" 개수 (개화 구제 ${15*ms}%)</span>${seg('mindsight',ms,[[0,'0'],[1,'1'],[2,'2'],[3,'3'],[4,'4']])}
+      <span class="mono small" style="color:var(--gold)">정신력 1·0 개화 기준 ${th} 이하 · 목소리 판정 ${dcs} 이상 × 3 · 구제 ${15*ms}%${mb==='bad'&&ms>=4?' · 목소리 판정 개화 확정':''}</span>
+      <button class="btn primary" data-a="mindtest" data-i="voice"><b>① 정신력 8 · 들리는 목소리</b><span class="dim small">목소리 연출 → 듣기 좋다/싫다 → 기존 개화 판정 (목소리 선택은 직접 고른다 · 성장기 개수는 위 값 적용)</span></button>
       <button class="btn" data-a="mindtest" data-i="distort"><b>② 정신력 1 · 뒤틀림 사건</b><span class="dim small">정신을 붙잡는다 → 판정 연출 (기준선 표시)</span></button>
-      <button class="btn" data-a="mindtest" data-i="break"><b>③ 전투 중 정신력 0</b><span class="dim small">전투가 시작되자마자 개화/뒤틀림 판정 연출</span></button>
-      <button class="btn quiet" data-a="mindtest" data-i="voice-good"><b>①-a 듣기 좋다를 고른 상태로 ②·③ 시험</b><span class="dim small">개화 기준선이 30으로 내려간다</span></button>
-      <button class="btn quiet" data-a="mindtest" data-i="voice-bad"><b>①-b 듣기 싫다를 고른 상태로 ②·③ 시험</b><span class="dim small">개화 기준선이 70으로 올라간다</span></button></div>`}
+      <button class="btn" data-a="mindtest" data-i="break"><b>③ 전투 중 정신력 0</b><span class="dim small">전투가 시작되자마자 개화/뒤틀림 판정 연출</span></button></div>`}
   function vTitle(){
     return `${chronBtn('chron-in')}<div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
       <h1>도시의 한 해</h1></div>
@@ -2406,12 +2409,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:BGM.extOn()?'ext':'calm',ext:'calm'}[BGM.style()]||'calm');bgmSave();render()},
     qvol(){UI.volOpen=!UI.volOpen;render()},
     voicepick(k){if(!UI.ev||!UI.ev.voices||(k!=='good'&&k!=='bad'))return;G.ch.voiceBias=k;UI.voicePicked=UI.ev;resave();render()},
+    mindbias(k){UI.mindBias=k||'';render()},
+    mindsight(k){UI.mindSight=+k||0;render()},
     mindtest(k){
       const sd=newSeed();E.reseed(sd);let c=E.newChar(),g=0;while((c.o.hidden||c.ego||c.o.secret)&&g++<200)c=E.newChar();BC=c;BC.seed=sd;BC.name='';BC.fresh=false;
-      ACT.live();const ch=G.ch;ch.year=G.year=Math.max(G.year||0,12);ch.hp=ch.stats.maxHp;ch.voiceUsed=false;ch.distortDone=false;ch.voicePend=false;ch.distortPend=false;ch.voiceBias=null;UI.voicePicked=null;UI.voicePlay=null;UI.voiceSeen=null;
-      if(k==='voice-good'||k==='voice-bad')ch.voiceBias=k==='voice-good'?'good':'bad';
+      ACT.live();const ch=G.ch;ch.year=G.year=Math.max(G.year||0,12);ch.hp=ch.stats.maxHp;ch.voiceUsed=false;ch.distortDone=false;ch.voicePend=false;ch.distortPend=false;ch.voiceBias=k==='voice'?null:(UI.mindBias||null);ch.stats.egoSight=15*(UI.mindSight||0);UI.voicePicked=null;UI.voicePlay=null;UI.voiceSeen=null;
       if(k==='voice'){ch.mind=8;ch.voicePend=true}
-      else if(k==='distort'||k==='voice-good'||k==='voice-bad'){ch.mind=1;ch.distortPend=true}
+      else if(k==='distort'){ch.mind=1;ch.distortPend=true}
       else if(k==='break'){ch.mind=0;ch.mindDead=true;ch.distortDone=true;UI.pending='thug'}
       UI.ev=null;UI.res=null;flow()},
     voiceskip(){if(UI.ev&&UI.ev.voices&&UI.voiceSeen!==UI.ev){UI.voiceSeen=UI.ev;render()}},
