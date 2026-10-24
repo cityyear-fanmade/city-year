@@ -2557,7 +2557,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const m=UI.omen.omen;UI.omen=null;UI.fight=st.enemy;UI.enc=st.enc;UI.avoidText=st.avoided?m.awayT:null;render();
     },
     choose(i){
-      const r=E.choose(G,UI.ev,+i);syncTitles();
+      const ev0=UI.ev,r=E.choose(G,UI.ev,+i);syncTitles();
+      if(ev0&&ev0.voices&&r&&r.t){const vb=G.ch.voiceBias;if(vb==='good'&&ev0.tGood)r.t=ev0.tGood;else if(vb==='bad'&&ev0.tBad)r.t=ev0.tBad}
       {const un=checkInnateUnlock();if(un.length)r.chips=[...(r.chips||[]),`타고난 것 해금 · ${un.join(', ')} (이제 태어날 때 1%로 나온다)`]}
       UI.pending=r.combat;saveGame({after:true,pending:UI.pending});
       UI.res=Object.assign(r,{anim:!!r.roll&&MODE!=='off'});
