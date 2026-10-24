@@ -169,7 +169,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.weapon==='star'){equip(ch,starItem(0,''));ch.starPick=true}
     if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e}}
     /* E.G.O 적성자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
-    if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;egoDeck(ch,g.id,0);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
+    if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;egoDeck(ch,g.id,0,true);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);if(o.startRank)ch.rank=o.startRank;ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
     ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;ch.packKind=ch.deckLocked||ch.cardMoney?'special':'origin';ch.packName=ch.packName||(ch.o&&ch.o.packName)||(ch.packKind==='special'?(ch.o&&ch.o.n?ch.o.n+' 전용 카드팩':'전용 카드팩'):(ch.o&&ch.o.n?ch.o.n+' 출신 카드팩':'출신 카드팩'));ch.birthPack=ch.packName;ch.packs=newBasicPacks();
     return ch;
@@ -275,7 +275,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const egoLvFor=u=>CFG.egoGrow.need.reduce((a,n,i)=>u>=n?i:a,0);
   /* E.G.O 책장: 등급(L)마다 덱의 E.G.O 전용 카드가 그 등급의 카드로 바뀐다. 장수·구성은 birth.json egoBooks[무기 id].decks[L] */
   const egoBook=id=>{for(const o of D.hiddenOrigins||[])if(o.egoBooks&&o.egoBooks[id])return o.egoBooks[id];return null};
-  function egoDeck(ch,id,L){const bk=egoBook(id);if(!bk)return;const all=new Set(bk.decks.flat());ch.deck=ch.deck.filter(c=>!all.has(c)).concat(bk.decks[Math.min(L,bk.decks.length-1)])}
+  /* 다른 카드팩으로 갈아탄 덱에는 E.G.O 책장을 끼워 넣지 않는다 (덱에 E.G.O 책장 카드가 있을 때만 그 등급 카드로 바꾼다). 보관 중인 팩의 덱도 같이 올려 둔다 */
+  function egoDeck(ch,id,L,force){const bk=egoBook(id);if(!bk)return;const all=new Set(bk.decks.flat()),to=bk.decks[Math.min(L,bk.decks.length-1)];
+    const swap=dk=>Array.isArray(dk)&&(force||dk.some(c=>all.has(c)))?dk.filter(c=>!all.has(c)).concat(to):dk;
+    ch.deck=swap(ch.deck);for(const p of ch.packs||[])if(p&&p.deck)p.deck=swap(p.deck)}
   /* E.G.O 카드의 무기 자원: 징벌(내 쪽)·거미줄·우주의 노래(상대 쪽). get/add는 현재 무기 기준 */
   function egRes(A,B,add){const w=A.wx||{};
     if(w.grudge){if(add)A.grudge=Math.min(5,(A.grudge||0)+add);return A.grudge||0}

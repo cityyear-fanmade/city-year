@@ -2657,7 +2657,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testTitles(a){if(G)G.ch.titles=a},
     testRoll(r,th,ok,at){rollFx({r:r||38,th:th||50,ok:ok!==false&&(r||38)<=(th||50),at:at==null?1:at});return true},
     testVoice(mind){if(!G)return null;G.ch.mind=mind||6;UI.ev=D.mindEvents.voice;UI.voicePlay=null;UI.voiceSeen=null;UI.voicePicked=null;G.ch.voiceBias=null;UI.screen='event';render();return true},
-    testEgo(L){if(!G||!E.egoItem)return null;const c=G.ch,w=c.gear.weapon;if(!w)return null;const it=E.egoItem(w.id,L);E.equip(c,it);E.egoDeck(c,w.id,L);c.egoUses=[0,5,15,30][L];render();return c.deck.length},
+    testEgo(L){if(!G||!E.egoItem)return null;const c=G.ch,w=c.gear.weapon;if(!w)return null;const it=E.egoItem(w.id,L);E.equip(c,it);E.egoDeck(c,w.id,L,true);c.egoUses=[0,5,15,30][L];render();return c.deck.length},
     async testCard(){if(!G)return null;const cv=await endCard();return cv.toDataURL('image/png')},
     testPatch(o){if(!G)return;Object.assign(G.ch,o);render()},
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
