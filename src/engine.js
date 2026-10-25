@@ -2441,15 +2441,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 전투 승리 보상: 회복, 카드, 경험치, 자격 등록 또는 (고정 전투) 승급 */
   /* ===== 특색 기념 의뢰: 소속에 따라 전용 의수 · 의안(공방 해결사) · 신체 개조(N사)를 설계해 받는다 ===== */
   const custKind=ch=>isN(ch)?'body':isWs(ch)?'eye':'aug';
-  const custNoun=ch=>({aug:'의수',eye:'의안',body:'신체 개조'})[custKind(ch)];
+  const custNoun=ch=>({aug:'보조 장비',eye:'의안',body:'신체 개조'})[custKind(ch)];
   function custIntro(ch){const a=ch.aff;
     if(isN(ch))return 'N사는 의체를 쓰지 않는다. 대신 연구소에서 특색 기념으로 전용 신체 개조를 설계해 준다고 한다.';
     if(isWs(ch))return '공방 동료들이 특색 기념으로 전용 의안을 만들어 준다고 한다.';
-    if(!a)return '협회가 이름도 알려 주지 않고 공방 하나를 안내해 주었다. 특색 기념으로 전용 의수를 만들어 준다고 한다.';
-    if(a.type==='assoc')return `${a.name} 직속 공방에서 특색 기념으로 전용 의수를 만들어 준다고 한다.`;
-    if(a.type==='wing')return `${a.name} 직속 개발실에서 특색 기념으로 전용 의수를 만들어 준다고 한다.`;
-    if(a.type==='finger')return `${a.name}이(가) 쓰는 공방에서 특색 기념으로 전용 의수를 만들어 준다고 한다.`;
-    return `${a.name} 단골 공방에서 특색 기념으로 전용 의수를 만들어 준다고 한다.`}
+    if(!a)return '협회가 이름도 알려 주지 않고 공방 하나를 안내해 주었다. 특색 기념으로 전용 보조 장비(의수·의복·지팡이·단말기·계약서·장치 중 하나)를 만들어 준다고 한다.';
+    if(a.type==='assoc')return `${a.name} 직속 공방에서 특색 기념으로 전용 보조 장비(의수·의복·지팡이·단말기·계약서·장치 중 하나)를 만들어 준다고 한다.`;
+    if(a.type==='wing')return `${a.name} 직속 개발실에서 특색 기념으로 전용 보조 장비(의수·의복·지팡이·단말기·계약서·장치 중 하나)를 만들어 준다고 한다.`;
+    if(a.type==='finger')return `${a.name}이(가) 쓰는 공방에서 특색 기념으로 전용 보조 장비(의수·의복·지팡이·단말기·계약서·장치 중 하나)를 만들어 준다고 한다.`;
+    return `${a.name} 단골 공방에서 특색 기념으로 전용 보조 장비(의수·의복·지팡이·단말기·계약서·장치 중 하나)를 만들어 준다고 한다.`}
   function custEvent(ch){const nn=custNoun(ch);
     return {t:'특색 기념 의뢰',x:`특색을 받고 한 해가 지났다. ${custIntro(ch)} 이름과 능력치를 직접 설계할 수 있다.`,c:[
       {l:`전용 ${nn}을(를) 설계한다`,h:`포인트 ${WS.cust.pts}를 나눠 이름·능력치·패시브를 정한다`,ok:{t:`도면 위에 손을 올렸다. 무엇을 넣을지 정할 차례다.`,fx:{custOpen:true}}},
@@ -2462,7 +2462,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(atk)fx.atk=atk*K.atkPer;if(eva)fx.eva=eva;if(hp)fx.maxHp=hp*K.hpPer;
     const txt=[atk?`공격 +${fx.atk}`:'',eva?`회피 +${eva}`:'',hp?`최대 HP +${fx.maxHp}`:'',pas?`${K.pass[pas].n} (${K.pass[pas].e})`:''].filter(Boolean).join(' · ');
     const chips=[];ch.custPick=false;ch.custDone=true;ch.cust={name:nm,kind,atk,eva,hp,pas};
-    if(kind==='aug'){offerGear(ch,{id:'cust_aug',slot:'aug',n:nm,grade:4,e:txt,fx,cust:{pas}});chips.push(`전용 의수 · ${nm} · ${txt} (받을지 고른다)`)}
+    if(kind==='aug'){const KK=CFG.custKinds[o.ak]||CFG.custKinds.aug;for(const [k,v] of Object.entries(KK.fx))fx[k]=(fx[k]||0)+v;const txt2=(txt?txt+' · ':'')+KK.e;
+      offerGear(ch,{id:'cust_aug',slot:'aug',kind:KK.n,tag:'특색',n:nm,grade:4,e:txt2,fx,cust:{pas}});ch.cust.ak=KK.n;chips.push(`전용 ${KK.n} · ${nm} · ${txt2} (받을지 고른다)`)}
     else{addStats(ch.stats,fx);if(fx.maxHp)ch.hp+=fx.maxHp;ch.custPas=pas;ch.custNote=txt;(ch.relics=ch.relics||[]).push(`${noun} · ${nm}`);chips.push(`${kind==='eye'?'전용 의안':'전용 신체 개조'} · ${nm} · ${txt}`)}
     return {chips,kind,nm,txt}
   }
