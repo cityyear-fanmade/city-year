@@ -471,6 +471,7 @@ html[data-skin="dante"] .moneybar,html[data-skin="terminal"] .moneybar,html[data
 .qb:hover{color:var(--gold);border-color:var(--gold)}
 .qb.on{color:var(--gold);border-color:var(--gold)}
 .volbox{position:fixed;right:12px;top:98px;z-index:30;display:flex;flex-direction:column;align-items:center;gap:6px}
+@media (min-width:701px){.volbox{z-index:40;flex-direction:row-reverse;align-items:flex-start}}   /* PC: 음량 막대는 버튼 왼쪽으로 펼쳐 오른쪽 도크에 가려지지 않게 */
 .volbox .qb{width:36px;padding:0;border-radius:50%}
 .volpop{width:36px;padding:12px 0 8px;border:1px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--panel) 92%,transparent);display:flex;flex-direction:column;align-items:center;gap:8px}
 .volpop input[type=range]{-webkit-appearance:slider-vertical;appearance:slider-vertical;writing-mode:vertical-lr;direction:rtl;width:22px;height:120px;margin:0;accent-color:var(--gold)}
@@ -641,3 +642,7 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 #rv .rv-d b{display:grid;place-items:center;width:78px;height:78px;border:2px solid #4a4538;border-radius:14px;font:700 34px/1 var(--mono,monospace);color:#cfc7ad;background:rgba(10,9,6,.8)}
 #rv .rv-d b.on{border-color:#e6c767;color:#f1d98a;box-shadow:0 0 22px rgba(255,226,140,.55);animation:rvRing .6s ease-out}
 #rv .rv-d b.off{border-color:#6a3a3a;color:#c0705f}
+
+.rfh{cursor:pointer;user-select:none}
+.rfold.closed{gap:0!important}
+.rfold.closed>:not(.eyebrow){display:none}
