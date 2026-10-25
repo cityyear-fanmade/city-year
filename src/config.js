@@ -336,6 +336,8 @@ export const CFG = {
   /* 전투 승리 후 해결사 등록 판정 난이도 (1d100 + 해결사 진로 보정) */
   winLicenseDc: 60,
   /* 소속 선택이 열리는 해 */
+  /* 약지 작품 사건: need = '모아 둔 재료'(재료 수집) 소모량 · dc = 품평회 난이도 · bonus = 작품 성격별 평가 보정 · made = 제작에 성공했을 때 보정 · goodNeed = 갤러리까지 필요한 예술적 평가 수 · gap = 사건 사이 간격(해) · cycleGap = 한 작품이 끝난 뒤 다음 작품까지 · income = 갤러리 연 수입 */
+  art: {need: 5, stockMax: 20, dc: 75, bonus: {mad: 4, ext: 6, ref: 2}, made: 3, goodNeed: 3, gap: 1, cycleGap: 4, income: 300, visit: {chance: 30, money: 600}, patron: {chance: 8, money: 2500}, madHp: 8, failMind: 2, failHp: 4, badLose: 0.33},
   affiliationYear: 4,
   /* 성장: 판정 성공/실패/판정 없음/전투 승리 경험치, 레벨별 누적 경험치 */
   /* 레벨 보너스: at레벨마다(8, 16, 24…) 모든 전투에서 빛과 빛 최대치 +up */
