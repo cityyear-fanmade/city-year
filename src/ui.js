@@ -2573,6 +2573,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const m=UI.omen.omen;UI.omen=null;UI.fight=st.enemy;UI.enc=st.enc;UI.avoidText=st.avoided?m.awayT:null;render();
     },
     choose(i){
+      G.ch.rollFx=null;   /* 지난 판정(저장돼 남은 것)이 엉뚱한 사건 결과 때 다시 재생되지 않게, 이번 선택에서 새로 생긴 것만 남긴다 */
       const ev0=UI.ev,r=E.choose(G,UI.ev,+i);syncTitles();
       if(ev0&&ev0.voices&&r&&r.t){const vb=G.ch.voiceBias;if(vb==='good'&&ev0.tGood)r.t=ev0.tGood;else if(vb==='bad'&&ev0.tBad)r.t=ev0.tBad}
       {const un=checkInnateUnlock();if(un.length)r.chips=[...(r.chips||[]),`타고난 것 해금 · ${un.join(', ')} (이제 태어날 때 1%로 나온다)`]}
