@@ -553,7 +553,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const g=gainMind(ch,K.mind);if(g<=0)return 0;ch.money-=p;ch.mindBought=(ch.mindBought||0)+1;return g;
   }
   /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 쓰여 HP를 heal 회복한다 (전투마다 1개). 최대 carry개, 무한 모드 뒤엔 값이 오른다 */
-  const ampPrice=ch=>ch.infinite?CFG.ample.priceInf:CFG.ample.price;
+  const ampPrice=ch=>Math.round((ch.infinite?CFG.ample.priceInf:CFG.ample.price)*(isWs(ch)?1-CFG.workshopFixer.discount:1));   /* 공방 해결사는 공방 단골 값(할인)으로 산다 */
   function buyAmple(ch){
     const K=CFG.ample;if(ch.hw&&!ch.hw.out&&!ch.hw.done)return false;if((ch.ample||0)>=K.carry||((ch.ampleBought||0)>=K.limit&&!ch.infinite)||ch.money<ampPrice(ch))return false;
     ch.money-=ampPrice(ch);ch.ample=(ch.ample||0)+1;ch.ampleBought=(ch.ampleBought||0)+1;return true;
