@@ -1567,7 +1567,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const FINGER_ROUTE={'엄지':'thumb','검지':'pointer','중지':'middle','약지':'ring'};
   /* 호수 출생은 인연·가족 공통 문구를 D.bond.lake 로 덮어 쓴다(배에서 사는 사람의 말투) */
   const bondTx=ch=>(lakeOn(ch)&&D.bond&&D.bond.lake)?Object.assign({},D.bond,D.bond.lake):D.bond;
-  const bondRouteOf=ch=>lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
+  const bondRouteOf=ch=>lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
   function bondMeetEvent(ch){
