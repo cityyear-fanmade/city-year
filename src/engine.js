@@ -930,6 +930,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function joinAff(ch,J,name,chips){
     /* 홍원의 자제는 어디에 몸을 둬도 홍원 소속이다: 다른 곳에 입사·입회하지 않는다(정보를 빼 오는 것뿐) */
     if(ch.hw){chips.push('홍원의 자제는 다른 곳에 소속되지 않는다 · 홍원 소속으로 남는다');return}
+    /* 무한 모드: 새 소속에 들어가거나 이직하지 않는다 (사건 풀이 다시 돌아도 마찬가지) */
+    if(ch.infinite){chips.push('무한 모드 · 새 소속에 들어가지 않는다');return}
     ch.aff={type:J.type,name};(ch.affLog=ch.affLog||[]).includes(name)||ch.affLog.push(name);chips.push(((D.fingers[name]&&D.fingers[name].kind)||T.affTypes[J.type]||'소속')+' · '+name);
     if(isN(ch)&&ch.gear.aug&&(ch.gear.aug.kind||'의수')==='의수'&&!/^ws_/.test(ch.gear.aug.id||'')){chips.push(`의체를 버린다 · ${ch.gear.aug.n} → 보관함`);unequip(ch,'aug')}
     ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0;
@@ -979,7 +981,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 열차를 내린 뒤 일반 흐름으로: 해결사로 등록하고 급수를 한꺼번에 받는다 (협회나 해결사 길만 열려 있다). 받는 급수에 맞는 능력치 보너스도 같이 */
     if(fx.setRank&&!ch.wtrain){const R_=fx.setRank,B_=CFG.warp.after.bonus[R_.rank];if(!ch.licensed)license(ch);
       if(ch.licensed){ch.rank=Math.min(ch.rank,R_.rank);if(B_){addStats(ch.stats,B_);if(B_.maxHp)ch.hp+=B_.maxHp}chips.push(`해결사 ${ch.rank}급으로 등록되었다`+(B_?` · 공격 +${B_.atk||0} · 회피 +${B_.eva||0} · 최대 HP +${B_.maxHp||0}`:''))}}
-    if(fx.join){
+    if(fx.join&&ch.infinite)chips.push('무한 모드 · 새 소속에 들어가지 않는다');
+    else if(fx.join){
       /* 손가락 가입: 소지를 뺀 네 손가락 중 하나를 직접 고른다 (고르지 않고 넘어오면 무작위 · 엄지 특화 출신은 엄지 확률 보정) */
       if(fx.join.from==='finger'&&!fx.join.name){ch.fingerPick=true;chips.push('손가락 · 어느 손가락에 설지 고른다')}
       else if((fx.join.from==='wing'||fx.join.from==='assoc'||fx.join.from==='office'||fx.join.from==='syn')&&!fx.join.name){ch.orgPick=fx.join.from;chips.push(`${T.affTypes[fx.join.from]} · 어느 곳에 들어갈지 고른다`)}
@@ -1084,7 +1087,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(k==='bow'){fl.purgeSeen=1;fl.thumbBow=1;ch.money+=earn(ch,150);chips.push('고개를 숙인다 · 이 길은 닫힌다')}
       else if(k==='traitor'){fl.traitor=1;chips.push('역적 · S사의 절도사가 온다')}
       else if(k==='traitorFlee'){fl.traitor=1;ch.hp=clamp(ch.hp-CFG.synRoute.fleeHp,1,ch.stats.maxHp);chips.push(`HP −${CFG.synRoute.fleeHp} · 역적 · S사의 절도사가 온다`)}}
-    if(fx.eastScout&&!isN(ch)){joinAff(ch,{type:'wing',from:'wing'},CFG.nWing.name,chips);ch.eastScoutDone=true;for(let i=ch.fi||0;i<CFG.eastN.startFi;i++){ch.promos=(ch.promos||0)+1;const c=careerStep(ch);if(c)chips.push(...c)}}
+    if(fx.eastScout&&!isN(ch)&&!ch.infinite){joinAff(ch,{type:'wing',from:'wing'},CFG.nWing.name,chips);ch.eastScoutDone=true;for(let i=ch.fi||0;i<CFG.eastN.startFi;i++){ch.promos=(ch.promos||0)+1;const c=careerStep(ch);if(c)chips.push(...c)}}
     if(fx.oracleFail){ch.oracleTries=(ch.oracleTries||0)+1;ch.oracleNext=(ch.year||0)+CFG.oracle.every}
     if(fx.oracleDecline)ch.oracleTries=CFG.oracle.tries;
     if(fx.custOpen)ch.custPick=true;
@@ -2165,7 +2168,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!ch.outSeen.star&&ch.beaten.length>=OE.starHidden){ch.outSeen.star=1;return {type:'end',win:true,out:'star'}}
       if(!ch.outSeen.settle&&bondMarried(ch)&&(ch.bond.kids||[]).some(k=>G.year-k.born>=BD.kid.adult)&&G.year>=baseEnd_+OE.settleYears){ch.outSeen.settle=1;return {type:'end',win:true,out:'settle'}}}
     /* W사: 입사 직후 근무지 선택, 열차 직원은 해마다 열차 안 사건이 온다 (해는 넘어가지 않음) */
-    if(mc.aff&&mc.aff.name==='W사 날개'&&!mc.hw&&D.warpFork&&mc.wtrain===undefined&&!mc.wAsked){mc.wAsked=true;return {type:'event',ev:D.warpFork}}
+    if(mc.aff&&mc.aff.name==='W사 날개'&&!mc.hw&&!mc.infinite&&D.warpFork&&mc.wtrain===undefined&&!mc.wAsked){mc.wAsked=true;return {type:'event',ev:D.warpFork}}
     if(G.infinite&&mc.wtrain&&D.warpQuit&&!mc.wLead&&!mc.wQuitShown&&(mc.year||0)>=(mc.wQuitAt||0)){mc.wQuitShown=true;return {type:'event',ev:D.warpQuit}}
     /* 열차 연전: 사건 하나에서 적을 연달아 상대한다. 해는 넘어가지 않고, 정리가 끝나 수복한 뒤에야 해가 지난다 */
     if(mc.wChain){const W=mc.wChain;
@@ -2370,7 +2373,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ok){const wn_=giveRelic(ch,'odin',true);if(wn_)chips.push('유물 · '+D.relics.odin.n+' · '+wn_);else chips.push('유물 · '+D.relics.odin.n+' ('+D.relics.odin.e+')');if(wn_){}else if(ch.yeji)chips.push('패시브 · 가속하는 미래 · 버프 · 예지안 (전용 검술 카드 피해 +'+CFG.odin.yeji+')');else chips.push('버프 · 순간의 예지 · 첫 라운드 회피 +'+CFG.odin.first+' · 이후 +'+CFG.odin.after)}else{chips.push(ch.resoAsked?'유물고의 울림이 잦아들었다':'보물고는 비어 있었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.resoAsked){ch.resoPend=true;ch.resoAt=(ch.year||0)+3}}}
     if(fx.wsRoll){
       const r=d(WF.die);chips.push(`1d${WF.die} · ${r} (${WF.minRoll} 이상)`);
-      if(r>=WF.minRoll){const was=ch.licensed;if(!was)license(ch);ch.aff={type:'workshop',name:'공방 해결사'};
+      if(r>=WF.minRoll&&!ch.infinite){const was=ch.licensed;if(!was)license(ch);ch.aff={type:'workshop',name:'공방 해결사'};
         chips.push(`소속 · 공방 해결사${was?'':' · '+T.licenseGained+' '+ch.rank+T.rankUnit}`);chips.push('공방 물건 20% 할인 · 보관함 장비 판매');wsOpen(ch,chips)}
       else{chips.push('공방 주인이 고개를 젓는다 · 다른 길을 고른다');ch.affRetry=true}
     }
@@ -2418,7 +2421,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.warpChain&&D.warpChains&&D.warpChains[fx.warpChain]){const W=D.warpChains[fx.warpChain];ch.wChain={ids:W.ids.slice(),i:0,label:W.label,done:W.done,doneHid:W.doneHid,hid:W.hid};if(fx.warpChain==='blood')(ch.warpOnce=ch.warpOnce||[]).push('bloodhunt');chips.push(`${W.label} · 연전 ${W.ids.length}판 · 해가 넘어가지 않는다`)}
     if(fx.warpWpn&&ch.wtrain&&D.warpWeapons&&D.warpWeapons[fx.warpWpn]){ch.wFam=fx.warpWpn;ch.wPick=false;const w0=D.warpWeapons[fx.warpWpn][Math.max(0,Math.min(4,ch.fi||0))];equipUp(ch,structuredClone(w0));chips.push(`차원 무기 · ${w0.n} (${w0.e})`)}
     if(fx.wtrain&&ch.hw)chips.push('홍원의 자제는 열차 직원이 될 수 없다 · 홍원의 카드와 길이 그대로 남는다');
-    else if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
+    else if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'&&!(ch.infinite&&fx.wtrain)){ch.wtrain=!!fx.wtrain;
       if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(D.warpWeapons&&D.warpWeaponPick){ch.wPick=true;chips.push('차원 무기 · 입사 때 계열을 고른다')}else if(r.gear)equip(ch,structuredClone(r.gear));for(let q=0;q<=Math.max(0,ch.fi||0);q++){const g2=C_.trainRanks[q]&&C_.trainRanks[q].gear2;if(g2)equip(ch,structuredClone(g2))}chips.push(`W사 열차 직원 · ${r.n}`)}if(!ch.deckLocked&&!ch.cardMoney&&!ch.packOffer&&D.warpDeck){ch.packOffer={n:'W사 정리 요원 책장',cards:warpDeckFor(ch.fi||0),relic:'정리 요원의 책장'};chips.push('정리 요원 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
       else chips.push('W사 날개 · 본사 근무')}
     /* W사 열차 직원이 무한 모드(2막)에서 열차를 내릴지 정한다: free=내리고 독립(공방·해결사·소속 제안이 다시 열린다) · stay=남아 정리 요원장 · later=5년 뒤 다시 */
