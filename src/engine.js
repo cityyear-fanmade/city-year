@@ -2019,8 +2019,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(up&&R[key]===0){R[key]=1;const it=riteItem(key,true),cur=ch.gear.aug;
       if(cur&&cur.rite===key)equip(ch,it);else{const i=(ch.stash||[]).findIndex(x=>x.rite===key);if(i>=0)ch.stash[i]=it}}
   }
+  /* ===== 문신 칸: 중지(원한 문신)·흑운회(흑운회 문신)만. 새기면 지워지지 않아 능력치가 그대로 늘어나고, 서열이 오르면 한 줄씩 늘어난다 ===== */
+  function tattooSync(ch){
+    const T_=D.tattoos;if(!T_||!ch||ch.hw)return;
+    const a=ch.aff;if(!a||a.type!=='finger')return;
+    const key=Object.keys(T_).find(k=>T_[k].aff===a.name);if(!key)return;
+    const want=1+((ch.fi||0)>=2?1:0)+((ch.fi||0)>=3?1:0),cur=(ch.tattoo&&ch.tattoo.key===key)?ch.tattoo.lv:0;
+    if(cur>=want)return;
+    ch.tattoo=ch.tattoo&&ch.tattoo.key===key?ch.tattoo:{key,lv:0};
+    for(let lv=cur+1;lv<=want;lv++){const L_=T_[key].lv[lv-1],prev=lv>1?T_[key].lv[lv-2].fx:{};
+      for(const [k,v] of Object.entries(L_.fx)){const dv=v-(prev[k]||0);if(dv){ch.stats[k]=(ch.stats[k]||0)+dv;if(k==='maxHp')ch.hp+=dv}}
+      ch.tattoo.lv=lv;(ch.relics=ch.relics||[]).push(`${T_[key].n} ${lv}단계 · ${L_.e}`)}
+  }
   function advanceYear(G){
-    riteSync(G.ch);
+    riteSync(G.ch);tattooSync(G.ch);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
     G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);starPinky(mc);if(isWs(mc))for(const id of (mc.relicIds||[]))if(!(mc.wsRelic&&mc.wsRelic[id]))wsAbsorb(mc,id);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
     if(mc.distPick)setDistort(mc,'');
