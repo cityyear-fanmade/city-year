@@ -638,7 +638,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 해마다 들어오는 돈: 소속 봉급 + 해결사 급수 수당 */
   const income=ch=>(D.money.salary[ch.aff?ch.aff.type:'none']||0)+(ch.licensed?(T.rankStart-ch.rank)*D.money.rankSalary:0)
-    +(isFinger(ch)&&ch.fr?(ch.fr.tier-1)*D.fingerRules.salaryPerTier:0)+(ch.pinky?D.pinky.money:0)+(ch.art&&ch.art.gallery?CFG.art.income:0);
+    +(isFinger(ch)&&ch.fr?(ch.fr.tier-1)*D.fingerRules.salaryPerTier:0)+(ch.pinky?D.pinky.money:0)+(ch.art&&ch.art.gallery?CFG.art.income:0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.inc)||0);
   const money=n=>n.toLocaleString('ko-KR')+D.money.unit;
   function setColor(ch,ci){ch.ci=ci;ch.color=D.colors[ci].hex}
   /* 자격 등록: 가장 낮은 급수에서 시작한다. 특색은 여기서 주지 않는다 */
@@ -2012,9 +2012,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!pool.length)return null;const i=one(pool);seen.push(i);ch.warpYear=G.year;return L[i];
   }
   /* ===== 제식 장비: 소속이 주는 보조 장비. 입회 때 기본형을 받고, 높은 급수·서열에 오르면 상위형으로 바뀐다 ===== */
-  const riteKey=ch=>{const a=ch.aff;if(!a||isWs(ch)||ch.hw)return null;if(a.type==='assoc')return 'assoc';if(a.type==='office')return 'office';if(a.type==='wing')return 'wing';if(a.type==='finger'&&D.rites&&D.rites[a.name])return a.name;return null};
-  const riteUp=(ch,key)=>key==='약지'?false:['assoc','office','wing'].includes(key)?!!ch.licensed&&ch.rank<=2:(ch.fi||0)>=((D.fingers[key]&&D.fingers[key].ranks.length)||4)-1;
-  function riteItem(key,up){const r=D.rites[key],o=up?r.up:r.base;return Object.assign({id:'rite_'+key+(up?'_up':''),slot:'aug',kind:'제식 장비',grade:3,rite:key,up:!!up},o,{fx:Object.assign({},o.fx),matHit:o.matHit,guard:o.guard?Object.assign({},o.guard):undefined,dsp:o.dsp?JSON.parse(JSON.stringify(o.dsp)):undefined,debuff:o.debuff?Object.assign({},o.debuff):undefined})}
+  const riteKey=ch=>{if(ch.pinkyFull&&D.rites&&D.rites['소지']&&!isWs(ch)&&!ch.hw)return '소지';const a=ch.aff;if(!a||isWs(ch)||ch.hw)return null;if(a.type==='assoc')return 'assoc';if(a.type==='office')return 'office';if(a.type==='wing')return 'wing';if(a.type==='finger'&&D.rites&&D.rites[a.name])return a.name;return null};
+  const riteUp=(ch,key)=>key==='약지'?false:key==='소지'?(ch.pinkyKeys||[]).length>=((D.pinky&&D.pinky.keys)||[]).length:['assoc','office','wing'].includes(key)?!!ch.licensed&&ch.rank<=2:(ch.fi||0)>=((D.fingers[key]&&D.fingers[key].ranks.length)||4)-1;
+  function riteItem(key,up){const r=D.rites[key],o=up?r.up:r.base;return Object.assign({id:'rite_'+key+(up?'_up':''),slot:'aug',kind:'제식 장비',grade:3,rite:key,up:!!up},o,{fx:Object.assign({},o.fx),matHit:o.matHit,inc:o.inc,guard:o.guard?Object.assign({},o.guard):undefined,dsp:o.dsp?JSON.parse(JSON.stringify(o.dsp)):undefined,debuff:o.debuff?Object.assign({},o.debuff):undefined})}
   function riteSync(ch){
     if(!D.rites||!ch)return;const key=riteKey(ch);
     /* 소속을 떠나면 그 소속의 제식 장비는 사라진다 */
