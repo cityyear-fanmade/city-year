@@ -2015,7 +2015,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const riteUp=(ch,key)=>key==='약지'?false:['assoc','office','wing'].includes(key)?!!ch.licensed&&ch.rank<=2:(ch.fi||0)>=((D.fingers[key]&&D.fingers[key].ranks.length)||4)-1;
   function riteItem(key,up){const r=D.rites[key],o=up?r.up:r.base;return Object.assign({id:'rite_'+key+(up?'_up':''),slot:'aug',kind:'제식 장비',grade:3,rite:key,up:!!up},o,{fx:Object.assign({},o.fx),matHit:o.matHit,guard:o.guard?Object.assign({},o.guard):undefined,dsp:o.dsp?JSON.parse(JSON.stringify(o.dsp)):undefined,debuff:o.debuff?Object.assign({},o.debuff):undefined})}
   function riteSync(ch){
-    if(!D.rites||!ch)return;const key=riteKey(ch);if(!key)return;
+    if(!D.rites||!ch)return;const key=riteKey(ch);
+    /* 소속을 떠나면 그 소속의 제식 장비는 사라진다 */
+    if(ch.rites)for(const k of Object.keys(ch.rites)){if(k===key)continue;
+      if(ch.gear.aug&&ch.gear.aug.rite===k)unequip(ch,'aug');
+      ch.stash=(ch.stash||[]).filter(x=>x.rite!==k);ch.gearOffers=(ch.gearOffers||[]).filter(x=>x.rite!==k);delete ch.rites[k]}
+    if(!key)return;
     const up=riteUp(ch,key),R=ch.rites=ch.rites||{};
     if(R[key]==null){R[key]=up?1:0;offerGear(ch,riteItem(key,up));return}
     if(up&&R[key]===0){R[key]=1;const it=riteItem(key,true),cur=ch.gear.aug;
@@ -2065,6 +2070,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     else if(o.op==='gallery'){a.gallery=1;a.next=y+1;chips.push(`갤러리 개관 · 해마다 수입 +${A.income}`)}
     else if(o.op==='ring'){a.ring=1;a.next=y+2;let n=0;while((ch.fi||0)<2&&n++<3){const r=fingerStep(ch);if(!r)break}
       (ch.relics=ch.relics||[]).push('마에스트로의 증거');const it=riteItem('약지',true);const cur=ch.gear.aug;if(cur&&cur.rite==='약지')equip(ch,it);else offerGear(ch,it);ch.rites=ch.rites||{};ch.rites['약지']=1;chips.push('마에스트로의 증거 · 반지를 받았다')}
+  }
+  /* 외곽(2막)에서는 승급 사건이 오지 않아 못 오른 사람이 막힌다: 공간이 뒤틀려 과거의 승급 심사장에 서게 한다 (최고 등급이면 오지 않는다) */
+  function infPromoEvent(G){
+    const ch=G.ch,K=CFG.infPromo;if(!K||!G.infinite||!ch.licensed&&!isFinger(ch)||ch.hw||lakeOn(ch)||ch.distForm)return null;
+    if(!(canPromote(ch)||canFingerUp(ch))||G.year<(ch.infPromoNext||0))return null;
+    ch.infPromoNext=G.year+K.gap;if(d(100)>K.chance)return null;
+    return {t:'공간의 뒤틀림 · 과거의 심사장',x:'외곽의 공기가 한 번 접혔다. 눈을 뜨자 오래전 승급 심사장에 서 있다. 윗사람들이 일렬로 앉아 있고, 아무도 이 자리가 어디인지 말하지 않는다. 지금이라면 통과할 수 있을 것 같다.',
+      c:[{l:'실력으로 심사에 응한다',h:'성공 시 승진',check:{s:'atk',dc:'exam'},ok:{t:'심사관들이 고개를 끄덕이자 공간이 풀렸다. 서열이 올랐다.',fx:{examPass:true}},fail:{t:'심사장이 흩어졌다. 아무도 합격을 말하지 않았다.',fx:{hp:-4}}},
+         {l:'지나온 일을 해설한다',h:'성공 시 승진',check:{s:null,dc:'exam'},ok:{t:'해설이 끝나자 심사관들이 서류를 덮었다. 공간이 풀렸다. 서열이 올랐다.',fx:{examPass:true}},fail:{t:'해설은 닿지 않았다. 심사장이 연기처럼 사라졌다.',fx:{hp:-4}}},
+         {l:'조용히 걸어 나간다',ok:{t:'문을 열고 나서자 외곽의 밤이 그대로 있었다.',fx:{}}}]}
   }
   function advanceYear(G){
     riteSync(G.ch);tattooSync(G.ch);
@@ -2236,6 +2251,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(D.abnoBreach&&!lakeOn(ch)&&G.year>=CFG.abnoBreach.from&&abnoLeft(ch).length&&d(100)<=CFG.abnoBreach.chance)return {type:'event',ev:D.abnoBreach};
     /* 6시즌: 내 사무소 개설(5급 이상, 5년마다 다시 묻는다) · 소속 없는 해결사는 4년마다 급수에 맞는 사무소 문을 두드린다 */
     {const ae=artEvent(G);if(ae)return {type:'event',ev:ae}}
+    {const pe=infPromoEvent(G);if(pe)return {type:'event',ev:pe}}
     if(D.officeFound&&canFound(ch)&&G.year>=(ch.officeNext||0)){ch.officeNext=G.year+CFG.office.foundEvery;return {type:'event',ev:isWs(ch)?Object.assign({},D.officeFound,{x:D.officeFound.x+' 공방의 작업대는 그대로 두고, 그 옆에 간판을 하나 더 건다.'}):D.officeFound}}
     if(D.officeKnock&&ch.licensed&&!ch.aff&&!ch.job&&!noFixer(ch)&&G.year>CFG.affiliationYear&&G.year>=(ch.knockNext||0)){ch.knockNext=G.year+CFG.office.knockEvery;return {type:'event',ev:D.officeKnock}}
     {const lk=lakeYear(G);if(lk)return lk.type==='fight'?lk:{type:'event',ev:lk}}
