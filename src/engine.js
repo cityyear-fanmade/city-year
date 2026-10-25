@@ -778,7 +778,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(let i=0;i<promoDone(ch);i++)need*=multAt(i);
     return Math.round(need);
   }
-  const canPromote=ch=>{const k=career(ch);return !!k&&promoDone(ch)<steps(k,ch)};
+  /* 약지: 도슨트에서 마에스트로로 오르는 길은 작품 사건(갤러리 → 마에스트로의 증거)뿐이다. 기존 품평 심사로는 오르지 않는다 */
+  const ringLock=ch=>!!ch.aff&&ch.aff.name==='약지'&&(ch.fi||0)>=1&&!(ch.art&&ch.art.ring);
+  const canPromote=ch=>{const k=career(ch);return !!k&&!ringLock(ch)&&promoDone(ch)<steps(k,ch)};
   const ptsName=ch=>{const k=career(ch);return k&&CR[k]?CR[k].pts:T.promoPoints};
   const examReady=ch=>canPromote(ch)&&(ch.pp||0)>=promoNeed(ch);
   const examDc=ch=>{const k=career(ch),n=Math.max(1,steps(k,ch));return Math.round(CFG.promo.examDc+CFG.promo.examDcSpan*promoDone(ch)/n)};
@@ -858,7 +860,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 최고 단계의 특수 사건: 해결사는 특색 심사, 다른 진로는 careers.*.top */
   const assocColor=ch=>career(ch)==='assoc'&&ch.titleKind==='top'&&!!ch.licensed&&ch.rank<=CFG.colorRank&&!ch.colorFailed&&!ch.colorDone;
   const topEvent=ch=>{const k=career(ch);return k==='fixer'||assocColor(ch)?D.colorExam:CR[k]&&CR[k].top};
-  const topReady=ch=>{const k=career(ch);return !!k&&!canPromote(ch)&&(!ch.title||assocColor(ch))&&!ch.colorFailed&&promoDone(ch)>0&&(ch.year||0)>=(ch.topNext||0)}
+  const topReady=ch=>{const k=career(ch);return !!k&&!ringLock(ch)&&!canPromote(ch)&&(!ch.title||assocColor(ch))&&!ch.colorFailed&&promoDone(ch)>0&&(ch.year||0)>=(ch.topNext||0)}
   /* 특색·상석 심사 실패: 최대 CFG.top.tries번까지, 실패하면 CFG.top.wait년 뒤 다시 */
   function topFailed(ch,chips,label){ch.topTries=(ch.topTries||0)+1;const sb=ch.bond;if(sb&&sb.st==='married'){sb.promo=(sb.promo||0)+1;chips.push(`배우자 승급 · ${sb.name} (+1급)`)}const left=CFG.top.tries-ch.topTries;
     if(left<=0){ch.colorFailed=true;chips.push(label+' 실패 · 다시 기회 없음')}else{ch.topNext=(ch.year||0)+CFG.top.wait;chips.push(`${label} 실패 · 남은 기회 ${left}번 · ${CFG.top.wait}년 뒤 다시`)}}
@@ -887,7 +889,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.fi===0&&F.pack&&!ch.deckLocked&&!ch.cardMoney){stashPack(ch,ch.aff.name+' 전용 카드팩');ch.extra=[];ch.deck=F.pack.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.side=[];ch.offers=[];ch.picks=[];ch.packOffer=null;ch.cardMoney=true;out.push(`전용 카드팩 · ${ch.aff.name} ${F.pack.length}장 (덱이 통째로 바뀐다 · 이후 카드는 얻지 못하고 대신 돈 · 이전 덱은 가방의 카드팩 보관함에 남는다)`)}
     return out;
   }
-  const canFingerUp=ch=>isFinger(ch)&&!!D.fingers[ch.aff.name].ranks[(ch.fi??-1)+1];
+  const canFingerUp=ch=>isFinger(ch)&&!ringLock(ch)&&!!D.fingers[ch.aff.name].ranks[(ch.fi??-1)+1];
   /* 승급 사건·고정 전투 승리: 손가락이면 서열, 아니면 해결사 급수 */
   function promoteAny(ch){
     if(canFingerUp(ch))return {chips:fingerStep(ch),finger:true};
@@ -2058,6 +2060,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function artEvent(G){
     const ch=G.ch,A=CFG.art,T_=D.art;if(!T_||!ch.aff||ch.aff.name!=='약지'||ch.hw||(ch.distForm&&!ch.distStable))return null;
     const a=ch.art=ch.art||{stage:0,good:0,style:null,made:false,next:0};if(G.year<(a.next||0))return null;
+    if((ch.fi||0)<1&&!a.stage&&!a.good&&!a.gallery)return null;   // 도슨트가 된 뒤부터 작품을 낸다
     if(a.good>=A.goodNeed&&!a.gallery){const E_=T_.gallery;return {t:E_.t,x:E_.x,c:E_.c.map(c=>({l:c.l,ok:{t:c.t,fx:{art:{op:'gallery'}}}}))}}
     if(a.gallery&&!a.ring)return {t:T_.ring.t,x:T_.ring.x,c:[{l:T_.ring.l,ok:{t:T_.ring.t2,fx:{art:{op:'ring'}}}}]};
     if(a.gallery){
@@ -2162,7 +2165,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!ch.outSeen.star&&ch.beaten.length>=OE.starHidden){ch.outSeen.star=1;return {type:'end',win:true,out:'star'}}
       if(!ch.outSeen.settle&&bondMarried(ch)&&(ch.bond.kids||[]).some(k=>G.year-k.born>=BD.kid.adult)&&G.year>=baseEnd_+OE.settleYears){ch.outSeen.settle=1;return {type:'end',win:true,out:'settle'}}}
     /* W사: 입사 직후 근무지 선택, 열차 직원은 해마다 열차 안 사건이 온다 (해는 넘어가지 않음) */
-    if(mc.aff&&mc.aff.name==='W사 날개'&&D.warpFork&&mc.wtrain===undefined&&!mc.wAsked){mc.wAsked=true;return {type:'event',ev:D.warpFork}}
+    if(mc.aff&&mc.aff.name==='W사 날개'&&!mc.hw&&D.warpFork&&mc.wtrain===undefined&&!mc.wAsked){mc.wAsked=true;return {type:'event',ev:D.warpFork}}
     if(G.infinite&&mc.wtrain&&D.warpQuit&&!mc.wLead&&!mc.wQuitShown&&(mc.year||0)>=(mc.wQuitAt||0)){mc.wQuitShown=true;return {type:'event',ev:D.warpQuit}}
     /* 열차 연전: 사건 하나에서 적을 연달아 상대한다. 해는 넘어가지 않고, 정리가 끝나 수복한 뒤에야 해가 지난다 */
     if(mc.wChain){const W=mc.wChain;
@@ -2414,7 +2417,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
     if(fx.warpChain&&D.warpChains&&D.warpChains[fx.warpChain]){const W=D.warpChains[fx.warpChain];ch.wChain={ids:W.ids.slice(),i:0,label:W.label,done:W.done,doneHid:W.doneHid,hid:W.hid};if(fx.warpChain==='blood')(ch.warpOnce=ch.warpOnce||[]).push('bloodhunt');chips.push(`${W.label} · 연전 ${W.ids.length}판 · 해가 넘어가지 않는다`)}
     if(fx.warpWpn&&ch.wtrain&&D.warpWeapons&&D.warpWeapons[fx.warpWpn]){ch.wFam=fx.warpWpn;ch.wPick=false;const w0=D.warpWeapons[fx.warpWpn][Math.max(0,Math.min(4,ch.fi||0))];equipUp(ch,structuredClone(w0));chips.push(`차원 무기 · ${w0.n} (${w0.e})`)}
-    if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
+    if(fx.wtrain&&ch.hw)chips.push('홍원의 자제는 열차 직원이 될 수 없다 · 홍원의 카드와 길이 그대로 남는다');
+    else if(fx.wtrain!==undefined&&ch.aff&&ch.aff.name==='W사 날개'){ch.wtrain=!!fx.wtrain;
       if(ch.wtrain){const C_=CR.wing,r=C_.trainRanks[Math.max(0,ch.fi||0)];if(r){ch.fr=r;if(D.warpWeapons&&D.warpWeaponPick){ch.wPick=true;chips.push('차원 무기 · 입사 때 계열을 고른다')}else if(r.gear)equip(ch,structuredClone(r.gear));for(let q=0;q<=Math.max(0,ch.fi||0);q++){const g2=C_.trainRanks[q]&&C_.trainRanks[q].gear2;if(g2)equip(ch,structuredClone(g2))}chips.push(`W사 열차 직원 · ${r.n}`)}if(!ch.deckLocked&&!ch.cardMoney&&!ch.packOffer&&D.warpDeck){ch.packOffer={n:'W사 정리 요원 책장',cards:warpDeckFor(ch.fi||0),relic:'정리 요원의 책장'};chips.push('정리 요원 전용 책장 · 받을지 고른다 (받으면 덱이 바뀐다)')}}
       else chips.push('W사 날개 · 본사 근무')}
     /* W사 열차 직원이 무한 모드(2막)에서 열차를 내릴지 정한다: free=내리고 독립(공방·해결사·소속 제안이 다시 열린다) · stay=남아 정리 요원장 · later=5년 뒤 다시 */
