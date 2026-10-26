@@ -721,3 +721,7 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 
 .hfx .link.big{width:22px;height:12px;margin:-6px -11px;border-width:3px;border-color:#1b1e26;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
 .hfx .link.big.side{width:10px;height:12px;margin:-6px -5px;border-radius:40%}
+
+.hfx .petal{position:absolute;left:50%;top:50%;width:24px;height:46px;margin:-46px -12px;transform-origin:50% 100%;transform:rotate(var(--a)) scale(.15);opacity:0;animation:hPetal .62s ease-out .1s forwards;filter:drop-shadow(0 0 3px #3b82f6)}
+.hfx .petal svg{display:block;width:100%;height:100%}
+@keyframes hPetal{0%{transform:rotate(var(--a)) translateY(0) scale(.15);opacity:0}28%{transform:rotate(var(--a)) translateY(-6px) scale(1.1);opacity:1}55%{transform:rotate(var(--a)) translateY(-10px) scale(1);opacity:1}100%{transform:rotate(calc(var(--a) + var(--sp))) translateY(-64px) scale(.7);opacity:0}}
