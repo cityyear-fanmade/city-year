@@ -662,7 +662,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const tiers=n=>B_.at.map((t,i)=>n>=t?i:-1).filter(i=>i>=0),bigFx=(sl,n)=>{const o={};for(const i of tiers(n))for(const [x,v] of Object.entries(B_[sl][i]))o[x]=(o[x]||0)+v;return o};
     if(slot==='weapon'){const C_=WS.weapon,bf=bigFx('weapon',k.n),atk=C_.base.atk+k.n*C_.normal.atk+(bf.atk||0)+k.h*(C_.hidden.atk||0),dmg=k.h*C_.hidden.dmgB+(bf.dmgB||0),spd=(C_.base.spd||0)+(bf.spd||0),bg=tiers(k.n).length;
       const sp=w.sp||{},wx={dice:C_.dice.slice()};if(sp.baral)wx.extraHit=1;if(sp.gebura)wx.drain=1;if(sp.zena)wx.fairy={add:1,every:2,max:30};
-      return {id:'ws_weapon',slot,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}${Object.keys(sp).map(x=>' · '+WS_SPN[x]).join('')}`,fx:{atk,spd,dmgB:dmg},wx}}
+      return {id:'ws_weapon',slot,wsH:k.h,wsN:k.n,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}${Object.keys(sp).map(x=>' · '+WS_SPN[x]).join('')}`,fx:{atk,spd,dmgB:dmg},wx}}
     if(slot==='armor'){const C_=WS.armor,bf=bigFx('armor',k.n),hp=C_.base.maxHp+k.n*C_.normal.maxHp+(bf.maxHp||0)+k.h*(C_.hidden.maxHp||0),rg=bf.regen||0,dr=Math.min(C_.drMax,k.h*C_.hidden.dr+(bf.dr||0)),eva=k.h*C_.hidden.eva,bg=tiers(k.n).length;
       return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%${dr>=C_.drMax?' (최대)':''}`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
     const A_=WS.aug,g=w.g,fx=Object.assign({},A_.base),pk=g.picks||[];
@@ -2682,7 +2682,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     let hpNote=null;
     if(P.laev==='open'){P.flame=1}
     /* 공방 해결사의 유물: 공방 무기에 깃든 효과 */
-    if(P.isP&&ch.wsRelic&&isWs(ch)){P.wsRelic=ch.wsRelic;if(ch.wsRelic.laev){P.wsFlame=true;P.burnHit=Math.max(P.burnHit||0,CFG.wsRelic.laev.hit)}if(ch.wsRelic.odin)P.runes=0}
+    if(P.isP&&ch.wsRelic&&isWs(ch)){P.wsRelic=ch.wsRelic;if(ch.wsRelic.laev){P.wsFlame=true;P.burnHit=Math.max(P.burnHit||0,CFG.wsRelic.laev.hit)}if(ch.wsRelic.odin){P.runes=0;P.eva+=CFG.wsRelic.odin.eva}if(ch.wsRelic.gungnir)P.gunRes=CFG.wsRelic.gungnir.start}
     if(e.hidden&&P.hp<Math.min(CFG.hidden.minHp,P.maxHp)){const t=Math.min(CFG.hidden.minHp,P.maxHp);hpNote=`불길한 예감에 숨을 고른다 · HP ${P.hp} → ${t}`;P.hp=t;ch.hp=t}
     /* 정신력: 환상체와 마주치면 2d3 감소, 그다음 정신력 구간 보정(호흡·회피) */
     let mindNote=hpNote?[hpNote]:[];
@@ -3162,6 +3162,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 중지 패시브 되갚음: 맞을 때마다 1 (최대 5), 다음 적중 피해 +2×스택 */
       if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
       if(A.isP&&A.angry>0&&dmg>0){dmg+=A.angry;note+=` 분노+${A.angry}`;A.angry=0}
+      if(A.isP&&A.wsRelic&&A.wsRelic.gungnir&&dmg>0){const G_=CFG.wsRelic.gungnir,x=(A.gunRes||0)*G_.per;if(x>0){dmg+=x;note+=` 공명 ${A.gunRes} · 피해 +${x}`}A.gunRes=Math.min(G_.max,(A.gunRes||0)+1)}
       if(A.isP&&A.wsRelic&&A.wsRelic.odin&&dmg>0){const R_=CFG.wsRelic.odin;
         if((A.runes||0)>=R_.need){const dd=A.wx&&A.wx.dice?A.wx.dice[1]:(A.pdie||6);let x=0;for(let q=0;q<R_.extra;q++)x+=d(dd);dmg+=x;note+=` 룬 ${R_.need} 소모 · 주사위 +${R_.extra}개(+${x})`;A.runes=0}
         else{A.runes=(A.runes||0)+1;L('kw',`  ${A.name} · 룬 ${A.runes}/${R_.need}`)}}
@@ -3322,7 +3323,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 궁니르 공명: 궁니르 카드를 낸 라운드는 받는 피해 60% 감소 */
     if(P.resonance&&pp.some(c=>c.gungnir))P.drRound=C.round;
     const L=(t,s)=>{if(C.quiet)return;C.log.push({t,s});C.cur.push({t,s})};
-    if(P.isP&&P.wsRelic&&P.wsRelic.gungnir&&(C.round-1)%CFG.wsRelic.gungnir.every===0){P.drRound=C.round;L('kw',`${P.name} · 궁니르 · 강제 공명 · 이번 라운드 받는 피해 60% 감소`)}
     /* 보랏빛 사복검: 서로 다른 자세의 4코스트 카드를 두 가지 쓰면 다음 손패에 환영난무, 몇 라운드 동안 최대 빛 증가 (전투에 한 번) */
     if(P.isP&&P.wx&&P.wx.forms){C.vsTop=C.vsTop||[];pp.forEach(c=>{if(c.vsTop&&!C.vsTop.includes(c.vsTop))C.vsTop.push(c.vsTop)});if(C.vsTop.length>=2&&!C.vsGiven){C.vsGiven=true;giveNext(P,'x_vs_ego');P.burstLight=CFG.form.burstLight;P.burstTo=C.round+CFG.form.burstRounds;L('sys',`  ${P.name} · 3코스트 이상 두 자세 · 다음 손패에 환영난무 · 최대 빛 +${CFG.form.burstLight} (${CFG.form.burstRounds}라운드)`)}}
     const push=ev=>{if(C.quiet)return;if(C.rollPend){C.cur.unshift({t:'sys',s:`  판정 1d100 ${C.rollPend.r} / 개화 ${C.rollPend.th} 이하`,roll:C.rollPend});C.rollPend=null}ev.lines=C.cur;C.cur=[];ev.snap=snap(C);ev.step=C.step;C.evs.push(ev)};

@@ -646,3 +646,118 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .rfh{cursor:pointer;user-select:none}
 .rfold.closed{gap:0!important}
 .rfold.closed>:not(.eyebrow){display:none}
+
+/* 신규 설계안 시안 이펙트 (시험실 fxv) */
+.hfx .glint{position:absolute;left:var(--x);top:var(--y);width:50px;height:50px;margin:-25px;background:radial-gradient(circle,#fff 0 14%,var(--c) 18% 38%,transparent 66%);clip-path:polygon(50% 0,57% 43%,100% 50%,57% 57%,50% 100%,43% 57%,0 50%,43% 43%);opacity:0;animation:hGlint .34s ease-out var(--d,0ms) forwards}
+@keyframes hGlint{0%{transform:scale(.2);opacity:1}40%{transform:scale(1.15);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.hfx .spk.up{animation-name:hDust;animation-duration:.58s;animation-timing-function:ease-out}
+@keyframes hDust{0%{transform:translate(0,0) scale(1.1);opacity:0}15%{opacity:.95}100%{transform:translate(var(--dx),var(--dy)) scale(.55);opacity:0}}
+.hfx .spk.gth{animation-name:hGather;animation-duration:.62s;animation-timing-function:ease-out}
+@keyframes hGather{0%{transform:translate(var(--sx),var(--sy)) scale(.6);opacity:0}22%{transform:translate(var(--tx),var(--ty)) scale(1.1);opacity:1}38%{transform:translate(var(--tx),var(--ty)) scale(1.1);opacity:1}100%{transform:translate(var(--ox),var(--oy)) scale(.3);opacity:0}}
+.hfx .scv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;clip-path:inset(0 100% 0 0);animation:hScvIn .18s ease-out forwards,hScvOut .55s ease-in .2s forwards}
+.hfx .scv path{fill:none;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.hfx .scv .s1{stroke:var(--c);stroke-width:7px}
+.hfx .scv .s2{stroke:#b48cf0;stroke-width:2px;opacity:.7}
+@keyframes hScvIn{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes hScvOut{from{opacity:1}to{opacity:0}}
+.hfx .note{position:absolute;left:var(--x);top:var(--y);margin:-13px 0 0 -8px;font:700 26px/1 serif;color:#fff;text-decoration:none;opacity:0;transform-origin:center;animation:hNote .24s ease-out .1s forwards;rotate:var(--r)}
+.hfx .note.blk{color:#05060a;translate:4px 3px}
+@keyframes hNote{0%{transform:scale(.2) translateY(8px);opacity:0}30%{transform:scale(1.15) translateY(-6px);opacity:1}60%{transform:scale(1) translateY(-8px);opacity:1}75%{transform:scale(1.05) translateY(-9px);opacity:0}100%{opacity:0}}
+
+/* 신규 시안 2차: 큰 영역, 가시 폭발, 방벽, 눈알 점 */
+.hfx .edot{position:absolute;width:8px;height:8px;margin:-4px;border-radius:50%;background:#fff;box-shadow:0 0 5px #fff;left:var(--x0);top:var(--y0);opacity:0;animation:hEdot .44s ease-in var(--d,0ms) forwards}
+.hfx .edot::after{content:'';position:absolute;left:50%;top:50%;width:35%;height:45%;margin:-22% -17%;border-radius:50%;background:#a3162a}
+@keyframes hEdot{0%{left:var(--x0);top:var(--y0);opacity:0}12%{opacity:1}33%{left:var(--x1);top:var(--y1)}66%{left:var(--x2);top:var(--y2);opacity:1}100%{left:var(--x3);top:var(--y3);opacity:0}}
+.hfx.big{margin-top:-64px;height:128px;clip-path:inset(-8px -6px -8px -6px)}
+.hfx .burst{position:absolute;inset:0;width:100%;height:100%;overflow:visible;transform-origin:50% 50%;opacity:0;animation:hBurst .36s steps(8,end) var(--d,.08s) forwards}
+@keyframes hBurst{0%{transform:scale(.2);opacity:1}35%{transform:scale(1);opacity:1}100%{transform:scale(1.2);opacity:0}}
+.hfx .disc{position:absolute;left:50%;top:50%;width:200px;height:116px;margin:-58px -100px;border-radius:50%;background:radial-gradient(ellipse,var(--c) 0,transparent 70%);opacity:0;animation:hDisc .4s ease-out .06s forwards}
+@keyframes hDisc{0%{opacity:.9}100%{opacity:0}}
+.hfx .shield{position:absolute;left:50%;top:50%;width:150px;height:108px;margin:-54px -75px;border:6px solid #c084fc;border-radius:50%;background:radial-gradient(ellipse,rgba(124,58,237,.35),transparent 70%);box-shadow:0 0 0 2px #26104a,inset 0 0 0 3px #26104a;opacity:0;transform:scale(.3);animation:hShield .42s steps(7,end) forwards}
+.hfx .shield.in{width:100px;height:70px;margin:-35px -50px;border-width:3px;animation-delay:.06s}
+@keyframes hShield{0%{transform:scale(.3);opacity:1}45%{transform:scale(1);opacity:1}100%{transform:scale(1.15);opacity:0}}
+
+/* 금색·검은색 조각이 여러 방향으로 튀어 나간다 (조율자) */
+.hfx .sw{position:absolute;left:50%;top:50%;width:var(--len);height:var(--th);margin-top:calc(var(--th) / -2);transform-origin:0 50%;transform:rotate(var(--a)) translateX(var(--r0)) scaleX(.1);opacity:0;filter:drop-shadow(0 0 .6px var(--k)) drop-shadow(0 0 .6px var(--k));animation:hShard .44s cubic-bezier(.1,.9,.2,1) var(--d,60ms) forwards}
+.hfx .sw i{display:block;width:100%;height:100%;background:var(--c);clip-path:polygon(0 50%,14% 0,100% 42%,100% 58%,14% 100%)}
+@keyframes hShard{0%{transform:rotate(var(--a)) translateX(var(--r0)) scaleX(.12);opacity:1}26%{transform:rotate(var(--a)) translateX(var(--r1)) scaleX(1);opacity:1}100%{transform:rotate(var(--a)) translateX(var(--r2)) scaleX(.85);opacity:0}}
+.hfx .edot{animation-name:hEdot2}
+@keyframes hEdot2{0%{left:var(--x0);top:var(--y0);opacity:0}12%{opacity:1}33%{left:var(--x1);top:var(--y1)}66%{left:var(--x2);top:var(--y2);opacity:1}100%{left:var(--x3,var(--x2));top:var(--y3,var(--y2));opacity:0}}
+
+/* 히든 무기 치명타: 금빛 대신 맞은 쪽이 잠깐 더 떨린다 */
+.ent.cjit{animation:hCritJit .4s steps(1,end)}
+@keyframes hCritJit{0%{translate:0 0}12%{translate:-5px 2px}25%{translate:5px -2px}38%{translate:-4px 1px}52%{translate:3px -1px}68%{translate:-2px 0}84%{translate:1px 0}100%{translate:0 0}}
+@media (prefers-reduced-motion:reduce){.ent.cjit{animation:none}}
+
+/* 신규 설계안 3종 묶음 */
+.hfx .paper{position:absolute;left:50%;top:50%;width:var(--w);height:calc(var(--w) * .55);margin:-3px;background:var(--c);border:1px solid var(--k);opacity:0;animation:hPaper .6s ease-in-out var(--d) forwards}
+@keyframes hPaper{0%{translate:0 0;rotate:var(--r0);opacity:1}22%{translate:var(--x1) var(--y1)}46%{translate:var(--x2) var(--y2)}70%{translate:var(--x3) var(--y3);opacity:1}100%{translate:var(--x4) var(--y4);rotate:var(--r1);opacity:0}}
+.hfx .ripple{position:absolute;left:50%;top:50%;width:36px;height:24px;margin:-12px -18px;border:2px solid var(--c);border-radius:50%;opacity:0;animation:hRip .58s ease-out var(--d) forwards}
+@keyframes hRip{0%{transform:scale(.3);opacity:.85}100%{transform:scale(10);opacity:0}}
+.hfx .dia{position:absolute;left:50%;top:50%;width:10px;height:18px;margin:-9px -5px;background:linear-gradient(135deg,#ff8a2a,#14101c 45%);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);opacity:0;animation:hDia .42s ease-out var(--d) forwards}
+@keyframes hDia{0%{translate:0 0;rotate:0deg;opacity:1}100%{translate:var(--dx) var(--dy);rotate:var(--r);opacity:0}}
+.hfx .spk.ash{animation-timing-function:steps(5,end)}
+.hfx .link{position:absolute;left:50%;top:50%;width:14px;height:7px;margin:-3px -7px;border-radius:50%;border:2px solid #20232a;background:var(--k);translate:var(--x) var(--y);rotate:var(--a);opacity:0;animation:hLink .62s ease-out .06s forwards}
+@keyframes hLink{0%{opacity:1;translate:var(--x) calc(var(--y) + var(--s))}28%{translate:var(--x) var(--y);opacity:1}36%{translate:var(--x) var(--y);opacity:1}100%{translate:calc(var(--x) + var(--fx)) calc(var(--y) + var(--fy));rotate:calc(var(--a) + var(--fr));opacity:0}}
+.hfx .muzzle{position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px;background:radial-gradient(circle,#fff 0 24%,#ffe45a 28% 56%,transparent 60%);clip-path:polygon(50% 0,60% 30%,95% 20%,72% 48%,100% 62%,66% 66%,70% 100%,50% 76%,28% 100%,34% 66%,0 62%,28% 48%,5% 20%,40% 30%);opacity:0;animation:hMuz .26s steps(4,end) forwards}
+@keyframes hMuz{0%{transform:scale(.4);opacity:1}60%{transform:scale(1.1);opacity:1}100%{transform:scale(1.3);opacity:0}}
+.hfx .smoke{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);margin:calc(var(--s) / -2);border-radius:50%;background:radial-gradient(circle,rgba(205,205,205,.75),rgba(125,125,125,.38) 60%,transparent 72%);opacity:0;animation:hSmoke .62s ease-out var(--d) forwards}
+@keyframes hSmoke{0%{transform:scale(.3);translate:0 0;opacity:0}15%{opacity:.85}100%{transform:scale(1.3);translate:var(--sx) -34px;opacity:0}}
+.hfx .hbeam{position:absolute;left:-4%;top:50%;width:108%;height:22px;margin-top:-11px;background:linear-gradient(90deg,transparent,#2f7bff 8%,#2f7bff 48%,#fff 50% 60%,#2f7bff 62%,#2f7bff 92%,transparent);border-top:2px solid #0a2a6a;border-bottom:2px solid #0a2a6a;transform:scaleX(0);transform-origin:var(--o,left) center;animation:hThrust .28s ease-out forwards}
+.hfx .spk.fall{animation-name:hFall;animation-duration:.62s;animation-timing-function:ease-out}
+@keyframes hFall{0%{transform:translate(0,0) scale(1.1);opacity:0}12%{opacity:1}45%{transform:translate(calc(var(--dx) * .75),calc(var(--dy) * .6 - 12px))}100%{transform:translate(var(--dx),calc(var(--dy) + 52px)) scale(.4);opacity:0}}
+.hfx .gbeam{position:absolute;left:0;top:50%;width:100%;height:16px;margin-top:-8px;background:linear-gradient(90deg,transparent,#fff 6%,#fff 94%,transparent);box-shadow:0 0 0 3px #4aa8ff;transform:scaleX(0);animation:hGBeam .42s ease-out forwards}
+@keyframes hGBeam{0%{transform:scaleX(0);opacity:1}16%{transform:scaleX(1);opacity:1}55%{transform:scaleX(1);opacity:1}80%{transform:scaleX(.08) scaleY(1.4);opacity:1}100%{transform:scaleX(.02);opacity:0}}
+.hfx .rz{position:absolute;left:var(--x);top:50%;width:14px;height:34px;margin:-17px -7px;border:3px solid var(--c);border-radius:50%;opacity:0;animation:hRz .42s ease-out var(--d) forwards}
+@keyframes hRz{0%{transform:scale(.4);opacity:.95;left:var(--x)}45%{transform:scale(1.4,2.6);opacity:1;left:var(--x)}100%{transform:scale(.2,.3);left:50%;opacity:0}}
+
+.hfx .rune{position:absolute;left:50%;top:50%;width:44px;height:56px;margin:-28px -22px;opacity:0;animation:hRune .16s ease-out .1s forwards;filter:drop-shadow(0 0 4px #e8d28a)}
+.hfx .rune svg{display:block;width:100%;height:100%}
+.hfx .rune.blk{translate:3px 3px;filter:none}
+@keyframes hRune{0%{transform:scale(.3);opacity:0}35%{transform:scale(1.15);opacity:1}75%{transform:scale(1);opacity:1}100%{transform:scale(1.2);opacity:0}}
+
+.hfx .spk.ember{animation-name:hEmber;animation-duration:.6s;animation-timing-function:ease-in-out}
+@keyframes hEmber{0%{translate:0 0;opacity:0;filter:none}15%{opacity:1}38%{translate:var(--w1) -18px}68%{translate:calc(var(--w1) * -1) -40px}100%{translate:var(--w2) -66px;opacity:0;filter:grayscale(1) brightness(.55)}}
+
+.hfx .link.big{width:22px;height:12px;margin:-6px -11px;border-width:3px;border-color:#1b1e26;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.hfx .link.big.side{width:10px;height:12px;margin:-6px -5px;border-radius:40%}
+
+.hfx .petal{position:absolute;left:50%;top:50%;width:24px;height:46px;margin:-46px -12px;transform-origin:50% 100%;transform:rotate(var(--a)) scale(.15);opacity:0;animation:hPetal .62s ease-out .1s forwards;filter:drop-shadow(0 0 3px #3b82f6)}
+.hfx .petal svg{display:block;width:100%;height:100%}
+@keyframes hPetal{0%{transform:rotate(var(--a)) translateY(0) scale(.15);opacity:0}28%{transform:rotate(var(--a)) translateY(-6px) scale(1.1);opacity:1}55%{transform:rotate(var(--a)) translateY(-10px) scale(1);opacity:1}100%{transform:rotate(calc(var(--a) + var(--sp))) translateY(-64px) scale(.7);opacity:0}}
+
+.hfx .aura{position:absolute;top:58%;width:var(--w);height:var(--h);margin-left:calc(var(--w) / -2);border-radius:50% 50% 45% 45% / 70% 70% 30% 30%;background:linear-gradient(0deg,rgba(124,58,237,.85),rgba(192,132,252,.55) 55%,transparent);filter:blur(1.5px);transform-origin:50% 100%;transform:translateY(0) scaleY(.2);opacity:0;animation:hAura .62s ease-out var(--d) forwards}
+@keyframes hAura{0%{transform:translateY(0) scaleY(.2);opacity:0}25%{opacity:.95;transform:translateY(-10px) scaleY(1)}100%{transform:translateY(-52px) scaleY(1.25) skewX(8deg);opacity:0}}
+
+/* 나머지 6종 */
+@keyframes hScvDn{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.hfx .plus{position:absolute;left:50%;top:50%;width:var(--z);height:var(--z);margin:calc(var(--z) / -2);background:linear-gradient(var(--c),var(--c)) center/100% 30% no-repeat,linear-gradient(var(--c),var(--c)) center/30% 100% no-repeat;opacity:0;animation:hPlus .62s steps(12,end) var(--d) forwards}
+@keyframes hPlus{0%{translate:0 0;scale:.3;opacity:0}20%{translate:var(--dx) var(--dy);scale:1.2;opacity:1}45%{translate:var(--dx) var(--dy);scale:1;opacity:1}100%{translate:var(--dx) calc(var(--dy) + 62px);scale:.8;opacity:0}}
+.hfx .sw.thr{animation-name:hThread;animation-duration:.5s}
+.hfx .sw.thr i{clip-path:none}
+@keyframes hThread{0%{transform:rotate(var(--a)) translateX(var(--r0)) scaleX(.1);opacity:1}35%{transform:rotate(var(--a)) translateX(var(--r1)) scaleX(1);opacity:1}72%{transform:rotate(var(--a)) translateX(var(--r2)) scaleX(1.15);opacity:1}85%{transform:rotate(var(--a)) translateX(var(--r2)) scaleX(1.15);opacity:1}100%{transform:rotate(var(--a)) translateX(var(--r2)) scaleX(.04);opacity:0}}
+.hfx .spk.drip{width:8px;height:8px;animation-name:hDrip;animation-duration:.55s;animation-timing-function:ease-in}
+@keyframes hDrip{0%{translate:0 0;scale:1;opacity:0}15%{opacity:.95}100%{translate:0 var(--fall);scale:.8 2.2;opacity:0}}
+.hfx .lance{position:absolute;left:0;top:50%;width:100%;height:30px;margin-top:-15px;background:linear-gradient(90deg,transparent,#8e1224 18%,#c81e32 58%,#ff4a5e 90%);clip-path:polygon(0 38%,90% 0,100% 50%,90% 100%,0 62%);transform:scaleX(0);transform-origin:var(--o,left) center;animation:hThrust .24s ease-out forwards}
+.hfx .spiral{position:absolute;left:50%;top:50%;width:130px;height:130px;margin:-65px;overflow:visible;opacity:0;transform:scale(.3) rotate(0);animation:hSpiral .5s ease-out .12s forwards}
+@keyframes hSpiral{0%{transform:scale(.3) rotate(0);opacity:1}45%{transform:scale(1) rotate(130deg);opacity:1}100%{transform:scale(1.6) rotate(260deg);opacity:0}}
+.hfx .brand{position:absolute;left:50%;top:50%;width:60px;height:76px;margin:-38px -30px;background:linear-gradient(#fff2b0,#fff2b0) center/20% 100% no-repeat,linear-gradient(#fff2b0,#fff2b0) 50% 34%/100% 15% no-repeat;filter:drop-shadow(0 0 7px #ff8a2a);opacity:0;animation:hBrand .42s ease-out .1s forwards}
+@keyframes hBrand{0%{transform:scale(.3);opacity:0}22%{transform:scale(1.15);opacity:1}48%{transform:scale(1);opacity:1;filter:drop-shadow(0 0 6px #ff6a1a) brightness(.8)}100%{transform:scale(1);opacity:0;filter:brightness(.08)}}
+.hfx .bdrop{position:absolute;left:var(--x0);top:var(--y0);border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;background:radial-gradient(circle at 35% 30%,#ff7a8a,#c81e32 55%,#6a0a18);opacity:0;animation:hBdrop .46s ease-in var(--d) forwards}
+@keyframes hBdrop{0%{left:var(--x0);top:var(--y0);opacity:0;transform:scale(.6)}15%{opacity:1}60%{left:var(--tx);top:var(--ty);transform:scale(1.1);opacity:1}82%{left:var(--tx);top:var(--ty);transform:scale(2.2);opacity:1}100%{left:var(--tx);top:var(--ty);transform:scale(2.8);opacity:0}}
+
+/* 검은 침묵의 장갑: 흑연 + 번호 픽토그램 */
+.hfx .smoke.dk{background:radial-gradient(circle,rgba(14,14,18,.92),rgba(40,40,48,.55) 60%,transparent 72%);animation-duration:.7s}
+.hfx .numtag{position:absolute;left:50%;top:50%;margin:-22px -14px;font:900 44px/1 'IBM Plex Mono',monospace;color:#f4f4f6;-webkit-text-stroke:2px #05060a;opacity:0;text-decoration:none;animation:hNum .3s ease-out .11s forwards}
+.hfx .numtag.blk{color:#05060a;translate:3px 3px}
+@keyframes hNum{0%{transform:scale(.3);opacity:0}22%{transform:scale(1.2);opacity:1}55%{transform:scale(1);opacity:1}100%{transform:scale(1.25);opacity:0;filter:blur(2px)}}
+
+/* E.G.O 4종 */
+.hfx .paper.feather{height:calc(var(--w) * 2.3);clip-path:polygon(50% 0,100% 40%,62% 100%,38% 100%,0 40%);border:0;box-shadow:none}
+.hfx .web{position:absolute;left:50%;top:50%;width:120px;height:120px;margin:-60px;overflow:visible;opacity:0;transform:scale(.3);animation:hWeb .52s steps(8,end) .12s forwards}
+.hfx .web path{fill:none;stroke:#e02a40;stroke-width:1.6;stroke-linecap:round}
+@keyframes hWeb{0%{transform:scale(.3);opacity:1}40%{transform:scale(1);opacity:1}62%{transform:scale(1.05);opacity:1}100%{transform:scale(1.35);opacity:0}}
+.hfx .star{position:absolute;left:50%;top:50%;width:var(--z);height:var(--z);margin:calc(var(--z) / -2);background:#fff;clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);opacity:0;animation:hStar2 .6s ease-out var(--d) forwards}
+@keyframes hStar2{0%{translate:0 0;scale:.2;opacity:1}30%{translate:calc(var(--dx) * .7) calc(var(--dy) * .7);scale:1.1;opacity:1}55%{opacity:.4}70%{opacity:1}100%{translate:var(--dx) var(--dy);scale:.6;opacity:0}}
+.hfx .chunk{position:absolute;left:50%;top:50%;width:var(--len);height:var(--th);margin-top:calc(var(--th) / -2);background:var(--c);border:1px solid #101014;rotate:var(--a);opacity:0;animation:hChunk .5s ease-in var(--d) forwards}
+@keyframes hChunk{0%{translate:0 0;opacity:1}35%{translate:var(--dx) var(--dy);opacity:1}100%{translate:var(--dx) calc(var(--dy) + 84px);opacity:0}}
