@@ -143,7 +143,7 @@ export function startUI(E,app){
   const HFXK='cityYearHitFx';let HFX=store.get(HFXK)||'mid';
   const HFX_N={off:0,low:1,mid:2,high:3};let HFXFLIP=false;const HFXMK='cityYearHitFxM';let HFXM=store.get(HFXMK)||'each';
   /* 무기 이름으로 타격 모양을 고른다 (플레이어의 공격만. 맨손·기타는 키워드·무작위 모션) */
-  const WMOT=[[/낫|발톱|손톱|팔$|부리|갈고리/,'claw'],[/십자가|쌍수|난무|대검/,'cross'],[/창|송곳|비수|권총|화살|총$|탄/,'thrust'],[/망치|몽둥이|파이프|지휘봉|장갑|주먹|사슬|방패|책갈피/,'ring'],[/도$|검$|칼$|단도|장도|박도|언월도|톱$|검 |칼날/,'slash']];
+  const WMOT=[[/낫|발톱|손톱|팔$|부리|갈고리/,'claw'],[/십자가|쌍수|난무|대검/,'cross'],[/창|송곳|비수|권총|화살|작살|총$|탄/,'thrust'],[/망치|몽둥이|파이프|지휘봉|장갑|주먹|사슬|방패|책갈피/,'ring'],[/도$|검$|칼$|단도|장도|박도|언월도|톱$|검 |칼날/,'slash']];
   const WMOT2={궁니르:'thrust',레바테인:'slash',미미크리:'slash','다 카포':'ring',절대음감:'ring',금서:'ring',황혼:'slash',아라야시키:'slash',동부십검:'slash','붉은 눈':'ring','우주의 조각':'ring',후회:'ring',요정:'slash'};
   const weaponMotion=n=>{if(!n)return '';n=n.split(' · ')[0].replace(/\s*\(.*\)$/,'');if(WMOT2[n])return WMOT2[n];for(const [re,m] of WMOT)if(re.test(n))return m;return ''};
   /* 타격음 종류: 무기 모션으로 정한다 (베기·할퀴기=참격, 찌르기=관통, 고리=타격). 큰 피해는 뒤에 _h */
