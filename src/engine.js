@@ -667,14 +667,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%${dr>=C_.drMax?' (최대)':''}`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
     const A_=WS.aug,g=w.g,KD=CFG.custKinds[w.kind]||CFG.custKinds.aug,fx=Object.assign({},w.kind&&w.kind!=='aug'?(A_.baseKind[w.kind]||KD.fx):A_.base),pk=g.picks||[];
     for(const [x,v] of Object.entries(A_.normalKind[w.kind||'aug']||A_.normal))fx[x]=(fx[x]||0)+Math.floor((g.n||0)*v+1e-9);fx.hit=(fx.hit||0)+(g.n||0)*(A_.normal.hit||0)+(g.h||0)*(A_.hidden.hit||0);fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);fx.atk=(fx.atk||0)+(g.h||0)*(A_.hidden.atk||0);
-    const kwm={};pk.forEach((x,i)=>{if(A_.pickAmt[x])fx[x]=(fx[x]||0)+A_.pickAmt[x];else if(A_.kwList.includes(x))kwm[x]=(kwm[x]||0)+A_.kwAmt[Math.min(i,A_.kwAmt.length-1)]});
-    {const hb=Math.floor((g.h||0)/A_.kwHidden),top=Object.entries(kwm).sort((a,b)=>b[1]-a[1])[0];if(hb>0&&top)kwm[top[0]]+=hb}
+    const kind=w.kind||'aug',kwm={};pk.forEach((x,i)=>{if(A_.pickAmt[x])fx[x]=(fx[x]||0)+A_.pickAmt[x];else if(kind==='aug'&&A_.kwList.includes(x))kwm[x]=(kwm[x]||0)+A_.kwAmt[Math.min(i,A_.kwAmt.length-1)]});
+    if(kind!=='aug'&&A_.bigKind[kind])for(const i of tiers(g.n||0))for(const [x,v] of Object.entries(A_.bigKind[kind][i]||{}))fx[x]=(fx[x]||0)+v;
+    for(let i=1;i<=Math.floor((g.h||0)/A_.kwHidden);i++){const P_=A_.hiddenKwPool,k=P_[Math.abs(((ch.seed|0)*31+i*7919)%P_.length)];kwm[k]=(kwm[k]||0)+1}
     const kw=Object.entries(kwm);
     if(g.pick)fx[g.pick]=(fx[g.pick]||0)+A_.pick;
     const cu=w.cust&&w.cust.done?w.cust:null;
     if(cu){if(cu.atk)fx.atk=(fx.atk||0)+cu.atk*WS.cust.atkPer;if(cu.eva)fx.eva=(fx.eva||0)+cu.eva;if(cu.hp)fx.maxHp=(fx.maxHp||0)+cu.hp*WS.cust.hpPer}
-    const LB={spd:'속도',maxHp:'최대 HP',check:'판정',dmgB:'피해'};
-    return {id:'ws_aug',slot,kind:KD.n,n:nmOf(w.kind&&w.kind!=='aug'?'공방 '+KD.n:A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>x==='dr'?`받는 피해 −${v}%`:`${A_.stats[x]||LB[x]||x}+${v}`).join(' · ')+kw.map(([k,v])=>` · 적중 시 ${D.keywords[k].n} +${v}`).join('')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${pk.length?` · 선택 ${pk.length}/${B_.at.length}`:''}${g.pend?` · 고를 수 있는 선택 ${g.pend}`:''}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx,kw,rev:2}
+    const LB={spd:'속도',maxHp:'최대 HP',check:'판정',dmgB:'피해',regen:'라운드마다 HP'};
+    return {id:'ws_aug',slot,kind:KD.n,n:nmOf(w.kind&&w.kind!=='aug'?'공방 '+KD.n:A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>x==='dr'?`받는 피해 −${v}%`:`${A_.stats[x]||LB[x]||x}+${v}`).join(' · ')+kw.map(([k,v])=>` · 적중 시 ${D.keywords[k].n} +${v}`).join('')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${kind==='aug'?(pk.length?` · 선택 ${pk.length}/${B_.at.length}`:'')+(g.pend?` · 고를 수 있는 선택 ${g.pend}`:''):(tiers(g.n||0).length?` · 특수 강화 ${tiers(g.n||0).length}/${B_.at.length}`:'')}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx,kw,rev:2}
   }
   /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
   function wsOpen(ch,chips){
@@ -722,7 +723,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.ws.kind=k;const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return CFG.custKinds[k];
   }
   function wsAugChoose(ch,stat){
-    const g=ch.ws&&ch.ws.g;if(!g||!isWs(ch)||!(g.pend>0)||!WS.aug.kwList.includes(stat)||(ch.distForm&&!ch.distStable))return null;
+    const g=ch.ws&&ch.ws.g;if(!g||!isWs(ch)||(ch.ws.kind||'aug')!=='aug'||!(g.pend>0)||!WS.aug.kwList.includes(stat)||(ch.distForm&&!ch.distStable))return null;
     const amt=WS.aug.kwAmt[Math.min((g.picks||[]).length,WS.aug.kwAmt.length-1)];
     g.pend--;(g.picks=g.picks||[]).push(stat);const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return {stat,amt,kw:true};
   }
