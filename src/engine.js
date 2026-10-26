@@ -596,7 +596,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 공방 해결사: 공방 물건 할인, 보관함 장비 판매 */
   const WF=CFG.workshopFixer;
   const isWs=ch=>!!ch.aff&&ch.aff.type==='workshop';
-  const priceOf=(ch,id)=>{const p=D.items[id].price,up=1+(CFG.ws.priceUp||0)*((ch.ws&&ch.ws.used&&ch.ws.used[id])||0);return Math.round(isWs(ch)?p*(1-WF.discount)*up:p*up)};
+  const priceOf=(ch,id)=>{const p=D.items[id].price;if(!isWs(ch))return Math.round(p);const K=CFG.ws,up=1+(K.priceYearUp||0)*Math.floor((ch.year||0)/(K.priceYearEvery||20));return Math.round(p*(1-WF.discount)*up)};   /* 공방 해결사: 값은 고정이고 priceYearEvery년마다 한 번씩 오른다 */
   const sellValue=it=>it.id==='hidmat'?WF.sellBase*2:(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
   /* 공방 해결사: 장비 판매는 없다. 대신 덱의 카드를 공방에 넘긴다 (덱 고정·전용 카드팩·고정 카드는 팔 수 없고, 덱은 minDeck장 아래로 줄이지 않는다) */
   const cardPrice=id=>WF.cardBase+WF.cardPer*((D.cards[id]&&D.cards[id].c)||0);
@@ -2233,7 +2233,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const ch_=h.chance?Math.min(95,h.chance+[].concat(h.chanceBonus||[]).reduce((t_,b_)=>t_+(meets(G.ch,b_.req)?b_.add:0),0)+(G.infinite?INF.hiddenAdd:0)):0;
         if(ch_&&d(100)>ch_)continue;
         if(G.infinite&&G.year>baseEnd)return {type:'omen',boss:h.id,omen:riftOmenFor(G.ch,D.enemies[h.id].n),rift:true,escape:!h.noEscape,spec:f};
-        return {type:'omen',boss:h.id,omen:omenOf(G.ch,h.omen),escape:!h.noEscape,spec:f};
+        {const forced=!!h.refuseOnce&&!!(G.ch.refused||{})[h.id];return {type:'omen',boss:h.id,omen:omenOf(G.ch,forced&&h.omen&&h.omen.forced?Object.assign({},h.omen,{x:h.omen.forced}):h.omen),escape:!h.noEscape&&!forced,refuse:!!h.refuseOnce&&!forced,spec:f}}
       }
       if(lakeOn(G.ch)&&G.infinite&&G.year>baseEnd){const id=one(['lake_mermaid','lake_hook','lake_blade','lake_shield']),e_=D.enemies[id];return {type:'fight',enemy:id,enc:{label:'외곽 호수의 '+e_.n}}}
       const e=encounter(G.ch,f);return {type:'fight',enemy:e.id,enc:e};
@@ -2319,6 +2319,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(go||!st.escape)lakeIntroFor(G,st.boss);
     if(go||!st.escape){if(st.echo){G.ch.echoFoe=st.boss;return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:true,echo:true,label:lakeOn(G.ch)?'호수 밑의 불순물':'균열 너머의 불순물'}}}(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:!!st.rift,label:st.rift?(lakeOn(G.ch)?'호수 밑의 운명':'균열 너머의 운명'):T.hiddenBoss}}}
     if(lakeOn(G.ch)&&G.infinite){const id=one(['lake_mermaid','lake_hook','lake_blade','lake_shield']);return {type:'fight',enemy:id,enc:{id,label:'외곽 호수의 '+D.enemies[id].n},avoided:st.boss}}
+    if(st.refuse){G.ch.refused=G.ch.refused||{};G.ch.refused[st.boss]=1}   // 한 번 거절한 보스는 다음에 돌아설 수 없다
     const e=encounter(G.ch,st.spec);return {type:'fight',enemy:e.id,enc:e,avoided:st.boss};
   }
   /* 고를 수 있는 선택지 (조건이 맞지 않는 선택지는 빠진다). i는 원래 번호 */
@@ -2462,6 +2463,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:`전용 ${nn}을(를) 설계한다`,h:`포인트 ${WS.cust.pts}를 나눠 이름·능력치·패시브를 정한다`,ok:{t:`도면 위에 손을 올렸다. 무엇을 넣을지 정할 차례다.`,fx:{custOpen:true}}},
       {l:'지금은 사양한다',h:`${CFG.custEvent.retry}년 뒤 다시 연락이 온다`,ok:{t:'다음에 하겠다고 답했다. 연락은 다시 올 것이다.',fx:{}}}]}}
   /* 설계 확정: 의수는 장비 제안으로, 의안과 신체 개조는 몸(능력치·패시브)에 새겨진다 */
+  /* 장착한 의수·의안의 패시브(커스텀 의수·특색 전용 의수·공방 해결사 커스텀): 능력치 창에 없는 전투 효과의 표시용 */
+  const augPasOf=ch=>(ch.gear&&ch.gear.aug&&ch.gear.aug.cust&&ch.gear.aug.cust.pas)||ch.custPas||((ch.ws&&ch.ws.cust&&ch.ws.cust.done&&isWs(ch))?ch.ws.cust.pas:null);
+  /* 라운드마다 HP 회복 총합: 능력치(방어구 등) + 흡수 코어 */
+  /* 매 라운드 시작에 받는 회복의 갈래별 값 (능력치의 재생 + 흡수 코어 + 홍원 단약 + 기업 혈청) */
+  const regenParts=ch=>{const ct=corpType(ch);return {regen:(ch.stats&&ch.stats.regen)||0,absorb:augPasOf(ch)==='absorb'?3:0,dan:ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0,serum:ct&&ct.heal?Math.min((ch.corp.up2?ct.heal2Max:0)||ct.healMax||999,ct.heal+corpLv(ch)*ct.per):0}};
+  const regenTotal=ch=>{const r=regenParts(ch);return r.regen+r.absorb+r.dan+r.serum};
   function custBuild(ch,o){
     const K=WS.cust,atk=Math.max(0,o.atk|0),eva=Math.max(0,o.eva|0),hp=Math.max(0,o.hp|0),pas=o.pas&&K.pass[o.pas]?o.pas:null,used=atk*K.atkCost+eva*K.evaCost+hp*K.hpCost+(pas?K.passCost:0);
     if(!ch.custPick||ch.custDone||used>K.pts||used<=0)return null;
@@ -2585,7 +2592,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');
       /* 새 시리즈를 모두 이기면 종말의 예언 */
       {const MG=CFG.mgirl;if(MG.ids.includes(C.id)&&!ch.flags[MG.flag]&&MG.ids.every(id=>ch.minis.includes(id))){ch.flags[MG.flag]=1;ch.nihilAt=(G.year||0)+MG.gap}}
-      const AP=CFG.apoc;if(AP.birds.includes(C.id)&&!ch.flags[AP.flag]&&AP.birds.every(id=>ch.minis.includes(id))){ch.flags[AP.flag]=1;(ch.relics=ch.relics||[]).push('종말의 예언');chips.push('종말의 예언 · 검은 숲 깊은 곳에서 무언가 눈을 뜬다')}
+      const AP=CFG.apoc;if(AP.birds.includes(C.id)&&!ch.flags[AP.flag]&&AP.birds.every(id=>ch.minis.includes(id))){ch.flags[AP.flag]=1;(ch.relics=ch.relics||[]).push('종말의 예언');chips.push('종말의 예언 · 검은 숲 깊은 곳에서 무언가 눈을 뜬다 · 아직 그 앞에 설 때가 아니다')}
     }
     /* 전투 승리 후 등록: 소속이 없거나 사무소 소속일 때만, 소문 판정(1d100 + 해결사 진로 보정 ≥ winLicenseDc) */
     if(!ch.licensed){
@@ -3486,6 +3493,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
-    cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,equip,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
