@@ -2032,12 +2032,23 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const foeEnc=ids=>{const u=new Uint8Array(Math.ceil(SHFOES.length/8)),x=[];for(const id of ids){const i=SHFOES.indexOf(id);if(i>=0)u[i>>3]|=1<<(i&7);else x.push(id)}let m=u.length;while(m>0&&!u[m-1])m--;return u8b64(u.slice(0,m))+(x.length?'~'+x.join(','):'')};
   const foeDec=t=>{const [b,x]=String(t||'').split('~'),u=b?b64u8(b):new Uint8Array(0),o=[];for(let i=0;i<SHFOES.length;i++)if(u[i>>3]&(1<<(i&7)))o.push(SHFOES[i]);return o.concat(x?x.split(','):[])};
   function shareHead(){const w=UI.endWin,dt=UI.death;return UI.overflowEnd?'오버플로우':UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)==='rcorp'?'나는 존재한다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'사랑하던 이의 손에':dt&&dt.id==='hongru'?'홍원에 군주가 태어났다':dt&&dt.cause==='distort'?'뒤틀렸다':cityN()+'는 나를 기억하지 않는다'}
+  /* 링크에 담는 가족·일대기: 받는 쪽은 게임 상태가 없으니 글로 풀어 담는다 */
+  const shPlain=t=>String(t).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  function shFamily(c){
+    const b=c.bond,o=[];if(!b)return o;
+    if(E.bondMarried(c))o.push(`가족 · ${b.name}${c.distForm?' (당신을 알아보지 못한다)':''}`);
+    else if(b.st==='lost'&&b.name)o.push(`가족 · ${b.name} (${b.dieBy==='age'?'수명을 다해 세상을 떠났다':'세상을 떠났다'}${b.dieYear?' · '+b.dieYear+'년차':''})`);
+    for(const k of b.kids||[]){if(k.pend)continue;const a=Math.max(0,G.year-k.born);
+      o.push(k.dead?`아이 · ${k.n} (${k.dead==='old'?'수명을 다해 세상을 떠났다':'토벌 의뢰에서 쓰러졌다'}${k.dieYear?' · '+k.dieYear+'년차':''})`:`아이 · ${k.n} ${a}세${a>=CFG.bond.kid.adult?' · '+((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l||''):''}`)}
+    return o;
+  }
+  const shLife=(c,w)=>{try{return epilogue(c,w,UI.trueEnd).map(shPlain).filter(t=>!t.startsWith('그 사이 도시가 감춰')).join('\n')}catch(e){return ''}};
   /* 링크용 기록: 이름이 아니라 id를 담아 짧게 만든다(받는 쪽에서 이름으로 바꾼다) */
   function shareRec(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
     return {v:2,h:shareHead(),w:w?1:0,n:c.name||'',k:careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&'),t:shTitle(c),col:c.color,y:lived,a:E.age(G),
       g:G.endless&&gi>=0?X.grades[gi]:'',d:!w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:'',fi:[...new Set([...c.beaten,...(c.minis||[])])],
-      e:c.ego?c.ego.n:'',i:innateName(c)||'',o:`${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n}`,lv:c.lv,st:[c.stats.atk,c.stats.eva,c.stats.spd],s:c.seed,dy:c.daily||'',df:diffOf(c),ver:UPDATES.v};
+      e:c.ego?c.ego.n:'',i:innateName(c)||'',o:`${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n}`,lv:c.lv,st:[c.stats.atk,c.stats.eva,c.stats.spd],s:c.seed,dy:c.daily||'',df:diffOf(c),ver:UPDATES.v,fm:shFamily(c),lf:shLife(c,w)};
   }
   const shBase=()=>/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.origin+location.pathname:PAGES;
   const u8b64=u=>{let x='';u.forEach(c=>x+=String.fromCharCode(c));return btoa(x).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
@@ -2045,9 +2056,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const canZip=typeof CompressionStream==='function'&&typeof DecompressionStream==='function';
   const zipB=async(u,Cls,fmt)=>{const st=new Cls(fmt),wr=st.writable.getWriter();wr.write(u);wr.close();return new Uint8Array(await new Response(st.readable).arrayBuffer())};
   /* 배열로 줄여 담는다(키 이름 생략). 순서를 바꾸지 말고 끝에만 덧붙인다 */
-  const shArr=o=>[3,shHeadK(o.h),o.w,o.n,o.k,o.t,String(o.col||'').replace(/^#/,''),o.y,o.a,o.g,o.d,foeEnc(o.fi),o.e,o.i,o.o,o.lv,o.st.join(','),o.s,o.dy,o.df,o.ver];
+  const shArr=o=>[3,shHeadK(o.h),o.w,o.n,o.k,o.t,String(o.col||'').replace(/^#/,''),o.y,o.a,o.g,o.d,foeEnc(o.fi),o.e,o.i,o.o,o.lv,o.st.join(','),o.s,o.dy,o.df,o.ver,(o.fm||[]).join('|'),o.lf||''];
   const shObj=a=>({v:a[0],h:a[0]>=3?shHeadV(a[1]):a[1],w:a[2],n:a[3],k:a[4],t:a[5],col:/^[0-9a-f]{3,8}$/i.test(a[6])?'#'+a[6]:a[6],y:a[7],a:a[8],g:a[9],d:a[10],
-    f:(a[0]>=3?foeDec(a[11]):String(a[11]||'').split(',').filter(Boolean)).map(id=>(D.enemies[id]&&D.enemies[id].n)||id),e:a[12],i:a[13],o:a[14],lv:a[15],st:String(a[16]||'0,0,0').split(',').map(Number),s:a[17],dy:a[18],df:a[19],ver:a[20]});
+    f:(a[0]>=3?foeDec(a[11]):String(a[11]||'').split(',').filter(Boolean)).map(id=>(D.enemies[id]&&D.enemies[id].n)||id),e:a[12],i:a[13],o:a[14],lv:a[15],st:String(a[16]||'0,0,0').split(',').map(Number),s:a[17],dy:a[18],df:a[19],ver:a[20],fm:a[21]?String(a[21]).split('|'):[],lf:a[22]||''});
   /* 기록 링크: #c= 압축(deflate) 배열, #a= 압축 없는 배열(압축을 못 쓰는 브라우저), #r= 예전 형식(그대로 읽는다) */
   async function shareLinkAsync(){
     const j=new TextEncoder().encode(JSON.stringify(shArr(shareRec()))),a='#a='+u8b64(j);
@@ -2074,6 +2085,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <div class="panel stack" style="gap:6px">${row('산 햇수',r.y+'년')}${row('위협 등급',r.g)}${row('마지막',r.d)}${row('타고난 것',r.i)}${row('E.G.O',r.e)}
         ${row('레벨',`Lv ${r.lv} · 공격 ${sg(r.st[0])} · 회피 ${sg(r.st[1])} · 속도 ${sg(r.st[2])}`)}${row('출신',r.o)}${row('난이도',r.df)}${row('시드',r.s+(r.dy?' · 오늘의 시드 '+r.dy:''))}
         ${r.f&&r.f.length?`<div class="small"><span class="dim">쓰러뜨린 이름난 상대</span><br><b>${r.f.map(esc).join(' · ')}</b></div>`:''}</div>
+      ${r.fm&&r.fm.length?`<div class="row" style="gap:6px;flex-wrap:wrap">${r.fm.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>`:''}
+      ${r.lf?`<div class="panel stack" style="gap:8px"><span class="eyebrow">어떤 삶을 살았나</span>${String(r.lf).split('\n').map(t=>`<p class="small" style="line-height:1.65">${esc(t)}</p>`).join('')}</div>`:''}
       <button class="btn primary" data-a="sharedSeed"><b>같은 시드로 태어나기</b><span class="small">시드 ${r.s}</span></button>
       <button class="btn quiet" data-a="title">처음 화면</button>`;
   }
@@ -2086,7 +2099,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     return [`[도시의 한 해] ${head}`,(c.name?`${c.name} · `:'')+careerLine(c).replace(/<[^>]*>/g,'')+(shTitle(c)?` · ${shTitle(c)}`:''),
       `${lived}년 · ${E.age(G)}세`+(G.endless&&gi>=0?` · 위협 등급 ${X.grades[gi]}`:''),
       !w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:null,c.ego?`E.G.O · ${c.ego.n}`:null,c.innate?`타고난 것 · ${innateName(c)}`:null,foes.length?`쓰러뜨린 상대 · ${foes.join(', ')}`:null,
-      `${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`난이도 · ${diffOf(c)}`,`시드 ${c.seed}`+(c.daily?` · 오늘의 시드 ${c.daily}`:''),url].filter(Boolean).join('\n');
+      `${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n} · Lv ${c.lv}`,`난이도 · ${diffOf(c)}`,`시드 ${c.seed}`+(c.daily?` · 오늘의 시드 ${c.daily}`:''),...shFamily(c).slice(0,1),url].filter(Boolean).join('\n');
   }
   /* 엔딩 화면 그대로 찍기: 저장 버튼을 누를 때만 html2canvas를 불러온다. 실패하면 null (카드 이미지로 대신) */
   const SHOTSRC=['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js','https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'];
