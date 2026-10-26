@@ -99,7 +99,7 @@ export const CFG = {
     deck2: ['d2_strike', 'd2_strike', 'd2_strike', 'd2_twist', 'd2_twist', 'd2_surge', 'd2_surge', 'd2_flurry', 'd2_flurry', 'd2_gamble', 'd2_final', 'd2_guard']},
   /* 대호수로 나간 자: 침묵·시선의 호수에서 주인공이 아니라 다른 선원이 금기를 어기는 사건이 나올 확률(%) */
   lake: {infMob:{hp:2.2,atk:2},morph:{every:15,mindA:5,atkB:1,maxHpFinal:10},hullMax:100,hullWear:1,repairCost:700,trait:{hp:40,atk:20,eva:20},wave:{basePct:10,perBreak:15,maxPct:70,stage:3,maxStage:5,wallCost:200,wallDc:35,helmDc:55,helmNav:10,failMind:6,failMindStep:2,failHp:3,failCrew:50,driftMind:20,rewardPts:2,rewardMind:10,hullLoss:80},handShield: 6, cookHeal: 4, navEva: 4, navFlee: 10, harpStack: 1, loot: {silence: '무음의 고래 심장 · 피격 시 상대 왜곡 +1', lamp: '거짓 등대 고래 심장 · 매 라운드 시작 빛 +1', anchor: '닻을 삼킨 고래 심장 · 피격 시 상대 사슬 +1 · 무게 절반', tide: '적조의 고래 심장 · 피격 시 상대 출혈 +2', genesis: '창세치 고래 심장 · 3타마다 1타 추가', pale: '창백한 고래 심장 · 피격 시 상대 침잠 +1 · 창백화 절반'}, align: [9, 7, 5, 3], mindYear: 2, mindSail: 3, mindKeep: 26, harborMind: 10, slip: 30, encChance: 55 /* 선장이 된 뒤 새 호수에 들어서기 전 인어·해적 조우가 나올 확률 */, pirateAfter: 6 /* 선장이 된 지 이만큼 지나면 쌍갈고리 해적단과 얽힌다 */, adultBefore: 12 /* 1막이 끝나기 이만큼 전부터 같은 호수의 대재앙(성체)이 나온다 */, ricardoAfter: 4 /* 해적단 반파 뒤 이만큼 지나면 중지의 큰형님 리카르도가 찾아온다 */, crewMax: 4 /* 선장이 되면 모집할 수 있는 선원 수 */, crewW: 1 /* 선원 합산 굴림의 가중 */, crewEvery: 3 /* 모집 사건 간격(해) */, signEvery: 8 /* 변모의 징후 사건 간격(해) */, meetMul: 2 /* 일상 사건이 없는 대신 인연을 만날 확률을 배로(해마다) */, infFight: 35 /* 무한 모드에서 해마다 전투가 나올 확률(%) */, genesisAt: 2 /* 성체 대재앙을 이만큼 쓰러뜨리면 창세치 고래가 나온다 */},
-  shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4, restMind: 5,
+  shop: {every: 3, blackFrom: 12, blackStock: 3, wsAux: {chance: 20, cap: 8, prices: [4500, 5000, 5500, 6000]} /* 공방 해결사에게만, 방문마다 chance% 확률로 비장 부품(효과 없음, 보조 장비 히든 재료) 하나. 한 판에 cap개까지 */, delCost: 500, delMax: 3, minDeck: 4, restMind: 5,
     /* v6.1: 카드 교환(덱 카드 1장을 일반 보상 카드 무작위 1장으로, 방문마다 swapMax장까지) · 장비 정비(장착 장비마다 최대 tune.max번 시도, chance% 확률로 공격 또는 회피 +1, 시도 비용 base+step×지금까지 시도) */
     swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150, zenaPlus: 10, noPlus: ['w_baralclaw', 'a_baralcoat', 'w_zenafairy', 'a_zenaarmor']}},
   /* 타고난 것: 출생 굴림과 별개로 1/chanceDiv 확률. 시드 재현을 위해 출생 굴림 값에서 파생 (새 주사위를 쓰지 않는다) */
@@ -304,6 +304,8 @@ export const CFG = {
   leads: {hollow: '문 없는 방의 흔적', tune: '소리 없는 연주회장의 흔적', finger: '손가락의 연줄', debt: '밀린 장부', blade: '칼 가는 소리', heat: '식지 않은 열기', seek: '누군가를 찾는 눈'},
   /* 공격과 명중: 공격은 hitPer배(소수점 버림)만큼 명중을 올리고, dmgPer마다 피해 +1을 한계 없이 더한다. 명중 스탯은 명중만 올린다 */
   atkRule: {on: true, hitPer: 0.5, dmgPer: 6},
+  /* 넘친 명중(지팡이): 명중이 회피를 넘은 만큼(최대 cap)에 점수/per을 곱해 내림한 값이 피해로 더해진다 */
+  overHit: {cap: 50, per: 200},
   ws: {
     needEvery: 10, priceYearUp: 0.25, priceYearEvery: 20 /* 공방 해결사가 사는 공방 물건의 값은 고정이고, 20년차마다 원래 값의 25%씩 오른다 (예전에는 재료로 쓸 때마다 올랐다) */,
     /* 기본값은 공방 1등급 물건 중 가장 낮은 것 수준 (날 세운 단검 · 누빈 작업복 · 중고 의수) */
@@ -313,10 +315,16 @@ export const CFG = {
     /* 방어구의 받는 피해 감소는 drMax%까지만 (전체 합계 상한 drCap 70% 안에서 다른 감소량이 밀려나지 않게). 체력·회피·재생은 상한 없이 계속 오른다 */
     armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 4}, hidden: {dr: 3, eva: 3, maxHp: 4}, drMax: 30},
     /* 의수: 일반 강화 한 단계마다 속도 +1(히든 한 번마다 공격 +2 · 회피 +1 · 명중 +1), 5·10·15단계마다 출혈·파열·화상 중 하나를 골라 적중마다 거는 키워드로 더한다 (kwAmt). pick은 예전 저장의 히든 의수 개조 값 */
-    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {spd: 1}, normalKind: {aug: {spd: 1}, cloth: {maxHp: 2}, staff: {hit: 1}, term: {check: 1, hit: 0.7}, pact: {dmgB: 0.2}, dev: {atk: 0.6}} /* 종류별 일반 강화 한 단계당 (소수는 내림해 쌓인다: 계약서는 5단계마다 피해 +1, 장치는 5단계마다 공격 +3, 단말기는 2단계마다 명중 +1) */, baseKind: {pact: {eva: 3}, term: {check: 3, hit: 3}, staff: {hit: 4}}, kindE: {pact: '회피+3', term: '판정+3 · 명중+3', staff: '명중+4'} /* 공방 방어구가 받는 피해 감소를 맡으므로 공방의 계약서는 피해 감소 대신 */, hidden: {atk: 2, eva: 1, hit: 1}, kwHidden: 4, hiddenKwPool: ['bleed', 'rupture', 'burn', 'sink'] /* 히든 강화 kwHidden번마다 이 가운데 하나(같은 캐릭터는 늘 같은 순서)가 적중마다 +1. 모든 종류 공통 */,
-      /* 특수 강화(5·10·15단계), 의수는 키워드를 고르고(kwAmt) 나머지 종류는 단계마다 정해진 보너스를 받는다 */
-      bigKind: {cloth: [{maxHp: 8}, {maxHp: 8, eva: 1}, {maxHp: 12, regen: 1}], staff: [{hit: 6}, {hit: 6, atk: 2}, {hit: 10, atk: 4}], term: [{check: 4, hit: 3}, {check: 4, hit: 5}, {check: 6, hit: 6, spd: 4}], pact: [{dmgB: 1}, {dmgB: 1, eva: 2}, {dmgB: 2}], dev: [{atk: 3}, {atk: 3, hit: 2}, {atk: 6}]}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'},
-      /* 특수 강화(5·10·15단계): 키워드 하나를 골라 적중마다 상대에게 건다. 몇 번째 선택이냐에 따라 kwAmt[순번]만큼 (같은 키워드를 거듭 골라도 된다). 예전 저장의 공격·회피·명중 선택은 그대로 남는다 */
+    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {spd: 1}, hidden: {atk: 2, eva: 1, hit: 1}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'},
+      /* 종류(의수 · 의복 · 지팡이 · 단말기 · 계약서 · 장치): 기본 보너스(baseKind, 의수는 base)와 일반 강화 한 단계당 값(normalKind, 소수는 내림해 쌓인다)이 다르다.
+         의수 올라운더 + 키워드 · 의복 HP와 회복 · 지팡이 넘친 명중 · 단말기 판정과 회피 · 계약서 피해 · 장치 공격. 히든 강화는 종류와 상관없이 같다 */
+      normalKind: {aug: {spd: 1, atk: 0.34, eva: 0.34}, cloth: {maxHp: 2, regen: 0.1}, staff: {over: 1.5}, term: {check: 1, eva: 0.8}, pact: {dmgB: 0.6}, dev: {atk: 1.5}},
+      baseKind: {cloth: {maxHp: 14}, staff: {over: 12, hit: 2}, term: {check: 3, eva: 2}, pact: {dmgB: 1, eva: 1}, dev: {atk: 3}},
+      kindE: {aug: '속도+1 · 회피+1', cloth: 'HP+14', staff: '넘친 명중+12 · 명중+2', term: '판정+3 · 회피+2', pact: '피해+1 · 회피+1', dev: '공격+3'},
+      /* 히든 강화 kwHidden번마다 이 가운데 하나(같은 캐릭터는 늘 같은 순서)가 적중마다 +1 걸린다. 같은 키워드가 나오면 쌓인다 */
+      kwHidden: 4, hiddenKwPool: ['bleed', 'rupture', 'burn', 'sink'],
+      /* 특수 강화(5·10·15단계): 의수는 키워드 하나를 골라 적중마다 건다(kwAmt, 같은 키워드를 거듭 골라도 된다). 나머지 종류는 단계마다 정해진 보너스 */
+      bigKind: {cloth: [{maxHp: 6, regen: 1}, {maxHp: 6}, {maxHp: 12, regen: 1}], staff: [{over: 10}, {over: 10, atk: 2}, {over: 20, atk: 3}], term: [{check: 4, eva: 2}, {check: 4, eva: 2}, {check: 6, eva: 4}], pact: [{dmgB: 1}, {dmgB: 2}, {dmgB: 2}], dev: [{atk: 4}, {atk: 4}, {atk: 8}]},
       kwList: ['bleed', 'rupture', 'burn'], kwAmt: [1, 1, 2]},
     /* 커스텀 의수: 공방 해결사가 한 번 포인트(pts)를 나눠 만든다. 공격은 atkCost 포인트에 +atkPer, 회피는 evaCost 포인트에 +1, 체력은 hpCost 포인트에 +hpPer, 패시브 하나는 passCost 포인트 */
     cust: {pts: 35, atkCost: 3, atkPer: 2, evaCost: 3, hpCost: 2, hpPer: 5, passCost: 5,

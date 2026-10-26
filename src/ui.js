@@ -939,8 +939,8 @@ export function startUI(E,app){
     if(!(UI.stock||[]).length)return '';
     const ch=G.ch;
     const items=UI.stock.map(id=>{const it=D.special[id],st=E.canBuySpecial(ch,id);
-      const note=st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${D.slots[it.slot]} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
-      return `<button class="btn" data-a="bspecial" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(it.price)}</span></span>
+      const note=it.wsOnly?(st==='money'?'돈이 모자란다':'공방 해결사 전용 재료 · 보관함에 들어간다'):st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${D.slots[it.slot]} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
+      return `<button class="btn" data-a="bspecial" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(E.specialPrice(ch,id))}</span></span>
         <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${note}</span></button>`}).join('');
     const B=CFG.blackCard,box=UI.cardBox?`<div class="panel stack" style="gap:8px;border-color:${KIND.debuff[1]}"><div class="row between"><b class="serif">수상한 카드 상자</b><span class="mono" style="color:var(--gold)">${E.money(B.price)}</span></div>
       <p class="small dim">원하는 쪽을 말하면 그런 카드 한 장을 꺼내 준다. 무엇이 나올지는 모른다. 이번 방문에 한 번.</p>
@@ -2347,7 +2347,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     /* 공방 거리: 1년차부터 3년마다 들를지 묻는다. 들러도 해는 넘어가지 않는다 */
     const lakeDue=lakeHome()&&G.ch.lake&&G.ch.lake.harbor;if(lakeDue)G.ch.lake.harbor=false;
     if((lakeHome()?lakeDue:(G.year-1)%CFG.shop.every===0)&&!shopDone&&!(G.ch.rb&&!G.ch.rb.out)){
-      UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
+      UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special).filter(k=>!D.special[k].wsOnly),CFG.shop.blackStock).concat(E.wsAuxStock(G.ch)||[]):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
       UI.bought=null;UI.meltMsg=null;UI.meltN=0;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.soldN=0;UI.rested=null;UI.healed=0;UI.healMsg=null;UI.mindHealed=0;UI.mindMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
