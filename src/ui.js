@@ -284,7 +284,11 @@ export function startUI(E,app){
     }
     if(lv>=3&&lastHit)h+=`<i class="hflash" style="--c:${col}"></i>`;
     for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk${sp==='eye'?' drop':''}" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)+(sp==='eye'?26:0)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
-    const fx=document.createElement('div');fx.className='hfx'+(/^n_(?!dacapo)/.test(sp)?' big':'');fx.innerHTML=h;if(gw&&/^ego_/.test(wid)&&typeof gw.egoLv==='number')fx.style.transform=`scale(${[.65,.8,.95,1.15][Math.min(3,gw.egoLv)]})`;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
+    const fx=document.createElement('div');fx.className='hfx'+(/^n_(?!dacapo)/.test(sp)?' big':'');fx.innerHTML=h;{let zf=(gw&&/^ego_/.test(wid)&&typeof gw.egoLv==='number')?[.65,.8,.95,1.15][Math.min(3,gw.egoLv)]:1;
+      if(/^n_/.test(sp)){/* 연출 강도: 가볍게=파티클 1/3·번쩍임 없음·80%, 강하게=110% (시안 이펙트는 '보통' 기준) */
+        if(lv===1){zf*=.8;fx.querySelectorAll('.spk,.smoke,.sw,.paper,.star,.dia,.edot,.chunk,.petal,.link,.bdrop,.aura,.rune,.note').forEach((el,i)=>{if(i%3)el.remove()});fx.querySelectorAll('.hflash,.disc,.ripple').forEach(el=>el.remove())}
+        else if(lv>=3)zf*=1.1}
+      if(zf!==1)fx.style.transform=`scale(${zf})`}box.appendChild(fx);setTimeout(()=>fx.remove(),800);
     if(crit&&lv>=2)floatTxt(e.def,'치명!','#ffd35a','crit');
     if(crit&&hid&&lv>=2){box.classList.remove('cjit');void box.offsetWidth;box.classList.add('cjit');setTimeout(()=>box.classList.remove('cjit'),420)}
     if(lastHit&&(lv>=2&&bigFx||lv>=3)){const hs=bigFx&&lv>=2?90:0;/* 역경직: 큰 타격은 잠깐 멈칫(밝아졌다 굳음)한 뒤 흔들린다 */if(hs){box.classList.add('hstop');setTimeout(()=>box.classList.remove('hstop'),hs)}setTimeout(()=>{const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&bigFx?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}},hs)}
