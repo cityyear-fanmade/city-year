@@ -163,7 +163,7 @@ export function startUI(E,app){
     const big=crit||e.dmg>=(C[e.def].maxHp||100)*0.15;
     /* '마지막만 크게': 타수 3 이상인 카드는 앞의 타격은 작은 파편만, 마지막 타격에 베기와 큰 효과가 몰린다 */
     const multi=HFXM==='last'&&e._g&&e._g.n>=3,lastHit=!multi||e._g.i===e._g.n-1,bigFx=big||(multi&&lastHit);
-    const n=multi&&!lastHit?3:lv===1?0:lv===2?(bigFx?10:6):(bigFx?18:12);
+    let n=multi&&!lastHit?3:lv===1?0:lv===2?(bigFx?10:6):(bigFx?18:12);
     /* 방향: 공격한 쪽에서 맞은 쪽으로 베어 들어온다 (플레이어가 오른쪽 · 적이 왼쪽). 연달아 맞을 때는 위·아래로 번갈아 긋는다 */
     HFXFLIP=!HFXFLIP;const fromRight=e.att==='P',pose=['/','\\','|'][Math.floor(Math.random()*3)],RD=Math.random(),rot=pose==='/'?-(24+RD*14):pose==='\\'?(24+RD*14):(HFXFLIP?1:-1)*(66+RD*10);
     const org=`${fromRight?'right':'left'} center`,sl0=(r,top,ex='')=>`<svg class="blade" viewBox="0 0 100 24" preserveAspectRatio="none" style="--c:${col};--rot:${Math.max(-82,Math.min(82,r))}deg;--w:${pose==='|'?44:84}%;--wm:${pose==='|'?120:210}px;--org:${org};--a0:inset(0 ${fromRight?'0 0 100%':'100% 0 0'});--top:${top}%;${ex}"><path class="bd" d="M0 18 Q44 -4 100 8 Q50 20 0 18Z"/><path class="bc" d="M6 17 Q46 9 94 8.5"/></svg>`,sl=(r,top,ex='')=>{const m=/animation-delay:(\d+)ms/.exec(ex);return sl0(r,top,ex)+(/--ng/.test(ex)?'':sl0(r,top,ex+`;--ng:1;animation-delay:${(m?+m[1]:0)+40}ms;animation-duration:.26s;filter:opacity(.3);margin-top:-4px`))};
@@ -176,11 +176,18 @@ export function startUI(E,app){
     /* 전용 모션: 기믹 무기는 무기마다 따로 그린다 (레바테인=해방 단계별, 발톱=흰 발톱자국, 미미크리=눈, 다 카포·궁니르=떨림, 검은 침묵의 장갑=나온 무기 번호별) */
     const gw=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon:null,wid=gw?gw.id:'',gl=/장갑 1d9 (\d)/.exec(e.note||'');
     const LST={laev_sealed:0,laev_s1:1,laev_s2:2,laev:3};
-    const sp=crit?'':gl?'gl'+gl[1]:(wid==='job_claw'||/하얀 발톱/.test(wn))?'tclaw':wid in LST?'lv'+LST[wid]:/미미크리/.test(wn)?'eye':/다 카포/.test(wn)?'tremor':(wid==='gungnir'||/절대음감/.test(wn))?'reson':'';
+    const sp=e.fxv||(crit?'':gl?'gl'+gl[1]:(wid==='job_claw'||/하얀 발톱/.test(wn))?'tclaw':wid in LST?'lv'+LST[wid]:/미미크리/.test(wn)?'eye':/다 카포/.test(wn)?'tremor':(wid==='gungnir'||/절대음감/.test(wn))?'reson':'');
+    const NR=(a,b)=>a+Math.random()*(b-a),NSP=(c,d,a,r,cls='',ex='')=>`<b class="spk${cls}" style="--c:${c};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)}px;--d:${d}ms;${ex}"></b>`;
     let h='';
     if(sp&&!(multi&&!lastHit)){
       const FL='#ff8a3c';
       if(sp==='tclaw'){col='#fff';const T=[[18,3],[36,4],[54,4],[72,3]],gh=(t,hh,d)=>sl(rot*0.7,t,`--ng:1;--sw:0;height:${hh}px;animation-delay:${d}ms`),ghost=(t,hh,d,mt,o)=>sl(rot*0.7,t,`--ng:1;--sw:0;height:${hh}px;animation-delay:${d}ms;margin-top:${mt}px;filter:opacity(${o})`);h=`<u class="jw lng">`+T.map(([t,hh],k)=>ghost(t,hh,k*40+90,-7,.18)+ghost(t,hh,k*40+45,-3,.4)+gh(t,hh+1,k*40)).join('')+`</u>`}
+      /* 신규 설계안 시안(시험실 전용 fxv): 3프레임 기획(80 · 170 · 280ms)대로 만든 전용 이펙트 */
+      else if(sp==='n_claw'){const rr=(rot<0?-1:1)*Math.min(Math.abs(rot),36),T=(t,hh)=>sl(rr,t,`--ng:1;--sw:0;height:${hh}px;--w:92%;--wm:250px;animation-duration:.26s;--c:#fff`);h=T(28,9)+T(50,12)+T(72,9);col='#7ba6dc';h+=`<i class="ringfx" style="--c:#7ba6dc;animation-delay:.1s;border-width:7px"></i><i class="ringfx small" style="--c:#fff;animation-delay:.16s"></i>`;for(let i=0;i<16;i++)h+=NSP(i%2?'#7ba6dc':'#fff',Math.round(NR(100,150)),NR(0,6.28),NR(28,84),'','animation-duration:.5s');n=0}
+      else if(sp==='n_fairy_g'||sp==='n_fairy_b'){const g=sp==='n_fairy_g',lc=g?'#f2c94c':'#2a2040',gc=g?'#ffe08a':'#b9a0f0';col=gc;h=sl(rot*0.1,50,`--ng:1;--sw:0;height:4px;--w:98%;--wm:320px;animation-duration:.2s;--c:${lc}`);[22,50,78].forEach((x,i)=>{h+=`<i class="glint" style="--c:${gc};--x:${x}%;--y:${50+(x-50)*Math.tan(rot*0.1*Math.PI/180)*0.3}%;--d:${90+i*40}ms"></i>`});for(let i=0;i<18;i++)h+=`<b class="spk up" style="--c:${gc};left:${Math.round(NR(8,92))}%;--dx:${Math.round(NR(-10,10))}px;--dy:${-Math.round(NR(22,62))}px;--d:${Math.round(NR(110,210))}ms"></b>`;n=0}
+      else if(sp==='n_mist'){const R='#c81e32';col=R;const rr=(rot<0?-1:1)*Math.min(Math.abs(rot),34);h=sl(rr,50,`--ng:1;--sw:0;height:17px;--w:92%;--wm:250px;--c:${R};animation-duration:.24s`)+sl(-rr,50,`--ng:1;--sw:0;height:17px;--w:92%;--wm:250px;--c:#8e1224;animation-duration:.24s;animation-delay:25ms`)+`<i class="ringfx" style="--c:${R};animation-delay:.1s;border-width:7px"></i>`;const pts=[];for(let k=0;k<=12;k++){const x=-34+68*k/12,y=13*(1-(x/34)*(x/34));pts.push([x,-y]);if(k>0&&k<12)pts.push([x,y])}for(let k=0;k<6;k++){const a=k/6*6.283;pts.push([Math.cos(a)*5,Math.sin(a)*5])}pts.forEach(([x,y])=>{const a=NR(0,6.28),r1=NR(40,70),a2=NR(0,6.28),r2=NR(30,70);h+=`<b class="spk gth" style="--c:#fff;--tx:${Math.round(x)}px;--ty:${Math.round(y)}px;--sx:${Math.round(Math.cos(a)*r1)}px;--sy:${Math.round(Math.sin(a)*r1)}px;--ox:${Math.round(x+Math.cos(a2)*r2)}px;--oy:${Math.round(y+Math.sin(a2)*r2)}px;--d:${Math.round(NR(30,70))}ms"></b>`});for(let i=0;i<9;i++)h+=NSP(R,Math.round(NR(210,250)),NR(0,6.28),NR(24,68),' drop','animation-duration:.5s');n=0}
+      else if(sp==='n_violet'){const V='#5b2a9a',P=[[4,78],[28,-14],[72,114],[96,22]],bz=(t,i)=>{const u=1-t;return u*u*u*P[0][i]+3*u*u*t*P[1][i]+3*u*t*t*P[2][i]+t*t*t*P[3][i]},fl=fromRight?-1:1;col='#9a6ae0';h=`<svg class="scv" viewBox="0 0 100 100" preserveAspectRatio="none" style="--c:${V};transform:scaleX(${fl})"><path class="s1" d="M4 78 C28 -14 72 114 96 22"/><path class="s2" d="M4 78 C28 -14 72 114 96 22"/></svg>`;[0.22,0.52,0.8].forEach((t,i)=>{const x=fl<0?100-bz(t,0):bz(t,0);h+=`<i class="ringfx small" style="--c:#b48cf0;left:${x}%;top:${bz(t,1)}%;animation-delay:${110+i*45}ms;border-width:2px"></i>`});n=0}
+      else if(sp==='n_dacapo'){col='#5fb8ff';h=sl((rot<0?-1:1)*Math.min(Math.abs(rot),32),50,`--ng:1;--sw:0;height:4px;--w:92%;--wm:250px;--c:#fff;animation-duration:.22s`)+`<i class="ringfx" style="--c:#5fb8ff;animation-delay:.11s"></i><i class="ringfx small" style="--c:#fff;animation-delay:.2s"></i>`;[['♪',40,44,-14],['♫',54,56,10],['♪',66,42,16]].forEach(([c,x,y,r])=>{h+=`<u class="note blk" style="--x:${x}%;--y:${y}%;--r:${r}deg">${c}</u><u class="note" style="--x:${x}%;--y:${y}%;--r:${r}deg">${c}</u>`;for(let i=0;i<6;i++)h+=`<b class="spk" style="--c:#5fb8ff;left:${x}%;top:${y}%;--dx:${Math.round(NR(-34,34))}px;--dy:${Math.round(NR(-30,30))}px;--d:${Math.round(NR(235,275))}ms;animation-duration:.5s"></b>`});n=0}
       else if(sp==='eye'){col='#d0344a';h=sl(rot,50,'height:7px;--c:#d0344a')+sl(rot*0.6,56,'--sw:0;height:3px;--c:#7a1020;animation-delay:50ms')}
       else if(sp==='tremor'){h=`<u class="jw">`+sl(rot,50,'--c:#5fd0ff;margin-top:-3px')+sl(rot,50,'--c:#ff4d6d;margin-top:3px;animation-delay:30ms')+sl(rot,50,'--c:#fff;animation-delay:15ms')+sl(rot,50,'opacity:.5;animation-delay:70ms')+sl(rot,50,'opacity:.3;animation-delay:140ms')+`</u>`}
       else if(sp==='reson'){col='#4aa8ff';h=`<u class="jw"><i class="thrust beam" style="--c:#4aa8ff;--org:${org}"></i></u><i class="ringfx" style="--c:${col}"></i><i class="ringfx small" style="--c:${col};animation-delay:.22s"></i><i class="ringfx" style="--c:${col};animation-delay:.34s;opacity:.5"></i>`}
@@ -2131,13 +2138,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* ===== 타격 모션 시험실 (dist/motion-lab.html 빌드에서만 켜진다) ===== */
   const LABW=[['칼 (베기)',{n:'식칼'}],['대검 (X자)',{n:'대검'}],['창 (찌르기)',{n:'창'}],['낫 (할퀴기)',{n:'낫'}],['망치 (충격 고리)',{n:'망치'}],['무기 없음 (키워드로 결정)',null]];
   const LABS=[['하얀 발톱',{n:'하얀 발톱',id:'job_claw'}],['미미크리',{n:'미미크리'}],['다 카포',{n:'다 카포'}],['궁니르',{n:'궁니르',id:'gungnir'}],['절대음감',{n:'절대음감'}],['레바테인 · 봉인',{n:'레바테인',id:'laev_sealed'}],['레바테인 · 1단계',{n:'레바테인',id:'laev_s1'}],['레바테인 · 2단계',{n:'레바테인',id:'laev_s2'}],['레바테인 · 해방',{n:'레바테인',id:'laev'}],...[1,2,3,4,5,6,7,8,9].map(k=>['검은 침묵의 장갑 '+k,{n:'검은 침묵의 장갑',note:'장갑 1d9 '+k}])];
+  const LABN=[['발톱 (하얀 발톱 · 바랄)',{n:'하얀 발톱',fxv:'n_claw'}],['조율자 · 봉인의 요정 (황금)',{n:'봉인의 요정',fxv:'n_fairy_g'}],['조율자 · 제나의 요정 (검은빛)',{n:'제나의 요정',fxv:'n_fairy_b'}],['붉은 안개 · 미미크리 프로토타입',{n:'미미크리 (프로토타입)',fxv:'n_mist'}],['보라눈물 · 보랏빛 사복검',{n:'보랏빛 사복검',fxv:'n_violet'}],['다 카포 · 침묵의 오케스트라',{n:'다 카포',fxv:'n_dacapo'}]];
   const LAB={att:'P',lv:'mid',kw:'',crit:false,big:false,hits:1,last:false,chips:false};
   function labPlay(w){
     const sv={C,HFX,MODE,SKIP,HFXM};HFX=LAB.lv;MODE='slow';SKIP=false;HFXM=LAB.last?'last':'each';
     const def=LAB.att==='P'?'E':'P',n=LAB.hits;
     C={id:'lab',P:{maxHp:100},E:{maxHp:100},ch:{gear:{weapon:LAB.att==='P'&&w&&w.n?{n:w.n,id:w.id||''}:null}}};
     for(let i=0;i<n;i++)setTimeout(()=>{PREV[def]={};const snap={};snap[def]=LAB.kw?{[LAB.kw]:3}:{};
-      hitFx({def,att:LAB.att,snap,note:(LAB.crit?'치명 ':'')+((w&&w.note)||''),dmg:LAB.big||LAB.crit?30:6,card:{hits:n},_g:{i,n}})},i*230);
+      hitFx({def,att:LAB.att,snap,fxv:w&&w.fxv,note:(LAB.crit?'치명 ':'')+((w&&w.note)||''),dmg:LAB.big||LAB.crit?30:6,card:{hits:n},_g:{i,n}})},i*230);
     setTimeout(()=>{C=sv.C;HFX=sv.HFX;MODE=sv.MODE;SKIP=sv.SKIP;HFXM=sv.HFXM},n*230+900);
   }
   function labDraw(){
@@ -2154,10 +2162,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <div class="row" style="gap:6px;flex-wrap:wrap"><span class="small dim">옵션</span>${chip(LAB.crit,'crit','치명타')}${chip(LAB.big,'big','큰 피해')}${[1,2,3,4].map(k=>chip(LAB.hits===k,'hits:'+k,k+'연타')).join('')}${chip(LAB.last,'last','마지막만 크게')}${chip(LAB.chips,'chips','디버프 칩 많음(상자가 커짐)')}</div>
       <div class="small dim">무기를 누르면 그 무기로 때리는 모션이 나옵니다. 연타는 한 번에 여러 번 이어서 나옵니다.</div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${LABW.map(([t],i)=>`<button class="btn" style="width:auto;flex:none;padding:8px 14px" data-w="w${i}">${t}</button>`).join('')}</div>
+      <div class="small" style="color:var(--gold)">신규 설계안 (히든 무기 전용 시안 · 80 · 170 · 280ms 기획대로)</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">${LABN.map(([t],i)=>`<button class="btn" style="width:auto;flex:none;padding:8px 14px;border-color:var(--gold)" data-w="n${i}">${t}</button>`).join('')}</div>
       <div class="small dim">전용 모션이 있는 무기</div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${LABS.map(([t],i)=>`<button class="btn" style="width:auto;flex:none;padding:8px 14px" data-w="s${i}">${t}</button>`).join('')}</div></div>`;
     if(!app._lab){app._lab=true;app.addEventListener('click',ev=>{
-      const b=ev.target.closest('[data-w]');if(b){const k=b.dataset.w;labPlay(k[0]==='w'?LABW[+k.slice(1)][1]:LABS[+k.slice(1)][1]);return}
+      const b=ev.target.closest('[data-w]');if(b){const k=b.dataset.w;labPlay(k[0]==='w'?LABW[+k.slice(1)][1]:k[0]==='n'?LABN[+k.slice(1)][1]:LABS[+k.slice(1)][1]);return}
       const c=ev.target.closest('[data-lab]');if(!c)return;const [a,v]=c.dataset.lab.split(':');
       if(a==='att')LAB.att=v;else if(a==='lv')LAB.lv=v;else if(a==='kw')LAB.kw=v;else if(a==='hits')LAB.hits=+v;else if(a==='crit')LAB.crit=!LAB.crit;else if(a==='big')LAB.big=!LAB.big;else if(a==='last')LAB.last=!LAB.last;else if(a==='chips')LAB.chips=!LAB.chips;
       labDraw()})}

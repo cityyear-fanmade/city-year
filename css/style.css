@@ -646,3 +646,20 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .rfh{cursor:pointer;user-select:none}
 .rfold.closed{gap:0!important}
 .rfold.closed>:not(.eyebrow){display:none}
+
+/* 신규 설계안 시안 이펙트 (시험실 fxv) */
+.hfx .glint{position:absolute;left:var(--x);top:var(--y);width:50px;height:50px;margin:-25px;background:radial-gradient(circle,#fff 0 14%,var(--c) 18% 38%,transparent 66%);clip-path:polygon(50% 0,57% 43%,100% 50%,57% 57%,50% 100%,43% 57%,0 50%,43% 43%);opacity:0;animation:hGlint .34s ease-out var(--d,0ms) forwards}
+@keyframes hGlint{0%{transform:scale(.2);opacity:1}40%{transform:scale(1.15);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.hfx .spk.up{animation-name:hDust;animation-duration:.58s;animation-timing-function:ease-out}
+@keyframes hDust{0%{transform:translate(0,0) scale(1.1);opacity:0}15%{opacity:.95}100%{transform:translate(var(--dx),var(--dy)) scale(.55);opacity:0}}
+.hfx .spk.gth{animation-name:hGather;animation-duration:.62s;animation-timing-function:ease-out}
+@keyframes hGather{0%{transform:translate(var(--sx),var(--sy)) scale(.6);opacity:0}22%{transform:translate(var(--tx),var(--ty)) scale(1.1);opacity:1}38%{transform:translate(var(--tx),var(--ty)) scale(1.1);opacity:1}100%{transform:translate(var(--ox),var(--oy)) scale(.3);opacity:0}}
+.hfx .scv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;clip-path:inset(0 100% 0 0);animation:hScvIn .18s ease-out forwards,hScvOut .55s ease-in .2s forwards}
+.hfx .scv path{fill:none;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.hfx .scv .s1{stroke:var(--c);stroke-width:7px}
+.hfx .scv .s2{stroke:#b48cf0;stroke-width:2px;opacity:.7}
+@keyframes hScvIn{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes hScvOut{from{opacity:1}to{opacity:0}}
+.hfx .note{position:absolute;left:var(--x);top:var(--y);margin:-13px 0 0 -8px;font:700 26px/1 serif;color:#fff;text-decoration:none;opacity:0;transform-origin:center;animation:hNote .24s ease-out .1s forwards;rotate:var(--r)}
+.hfx .note.blk{color:#05060a;translate:4px 3px}
+@keyframes hNote{0%{transform:scale(.2) translateY(8px);opacity:0}30%{transform:scale(1.15) translateY(-6px);opacity:1}60%{transform:scale(1) translateY(-8px);opacity:1}75%{transform:scale(1.05) translateY(-9px);opacity:0}100%{opacity:0}}
