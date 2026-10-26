@@ -304,6 +304,8 @@ export const CFG = {
   leads: {hollow: '문 없는 방의 흔적', tune: '소리 없는 연주회장의 흔적', finger: '손가락의 연줄', debt: '밀린 장부', blade: '칼 가는 소리', heat: '식지 않은 열기', seek: '누군가를 찾는 눈'},
   /* 공격과 명중: 공격은 hitPer배(소수점 버림)만큼 명중을 올리고, dmgPer마다 피해 +1을 한계 없이 더한다. 명중 스탯은 명중만 올린다 */
   atkRule: {on: true, hitPer: 0.5, dmgPer: 6},
+  /* 무기와 보조 장비가 라운드마다 한 키워드로 줄 수 있는 부여량 합계(공방 지팡이의 집중 키워드는 제외). 상대에게 쌓이는 키워드 자체의 한계는 따로 있다 */
+  kwTurnCap: 5,
   ws: {
     needEvery: 10, priceYearUp: 0.25, priceYearEvery: 20 /* 공방 해결사가 사는 공방 물건의 값은 고정이고, 20년차마다 원래 값의 25%씩 오른다 (예전에는 재료로 쓸 때마다 올랐다) */,
     /* 기본값은 공방 1등급 물건 중 가장 낮은 것 수준 (날 세운 단검 · 누빈 작업복 · 중고 의수) */
@@ -323,7 +325,7 @@ export const CFG = {
       kwHidden: 4, hiddenKwPool: ['bleed', 'rupture', 'burn', 'sink'],
       /* 특수 강화(5·10·15단계): 의수는 키워드 하나를 골라 적중마다 건다(kwAmt, 같은 키워드를 거듭 골라도 된다). 나머지 종류는 단계마다 정해진 보너스 */
       bigKind: {cloth: [{maxHp: 6, regen: 1}, {maxHp: 6}, {maxHp: 12, regen: 1}], term: [{check: 4, eva: 2}, {check: 4, eva: 2}, {check: 6, eva: 4}], pact: [{dmgB: 1}, {dmgB: 2}, {dmgB: 2}], dev: [{atk: 4}, {atk: 4}, {atk: 8}]},
-      kwList: ['bleed', 'rupture', 'burn'], kwAmt: [1, 1, 2],
+      kwList: ['bleed', 'rupture', 'burn'], kwAmt: [1, 1, 1],
       /* 지팡이: 고른 키워드(기본 출혈). 일반 강화 한 단계마다 그 키워드를 상대에게 쌓는 최대치 +1(카드·무기·보조 장비 모두),
          특수 강화(5·10·15단계)마다 적중 시 +staffKwAmt, 히든 4번마다 +1 */
       staffKwAmt: 1},
