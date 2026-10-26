@@ -46,7 +46,7 @@ export function startUI(E,app){
     if(!now.length)return [];r.unl=open.concat(now);store.set(REC,JSON.stringify(r));E.setInnateOpen(r.unl);return now.map(k=>D.innate[k].n);
   }
   const recAdd=(k,v)=>{const r=loadRec();if(!r[k].includes(v)){r[k].push(v);store.set(REC,JSON.stringify(r))}};
-  let INFNOTE=store.get('cityYearInfNote')!=='off';
+  let INFNOTE=store.get('cityYearInfNote')!=='off';let AUTOMELT=store.get('cityYearAutoMelt')==='on';
   let MODE=store.get('cityYearMode')||((window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?'off':'slow');
   const SKINS=[{k:'base',n:'기본'},{k:'dante',n:'단테의 노트'},{k:'terminal',n:'검지 단말기'},{k:'ruina',n:'도서관 초대장'}];
   const SKIN_TAB={base:'도시 기록',dante:'단테의 노트',terminal:'TERMINAL · 대행',ruina:'오늘의 책'};
@@ -988,7 +988,7 @@ export function startUI(E,app){
       const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade&&(lakeHome()?!!it.lake:hwHome()?(w.grade<3||it.hw):(!it.hw&&!it.lake))).filter(([id,it],_i,all)=>!hwHome()||w.grade===3||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
         const note=it.tool&&st==='ok'?`쓰면 사라진다 · 지금 ${((ch.lake||{}).tools||{})[it.tool]||0}개`:it.tool&&st==='money'?'돈이 모자란다':it.tool&&st==='locked'?'이 호수의 소문을 아직 듣지 못했다':it.tool&&st==='owned'?'이미 두 개를 챙겨 두었다':st==='owned'?(it.hw&&(ch.hwGot||[]).includes(id)&&!(cur&&cur.id===id)?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
-        if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span><span class="small dim">${it.tool?'소모형 도구':auxLbl(it)}${cur&&!it.tool?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · ${it.tool?'이 도구를 챙길까?':'이 장비를 맞출까?'}</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">${it.perm?'먹는다':it.hw?'받는다':it.tool?'챙긴다':'맞춘다'}</button>${E.isWs(ch)&&!it.tool&&!it.perm&&!it.hw&&ch.ws?`<button class="btn" data-a="buymelt" data-i="${id}">사서 바로 녹이기</button>`:''}<button class="btn quiet" data-a="buyno">취소</button></div></div>`;
+        if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span><span class="small dim">${it.tool?'소모형 도구':auxLbl(it)}${cur&&!it.tool?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · ${it.tool?'이 도구를 챙길까?':'이 장비를 맞출까?'}</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">${it.perm?'먹는다':it.hw?'받는다':it.tool?'챙긴다':'맞춘다'}</button>${E.isWs(ch)&&!it.tool&&!it.perm&&!it.hw&&ch.ws?`<button class="btn" data-a="buymelt" data-i="${id}">사서 바로 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="5">5개 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="10">10개 녹이기</button>`:''}<button class="btn quiet" data-a="buyno">취소</button></div></div>`;
         return `<button class="btn" data-a="buy" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':(E.isWs(ch)?`<s class="dim">${E.money(it.price)}</s> `:'')+E.money(E.priceOf(ch,id))}</span></span>
           <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${it.tool?'도구 · 소모형':it.perm?'영구 강화':auxLbl(it)} · ${note}</span></button>`;
       }).join('');
@@ -997,7 +997,7 @@ export function startUI(E,app){
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
     return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">${hwHome()?'홍원의 저잣거리':lakeHome()?'U사의 어느 항구':(G.infinite&&G.ch.infinite)?'외곽의 가게':'공방'} · 내 등급 ${acc}</div><h2>무엇을 맞출까</h2>
-      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}</div>${shops}${vClinic()}${vHull()}${vSupplyShop()}${vCafe()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
+      <div class="chips">${gear}</div>${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}${E.isWs(ch)&&ch.ws?`<button class="btn quiet" data-a="automelt"><b>구매하면 바로 녹이기 · ${AUTOMELT?'켜짐':'꺼짐'}</b><span class="small dim">켜면 장비를 누르는 즉시 사서 작업대 재료로 녹인다 (확인 없이 같은 장비를 연달아 살 수 있다)</span></button>`:''}${UI.meltMsg?`<p class="good small">${esc(UI.meltMsg)}</p>`:''}</div>${shops}${vClinic()}${vHull()}${vSupplyShop()}${vCafe()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
       <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':lakeHome()?'항구를 나간다':'공방을 나간다'}</button>`;
   }
   /* 공방 해결사: 카드 판매 (장비 판매는 없다) */
@@ -2335,7 +2335,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
-      UI.bought=null;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.soldN=0;UI.rested=null;UI.healed=0;UI.healMsg=null;UI.mindHealed=0;UI.mindMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
+      UI.bought=null;UI.meltMsg=null;UI.meltN=0;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.soldN=0;UI.rested=null;UI.healed=0;UI.healMsg=null;UI.mindHealed=0;UI.mindMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
     }
     UI.stock=[];saveGame({st});UI.screen='event';render();
   }
@@ -2594,10 +2594,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     shop(){UI.wsMsg=null;E.wsEnsure(G.ch);UI.showIncome=false;UI.screen='shop';render()},
     /* 6시즌: 공방 거리에서 쉬어 가기 (공방 거래 없이 정신력 회복) */
     rest(){if(UI.rested)return;if(G.ch.restYear===G.year){UI.rested='이번 해에는 이미 쉬었다 · 정신력은 해마다 한 번만 회복한다';render();return}G.ch.restYear=G.year;const g=E.gainMind(G.ch,CFG.shop.restMind);UI.rested=g?`잠시 쉬었다 · 정신력 +${g} (${G.ch.mind}/${E.mindMax(G.ch)})`:'잠시 쉬었다 · 정신력이 이미 가득하다';UI.showIncome=false;resave();render()},
-    buy(id){UI.buyAsk=id;render()},
-    buymelt(id){UI.buyAsk=null;const ch=G.ch,it=D.items[id];if(!it||!E.isWs(ch)||!ch.ws||it.tool||it.perm||it.hw){render();return}
-      const before=(ch.stash||[]).length;if(E.buy(ch,id,false)){const st=ch.stash||[];let ix=-1;for(let i=st.length-1;i>=0;i--)if(st[i].id===id){ix=i;break}
-        const r=ix>=0&&st.length>=before?E.wsMelt(ch,it.slot,ix):null;UI.bought=it.n;if(r){UI.wsMsg=`${r.m}을(를) 사서 바로 녹였다 · ${r.step?'강화 '+r.n+'단계':'일반 재료 +'+r.val+' · '+r.p+'/'+r.need}`}resave()}render()},
+    buy(id){const ch=G.ch,it=D.items[id];if(AUTOMELT&&it&&E.isWs(ch)&&ch.ws&&!it.tool&&!it.perm&&!it.hw&&E.canBuy(ch,id)==='ok'){ACT.buymelt(id);return}UI.buyAsk=id;render()},
+    buymelt(id,b){UI.buyAsk=null;const ch=G.ch,it=D.items[id];if(!it||!E.isWs(ch)||!ch.ws||it.tool||it.perm||it.hw){render();return}
+      const cnt=Math.max(1,+((b&&b.dataset&&b.dataset.n)||1)),m0=ch.money;let ok=0,last=null,why='';
+      for(let k=0;k<cnt;k++){const before=(ch.stash||[]).length;if(!E.buy(ch,id,false)){why='돈이 모자라거나 더 살 수 없다';break}const st=ch.stash||[];let ix=-1;for(let i=st.length-1;i>=0;i--)if(st[i].id===id){ix=i;break}
+        const r=ix>=0&&st.length>=before?E.wsMelt(ch,it.slot,ix):null;if(!r){why='작업대에 이 칸의 전용 장비가 없어 녹이지 못했다 (보관함에 남았다)';break}ok++;last=r}
+      if(ok){UI.meltN=(UI.meltN||0)+ok;UI.meltMsg=`${it.n} ${ok}개를 사서 바로 녹였다 (−${E.money(m0-ch.money)}) · ${last.step?'강화 '+last.n+'단계':'일반 재료 +'+last.val+' · '+last.p+'/'+last.need} · 이번 방문 모두 ${UI.meltN}개${why?' · '+why:''}`;resave()}
+      else UI.meltMsg=`${it.n}: ${why||'녹이지 못했다'}`;render()},
+    automelt(){AUTOMELT=!AUTOMELT;store.set('cityYearAutoMelt',AUTOMELT?'on':'off');render()},
     buyok(id){UI.buyAsk=null;if(E.buy(G.ch,id,true)){UI.bought=D.items[id].n}render()},
     buyno(){UI.buyAsk=null;render()},
     gtab(i){UI.gTab=i;render()},
