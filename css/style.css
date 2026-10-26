@@ -683,3 +683,8 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 @keyframes hShard{0%{transform:rotate(var(--a)) translateX(var(--r0)) scaleX(.12);opacity:1}26%{transform:rotate(var(--a)) translateX(var(--r1)) scaleX(1);opacity:1}100%{transform:rotate(var(--a)) translateX(var(--r2)) scaleX(.85);opacity:0}}
 .hfx .edot{animation-name:hEdot2}
 @keyframes hEdot2{0%{left:var(--x0);top:var(--y0);opacity:0}12%{opacity:1}33%{left:var(--x1);top:var(--y1)}66%{left:var(--x2);top:var(--y2);opacity:1}100%{left:var(--x3,var(--x2));top:var(--y3,var(--y2));opacity:0}}
+
+/* 히든 무기 치명타: 금빛 대신 맞은 쪽이 잠깐 더 떨린다 */
+.ent.cjit{animation:hCritJit .4s steps(1,end)}
+@keyframes hCritJit{0%{translate:0 0}12%{translate:-5px 2px}25%{translate:5px -2px}38%{translate:-4px 1px}52%{translate:3px -1px}68%{translate:-2px 0}84%{translate:1px 0}100%{translate:0 0}}
+@media (prefers-reduced-motion:reduce){.ent.cjit{animation:none}}

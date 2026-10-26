@@ -159,7 +159,7 @@ export function startUI(E,app){
     const box=$('ent-'+e.def);if(!box)return;
     let col='#cfe6ff',best=0;const sn=e.snap&&e.snap[e.def],pv=PREV[e.def];
     if(sn&&pv)for(const k of Object.keys(D.keywords)){const dl=(sn[k]||0)-(pv[k]||0);if(dl>best){best=dl;col=kwc(k)}}
-    const crit=/치명/.test(e.note||'');if(crit)col='#ffd35a';
+    const crit=/치명/.test(e.note||'');const edg0=e.att!=='P'&&C&&D.enemies[C.id]&&D.enemies[C.id].drop&&D.enemies[C.id].drop.gear,hid=!!e.fxv||/^(w_|laev|gungnir|job_claw|cheontoe|dongbu|arayashiki)/.test(e.att==='P'?((C&&C.ch&&C.ch.gear&&C.ch.gear.weapon&&C.ch.gear.weapon.id)||''):((Array.isArray(edg0)?edg0:[edg0]).filter(g=>g&&g.slot==='weapon').map(g=>g.id)[0]||''));if(crit&&!hid)col='#ffd35a';
     const big=crit||!!e.fxv||e.dmg>=(C[e.def].maxHp||100)*0.15;
     /* '마지막만 크게': 타수 3 이상인 카드는 앞의 타격은 작은 파편만, 마지막 타격에 베기와 큰 효과가 몰린다 */
     const multi=HFXM==='last'&&e._g&&e._g.n>=3,lastHit=!multi||e._g.i===e._g.n-1,bigFx=big||(multi&&lastHit);
@@ -227,6 +227,7 @@ export function startUI(E,app){
     for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk${sp==='eye'?' drop':''}" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)+(sp==='eye'?26:0)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
     const fx=document.createElement('div');fx.className='hfx'+(/^n_(claw|fairy|mist|vi_)/.test(sp)?' big':'');fx.innerHTML=h;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
     if(crit&&lv>=2)floatTxt(e.def,'치명!','#ffd35a','crit');
+    if(crit&&hid&&lv>=2){box.classList.remove('cjit');void box.offsetWidth;box.classList.add('cjit');setTimeout(()=>box.classList.remove('cjit'),420)}
     if(lastHit&&(lv>=2&&bigFx||lv>=3)){const hs=bigFx&&lv>=2?90:0;/* 역경직: 큰 타격은 잠깐 멈칫(밝아졌다 굳음)한 뒤 흔들린다 */if(hs){box.classList.add('hstop');setTimeout(()=>box.classList.remove('hstop'),hs)}setTimeout(()=>{const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&bigFx?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}},hs)}
   }
   function whiffFx(e){
@@ -2144,7 +2145,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   }
   /* ===== 타격 모션 시험실 (dist/motion-lab.html 빌드에서만 켜진다) ===== */
   const LABW=[['칼 (베기)',{n:'식칼'}],['대검 (X자)',{n:'대검'}],['창 (찌르기)',{n:'창'}],['낫 (할퀴기)',{n:'낫'}],['망치 (충격 고리)',{n:'망치'}],['무기 없음 (키워드로 결정)',null]];
-  const LABS=[['하얀 발톱',{n:'하얀 발톱',id:'job_claw'}],['미미크리',{n:'미미크리'}],['다 카포',{n:'다 카포'}],['궁니르',{n:'궁니르',id:'gungnir'}],['절대음감',{n:'절대음감'}],['레바테인 · 봉인',{n:'레바테인',id:'laev_sealed'}],['레바테인 · 1단계',{n:'레바테인',id:'laev_s1'}],['레바테인 · 2단계',{n:'레바테인',id:'laev_s2'}],['레바테인 · 해방',{n:'레바테인',id:'laev'}],...[1,2,3,4,5,6,7,8,9].map(k=>['검은 침묵의 장갑 '+k,{n:'검은 침묵의 장갑',note:'장갑 1d9 '+k}])];
+  const LABS=[['하얀 발톱',{n:'하얀 발톱',id:'job_claw'}],['미미크리',{n:'미미크리',id:'w_mimicry'}],['다 카포',{n:'다 카포',id:'w_dacapo'}],['궁니르',{n:'궁니르',id:'gungnir'}],['절대음감',{n:'절대음감',id:'w_perfectpitch'}],['레바테인 · 봉인',{n:'레바테인',id:'laev_sealed'}],['레바테인 · 1단계',{n:'레바테인',id:'laev_s1'}],['레바테인 · 2단계',{n:'레바테인',id:'laev_s2'}],['레바테인 · 해방',{n:'레바테인',id:'laev'}],...[1,2,3,4,5,6,7,8,9].map(k=>['검은 침묵의 장갑 '+k,{n:'검은 침묵의 장갑',id:'w_blacksilence',note:'장갑 1d9 '+k}])];
   const LABN=[['발톱 (하얀 발톱 · 바랄)',{n:'하얀 발톱',fxv:'n_claw'}],['조율자 · 봉인의 요정 (황금)',{n:'봉인의 요정',fxv:'n_fairy_g'}],['조율자 · 제나의 요정 (검은빛)',{n:'제나의 요정',fxv:'n_fairy_b'}],['붉은 안개 · 미미크리 프로토타입',{n:'미미크리 (프로토타입)',fxv:'n_mist'}],['보라눈물 · 참격 (한 번 크게 벰)',{n:'보랏빛 사복검',fxv:'n_vi_slash'}],['보라눈물 · 관통 (한 점 찌르기)',{n:'보랏빛 사복검',fxv:'n_vi_pierce'}],['보라눈물 · 타격 (뱀처럼 여러 갈래)',{n:'보랏빛 사복검',fxv:'n_vi_snake'}],['보라눈물 · 방어 (방벽)',{n:'보랏빛 사복검',fxv:'n_vi_guard'}],['다 카포 · 침묵의 오케스트라',{n:'다 카포',fxv:'n_dacapo'}]];
   const LAB={att:'P',lv:'mid',kw:'',crit:false,big:false,hits:1,last:false,chips:false};
   function labPlay(w){
