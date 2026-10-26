@@ -2047,7 +2047,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 링크용 기록: 이름이 아니라 id를 담아 짧게 만든다(받는 쪽에서 이름으로 바꾼다) */
   function shareRec(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
-    return {v:2,h:shareHead(),w:w?1:0,n:c.name||'',k:careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&'),t:shTitle(c),col:c.color,y:lived,a:E.age(G),
+    return {v:2,h:shareHead(),w:w?1:0,n:c.name||'',k:careerLine0(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&'),xt:(c.titles||[]).slice(),t:shTitle(c),col:c.color,y:lived,a:E.age(G),
       g:G.endless&&gi>=0?X.grades[gi]:'',d:!w&&dt?`${dt.year}년차 · ${dt.cause?dt.foe:dt.foe+'에게 쓰러짐'}`:'',fi:[...new Set([...c.beaten,...(c.minis||[])])],
       e:c.ego?c.ego.n:'',i:innateName(c)||'',o:`${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n}`,lv:c.lv,st:[c.stats.atk,c.stats.eva,c.stats.spd],s:c.seed,dy:c.daily||'',df:diffOf(c),ver:UPDATES.v,fm:shFamily(c),lf:shLife(c,w)};
   }
@@ -2057,9 +2057,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const canZip=typeof CompressionStream==='function'&&typeof DecompressionStream==='function';
   const zipB=async(u,Cls,fmt)=>{const st=new Cls(fmt),wr=st.writable.getWriter();wr.write(u);wr.close();return new Uint8Array(await new Response(st.readable).arrayBuffer())};
   /* 배열로 줄여 담는다(키 이름 생략). 순서를 바꾸지 말고 끝에만 덧붙인다 */
-  const shArr=o=>[3,shHeadK(o.h),o.w,o.n,o.k,o.t,String(o.col||'').replace(/^#/,''),o.y,o.a,o.g,o.d,foeEnc(o.fi),o.e,o.i,o.o,o.lv,o.st.join(','),o.s,o.dy,o.df,o.ver,(o.fm||[]).join('|'),o.lf||''];
+  const shArr=o=>[3,shHeadK(o.h),o.w,o.n,o.k,o.t,String(o.col||'').replace(/^#/,''),o.y,o.a,o.g,o.d,foeEnc(o.fi),o.e,o.i,o.o,o.lv,o.st.join(','),o.s,o.dy,o.df,o.ver,(o.fm||[]).join('|'),o.lf||'',(o.xt||[]).join('|')];
   const shObj=a=>({v:a[0],h:a[0]>=3?shHeadV(a[1]):a[1],w:a[2],n:a[3],k:a[4],t:a[5],col:/^[0-9a-f]{3,8}$/i.test(a[6])?'#'+a[6]:a[6],y:a[7],a:a[8],g:a[9],d:a[10],
-    f:(a[0]>=3?foeDec(a[11]):String(a[11]||'').split(',').filter(Boolean)).map(id=>(D.enemies[id]&&D.enemies[id].n)||id),e:a[12],i:a[13],o:a[14],lv:a[15],st:String(a[16]||'0,0,0').split(',').map(Number),s:a[17],dy:a[18],df:a[19],ver:a[20],fm:a[21]?String(a[21]).split('|'):[],lf:a[22]||''});
+    f:(a[0]>=3?foeDec(a[11]):String(a[11]||'').split(',').filter(Boolean)).map(id=>(D.enemies[id]&&D.enemies[id].n)||id),e:a[12],i:a[13],o:a[14],lv:a[15],st:String(a[16]||'0,0,0').split(',').map(Number),s:a[17],dy:a[18],df:a[19],ver:a[20],fm:a[21]?String(a[21]).split('|'):[],lf:a[22]||'',xt:a[23]?String(a[23]).split('|'):[]});
   /* 기록 링크: #c= 압축(deflate) 배열, #a= 압축 없는 배열(압축을 못 쓰는 브라우저), #r= 예전 형식(그대로 읽는다) */
   async function shareLinkAsync(){
     const j=new TextEncoder().encode(JSON.stringify(shArr(shareRec()))),a='#a='+u8b64(j);
@@ -2082,7 +2082,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     return `<div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow">공유된 기록 · ${esc(r.ver||'')}</div>
       <div class="eyebrow" style="color:${r.w?'var(--gold)':'#c46a5a'}">${esc(r.h)} · ${r.a}세</div>
       <h1 style="color:${esc(r.col||'')};${String(r.n||r.k).length>14?'font-size:clamp(20px,5.6vw,30px);line-height:1.3;word-break:keep-all':''}">${esc(r.n||r.k)}</h1>${r.n?`<div class="mono small" style="color:${esc(r.col||'')}">${esc(r.k)}</div>`:''}
-      ${r.t?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${esc(r.t)}</span></div>`:''}</div>
+      ${r.t||(r.xt&&r.xt.length)?`<div class="row" style="gap:6px;flex-wrap:wrap">${r.t?`<span class="chip" style="color:var(--gold);border-color:var(--gold)">${esc(r.t)}</span>`:''}${(r.xt||[]).filter(x=>x!==r.t).map(x=>`<span class="chip" style="color:var(--gold);border-color:var(--gold)">${esc(x)}</span>`).join('')}</div>`:''}</div>
       <div class="panel stack" style="gap:6px">${row('산 햇수',r.y+'년')}${row('위협 등급',r.g)}${row('마지막',r.d)}${row('타고난 것',r.i)}${row('E.G.O',r.e)}
         ${row('레벨',`Lv ${r.lv} · 공격 ${sg(r.st[0])} · 회피 ${sg(r.st[1])} · 속도 ${sg(r.st[2])}`)}${row('출신',r.o)}${row('난이도',r.df)}${row('시드',r.s+(r.dy?' · 오늘의 시드 '+r.dy:''))}
         ${r.f&&r.f.length?`<div class="small"><span class="dim">쓰러뜨린 이름난 상대</span><br><b>${r.f.map(esc).join(' · ')}</b></div>`:''}</div>
