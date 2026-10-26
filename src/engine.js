@@ -2233,7 +2233,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const ch_=h.chance?Math.min(95,h.chance+[].concat(h.chanceBonus||[]).reduce((t_,b_)=>t_+(meets(G.ch,b_.req)?b_.add:0),0)+(G.infinite?INF.hiddenAdd:0)):0;
         if(ch_&&d(100)>ch_)continue;
         if(G.infinite&&G.year>baseEnd)return {type:'omen',boss:h.id,omen:riftOmenFor(G.ch,D.enemies[h.id].n),rift:true,escape:!h.noEscape,spec:f};
-        return {type:'omen',boss:h.id,omen:omenOf(G.ch,h.omen),escape:!h.noEscape,spec:f};
+        {const forced=!!h.refuseOnce&&!!(G.ch.refused||{})[h.id];return {type:'omen',boss:h.id,omen:omenOf(G.ch,forced&&h.omen&&h.omen.forced?Object.assign({},h.omen,{x:h.omen.forced}):h.omen),escape:!h.noEscape&&!forced,refuse:!!h.refuseOnce&&!forced,spec:f}}
       }
       if(lakeOn(G.ch)&&G.infinite&&G.year>baseEnd){const id=one(['lake_mermaid','lake_hook','lake_blade','lake_shield']),e_=D.enemies[id];return {type:'fight',enemy:id,enc:{label:'외곽 호수의 '+e_.n}}}
       const e=encounter(G.ch,f);return {type:'fight',enemy:e.id,enc:e};
@@ -2319,6 +2319,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(go||!st.escape)lakeIntroFor(G,st.boss);
     if(go||!st.escape){if(st.echo){G.ch.echoFoe=st.boss;return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:true,echo:true,label:lakeOn(G.ch)?'호수 밑의 불순물':'균열 너머의 불순물'}}}(G.met=G.met||[]).push(st.boss);return {type:'fight',enemy:st.boss,enc:{hidden:true,rift:!!st.rift,label:st.rift?(lakeOn(G.ch)?'호수 밑의 운명':'균열 너머의 운명'):T.hiddenBoss}}}
     if(lakeOn(G.ch)&&G.infinite){const id=one(['lake_mermaid','lake_hook','lake_blade','lake_shield']);return {type:'fight',enemy:id,enc:{id,label:'외곽 호수의 '+D.enemies[id].n},avoided:st.boss}}
+    if(st.refuse){G.ch.refused=G.ch.refused||{};G.ch.refused[st.boss]=1}   // 한 번 거절한 보스는 다음에 돌아설 수 없다
     const e=encounter(G.ch,st.spec);return {type:'fight',enemy:e.id,enc:e,avoided:st.boss};
   }
   /* 고를 수 있는 선택지 (조건이 맞지 않는 선택지는 빠진다). i는 원래 번호 */
@@ -2585,7 +2586,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');
       /* 새 시리즈를 모두 이기면 종말의 예언 */
       {const MG=CFG.mgirl;if(MG.ids.includes(C.id)&&!ch.flags[MG.flag]&&MG.ids.every(id=>ch.minis.includes(id))){ch.flags[MG.flag]=1;ch.nihilAt=(G.year||0)+MG.gap}}
-      const AP=CFG.apoc;if(AP.birds.includes(C.id)&&!ch.flags[AP.flag]&&AP.birds.every(id=>ch.minis.includes(id))){ch.flags[AP.flag]=1;(ch.relics=ch.relics||[]).push('종말의 예언');chips.push('종말의 예언 · 검은 숲 깊은 곳에서 무언가 눈을 뜬다')}
+      const AP=CFG.apoc;if(AP.birds.includes(C.id)&&!ch.flags[AP.flag]&&AP.birds.every(id=>ch.minis.includes(id))){ch.flags[AP.flag]=1;(ch.relics=ch.relics||[]).push('종말의 예언');chips.push('종말의 예언 · 검은 숲 깊은 곳에서 무언가 눈을 뜬다 · 아직 그 앞에 설 때가 아니다')}
     }
     /* 전투 승리 후 등록: 소속이 없거나 사무소 소속일 때만, 소문 판정(1d100 + 해결사 진로 보정 ≥ winLicenseDc) */
     if(!ch.licensed){
