@@ -673,15 +673,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const A_=WS.aug,g=w.g,KD=CFG.custKinds[w.kind]||CFG.custKinds.aug,fx=Object.assign({},w.kind&&w.kind!=='aug'?(A_.baseKind[w.kind]||KD.fx):A_.base),pk=g.picks||[];
     for(const [x,v] of Object.entries(A_.normalKind[w.kind||'aug']||A_.normal))fx[x]=(fx[x]||0)+Math.floor((g.n||0)*v+1e-9);fx.hit=(fx.hit||0)+(g.n||0)*(A_.normal.hit||0)+(g.h||0)*(A_.hidden.hit||0);fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);fx.atk=(fx.atk||0)+(g.h||0)*(A_.hidden.atk||0);
     const kind=w.kind||'aug',kwm={};pk.forEach((x,i)=>{if(A_.pickAmt[x])fx[x]=(fx[x]||0)+A_.pickAmt[x];else if(kind==='aug'&&A_.kwList.includes(x))kwm[x]=(kwm[x]||0)+A_.kwAmt[Math.min(i,A_.kwAmt.length-1)]});
-    if(kind!=='aug'&&A_.bigKind[kind])for(const i of tiers(g.n||0))for(const [x,v] of Object.entries(A_.bigKind[kind][i]||{}))fx[x]=(fx[x]||0)+v;
-    for(let i=1;i<=Math.floor((g.h||0)/A_.kwHidden);i++){const P_=A_.hiddenKwPool,k=P_[Math.abs(((ch.seed|0)*31+i*7919)%P_.length)];kwm[k]=(kwm[k]||0)+1}
-    const stKw=kind==='staff'?(w.staffKw||'bleed'):null,kwCap=stKw?[stKw,g.n||0]:null;
+    if(kind!=='aug'&&kind!=='staff'&&A_.bigKind[kind])for(const i of tiers(g.n||0))for(const [x,v] of Object.entries(A_.bigKind[kind][i]||{}))fx[x]=(fx[x]||0)+v;
+    const stKw=kind==='staff'?(w.staffKw||'bleed'):null;
+    /* 지팡이는 키워드를 스스로 정해 받는다: 특수 강화(5·10·15단계)마다 kwAmt, 히든 kwHidden번마다 +1이 모두 집중 키워드로 간다 */
+    if(stKw){for(const i of tiers(g.n||0))kwm[stKw]=(kwm[stKw]||0)+A_.kwAmt[Math.min(i,A_.kwAmt.length-1)];kwm[stKw]=(kwm[stKw]||0)+Math.floor((g.h||0)/A_.kwHidden)}
+    else for(let i=1;i<=Math.floor((g.h||0)/A_.kwHidden);i++){const P_=A_.hiddenKwPool,k=P_[Math.abs(((ch.seed|0)*31+i*7919)%P_.length)];kwm[k]=(kwm[k]||0)+1}
     const kw=Object.entries(kwm);
     if(g.pick)fx[g.pick]=(fx[g.pick]||0)+A_.pick;
     const cu=w.cust&&w.cust.done?w.cust:null;
     if(cu){if(cu.atk)fx.atk=(fx.atk||0)+cu.atk*WS.cust.atkPer;if(cu.eva)fx.eva=(fx.eva||0)+cu.eva;if(cu.hp)fx.maxHp=(fx.maxHp||0)+cu.hp*WS.cust.hpPer}
     const LB={spd:'속도',maxHp:'최대 HP',check:'판정',dmgB:'피해',regen:'라운드마다 HP',over:'넘친 명중'};
-    return {id:'ws_aug',slot,kind:KD.n,n:nmOf(w.kind&&w.kind!=='aug'?'공방 '+KD.n:A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>x==='dr'?`받는 피해 −${v}%`:`${A_.stats[x]||LB[x]||x}+${v}`).join(' · ')+kw.map(([k,v])=>` · 적중 시 ${D.keywords[k].n} +${v}`).join('')+(kwCap?` · ${D.keywords[kwCap[0]].n} 최대치 +${kwCap[1]}`:'')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${kind==='aug'?(pk.length?` · 선택 ${pk.length}/${B_.at.length}`:'')+(g.pend?` · 고를 수 있는 선택 ${g.pend}`:''):(tiers(g.n||0).length?` · 특수 강화 ${tiers(g.n||0).length}/${B_.at.length}`:'')}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx,kw,kwCap,rev:2}
+    return {id:'ws_aug',slot,kind:KD.n,n:nmOf(w.kind&&w.kind!=='aug'?'공방 '+KD.n:A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>x==='dr'?`받는 피해 −${v}%`:`${A_.stats[x]||LB[x]||x}+${v}`).join(' · ')+kw.map(([k,v])=>` · 적중 시 ${D.keywords[k].n} +${v}`).join('')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${kind==='aug'?(pk.length?` · 선택 ${pk.length}/${B_.at.length}`:'')+(g.pend?` · 고를 수 있는 선택 ${g.pend}`:''):(tiers(g.n||0).length?` · 특수 강화 ${tiers(g.n||0).length}/${B_.at.length}`:'')}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx,kw,rev:2}
   }
   /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
   function wsOpen(ch,chips){
@@ -728,7 +730,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!ch.ws||!isWs(ch)||!CFG.custKinds[k]||(ch.ws.kind||'aug')===k||(ch.distForm&&!ch.distStable))return null;
     ch.ws.kind=k;const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return CFG.custKinds[k];
   }
-  /* 지팡이의 집중 키워드: 출혈·파열·화상 중 하나. 일반 강화마다 이 키워드의 쌓임 상한이 1씩 오른다 */
+  /* 지팡이의 집중 키워드: 출혈·파열·화상 중 하나. 특수 강화(5·10·15단계)와 히든 4번마다 이 키워드를 적중마다 더 건다 */
   function wsSetStaffKw(ch,k){
     if(!ch.ws||!isWs(ch)||(ch.ws.kind||'aug')!=='staff'||!WS.aug.kwList.includes(k)||(ch.ws.staffKw||'bleed')===k)return null;
     ch.ws.staffKw=k;const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return D.keywords[k];
