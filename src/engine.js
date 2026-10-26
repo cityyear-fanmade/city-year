@@ -167,7 +167,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
     if(o.weapon==='star'){equip(ch,starItem(0,''));ch.starPick=true}
-    if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e}}
+    if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e;if(o.rb)routeWeaponUp(ch,'rb',0)}}
     /* E.G.O 적성자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;egoDeck(ch,g.id,0,true);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);if(o.startRank)ch.rank=o.startRank;ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
@@ -181,6 +181,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.rb.chasers=['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==team).map(t=>Z.foes[t]));
     ch.relics=(ch.relics||[]).map(r=>r==='R사 부화장 · '+old+' 개체'?'R사 부화장 · '+team+' 개체':r);
     addStats(ch.stats,B);if(B.maxHp)ch.hp+=B.maxHp;if(B.spd!=null)ch.spd0=ch.stats.spd;
+    {const w=ch.gear.weapon&&ch.gear.weapon.id==='w_clone'?ch.gear.weapon:(ch.stash||[]).find(x=>x.id==='w_clone');if(w)routeWeaponUp(ch,'rb',w.lvl|0)}
     return true;
   }
   /* 유물 적성자: 출생 때 고른 유물 지급 */
@@ -1794,7 +1795,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 루트 전용 무기 강화: kind rb|hw, key = 단계 인덱스 또는 'host'|'free'. 끼고 있거나 보관함에 있는 같은 id의 무기를 새 단계로 바꾼다 */
   function routeWeaponUp(ch,kind,key,chips){
-    const W=CFG.routeWeapon[kind],g=W[key]||W.lv[key];if(!g)return;
+    const W=CFG.routeWeapon[kind];let g=W[key]||W.lv[key];if(!g)return;
+    {const tv=kind==='rb'&&typeof key==='number'&&ch.rteam&&W.team&&W.team[ch.rteam]&&W.team[ch.rteam][key];if(tv)g=Object.assign({},g,tv)}
     const it={id:W.id,slot:'weapon',grade:5,lvl:typeof key==='number'?key:9,n:g.n,e:g.e,fx:Object.assign({},g.fx),wx:Object.assign({dice:g.dice},g.wx||{})};
     const old=ch.gear.weapon&&ch.gear.weapon.id===W.id?ch.gear.weapon:null;
     if(old){equip(ch,carryTune(old,it));ch.stash=(ch.stash||[]).filter(x=>x!==old)}
