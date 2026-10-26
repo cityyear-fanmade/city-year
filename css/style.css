@@ -663,3 +663,16 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .hfx .note{position:absolute;left:var(--x);top:var(--y);margin:-13px 0 0 -8px;font:700 26px/1 serif;color:#fff;text-decoration:none;opacity:0;transform-origin:center;animation:hNote .24s ease-out .1s forwards;rotate:var(--r)}
 .hfx .note.blk{color:#05060a;translate:4px 3px}
 @keyframes hNote{0%{transform:scale(.2) translateY(8px);opacity:0}30%{transform:scale(1.15) translateY(-6px);opacity:1}60%{transform:scale(1) translateY(-8px);opacity:1}75%{transform:scale(1.05) translateY(-9px);opacity:0}100%{opacity:0}}
+
+/* 신규 시안 2차: 큰 영역, 가시 폭발, 방벽, 눈알 점 */
+.hfx .edot{position:absolute;width:8px;height:8px;margin:-4px;border-radius:50%;background:#fff;box-shadow:0 0 5px #fff;left:var(--x0);top:var(--y0);opacity:0;animation:hEdot .44s ease-in var(--d,0ms) forwards}
+.hfx .edot::after{content:'';position:absolute;left:50%;top:50%;width:35%;height:45%;margin:-22% -17%;border-radius:50%;background:#a3162a}
+@keyframes hEdot{0%{left:var(--x0);top:var(--y0);opacity:0}12%{opacity:1}33%{left:var(--x1);top:var(--y1)}66%{left:var(--x2);top:var(--y2);opacity:1}100%{left:var(--x3);top:var(--y3);opacity:0}}
+.hfx.big{margin-top:-64px;height:128px;clip-path:inset(-8px -6px -8px -6px)}
+.hfx .burst{position:absolute;inset:0;width:100%;height:100%;overflow:visible;transform-origin:50% 50%;opacity:0;animation:hBurst .36s steps(8,end) var(--d,.08s) forwards}
+@keyframes hBurst{0%{transform:scale(.2);opacity:1}35%{transform:scale(1);opacity:1}100%{transform:scale(1.2);opacity:0}}
+.hfx .disc{position:absolute;left:50%;top:50%;width:200px;height:116px;margin:-58px -100px;border-radius:50%;background:radial-gradient(ellipse,var(--c) 0,transparent 70%);opacity:0;animation:hDisc .4s ease-out .06s forwards}
+@keyframes hDisc{0%{opacity:.9}100%{opacity:0}}
+.hfx .shield{position:absolute;left:50%;top:50%;width:150px;height:108px;margin:-54px -75px;border:6px solid #c084fc;border-radius:50%;background:radial-gradient(ellipse,rgba(124,58,237,.35),transparent 70%);box-shadow:0 0 0 2px #26104a,inset 0 0 0 3px #26104a;opacity:0;transform:scale(.3);animation:hShield .42s steps(7,end) forwards}
+.hfx .shield.in{width:100px;height:70px;margin:-35px -50px;border-width:3px;animation-delay:.06s}
+@keyframes hShield{0%{transform:scale(.3);opacity:1}45%{transform:scale(1);opacity:1}100%{transform:scale(1.15);opacity:0}}
