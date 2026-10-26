@@ -728,3 +728,20 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 
 .hfx .aura{position:absolute;top:58%;width:var(--w);height:var(--h);margin-left:calc(var(--w) / -2);border-radius:50% 50% 45% 45% / 70% 70% 30% 30%;background:linear-gradient(0deg,rgba(124,58,237,.85),rgba(192,132,252,.55) 55%,transparent);filter:blur(1.5px);transform-origin:50% 100%;transform:translateY(0) scaleY(.2);opacity:0;animation:hAura .62s ease-out var(--d) forwards}
 @keyframes hAura{0%{transform:translateY(0) scaleY(.2);opacity:0}25%{opacity:.95;transform:translateY(-10px) scaleY(1)}100%{transform:translateY(-52px) scaleY(1.25) skewX(8deg);opacity:0}}
+
+/* 나머지 6종 */
+@keyframes hScvDn{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.hfx .plus{position:absolute;left:50%;top:50%;width:var(--z);height:var(--z);margin:calc(var(--z) / -2);background:linear-gradient(var(--c),var(--c)) center/100% 30% no-repeat,linear-gradient(var(--c),var(--c)) center/30% 100% no-repeat;opacity:0;animation:hPlus .62s steps(12,end) var(--d) forwards}
+@keyframes hPlus{0%{translate:0 0;scale:.3;opacity:0}20%{translate:var(--dx) var(--dy);scale:1.2;opacity:1}45%{translate:var(--dx) var(--dy);scale:1;opacity:1}100%{translate:var(--dx) calc(var(--dy) + 62px);scale:.8;opacity:0}}
+.hfx .sw.thr{animation-name:hThread;animation-duration:.5s}
+.hfx .sw.thr i{clip-path:none}
+@keyframes hThread{0%{transform:rotate(var(--a)) translateX(var(--r0)) scaleX(.1);opacity:1}35%{transform:rotate(var(--a)) translateX(var(--r1)) scaleX(1);opacity:1}72%{transform:rotate(var(--a)) translateX(var(--r2)) scaleX(1.15);opacity:1}85%{transform:rotate(var(--a)) translateX(var(--r2)) scaleX(1.15);opacity:1}100%{transform:rotate(var(--a)) translateX(var(--r2)) scaleX(.04);opacity:0}}
+.hfx .spk.drip{width:8px;height:8px;animation-name:hDrip;animation-duration:.55s;animation-timing-function:ease-in}
+@keyframes hDrip{0%{translate:0 0;scale:1;opacity:0}15%{opacity:.95}100%{translate:0 var(--fall);scale:.8 2.2;opacity:0}}
+.hfx .lance{position:absolute;left:0;top:50%;width:100%;height:30px;margin-top:-15px;background:linear-gradient(90deg,transparent,#8e1224 18%,#c81e32 58%,#ff4a5e 90%);clip-path:polygon(0 38%,90% 0,100% 50%,90% 100%,0 62%);transform:scaleX(0);transform-origin:var(--o,left) center;animation:hThrust .24s ease-out forwards}
+.hfx .spiral{position:absolute;left:50%;top:50%;width:130px;height:130px;margin:-65px;overflow:visible;opacity:0;transform:scale(.3) rotate(0);animation:hSpiral .5s ease-out .12s forwards}
+@keyframes hSpiral{0%{transform:scale(.3) rotate(0);opacity:1}45%{transform:scale(1) rotate(130deg);opacity:1}100%{transform:scale(1.6) rotate(260deg);opacity:0}}
+.hfx .brand{position:absolute;left:50%;top:50%;width:60px;height:76px;margin:-38px -30px;background:linear-gradient(#fff2b0,#fff2b0) center/20% 100% no-repeat,linear-gradient(#fff2b0,#fff2b0) 50% 34%/100% 15% no-repeat;filter:drop-shadow(0 0 7px #ff8a2a);opacity:0;animation:hBrand .42s ease-out .1s forwards}
+@keyframes hBrand{0%{transform:scale(.3);opacity:0}22%{transform:scale(1.15);opacity:1}48%{transform:scale(1);opacity:1;filter:drop-shadow(0 0 6px #ff6a1a) brightness(.8)}100%{transform:scale(1);opacity:0;filter:brightness(.08)}}
+.hfx .bdrop{position:absolute;left:var(--x0);top:var(--y0);border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;background:radial-gradient(circle at 35% 30%,#ff7a8a,#c81e32 55%,#6a0a18);opacity:0;animation:hBdrop .46s ease-in var(--d) forwards}
+@keyframes hBdrop{0%{left:var(--x0);top:var(--y0);opacity:0;transform:scale(.6)}15%{opacity:1}60%{left:var(--tx);top:var(--ty);transform:scale(1.1);opacity:1}82%{left:var(--tx);top:var(--ty);transform:scale(2.2);opacity:1}100%{left:var(--tx);top:var(--ty);transform:scale(2.8);opacity:0}}
