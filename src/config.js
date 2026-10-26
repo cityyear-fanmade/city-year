@@ -312,8 +312,10 @@ export const CFG = {
     weapon: {n: '작업대의 칼날', base: {atk: 2, spd: 1}, dice: [1, 6], normal: {atk: 2}, hidden: {dmgB: 3, atk: 2}},
     /* 방어구의 받는 피해 감소는 drMax%까지만 (전체 합계 상한 drCap 70% 안에서 다른 감소량이 밀려나지 않게). 체력·회피·재생은 상한 없이 계속 오른다 */
     armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 4}, hidden: {dr: 3, eva: 3, maxHp: 4}, drMax: 30},
-    /* 의수: 일반 강화 한 단계마다 명중 +1, 5·10·15단계마다 공격·회피·명중 중 하나를 골라 올린다 (pickAmt). pick은 예전 저장의 히든 의수 개조 값 */
-    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {hit: 1}, hidden: {hit: 2}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'}},
+    /* 의수: 일반 강화 한 단계마다 속도 +1(히든은 명중 +2), 5·10·15단계마다 출혈·파열·화상 중 하나를 골라 적중마다 거는 키워드로 더한다 (kwAmt). pick은 예전 저장의 히든 의수 개조 값 */
+    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {spd: 1}, hidden: {hit: 2}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'},
+      /* 특수 강화(5·10·15단계): 키워드 하나를 골라 적중마다 상대에게 건다. 몇 번째 선택이냐에 따라 kwAmt[순번]만큼 (같은 키워드를 거듭 골라도 된다). 예전 저장의 공격·회피·명중 선택은 그대로 남는다 */
+      kwList: ['bleed', 'rupture', 'burn'], kwAmt: [1, 1, 2]},
     /* 커스텀 의수: 공방 해결사가 한 번 포인트(pts)를 나눠 만든다. 공격은 atkCost 포인트에 +atkPer, 회피는 evaCost 포인트에 +1, 체력은 hpCost 포인트에 +hpPer, 패시브 하나는 passCost 포인트 */
     cust: {pts: 35, atkCost: 3, atkPer: 2, evaCost: 3, hpCost: 2, hpPer: 5, passCost: 5,
       pass: {react: {n: '반응 회로', e: '전투 시작 후 2라운드 동안 회피 +10'}, absorb: {n: '흡수 코어', e: '라운드마다 HP +3'}, over: {n: '과부하 코어', e: '라운드 첫 공격 피해 +4'}}},

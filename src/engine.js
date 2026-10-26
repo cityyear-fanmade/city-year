@@ -666,12 +666,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(slot==='armor'){const C_=WS.armor,bf=bigFx('armor',k.n),hp=C_.base.maxHp+k.n*C_.normal.maxHp+(bf.maxHp||0)+k.h*(C_.hidden.maxHp||0),rg=bf.regen||0,dr=Math.min(C_.drMax,k.h*C_.hidden.dr+(bf.dr||0)),eva=k.h*C_.hidden.eva,bg=tiers(k.n).length;
       return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%${dr>=C_.drMax?' (최대)':''}`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
     const A_=WS.aug,g=w.g,fx=Object.assign({},A_.base),pk=g.picks||[];
-    fx.hit=(fx.hit||0)+(g.n||0)*A_.normal.hit+(g.h||0)*A_.hidden.hit;fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);
-    for(const x of pk)fx[x]=(fx[x]||0)+A_.pickAmt[x];
+    fx.spd=(fx.spd||0)+(g.n||0)*(A_.normal.spd||0);fx.hit=(fx.hit||0)+(g.n||0)*(A_.normal.hit||0)+(g.h||0)*(A_.hidden.hit||0);fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);
+    const kwm={};pk.forEach((x,i)=>{if(A_.pickAmt[x])fx[x]=(fx[x]||0)+A_.pickAmt[x];else if(A_.kwList.includes(x))kwm[x]=(kwm[x]||0)+A_.kwAmt[Math.min(i,A_.kwAmt.length-1)]});
+    const kw=Object.entries(kwm);
     if(g.pick)fx[g.pick]=(fx[g.pick]||0)+A_.pick;
     const cu=w.cust&&w.cust.done?w.cust:null;
     if(cu){if(cu.atk)fx.atk=(fx.atk||0)+cu.atk*WS.cust.atkPer;if(cu.eva)fx.eva=(fx.eva||0)+cu.eva;if(cu.hp)fx.maxHp=(fx.maxHp||0)+cu.hp*WS.cust.hpPer}
-    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>`${A_.stats[x]||(x==='spd'?'속도':x==='maxHp'?'최대 HP':x)}+${v}`).join(' · ')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${pk.length?` · 선택 ${pk.length}/${B_.at.length}`:''}${g.pend?` · 고를 수 있는 선택 ${g.pend}`:''}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx}
+    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>`${A_.stats[x]||(x==='spd'?'속도':x==='maxHp'?'최대 HP':x)}+${v}`).join(' · ')+kw.map(([k,v])=>` · 적중 시 ${D.keywords[k].n} +${v}`).join('')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${pk.length?` · 선택 ${pk.length}/${B_.at.length}`:''}${g.pend?` · 고를 수 있는 선택 ${g.pend}`:''}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx,kw,rev:2}
   }
   /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
   function wsOpen(ch,chips){
@@ -694,6 +695,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!ch.ws.g||!('pick' in ch.ws.g)){ch.ws.g={pick:null};}
     {const g=ch.ws.g;g.n=g.n||0;g.p=g.p||0;g.h=g.h||0;g.picks=g.picks||[];g.pend=g.pend||0}
     for(const sl of ['weapon','armor','aug'])if(!ch.gear[sl]||ch.gear[sl].id!=='ws_'+sl)equip(ch,wsItem(ch,sl));
+    /* 의수 개편 전 저장: 장착 중인 의수를 새 규칙(속도·키워드)으로 다시 만든다 */
+    {const a=ch.gear.aug;if(a&&a.id==='ws_aug'&&a.rev!==2){equip(ch,carryTune(a,wsItem(ch,'aug')));ch.stash=(ch.stash||[]).filter(x=>x!==a)}}
   }
   /* 의수는 히든 의수 하나로 한 번만 개조한다: 공격·회피·명중 중 하나를 올린다 */
   const wsAugOk=(ch,m)=>false;
@@ -712,8 +715,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 의수 선택: 5·10·15단계에 닿으면 공격·회피·명중 중 하나를 고른다 */
   function wsAugChoose(ch,stat){
-    const g=ch.ws&&ch.ws.g;if(!g||!isWs(ch)||!(g.pend>0)||!WS.aug.pickAmt[stat]||(ch.distForm&&!ch.distStable))return null;
-    g.pend--;(g.picks=g.picks||[]).push(stat);const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return {stat,amt:WS.aug.pickAmt[stat]};
+    const g=ch.ws&&ch.ws.g;if(!g||!isWs(ch)||!(g.pend>0)||!WS.aug.kwList.includes(stat)||(ch.distForm&&!ch.distStable))return null;
+    const amt=WS.aug.kwAmt[Math.min((g.picks||[]).length,WS.aug.kwAmt.length-1)];
+    g.pend--;(g.picks=g.picks||[]).push(stat);const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return {stat,amt,kw:true};
   }
   /* 보관함 장비 하나를 녹여 장착 중인 전용 무기·방어구를 강화한다. 무기는 무기, 방어구는 방어구만 재료가 된다 */
   function wsMelt(ch,slot,i){
