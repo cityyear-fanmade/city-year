@@ -154,12 +154,24 @@ export function startUI(E,app){
     const k=m==='thrust'?'pierce':m==='ring'?'blunt':'slash';
     return k+(big||crit?'_h':'');
   }
+  /* 히든 무기 전용 이펙트: 무기 id로 연결한다 (시험실 시안 = fxv). 없으면 기존 일반 모션 */
+  const WFXM={w_whiteclaw:'n_claw',job_claw:'n_claw',w_baralclaw:'n_claw',w_mimicry:'n_mist',w_mimicry_p:'n_mist',w_sealfairy:'n_fairy_g',job_fairy:'n_fairy_g',w_zenafairy:'n_fairy_b',w_bookmark:'n_book',w_forbidden_book:'n_book',w_perfectpitch:'n_pitch',w_twilight:'n_twilight',cheontoe:'n_geom1',dongbu:'n_geom2',w_prescript:'n_finger',w_middlechain:'n_chain',w_ssangsu:'n_ssang',w_godfather:'n_gun',w_indigo:'n_gung',gungnir:'n_gung2',w_dacapo:'n_dacapo',w_ledgerblade:'n_grudge',w_baton:'n_baton',arayashiki:'n_araya',w_redlance:'n_lance',w_scarlet_cross:'n_cross',w_kas_needle:'n_needle',ego_beak:'n_beak',ego_redeyes:'n_redeye',ego_universe:'n_cosmos',ego_regret:'n_regret'};
+  const VFORM={a:'n_vi_slash',d:'n_vi_guard',p:'n_vi_pierce',s:'n_vi_snake'},LAEV={laev_sealed:0,laev_s1:1,laev_s2:2,laev:3};
+  function weaponFx(wid,e,isP){
+    if(!wid)return (isP&&C&&C.ch&&C.ch.hwando)?'n_rune':'';
+    if(WFXM[wid])return WFXM[wid];
+    if(wid in LAEV)return 'n_lev'+LAEV[wid];
+    const w=/^w_d(blade|scythe|gaunt)([1-5])$/.exec(wid);if(w)return 'n_warp'+w[2];
+    if(wid==='w_violet_dagger')return VFORM[(C&&C.P&&C.P.form)||'a']||'n_vi_slash';
+    if(wid==='w_blacksilence'){if(e.card&&(e.card.id==='x_furioso'||/Furioso/i.test(e.card.n||'')))return 'n_bsF';const m=/장갑 1d9 (\d)/.exec(e.note||'');return m?'n_bs'+m[1]:'n_bs0'}
+    return '';
+  }
   function hitFx(e){
     const lv=HFX_N[HFX]||0;if(!lv||MODE==='off'||SKIP||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
     const box=$('ent-'+e.def);if(!box)return;
     let col='#cfe6ff',best=0;const sn=e.snap&&e.snap[e.def],pv=PREV[e.def];
     if(sn&&pv)for(const k of Object.keys(D.keywords)){const dl=(sn[k]||0)-(pv[k]||0);if(dl>best){best=dl;col=kwc(k)}}
-    const crit=/치명/.test(e.note||'');const edg0=e.att!=='P'&&C&&D.enemies[C.id]&&D.enemies[C.id].drop&&D.enemies[C.id].drop.gear,hid=!!e.fxv||/^(w_|laev|gungnir|job_claw|cheontoe|dongbu|arayashiki)/.test(e.att==='P'?((C&&C.ch&&C.ch.gear&&C.ch.gear.weapon&&C.ch.gear.weapon.id)||''):((Array.isArray(edg0)?edg0:[edg0]).filter(g=>g&&g.slot==='weapon').map(g=>g.id)[0]||''));if(crit&&!hid)col='#ffd35a';
+    const crit=/치명/.test(e.note||'');const edg0=e.att!=='P'&&C&&D.enemies[C.id]&&D.enemies[C.id].drop&&D.enemies[C.id].drop.gear,hid=!!e.fxv||/^(w_|laev|gungnir|job_claw|cheontoe|dongbu|arayashiki|ego_)/.test(e.att==='P'?((C&&C.ch&&C.ch.gear&&C.ch.gear.weapon&&C.ch.gear.weapon.id)||''):((Array.isArray(edg0)?edg0:[edg0]).filter(g=>g&&g.slot==='weapon').map(g=>g.id)[0]||''));if(crit&&!hid)col='#ffd35a';
     const big=crit||!!e.fxv||e.dmg>=(C[e.def].maxHp||100)*0.15;
     /* '마지막만 크게': 타수 3 이상인 카드는 앞의 타격은 작은 파편만, 마지막 타격에 베기와 큰 효과가 몰린다 */
     const multi=HFXM==='last'&&e._g&&e._g.n>=3,lastHit=!multi||e._g.i===e._g.n-1,bigFx=big||(multi&&lastHit);
@@ -176,7 +188,7 @@ export function startUI(E,app){
     /* 전용 모션: 기믹 무기는 무기마다 따로 그린다 (레바테인=해방 단계별, 발톱=흰 발톱자국, 미미크리=눈, 다 카포·궁니르=떨림, 검은 침묵의 장갑=나온 무기 번호별) */
     const gw=e.att==='P'&&C&&C.ch&&C.ch.gear&&C.ch.gear.weapon?C.ch.gear.weapon:null,wid=gw?gw.id:'',gl=/장갑 1d9 (\d)/.exec(e.note||'');
     const LST={laev_sealed:0,laev_s1:1,laev_s2:2,laev:3};
-    const sp=e.fxv||(gl?'gl'+gl[1]:(wid==='job_claw'||/하얀 발톱/.test(wn))?'tclaw':wid in LST?'lv'+LST[wid]:/미미크리/.test(wn)?'eye':/다 카포/.test(wn)?'tremor':(wid==='gungnir'||/절대음감/.test(wn))?'reson':'');
+    const gwid=e.att==='P'?wid:((Array.isArray(edg)?edg:[edg]).filter(g=>g&&g.slot==='weapon').map(g=>g.id)[0]||''),sp=e.fxv||weaponFx(gwid,e,e.att==='P')||(gl?'gl'+gl[1]:(wid==='job_claw'||/하얀 발톱/.test(wn))?'tclaw':wid in LST?'lv'+LST[wid]:/미미크리/.test(wn)?'eye':/다 카포/.test(wn)?'tremor':(wid==='gungnir'||/절대음감/.test(wn))?'reson':'');
     const NR=(a,b)=>a+Math.random()*(b-a),NSP=(c,d,a,r,cls='',ex='')=>`<b class="spk${cls}" style="--c:${c};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)}px;--d:${d}ms;${ex}"></b>`;
     const PSX=pose==='|'?.42:1,PFY=pose==='\\'||(pose==='|'&&HFXFLIP)?-1:1;
     const RB=(P,W,c,o,N=22)=>{const B=(t,i)=>{const u=1-t;return u*u*u*P[0][i]+3*u*u*t*P[1][i]+3*u*t*t*P[2][i]+t*t*t*P[3][i]},Lf=[],Rt=[];for(let k=0;k<=N;k++){const t=k/N,x=B(t,0),y=B(t,1),dx=B(Math.min(1,t+.01),0)-B(Math.max(0,t-.01),0),dy=B(Math.min(1,t+.01),1)-B(Math.max(0,t-.01),1),m=Math.hypot(dx,dy)||1,w=W*Math.pow(Math.sin(Math.PI*t),.7)*(1+(Math.random()*2-1)*.16);Lf.push(`${(x-dy/m*w).toFixed(1)} ${(y+dx/m*w).toFixed(1)}`);Rt.push(`${(x+dy/m*w).toFixed(1)} ${(y-dx/m*w).toFixed(1)}`)}return `<path d="M${Lf.join('L')}L${Rt.reverse().join('L')}Z" style="fill:${c};stroke:none;opacity:${o}"/>`},
@@ -262,7 +274,7 @@ export function startUI(E,app){
     }
     if(lv>=3&&lastHit)h+=`<i class="hflash" style="--c:${col}"></i>`;
     for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=26+Math.random()*(big?70:46);h+=`<b class="spk${sp==='eye'?' drop':''}" style="--c:${col};--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)+(sp==='eye'?26:0)}px;--d:${Math.round(Math.random()*90)}ms"></b>`}
-    const fx=document.createElement('div');fx.className='hfx'+(/^n_(?!dacapo)/.test(sp)?' big':'');fx.innerHTML=h;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
+    const fx=document.createElement('div');fx.className='hfx'+(/^n_(?!dacapo)/.test(sp)?' big':'');fx.innerHTML=h;if(gw&&/^ego_/.test(wid)&&typeof gw.egoLv==='number')fx.style.transform=`scale(${[.65,.8,.95,1.15][Math.min(3,gw.egoLv)]})`;box.appendChild(fx);setTimeout(()=>fx.remove(),800);
     if(crit&&lv>=2)floatTxt(e.def,'치명!','#ffd35a','crit');
     if(crit&&hid&&lv>=2){box.classList.remove('cjit');void box.offsetWidth;box.classList.add('cjit');setTimeout(()=>box.classList.remove('cjit'),420)}
     if(lastHit&&(lv>=2&&bigFx||lv>=3)){const hs=bigFx&&lv>=2?90:0;/* 역경직: 큰 타격은 잠깐 멈칫(밝아졌다 굳음)한 뒤 흔들린다 */if(hs){box.classList.add('hstop');setTimeout(()=>box.classList.remove('hstop'),hs)}setTimeout(()=>{const w=document.querySelector('.wrap');if(w){w.classList.remove('shk','shk2');void w.offsetWidth;w.classList.add(lv>=3&&bigFx?'shk2':'shk');setTimeout(()=>w.classList.remove('shk','shk2'),320)}},hs)}
@@ -2725,7 +2737,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 자동 테스트용 상태 조회 */
   return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff}),
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
-    testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testBgmStage:n=>BGM.setStage(n),testInfNote:y=>{if(G)G.year=y||300;showInfNote(G?infNote():D.infinite.notes[2][3])},testBgmPos:()=>BGM.pos(),testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
+    testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testBgmStage:n=>BGM.setStage(n),testWfx:(id,form,note)=>{const sv=C;C={P:{form},ch:{}};const r=weaponFx(id,{note:note||'장갑 1d9 3'},true);C=sv;return r},testInfNote:y=>{if(G)G.year=y||300;showInfNote(G?infNote():D.infinite.notes[2][3])},testBgmPos:()=>BGM.pos(),testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
     testShareLink:()=>shareLinkAsync(),testShareLinkOld:()=>shareLink(),
     testDistort(){if(!G)return;UI.ev=D.mindEvents.distort;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
