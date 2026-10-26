@@ -751,3 +751,13 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .hfx .numtag{position:absolute;left:50%;top:50%;margin:-22px -14px;font:900 44px/1 'IBM Plex Mono',monospace;color:#f4f4f6;-webkit-text-stroke:2px #05060a;opacity:0;text-decoration:none;animation:hNum .3s ease-out .11s forwards}
 .hfx .numtag.blk{color:#05060a;translate:3px 3px}
 @keyframes hNum{0%{transform:scale(.3);opacity:0}22%{transform:scale(1.2);opacity:1}55%{transform:scale(1);opacity:1}100%{transform:scale(1.25);opacity:0;filter:blur(2px)}}
+
+/* E.G.O 4종 */
+.hfx .paper.feather{height:calc(var(--w) * 2.3);clip-path:polygon(50% 0,100% 40%,62% 100%,38% 100%,0 40%);border:0;box-shadow:none}
+.hfx .web{position:absolute;left:50%;top:50%;width:120px;height:120px;margin:-60px;overflow:visible;opacity:0;transform:scale(.3);animation:hWeb .52s steps(8,end) .12s forwards}
+.hfx .web path{fill:none;stroke:#e02a40;stroke-width:1.6;stroke-linecap:round}
+@keyframes hWeb{0%{transform:scale(.3);opacity:1}40%{transform:scale(1);opacity:1}62%{transform:scale(1.05);opacity:1}100%{transform:scale(1.35);opacity:0}}
+.hfx .star{position:absolute;left:50%;top:50%;width:var(--z);height:var(--z);margin:calc(var(--z) / -2);background:#fff;clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);opacity:0;animation:hStar2 .6s ease-out var(--d) forwards}
+@keyframes hStar2{0%{translate:0 0;scale:.2;opacity:1}30%{translate:calc(var(--dx) * .7) calc(var(--dy) * .7);scale:1.1;opacity:1}55%{opacity:.4}70%{opacity:1}100%{translate:var(--dx) var(--dy);scale:.6;opacity:0}}
+.hfx .chunk{position:absolute;left:50%;top:50%;width:var(--len);height:var(--th);margin-top:calc(var(--th) / -2);background:var(--c);border:1px solid #101014;rotate:var(--a);opacity:0;animation:hChunk .5s ease-in var(--d) forwards}
+@keyframes hChunk{0%{translate:0 0;opacity:1}35%{translate:var(--dx) var(--dy);opacity:1}100%{translate:var(--dx) calc(var(--dy) + 84px);opacity:0}}
