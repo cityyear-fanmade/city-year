@@ -2682,7 +2682,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     let hpNote=null;
     if(P.laev==='open'){P.flame=1}
     /* 공방 해결사의 유물: 공방 무기에 깃든 효과 */
-    if(P.isP&&ch.wsRelic&&isWs(ch)){P.wsRelic=ch.wsRelic;if(ch.wsRelic.laev){P.wsFlame=true;P.burnHit=Math.max(P.burnHit||0,CFG.wsRelic.laev.hit)}if(ch.wsRelic.odin)P.runes=0;if(ch.wsRelic.gungnir)P.gunRes=CFG.wsRelic.gungnir.start}
+    if(P.isP&&ch.wsRelic&&isWs(ch)){P.wsRelic=ch.wsRelic;if(ch.wsRelic.laev){P.wsFlame=true;P.burnHit=Math.max(P.burnHit||0,CFG.wsRelic.laev.hit)}if(ch.wsRelic.odin){P.runes=0;P.eva+=CFG.wsRelic.odin.eva}if(ch.wsRelic.gungnir)P.gunRes=CFG.wsRelic.gungnir.start}
     if(e.hidden&&P.hp<Math.min(CFG.hidden.minHp,P.maxHp)){const t=Math.min(CFG.hidden.minHp,P.maxHp);hpNote=`불길한 예감에 숨을 고른다 · HP ${P.hp} → ${t}`;P.hp=t;ch.hp=t}
     /* 정신력: 환상체와 마주치면 2d3 감소, 그다음 정신력 구간 보정(호흡·회피) */
     let mindNote=hpNote?[hpNote]:[];
