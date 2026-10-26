@@ -596,7 +596,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 공방 해결사: 공방 물건 할인, 보관함 장비 판매 */
   const WF=CFG.workshopFixer;
   const isWs=ch=>!!ch.aff&&ch.aff.type==='workshop';
-  const priceOf=(ch,id)=>{const p=D.items[id].price,up=1+(CFG.ws.priceUp||0)*((ch.ws&&ch.ws.used&&ch.ws.used[id])||0);return Math.round(isWs(ch)?p*(1-WF.discount)*up:p*up)};
+  const priceOf=(ch,id)=>{const p=D.items[id].price;if(!isWs(ch))return Math.round(p);const K=CFG.ws,up=1+(K.priceYearUp||0)*Math.floor((ch.year||0)/(K.priceYearEvery||20));return Math.round(p*(1-WF.discount)*up)};   /* 공방 해결사: 값은 고정이고 priceYearEvery년마다 한 번씩 오른다 */
   const sellValue=it=>it.id==='hidmat'?WF.sellBase*2:(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
   /* 공방 해결사: 장비 판매는 없다. 대신 덱의 카드를 공방에 넘긴다 (덱 고정·전용 카드팩·고정 카드는 팔 수 없고, 덱은 minDeck장 아래로 줄이지 않는다) */
   const cardPrice=id=>WF.cardBase+WF.cardPer*((D.cards[id]&&D.cards[id].c)||0);
