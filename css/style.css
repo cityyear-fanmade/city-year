@@ -688,3 +688,30 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .ent.cjit{animation:hCritJit .4s steps(1,end)}
 @keyframes hCritJit{0%{translate:0 0}12%{translate:-5px 2px}25%{translate:5px -2px}38%{translate:-4px 1px}52%{translate:3px -1px}68%{translate:-2px 0}84%{translate:1px 0}100%{translate:0 0}}
 @media (prefers-reduced-motion:reduce){.ent.cjit{animation:none}}
+
+/* 신규 설계안 3종 묶음 */
+.hfx .paper{position:absolute;left:50%;top:50%;width:var(--w);height:calc(var(--w) * .55);margin:-3px;background:var(--c);border:1px solid var(--k);opacity:0;animation:hPaper .6s ease-in-out var(--d) forwards}
+@keyframes hPaper{0%{translate:0 0;rotate:var(--r0);opacity:1}22%{translate:var(--x1) var(--y1)}46%{translate:var(--x2) var(--y2)}70%{translate:var(--x3) var(--y3);opacity:1}100%{translate:var(--x4) var(--y4);rotate:var(--r1);opacity:0}}
+.hfx .ripple{position:absolute;left:50%;top:50%;width:36px;height:24px;margin:-12px -18px;border:2px solid var(--c);border-radius:50%;opacity:0;animation:hRip .58s ease-out var(--d) forwards}
+@keyframes hRip{0%{transform:scale(.3);opacity:.85}100%{transform:scale(10);opacity:0}}
+.hfx .dia{position:absolute;left:50%;top:50%;width:10px;height:18px;margin:-9px -5px;background:linear-gradient(135deg,#ff8a2a,#14101c 45%);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);opacity:0;animation:hDia .42s ease-out var(--d) forwards}
+@keyframes hDia{0%{translate:0 0;rotate:0deg;opacity:1}100%{translate:var(--dx) var(--dy);rotate:var(--r);opacity:0}}
+.hfx .spk.ash{animation-timing-function:steps(5,end)}
+.hfx .link{position:absolute;left:50%;top:50%;width:14px;height:7px;margin:-3px -7px;border-radius:50%;border:2px solid #20232a;background:var(--k);translate:var(--x) var(--y);rotate:var(--a);opacity:0;animation:hLink .62s ease-out .06s forwards}
+@keyframes hLink{0%{opacity:1;translate:var(--x) calc(var(--y) + var(--s))}28%{translate:var(--x) var(--y);opacity:1}36%{translate:var(--x) var(--y);opacity:1}100%{translate:calc(var(--x) + var(--fx)) calc(var(--y) + var(--fy));rotate:calc(var(--a) + var(--fr));opacity:0}}
+.hfx .muzzle{position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px;background:radial-gradient(circle,#fff 0 24%,#ffe45a 28% 56%,transparent 60%);clip-path:polygon(50% 0,60% 30%,95% 20%,72% 48%,100% 62%,66% 66%,70% 100%,50% 76%,28% 100%,34% 66%,0 62%,28% 48%,5% 20%,40% 30%);opacity:0;animation:hMuz .26s steps(4,end) forwards}
+@keyframes hMuz{0%{transform:scale(.4);opacity:1}60%{transform:scale(1.1);opacity:1}100%{transform:scale(1.3);opacity:0}}
+.hfx .smoke{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);margin:calc(var(--s) / -2);border-radius:50%;background:radial-gradient(circle,rgba(205,205,205,.75),rgba(125,125,125,.38) 60%,transparent 72%);opacity:0;animation:hSmoke .62s ease-out var(--d) forwards}
+@keyframes hSmoke{0%{transform:scale(.3);translate:0 0;opacity:0}15%{opacity:.85}100%{transform:scale(1.3);translate:var(--sx) -34px;opacity:0}}
+.hfx .hbeam{position:absolute;left:-4%;top:50%;width:108%;height:22px;margin-top:-11px;background:linear-gradient(90deg,transparent,#2f7bff 8%,#2f7bff 48%,#fff 50% 60%,#2f7bff 62%,#2f7bff 92%,transparent);border-top:2px solid #0a2a6a;border-bottom:2px solid #0a2a6a;transform:scaleX(0);transform-origin:var(--o,left) center;animation:hThrust .28s ease-out forwards}
+.hfx .spk.fall{animation-name:hFall;animation-duration:.62s;animation-timing-function:ease-out}
+@keyframes hFall{0%{transform:translate(0,0) scale(1.1);opacity:0}12%{opacity:1}45%{transform:translate(calc(var(--dx) * .75),calc(var(--dy) * .6 - 12px))}100%{transform:translate(var(--dx),calc(var(--dy) + 52px)) scale(.4);opacity:0}}
+.hfx .gbeam{position:absolute;left:0;top:50%;width:100%;height:16px;margin-top:-8px;background:linear-gradient(90deg,transparent,#fff 6%,#fff 94%,transparent);box-shadow:0 0 0 3px #4aa8ff;transform:scaleX(0);animation:hGBeam .42s ease-out forwards}
+@keyframes hGBeam{0%{transform:scaleX(0);opacity:1}16%{transform:scaleX(1);opacity:1}55%{transform:scaleX(1);opacity:1}80%{transform:scaleX(.08) scaleY(1.4);opacity:1}100%{transform:scaleX(.02);opacity:0}}
+.hfx .rz{position:absolute;left:var(--x);top:50%;width:14px;height:34px;margin:-17px -7px;border:3px solid var(--c);border-radius:50%;opacity:0;animation:hRz .42s ease-out var(--d) forwards}
+@keyframes hRz{0%{transform:scale(.4);opacity:.95;left:var(--x)}45%{transform:scale(1.4,2.6);opacity:1;left:var(--x)}100%{transform:scale(.2,.3);left:50%;opacity:0}}
+
+.hfx .rune{position:absolute;left:50%;top:50%;width:44px;height:56px;margin:-28px -22px;opacity:0;animation:hRune .16s ease-out .1s forwards;filter:drop-shadow(0 0 4px #e8d28a)}
+.hfx .rune svg{display:block;width:100%;height:100%}
+.hfx .rune.blk{translate:3px 3px;filter:none}
+@keyframes hRune{0%{transform:scale(.3);opacity:0}35%{transform:scale(1.15);opacity:1}75%{transform:scale(1);opacity:1}100%{transform:scale(1.2);opacity:0}}
