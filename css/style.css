@@ -676,3 +676,10 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .hfx .shield{position:absolute;left:50%;top:50%;width:150px;height:108px;margin:-54px -75px;border:6px solid #c084fc;border-radius:50%;background:radial-gradient(ellipse,rgba(124,58,237,.35),transparent 70%);box-shadow:0 0 0 2px #26104a,inset 0 0 0 3px #26104a;opacity:0;transform:scale(.3);animation:hShield .42s steps(7,end) forwards}
 .hfx .shield.in{width:100px;height:70px;margin:-35px -50px;border-width:3px;animation-delay:.06s}
 @keyframes hShield{0%{transform:scale(.3);opacity:1}45%{transform:scale(1);opacity:1}100%{transform:scale(1.15);opacity:0}}
+
+/* 금색·검은색 조각이 여러 방향으로 튀어 나간다 (조율자) */
+.hfx .sw{position:absolute;left:50%;top:50%;width:var(--len);height:var(--th);margin-top:calc(var(--th) / -2);transform-origin:0 50%;transform:rotate(var(--a)) translateX(var(--r0)) scaleX(.1);opacity:0;filter:drop-shadow(0 0 .6px var(--k)) drop-shadow(0 0 .6px var(--k));animation:hShard .44s cubic-bezier(.1,.9,.2,1) var(--d,60ms) forwards}
+.hfx .sw i{display:block;width:100%;height:100%;background:var(--c);clip-path:polygon(0 50%,14% 0,100% 42%,100% 58%,14% 100%)}
+@keyframes hShard{0%{transform:rotate(var(--a)) translateX(var(--r0)) scaleX(.12);opacity:1}26%{transform:rotate(var(--a)) translateX(var(--r1)) scaleX(1);opacity:1}100%{transform:rotate(var(--a)) translateX(var(--r2)) scaleX(.85);opacity:0}}
+.hfx .edot{animation-name:hEdot2}
+@keyframes hEdot2{0%{left:var(--x0);top:var(--y0);opacity:0}12%{opacity:1}33%{left:var(--x1);top:var(--y1)}66%{left:var(--x2);top:var(--y2);opacity:1}100%{left:var(--x3,var(--x2));top:var(--y3,var(--y2));opacity:0}}
