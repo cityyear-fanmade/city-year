@@ -246,7 +246,7 @@ export const CFG = {
   rupture: {max: 20},
   /* 전용 책장이 없는 날개: 카드팩 대신 입사 때 보정치를 더 받는다 */
   freeWing: {names: ['K사 날개', 'J사 날개', 'G사 날개'], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
-  burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5, tickCap: 22 /* 달궈진 십자가: 라운드 끝 추가 고정 피해의 상한 (화상 상한 15×1.5와 같다) */},
+  burn: {dmg: 3, dmgMe: 2, max: 20, keep: 0.5, foe: 0.5, tickCap: 22 /* 달궈진 십자가: 라운드 끝 추가 고정 피해의 상한 (화상 상한 15×1.5와 같다) */},
   /* 패시브 근성(형님)·초근성(큰형님) 받는 피해 감소 %: 맞아야 강해지는 중지가 후반에 버티도록 */
   /* 중지 회피 환산: evaEff = 서열별(막내·동생·작은형님·큰형님) 회피의 '피하는 힘' 비율, 줄어든 회피 1당 받는 피해 감소 evaDr%p (근성과 합쳐 drCap까지). cap = 플레이어 되갚음 스택 최대(적은 5), counter = 방어 카드를 낸 라운드에 맞으면 되갚음 스택 × counter의 고정 피해 반격, sinkHit = 중지를 노린 침잠의 명중 감소 배율 */
   /* 개화한 E.G.O: 개화 카드(공세·수호)를 every번 쓸 때마다(전투마다 세어) 방금 낸 카드에 맞는 1회용 스킬이 다음 라운드 손패에 들어온다 */
@@ -318,13 +318,13 @@ export const CFG = {
     aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {spd: 1}, hidden: {atk: 2, eva: 1, hit: 1}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'},
       /* 종류(의수 · 의복 · 지팡이 · 단말기 · 계약서 · 장치): 기본 보너스(baseKind, 의수는 base)와 일반 강화 한 단계당 값(normalKind, 소수는 내림해 쌓인다)이 다르다.
          의수 올라운더 + 키워드 · 의복 HP와 회복 · 지팡이 넘친 명중 · 단말기 판정과 회피 · 계약서 피해 · 장치 공격. 히든 강화는 종류와 상관없이 같다 */
-      normalKind: {aug: {spd: 1, atk: 0.34, eva: 0.34}, cloth: {maxHp: 2, regen: 0.1}, staff: {}, term: {check: 1, eva: 0.8}, pact: {dmgB: 0.6}, dev: {atk: 1.5}},
-      baseKind: {cloth: {maxHp: 14}, staff: {hit: 4, atk: 2}, term: {check: 3, eva: 2}, pact: {dmgB: 1, eva: 1}, dev: {atk: 3}},
-      kindE: {aug: '속도+1 · 회피+1', cloth: 'HP+14', staff: '공격+2 · 명중+4 · 집중 키워드', term: '판정+3 · 회피+2', pact: '피해+1 · 회피+1', dev: '공격+3'},
+      normalKind: {aug: {spd: 1, atk: 0.34, eva: 0.34}, cloth: {maxHp: 2, regen: 0.1}, staff: {}, term: {check: 1, eva: 0.8}, pact: {dmgB: 1}, dev: {atk: 1.5}},
+      baseKind: {cloth: {maxHp: 14}, staff: {hit: 4, atk: 2}, term: {check: 3, eva: 2}, pact: {dmgB: 2}, dev: {atk: 3}},
+      kindE: {aug: '속도+1 · 회피+1', cloth: 'HP+14', staff: '공격+2 · 명중+4 · 집중 키워드', term: '판정+3 · 회피+2', pact: '피해+2', dev: '공격+3'},
       /* 히든 강화 kwHidden번마다 이 가운데 하나(같은 캐릭터는 늘 같은 순서)가 적중마다 +1 걸린다. 같은 키워드가 나오면 쌓인다 */
       kwHidden: 4, hiddenKwPool: ['bleed', 'rupture', 'burn', 'sink'],
       /* 특수 강화(5·10·15단계): 의수는 키워드 하나를 골라 적중마다 건다(kwAmt, 같은 키워드를 거듭 골라도 된다). 나머지 종류는 단계마다 정해진 보너스 */
-      bigKind: {cloth: [{maxHp: 6, regen: 1}, {maxHp: 6}, {maxHp: 12, regen: 1}], term: [{check: 4, eva: 2}, {check: 4, eva: 2}, {check: 6, eva: 4}], pact: [{dmgB: 1}, {dmgB: 2}, {dmgB: 2}], dev: [{atk: 4}, {atk: 4}, {atk: 8}]},
+      bigKind: {cloth: [{maxHp: 6, regen: 1}, {maxHp: 6}, {maxHp: 12, regen: 1}], term: [{check: 4, eva: 2}, {check: 4, eva: 2}, {check: 6, eva: 4}], pact: [{dmgB: 3}, {dmgB: 5}, {extraHit: 1}], dev: [{atk: 4}, {atk: 4}, {atk: 8}]},
       kwList: ['bleed', 'rupture', 'burn'], kwAmt: [1, 1, 1],
       /* 지팡이: 고른 키워드(기본 출혈). 일반 강화 한 단계마다 그 키워드를 상대에게 쌓는 최대치 +1(카드·무기·보조 장비 모두),
          특수 강화(5·10·15단계)마다 적중 시 +staffKwAmt, 히든 4번마다 +1 */
