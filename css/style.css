@@ -745,3 +745,9 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 @keyframes hBrand{0%{transform:scale(.3);opacity:0}22%{transform:scale(1.15);opacity:1}48%{transform:scale(1);opacity:1;filter:drop-shadow(0 0 6px #ff6a1a) brightness(.8)}100%{transform:scale(1);opacity:0;filter:brightness(.08)}}
 .hfx .bdrop{position:absolute;left:var(--x0);top:var(--y0);border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;background:radial-gradient(circle at 35% 30%,#ff7a8a,#c81e32 55%,#6a0a18);opacity:0;animation:hBdrop .46s ease-in var(--d) forwards}
 @keyframes hBdrop{0%{left:var(--x0);top:var(--y0);opacity:0;transform:scale(.6)}15%{opacity:1}60%{left:var(--tx);top:var(--ty);transform:scale(1.1);opacity:1}82%{left:var(--tx);top:var(--ty);transform:scale(2.2);opacity:1}100%{left:var(--tx);top:var(--ty);transform:scale(2.8);opacity:0}}
+
+/* 검은 침묵의 장갑: 흑연 + 번호 픽토그램 */
+.hfx .smoke.dk{background:radial-gradient(circle,rgba(14,14,18,.92),rgba(40,40,48,.55) 60%,transparent 72%);animation-duration:.7s}
+.hfx .numtag{position:absolute;left:50%;top:50%;margin:-22px -14px;font:900 44px/1 'IBM Plex Mono',monospace;color:#f4f4f6;-webkit-text-stroke:2px #05060a;opacity:0;text-decoration:none;animation:hNum .3s ease-out .11s forwards}
+.hfx .numtag.blk{color:#05060a;translate:3px 3px}
+@keyframes hNum{0%{transform:scale(.3);opacity:0}22%{transform:scale(1.2);opacity:1}55%{transform:scale(1);opacity:1}100%{transform:scale(1.25);opacity:0;filter:blur(2px)}}
