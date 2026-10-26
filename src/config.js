@@ -304,8 +304,6 @@ export const CFG = {
   leads: {hollow: '문 없는 방의 흔적', tune: '소리 없는 연주회장의 흔적', finger: '손가락의 연줄', debt: '밀린 장부', blade: '칼 가는 소리', heat: '식지 않은 열기', seek: '누군가를 찾는 눈'},
   /* 공격과 명중: 공격은 hitPer배(소수점 버림)만큼 명중을 올리고, dmgPer마다 피해 +1을 한계 없이 더한다. 명중 스탯은 명중만 올린다 */
   atkRule: {on: true, hitPer: 0.5, dmgPer: 6},
-  /* 넘친 명중(지팡이): 명중이 회피를 넘은 만큼(최대 cap)에 점수/per을 곱해 내림한 값이 피해로 더해진다 */
-  overHit: {cap: 50, per: 200},
   ws: {
     needEvery: 10, priceYearUp: 0.25, priceYearEvery: 20 /* 공방 해결사가 사는 공방 물건의 값은 고정이고, 20년차마다 원래 값의 25%씩 오른다 (예전에는 재료로 쓸 때마다 올랐다) */,
     /* 기본값은 공방 1등급 물건 중 가장 낮은 것 수준 (날 세운 단검 · 누빈 작업복 · 중고 의수) */
@@ -318,14 +316,16 @@ export const CFG = {
     aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {spd: 1}, hidden: {atk: 2, eva: 1, hit: 1}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'},
       /* 종류(의수 · 의복 · 지팡이 · 단말기 · 계약서 · 장치): 기본 보너스(baseKind, 의수는 base)와 일반 강화 한 단계당 값(normalKind, 소수는 내림해 쌓인다)이 다르다.
          의수 올라운더 + 키워드 · 의복 HP와 회복 · 지팡이 넘친 명중 · 단말기 판정과 회피 · 계약서 피해 · 장치 공격. 히든 강화는 종류와 상관없이 같다 */
-      normalKind: {aug: {spd: 1, atk: 0.34, eva: 0.34}, cloth: {maxHp: 2, regen: 0.1}, staff: {over: 1.5}, term: {check: 1, eva: 0.8}, pact: {dmgB: 0.6}, dev: {atk: 1.5}},
-      baseKind: {cloth: {maxHp: 14}, staff: {over: 12, hit: 2}, term: {check: 3, eva: 2}, pact: {dmgB: 1, eva: 1}, dev: {atk: 3}},
-      kindE: {aug: '속도+1 · 회피+1', cloth: 'HP+14', staff: '넘친 명중+12 · 명중+2', term: '판정+3 · 회피+2', pact: '피해+1 · 회피+1', dev: '공격+3'},
+      normalKind: {aug: {spd: 1, atk: 0.34, eva: 0.34}, cloth: {maxHp: 2, regen: 0.1}, staff: {atk: 0.5}, term: {check: 1, eva: 0.8}, pact: {dmgB: 0.6}, dev: {atk: 1.5}},
+      baseKind: {cloth: {maxHp: 14}, staff: {hit: 2}, term: {check: 3, eva: 2}, pact: {dmgB: 1, eva: 1}, dev: {atk: 3}},
+      kindE: {aug: '속도+1 · 회피+1', cloth: 'HP+14', staff: '고른 키워드 적중마다 +1 · 명중+2', term: '판정+3 · 회피+2', pact: '피해+1 · 회피+1', dev: '공격+3'},
       /* 히든 강화 kwHidden번마다 이 가운데 하나(같은 캐릭터는 늘 같은 순서)가 적중마다 +1 걸린다. 같은 키워드가 나오면 쌓인다 */
       kwHidden: 4, hiddenKwPool: ['bleed', 'rupture', 'burn', 'sink'],
       /* 특수 강화(5·10·15단계): 의수는 키워드 하나를 골라 적중마다 건다(kwAmt, 같은 키워드를 거듭 골라도 된다). 나머지 종류는 단계마다 정해진 보너스 */
-      bigKind: {cloth: [{maxHp: 6, regen: 1}, {maxHp: 6}, {maxHp: 12, regen: 1}], staff: [{over: 10}, {over: 10, atk: 2}, {over: 20, atk: 3}], term: [{check: 4, eva: 2}, {check: 4, eva: 2}, {check: 6, eva: 4}], pact: [{dmgB: 1}, {dmgB: 2}, {dmgB: 2}], dev: [{atk: 4}, {atk: 4}, {atk: 8}]},
-      kwList: ['bleed', 'rupture', 'burn'], kwAmt: [1, 1, 2]},
+      bigKind: {cloth: [{maxHp: 6, regen: 1}, {maxHp: 6}, {maxHp: 12, regen: 1}], staff: [{atk: 2, hit: 4}, {atk: 2, hit: 4}, {atk: 4, hit: 8}], term: [{check: 4, eva: 2}, {check: 4, eva: 2}, {check: 6, eva: 4}], pact: [{dmgB: 1}, {dmgB: 2}, {dmgB: 2}], dev: [{atk: 4}, {atk: 4}, {atk: 8}]},
+      kwList: ['bleed', 'rupture', 'burn'], kwAmt: [1, 1, 2],
+      /* 지팡이: 고른 키워드(기본 출혈)가 적중마다 staffKwAmt씩 쌓이고, 일반 강화 한 단계마다 쌓임 상한(기본 5)이 1씩 오른다 */
+      staffKwAmt: 1},
     /* 커스텀 의수: 공방 해결사가 한 번 포인트(pts)를 나눠 만든다. 공격은 atkCost 포인트에 +atkPer, 회피는 evaCost 포인트에 +1, 체력은 hpCost 포인트에 +hpPer, 패시브 하나는 passCost 포인트 */
     cust: {pts: 35, atkCost: 3, atkPer: 2, evaCost: 3, hpCost: 2, hpPer: 5, passCost: 5,
       pass: {react: {n: '반응 회로', e: '전투 시작 후 2라운드 동안 회피 +10'}, absorb: {n: '흡수 코어', e: '라운드마다 HP +3'}, over: {n: '과부하 코어', e: '라운드 첫 공격 피해 +4'}}},
