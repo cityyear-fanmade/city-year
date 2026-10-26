@@ -313,7 +313,7 @@ export const CFG = {
     /* 방어구의 받는 피해 감소는 drMax%까지만 (전체 합계 상한 drCap 70% 안에서 다른 감소량이 밀려나지 않게). 체력·회피·재생은 상한 없이 계속 오른다 */
     armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 4}, hidden: {dr: 3, eva: 3, maxHp: 4}, drMax: 30},
     /* 의수: 일반 강화 한 단계마다 속도 +1(히든 한 번마다 공격 +2 · 회피 +1 · 명중 +1), 5·10·15단계마다 출혈·파열·화상 중 하나를 골라 적중마다 거는 키워드로 더한다 (kwAmt). pick은 예전 저장의 히든 의수 개조 값 */
-    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {spd: 1}, normalKind: {aug: {spd: 1}, cloth: {maxHp: 3}, staff: {hit: 1}, term: {check: 1}, pact: {dr: 0.34}, dev: {atk: 0.5}} /* 종류별 일반 강화 한 단계당 (소수는 내림해 쌓인다: 계약서는 3단계마다 피해 −1%, 장치는 2단계마다 공격 +1) */, hidden: {atk: 2, eva: 1, hit: 1}, kwHidden: 4 /* 히든 강화 kwHidden번마다 가장 많이 고른 키워드 +1 */, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'},
+    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {spd: 1}, normalKind: {aug: {spd: 1}, cloth: {maxHp: 3}, staff: {hit: 1}, term: {check: 1}, pact: {dmgB: 0.2}, dev: {atk: 0.5}} /* 종류별 일반 강화 한 단계당 (소수는 내림해 쌓인다: 계약서는 5단계마다 피해 +1, 장치는 2단계마다 공격 +1) */, baseKind: {pact: {eva: 2}}, kindE: {pact: '회피+2'} /* 공방 방어구가 받는 피해 감소를 맡으므로 공방의 계약서는 피해 감소 대신 */, hidden: {atk: 2, eva: 1, hit: 1}, kwHidden: 4 /* 히든 강화 kwHidden번마다 가장 많이 고른 키워드 +1 */, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'},
       /* 특수 강화(5·10·15단계): 키워드 하나를 골라 적중마다 상대에게 건다. 몇 번째 선택이냐에 따라 kwAmt[순번]만큼 (같은 키워드를 거듭 골라도 된다). 예전 저장의 공격·회피·명중 선택은 그대로 남는다 */
       kwList: ['bleed', 'rupture', 'burn'], kwAmt: [1, 1, 2]},
     /* 커스텀 의수: 공방 해결사가 한 번 포인트(pts)를 나눠 만든다. 공격은 atkCost 포인트에 +atkPer, 회피는 evaCost 포인트에 +1, 체력은 hpCost 포인트에 +hpPer, 패시브 하나는 passCost 포인트 */

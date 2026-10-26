@@ -665,7 +665,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {id:'ws_weapon',slot,wsH:k.h,wsN:k.n,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}${Object.keys(sp).map(x=>' · '+WS_SPN[x]).join('')}`,fx:{atk,spd,dmgB:dmg},wx}}
     if(slot==='armor'){const C_=WS.armor,bf=bigFx('armor',k.n),hp=C_.base.maxHp+k.n*C_.normal.maxHp+(bf.maxHp||0)+k.h*(C_.hidden.maxHp||0),rg=bf.regen||0,dr=Math.min(C_.drMax,k.h*C_.hidden.dr+(bf.dr||0)),eva=k.h*C_.hidden.eva,bg=tiers(k.n).length;
       return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%${dr>=C_.drMax?' (최대)':''}`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
-    const A_=WS.aug,g=w.g,KD=CFG.custKinds[w.kind]||CFG.custKinds.aug,fx=Object.assign({},w.kind&&w.kind!=='aug'?KD.fx:A_.base),pk=g.picks||[];
+    const A_=WS.aug,g=w.g,KD=CFG.custKinds[w.kind]||CFG.custKinds.aug,fx=Object.assign({},w.kind&&w.kind!=='aug'?(A_.baseKind[w.kind]||KD.fx):A_.base),pk=g.picks||[];
     for(const [x,v] of Object.entries(A_.normalKind[w.kind||'aug']||A_.normal))fx[x]=(fx[x]||0)+Math.floor((g.n||0)*v+1e-9);fx.hit=(fx.hit||0)+(g.n||0)*(A_.normal.hit||0)+(g.h||0)*(A_.hidden.hit||0);fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);fx.atk=(fx.atk||0)+(g.h||0)*(A_.hidden.atk||0);
     const kwm={};pk.forEach((x,i)=>{if(A_.pickAmt[x])fx[x]=(fx[x]||0)+A_.pickAmt[x];else if(A_.kwList.includes(x))kwm[x]=(kwm[x]||0)+A_.kwAmt[Math.min(i,A_.kwAmt.length-1)]});
     {const hb=Math.floor((g.h||0)/A_.kwHidden),top=Object.entries(kwm).sort((a,b)=>b[1]-a[1])[0];if(hb>0&&top)kwm[top[0]]+=hb}
@@ -673,7 +673,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(g.pick)fx[g.pick]=(fx[g.pick]||0)+A_.pick;
     const cu=w.cust&&w.cust.done?w.cust:null;
     if(cu){if(cu.atk)fx.atk=(fx.atk||0)+cu.atk*WS.cust.atkPer;if(cu.eva)fx.eva=(fx.eva||0)+cu.eva;if(cu.hp)fx.maxHp=(fx.maxHp||0)+cu.hp*WS.cust.hpPer}
-    const LB={spd:'속도',maxHp:'최대 HP',check:'판정'};
+    const LB={spd:'속도',maxHp:'최대 HP',check:'판정',dmgB:'피해'};
     return {id:'ws_aug',slot,kind:KD.n,n:nmOf(w.kind&&w.kind!=='aug'?'공방 '+KD.n:A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>x==='dr'?`받는 피해 −${v}%`:`${A_.stats[x]||LB[x]||x}+${v}`).join(' · ')+kw.map(([k,v])=>` · 적중 시 ${D.keywords[k].n} +${v}`).join('')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${pk.length?` · 선택 ${pk.length}/${B_.at.length}`:''}${g.pend?` · 고를 수 있는 선택 ${g.pend}`:''}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx,kw,rev:2}
   }
   /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
