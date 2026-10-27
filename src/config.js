@@ -382,7 +382,7 @@ export const CFG = {
     reward: {작음: {maxHp: 3}, 보통: 1, 큼: 2}, themeAmt: {maxHp: 4},
     theme: {'엄지': 'atk', '검지': 'spd', '중지': 'maxHp', '약지': 'check', '소지': 'eva'},
     role: {'엄지': '언더보스', '검지': '대행자', '중지': '큰형님', '약지': '마에스트로', '소지': '인의예지'},
-    child: '아이', endTitle: {complete: '이어진 실', apart: '각자의 길', accomplice: '같은 매듭', left: '남겨진 자리', revolt: '끊어낸 실'},
+    child: '제자', endTitle: {complete: '이어진 실', apart: '각자의 길', accomplice: '같은 매듭', left: '남겨진 자리', revolt: '끊어낸 실'},
     endName: {complete: '완성된 관계', apart: '각자의 길', accomplice: '서로의 공범', left: '남겨진 자리', revolt: '재료의 반란'}},
   /* 성장: 판정 성공/실패/판정 없음/전투 승리 경험치, 레벨별 누적 경험치 */
   /* 레벨 보너스: at레벨마다(8, 16, 24…) 모든 전투에서 빛과 빛 최대치 +up */

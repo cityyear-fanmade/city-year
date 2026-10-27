@@ -4,7 +4,7 @@
 import {readFileSync} from 'node:fs';
 
 const FINGERS=['엄지','검지','중지','약지','소지'],ROUTES=['disciple','master'];
-const BONDS=['신뢰','의존','존경','집착','공범'],SIZES=['없음','작음','보통','큼'];
+const BONDS=['신뢰','의존','존경','집착','공범','연정'],SIZES=['없음','작음','보통','큼'];
 const ENDS=['complete','apart','accomplice','left','revolt'];   // 완성된 관계 · 각자의 길 · 서로의 공범 · 남겨진 자리 · 재료의 반란
 const BAN=['무흔검','롤랑','앤젤라','파우스트','이스마엘','돈키호테','히스클리프'];   // 쓰면 안 되는 이름
 const PRON=/(그녀|그는|그가|그를|그의|그에게|그와\s|걔)/;   // 성별을 가리키는 대명사 후보(경고)
