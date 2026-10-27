@@ -99,7 +99,7 @@ export const CFG = {
     deck2: ['d2_strike', 'd2_strike', 'd2_strike', 'd2_twist', 'd2_twist', 'd2_surge', 'd2_surge', 'd2_flurry', 'd2_flurry', 'd2_gamble', 'd2_final', 'd2_guard']},
   /* 대호수로 나간 자: 침묵·시선의 호수에서 주인공이 아니라 다른 선원이 금기를 어기는 사건이 나올 확률(%) */
   lake: {infMob:{hp:2.2,atk:2},morph:{every:15,mindA:5,atkB:1,maxHpFinal:10},hullMax:100,hullWear:1,repairCost:700,trait:{hp:40,atk:20,eva:20},wave:{basePct:10,perBreak:15,maxPct:70,stage:3,maxStage:5,wallCost:200,wallDc:35,helmDc:55,helmNav:10,failMind:6,failMindStep:2,failHp:3,failCrew:50,driftMind:20,rewardPts:2,rewardMind:10,hullLoss:80},handShield: 6, cookHeal: 4, navEva: 4, navFlee: 10, harpStack: 1, loot: {silence: '무음의 고래 심장 · 피격 시 상대 왜곡 +1', lamp: '거짓 등대 고래 심장 · 매 라운드 시작 빛 +1', anchor: '닻을 삼킨 고래 심장 · 피격 시 상대 사슬 +1 · 무게 절반', tide: '적조의 고래 심장 · 피격 시 상대 출혈 +2', genesis: '창세치 고래 심장 · 3타마다 1타 추가', pale: '창백한 고래 심장 · 피격 시 상대 침잠 +1 · 창백화 절반'}, align: [9, 7, 5, 3], mindYear: 2, mindSail: 3, mindKeep: 26, harborMind: 10, slip: 30, encChance: 55 /* 선장이 된 뒤 새 호수에 들어서기 전 인어·해적 조우가 나올 확률 */, pirateAfter: 6 /* 선장이 된 지 이만큼 지나면 쌍갈고리 해적단과 얽힌다 */, adultBefore: 12 /* 1막이 끝나기 이만큼 전부터 같은 호수의 대재앙(성체)이 나온다 */, ricardoAfter: 4 /* 해적단 반파 뒤 이만큼 지나면 중지의 큰형님 리카르도가 찾아온다 */, crewMax: 4 /* 선장이 되면 모집할 수 있는 선원 수 */, crewW: 1 /* 선원 합산 굴림의 가중 */, crewEvery: 3 /* 모집 사건 간격(해) */, signEvery: 8 /* 변모의 징후 사건 간격(해) */, meetMul: 2 /* 일상 사건이 없는 대신 인연을 만날 확률을 배로(해마다) */, infFight: 35 /* 무한 모드에서 해마다 전투가 나올 확률(%) */, genesisAt: 2 /* 성체 대재앙을 이만큼 쓰러뜨리면 창세치 고래가 나온다 */},
-  shop: {every: 3, blackFrom: 12, blackStock: 3, delCost: 500, delMax: 3, minDeck: 4, restMind: 5,
+  shop: {every: 3, blackFrom: 12, blackStock: 3, wsAux: {chance: 20, cap: 8, prices: [4500, 5000, 5500, 6000]} /* 공방 해결사에게만, 방문마다 chance% 확률로 비장 부품(효과 없음, 보조 장비 히든 재료) 하나. 한 판에 cap개까지 */, delCost: 500, delMax: 3, minDeck: 4, restMind: 5,
     /* v6.1: 카드 교환(덱 카드 1장을 일반 보상 카드 무작위 1장으로, 방문마다 swapMax장까지) · 장비 정비(장착 장비마다 최대 tune.max번 시도, chance% 확률로 공격 또는 회피 +1, 시도 비용 base+step×지금까지 시도) */
     swapCost: 500, swapMax: 3, tune: {max: 5, maxWs: 10, chance: 50, base: 300, step: 150, zenaPlus: 10, noPlus: ['w_baralclaw', 'a_baralcoat', 'w_zenafairy', 'a_zenaarmor']}},
   /* 타고난 것: 출생 굴림과 별개로 1/chanceDiv 확률. 시드 재현을 위해 출생 굴림 값에서 파생 (새 주사위를 쓰지 않는다) */
@@ -246,7 +246,7 @@ export const CFG = {
   rupture: {max: 20},
   /* 전용 책장이 없는 날개: 카드팩 대신 입사 때 보정치를 더 받는다 */
   freeWing: {names: ['K사 날개', 'J사 날개', 'G사 날개'], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
-  burn: {dmg: 3, dmgMe: 2, max: 15, keep: 0.5, foe: 0.5, tickCap: 22 /* 달궈진 십자가: 라운드 끝 추가 고정 피해의 상한 (화상 상한 15×1.5와 같다) */},
+  burn: {dmg: 3, dmgMe: 2, max: 20, keep: 0.5, foe: 0.5, tickCap: 22 /* 달궈진 십자가: 라운드 끝 추가 고정 피해의 상한 (화상 상한 15×1.5와 같다) */},
   /* 패시브 근성(형님)·초근성(큰형님) 받는 피해 감소 %: 맞아야 강해지는 중지가 후반에 버티도록 */
   /* 중지 회피 환산: evaEff = 서열별(막내·동생·작은형님·큰형님) 회피의 '피하는 힘' 비율, 줄어든 회피 1당 받는 피해 감소 evaDr%p (근성과 합쳐 drCap까지). cap = 플레이어 되갚음 스택 최대(적은 5), counter = 방어 카드를 낸 라운드에 맞으면 되갚음 스택 × counter의 고정 피해 반격, sinkHit = 중지를 노린 침잠의 명중 감소 배율 */
   /* 개화한 E.G.O: 개화 카드(공세·수호)를 every번 쓸 때마다(전투마다 세어) 방금 낸 카드에 맞는 1회용 스킬이 다음 라운드 손패에 들어온다 */
@@ -267,7 +267,24 @@ export const CFG = {
       {n: '복제 단검', fx: {atk: 3, eva: 2}, dice: [2, 4], e: '공+3 · 회피+2 · 피해 2d4 (부화장에서 쥐여 준 단검)'},
       {n: '번호 없는 단검', fx: {atk: 5, eva: 2}, dice: [2, 5], e: '공+5 · 회피+2 · 피해 2d5'},
       {n: '번호 없는 단검', fx: {atk: 5, eva: 4}, dice: [2, 5], wx: {hitBleed: 1}, e: '공+5 · 회피+4 · 피해 2d5 · 적중 시 출혈 +1'},
-      {n: '존재의 단검', fx: {atk: 8, eva: 4}, dice: [2, 6], wx: {hitBleed: 1, finish: {at: 0.3, dmg: 5}}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 출혈 +1 · 상대 HP 30% 이하면 피해 +5'}]},
+      {n: '존재의 단검', fx: {atk: 8, eva: 4}, dice: [2, 6], wx: {hitBleed: 1, finish: {at: 0.3, dmg: 5}}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 출혈 +1 · 상대 HP 30% 이하면 피해 +5'}],
+      /* 팀마다 시작 무기의 모양이 다르다(능력치는 같고 이름·피해 주사위·적중 키워드만 바뀐다). 토끼 자동소총과 단검 · 순록 카두세우스(지팡이) · 코뿔소 해머와 대형 방패 */
+      team: {
+        '토끼팀': [
+          {n: '보급 자동소총과 단검', dice: [2, 4], wx: {}, e: '공+3 · 회피+2 · 피해 2d4'},
+          {n: '개조 자동소총과 단검', dice: [2, 5], wx: {}, e: '공+5 · 회피+2 · 피해 2d5'},
+          {n: '개조 자동소총과 단검', dice: [2, 5], wx: {hitBleed: 1}, e: '공+5 · 회피+4 · 피해 2d5 · 적중 시 출혈 +1'},
+          {n: '번호 없는 자동소총과 단검', dice: [2, 6], wx: {hitBleed: 1, finish: {at: 0.3, dmg: 5}}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 출혈 +1 · 상대 HP 30% 이하면 피해 +5'}],
+        '순록팀': [
+          {n: '카두세우스', dice: [2, 4], wx: {}, e: '공+3 · 회피+2 · 피해 2d4'},
+          {n: '조율된 카두세우스', dice: [2, 5], wx: {}, e: '공+5 · 회피+2 · 피해 2d5'},
+          {n: '조율된 카두세우스', dice: [2, 5], wx: {hitKw: [['sink', 1]]}, e: '공+5 · 회피+4 · 피해 2d5 · 적중 시 침잠 +1'},
+          {n: '번호 없는 카두세우스', dice: [2, 6], wx: {hitKw: [['sink', 1]], finish: {at: 0.3, dmg: 5}}, e: '공+8 · 회피+4 · 피해 2d6 · 적중 시 침잠 +1 · 상대 HP 30% 이하면 피해 +5'}],
+        '코뿔소팀': [
+          {n: '해머와 대형 방패', dice: [1, 8], wx: {}, e: '공+3 · 회피+2 · 피해 1d8'},
+          {n: '개조 해머와 대형 방패', dice: [1, 10], wx: {}, e: '공+5 · 회피+2 · 피해 1d10'},
+          {n: '개조 해머와 대형 방패', dice: [1, 10], wx: {hitKw: [['rupture', 1]]}, e: '공+5 · 회피+4 · 피해 1d10 · 적중 시 파열 +1'},
+          {n: '번호 없는 해머와 대형 방패', dice: [1, 12], wx: {hitKw: [['rupture', 1]], finish: {at: 0.3, dmg: 5}}, e: '공+8 · 회피+4 · 피해 1d12 · 적중 시 파열 +1 · 상대 HP 30% 이하면 피해 +5'}]}},
     hw: {id: 'w_hongwon', lv: [
       {n: '홍원의 장도', fx: {atk: 3, eva: 2}, dice: [2, 4], e: '공+3 · 회피+2 · 피해 2d4 (가문의 의례용 장도)'},
       {n: '후보의 장도', fx: {atk: 5, eva: 2}, dice: [2, 5], e: '공+5 · 회피+2 · 피해 2d5'},
@@ -281,7 +298,7 @@ export const CFG = {
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},
   middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30], evaEff: [1, 1, 0.5, 0], evaDr: 0.5, drCap: 50, counter: 3, sinkHit: 0.5, cap: 10},
   /* 의리 순례(중지 전용 루트): 동생(fi 1) 이상이 되면 해마다 chance%로 원한의 책 제안, 거절하면 gap년 뒤 다시. 둘째 장 전투에서 아우가 맞으면(kin) 분노 +anger, 셋째 장 시험은 rounds라운드 버티기 */
-  giri: {fi: 1, chance: 35, gap: 5, kin: 50, anger: 5},
+  giri: {fi: 1, fi2: 2, chance: 60, gap: 5, bigBro: {chance: 50, ppFrac: 0.2, dc: 50, failHp: 6, gap: 1} /* 작은형님이 서열 점수의 ppFrac 이상 모으면 해마다 chance%: 큰형님의 시험 */, kin: 50, anger: 5},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
@@ -294,7 +311,7 @@ export const CFG = {
     odin: {need: 3, extra: 3, eva: 10, n: '룬 새김', e: '회피 +10 (미약한 가속) · 적중마다 룬 1(최대 3). 룬이 3개이면 다음 적중에서 룬을 모두 소모해 무기 주사위 3개를 더 굴린다'}},
   laev: {stages: [{at: 20, id: 'laev_s1', f: 0.25, n: '1단계 해방'}, {at: 45, id: 'laev_s2', f: 0.5, n: '2단계 해방'}, {at: 80, id: 'laev', f: 1, n: '해방 완료'}], selfEvery: 1, blueAt: 5, blueDot: 2, blueMul: 2, selfBlueHit: 30},
   /* 엄지 검술(덱 고정): 카드를 얻는 자리마다 대신 받는 돈 */
-  lockedCardMoney: 150,
+  lockedCardMoney: 500,   // 카드 보상을 받을 때마다 카드와 함께 주는 돈(고정 500안). 덱이 고정이거나 전용 카드팩이면 카드는 편집 가능한 다른 카드팩으로 들어간다
   /* 공방 해결사: 4년차 갈림길에 chance% 확률로 제안. 1d die에서 minRoll 이상이면 성공. 공방 물건 할인율, 보관함 판매 비율 */
   /* 공방 해결사의 작업대: 공방 해결사가 되면 전용 무기·방어구·의수를 받고, 이 셋은 빼거나 바꿀 수 없다 (능력치 하나가 1인 장비로 시작).
      다른 무기·방어구는 모두 재료: 보관함 장비를 녹여 끝없이 강화한다.
@@ -304,6 +321,8 @@ export const CFG = {
   leads: {hollow: '문 없는 방의 흔적', tune: '소리 없는 연주회장의 흔적', finger: '손가락의 연줄', debt: '밀린 장부', blade: '칼 가는 소리', heat: '식지 않은 열기', seek: '누군가를 찾는 눈'},
   /* 공격과 명중: 공격은 hitPer배(소수점 버림)만큼 명중을 올리고, dmgPer마다 피해 +1을 한계 없이 더한다. 명중 스탯은 명중만 올린다 */
   atkRule: {on: true, hitPer: 0.5, dmgPer: 6},
+  /* 무기와 보조 장비가 라운드마다 한 키워드로 줄 수 있는 부여량 합계(공방 지팡이의 집중 키워드는 제외). 상대에게 쌓이는 키워드 자체의 한계는 따로 있다 */
+  kwTurnCap: 5,
   ws: {
     needEvery: 10, priceYearUp: 0.25, priceYearEvery: 20 /* 공방 해결사가 사는 공방 물건의 값은 고정이고, 20년차마다 원래 값의 25%씩 오른다 (예전에는 재료로 쓸 때마다 올랐다) */,
     /* 기본값은 공방 1등급 물건 중 가장 낮은 것 수준 (날 세운 단검 · 누빈 작업복 · 중고 의수) */
@@ -312,8 +331,21 @@ export const CFG = {
     weapon: {n: '작업대의 칼날', base: {atk: 2, spd: 1}, dice: [1, 6], normal: {atk: 2}, hidden: {dmgB: 3, atk: 2}},
     /* 방어구의 받는 피해 감소는 drMax%까지만 (전체 합계 상한 drCap 70% 안에서 다른 감소량이 밀려나지 않게). 체력·회피·재생은 상한 없이 계속 오른다 */
     armor: {n: '공방 작업복', base: {maxHp: 4}, normal: {maxHp: 4}, hidden: {dr: 3, eva: 3, maxHp: 4}, drMax: 30},
-    /* 의수: 일반 강화 한 단계마다 명중 +1, 5·10·15단계마다 공격·회피·명중 중 하나를 골라 올린다 (pickAmt). pick은 예전 저장의 히든 의수 개조 값 */
-    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {hit: 1}, hidden: {hit: 2}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'}},
+    /* 의수: 일반 강화 한 단계마다 속도 +1(히든 한 번마다 공격 +2 · 회피 +1 · 명중 +1), 5·10·15단계마다 출혈·파열·화상 중 하나를 골라 적중마다 거는 키워드로 더한다 (kwAmt). pick은 예전 저장의 히든 의수 개조 값 */
+    aug: {n: '공방 의수', base: {spd: 1, eva: 1}, normal: {spd: 1}, hidden: {atk: 2, eva: 1, hit: 1}, pick: 5, pickAmt: {atk: 3, eva: 3, hit: 6}, stats: {atk: '공격', eva: '회피', hit: '명중'},
+      /* 종류(의수 · 의복 · 지팡이 · 단말기 · 계약서 · 장치): 기본 보너스(baseKind, 의수는 base)와 일반 강화 한 단계당 값(normalKind, 소수는 내림해 쌓인다)이 다르다.
+         의수 올라운더 + 키워드 · 의복 HP와 회복 · 지팡이 넘친 명중 · 단말기 판정과 회피 · 계약서 피해 · 장치 공격. 히든 강화는 종류와 상관없이 같다 */
+      normalKind: {aug: {spd: 1, atk: 0.5, eva: 0.5}, cloth: {maxHp: 3, regen: 0.1}, staff: {atk: 1.5, hit: 1}, term: {check: 1.2, eva: 1}, pact: {dmgB: 1}, dev: {atk: 2}},
+      baseKind: {cloth: {maxHp: 18}, staff: {hit: 4, atk: 2}, term: {check: 4, eva: 3}, pact: {dmgB: 2}, dev: {atk: 4}},
+      kindE: {aug: '속도+1 · 회피+1', cloth: 'HP+18', staff: '공격+2 · 명중+4 · 집중 키워드', term: '판정+4 · 회피+3', pact: '피해+2', dev: '공격+4'},
+      /* 히든 강화 kwHidden번마다 이 가운데 하나(같은 캐릭터는 늘 같은 순서)가 적중마다 +1 걸린다. 같은 키워드가 나오면 쌓인다 */
+      kwHidden: 4, hiddenKwPool: ['bleed', 'rupture', 'burn', 'sink'],
+      /* 특수 강화(5·10·15단계): 의수는 키워드 하나를 골라 적중마다 건다(kwAmt, 같은 키워드를 거듭 골라도 된다). 나머지 종류는 단계마다 정해진 보너스 */
+      bigKind: {aug: [{}, {}, {adv: 1}], cloth: [{maxHp: 8, regen: 1}, {maxHp: 8, regen: 1}, {maxHp: 16, rShield: 10}], term: [{check: 5, eva: 3}, {check: 5, eva: 3}, {check: 8, eva: 5, foeSink: 3}], pact: [{dmgB: 3}, {dmgB: 5}, {extraHit: 1}], dev: [{atk: 5}, {atk: 5}, {atk: 10, rFirst: 30}]},
+      kwList: ['bleed', 'rupture', 'burn'], kwAmt: [1, 1, 1],
+      /* 지팡이: 고른 키워드(기본 출혈). 일반 강화 한 단계마다 그 키워드를 상대에게 쌓는 최대치 +1(카드·무기·보조 장비 모두),
+         특수 강화(5·10·15단계)마다 적중 시 +staffKwAmt, 히든 4번마다 +1 */
+      staffKwAmt: 1},
     /* 커스텀 의수: 공방 해결사가 한 번 포인트(pts)를 나눠 만든다. 공격은 atkCost 포인트에 +atkPer, 회피는 evaCost 포인트에 +1, 체력은 hpCost 포인트에 +hpPer, 패시브 하나는 passCost 포인트 */
     cust: {pts: 35, atkCost: 3, atkPer: 2, evaCost: 3, hpCost: 2, hpPer: 5, passCost: 5,
       pass: {react: {n: '반응 회로', e: '전투 시작 후 2라운드 동안 회피 +10'}, absorb: {n: '흡수 코어', e: '라운드마다 HP +3'}, over: {n: '과부하 코어', e: '라운드 첫 공격 피해 +4'}}},
@@ -340,8 +372,10 @@ export const CFG = {
   /* 특색 전용 보조 장비: 종류마다 기본으로 붙는 보너스 (고르는 맛) */
   custKinds: {aug: {n: '의수', fx: {spd: 1}, e: '속도+1'}, cloth: {n: '의복', fx: {maxHp: 10, eva: 1}, e: 'HP+10 · 회피+1'}, staff: {n: '지팡이', fx: {hit: 3}, e: '명중+3'}, term: {n: '단말기', fx: {check: 3}, e: '판정 +3'}, pact: {n: '계약서', fx: {dr: 3}, e: '받는 피해 −3%'}, dev: {n: '장치', fx: {atk: 2, hit: 1}, e: '공+2 · 명중+1'}},
   infPromo: {gap: 5, chance: 70} /* 외곽에서 승급이 막힌 사람을 위한 과거의 승급 심사장: gap해마다 chance% */,
-  art: {need: 5, stockMax: 20, dc: 75, bonus: {mad: 4, ext: 6, ref: 2}, made: 3, goodNeed: 3, gap: 1, cycleGap: 4, income: 300, visit: {chance: 30, money: 600}, patron: {chance: 8, money: 2500}, madHp: 8, failMind: 2, failHp: 4, badLose: 0.33},
+  art: {need: 5, stockMax: 20, dc: 55, bonus: {mad: 4, ext: 6, ref: 2}, made: 3, goodNeed: 2, gap: 1, cycleGap: 2, masterEye: {chance: 60, dc: 55, failHp: 4, retry: 2} /* 도슨트가 예술적 평가를 1번(또는 아무 평가 2번) 받은 뒤 해마다 chance%: 대작을 내건다. 성공하면 예술적 평가가 모두 채워져 갤러리가 열린다 */, income: 300, visit: {chance: 30, money: 600}, patron: {chance: 8, money: 2500}, madHp: 8, failMind: 2, failHp: 4, badLose: 0.33},
   affiliationYear: 4,
+  /* 손가락 출신(조직 출신 · 보냐텔리 가문): 이 해에 손가락이 먼저 찾아온다(받아들이면 입단) */
+  fingerEarly: {year: 1},
   /* 성장: 판정 성공/실패/판정 없음/전투 승리 경험치, 레벨별 누적 경험치 */
   /* 레벨 보너스: at레벨마다(8, 16, 24…) 모든 전투에서 빛과 빛 최대치 +up */
   lvLight: {at: 8, up: 1},

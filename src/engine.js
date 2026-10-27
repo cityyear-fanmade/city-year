@@ -143,7 +143,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0)),stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||o.money||0,
       deck:o.deck?o.deck.slice():['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
     ch.s0={maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,check:s.check};
-    if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
+    if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.fingerEarly){ch.fingerEarly=1;ch.fingerMul=o.fingerMul||1}if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
     if(o.hw)ch.hw={fi:0,rv:0};
     if(o.flags&&o.flags.lake)ch.aff={type:'lake',name:'U사 선원'};   // 대호수로 나간 자는 처음부터 선원: 기존 진로(공적·승급·최고 직위) 구조를 쓴다
@@ -167,7 +167,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
     if(o.weapon==='star'){equip(ch,starItem(0,''));ch.starPick=true}
-    if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e}}
+    if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e;if(o.rb)routeWeaponUp(ch,'rb',0)}}
     /* E.G.O 적성자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;egoDeck(ch,g.id,0,true);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
       ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);if(o.startRank)ch.rank=o.startRank;ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
@@ -181,6 +181,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.rb.chasers=['rh1'].concat(Object.keys(Z.foes).filter(t=>t!==team).map(t=>Z.foes[t]));
     ch.relics=(ch.relics||[]).map(r=>r==='R사 부화장 · '+old+' 개체'?'R사 부화장 · '+team+' 개체':r);
     addStats(ch.stats,B);if(B.maxHp)ch.hp+=B.maxHp;if(B.spd!=null)ch.spd0=ch.stats.spd;
+    {const w=ch.gear.weapon&&ch.gear.weapon.id==='w_clone'?ch.gear.weapon:(ch.stash||[]).find(x=>x.id==='w_clone');if(w)routeWeaponUp(ch,'rb',w.lvl|0)}
     return true;
   }
   /* 유물 적성자: 출생 때 고른 유물 지급 */
@@ -606,8 +607,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const v=cardPrice(id);ch.deck.splice(i,1);ch.money+=v;return {id,v};
   }
   /* 암시장: 영구 강화(한 번만)와 특수 장비 */
+  const specialPrice=(ch,id)=>D.special[id].wsOnly?((ch.ws&&ch.ws.auxPrice)||D.special[id].price):D.special[id].price;
+  /* 공방 해결사 전용 비장 부품: 방문마다 가끔 진열되고 한 판에 cap개까지 */
+  function wsAuxStock(ch){const Z=CFG.shop.wsAux;if(!isWs(ch)||!ch.ws||(ch.ws.auxN||0)>=Z.cap||d(100)>Z.chance)return null;ch.ws.auxPrice=Z.prices[d(Z.prices.length)-1];return 'auxhid'}
   function canBuySpecial(ch,id){
     const it=D.special[id];
+    if(it.wsOnly)return !isWs(ch)||!ch.ws?'ws':ch.money<specialPrice(ch,id)?'money':'ok';
     if(it.perm?(ch.perms||[]).includes(id):(ch.gear[it.slot]&&ch.gear[it.slot].id===id))return 'owned';
         if(!it.perm&&ch.distForm&&!ch.distStable)return 'distort';
     if(it.slot==='aug'&&isN(ch)&&(it.kind||'의수')==='의수')return 'nwing';
@@ -617,7 +622,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function buySpecial(ch,id,offer){
     if(canBuySpecial(ch,id)!=='ok')return false;
-    const it=D.special[id];ch.money-=it.price;
+    const it=D.special[id];ch.money-=specialPrice(ch,id);
+    if(it.wsOnly){(ch.stash=ch.stash||[]).push(Object.assign({id,grade:5},structuredClone(it)));ch.ws.auxN=(ch.ws.auxN||0)+1;return true}
     if(it.perm){(ch.perms=ch.perms||[]).push(id);addStats(ch.stats,it.fx);if(it.fx.maxHp)ch.hp+=it.fx.maxHp}
     else if(offer)offerGear(ch,Object.assign({id,grade:4},it));else equip(ch,Object.assign({id,grade:4},it));
     return true;
@@ -654,7 +660,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const WS_SP={w_baralclaw:'baral',w_zenafairy:'zena',w_mimicry_p:'gebura'},WS_SPN={baral:'바랄의 발톱 · 공격 카드마다 1타 추가',zena:'제나의 요정 · 2번 적중마다 요정 +1',gebura:'게부라 · 적중마다 HP 1 흡수'};
   const wsMatVal=m=>WS.matValue[Math.max(1,Math.min(5,(m&&m.grade)|0||1))]||1;
   /* 일반 재료: 공방 물건이거나 등급이 4 이하. 히든 재료: 그 밖의 전리품·유물 (5등급 이상이나 등급이 없는 전용 장비) */
-  const wsHidden=m=>!(D.items&&D.items[m.id])&&!((m.grade||0)>=1&&(m.grade||0)<=4)&&!(m.id==='birth'||m.n==='맨손');
+  const wsHidden=m=>!!m.hid||!(D.items&&D.items[m.id])&&!((m.grade||0)>=1&&(m.grade||0)<=4)&&!(m.id==='birth'||m.n==='맨손');
   function wsItem(ch,slot){
     const w=ch.ws,k=w[wsKey(slot)];
     const nmOf=d=>(w.names&&w.names[slot])||d,B_=WS.big;
@@ -665,13 +671,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {id:'ws_weapon',slot,wsH:k.h,wsN:k.n,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}${Object.keys(sp).map(x=>' · '+WS_SPN[x]).join('')}`,fx:{atk,spd,dmgB:dmg},wx}}
     if(slot==='armor'){const C_=WS.armor,bf=bigFx('armor',k.n),hp=C_.base.maxHp+k.n*C_.normal.maxHp+(bf.maxHp||0)+k.h*(C_.hidden.maxHp||0),rg=bf.regen||0,dr=Math.min(C_.drMax,k.h*C_.hidden.dr+(bf.dr||0)),eva=k.h*C_.hidden.eva,bg=tiers(k.n).length;
       return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%${dr>=C_.drMax?' (최대)':''}`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
-    const A_=WS.aug,g=w.g,fx=Object.assign({},A_.base),pk=g.picks||[];
-    fx.hit=(fx.hit||0)+(g.n||0)*A_.normal.hit+(g.h||0)*A_.hidden.hit;fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);
-    for(const x of pk)fx[x]=(fx[x]||0)+A_.pickAmt[x];
+    const A_=WS.aug,g=w.g,KD=CFG.custKinds[w.kind]||CFG.custKinds.aug,fx=Object.assign({},w.kind&&w.kind!=='aug'?(A_.baseKind[w.kind]||KD.fx):A_.base),pk=g.picks||[];
+    for(const [x,v] of Object.entries(A_.normalKind[w.kind||'aug']||A_.normal))fx[x]=(fx[x]||0)+Math.floor((g.n||0)*v+1e-9);fx.hit=(fx.hit||0)+(g.n||0)*(A_.normal.hit||0)+(g.h||0)*(A_.hidden.hit||0);fx.eva=(fx.eva||0)+(g.h||0)*(A_.hidden.eva||0);fx.atk=(fx.atk||0)+(g.h||0)*(A_.hidden.atk||0);
+    const kind=w.kind||'aug',kwm={};pk.forEach((x,i)=>{if(A_.pickAmt[x])fx[x]=(fx[x]||0)+A_.pickAmt[x];else if(kind!=='staff'&&A_.kwList.includes(x))kwm[x]=(kwm[x]||0)+A_.kwAmt[Math.min(i,A_.kwAmt.length-1)]});
+    if(kind!=='staff'&&A_.bigKind[kind])for(const i of tiers(g.n||0))for(const [x,v] of Object.entries(A_.bigKind[kind][i]||{}))fx[x]=(fx[x]||0)+v;
+    const stKw=kind==='staff'?(w.staffKw||'bleed'):null,kwCap=stKw?[stKw,g.n||0]:null;
+    /* 지팡이는 키워드를 스스로 정해 받는다: 특수 강화(5·10·15단계)마다 staffKwAmt, 히든 kwHidden번마다 +1이 모두 집중 키워드로 간다. 일반 강화는 그 키워드의 쌓는 최대치를 올린다 */
+    if(stKw){kwm[stKw]=(kwm[stKw]||0)+tiers(g.n||0).length*A_.staffKwAmt;kwm[stKw]=(kwm[stKw]||0)+Math.floor((g.h||0)/A_.kwHidden);if(tiers(g.n||0).length>=3)kwm[stKw]*=2}
+    else for(let i=1;i<=Math.floor((g.h||0)/A_.kwHidden);i++){const P_=A_.hiddenKwPool,k=P_[Math.abs(((ch.seed|0)*31+i*7919)%P_.length)];kwm[k]=(kwm[k]||0)+1}
+    const kw=Object.entries(kwm).map(([k,v])=>stKw?[k,v,1]:[k,v]);
     if(g.pick)fx[g.pick]=(fx[g.pick]||0)+A_.pick;
+    const ab={};for(const x of ['extraHit','rShield','rFirst','foeSink']){if(fx[x]){ab[x]=fx[x]}delete fx[x]}const xh=ab.extraHit||0;
     const cu=w.cust&&w.cust.done?w.cust:null;
     if(cu){if(cu.atk)fx.atk=(fx.atk||0)+cu.atk*WS.cust.atkPer;if(cu.eva)fx.eva=(fx.eva||0)+cu.eva;if(cu.hp)fx.maxHp=(fx.maxHp||0)+cu.hp*WS.cust.hpPer}
-    return {id:'ws_aug',slot,n:nmOf(A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>`${A_.stats[x]||(x==='spd'?'속도':x==='maxHp'?'최대 HP':x)}+${v}`).join(' · ')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${pk.length?` · 선택 ${pk.length}/${B_.at.length}`:''}${g.pend?` · 고를 수 있는 선택 ${g.pend}`:''}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx}
+    const LB={spd:'속도',maxHp:'최대 HP',check:'판정',dmgB:'피해',regen:'라운드마다 HP',over:'넘친 명중'};
+    return {id:'ws_aug',slot,kind:KD.n,n:nmOf(w.kind&&w.kind!=='aug'?'공방 '+KD.n:A_.n),grade:4,e:Object.entries(fx).filter(([x,v])=>v).map(([x,v])=>x==='dr'?`받는 피해 −${v}%`:`${A_.stats[x]||LB[x]||x}+${v}`).join(' · ')+kw.map(([k,v])=>` · 적중 시 ${D.keywords[k].n} +${v}`).join('')+(kwCap?` · ${D.keywords[kwCap[0]].n} 최대치 +${kwCap[1]}`:'')+(xh?' · 공격 카드마다 1타 추가':'')+(ab.rShield?` · 라운드 시작마다 보호막 +${ab.rShield}`:'')+(ab.rFirst?` · 라운드 첫 공격 피해 +${ab.rFirst}`:'')+(ab.foeSink?` · 전투 시작 시 상대에게 침잠 +${ab.foeSink}`:'')+(fx.adv?' · 라운드 첫 공격 명중 2회 굴림':'')+` · 강화 ${g.n||0}단계${g.h?' · 히든 '+g.h:''}${kind==='aug'?(pk.length?` · 선택 ${pk.length}/${B_.at.length}`:'')+(g.pend?` · 고를 수 있는 선택 ${g.pend}`:''):(tiers(g.n||0).length?` · 특수 강화 ${tiers(g.n||0).length}/${B_.at.length}`:'')}${cu&&cu.pas?` · 커스텀 패시브 ${WS.cust.pass[cu.pas].n}`:''}`,fx,kw,kwCap,extraHit:xh,rShield:ab.rShield||0,rFirst:ab.rFirst||0,foeSink:ab.foeSink||0,rev:2}
   }
   /* 공방 해결사가 되면 전용 무기·방어구·의수를 받는다. 쥐고 있던 무기·방어구·의수는 보관함으로 가서 재료가 된다 */
   function wsOpen(ch,chips){
@@ -694,6 +708,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!ch.ws.g||!('pick' in ch.ws.g)){ch.ws.g={pick:null};}
     {const g=ch.ws.g;g.n=g.n||0;g.p=g.p||0;g.h=g.h||0;g.picks=g.picks||[];g.pend=g.pend||0}
     for(const sl of ['weapon','armor','aug'])if(!ch.gear[sl]||ch.gear[sl].id!=='ws_'+sl)equip(ch,wsItem(ch,sl));
+    /* 의수 개편 전 저장: 장착 중인 의수를 새 규칙(속도·키워드)으로 다시 만든다 */
+    {const a=ch.gear.aug;if(a&&a.id==='ws_aug'&&a.rev!==2){equip(ch,carryTune(a,wsItem(ch,'aug')));ch.stash=(ch.stash||[]).filter(x=>x!==a)}}
   }
   /* 의수는 히든 의수 하나로 한 번만 개조한다: 공격·회피·명중 중 하나를 올린다 */
   const wsAugOk=(ch,m)=>false;
@@ -711,9 +727,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     w.cust={atk,eva,hp,pas,done:true,used};const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return {used,atk,eva,hp,pas}
   }
   /* 의수 선택: 5·10·15단계에 닿으면 공격·회피·명중 중 하나를 고른다 */
+  /* 작업대 보조 장비 종류: 의수·의복·지팡이·단말기·계약서·장치. 종류는 기본 보너스만 다르고 강화는 모두 같다 */
+  function wsSetKind(ch,k){
+    if(!ch.ws||!isWs(ch)||!CFG.custKinds[k]||(ch.ws.kind||'aug')===k||(ch.distForm&&!ch.distStable))return null;
+    ch.ws.kind=k;const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return CFG.custKinds[k];
+  }
+  /* 지팡이의 집중 키워드: 출혈·파열·화상 중 하나. 일반 강화마다 최대치가 오르고, 특수 강화(5·10·15단계)·히든 4번마다 적중마다 더 건다 */
+  function wsSetStaffKw(ch,k){
+    if(!ch.ws||!isWs(ch)||(ch.ws.kind||'aug')!=='staff'||!WS.aug.kwList.includes(k)||(ch.ws.staffKw||'bleed')===k)return null;
+    ch.ws.staffKw=k;const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return D.keywords[k];
+  }
   function wsAugChoose(ch,stat){
-    const g=ch.ws&&ch.ws.g;if(!g||!isWs(ch)||!(g.pend>0)||!WS.aug.pickAmt[stat]||(ch.distForm&&!ch.distStable))return null;
-    g.pend--;(g.picks=g.picks||[]).push(stat);const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return {stat,amt:WS.aug.pickAmt[stat]};
+    const g=ch.ws&&ch.ws.g;if(!g||!isWs(ch)||(ch.ws.kind||'aug')==='staff'||!(g.pend>0)||!WS.aug.kwList.includes(stat)||(ch.distForm&&!ch.distStable))return null;
+    const amt=WS.aug.kwAmt[Math.min((g.picks||[]).length,WS.aug.kwAmt.length-1)];
+    g.pend--;(g.picks=g.picks||[]).push(stat);const cur=ch.gear.aug;equip(ch,carryTune(cur,wsItem(ch,'aug')));if(cur)ch.stash=(ch.stash||[]).filter(x=>x!==cur);return {stat,amt,kw:true};
   }
   /* 보관함 장비 하나를 녹여 장착 중인 전용 무기·방어구를 강화한다. 무기는 무기, 방어구는 방어구만 재료가 된다 */
   function wsMelt(ch,slot,i){
@@ -786,7 +813,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const examDc=ch=>{const k=career(ch),n=Math.max(1,steps(k,ch));return Math.round(CFG.promo.examDc+CFG.promo.examDcSpan*promoDone(ch)/n)};
   function addPts(ch,n,chips){
     const k=career(ch);if(!n||!k)return;
-    n=Math.round(n*((CR[k]&&CR[k].gainMul)||1));ch.pp=(ch.pp||0)+n;
+    n=Math.round(n*((CR[k]&&CR[k].gainMul)||1)*(k==='finger'&&ch.fingerMul||1));ch.pp=(ch.pp||0)+n;
     if(canPromote(ch))chips.push(`${ptsName(ch)} +${n} (${ch.pp}/${promoNeed(ch)})`);
     /* 무한 모드: 도시가 모두 적대적이라 격식을 차린 심사는 열리지 않는다. 포인트가 차면 전공으로 바로 승급하고,
        최고 직위에 오른 뒤에는 포인트가 연륜 단계로 바뀐다 (단계마다 능력치 +1, 최대 legacyMax) */
@@ -919,6 +946,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const fresh=pool.filter(id=>!ownsCard(ch,id)),src=fresh.length>=CFG.cardPick.n?fresh:fresh.concat(pool.filter(id=>!fresh.includes(id))),set=[];
     const left=src.slice();while(set.length<CFG.cardPick.n&&left.length)set.push(left.splice(d(left.length)-1,1)[0]);
     if(!set.length)return null;
+    /* 카드 보상은 돈도 같이 준다(고정액). 구매한 상자는 제외 */
+    if(label!=='상자'){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;chips&&chips.push(`카드 보상 · +${money(m)}`)}
     if(set.length===1)return addCard(ch,set[0],chips,label,true);
     (ch.picks=ch.picks||[]).push(set);chips&&chips.push(`${label||'카드'} 발견 · ${set.length}장 가운데 하나를 고른다`);return set;
   }
@@ -1768,7 +1797,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 루트 전용 무기 강화: kind rb|hw, key = 단계 인덱스 또는 'host'|'free'. 끼고 있거나 보관함에 있는 같은 id의 무기를 새 단계로 바꾼다 */
   function routeWeaponUp(ch,kind,key,chips){
-    const W=CFG.routeWeapon[kind],g=W[key]||W.lv[key];if(!g)return;
+    const W=CFG.routeWeapon[kind];let g=W[key]||W.lv[key];if(!g)return;
+    {const tv=kind==='rb'&&typeof key==='number'&&ch.rteam&&W.team&&W.team[ch.rteam]&&W.team[ch.rteam][key];if(tv)g=Object.assign({},g,tv)}
     const it={id:W.id,slot:'weapon',grade:5,lvl:typeof key==='number'?key:9,n:g.n,e:g.e,fx:Object.assign({},g.fx),wx:Object.assign({dice:g.dice},g.wx||{})};
     const old=ch.gear.weapon&&ch.gear.weapon.id===W.id?ch.gear.weapon:null;
     if(old){equip(ch,carryTune(old,it));ch.stash=(ch.stash||[]).filter(x=>x!==old)}
@@ -1830,10 +1860,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {t:R.trial.t,x:R.trial.x,c:[
         {l:R.trial.obey,h:R.trial.obeyH,ok:{t:R.trial.obeyT,fx:{giri:'obey'}}},
         {l:R.trial.rebel,h:R.trial.rebelH,ok:{t:R.trial.rebelT,fx:{giri:'rebel'}}}]};
-    if(!fl.giri&&ch.fi===Z.fi&&y>=(ch.giriAt||0)&&d(100)<=Z.chance)
+    if(!fl.giri&&ch.fi>=Z.fi&&ch.fi<=(Z.fi2||Z.fi)&&y>=(ch.giriAt||0)&&d(100)<=Z.chance)
       return {t:R.start.t,x:R.start.x,c:[
         {l:R.start.yes,h:R.start.yesH,ok:{t:R.start.yesT,fx:{giri:'start'}}},
         {l:R.start.no,h:R.start.noH,ok:{t:R.start.noT,fx:{giri:'later'}}}]};
+    /* 큰형님의 시험: 작은형님이 점수를 절반 넘게 모았으면 해마다 한 번 형님이 직접 부른다 */
+    if(ch.fi===2&&canPromote(ch)&&(ch.pp||0)>=promoNeed(ch)*Z.bigBro.ppFrac&&y>=(ch.bigNext||0)){ch.bigNext=y+Z.bigBro.gap;if(d(100)<=Z.bigBro.chance)
+      return {t:'큰형님의 시험',x:'큰형님이 직접 이름을 불렀다. 앉으라는 말도 없이 술 한 잔을 앞에 놓는다. 그 잔을 어떻게 받느냐가 오늘의 시험이다. 의리를 앞세울지, 체면을 앞세울지는 당신이 정한다.',c:[
+        {l:'의리를 앞세워 잔을 받는다',h:'성공 시 큰형님 승급 · 실패 시 HP −'+Z.bigBro.failHp,check:{s:null,dc:Z.bigBro.dc},ok:{t:'잔이 비워지자 큰형님이 한쪽 입꼬리를 올렸다. 이제 그 이름 앞에 큰 자가 붙는다.',fx:{examPass:true}},fail:{t:'잔을 든 손이 한 박자 늦었다. 큰형님은 아무 말 없이 다음 잔을 거두었다.',fx:{hp:-Z.bigBro.failHp}}},
+        {l:'체면을 앞세워 맞선다',h:'성공 시 큰형님 승급 · 실패 시 HP −'+Z.bigBro.failHp,check:{s:'atk',dc:Z.bigBro.dc},ok:{t:'맞선 눈을 큰형님이 피하지 않았다. 한참 뒤에야 잔을 내밀었다. 그 잔은 받아도 되는 잔이었다.',fx:{examPass:true}},fail:{t:'체면은 지켰지만 큰형님의 얼굴이 굳었다. 다음 기회까지는 시간이 필요하다.',fx:{hp:-Z.bigBro.failHp}}},
+        {l:'아직은 이르다며 물러난다',ok:{t:'큰형님은 고개를 끄덕이고 잔을 다시 채웠다. 서두르지 않는 사람은 오래 간다.',fx:{}}}]};}
     return null;
   }
   function synRouteEvent(G){
@@ -2070,6 +2106,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(d(100)<=A.patron.chance)return {t:T_.patron.t,x:T_.patron.x,c:[{l:T_.patron.l,ok:{t:T_.patron.t2,fx:{money:A.patron.money}}}]};
       if(d(100)<=A.visit.chance)return {t:T_.visit.t,x:T_.visit.x,c:[{l:T_.visit.l,ok:{t:T_.visit.t2,fx:{money:A.visit.money}}}]};
       return null}
+    if(a.stage===0&&(a.good>=1||(a.rated||0)>=2)&&!a.gallery&&(ch.fi||0)>=1&&d(100)<=A.masterEye.chance){
+      return {t:'마에스트로의 눈에 든 날',x:'품평회장 맨 뒤 자리에 오래된 얼굴 하나가 앉아 있다. 마에스트로다. 당신의 지난 작품 앞에서 한참 서 있던 사람이다. 다음 한 점을 직접 보고 싶다는 전갈이 왔다.',c:[
+        {l:'대작 한 점을 내건다',h:'성공 시 갤러리 개관 · 실패 시 HP −'+A.masterEye.failHp,check:{s:null,dc:A.masterEye.dc},ok:{t:'작품 앞에서 마에스트로가 오래 서 있었다. 말은 없었다. 그 침묵이 곧 평가였다.',fx:{art:{op:'master'}}},fail:{t:'마에스트로는 고개를 끄덕이지도 젓지도 않고 자리를 떴다. 다음 기회를 기다려야 한다.',fx:{hp:-A.masterEye.failHp,art:{op:'masterFail'}}}},
+        {l:'아직은 이르다고 한다',ok:{t:'마에스트로의 전갈은 접혀서 품속에 들어갔다. 기회는 다시 올 것이다.',fx:{}}}]}}
     if(a.stage===0){const S=T_.s1,c=[];
       c.push({l:S.c.mad.l,h:S.c.mad.h,ok:{t:S.c.mad.t,fx:{hp:-A.madHp,art:{op:'style',style:'mad'}}}});
       c.push({l:S.c.ext.l,h:fillArt(S.c.ext.h,A),req:'matstock>='+A.need,lock:fillArt(S.c.ext.lock,A),ok:{t:S.c.ext.t,fx:{art:{op:'style',style:'ext'}}}});
@@ -2084,10 +2124,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const A=CFG.art,a=ch.art=ch.art||{stage:0,good:0,style:null,made:false,next:0},y=ch.year||0;
     if(o.op==='style'){a.style=o.style;a.stage=1;a.made=false;a.next=y+A.gap;if(o.style==='ext'){ch.matStock=Math.max(0,(ch.matStock||0)-A.need);chips.push(`모아 둔 재료 −${A.need} (지금 ${ch.matStock})`)}chips.push(`작품 · ${({mad:'광기',ext:'극단',ref:'정제'})[o.style]}`)}
     else if(o.op==='made'){a.made=!!o.ok;a.stage=2;a.next=y+A.gap;if(!o.ok&&a.style==='ext')loseMind(ch,A.failMind,m=>chips.push(m));chips.push(o.ok?'완성도 +':'완성도 흠')}
-    else if(o.op==='rate'){a.stage=0;a.style=null;a.next=y+A.cycleGap;
+    else if(o.op==='rate'){a.stage=0;a.style=null;a.next=y+A.cycleGap;a.rated=(a.rated||0)+1;
       if(o.r==='good'){a.good++;chips.push(`예술적 평가 ${a.good}/${A.goodNeed}`)}
       else if(o.r==='bad'){const lost=Math.floor((ch.pp||0)*A.badLose);ch.pp=(ch.pp||0)-lost;chips.push(`혹평 · ${ptsName(ch)} −${lost}`)}
       else chips.push('무난한 평가')}
+    else if(o.op==='master'){a.good=Math.max(a.good,A.goodNeed);a.next=y+1;chips.push(`마에스트로의 눈에 든 작품 · 예술적 평가 ${a.good}/${A.goodNeed}`)}
+    else if(o.op==='masterFail'){a.next=y+A.masterEye.retry;chips.push('대작은 닿지 못했다')}
     else if(o.op==='gallery'){a.gallery=1;a.next=y+1;chips.push(`갤러리 개관 · 해마다 수입 +${A.income}`)}
     else if(o.op==='ring'){a.ring=1;a.next=y+2;let n=0;while((ch.fi||0)<2&&n++<3){const r=fingerStep(ch);if(!r)break}
       (ch.relics=ch.relics||[]).push('마에스트로의 증거');const it=riteItem('약지',true);const cur=ch.gear.aug;if(cur&&cur.rite==='약지')equip(ch,it);else offerGear(ch,it);ch.rites=ch.rites||{};ch.rites['약지']=1;chips.push('마에스트로의 증거 · 반지를 받았다')}
@@ -2187,7 +2229,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+corpLv(G.ch)*(mt.yearPer||0))}
       if(bondMarried(G.ch))gainMind(G.ch,BD.yearMind);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
-    if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year;
+    if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year*(isFinger(G.ch)&&G.ch.fingerMul||1);
     let f=fixedSpec(G.year);
     /* 무한런 등급 전투: 등급 마지막 해. 도시의 별 등급은 피아니스트(이미 이겼으면 후반 조우), 마지막 등급은 최종 상대 */
     const X_=CFG.endless,k_=G.year-CFG.years;
@@ -2239,6 +2281,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const e=encounter(G.ch,f);return {type:'fight',enemy:e.id,enc:e};
     }
     /* 갈림길: 공방 해결사 제안이 가끔(WF.chance%) 끼어든다 */
+    /* 손가락 출신(조직 출신·보냐텔리): 4년차 갈림길보다 먼저 손가락이 찾아온다 */
+    if(G.year===CFG.fingerEarly.year&&G.ch.fingerEarly&&!G.ch.fingerEarlyDone&&!G.ch.aff&&!G.ch.hw&&!lakeOn(G.ch)&&D.fingerEarly){G.ch.fingerEarlyDone=1;return {type:'event',ev:D.fingerEarly}}
     if(G.year===CFG.affiliationYear&&!G.ch.aff&&!G.ch.hw&&!lakeOn(G.ch)){
       if(D.workshopChoice&&!noFixer(G.ch)&&d(100)<=WF.chance)return {type:'event',ev:Object.assign({},D.affiliation,{x:D.affiliation.x+(D.workshopIntro||''),c:[...D.affiliation.c,D.workshopChoice]})};
       return {type:'event',ev:D.affiliation};
@@ -2626,6 +2670,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 무한 모드에 들어선 뒤 지난 햇수: 해마다 양쪽 회피가 evaDown씩 줄어든다 (0에서 멈춤) */
   /* 출혈 최대 스택: 플레이어가 적에게 거는 출혈만 bleedMax, 플레이어가 받는 출혈은 stackCap */
   const bleedCap=X=>X.isP?CFG.stackCap:CFG.bleedMax;
+  /* 무기·보조 장비가 한 라운드에 한 키워드로 줄 수 있는 부여량(CFG.kwTurnCap). 지팡이(free)는 제외 */
+  const kwBudget=(A,C,k,n)=>{const R=A.kwR&&A.kwR.r===C.round?A.kwR:(A.kwR={r:C.round}),used=R[k]||0,g=Math.max(0,Math.min(n,CFG.kwTurnCap-used));R[k]=used+g;return g};
   /* 혈찬 회복: 5스택마다 CFG.hyeolchan.heal (총량 제한 없음) */
   const hcHeal=X=>Math.max(0,Math.min(CFG.hyeolchan.heal,X.maxHp-X.hp));
   /* 균열에 나타날 수 있는 히든 보스: 조건과 상관없이 나타나지만, 이기는 것이 아니라 버티는 시험(trial)이나 noRift 표시가 있는 보스는 뺀다 */
@@ -2650,7 +2696,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       bleed:s.startBleed,breath:s.startBreath,dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)?ch.gear.aug.dsp.ammo:0):0,thumbFi:ch.fi||0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,kwPlus:ch.colorPasv==='brand'?2:0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     if(ch.flags&&ch.flags.redMist&&ch.gear&&ch.gear.weapon&&ch.gear.weapon.id==='w_mimicry_p'){P.rmGauge=0;P.rmOpen=0}
     if(ch.flags&&ch.flags.redMist&&CFG.redMist.shieldPct)P.shield=Math.max(P.shield||0,Math.round(s.maxHp*CFG.redMist.shieldPct));   // 붉은 안개 책장: 전투 시작 때 보호막
-    P.ample=ch.ample||0;P.hitB=s.hit||0;P.auxKw=((ch.gear&&ch.gear.aug&&ch.gear.aug.kw)||[]).concat(ch.surg&&D.surgeries&&D.surgeries[ch.surg.kind]&&ch.surg.lv>=3&&D.surgeries[ch.surg.kind].lv[2].kw||[]);if(!P.auxKw.length)P.auxKw=null;P.surgThr=(ch.surg&&ch.surg.kind==='fun'&&ch.surg.lv>=3)?(D.surgeries.fun.lv[2].thr||2):0;P.riteGuard=(ch.gear&&ch.gear.aug&&ch.gear.aug.guard)||null;P.dsp=(ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)||null;P.auxMat=(ch.gear&&ch.gear.aug&&ch.gear.aug.matHit)||0;P.auxDebuff=(ch.gear&&ch.gear.aug&&ch.gear.aug.debuff)||null;if(P.wx&&P.wx.forms)P.form='a';if(P.wx&&P.wx.dimShift)P.dimCharge=1;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
+    P.ample=ch.ample||0;P.hitB=s.hit||0;P.auxExtra=(ch.gear&&ch.gear.aug&&ch.gear.aug.extraHit)||0;P.auxShield=(ch.gear&&ch.gear.aug&&ch.gear.aug.rShield)||0;P.auxFirst=(ch.gear&&ch.gear.aug&&ch.gear.aug.rFirst)||0;P.auxFoeSink=(ch.gear&&ch.gear.aug&&ch.gear.aug.foeSink)||0;{const kc=ch.gear&&ch.gear.aug&&ch.gear.aug.kwCap;P.kwCapUp=kc?{[kc[0]]:kc[1]}:null}P.auxKw=((ch.gear&&ch.gear.aug&&ch.gear.aug.kw)||[]).concat(ch.surg&&D.surgeries&&D.surgeries[ch.surg.kind]&&ch.surg.lv>=3&&D.surgeries[ch.surg.kind].lv[2].kw||[]);if(!P.auxKw.length)P.auxKw=null;P.surgThr=(ch.surg&&ch.surg.kind==='fun'&&ch.surg.lv>=3)?(D.surgeries.fun.lv[2].thr||2):0;P.riteGuard=(ch.gear&&ch.gear.aug&&ch.gear.aug.guard)||null;P.dsp=(ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)||null;P.auxMat=(ch.gear&&ch.gear.aug&&ch.gear.aug.matHit)||0;P.auxDebuff=(ch.gear&&ch.gear.aug&&ch.gear.aug.debuff)||null;if(P.wx&&P.wx.forms)P.form='a';if(P.wx&&P.wx.dimShift)P.dimCharge=1;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
     const IFH=CFG.infinite,yH=ch.infinite&&id===CFG.endless.final?Math.min(IFH.hpEnd,(Math.floor((CFG.startAge+(ch.year||0)-1)/IFH.hpStep)+1)*IFH.hpStep-CFG.startAge+1):(ch.year||0),growH=e.hidden?0:Math.max(0,yH-S_.from)*(EZ?EZ.grow:1);
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;
@@ -2674,6 +2720,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
     const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),maxHp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),atk:Math.max(1,((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.atk:0)+e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,kali:e.kali||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 무한 모드에서도 적의 회피는 enemyMax에서 멈춘다. 공격(명중)도 enemyMax에서 멈추지만, 균열을 닫은(균열 엔딩을 본) 뒤에는 균열 피해가 없어지므로 atkMax까지 올라 플레이어 회피가 아무리 높아도 결국 맞게 한다 */
+    if(P.auxFoeSink)E.sink=(E.sink||0)+P.auxFoeSink;
     E.atk+=Math.floor(infYears(ch)/CFG.infinite.atkEvery);E.atk=Math.min(E.atk,CFG.infinite.atkCap||(ch.outSeen&&ch.outSeen.seal?(CFG.infinite.atkMax||CFG.infinite.enemyMax):CFG.infinite.enemyMax));E.eva=Math.max(0,Math.min(E.eva,CFG.infinite.enemyMax)-Math.floor(infYears(ch)*CFG.infinite.evaDown));
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
@@ -2748,6 +2795,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     C.round++;
     const {P,E}=C;P.triDmg=0;P.triCut=0;C.tri=null;
     for(const X_ of [P,E])if((X_.fairy||0)>0)X_.fairy=Math.max(0,X_.fairy-3);
+    if(P.auxShield&&P.hp>0){P.shield=Math.min(CFG.shieldCap,(P.shield||0)+P.auxShield);const m={t:'kw',s:`${P.name} · 보조 장비 · 보호막 +${P.auxShield} (지금 ${P.shield})`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     if(P.augPas==='absorb'&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(3,P.maxHp-P.hp);P.hp+=h;const m={t:'kw',s:`${P.name} · 흡수 코어 · HP +${h}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     /* 망(望): 3라운드마다 정신력을 쓰고 빛의 고리 하나가 감긴다. 최대 3망, 9라운드 이후에는 더 쓰지 않는다. 정신력이 모자라면 감기지 않는다 */
     {const SM=CFG.shinmang;if(P.sm&&C.round%SM.ringEvery===0&&P.sm.rings<P.sm.limit){const cost=SM.ringCost[P.sm.rings]||SM.ringCost[SM.ringCost.length-1];
@@ -2966,7 +3014,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
       if(k==='burn'&&to!=='s'&&A.wx&&A.wx.burnPlus)n+=A.wx.burnPlus;
       if(A.kwPlus&&to!=='s'&&(k==='bleed'||k==='burn'||k==='rupture'||k==='stagger'||k==='sink'||k==='nail'))n+=A.kwPlus;
-      const cap_=k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
+      let cap_=k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
+      if(to!=='s'&&A.kwCapUp&&A.kwCapUp[k])cap_+=A.kwCapUp[k];
       X[k]=Math.min(cap_,b4_+n);
       {const R_=RS_;const gn_=X[k]-b4_;if(R_&&gn_>0){if(A.isP){if(to==='s')R_.buff=(R_.buff||0)+gn_;else R_.debuff=(R_.debuff||0)+gn_}else if(X.isP&&to!=='s')R_.debuffTaken=(R_.debuffTaken||0)+gn_}}
       L('kw',`  ${X.name}에게 ${D.keywords[k].n} +${n} (지금 ${X[k]}/${cap_}${b4_+n>cap_?` · 최대치라 실제 +${X[k]-b4_}`:''})`);
@@ -2994,7 +3043,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.debuffHit){B.passHitNext=(B.passHitNext||0)+c.debuffHit;L('kw',`  ${B.name} · 다음 라운드 명중 ${sg(c.debuffHit)} (1라운드)`)}
     }
     if(c.t==='buff'){if(c.serum)addSerum(A,c,L);if(c.shield)A.shield=Math.min(CFG.shieldCap,(A.shield||0)+c.shield+(A.prescPlus||0)+(A.isP&&A.cg?5*CFG.cardGrade.indexOf(A.cg):0));L('sys',`${A.name} · ${c.n} (버프)${c.gain?` · 빛 +${c.gain}`:''}${c.shield?` · 보호막 ${A.shield}`:''}`);applyKw(A,B,c,L);push({k:'buff',side:A.uid,card:c});return}
-    let hits=c.hits+(c.t==='atk'&&A.wx&&A.wx.extraHit?A.wx.extraHit:0);
+    let hits=c.hits+(c.t==='atk'?((A.wx&&A.wx.extraHit)||0)+(A.auxExtra||0):0);
     /* 창세치 고래 심장: 3타마다 1타 추가. 추가타는 다음 3타 세기에 들어가지 않는다 */
     if(A.isP&&A.lk&&A.lk.genesis&&c.t==='atk'){const b3=c.hits;A.h3=A.h3||0;const ex=Math.floor((A.h3+b3)/3)-Math.floor(A.h3/3);A.h3+=b3;if(ex>0){hits+=ex;L('kw',`  ${A.name} · 창세치 고래 심장 · 추가타 +${ex}`)}}
     /* 가속: 라운드마다 처음 공격할 때 1스택 (전투당 최대 3) */
@@ -3141,6 +3190,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.ring&&A.work>0){dmg+=CFG.ring.dmg*A.work;note+=` 작품 ${A.work}+${CFG.ring.dmg*A.work}`;if(A.work>=CFG.ring.max){dmg=Math.floor(dmg*CFG.ring.finish);A.work=CFG.ring.after;note+=` 완성×${CFG.ring.finish}`}}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
       if(A.augPas==='over'&&A.ovRound!==C.round){A.ovRound=C.round;dmg+=4;note+=' 과부하 코어+4'}
+      if(A.auxFirst&&A.afRound!==C.round){A.afRound=C.round;dmg+=A.auxFirst;note+=` 보조 장비 첫 공격+${A.auxFirst}`}
       if(A.cb&&A.cb.k==='dmg'&&A.hp>=A.maxHp*CFG.colorBuff.hpMin){dmg+=A.cb.v;note+=` 특색 위력+${A.cb.v}`}
       if(A.sm){const SM=CFG.shinmang,mul=1+SM.dealShin+A.sm.rings*SM.dealRing;dmg=Math.floor(dmg*mul);note+=` 신망 ×${mul.toFixed(2)}`}
       if(A.wx&&A.wx.finish&&B.hp<=B.maxHp*A.wx.finish.at){dmg+=A.wx.finish.dmg;note+=` 마무리+${A.wx.finish.dmg}`}
@@ -3221,7 +3271,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.auxMat&&B.hp>0){B.matc=(B.matc||0)+A.auxMat;L('kw',`  ${B.name}에게 재료 수집 ${B.matc} (마에스트로의 증거)`)}
       if(A.auxDebuff&&B.hp>0){const {k,n,cap}=A.auxDebuff;B[k]=Math.min(cap||5,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${{prescript:'지령',warp:'왜곡',shock:'감전',chain:'사슬',web:'거미줄'}[k]||k} ${B[k]} (제식 장비)`)}
       /* 보조 장비가 거는 키워드: 적중마다, 무기와 같이 5스택까지 */
-      if(A.auxKw&&B.hp>0)for(const [k,n] of A.auxKw){const lim=Math.min(5,k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):CFG.stackCap);if((B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (보조 장비)`)}
+      if(A.auxKw&&B.hp>0)for(const [k,n0,free] of A.auxKw){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=free?n0:kwBudget(A,C,k,n0);if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (보조 장비)`)}
       if(A.isP&&A.wx&&A.wx.forms&&B.hp>0&&!B.formImmune){const F_=CFG.form;
         if(A.form==='p')applyKw(A,B,{kw:[['bleed',F_.bleed,'t']]},L);
         if(A.form==='s'){addStagger(C,B,F_.stagger,L);if((A.stagger||0)>0)A.stagger=Math.max(0,A.stagger-F_.stagger)}}
@@ -3257,8 +3307,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.debuff){const {k,n}=X.debuff,nm={prescript:'지령',warp:'왜곡',shock:'감전',chain:'사슬',web:'거미줄'}[k];B[k]=Math.min(5,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${nm} ${B[k]}`)}
         if(X.mindHit&&A.isP){const g=gainMind(C.ch,X.mindHit);if(g)L('kw',`  ${A.name} · 참회 · 정신력 +${g}`)}
         /* 무기로 입히는 키워드는 무기만으로는 WKCAP스택까지 쌓인다 (이미 그 이상이면 더하지 않는다) */
-        {const WKCAP=5,kws=[...(X.hitKw||[]),...((X.formKw&&A.form&&X.formKw[A.form])?[X.formKw[A.form]]:[])];
-        for(const [k,n] of kws){const lim=Math.min(WKCAP,k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):CFG.stackCap);if((B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}}
+        {const kws=[...(X.hitKw||[]),...((X.formKw&&A.form&&X.formKw[A.form])?[X.formKw[A.form]]:[])];
+        for(const [k,n0] of kws){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=kwBudget(A,C,k,n0);if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}}
         if(X.fairy){A.fairyN=(A.fairyN||0)+1;if(!X.fairy.every||A.fairyN%X.fairy.every===0){B.fairy=Math.min(X.fairy.max,(B.fairy||0)+X.fairy.add);L('kw',`  ${B.name}에게 요정 +${X.fairy.add} (${B.fairy}/${X.fairy.max})`)}}
         if(X.imprint){B.imprint=Math.min(5,(B.imprint||0)+1);L('kw',`  ${B.name}에게 각인 ${B.imprint}/5`)}
         if(X.clawMark){B.cmark=Math.min(5,(B.cmark||0)+1);L('kw',`  ${B.name}에게 발톱자국 ${B.cmark}/5`);
@@ -3294,7 +3344,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.burnHit&&B.hp>0){
         if(A.laev||A.wsFlame){B.flame=Math.min(CFG.stackCap,(B.flame||0)+A.burnHit);if(A.wsFlame&&!A.laev)B.wsKeep=true;if(A.laev==='open'){B.blue=true;B.blueM=1+(CFG.laev.blueMul-1)*(A.laevF||1);B.blueD=Math.max(1,Math.round(CFG.laev.blueDot*(A.laevF||1)))}
           L('kw',`  ${B.name}에게 ${A.laev==='open'||isBlue(B)?'푸른 화염':'붉은 화염'} +${A.burnHit} (지금 ${B.flame})`);if(A.laev)laevCount(A,A.burnHit,L)}
-        else{const bp=A.burnHit+(A.wx&&A.wx.burnPlus||0);B.burn=Math.min(Math.round(CFG.burn.max*((A.wx&&A.wx.burnCap)||1)),(B.burn||0)+bp);L('kw',`  ${B.name}에게 화상 +${bp} (지금 ${B.burn})`)}}
+        else{const bp=A.burnHit+(A.wx&&A.wx.burnPlus||0);B.burn=Math.min(Math.round(CFG.burn.max*((A.wx&&A.wx.burnCap)||1))+((A.kwCapUp&&A.kwCapUp.burn)||0),(B.burn||0)+bp);L('kw',`  ${B.name}에게 화상 +${bp} (지금 ${B.burn})`)}}
       /* 주사위마다 무작위 디버프 1 (Furioso): 출혈 또는 파열 */
       if(c.rngDebuff&&B.hp>0){const got={};for(let i=0;i<c.dice;i++){const k=one(c.rngDebuff);B[k]=Math.min(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):CFG.stackCap,B[k]+1);got[k]=(got[k]||0)+1}
         L('kw',`  ${B.name}에게 ${Object.entries(got).map(([k,n])=>D.keywords[k].n+' +'+n).join(' · ')} (무작위)`)}
@@ -3492,7 +3542,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
-    wsOpen,wsEnsure,wsRename,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
+    wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,equip,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

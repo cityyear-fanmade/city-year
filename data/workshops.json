@@ -737,6 +737,15 @@
     "maxHp": 18,
     "eva": 4
    }
+  },
+  "auxhid": {
+   "n": "비장 부품",
+   "price": 5000,
+   "slot": "aug",
+   "hid": true,
+   "wsOnly": true,
+   "e": "아무 효과 없는 부품 · 공방 작업대에서 녹이면 보조 장비 히든 한 단계",
+   "fx": {}
   }
  },
  "officeGear": {

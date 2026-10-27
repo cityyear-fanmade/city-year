@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.1.8';
+  const VERSION='v10.1.9';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -939,8 +939,8 @@ export function startUI(E,app){
     if(!(UI.stock||[]).length)return '';
     const ch=G.ch;
     const items=UI.stock.map(id=>{const it=D.special[id],st=E.canBuySpecial(ch,id);
-      const note=st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${D.slots[it.slot]} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
-      return `<button class="btn" data-a="bspecial" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(it.price)}</span></span>
+      const note=it.wsOnly?(st==='money'?'돈이 모자란다':'공방 해결사 전용 재료 · 보관함에 들어간다'):st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${D.slots[it.slot]} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
+      return `<button class="btn" data-a="bspecial" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(E.specialPrice(ch,id))}</span></span>
         <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${note}</span></button>`}).join('');
     const B=CFG.blackCard,box=UI.cardBox?`<div class="panel stack" style="gap:8px;border-color:${KIND.debuff[1]}"><div class="row between"><b class="serif">수상한 카드 상자</b><span class="mono" style="color:var(--gold)">${E.money(B.price)}</span></div>
       <p class="small dim">원하는 쪽을 말하면 그런 카드 한 장을 꺼내 준다. 무엇이 나올지는 모른다. 이번 방문에 한 번.</p>
@@ -1038,8 +1038,8 @@ export function startUI(E,app){
     const K_=W_.cust,cu=UI.cu=UI.cu||{atk:0,eva:0,hp:0,pas:null},spent=cu.atk*K_.atkCost+cu.eva*K_.evaCost+cu.hp*K_.hpCost+(cu.pas?K_.passCost:0),left=K_.pts-spent;
     const stp=(k,l,cost,unit)=>`<div class="row between" style="gap:6px"><span class="small"><b>${l}</b> +${cu[k]*unit} <span class="dim">(${cost}포인트당 +${unit})</span></span><span class="row" style="gap:6px"><button class="chip" data-a="custd" data-i="${k}:-1" ${cu[k]<=0?'disabled':''}>−</button><button class="chip" data-a="custd" data-i="${k}:1" ${left<cost?'disabled':''}>＋</button></span></div>`;
     const custRow=(!ag||ag.id!=='ws_aug'||(w.cust&&w.cust.done))?'':`<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>커스텀 의수 만들기</b><span class="chip warn">남은 포인트 ${left}/${K_.pts}</span></div><p class="small dim">포인트를 나눠 의수를 한 번 만든다. 만들고 나면 바꿀 수 없다.</p>${stp('atk','공격',K_.atkCost,K_.atkPer)}${stp('eva','회피',K_.evaCost,1)}${stp('hp','체력',K_.hpCost,K_.hpPer)}<div class="stack" style="gap:4px"><span class="small"><b>패시브</b> <span class="dim">(${K_.passCost}포인트, 하나만)</span></span><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-items:stretch">${Object.entries(K_.pass).map(([k,v])=>`<button class="btn${cu.pas===k?' primary':''}" style="min-height:96px;justify-content:flex-start;word-break:keep-all" data-a="custp" data-i="${k}" ${cu.pas!==k&&!cu.pas&&left<K_.passCost?'disabled':''}><b>${v.n}</b><span class="small dim">${v.e}</span></button>`).join('')}</div></div><button class="btn primary" data-a="custok" ${spent<=0||dead?'disabled':''}>이 설계로 만든다</button></div>`;
-    const augRow=!ag||ag.id!=='ws_aug'?'':`<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow('aug')}<div class="row between"><b>${esc(ag.n)}</b><span class="mono small dim">일반 ${w.g.p||0}/${E.wsNeed(w.g.n||0)} · 강화 ${w.g.n||0}${w.g.h?' · 히든 '+w.g.h:''} · ${(w.g.picks||[]).length}/${W_.big.at.length} 선택</span></div><span class="mono small" style="color:var(--gold)">${esc(ag.e)}</span>${abtn||'<p class="small dim">녹일 의수가 보관함에 없다.</p>'}
-      ${w.g.pend>0?`<div class="stack" style="gap:4px"><b class="small" style="color:var(--gold)">특수 강화 · 하나를 고른다 (${w.g.pend}번 남음)</b><div class="row" style="gap:6px;flex-wrap:wrap">${Object.entries(W_.aug.stats).map(([k,l])=>`<button class="btn" data-a="wsaugc" data-i="${k}" ${dead?'disabled':''}><b>${l} +${W_.aug.pickAmt[k]}</b></button>`).join('')}</div></div>`:`<p class="small dim">${W_.big.at.map(t=>t+'단계').join('·')}에 닿으면 공격·회피·명중 중 하나를 고른다 (지금 ${(w.g.picks||[]).length}/${W_.big.at.length}).</p>`}</div>`;
+    const augRow=!ag||ag.id!=='ws_aug'?'':`<div class="stack" style="gap:6px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px">${nameRow('aug')}<div class="stack" style="gap:4px"><span class="small"><b>보조 장비 종류</b> <span class="dim">(종류마다 기본 보너스와 일반 강화 능력치가 다르다 · 언제든 바꿀 수 있다)</span></span><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">${Object.entries(CFG.custKinds).map(([k,v])=>`<button class="btn${(w.kind||'aug')===k?' primary':''}" data-a="wskind" data-i="${k}" ${dead?'disabled':''}><b>${v.n}</b><span class="small dim">${(W_.aug.kindE||{})[k]||v.e}</span></button>`).join('')}</div></div>${(w.kind||'aug')==='staff'?`<div class="stack" style="gap:4px"><span class="small"><b>집중 키워드</b> <span class="dim">(일반 강화마다 최대치 +1 · 특수 강화 5·10·15단계와 히든 4번마다 적중마다 +1 더 걸린다)</span></span><div class="row" style="gap:6px">${W_.aug.kwList.map(k=>`<button class="btn${(w.staffKw||'bleed')===k?' primary':''}" data-a="wsstkw" data-i="${k}" ${dead?'disabled':''}><b>${D.keywords[k].n}</b></button>`).join('')}</div></div>`:''}<div class="row between"><b>${esc(ag.n)}</b><span class="mono small dim">일반 ${w.g.p||0}/${E.wsNeed(w.g.n||0)} · 강화 ${w.g.n||0}${w.g.h?' · 히든 '+w.g.h:''} · ${(w.g.picks||[]).length}/${W_.big.at.length} 선택</span></div><span class="mono small" style="color:var(--gold)">${esc(ag.e)}</span>${abtn||'<p class="small dim">녹일 의수가 보관함에 없다.</p>'}
+      ${w.g.pend>0&&(w.kind||'aug')!=='staff'?`<div class="stack" style="gap:4px"><b class="small" style="color:var(--gold)">특수 강화 · 하나를 고른다 (${w.g.pend}번 남음)</b><div class="row" style="gap:6px;flex-wrap:wrap">${W_.aug.kwList.map(k=>`<button class="btn" data-a="wsaugc" data-i="${k}" ${dead?'disabled':''}><b>적중 시 ${D.keywords[k].n} +${W_.aug.kwAmt[Math.min((w.g.picks||[]).length,W_.aug.kwAmt.length-1)]}</b></button>`).join('')}</div></div>`:`<p class="small dim">${W_.big.at.map(t=>t+'단계').join('·')}에 닿으면 ${(w.kind||'aug')==='staff'?'집중 키워드가 적중마다 +1 더 걸리고, 15강에는 부여량이 2배가 된다':'종류에 맞는 특수 강화가 붙고, 출혈·파열·화상 중 하나를 골라 적중마다 건다'} (지금 ${(w.kind||'aug')==='staff'?W_.big.at.filter(t=>(w.g.n||0)>=t).length:(w.g.picks||[]).length}/${W_.big.at.length}).</p>`}</div>`;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b class="serif">작업대</b><span class="chip">공방 해결사</span></div>
       <p class="small dim">전용 무기·방어구·의수는 빼거나 바꿀 수 없다. 다른 장비는 모두 재료다. 무기·방어구·의수는 같은 칸의 보관함 장비를 녹여 끝없이 강화하고, 5·10·15단계에서 한 번씩 크게 오른다(특수 강화). 15단계 뒤로는 일반 강화만 끝없이 이어진다. 히든 강화재료는 어떤 전용 장비에든 쓸 수 있다. 일반 장비는 모아서 한 단계(필요한 개수는 단계가 오를수록 늘어난다), 히든 장비는 1개로 한 단계. 녹인 장비는 돌아오지 않고, 공방 물건의 값은 고정이고, 20년차마다 한 번씩 오른다.</p>
       ${UI.wsMsg?`<p class="good small">${esc(UI.wsMsg)}</p>`:''}${rows}${augRow}</div>`;
@@ -1308,9 +1308,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🆕 추가',['약지에 작품을 만들어 품평회에 내는 이야기가 추가됩니다.','소지 표식을 가진 사람에게 새로운 인연이 생깁니다.','외곽에서 승급이 막힌 사람을 위한 사건이 추가됩니다.']],
       ['🔧 조정',['공방 해결사의 엠플 값이 조정되고, 돈을 벌 수 있는 사건이 추가됩니다.','협회 추천서가 더 일찍 나옵니다.','기록실에 인연 힌트가 보강됩니다.','장인·명장 공방 장비와 암시장 장비가 조정되고, 명장의 공방에 4등급 보조 장비가 추가됩니다.','공방 해결사에 특수 강화와, 장비를 사자마자 재료로 쓰는 기능이 추가됩니다.','약지는 작품 이야기를 거쳐야 마에스트로가 됩니다.','무한 모드에서는 새 소속에 들어가거나 이직할 수 없습니다.','무한 모드에서 위쪽에 뜨는 글이 100년마다 한 번만 나옵니다.','일부 제식 장비와 N사 강화 시술이 강해집니다.']]];
   const V1015SEC=[['🔧 추가 조정',['무기 이펙트 조정','환상체 4종 조정']]];
-  const NOTICE={id:'v10.1.8',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v10.1.9',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[...V1010SEC,...V1015SEC,['🔧 v10.1.7 조정',['공방 해결사 편의성 증가','연출 강도 차이가 나지 않던 것 수정','환상체 몇 명 조정','라운드마다 HP UI 조정']],['🔧 v10.1.8 조정',['세이브 불러오기 시 해금 목록이 바로 적용되지 않던 문제 수정']]]};
+    sec:[...V1010SEC,...V1015SEC,['🔧 v10.1.7 조정',['공방 해결사 편의성 증가','연출 강도 차이가 나지 않던 것 수정','환상체 몇 명 조정','라운드마다 HP UI 조정']],['🔧 v10.1.8 조정',['세이브 불러오기 시 해금 목록이 바로 적용되지 않던 문제 수정']],['🔧 v10.1.9 조정',['공방 해결사 보조 장비 종류 선택 · 강화 개편','카드 보상을 받을 때 돈 500안을 함께 지급','R사 팀별 시작 무기 변경','손가락 승급 이벤트 추가']]]};
   const V1002SEC=[['🔧 조정',['인연 캐릭터의 성격과 말투를 조정하고, 루트별 전용 이벤트를 늘렸습니다.']]];
   const V1001SEC=[['🔧 개선 및 수정',['무한 모드 성장(주는 피해·일격·받는 피해·연륜)을 가방의 "정보" 칸에서 항상 볼 수 있습니다. 규칙 요약에 연륜 설명을 넣었습니다.','한계 돌파의 공격 선택지가 눌리지 않던 문제를 고쳤습니다. 일격 설명 문구도 알기 쉽게 바꿨습니다.','새로운 이야기에서 싸우기로 하면 다음 해로 미루지 않고 바로 전투가 시작됩니다.','무한 모드에서 이미 이긴 상대가 반복해서 나오던 것을 줄였습니다.','불순물을 쓰러뜨리면 받는 조각과 잔재 보상을 한 줄로 합쳤습니다.','정신력 막대의 채움이 보이지 않던 문제를 고쳤습니다.','엔딩 이미지에서 같은 히든 보스가 반복해 찍히거나 카드 장수가 줄바꿈되던 문제를 고쳤습니다.','가방의 첫 칸 이름을 "출생"에서 "정보"로 바꿨습니다.']]];
   const V1000SEC=[['🆕 소모품',['공방 거리의 "소지품"에서 붕대·간식·진정제를 살 수 있습니다. 종류마다 최대 3개까지 지닙니다.','소모품은 가방의 "소모품" 칸에 들어가고, 전투 중에도 쓸 수 있습니다.','가격은 10해마다 100안씩 오르고 최대 5,000안입니다.','인연이 있으면 전투를 이긴 뒤 가끔 도시락을 받아 HP와 정신력을 회복합니다.']],
@@ -2345,7 +2345,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     /* 공방 거리: 1년차부터 3년마다 들를지 묻는다. 들러도 해는 넘어가지 않는다 */
     const lakeDue=lakeHome()&&G.ch.lake&&G.ch.lake.harbor;if(lakeDue)G.ch.lake.harbor=false;
     if((lakeHome()?lakeDue:(G.year-1)%CFG.shop.every===0)&&!shopDone&&!(G.ch.rb&&!G.ch.rb.out)){
-      UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special),CFG.shop.blackStock):[]);
+      UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special).filter(k=>!D.special[k].wsOnly),CFG.shop.blackStock).concat(E.wsAuxStock(G.ch)||[]):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
       UI.bought=null;UI.meltMsg=null;UI.meltN=0;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.soldN=0;UI.rested=null;UI.healed=0;UI.healMsg=null;UI.mindHealed=0;UI.mindMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
@@ -2494,7 +2494,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     swapcard(i){if((UI.swapped||[]).length>=CFG.shop.swapMax)return;const r=E.swapCard(G.ch,+i);if(r){(UI.swapped=UI.swapped||[]).push([D.cards[r.old].n,D.cards[r.nid].n]);render()}},
     wsmelt(i){const [sl,ix]=String(i).split(':'),r=E.wsMelt(G.ch,sl,+ix);if(r){UI.wsMsg=`${r.m}을(를) 녹였다 · ${r.hidden?'히든 재료 · 한 단계 상승':r.step?'일반 재료 +'+r.val+' · '+(r.step>1?r.step+'단계 한꺼번에 ':'한 단계 ')+'상승 ('+r.n+'단계)':'일반 재료 +'+r.val+' · '+r.p+'/'+r.need}${r.sp?' · 특수 효과 획득 · '+({baral:'공격 카드마다 1타 추가',zena:'2번 적중마다 요정 +1',gebura:'적중마다 HP 1 흡수'})[r.sp]:''}`;resave();render()}},
     wsname(sl){const el=document.getElementById('wsn_'+sl),n=E.wsRename(G.ch,sl,el?el.value:'');if(n){UI.wsMsg=`이름을 '${n}'(으)로 정했다.`;resave();render()}},
-    wsaugc(i){const r=E.wsAugChoose(G.ch,i);if(r){UI.wsMsg=`의수 특수 강화 · ${CFG.ws.aug.stats[r.stat]} +${r.amt}`;resave();render()}},
+    wskind(i){const r=E.wsSetKind(G.ch,i);if(r){UI.wsMsg=`보조 장비 종류 · ${r.n} (${(CFG.ws.aug.kindE||{})[i]||r.e})`;resave();render()}},
+    wsstkw(i){const r=E.wsSetStaffKw(G.ch,i);if(r){UI.wsMsg=`지팡이 집중 키워드 · ${r.n}`;resave();render()}},
+    wsaugc(i){const r=E.wsAugChoose(G.ch,i);if(r){UI.wsMsg=`의수 특수 강화 · 적중 시 ${D.keywords[r.stat].n} +${r.amt}`;resave();render()}},
     wsaug(i){const [ix,k]=String(i).split(':'),r=E.wsAugPick(G.ch,+ix,k);if(r){UI.wsMsg=`${r.m}을(를) 녹여 의수를 개조했다 · ${CFG.ws.aug.stats[r.stat]} +${CFG.ws.aug.pick}`;resave();render()}},
     tune(k,el){const r=E.tuneGear(G.ch,k,el&&el.dataset?el.dataset.s:null);if(r){UI.tuneMsg={ok:r.ok,t:`${r.n} · ${r.stat==='atk'?'공격':'회피'} +1 ${r.ok?'성공':'실패'} (${r.tries}/${E.tuneMax(G.ch)})`};render()}},
     delcard(i){if((UI.deleted||[]).length>=CFG.shop.delMax)return;const c=E.delCard(G.ch,+i);if(c){(UI.deleted=UI.deleted||[]).push(D.cards[c].n);render()}},
@@ -2766,7 +2768,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     else if(/#[ac]=/.test(h))readShared(h).then(r=>{if(r&&r.s!=null){UI.shared=r;UI.screen='shared';render()}}).catch(()=>{})}catch(e){}
   render();
   /* 자동 테스트용 상태 조회 */
-  return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff}),
+  return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff,fi:G&&G.ch.fi,pp:G&&G.ch.pp,fr:G&&G.ch.fr&&G.ch.fr.n,hp:G&&G.ch.hp,dead:!!(UI.death),art:G&&G.ch.art&&G.ch.art.ring}),
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
     testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testInfNote:y=>{if(G)G.year=y||300;showInfNote(G?infNote():D.infinite.notes[2][3])},testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
     testShareLink:()=>shareLinkAsync(),testShareLinkOld:()=>shareLink(),
