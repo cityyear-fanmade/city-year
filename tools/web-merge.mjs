@@ -12,6 +12,7 @@ for(const p of parts){
   const a=Array.isArray(j)?j:j.turns;if(!Array.isArray(a)){console.error(`${p}: 배열 또는 {"turns":[...]} 이어야 한다`);process.exit(1)}
   for(const t of a){if(seen.has(t.n))console.warn(`경고: 턴 ${t.n}이 ${seen.get(t.n)}와 ${p}에 중복 — 뒤의 것을 쓴다`);seen.set(t.n,p);const i=turns.findIndex(x=>x.n===t.n);if(i>=0)turns[i]=t;else turns.push(t)}
 }
+for(const t of turns)for(const c of (t.c||[]))if(c&&c.bond==='null')c.bond=null;
 turns.sort((a,b)=>a.n-b.n);
 writeFileSync(out,JSON.stringify({finger,route,turns},null,1)+'\n');
 const miss=[];for(let n=1;n<=40;n++)if(!seen.has(n))miss.push(n);
