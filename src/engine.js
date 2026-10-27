@@ -1858,10 +1858,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {t:R.trial.t,x:R.trial.x,c:[
         {l:R.trial.obey,h:R.trial.obeyH,ok:{t:R.trial.obeyT,fx:{giri:'obey'}}},
         {l:R.trial.rebel,h:R.trial.rebelH,ok:{t:R.trial.rebelT,fx:{giri:'rebel'}}}]};
-    if(!fl.giri&&ch.fi===Z.fi&&y>=(ch.giriAt||0)&&d(100)<=Z.chance)
+    if(!fl.giri&&ch.fi>=Z.fi&&ch.fi<=(Z.fi2||Z.fi)&&y>=(ch.giriAt||0)&&d(100)<=Z.chance)
       return {t:R.start.t,x:R.start.x,c:[
         {l:R.start.yes,h:R.start.yesH,ok:{t:R.start.yesT,fx:{giri:'start'}}},
         {l:R.start.no,h:R.start.noH,ok:{t:R.start.noT,fx:{giri:'later'}}}]};
+    /* 큰형님의 시험: 작은형님이 점수를 절반 넘게 모았으면 해마다 한 번 형님이 직접 부른다 */
+    if(ch.fi===2&&canPromote(ch)&&(ch.pp||0)>=promoNeed(ch)*Z.bigBro.ppFrac&&y>=(ch.bigNext||0)){ch.bigNext=y+Z.bigBro.gap;if(d(100)<=Z.bigBro.chance)
+      return {t:'큰형님의 시험',x:'큰형님이 직접 이름을 불렀다. 앉으라는 말도 없이 술 한 잔을 앞에 놓는다. 그 잔을 어떻게 받느냐가 오늘의 시험이다. 의리를 앞세울지, 체면을 앞세울지는 당신이 정한다.',c:[
+        {l:'의리를 앞세워 잔을 받는다',h:'성공 시 큰형님 승급 · 실패 시 HP −'+Z.bigBro.failHp,check:{s:null,dc:Z.bigBro.dc},ok:{t:'잔이 비워지자 큰형님이 한쪽 입꼬리를 올렸다. 이제 그 이름 앞에 큰 자가 붙는다.',fx:{examPass:true}},fail:{t:'잔을 든 손이 한 박자 늦었다. 큰형님은 아무 말 없이 다음 잔을 거두었다.',fx:{hp:-Z.bigBro.failHp}}},
+        {l:'체면을 앞세워 맞선다',h:'성공 시 큰형님 승급 · 실패 시 HP −'+Z.bigBro.failHp,check:{s:'atk',dc:Z.bigBro.dc},ok:{t:'맞선 눈을 큰형님이 피하지 않았다. 한참 뒤에야 잔을 내밀었다. 그 잔은 받아도 되는 잔이었다.',fx:{examPass:true}},fail:{t:'체면은 지켰지만 큰형님의 얼굴이 굳었다. 다음 기회까지는 시간이 필요하다.',fx:{hp:-Z.bigBro.failHp}}},
+        {l:'아직은 이르다며 물러난다',ok:{t:'큰형님은 고개를 끄덕이고 잔을 다시 채웠다. 서두르지 않는 사람은 오래 간다.',fx:{}}}]};}
     return null;
   }
   function synRouteEvent(G){
@@ -2098,6 +2104,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(d(100)<=A.patron.chance)return {t:T_.patron.t,x:T_.patron.x,c:[{l:T_.patron.l,ok:{t:T_.patron.t2,fx:{money:A.patron.money}}}]};
       if(d(100)<=A.visit.chance)return {t:T_.visit.t,x:T_.visit.x,c:[{l:T_.visit.l,ok:{t:T_.visit.t2,fx:{money:A.visit.money}}}]};
       return null}
+    if(a.stage===0&&(a.good>=1||(a.rated||0)>=2)&&!a.gallery&&(ch.fi||0)>=1&&d(100)<=A.masterEye.chance){
+      return {t:'마에스트로의 눈에 든 날',x:'품평회장 맨 뒤 자리에 오래된 얼굴 하나가 앉아 있다. 마에스트로다. 당신의 지난 작품 앞에서 한참 서 있던 사람이다. 다음 한 점을 직접 보고 싶다는 전갈이 왔다.',c:[
+        {l:'대작 한 점을 내건다',h:'성공 시 갤러리 개관 · 실패 시 HP −'+A.masterEye.failHp,check:{s:null,dc:A.masterEye.dc},ok:{t:'작품 앞에서 마에스트로가 오래 서 있었다. 말은 없었다. 그 침묵이 곧 평가였다.',fx:{art:{op:'master'}}},fail:{t:'마에스트로는 고개를 끄덕이지도 젓지도 않고 자리를 떴다. 다음 기회를 기다려야 한다.',fx:{hp:-A.masterEye.failHp,art:{op:'masterFail'}}}},
+        {l:'아직은 이르다고 한다',ok:{t:'마에스트로의 전갈은 접혀서 품속에 들어갔다. 기회는 다시 올 것이다.',fx:{}}}]}}
     if(a.stage===0){const S=T_.s1,c=[];
       c.push({l:S.c.mad.l,h:S.c.mad.h,ok:{t:S.c.mad.t,fx:{hp:-A.madHp,art:{op:'style',style:'mad'}}}});
       c.push({l:S.c.ext.l,h:fillArt(S.c.ext.h,A),req:'matstock>='+A.need,lock:fillArt(S.c.ext.lock,A),ok:{t:S.c.ext.t,fx:{art:{op:'style',style:'ext'}}}});
@@ -2112,10 +2122,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const A=CFG.art,a=ch.art=ch.art||{stage:0,good:0,style:null,made:false,next:0},y=ch.year||0;
     if(o.op==='style'){a.style=o.style;a.stage=1;a.made=false;a.next=y+A.gap;if(o.style==='ext'){ch.matStock=Math.max(0,(ch.matStock||0)-A.need);chips.push(`모아 둔 재료 −${A.need} (지금 ${ch.matStock})`)}chips.push(`작품 · ${({mad:'광기',ext:'극단',ref:'정제'})[o.style]}`)}
     else if(o.op==='made'){a.made=!!o.ok;a.stage=2;a.next=y+A.gap;if(!o.ok&&a.style==='ext')loseMind(ch,A.failMind,m=>chips.push(m));chips.push(o.ok?'완성도 +':'완성도 흠')}
-    else if(o.op==='rate'){a.stage=0;a.style=null;a.next=y+A.cycleGap;
+    else if(o.op==='rate'){a.stage=0;a.style=null;a.next=y+A.cycleGap;a.rated=(a.rated||0)+1;
       if(o.r==='good'){a.good++;chips.push(`예술적 평가 ${a.good}/${A.goodNeed}`)}
       else if(o.r==='bad'){const lost=Math.floor((ch.pp||0)*A.badLose);ch.pp=(ch.pp||0)-lost;chips.push(`혹평 · ${ptsName(ch)} −${lost}`)}
       else chips.push('무난한 평가')}
+    else if(o.op==='master'){a.good=Math.max(a.good,A.goodNeed);a.next=y+1;chips.push(`마에스트로의 눈에 든 작품 · 예술적 평가 ${a.good}/${A.goodNeed}`)}
+    else if(o.op==='masterFail'){a.next=y+A.masterEye.retry;chips.push('대작은 닿지 못했다')}
     else if(o.op==='gallery'){a.gallery=1;a.next=y+1;chips.push(`갤러리 개관 · 해마다 수입 +${A.income}`)}
     else if(o.op==='ring'){a.ring=1;a.next=y+2;let n=0;while((ch.fi||0)<2&&n++<3){const r=fingerStep(ch);if(!r)break}
       (ch.relics=ch.relics||[]).push('마에스트로의 증거');const it=riteItem('약지',true);const cur=ch.gear.aug;if(cur&&cur.rite==='약지')equip(ch,it);else offerGear(ch,it);ch.rites=ch.rites||{};ch.rites['약지']=1;chips.push('마에스트로의 증거 · 반지를 받았다')}

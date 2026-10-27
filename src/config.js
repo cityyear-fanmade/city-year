@@ -298,7 +298,7 @@ export const CFG = {
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},
   middle: {def: 2, keep: 0, heal: 1, dmg: 1, dr: [0, 0, 10, 30], evaEff: [1, 1, 0.5, 0], evaDr: 0.5, drCap: 50, counter: 3, sinkHit: 0.5, cap: 10},
   /* 의리 순례(중지 전용 루트): 동생(fi 1) 이상이 되면 해마다 chance%로 원한의 책 제안, 거절하면 gap년 뒤 다시. 둘째 장 전투에서 아우가 맞으면(kin) 분노 +anger, 셋째 장 시험은 rounds라운드 버티기 */
-  giri: {fi: 1, chance: 35, gap: 5, kin: 50, anger: 5},
+  giri: {fi: 1, fi2: 2, chance: 60, gap: 5, bigBro: {chance: 50, ppFrac: 0.2, dc: 50, failHp: 6, gap: 1} /* 작은형님이 서열 점수의 ppFrac 이상 모으면 해마다 chance%: 큰형님의 시험 */, kin: 50, anger: 5},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
   office: {rank: 5, foundEvery: 5, knockEvery: 4},
@@ -372,7 +372,7 @@ export const CFG = {
   /* 특색 전용 보조 장비: 종류마다 기본으로 붙는 보너스 (고르는 맛) */
   custKinds: {aug: {n: '의수', fx: {spd: 1}, e: '속도+1'}, cloth: {n: '의복', fx: {maxHp: 10, eva: 1}, e: 'HP+10 · 회피+1'}, staff: {n: '지팡이', fx: {hit: 3}, e: '명중+3'}, term: {n: '단말기', fx: {check: 3}, e: '판정 +3'}, pact: {n: '계약서', fx: {dr: 3}, e: '받는 피해 −3%'}, dev: {n: '장치', fx: {atk: 2, hit: 1}, e: '공+2 · 명중+1'}},
   infPromo: {gap: 5, chance: 70} /* 외곽에서 승급이 막힌 사람을 위한 과거의 승급 심사장: gap해마다 chance% */,
-  art: {need: 5, stockMax: 20, dc: 75, bonus: {mad: 4, ext: 6, ref: 2}, made: 3, goodNeed: 3, gap: 1, cycleGap: 4, income: 300, visit: {chance: 30, money: 600}, patron: {chance: 8, money: 2500}, madHp: 8, failMind: 2, failHp: 4, badLose: 0.33},
+  art: {need: 5, stockMax: 20, dc: 55, bonus: {mad: 4, ext: 6, ref: 2}, made: 3, goodNeed: 2, gap: 1, cycleGap: 2, masterEye: {chance: 60, dc: 55, failHp: 4, retry: 2} /* 도슨트가 예술적 평가를 1번(또는 아무 평가 2번) 받은 뒤 해마다 chance%: 대작을 내건다. 성공하면 예술적 평가가 모두 채워져 갤러리가 열린다 */, income: 300, visit: {chance: 30, money: 600}, patron: {chance: 8, money: 2500}, madHp: 8, failMind: 2, failHp: 4, badLose: 0.33},
   affiliationYear: 4,
   /* 손가락 출신(조직 출신 · 보냐텔리 가문): 이 해에 손가락이 먼저 찾아온다(받아들이면 입단) */
   fingerEarly: {year: 1},
