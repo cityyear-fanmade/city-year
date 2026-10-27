@@ -3020,7 +3020,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const idx=P.hand.map((_,i)=>i).filter(i=>m>>i&1);
       if(idx.includes(P.locked))continue;
       if(idx.some(i=>D.cards[P.hand[i]].noKill))continue;   // 자동 전투는 '해치고 싶지 않다'를 스스로 쓰지 않는다
-      if(idx.some(i=>(D.cards[P.hand[i]].needBlack&&!P.black)||(D.cards[P.hand[i]].needLow&&C.E.hp>C.E.maxHp*CFG.raven.low)))continue;
+      if(idx.some(i=>!cloudOk(P,D.cards[P.hand[i]])||(D.cards[P.hand[i]].needLow&&C.E.hp>C.E.maxHp*CFG.raven.low)))continue;
       if(idx.reduce((a,i)=>a+cardCost(P,D.cards[P.hand[i]]),0)>P.light)continue;
       const sc=idx.reduce((a,i)=>a+score(D.cards[P.hand[i]])+0.01,0);
       if(sc>bs){bs=sc;best=idx}
@@ -3102,13 +3102,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 발톱 전용 키워드 · 혈청: 혈청 카드를 낼 때마다 1 (최대 3). 3이면 다음 적중 피해 ×1.5 후 비움 */
   function addSerum(A,c,L){A.serum=Math.min(3,(A.serum||0)+c.serum);L('kw',`  ${A.name} · 혈청 ${A.serum}/3${A.serum>=3?' · 과부하 준비':''}`)}
   /* 다음 라운드 손패에 넣어 줄 카드. 같은 때에 여러 장이 겹치면 한 라운드에 최대 2장(grantNext + 줄 한 칸)까지 받고, 더 겹친 것은 다음 라운드(grantWait)로 넘어간다 (예: 붉은 안개 개방의 대절단 가로 + 수호 개화) */
+  /* 구름 조건 카드(흑운도): 구름이 needCloud 이상이거나 흑운이면 쓸 수 있다 */
+  const cloudOk=(A,c)=>!c.needCloud||!!A.black||(A.cloud||0)>=c.needCloud;
   function giveNext(A,id){if(!id)return;if(!A.grantNext)A.grantNext=id;else if(!A.grantQ||A.grantQ.length<1)A.grantQ=[id];else(A.grantWait=A.grantWait||[]).push(id)}
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
     if(c.noKill){if(A.noKill){L('sys',`${A.name} · ${c.n} · 이미 그런 마음이다`);return}A.noKill=true;A.eva-=80;A.takenMul=2;L('kw',`${A.name} · ${c.n} · 이번 전투 동안 받는 피해 2배 · 회피 −80`);return}
     if(c.flesh){A.evaB-=30;A.fleshRound=C.round;L('kw',`${A.name} · ${c.n} · 이번 라운드 회피 −30`)}
     if(c.cloudGain&&A.kuro)for(let i=0;i<c.cloudGain;i++)addCloud(A,L);
-    if(c.needBlack&&!A.black){L('sys',`${A.name} · ${c.n} · 흑운이 아니면 쓸 수 없다 · 불발`);return}
+    if(!cloudOk(A,c)){L('sys',`${A.name} · ${c.n} · 구름이 ${c.needCloud} 이상이 아니면 쓸 수 없다 (지금 ${A.cloud||0}) · 불발`);return}
     if(c.inkCall){const ids=A.inkIds||[];if(!ids.length){L('sys',`${A.name} · ${c.n} · 곁에 흑수가 없다 · 불발`);return}if(A.obey>0){A.obey=0;L('kw',`${A.name} · 공허한 순종이 모두 풀렸다`)}L('kw',`${A.name} · ${c.n} · 곁의 흑수 ${ids.length}명이 모두 나선다`);for(const id of ids){if(B.hp<=0)break;act(C,A,D.cards[id],L,push)}return}
     if(c.ropeCut&&(A.harpoon||0)>0){L('kw',`  ${A.name} · ${c.n} · 작살 ${A.harpoon}개를 끊어 냈다`);A.harpoon=0}
     if(c.ropeCut&&(A.anchorLoss||0)>0){A.eva+=A.anchorLoss;L('kw',`  ${A.name} · ${c.n} · 무게를 덜어 회피 +${A.anchorLoss}`);A.anchorLoss=0}
@@ -3584,7 +3586,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     while(!C.over&&g++<80){
       let pp,ep;
       autoTri(C);
-      pp=autoPlay(C.P.hand.filter((id,i)=>i!==C.P.locked&&!((D.cards[id].needBlack&&!C.P.black)||(D.cards[id].needLow&&C.E.hp>C.E.maxHp*CFG.raven.low))),C.P.light);ep=C.ePlan;
+      pp=autoPlay(C.P.hand.filter((id,i)=>i!==C.P.locked&&!(!cloudOk(C.P,D.cards[id])||(D.cards[id].needLow&&C.E.hp>C.E.maxHp*CFG.raven.low))),C.P.light);ep=C.ePlan;
       resolveRound(C,pp,ep);
       if(!C.over)newRound(C);
     }
