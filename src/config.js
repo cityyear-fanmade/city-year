@@ -374,6 +374,8 @@ export const CFG = {
   infPromo: {gap: 5, chance: 70} /* 외곽에서 승급이 막힌 사람을 위한 과거의 승급 심사장: gap해마다 chance% */,
   art: {need: 5, stockMax: 20, dc: 75, bonus: {mad: 4, ext: 6, ref: 2}, made: 3, goodNeed: 3, gap: 1, cycleGap: 4, income: 300, visit: {chance: 30, money: 600}, patron: {chance: 8, money: 2500}, madHp: 8, failMind: 2, failHp: 4, badLose: 0.33},
   affiliationYear: 4,
+  /* 손가락 출신(조직 출신 · 보냐텔리 가문): 이 해에 손가락이 먼저 찾아온다(받아들이면 입단) */
+  fingerEarly: {year: 1},
   /* 성장: 판정 성공/실패/판정 없음/전투 승리 경험치, 레벨별 누적 경험치 */
   /* 레벨 보너스: at레벨마다(8, 16, 24…) 모든 전투에서 빛과 빛 최대치 +up */
   lvLight: {at: 8, up: 1},

@@ -2771,7 +2771,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     else if(/#[ac]=/.test(h))readShared(h).then(r=>{if(r&&r.s!=null){UI.shared=r;UI.screen='shared';render()}}).catch(()=>{})}catch(e){}
   render();
   /* 자동 테스트용 상태 조회 */
-  return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff}),
+  return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff,fi:G&&G.ch.fi,pp:G&&G.ch.pp,fr:G&&G.ch.fr&&G.ch.fr.n,hp:G&&G.ch.hp,dead:!!(UI.death),art:G&&G.ch.art&&G.ch.art.ring}),
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
     testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testBgmStage:n=>BGM.setStage(n),testWfxWs:(h,r)=>{const sv=C;C={P:{},ch:{wsRelic:Object.fromEntries(Array.from({length:r||0},(_,i)=>['r'+i,true]))}};const o=weaponFx('ws_weapon',{},true,{wsH:h});C=sv;return o},testWfx:(id,form,note)=>{const sv=C;C={P:{form},ch:{}};const r=weaponFx(id,{note:note||'장갑 1d9 3'},true);C=sv;return r},testInfNote:y=>{if(G)G.year=y||300;showInfNote(G?infNote():D.infinite.notes[2][3])},testBgmPos:()=>BGM.pos(),testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
     testShareLink:()=>shareLinkAsync(),testShareLinkOld:()=>shareLink(),

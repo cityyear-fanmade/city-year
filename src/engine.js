@@ -143,7 +143,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0)),stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||o.money||0,
       deck:o.deck?o.deck.slice():['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
     ch.s0={maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,check:s.check};
-    if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
+    if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.fingerEarly){ch.fingerEarly=1;ch.fingerMul=o.fingerMul||1}if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
     if(o.hw)ch.hw={fi:0,rv:0};
     if(o.flags&&o.flags.lake)ch.aff={type:'lake',name:'U사 선원'};   // 대호수로 나간 자는 처음부터 선원: 기존 진로(공적·승급·최고 직위) 구조를 쓴다
@@ -813,7 +813,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const examDc=ch=>{const k=career(ch),n=Math.max(1,steps(k,ch));return Math.round(CFG.promo.examDc+CFG.promo.examDcSpan*promoDone(ch)/n)};
   function addPts(ch,n,chips){
     const k=career(ch);if(!n||!k)return;
-    n=Math.round(n*((CR[k]&&CR[k].gainMul)||1));ch.pp=(ch.pp||0)+n;
+    n=Math.round(n*((CR[k]&&CR[k].gainMul)||1)*(k==='finger'&&ch.fingerMul||1));ch.pp=(ch.pp||0)+n;
     if(canPromote(ch))chips.push(`${ptsName(ch)} +${n} (${ch.pp}/${promoNeed(ch)})`);
     /* 무한 모드: 도시가 모두 적대적이라 격식을 차린 심사는 열리지 않는다. 포인트가 차면 전공으로 바로 승급하고,
        최고 직위에 오른 뒤에는 포인트가 연륜 단계로 바뀐다 (단계마다 능력치 +1, 최대 legacyMax) */
@@ -2215,7 +2215,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+corpLv(G.ch)*(mt.yearPer||0))}
       if(bondMarried(G.ch))gainMind(G.ch,BD.yearMind);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
-    if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year;
+    if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year*(isFinger(G.ch)&&G.ch.fingerMul||1);
     let f=fixedSpec(G.year);
     /* 무한런 등급 전투: 등급 마지막 해. 도시의 별 등급은 피아니스트(이미 이겼으면 후반 조우), 마지막 등급은 최종 상대 */
     const X_=CFG.endless,k_=G.year-CFG.years;
@@ -2267,6 +2267,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const e=encounter(G.ch,f);return {type:'fight',enemy:e.id,enc:e};
     }
     /* 갈림길: 공방 해결사 제안이 가끔(WF.chance%) 끼어든다 */
+    /* 손가락 출신(조직 출신·보냐텔리): 4년차 갈림길보다 먼저 손가락이 찾아온다 */
+    if(G.year===CFG.fingerEarly.year&&G.ch.fingerEarly&&!G.ch.fingerEarlyDone&&!G.ch.aff&&!G.ch.hw&&!lakeOn(G.ch)&&D.fingerEarly){G.ch.fingerEarlyDone=1;return {type:'event',ev:D.fingerEarly}}
     if(G.year===CFG.affiliationYear&&!G.ch.aff&&!G.ch.hw&&!lakeOn(G.ch)){
       if(D.workshopChoice&&!noFixer(G.ch)&&d(100)<=WF.chance)return {type:'event',ev:Object.assign({},D.affiliation,{x:D.affiliation.x+(D.workshopIntro||''),c:[...D.affiliation.c,D.workshopChoice]})};
       return {type:'event',ev:D.affiliation};
