@@ -1846,11 +1846,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     /* 빛 회복 카드(gain)는 내는 순간 빛이 그만큼 늘어난다 */
     const cost=UI.sel.reduce((a,i)=>a+E.cardCost(P,D.cards[P.hand[i]])-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
     const cards=P.hand.map((id,i)=>{
-      const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&E.cardCost(P,c)>left)||(c.needBlack&&!P.black)||(c.needLow&&X.hp>X.maxHp*CFG.raven.low);
+      const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&E.cardCost(P,c)>left)||(c.needLow&&X.hp>X.maxHp*CFG.raven.low);
       return `<button class="card ${si>=0?'sel':''}${P.index&&i===P.starSlot?' presc':''}" data-a="pick" data-i="${i}" ${dis?'disabled':''}>
         <span class="cost">${E.cardCost(P,c)}</span>${si>=0?`<em class="ord">${si+1}</em>`:''}${P.index&&i===P.starSlot?'<span class="prescTag">📜 지령</span>':''}
         <span class="nm">${kindBadge(c)} ${c.n}${c.t==='atk'&&P.cg&&P.cg.n?` <b style="color:var(--gold)">${P.cg.n}</b>`:''}${lk?` <span class="bad small">잠김 · ${esc(C.E.passive.n)}</span>`:''}</span>${c.t==='atk'?`<span class="mono small" style="color:var(--gold)">최종 명중 ${sg(P.atk+c.hit+(P.passHit||0)+(P.cg?P.cg.hit:0))}${P.fsOn&&P.fs?' (+선제 '+CFG.firstHit+')':''}</span>`:''}<span class="cd">${cardLine(c,c.t==='atk'?P.cg:null,P.wx)}</span>
-        ${c.needBlack&&!P.black?`<span class="bad small">흑운일 때만 낼 수 있다 · 구름 ${P.cloud||0}/${CFG.syn['흑운회'].max} (출혈을 걸거나 맞을 때마다 +1)</span>`:''}${c.needLow&&X.hp>X.maxHp*CFG.raven.low?`<span class="bad small">상대 HP ${Math.round(CFG.raven.low*100)}% 이하일 때만 낼 수 있다</span>`:''}
+        ${c.needBlack&&!P.black?`<span class="bad small">내는 순서가 올 때 흑운이어야 효과가 난다 · 구름 ${P.cloud||0}/${CFG.syn['흑운회'].max} (출혈을 걸거나 맞을 때마다 +1, 앞선 카드로 채운다)</span>`:''}${c.needLow&&X.hp>X.maxHp*CFG.raven.low?`<span class="bad small">상대 HP ${Math.round(CFG.raven.low*100)}% 이하일 때만 낼 수 있다</span>`:''}
         ${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</button>`;
     }).join('');
     return `${M?duo({E:X,P})+vOrder(true):entHtml('E',X,X)+arenaHtml(false)+entHtml('P',P,P)+vOrder()+log}
