@@ -1104,6 +1104,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else if(k==='break'){r.shrine=1;r.broke=1;ch.purge='hw_kamo';routeWeaponUp(ch,'hw','free',chips);chips.push(`재갈 ${hwHave(ch).length}개 · 흑수 부하가 모두 철함사로 나선다`)}
         else if(k==='refuse'){r.shrine=1;ch.purge='hw_elder';routeWeaponUp(ch,'hw','free',chips)}
         else if(k==='final'){r.finalSeen=1;ch.purge='hongru'}}}
+    if(fx.webStart)webStart(ch,fx.webStart,chips);
+    if(fx.webHold){ch.webHeld=true;ch.webAsked=false;ch.webInvNext=(ch.year||0)+CFG.web.holdGap;chips.push('거미집 · 2년 뒤 다시 묻는다')}
+    if(fx.webDecline){ch.webDeclined=true;chips.push('거미집 · 제안을 거절했다')}
+    if(fx.web)webTurnFx(ch,fx.web,chips);
     if(fx.giri){const k=fx.giri,fl=ch.flags;
       if(k==='start'){fl.giri=1;(ch.relics=ch.relics||[]).push('원한의 책 · 찢어낸 장부 세 장');chips.push('의리 순례 · 장부의 첫 이름을 찾아간다')}
       else if(k==='later'){ch.giriAt=(ch.year||0)+CFG.giri.gap;chips.push('원한의 책 · 몇 해 뒤에 다시 부른다')}
@@ -2052,6 +2056,71 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!pool.length){seen.length=0;pool=L.map((e,i)=>i).filter(i=>meets(ch,L[i].req)&&!(L[i].once&&(ch.warpOnce||[]).includes(L[i].once)))}
     if(!pool.length)return null;const i=one(pool);seen.push(i);ch.warpYear=G.year;return L[i];
   }
+  /* ===== 거미집: 손가락 전용 장기 스토리. 40턴을 5턴=1해로 흐르게 하고, 앞의 4턴은 해가 지나지 않는다(워프열차처럼) ===== */
+  const WEBF=['엄지','검지','중지','약지','소지'];
+  const webFinger=ch=>ch.pinkyFull&&ch.fingerEarly?'소지':(isFinger(ch)&&WEBF.includes(ch.aff.name)?ch.aff.name:null);
+  const webPart=(f,route)=>{const P=D.web&&D.web.parts&&D.web.parts[f+'-'+route];return P&&P.turns&&P.turns.length?P.turns:null};
+  /* 간부급: 엄지 언더보스 · 검지 대행자/전령 · 중지 큰형님 · 약지 마에스트로(증거 반지) · 소지 네 별 */
+  function webCadre(ch,f){
+    if(f==='소지')return !!ch.pinkyFull&&(ch.pinkyKeys||[]).length>=((D.pinky&&D.pinky.keys)||[]).length;
+    if(f==='약지')return !!(ch.art&&ch.art.ring);
+    const need={'엄지':2,'검지':1,'중지':3}[f];return (ch.fi||0)>=need;
+  }
+  const webTok=(s,ch,w)=>String(s||'').replace(/\{스승\}/g,CFG.web.role[w.finger]||'스승').replace(/\{제자\}/g,CFG.web.child);
+  /* 거미집의 한 턴을 사건으로 만든다: 위험한 선택은 판정, 결과 수치는 size로 환산한다 */
+  function webEvent(G,n){
+    const ch=G.ch,w=ch.web,T=webPart(w.finger,w.route)[n-1],total=w.total,Z=CFG.web;
+    const c=T.c.map(x=>{
+      const base={turn:n,bond:x.bond||null,flag:x.flag||null,end:x.end||null};
+      const ok={t:webTok(x.r,ch,w),fx:{web:Object.assign({size:x.size||'없음'},base)}};
+      const o={l:x.l,ok};if(x.h)o.h=x.h;
+      if(x.risk){o.check={s:null,dc:Z.dc[x.size]||50};o.fail={t:webTok(x.f,ch,w),fx:{web:Object.assign({noReward:true},base)}}}
+      return o});
+    return {t:`[거미집 ${n}/${total}] ${T.t}`,x:webTok(T.x,ch,w),c,web:true};
+  }
+  /* 거미집 안에서 해가 지나지 않는 턴(한 해의 2~5번째 턴) */
+  function webFree(G){
+    const w=G.ch.web;if(!w||!w.active||w.turn>=w.total||w.turn%CFG.web.turnsPerYear===0)return null;
+    G.free=true;return {type:'event',ev:webEvent(G,w.turn+1)};
+  }
+  /* 해가 바뀐 뒤: 거미집 첫 턴(한 해의 1번째 턴)이거나 초대 사건 */
+  function webStep(G){
+    const ch=G.ch,w=ch.web;
+    if(w&&w.active){if(w.turn<w.total&&webPart(w.finger,w.route))return {type:'event',ev:webEvent(G,w.turn+1)};w.active=false;ch.webDone=true;return null}
+    if(ch.webDone||w||ch.distForm||ch.hw||lakeOn(ch)||!ch.fingerEarly||!D.web||!D.web.invite)return null;
+    const f=webFinger(ch);if(!f||G.year+9>lastYear(G))return null;
+    const I=D.web.invite[f];if(!I)return null;
+    const mk=(src,fxs)=>({t:src.t,x:src.x,c:[{l:src.yes.l,h:src.yes.h,ok:{t:src.yes.t,fx:{webStart:fxs}}},...(src.hold&&!ch.webHeld?[{l:src.hold.l,h:src.hold.h,ok:{t:src.hold.t,fx:{webHold:true}}}]:[]),{l:src.no.l,h:src.no.h,ok:{t:src.no.t,fx:{webDecline:true}}}]});
+    if(!ch.webDeclined){
+      if(ch.webAsked||G.year<Math.max(CFG.web.inviteYear,ch.webInvNext||0)||!webPart(f,'disciple'))return null;
+      ch.webAsked=true;return {type:'event',ev:mk(I.early,'disciple')};
+    }
+    if(!ch.webMasterAsked&&webCadre(ch,f)&&webPart(f,'master')){ch.webMasterAsked=true;return {type:'event',ev:mk(I.master,'master')}}
+    return null;
+  }
+  function webStart(ch,route,chips){
+    const f=webFinger(ch),part=f&&webPart(f,route);if(!part)return;
+    ch.web={active:true,route,finger:f,turn:0,total:part.length,bond:{신뢰:0,의존:0,존경:0,집착:0,공범:0},flags:[],ends:[],started:ch.year||0};
+    chips.push(`거미집 · ${route==='disciple'?'제자':'스승'} 루트가 열렸다 (${part.length}턴 · 5턴이 1년)`);
+  }
+  function webTurnFx(ch,o,chips){
+    const w=ch.web;if(!w||!w.active||!o)return;const Z=CFG.web;
+    w.turn=Math.max(w.turn,o.turn);
+    if(o.bond){w.bond[o.bond]=(w.bond[o.bond]||0)+1;chips.push(`인연 · ${o.bond} +1`)}
+    if(o.flag&&!w.flags.includes(o.flag)){w.flags.push(o.flag);if(['adopt','separate','defer'].includes(o.flag))w.child=o.flag}
+    if(o.end)w.ends.push(o.end);
+    if(!o.noReward&&o.size&&Z.reward[o.size]!=null){
+      const R=Z.reward[o.size],st={};
+      if(typeof R==='object')Object.assign(st,R);
+      else{const th=Z.theme[w.finger]||'atk',u=(Z.themeAmt&&Z.themeAmt[th])||1;st[th]=R*u;if(R>=2)st.maxHp=(st.maxHp||0)+2}
+      addStats(ch.stats,st);if(st.maxHp)ch.hp+=st.maxHp;
+      chips.push('거미집 · '+Object.entries(st).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · '))}
+    if(w.turn>=w.total){
+      w.active=false;ch.webDone=true;const e=o.end||w.ends[w.ends.length-1]||'complete';w.end=e;
+      const T=Z.endTitle[e];if(T){ch.titles=ch.titles||[];if(!ch.titles.includes(T)){ch.titles.push(T);(ch.titleLog=ch.titleLog||[]).push(T)}}
+      (ch.relics=ch.relics||[]).push('거미집 · '+Z.endName[e]);
+      chips.push(`거미집의 끝 · ${Z.endName[e]}`)}
+  }
   /* ===== 제식 장비: 소속이 주는 보조 장비. 입회 때 기본형을 받고, 높은 급수·서열에 오르면 상위형으로 바뀐다 ===== */
   const riteKey=ch=>{if(ch.pinkyFull&&D.rites&&D.rites['소지']&&!isWs(ch)&&!ch.hw)return '소지';const a=ch.aff;if(!a||isWs(ch)||ch.hw)return null;if(a.type==='assoc')return 'assoc';if(a.type==='office')return 'office';if(a.type==='wing')return 'wing';if(a.type==='finger'&&D.rites&&D.rites[a.name])return a.name;return null};
   const riteUp=(ch,key)=>key==='약지'?false:key==='소지'?(ch.pinkyKeys||[]).length>=((D.pinky&&D.pinky.keys)||[]).length:['assoc','office','wing'].includes(key)?!!ch.licensed&&ch.rank<=2:(ch.fi||0)>=((D.fingers[key]&&D.fingers[key].ranks.length)||4)-1;
@@ -2219,6 +2288,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       mc.wChain=null;const F=W.hidFight&&W.doneHid?W.doneHid:W.done;return {type:'event',ev:{t:F.t,x:F.x,c:[{l:F.l,ok:{t:F.t2,fx:F.fx}}]}}}
     if(mc.wtrain&&mc.wPick&&D.warpWeaponPick)return {type:'event',ev:D.warpWeaponPick};
     {const we=warpEvent(G);if(we)return {type:'event',ev:we}}
+    {const wf=webFree(G);if(wf)return wf}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;return {type:'end',win:true,trueEnd:!!G.endless,hw:hk}}
     G.ch.year=G.year;
@@ -2230,6 +2300,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(bondMarried(G.ch))gainMind(G.ch,BD.yearMind);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
     if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year*(isFinger(G.ch)&&G.ch.fingerMul||1);
+    {const wv=webStep(G);if(wv)return wv}
     let f=fixedSpec(G.year);
     /* 무한런 등급 전투: 등급 마지막 해. 도시의 별 등급은 피아니스트(이미 이겼으면 후반 조우), 마지막 등급은 최종 상대 */
     const X_=CFG.endless,k_=G.year-CFG.years;
@@ -2483,7 +2554,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondSlip)bondPropose(ch,chips,false);
     if(fx.bondWait&&ch.bond){ch.bond.extra=(ch.bond.extra||0)+1;chips.push('인연을 더 쌓았다 · 청혼 기회는 그대로다')}
     if(roll&&roll.ok&&!fx.examPass&&!fx.colorPass&&!fx.topPass)addPts(ch,CFG.promo.gain.check,chips);
-    const up=gainXp(ch,xp);chips.push('경험치 +'+xp);if(up)chips.push('레벨 업 · Lv '+ch.lv);
+    if(ev.web)xp=0;   // 거미집 턴은 경험치를 주지 않는다(40턴이 레벨 흐름을 흔들지 않게)
+    const up=xp?gainXp(ch,xp):0;if(xp)chips.push('경험치 +'+xp);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     let enc=fx.combat?encounter(ch,fx.combat):null;
     if(ch.purge){enc={id:ch.purge};delete ch.purge;chips.push('숙청 · '+D.enemies[enc.id].n)}
     if(ch.lakeNow){const n_=ch.lakeNow;delete ch.lakeNow;enc={id:n_.id,roll:null,table:null,hidden:n_.hidden,label:n_.label}}

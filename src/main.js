@@ -3,7 +3,7 @@
 import {createEngine,validateData} from './engine.js';
 import {startUI} from './ui.js';
 
-const FILES=['cards','enemies','encounters','events','birth','workshops','fingers','text'];
+const FILES=['cards','enemies','encounters','events','birth','workshops','fingers','web','text'];
 async function loadData(){
   const D={};
   for(const f of FILES){
