@@ -2058,7 +2058,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* ===== 거미집: 손가락 전용 장기 스토리. 40턴을 5턴=1해로 흐르게 하고, 앞의 4턴은 해가 지나지 않는다(워프열차처럼) ===== */
   const WEBF=['엄지','검지','중지','약지','소지'];
-  const webFinger=ch=>ch.pinkyFull&&ch.fingerEarly?'소지':(isFinger(ch)&&WEBF.includes(ch.aff.name)?ch.aff.name:null);
+  /* 소지는 '별에 선택받은 자'가 정식 소지(소지 한 곳에만 섬)가 되었을 때만 소지 루트다. 다른 출신의 소지 표식은 부가효과라 거미집과 이어지지 않는다 */
+  const webStar=ch=>!!(ch.flags&&ch.flags.starborn&&ch.pinkyFull);
+  const webFinger=ch=>webStar(ch)?'소지':(ch.fingerEarly&&isFinger(ch)&&WEBF.includes(ch.aff.name)&&ch.aff.name!=='소지'?ch.aff.name:null);
   const webPart=(f,route)=>{const P=D.web&&D.web.parts&&D.web.parts[f+'-'+route];return P&&P.turns&&P.turns.length?P.turns:null};
   /* 간부급: 엄지 언더보스 · 검지 대행자/전령 · 중지 큰형님 · 약지 마에스트로(증거 반지) · 소지 네 별 */
   function webCadre(ch,f){
@@ -2087,7 +2089,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function webStep(G){
     const ch=G.ch,w=ch.web;
     if(w&&w.active){if(w.turn<w.total&&webPart(w.finger,w.route))return {type:'event',ev:webEvent(G,w.turn+1)};w.active=false;ch.webDone=true;return null}
-    if(ch.webDone||w||ch.distForm||ch.hw||lakeOn(ch)||!ch.fingerEarly||!D.web||!D.web.invite)return null;
+    if(ch.webDone||w||ch.distForm||ch.hw||lakeOn(ch)||!(ch.fingerEarly||webStar(ch))||!D.web||!D.web.invite)return null;
     const f=webFinger(ch);if(!f||G.year+9>lastYear(G))return null;
     const I=D.web.invite[f];if(!I)return null;
     const mk=(src,fxs)=>({t:src.t,x:src.x,c:[{l:src.yes.l,h:src.yes.h,ok:{t:src.yes.t,fx:{webStart:fxs}}},...(src.hold&&!ch.webHeld?[{l:src.hold.l,h:src.hold.h,ok:{t:src.hold.t,fx:{webHold:true}}}]:[]),{l:src.no.l,h:src.no.h,ok:{t:src.no.t,fx:{webDecline:true}}}]});
