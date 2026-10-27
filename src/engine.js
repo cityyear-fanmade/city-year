@@ -1627,6 +1627,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:B.meetNo,h:'다시 만나지 않는다',ok:{t:B.meetNoT,fx:{bondDecline:true}}}]};
   }
   /* 인연이 맺어진 뒤의 사건(3~4년마다)과 청혼. 만남은 일상 사건 안에서 일어난다 */
+  /* 1000해 불순물이 가져오는 카드: 기록된 덱 중 가장 센 카드 한 장 (예전 기록의 12장 덱도 이 한 장으로 줄여 쓴다) */
+  const ghostCard=deck=>{let best=null,bs=-1;for(const id of deck||[]){const c=D.cards[id];if(!c)continue;const s=((c.dice||0)+(c.b||0))*(c.hits||1);if(s>bs){bs=s;best=id}}return best};
   let legacyFn=null,ghostFn=null;const ghostOf=ch=>{const g=ghostFn?ghostFn():null;return g&&g.deck&&g.deck.length>=3&&ch.infinite?g:null};
   function bondEvent(G){
     const ch=G.ch,b=ch.bond,y=G.year,B=bondTx(ch);
@@ -2803,7 +2805,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(pen&&!rankMet(ch,pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
     /* 홍루: 홍루를 따르는 흑수들. 내 부하 두 사람은 빠진다 */
     /* 1000해를 넘긴 캐릭터가 이름 없는 불순물이 되어 돌아온다: 그 캐릭터가 쓰던 덱으로 싸운다 */
-    if(id==='impurity'){const gh=ghostOf(ch);if(gh){E.deck=gh.deck.slice();E.ghost=true;if(gh.wx)E.wx=structuredClone(gh.wx);E.name+=' · '+(gh.name||T.you)}}
+    if(id==='impurity'){const gh=ghostOf(ch);if(gh){const one=ghostCard(gh.deck);E.deck=(E.deck||[]).concat(one?[one]:[]);E.ghost=true;E.name+=' · '+(gh.name||T.you)}}
     if(e.zodiac10){const own=hwHave(ch);E.zChain=ZKEYS.filter(k=>!own.slice(0,2).includes(k));E.zExtra=Math.min(CFG.hw.zExtraMax,Math.max(0,own.length-CFG.hw.zExtraFrom));E.deck=['z_'+E.zChain[0]]}
     if(e.hwKamo){const n=hwHave(ch).length,cut=Math.min(CFG.hw.kamoCutMax,Math.max(0,n-3)*CFG.hw.kamoCut);E.maxHp=Math.round(E.maxHp*(1-cut));E.hp=E.maxHp}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
