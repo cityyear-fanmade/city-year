@@ -1104,8 +1104,8 @@ const CFG = {
   leads: {hollow: '문 없는 방의 흔적', tune: '소리 없는 연주회장의 흔적', finger: '손가락의 연줄', debt: '밀린 장부', blade: '칼 가는 소리', heat: '식지 않은 열기', seek: '누군가를 찾는 눈'},
   /* 공격과 명중: 공격은 hitPer배(소수점 버림)만큼 명중을 올리고, dmgPer마다 피해 +1을 한계 없이 더한다. 명중 스탯은 명중만 올린다 */
   atkRule: {on: true, hitPer: 0.5, dmgPer: 6},
-  /* 무기와 보조 장비가 라운드마다 한 키워드로 줄 수 있는 부여량 합계(공방 지팡이의 집중 키워드는 제외). 상대에게 쌓이는 키워드 자체의 한계는 따로 있다 */
-  kwTurnCap: 5,
+  /* 무기와 보조 장비는 각각 라운드마다 한 키워드로 kwTurnCap까지, 둘을 합쳐 kwTurnTotal까지 부여할 수 있다(공방 지팡이의 집중 키워드는 제외). 상대에게 쌓이는 키워드 자체의 한계는 그대로 */
+  kwTurnCap: 5, kwTurnTotal: 10,
   ws: {
     needEvery: 10, priceYearUp: 0.25, priceYearEvery: 20 /* 공방 해결사가 사는 공방 물건의 값은 고정이고, 20년차마다 원래 값의 25%씩 오른다 (예전에는 재료로 쓸 때마다 올랐다) */,
     /* 기본값은 공방 1등급 물건 중 가장 낮은 것 수준 (날 세운 단검 · 누빈 작업복 · 중고 의수) */
@@ -3848,7 +3848,8 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   /* 출혈 최대 스택: 플레이어가 적에게 거는 출혈만 bleedMax, 플레이어가 받는 출혈은 stackCap */
   const bleedCap=X=>X.isP?CFG.stackCap:CFG.bleedMax;
   /* 무기·보조 장비가 한 라운드에 한 키워드로 줄 수 있는 부여량(CFG.kwTurnCap). 지팡이(free)는 제외 */
-  const kwBudget=(A,C,k,n)=>{const R=A.kwR&&A.kwR.r===C.round?A.kwR:(A.kwR={r:C.round}),used=R[k]||0,g=Math.max(0,Math.min(n,CFG.kwTurnCap-used));R[k]=used+g;return g};
+  /* 무기(src 'w')와 보조 장비(src 'a')는 각각 한 라운드에 한 키워드로 CFG.kwTurnCap까지, 둘을 합쳐 CFG.kwTurnTotal까지 부여한다 */
+  const kwBudget=(A,C,k,n,src)=>{const R=A.kwR&&A.kwR.r===C.round?A.kwR:(A.kwR={r:C.round}),key=src+k,usedS=R[key]||0,usedT=R[k]||0,g=Math.max(0,Math.min(n,CFG.kwTurnCap-usedS,CFG.kwTurnTotal-usedT));R[key]=usedS+g;R[k]=usedT+g;return g};
   /* 혈찬 회복: 5스택마다 CFG.hyeolchan.heal (총량 제한 없음) */
   const hcHeal=X=>Math.max(0,Math.min(CFG.hyeolchan.heal,X.maxHp-X.hp));
   /* 균열에 나타날 수 있는 히든 보스: 조건과 상관없이 나타나지만, 이기는 것이 아니라 버티는 시험(trial)이나 noRift 표시가 있는 보스는 뺀다 */
@@ -4448,7 +4449,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.auxMat&&B.hp>0){B.matc=(B.matc||0)+A.auxMat;L('kw',`  ${B.name}에게 재료 수집 ${B.matc} (마에스트로의 증거)`)}
       if(A.auxDebuff&&B.hp>0){const {k,n,cap}=A.auxDebuff;B[k]=Math.min(cap||5,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${{prescript:'지령',warp:'왜곡',shock:'감전',chain:'사슬',web:'거미줄'}[k]||k} ${B[k]} (제식 장비)`)}
       /* 보조 장비가 거는 키워드: 적중마다, 무기와 같이 5스택까지 */
-      if(A.auxKw&&B.hp>0)for(const [k,n0,free] of A.auxKw){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=free?n0:kwBudget(A,C,k,n0);if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (보조 장비)`)}
+      if(A.auxKw&&B.hp>0)for(const [k,n0,free] of A.auxKw){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=free?n0:kwBudget(A,C,k,n0,'a');if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (보조 장비)`)}
       if(A.isP&&A.wx&&A.wx.forms&&B.hp>0&&!B.formImmune){const F_=CFG.form;
         if(A.form==='p')applyKw(A,B,{kw:[['bleed',F_.bleed,'t']]},L);
         if(A.form==='s'){addStagger(C,B,F_.stagger,L);if((A.stagger||0)>0)A.stagger=Math.max(0,A.stagger-F_.stagger)}}
@@ -4485,7 +4486,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.mindHit&&A.isP){const g=gainMind(C.ch,X.mindHit);if(g)L('kw',`  ${A.name} · 참회 · 정신력 +${g}`)}
         /* 무기로 입히는 키워드는 무기만으로는 WKCAP스택까지 쌓인다 (이미 그 이상이면 더하지 않는다) */
         {const kws=[...(X.hitKw||[]),...((X.formKw&&A.form&&X.formKw[A.form])?[X.formKw[A.form]]:[])];
-        for(const [k,n0] of kws){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=kwBudget(A,C,k,n0);if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}}
+        for(const [k,n0] of kws){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=kwBudget(A,C,k,n0,'w');if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}}
         if(X.fairy){A.fairyN=(A.fairyN||0)+1;if(!X.fairy.every||A.fairyN%X.fairy.every===0){B.fairy=Math.min(X.fairy.max,(B.fairy||0)+X.fairy.add);L('kw',`  ${B.name}에게 요정 +${X.fairy.add} (${B.fairy}/${X.fairy.max})`)}}
         if(X.imprint){B.imprint=Math.min(5,(B.imprint||0)+1);L('kw',`  ${B.name}에게 각인 ${B.imprint}/5`)}
         if(X.clawMark){B.cmark=Math.min(5,(B.cmark||0)+1);L('kw',`  ${B.name}에게 발톱자국 ${B.cmark}/5`);
@@ -5311,7 +5312,7 @@ function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.2.0';
+  const VERSION='v10.2.1';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -6359,6 +6360,7 @@ function startUI(E,app){
       <li><b>방어 자세</b> 카드를 하나도 내지 않으면 그 라운드는 회피 대신 방어로 받는다. 막으면 피해 ${CFG.guard.guardHit}, 못 막으면 피해 ×${CFG.guard.guardFailMul}. 다음 라운드 명중 +${CFG.guard.nextHit}${CFG.guard.lightUp?`, 그 전투 동안 빛과 빛 최대치 +${CFG.guard.lightUp}(최대 +${CFG.guard.lightUpMax})`:''}${CFG.guard.lightNext?`, 다음 라운드 빛 +${CFG.guard.lightNext}`:''}.</li>
       <li><b>빛</b> 라운드마다 ${CFG.light}. 남은 빛으로 손패 카드를 원하는 순서로 낸다. 남긴 빛은 사라진다.</li>
       <li><b>${D.keywords.bleed.n}</b> 공격할 때마다(빗나가도) 스택만큼 피해, 그 뒤 1 감소. 내가 방어 자세면 절반으로 지혈. <b>${D.keywords.rupture.n}</b> 피격 시 스택만큼 추가 피해, 피격마다 1 감소. <b>${D.keywords.ink.n}</b> 라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.ink.cap}스택. <b>${D.keywords.burn.n}</b> 라운드가 끝날 때 스택당 ${CFG.burn.dmg} 피해(내가 받으면 ${CFG.burn.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.burn.max}스택이고, 적이 거는 화상은 쌓이는 양이 절반이다. <b>${D.keywords.flame.n}</b>(레바테인 전용) 받는 피해 ×1.5, 라운드 끝에 1 감소. ${CFG.laev.blueAt}스택 이상이면 <b>푸른 화염</b>이 되어 받는 피해 ×${CFG.laev.blueMul}, 라운드 끝에 스택당 ${CFG.laev.blueDot} 피해를 주고 1 감소한다. 일반 디버프 스택의 최대치는 ${CFG.stackCap}이다. <b>${D.keywords.breath.n}</b> 최대 ${CFG.breath.cap}, 라운드마다 ${CFG.breath.decay} 줄어든다. 4~9는 치명 ${CFG.breath.base}%에서 90%까지(×${CFG.critMult}), ${CFG.breath.sure} 이상은 확정 치명, 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}. 방어 카드를 내면 내 출혈·파열이 1/4 줄어든다(적도 같다).</li>
+      <li><b>부여량 제한</b> 무기와 보조 장비는 각각 라운드마다 한 키워드로 ${CFG.kwTurnCap}까지, 둘을 합쳐 ${CFG.kwTurnTotal}까지 부여한다. 공방 지팡이의 집중 키워드는 제외한다.</li>
       <li><b>성장</b> 판정 성공 ${CFG.xp.ok}, 실패 ${CFG.xp.fail}, 판정 없는 선택 ${CFG.xp.plain}, 전투 승리 ${CFG.xp.win} 경험치. 레벨이 오르면 성장표를 1d100으로 세 번 굴려 하나를 고른다.</li>
       <li><b>${T.licensed}</b> 자격 시험, 계약, 견습으로 ${T.rankStart}${T.rankUnit}에 등록된다. 소속이 없거나 ${T.affTypes.office} 소속이면 전투에서 이긴 뒤 소문 판정(1d100 + ${T.paths.fixer} 진로 보정 ≥ ${CFG.winLicenseDc})으로도 등록된다. 고정 전투(${Object.keys(D.fixedFights).join('·')}년차)에서 이기면 2${T.rankUnit}씩 ${T.promote}한다.</li>
       <li><b>손가락 서열</b> ${Object.entries(D.fingers).map(([n,F])=>`${n}: ${F.ranks.map(r=>r.branch?r.branch.map(b=>b.n).join('/'):r.n).join(' → ')}`).join(' · ')}. 고정 전투 승리나 승급 사건으로 오르고, 오를 때마다 보정을 받는다. 서열 ${D.fingerRules.shopTier}단계 이상이면 공방 등급 +1.</li>
@@ -6600,9 +6602,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🆕 추가',['약지에 작품을 만들어 품평회에 내는 이야기가 추가됩니다.','소지 표식을 가진 사람에게 새로운 인연이 생깁니다.','외곽에서 승급이 막힌 사람을 위한 사건이 추가됩니다.']],
       ['🔧 조정',['공방 해결사의 엠플 값이 조정되고, 돈을 벌 수 있는 사건이 추가됩니다.','협회 추천서가 더 일찍 나옵니다.','기록실에 인연 힌트가 보강됩니다.','장인·명장 공방 장비와 암시장 장비가 조정되고, 명장의 공방에 4등급 보조 장비가 추가됩니다.','공방 해결사에 특수 강화와, 장비를 사자마자 재료로 쓰는 기능이 추가됩니다.','약지는 작품 이야기를 거쳐야 마에스트로가 됩니다.','무한 모드에서는 새 소속에 들어가거나 이직할 수 없습니다.','무한 모드에서 위쪽에 뜨는 글이 100년마다 한 번만 나옵니다.','일부 제식 장비와 N사 강화 시술이 강해집니다.']]];
   const V1015SEC=[['🔧 추가 조정',['무기 이펙트 조정','환상체 4종 조정']]];
-  const NOTICE={id:'v10.2.0',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const NOTICE={id:'v10.2.1',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[...V1010SEC,...V1015SEC,['🔧 v10.1.7 조정',['공방 해결사 편의성 증가','연출 강도 차이가 나지 않던 것 수정','환상체 몇 명 조정','라운드마다 HP UI 조정']],['🔧 v10.1.8 조정',['세이브 불러오기 시 해금 목록이 바로 적용되지 않던 문제 수정']],['🔧 v10.1.9 조정',['공방 해결사 보조 장비 종류 선택 · 강화 개편','카드 보상을 받을 때 돈 500안을 함께 지급','R사 팀별 시작 무기 변경','손가락 승급 이벤트 추가']],['🔧 v10.2.0 조정',['호흡이 최대치를 넘어 쌓이던 버그 수정','보호막이 최대치를 넘은 상태에서 카드로 보호막을 얻으면 줄어들던 버그 수정','1000해 달성 이후 불순물 너프']]]};
+    sec:[...V1010SEC,...V1015SEC,['🔧 v10.1.7 조정',['공방 해결사 편의성 증가','연출 강도 차이가 나지 않던 것 수정','환상체 몇 명 조정','라운드마다 HP UI 조정']],['🔧 v10.1.8 조정',['세이브 불러오기 시 해금 목록이 바로 적용되지 않던 문제 수정']],['🔧 v10.1.9 조정',['공방 해결사 보조 장비 종류 선택 · 강화 개편','카드 보상을 받을 때 돈 500안을 함께 지급','R사 팀별 시작 무기 변경','손가락 승급 이벤트 추가']],['🔧 v10.2.0 조정',['호흡이 최대치를 넘어 쌓이던 버그 수정','보호막이 최대치를 넘은 상태에서 카드로 보호막을 얻으면 줄어들던 버그 수정','1000해 달성 이후 불순물 너프']],['🔧 v10.2.1 조정',['무기와 보조 장비로 부여할 수 있는 키워드량을 정리했습니다. 한 키워드당 라운드마다 무기 5, 보조 장비 5까지 부여하고, 둘을 합쳐 최대 10까지 부여할 수 있습니다.','공방 해결사 지팡이의 집중 키워드는 이 제한을 받지 않습니다. 강화 단계가 오를수록 쌓을 수 있는 최대치도 함께 늘어납니다.','위 부여량 제한이 규칙 요약에 빠져 있던 것을 추가했습니다.']]]};
   const V1002SEC=[['🔧 조정',['인연 캐릭터의 성격과 말투를 조정하고, 루트별 전용 이벤트를 늘렸습니다.']]];
   const V1001SEC=[['🔧 개선 및 수정',['무한 모드 성장(주는 피해·일격·받는 피해·연륜)을 가방의 "정보" 칸에서 항상 볼 수 있습니다. 규칙 요약에 연륜 설명을 넣었습니다.','한계 돌파의 공격 선택지가 눌리지 않던 문제를 고쳤습니다. 일격 설명 문구도 알기 쉽게 바꿨습니다.','새로운 이야기에서 싸우기로 하면 다음 해로 미루지 않고 바로 전투가 시작됩니다.','무한 모드에서 이미 이긴 상대가 반복해서 나오던 것을 줄였습니다.','불순물을 쓰러뜨리면 받는 조각과 잔재 보상을 한 줄로 합쳤습니다.','정신력 막대의 채움이 보이지 않던 문제를 고쳤습니다.','엔딩 이미지에서 같은 히든 보스가 반복해 찍히거나 카드 장수가 줄바꿈되던 문제를 고쳤습니다.','가방의 첫 칸 이름을 "출생"에서 "정보"로 바꿨습니다.']]];
   const V1000SEC=[['🆕 소모품',['공방 거리의 "소지품"에서 붕대·간식·진정제를 살 수 있습니다. 종류마다 최대 3개까지 지닙니다.','소모품은 가방의 "소모품" 칸에 들어가고, 전투 중에도 쓸 수 있습니다.','가격은 10해마다 100안씩 오르고 최대 5,000안입니다.','인연이 있으면 전투를 이긴 뒤 가끔 도시락을 받아 HP와 정신력을 회복합니다.']],

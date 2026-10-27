@@ -2673,7 +2673,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 출혈 최대 스택: 플레이어가 적에게 거는 출혈만 bleedMax, 플레이어가 받는 출혈은 stackCap */
   const bleedCap=X=>X.isP?CFG.stackCap:CFG.bleedMax;
   /* 무기·보조 장비가 한 라운드에 한 키워드로 줄 수 있는 부여량(CFG.kwTurnCap). 지팡이(free)는 제외 */
-  const kwBudget=(A,C,k,n)=>{const R=A.kwR&&A.kwR.r===C.round?A.kwR:(A.kwR={r:C.round}),used=R[k]||0,g=Math.max(0,Math.min(n,CFG.kwTurnCap-used));R[k]=used+g;return g};
+  /* 무기(src 'w')와 보조 장비(src 'a')는 각각 한 라운드에 한 키워드로 CFG.kwTurnCap까지, 둘을 합쳐 CFG.kwTurnTotal까지 부여한다 */
+  const kwBudget=(A,C,k,n,src)=>{const R=A.kwR&&A.kwR.r===C.round?A.kwR:(A.kwR={r:C.round}),key=src+k,usedS=R[key]||0,usedT=R[k]||0,g=Math.max(0,Math.min(n,CFG.kwTurnCap-usedS,CFG.kwTurnTotal-usedT));R[key]=usedS+g;R[k]=usedT+g;return g};
   /* 혈찬 회복: 5스택마다 CFG.hyeolchan.heal (총량 제한 없음) */
   const hcHeal=X=>Math.max(0,Math.min(CFG.hyeolchan.heal,X.maxHp-X.hp));
   /* 균열에 나타날 수 있는 히든 보스: 조건과 상관없이 나타나지만, 이기는 것이 아니라 버티는 시험(trial)이나 noRift 표시가 있는 보스는 뺀다 */
@@ -3273,7 +3274,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.auxMat&&B.hp>0){B.matc=(B.matc||0)+A.auxMat;L('kw',`  ${B.name}에게 재료 수집 ${B.matc} (마에스트로의 증거)`)}
       if(A.auxDebuff&&B.hp>0){const {k,n,cap}=A.auxDebuff;B[k]=Math.min(cap||5,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${{prescript:'지령',warp:'왜곡',shock:'감전',chain:'사슬',web:'거미줄'}[k]||k} ${B[k]} (제식 장비)`)}
       /* 보조 장비가 거는 키워드: 적중마다, 무기와 같이 5스택까지 */
-      if(A.auxKw&&B.hp>0)for(const [k,n0,free] of A.auxKw){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=free?n0:kwBudget(A,C,k,n0);if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (보조 장비)`)}
+      if(A.auxKw&&B.hp>0)for(const [k,n0,free] of A.auxKw){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=free?n0:kwBudget(A,C,k,n0,'a');if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (보조 장비)`)}
       if(A.isP&&A.wx&&A.wx.forms&&B.hp>0&&!B.formImmune){const F_=CFG.form;
         if(A.form==='p')applyKw(A,B,{kw:[['bleed',F_.bleed,'t']]},L);
         if(A.form==='s'){addStagger(C,B,F_.stagger,L);if((A.stagger||0)>0)A.stagger=Math.max(0,A.stagger-F_.stagger)}}
@@ -3310,7 +3311,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.mindHit&&A.isP){const g=gainMind(C.ch,X.mindHit);if(g)L('kw',`  ${A.name} · 참회 · 정신력 +${g}`)}
         /* 무기로 입히는 키워드는 무기만으로는 WKCAP스택까지 쌓인다 (이미 그 이상이면 더하지 않는다) */
         {const kws=[...(X.hitKw||[]),...((X.formKw&&A.form&&X.formKw[A.form])?[X.formKw[A.form]]:[])];
-        for(const [k,n0] of kws){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=kwBudget(A,C,k,n0);if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}}
+        for(const [k,n0] of kws){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=kwBudget(A,C,k,n0,'w');if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}}
         if(X.fairy){A.fairyN=(A.fairyN||0)+1;if(!X.fairy.every||A.fairyN%X.fairy.every===0){B.fairy=Math.min(X.fairy.max,(B.fairy||0)+X.fairy.add);L('kw',`  ${B.name}에게 요정 +${X.fairy.add} (${B.fairy}/${X.fairy.max})`)}}
         if(X.imprint){B.imprint=Math.min(5,(B.imprint||0)+1);L('kw',`  ${B.name}에게 각인 ${B.imprint}/5`)}
         if(X.clawMark){B.cmark=Math.min(5,(B.cmark||0)+1);L('kw',`  ${B.name}에게 발톱자국 ${B.cmark}/5`);
