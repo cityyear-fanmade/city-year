@@ -946,6 +946,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const fresh=pool.filter(id=>!ownsCard(ch,id)),src=fresh.length>=CFG.cardPick.n?fresh:fresh.concat(pool.filter(id=>!fresh.includes(id))),set=[];
     const left=src.slice();while(set.length<CFG.cardPick.n&&left.length)set.push(left.splice(d(left.length)-1,1)[0]);
     if(!set.length)return null;
+    /* 카드 보상은 돈도 같이 준다(고정액). 구매한 상자는 제외 */
+    if(label!=='상자'){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;chips&&chips.push(`카드 보상 · +${money(m)}`)}
     if(set.length===1)return addCard(ch,set[0],chips,label,true);
     (ch.picks=ch.picks||[]).push(set);chips&&chips.push(`${label||'카드'} 발견 · ${set.length}장 가운데 하나를 고른다`);return set;
   }
