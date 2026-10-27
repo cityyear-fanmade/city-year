@@ -37,6 +37,7 @@ T.forEach((t,i)=>{
   const n=t&&t.n!=null?t.n:i+1;
   if(t.n!==i+1)E(i+1,`n이 ${i+1}이어야 한다 (지금: ${t.n})`);
   range(n,'제목 t',t.t,2,16);range(n,'본문 x',t.x,120,420);text(n,'제목',t.t);text(n,'본문',t.x);
+  if(n<31&&/레테/.test(JSON.stringify(t)))E(n,"'레테'는 31턴(7단계)부터 쓴다 — 1~30턴은 '프로젝트의 대상'·'검의 자리(가칭)'로만");
   const C=Array.isArray(t.c)?t.c:[];
   if(C.length<2||C.length>3)E(n,`선택지는 2~3개여야 한다 (지금: ${C.length}개)`);
   C.forEach((c,k)=>{const q=`선택 ${k+1}`;
