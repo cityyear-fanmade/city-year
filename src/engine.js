@@ -3385,7 +3385,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.mindHit&&A.isP){const g=gainMind(C.ch,X.mindHit);if(g)L('kw',`  ${A.name} · 참회 · 정신력 +${g}`)}
         /* 무기로 입히는 키워드는 무기만으로는 WKCAP스택까지 쌓인다 (이미 그 이상이면 더하지 않는다) */
         {const kws=[...(X.hitKw||[]),...((X.formKw&&A.form&&X.formKw[A.form])?[X.formKw[A.form]]:[])];
-        for(const [k,n0] of kws){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=kwBudget(A,C,k,n0,'w');if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}}
+        for(const [k,n0] of kws){const cu=(A.kwCapUp&&A.kwCapUp[k])||0,lim=(k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap)+cu,n=CFG.kwHitCap[k]!=null?Math.min(n0,CFG.kwHitCap[k]):kwBudget(A,C,k,n0,'w');if(n<=0||(B[k]||0)>=lim)continue;B[k]=Math.min(lim,(B[k]||0)+n);L('kw',`  ${B.name}에게 ${D.keywords[k].n} +${n} (무기)`)}}
         if(X.fairy){A.fairyN=(A.fairyN||0)+1;if(!X.fairy.every||A.fairyN%X.fairy.every===0){B.fairy=Math.min(X.fairy.max,(B.fairy||0)+X.fairy.add);L('kw',`  ${B.name}에게 요정 +${X.fairy.add} (${B.fairy}/${X.fairy.max})`)}}
         if(X.imprint){B.imprint=Math.min(5,(B.imprint||0)+1);L('kw',`  ${B.name}에게 각인 ${B.imprint}/5`)}
         if(X.clawMark){B.cmark=Math.min(5,(B.cmark||0)+1);L('kw',`  ${B.name}에게 발톱자국 ${B.cmark}/5`);
