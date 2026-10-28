@@ -66,7 +66,8 @@ html:not([data-skin="ruina"]) .btn.primary .mono,html:not([data-skin="ruina"]) .
 .stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;text-align:center}
 .stat div{background:var(--panel2);border-radius:4px;padding:8px 4px}
 .stat b{display:block;font:500 17px/1.2 var(--mono);color:var(--gold)}
-.stat span{font-size:11.5px;color:var(--dim)}
+.stat span{font-size:11.5px;color:var(--dim);word-break:keep-all}
+.stat .sub{display:block;font-size:10.5px;margin-top:2px;line-height:1.35}
 details{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--panel)}
 summary{cursor:pointer;font-weight:700}
 details ul{margin:10px 0 0;padding-left:18px;color:var(--dim);font-size:13.5px}
