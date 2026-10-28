@@ -2350,7 +2350,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     else if(st.type==='fight'){UI.fight=st.enemy;UI.enc=st.enc}else{UI.ev=st.ev;noteHint(st.ev)}
     /* 공방 거리: 1년차부터 3년마다 들를지 묻는다. 들러도 해는 넘어가지 않는다 */
     const lakeDue=lakeHome()&&G.ch.lake&&G.ch.lake.harbor;if(lakeDue)G.ch.lake.harbor=false;
-    if((lakeHome()?lakeDue:(G.year-1)%CFG.shop.every===0)&&!shopDone&&!G.free&&!(G.ch.rb&&!G.ch.rb.out)){
+    /* 거미집 안에서는 공방 거리가 끼어들지 않는다: 그 해의 기회는 거미집이 끝난 뒤 첫 해로 미룬다(G.shopOwed) */
+    let shopDue=lakeHome()?lakeDue:((G.year-1)%CFG.shop.every===0||!!G.shopOwed);
+    if(shopDue&&!lakeHome()&&st.type==='event'&&st.ev&&st.ev.web){G.shopOwed=true;shopDue=false}
+    if(shopDue&&!shopDone&&!G.free&&!(G.ch.rb&&!G.ch.rb.out)){G.shopOwed=false;
       UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special).filter(k=>!D.special[k].wsOnly),CFG.shop.blackStock).concat(E.wsAuxStock(G.ch)||[]):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
