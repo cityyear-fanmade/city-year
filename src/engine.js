@@ -1267,10 +1267,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.ego||ch.distForm||C.mindHandled)return;
     C.mindHandled=true;
     const L=(t,x)=>{if(C.quiet)return;C.log.push({t,s:x});C.cur.push({t,s:x})};
-    const th_=50+biasOf(ch),r=d(100),sg_=r>th_&&(s.egoSight||0)>0&&d(100)<=s.egoSight,ok=r<=th_||sg_;L('sys',`${P.name} · 정신력 0 · 마음이 한계에 닿았다 · 1d100 ${r} (${th_} 이하면 E.G.O 개화, 아니면 뒤틀림)`);if(sg_)L('kw',`  장비의 형상이 보였다 · ${s.egoSight}% · E.G.O 개화`);
-    if(!C.quiet)C.rollPend={k:'break',r,th:th_,ok,sight:sg_,at:0};
+    const th_=50+biasOf(ch),r=d(100),sg_=r>th_&&(s.egoSight||0)>0&&d(100)<=s.egoSight,ok=r<=th_||sg_,r2=ok?0:d(100),dead=!ok&&r2>M.twist;L('sys',`${P.name} · 정신력 0 · 마음이 한계에 닿았다 · 1d100 ${r} (${th_} 이하면 E.G.O 개화, 아니면 뒤틀림 판정)`);if(!ok)L('sys',`  뒤틀림 판정 1d100 ${r2} (${M.twist} 이하면 육신 뒤틀림, 아니면 정신 붕괴)`);if(sg_)L('kw',`  장비의 형상이 보였다 · ${s.egoSight}% · E.G.O 개화`);
+    if(!C.quiet)C.rollPend={k:'break',r,th:th_,ok,sight:sg_,at:0,r2:ok?null:r2,th2:M.twist,dead};
     const b={atk:s.atk,eva:s.eva,spd:s.spd,maxHp:s.maxHp};
     ch.mindDead=false;
+    if(dead){ch.mindDead=true;L('kw','  마음이 끝내 무너진다 · 정신 붕괴');return}
     if(ok){
       const type=d(2)===1?'atk':'def';setEgo(ch,type,'');ch.namePend='ego';
       P.egoLight=M.light;P.egoRounds=M.lightRounds;

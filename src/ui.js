@@ -346,17 +346,21 @@ export function startUI(E,app){
     });
   }
   /* 정신력 1·0의 판정 연출: 1d100이 굴러 멈추고, 기준선(개화 N 이하)과 결과를 보여 준다. 개화=금빛 파동, 뒤틀림=붉은 번쩍임·떨림 */
+  /* 전투 중 정신력 0: 개화 판정에 실패하면(r2가 있으면) 뒤틀림 판정을 한 번 더 굴린다. 두 번째도 실패하면 정신 붕괴 */
   function rollFx(a){
     if(a.rs)return rollFxVoice(a);
-    const {r,th,ok,at,sight}=a;
+    return rollBar(a).then(()=>a.r2!=null&&!a.ok?rollBar({r:a.r2,th:a.th2,ok:!a.dead,at:a.at,second:true}):null);
+  }
+  function rollBar(a){
+    const {r,th,ok,at,sight,second}=a,two=a.r2!=null;
     return new Promise(res=>{
       if(document.getElementById('rv')){res();return}
       const still=MODE==='off'||SKIP;
       const o=document.createElement('div');o.id='rv';
-      o.innerHTML=`<div class="rv-t">정신력 ${at} · 마음이 한계에 닿았다</div><div class="rv-n" id="rvn">–</div><div class="rv-bar"><i class="rv-ok" style="width:${th}%"></i><i class="rv-mk" id="rvm" style="left:0"></i><span class="rv-l" style="left:0">1</span><span class="rv-l" style="left:${th}%">${th}</span><span class="rv-l" style="right:0">100</span></div><div class="rv-s">1d100 · ${th} 이하면 E.G.O 개화, 넘으면 육신이 뒤틀린다</div><div class="rv-r" id="rvr"></div>`;
+      o.innerHTML=`<div class="rv-t">정신력 ${at} · ${second?'마음이 한계를 넘는다':'마음이 한계에 닿았다'}</div><div class="rv-n" id="rvn">–</div><div class="rv-bar"><i class="rv-ok" style="width:${th}%"></i><i class="rv-mk" id="rvm" style="left:0"></i><span class="rv-l" style="left:0">1</span><span class="rv-l" style="left:${th}%">${th}</span><span class="rv-l" style="right:0">100</span></div><div class="rv-s">${second?`1d100 · ${th} 이하면 육신이 뒤틀리고, 넘으면 정신이 무너진다`:`1d100 · ${th} 이하면 E.G.O 개화, 넘으면 ${two?'뒤틀림 판정으로 넘어간다':'육신이 뒤틀린다'}`}</div><div class="rv-r" id="rvr"></div>`;
       document.body.appendChild(o);
       const n=document.getElementById('rvn'),m=document.getElementById('rvm'),rr=document.getElementById('rvr');let t=still?1300:0,done=false;
-      const iv=setInterval(()=>{t+=70;const v=1+Math.floor(Math.random()*100);n.textContent=v;m.style.left=v+'%';if(t>=1300){clearInterval(iv);n.textContent=r;m.style.left=r+'%';o.classList.add(ok?'good':'bad');rr.textContent=ok?(sight?'장비의 형상이 보였다 · E.G.O 개화':'E.G.O 개화'):'육신이 뒤틀린다';setTimeout(end,1500)}},70);
+      const iv=setInterval(()=>{t+=70;const v=1+Math.floor(Math.random()*100);n.textContent=v;m.style.left=v+'%';if(t>=1300){clearInterval(iv);n.textContent=r;m.style.left=r+'%';o.classList.add(ok?'good':'bad');rr.textContent=second?(ok?'육신이 뒤틀린다':'정신이 무너진다'):ok?(sight?'장비의 형상이 보였다 · E.G.O 개화':'E.G.O 개화'):two?'개화하지 못했다':'육신이 뒤틀린다';setTimeout(end,1500)}},70);
       function end(){if(done)return;done=true;clearInterval(iv);o.classList.add('out');setTimeout(()=>{o.remove();res()},400)}
       o.addEventListener('click',()=>{if(t>=1300)end()});
     });
