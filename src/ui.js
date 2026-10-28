@@ -722,7 +722,7 @@ export function startUI(E,app){
     const gtabs=st.length?`<div class="seg" style="margin:6px 0">${[['all','전체',st.length],...slotKeys.map(k=>[k,D.slots[k],cnt(k)])].map(([k,n,c])=>`<button class="${gt===k?'on':''}" data-a="gtab" data-i="${k}">${n} ${c}</button>`).join('')}</div>`:'';
     const sl=order.map(i=>{const g=st[i],cur=ch.gear[g.slot],df=fxDiff(g,cur);
       return `<div class="invr stash"><span>${D.slots[g.slot]}</span><div class="stack" style="gap:2px;min-width:0"><b>${esc(g.n)}</b><span class="mono small" style="color:var(--gold)">${esc(g.e||'')}</span>${df?`<span class="mono small">지금 장비보다 · ${df}</span>`:''}</div>
-        ${cbt?'<span class="small dim">전투 중 교체 불가</span>':`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}</div>`}).join('');
+        ${cbt?'<span class="small dim">전투 중 교체 불가</span>':E.equipWhy(ch,g)?`<span class="small bad">${esc(E.equipWhy(ch,g))}</span>`:`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}</div>`}).join('');
     const w=ch.gear.weapon,need=E.bonNeed(ch);
     const up=w&&(w.id==='bonatelli'||w.id==='star')?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b class="serif">${esc(w.n)}</b><span class="mono" style="color:var(--gold)">강화 ${w.lvl}/${w.id==='star'?CFG.star.max:CFG.bon.max}</span></div>
       ${need==null?'<p class="small dim">최대로 강화했다.</p>':`<p class="small">보관함의 장비 하나를 녹여 한 단계 강화한다. 다음 단계 재료 · ${need?need+'등급 이상':'아무 장비'}${need>=5?' (유물·히든 장비)':''}</p>
@@ -910,7 +910,7 @@ export function startUI(E,app){
         <div class="cmp"><div class="panel stack" style="gap:4px"><span class="eyebrow">지금 장착 중</span><b>${cur?esc(cur.n):'없음'}</b><span class="mono small dim">${cur?esc(cur.e||''):''}</span></div>
           <div class="panel stack" style="gap:4px;border-color:var(--gold)"><span class="eyebrow">새 장비</span><b>${esc(it.n)}</b><span class="mono small" style="color:var(--gold)">${esc(it.e||'')}</span>${it.t?`<span class="small dim" style="line-height:1.55">${esc(it.t)}</span>`:''}</div></div>
         <div class="mono small">바꾸면 · ${df||'능력치 변화 없음'}</div>
-        <button class="btn primary" data-a="gwear">장착한다${cur?` · ${esc(cur.n)}은(는) 보관함으로`:''}</button>
+        ${E.equipWhy(ch,it)?`<p class="small bad">장착할 수 없다 · ${esc(E.equipWhy(ch,it))}</p>`:`<button class="btn primary" data-a="gwear">장착한다${cur?` · ${esc(cur.n)}은(는) 보관함으로`:''}</button>`}
         <button class="btn" data-a="gkeep">보관함에 넣어 둔다</button>
         <p class="small dim">보관함의 장비는 전투 밖이면 언제든 가방 → 장비에서 바꿔 낄 수 있다.</p>`,'offer',false);
     }
@@ -943,7 +943,7 @@ export function startUI(E,app){
     if(!(UI.stock||[]).length)return '';
     const ch=G.ch;
     const items=UI.stock.map(id=>{const it=D.special[id],st=E.canBuySpecial(ch,id);
-      const note=it.wsOnly?(st==='money'?'돈이 모자란다':'공방 해결사 전용 재료 · 보관함에 들어간다'):st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${D.slots[it.slot]} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
+      const note=it.wsOnly?(st==='money'?'돈이 모자란다':'공방 해결사 전용 재료 · 보관함에 들어간다'):st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='wslock'?'공방 해결사 · 전용 장비는 바꿀 수 없다':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${D.slots[it.slot]} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
       return `<button class="btn" data-a="bspecial" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(E.specialPrice(ch,id))}</span></span>
         <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${note}</span></button>`}).join('');
     const B=CFG.blackCard,box=UI.cardBox?`<div class="panel stack" style="gap:8px;border-color:${KIND.debuff[1]}"><div class="row between"><b class="serif">수상한 카드 상자</b><span class="mono" style="color:var(--gold)">${E.money(B.price)}</span></div>
@@ -991,7 +991,7 @@ export function startUI(E,app){
       const open=w.grade<=acc||(hwHome()&&w.grade===3);
       const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade&&(lakeHome()?!!it.lake:hwHome()?(w.grade<3||it.hw):(!it.hw&&!it.lake))).filter(([id,it],_i,all)=>!hwHome()||w.grade===3||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
-        const note=it.tool&&st==='ok'?`쓰면 사라진다 · 지금 ${((ch.lake||{}).tools||{})[it.tool]||0}개`:it.tool&&st==='money'?'돈이 모자란다':it.tool&&st==='locked'?'이 호수의 소문을 아직 듣지 못했다':it.tool&&st==='owned'?'이미 두 개를 챙겨 두었다':st==='owned'?(it.hw&&(ch.hwGot||[]).includes(id)&&!(cur&&cur.id===id)?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
+        const note=it.tool&&st==='ok'?`쓰면 사라진다 · 지금 ${((ch.lake||{}).tools||{})[it.tool]||0}개`:it.tool&&st==='money'?'돈이 모자란다':it.tool&&st==='locked'?'이 호수의 소문을 아직 듣지 못했다':it.tool&&st==='owned'?'이미 두 개를 챙겨 두었다':st==='owned'?(it.hw&&(ch.hwGot||[]).includes(id)&&!(cur&&cur.id===id)?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='wslock'?'공방 해결사 · 전용 장비는 바꿀 수 없다':st==='locked'?'잠김':`${D.slots[it.slot]} 교체${cur?' · 지금 '+esc(cur.n):''}`;
         if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span><span class="small dim">${it.tool?'소모형 도구':auxLbl(it)}${cur&&!it.tool?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · ${it.tool?'이 도구를 챙길까?':'이 장비를 맞출까?'}</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">${it.perm?'먹는다':it.hw?'받는다':it.tool?'챙긴다':'맞춘다'}</button>${E.isWs(ch)&&!it.tool&&!it.perm&&!it.hw&&ch.ws?`<button class="btn" data-a="buymelt" data-i="${id}">사서 바로 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="5">5개 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="10">10개 녹이기</button>`:''}<button class="btn quiet" data-a="buyno">취소</button></div></div>`;
         return `<button class="btn" data-a="buy" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':(E.isWs(ch)?`<s class="dim">${E.money(it.price)}</s> `:'')+E.money(E.priceOf(ch,id))}</span></span>
           <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${it.tool?'도구 · 소모형':it.perm?'영구 강화':auxLbl(it)} · ${note}</span></button>`;
