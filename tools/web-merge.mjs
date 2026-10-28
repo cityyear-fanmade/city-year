@@ -15,5 +15,5 @@ for(const p of parts){
 for(const t of turns)for(const c of (t.c||[]))if(c&&c.bond==='null')c.bond=null;
 turns.sort((a,b)=>a.n-b.n);
 writeFileSync(out,JSON.stringify({finger,route,turns},null,1)+'\n');
-const miss=[];for(let n=1;n<=40;n++)if(!seen.has(n))miss.push(n);
+const miss=[];for(let n=1;n<=Math.max(20,...seen);n++)if(!seen.has(n))miss.push(n);
 console.log(`${out} · ${finger} · ${route} · 턴 ${turns.length}개`+(miss.length?` · 빠진 턴: ${miss.join(', ')}`:''));

@@ -23,7 +23,8 @@ const E=(n,m)=>err.push(`턴 ${n}: ${m}`),W=(n,m)=>warn.push(`턴 ${n}: ${m}`);
 if(!FINGERS.includes(J.finger))err.push(`finger는 ${FINGERS.join('/')} 중 하나여야 한다 (지금: ${J.finger})`);
 if(!ROUTES.includes(J.route))err.push(`route는 ${ROUTES.join('/')} 중 하나여야 한다 (지금: ${J.route})`);
 const T=Array.isArray(J.turns)?J.turns:[];
-if(T.length!==40)err.push(`turns는 정확히 40개여야 한다 (지금: ${T.length}개)`);
+const LEN=T.length,NAME_FROM=LEN===20?17:31;
+if(![20,40].includes(LEN))err.push(`turns는 20개 또는 40개여야 한다 (지금: ${T.length}개)`);
 const range=(n,s,v,a,b,req=true)=>{if(v==null||v===''){if(req)E(n,`${s} 없음`);return}const L=len(v);if(L<a||L>b)E(n,`${s} 길이 ${L}자 (허용 ${a}~${b})`)};
 const text=(n,s,v)=>{if(typeof v!=='string')return;
   for(const b of BAN)if(v.includes(b))E(n,`${s}에 쓰면 안 되는 말 '${b}'`);
@@ -37,9 +38,9 @@ T.forEach((t,i)=>{
   const n=t&&t.n!=null?t.n:i+1;
   if(t.n!==i+1)E(i+1,`n이 ${i+1}이어야 한다 (지금: ${t.n})`);
   range(n,'제목 t',t.t,2,16);range(n,'본문 x',t.x,120,420);text(n,'제목',t.t);text(n,'본문',t.x);
-  if(n<31&&/레테/.test(JSON.stringify(t)))E(n,"'레테'는 31턴(7단계)부터 쓴다 — 1~30턴은 '프로젝트의 대상'·'검의 자리(가칭)'로만");
+  if(n<NAME_FROM&&/레테/.test(JSON.stringify(t)))E(n,`'레테'는 ${NAME_FROM}턴부터 쓴다 — 그 전에는 '프로젝트의 대상'·'검의 자리(가칭)'로만`);
   const C=Array.isArray(t.c)?t.c:[];
-  const maxC=n===40?5:3;if(C.length<2||C.length>maxC)E(n,`선택지는 2~${maxC}개여야 한다 (지금: ${C.length}개)`);
+  const maxC=n===LEN?5:3;if(C.length<2||C.length>maxC)E(n,`선택지는 2~${maxC}개여야 한다 (지금: ${C.length}개)`);
   C.forEach((c,k)=>{const q=`선택 ${k+1}`;
     range(n,q+' 라벨 l',c.l,3,28);range(n,q+' 결과 r',c.r,80,320);range(n,q+' 힌트 h',c.h,0,24,false);
     text(n,q+' 라벨',c.l);text(n,q+' 결과',c.r);text(n,q+' 힌트',c.h);
@@ -47,13 +48,13 @@ T.forEach((t,i)=>{
     if(!SIZES.includes(c.size))E(n,`${q} size는 ${SIZES.join('/')} 중 하나`);
     if(c.risk){range(n,q+' 실패 문구 f',c.f,70,260);text(n,q+' 실패 문구',c.f)}else if(c.f)W(n,`${q}에 f가 있지만 risk가 true가 아니다`);
     if(c.flag!=null&&!/^[a-z][a-z0-9_]{1,23}$/.test(c.flag))E(n,`${q} flag는 영문 소문자·숫자·밑줄 2~24자`);
-    if(c.end!=null){if(!ENDS.includes(c.end))E(n,`${q} end는 ${ENDS.join('/')} 중 하나`);else endsSeen.add(c.end);if(n<38)E(n,`${q} end는 38~40턴에서만 쓴다`)}
+    if(c.end!=null){if(!ENDS.includes(c.end))E(n,`${q} end는 ${ENDS.join('/')} 중 하나`);else endsSeen.add(c.end);if(n<LEN-2)E(n,`${q} end는 ${LEN-2}~${LEN}턴에서만 쓴다`)}
   });
-  if(n===40&&C.some(c=>c.end==null))E(n,'40턴의 모든 선택지에는 end가 있어야 한다');
+  if(n===LEN&&C.some(c=>c.end==null))E(n,`${LEN}턴의 모든 선택지에는 end가 있어야 한다`);
   if(J.route==='master'&&n===3){const fl=C.map(c=>c.flag);for(const f of ['adopt','separate','defer'])if(!fl.includes(f))E(n,`스승 루트 3턴 선택지에 flag '${f}'가 하나씩 있어야 한다 (제자로 받아들인다/분리해 보호한다/미룬다)`)}
 });
 {const all=T.map(t=>[t.x,...(t.c||[]).flatMap(c=>[c.r,c.f])].join(' ')).join(' ');for(const w of ['완벽','묵직','기묘','차가운','철저','무표정']){const k=(all.match(new RegExp(w,'g'))||[]).length;if(k>=4)warn.push(`전체: '${w}'이(가) ${k}번 나온다 (같은 수식어 반복 — 다른 표현으로)`)}}
-for(const e of ENDS)if(!endsSeen.has(e))err.push(`38~40턴 선택지에 결말 end '${e}'가 한 번도 없다`);
+for(const e of ENDS)if(!endsSeen.has(e))err.push(`${LEN-2}~${LEN}턴 선택지에 결말 end '${e}'가 한 번도 없다`);
 console.log(`${file} · ${J.finger||'?'} · ${J.route||'?'} · 턴 ${T.length}개`);
 if(warn.length){console.log(`\n경고 ${warn.length}건`);warn.slice(0,60).forEach(x=>console.log('  △ '+x));if(warn.length>60)console.log(`  … ${warn.length-60}건 더`)}
 if(err.length){console.log(`\n오류 ${err.length}건`);err.slice(0,80).forEach(x=>console.log('  ✕ '+x));if(err.length>80)console.log(`  … ${err.length-80}건 더`);process.exit(1)}

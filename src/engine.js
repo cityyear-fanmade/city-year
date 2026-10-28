@@ -2114,9 +2114,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.flag&&!w.flags.includes(o.flag)){w.flags.push(o.flag);if(['adopt','separate','defer'].includes(o.flag))w.child=o.flag}
     if(o.end)w.ends.push(o.end);
     if(!o.noReward&&o.size&&Z.reward[o.size]!=null){
-      const R=Z.reward[o.size],st={};
-      if(typeof R==='object')Object.assign(st,R);
-      else{const th=Z.theme[w.finger]||'atk',u=(Z.themeAmt&&Z.themeAmt[th])||1;st[th]=R*u;if(R>=2)st.maxHp=(st.maxHp||0)+2}
+      /* 40턴 기준 보상표: 20턴 파트는 한 턴의 보상을 두 배로 줘서 총합을 맞춘다 */
+      const R=Z.reward[o.size],st={},mul=Math.max(1,Math.round(40/(w.total||40)));
+      if(typeof R==='object'){for(const [k,v] of Object.entries(R))st[k]=v*mul}
+      else{const th=Z.theme[w.finger]||'atk',u=(Z.themeAmt&&Z.themeAmt[th])||1;st[th]=R*u*mul;if(R>=2)st.maxHp=(st.maxHp||0)+2*mul}
       addStats(ch.stats,st);if(st.maxHp)ch.hp+=st.maxHp;
       chips.push('거미집 · '+Object.entries(st).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · '))}
     if(w.turn>=w.total){
