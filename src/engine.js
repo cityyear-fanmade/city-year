@@ -234,7 +234,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const wsLock=(ch,item)=>{const old=ch.gear[item.slot];return !!(old&&old.id==='ws_'+item.slot&&item.id!==old.id&&isWs(ch))};
   /* 칸마다 보여 줄 '착용 불가' 안내 (빈 문자열이면 문제없음) */
   const slotWhy=(ch,slot)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':wsLock(ch,{slot,id:''})?'공방 해결사 전용 장비 · 바꿀 수 없다 (산 장비는 재료로 녹인다)':(slot==='aug'&&isN(ch))?'N사 날개 · 의수는 쓰지 않는다 (의복·지팡이 등은 가능)':'';
-  const equipWhy=(ch,item)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')?'N사 날개 · 의체를 쓰지 않는다':wsLock(ch,item)?'공방 해결사 · 전용 '+D.slots[item.slot]+'은 바꿀 수 없다':'';
+  const equipWhy=(ch,item)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')?'N사 날개 · 의체를 쓰지 않는다':wsLock(ch,item)?'공방 해결사 · 전용 장비는 바꿀 수 없다':'';
   /* 특색에 닿은 사람은 이미 전용 의수를 쓰고 있어서 N사 날개(의수 불가)에는 들어갈 수 없다 */
   const nBlocked=ch=>!!(ch.colorDone||ch.titleKind==='color');
   const isEastOuter=ch=>!!(ch.o&&ch.o.n==='동부 출신 외곽 생존자');
