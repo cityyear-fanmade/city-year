@@ -1477,7 +1477,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const b=BC,s=b.stats,fresh=b.fresh&&MODE!=='off';
     const v=r=>`<span class="v" ${fresh?`data-roll="${r}"`:''}>${r}</span>`;
     const cyc=pool=>fresh&&pool?` data-cyc="${esc(pool.map(y=>y.n).join('|'))}"`:'';
-    const row=(lab,r,x,pool)=>`<div class="roll"><span class="mono small dim">${lab}</span>${v(r)}<div class="n"><b${cyc(pool)}>${x.n}</b>${x.t?`<span>${x.t}</span>`:''}<span class="mono small" style="color:var(--gold)">${x.e}</span></div></div>`;
+    const row=(lab,r,x,pool)=>{const fx_=lab==='출신'&&b.o&&b.o.key;return `<div class="roll"><span class="mono small dim">${lab}</span>${fx_?'<span class="v">해금</span>':v(r)}<div class="n"><b${fx_?'':cyc(pool)}>${x.n}</b>${x.t?`<span>${x.t}</span>`:''}<span class="mono small" style="color:var(--gold)">${x.e}</span></div></div>`};
     const sw=D.colors.map((c,i)=>`<button class="sw ${i===b.ci?'on':''}" data-a="color" data-i="${i}" style="background:${c.hex}" aria-label="${c.adj} 색" title="${c.adj}"></button>`).join('');
     const kid=b.kid.length?`<div class="stack" style="gap:6px"><div class="eyebrow">성장기 · 1d100 × ${b.kid.length}</div>
       <div class="panel">${(()=>{const pl=placeOf(b.o,b.r,b.blank);return pl?`<div class="roll"><span class="mono small dim">태어난 곳</span><span class="v">·</span><div class="n"><b>${pl.n}</b><span>${pl.t}</span></div></div>`:''})()}${b.kid.map(k=>row(k.age+'세',k.r,k.x,D.childhood.table)).join('')}</div></div>`:'';
