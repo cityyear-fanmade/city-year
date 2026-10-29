@@ -1446,9 +1446,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
   const dailySeed=k=>{let h=2166136261;for(const c of 'city-year:'+k)h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;return h%1000000000};
   function vOrigins(){
-    const u=loadUnlocks();
-    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.hiddenOrigins||[]).map(o=>`<div class="row between"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.roll)?'':' dim'}">${u.includes('origin:'+o.roll)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>`).join('')}
-      <p class="small dim">숨은 출생으로 태어나 무한 모드 전, 제 2막의 끝까지 가면 그 출생이 열린다.</p></div>`;
+    const u=loadUnlocks();if(!(D.unlockOrigins||[]).length)return '';
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="row between"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>`).join('')}
+      <p class="small dim">정해진 출생으로 태어나거나 정해진 물건을 들고 무한 모드 전, 제 2막의 끝까지 가면 열린다.</p></div>`;
   }
   function vJobs(){
     const u=loadUnlocks();
@@ -1536,14 +1536,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <div class="row" style="gap:8px"><button class="btn${!UI.jobAuto?' primary':''}" style="flex:1" data-a="jobroll" data-i="">${esc(base)}</button><button class="btn${UI.jobAuto?' primary':''}" style="flex:1" data-a="jobroll" data-i="${k}">${esc(J.n)}</button></div></div>`;
   }
   /* 해금 출생: 무한 모드 전 2막 끝까지 간 숨은 출생은 이 목록에서 골라 시작할 수 있다. 다시 태어나도 출생은 그대로, 나머지만 다시 굴린다 */
-  const openOrigins=()=>{const u=loadUnlocks();return (D.hiddenOrigins||[]).filter(o=>u.includes('origin:'+o.roll))};
+  const openOrigins=()=>{const u=loadUnlocks();return (D.unlockOrigins||[]).filter(o=>u.includes('origin:'+o.key))};
   function vOriginPick(){
     const L=openOrigins();if(!L.length||UI.daily)return '';
-    const cur=UI.origin&&!UI.job&&L.some(o=>o.roll===UI.origin)?UI.origin:null;
+    const cur=UI.origin&&!UI.job&&L.some(o=>o.key===UI.origin)?UI.origin:null;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">해금된 출생</span>
       <p class="small dim">고르면 출생이 고정된다. 다시 태어나면 재능·결점·무기·성장기·타고난 것만 새로 굴린다.</p>
       <button class="btn${!cur?' primary':''}" data-a="origin" data-i="">굴림에 맡긴다</button>
-      ${L.map(o=>`<button class="btn${cur===o.roll?' primary':''}" data-a="origin" data-i="${o.roll}"><b>${esc(o.n)}</b><span class="small">${esc(o.t)}</span></button>`).join('')}</div>`;
+      ${L.map(o=>`<button class="btn${cur===o.key?' primary':''}" data-a="origin" data-i="${o.key}"><b>${esc(o.n)}</b><span class="small">${esc(o.t)}</span></button>`).join('')}</div>`;
   }
   function vJobPick(){
     const u=loadUnlocks().filter(k=>D.hiddenJobs[k]);if(!u.length)return '';
@@ -2435,8 +2435,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function recordEnd(){
     syncTitles();
     checkInnateUnlock();
-    {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||G.infinite);
-      if(cleared&&cc.o&&cc.o.hidden&&cc.o.roll&&!loadUnlocks().includes('origin:'+cc.o.roll)){addUnlock('origin:'+cc.o.roll);UI.newOrigin=cc.o.n}}
+    /* 해금 출생(D.unlockOrigins): 무한 모드 전 2막 끝까지 간 판이 cond의 출생(origin 이름) 또는 아이템(item id)을 만족하면 열린다. 굴림 번호 히든 출생과는 별개 */
+    {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||G.infinite),u0=loadUnlocks();
+      if(cleared)for(const o of D.unlockOrigins||[]){const k='origin:'+o.key,cd=o.cond||{};if(u0.includes(k))continue;
+        const has=cd.item?[...Object.values(cc.gear||{}),...(cc.stash||[])].some(x=>x&&x.id===cd.item):false;
+        if((cd.origin&&cc.o&&cc.o.n===cd.origin)||has){addUnlock(k);UI.newOrigin=o.n}}}
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:w&&UI.overflowEnd?'overflow':(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
     if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;r.ghost={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp}}
@@ -2653,7 +2656,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     color(i){E.setColor(BC,+i);BC.fresh=false;render()},
     relic(k){UI.relic=k;render()},
     rbteam(t){UI.team=t;render()},
-    origin(k){UI.origin=k?+k:null;if(UI.origin){UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
+    origin(k){UI.origin=k||null;if(UI.origin){UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
     job(k){if(k)UI.origin=null;UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
     live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},

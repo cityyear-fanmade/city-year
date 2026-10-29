@@ -131,10 +131,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function newChar(job,fixO,keep){
     const r=keep?Object.assign({},keep.r):{o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=!keep&&job&&D.hiddenJobs[job];
+    const UO=!J&&!keep&&typeof fixO==='string'&&(D.unlockOrigins||[]).find(x=>x.key===fixO)||null;   // 해금 출생(D.unlockOrigins): 굴림 번호 없이 고른 출생
     if(J)r.o=J.roll;
-    else if(fixO)r.o=fixO;
+    else if(fixO&&!UO)r.o=fixO;
     /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문). 숨은 출생이 talents·flaws·kidTable·noWeapon을 가지면 재능·결점·성장기는 그 표에서, 무기는 맨손(전용 무기)으로 */
-    const HO=!J&&(!keep||keep.fate)&&(D.hiddenOrigins||[]).find(x=>x.roll===(keep&&keep.fate?keep.fate:r.o)&&(keep||!(CFG.blankFate.pool||[]).includes(x.roll)));
+    const HO=UO||!J&&(!keep||keep.fate)&&(D.hiddenOrigins||[]).find(x=>x.roll===(keep&&keep.fate?keep.fate:r.o)&&(keep||!(CFG.blankFate.pool||[]).includes(x.roll)));
     const o=keep?(keep.fate&&HO?HO:BLANK.o):J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(o.talents||D.talents,r.t),f=keep?BLANK.f:pick(o.flaws||D.flaws,r.f),w=keep||o.noWeapon?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
     const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,dr:0,regen:0,defUp:0,hit:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,gearUp:0,egoSight:0,relicApt:0};
     for(const x of [o,t,f])addStats(s,x.fx);
