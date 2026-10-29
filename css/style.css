@@ -762,3 +762,8 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 @keyframes hStar2{0%{translate:0 0;scale:.2;opacity:1}30%{translate:calc(var(--dx) * .7) calc(var(--dy) * .7);scale:1.1;opacity:1}55%{opacity:.4}70%{opacity:1}100%{translate:var(--dx) var(--dy);scale:.6;opacity:0}}
 .hfx .chunk{position:absolute;left:50%;top:50%;width:var(--len);height:var(--th);margin-top:calc(var(--th) / -2);background:var(--c);border:1px solid #101014;rotate:var(--a);opacity:0;animation:hChunk .5s ease-in var(--d) forwards}
 @keyframes hChunk{0%{translate:0 0;opacity:1}35%{translate:var(--dx) var(--dy);opacity:1}100%{translate:var(--dx) calc(var(--dy) + 84px);opacity:0}}
+
+/* 공방 거리: 상점 접기 */
+.foldhd{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.foldmark{display:inline-block;width:1.3em;color:var(--gold);flex:none;font-size:1.05em}
+.panel.folded>*:not(:first-child){display:none}

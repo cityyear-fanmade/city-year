@@ -2297,6 +2297,20 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
         else if(a==='o'){AD.org=x}else if(a==='ok'){if(u>0)AD.done=true}else if(a==='again'){AD.done=false}
         augDemoDraw()})}
   }
+  /* 공방 거리: 상점마다 머리글을 눌러 접고 펼친다. 접은 상태는 이 브라우저에 기억한다 */
+  const SHOPFOLD_K='cityYearShopFold';
+  let SHOPFOLD={};try{SHOPFOLD=JSON.parse(store.get(SHOPFOLD_K)||'{}')||{}}catch(e){SHOPFOLD={}}
+  function applyShopFold(){
+    const mb=document.querySelector('.wrap .moneybar');if(!mb)return;
+    for(let el=mb.nextElementSibling;el;el=el.nextElementSibling){
+      if(!el.matches('.panel.stack')||!el.firstElementChild)continue;
+      const hd=el.firstElementChild,t=(hd.querySelector('b.serif')||hd).textContent.trim();
+      if(!t)continue;
+      hd.dataset.a='shopfold';hd.dataset.i=t;hd.classList.add('foldhd');
+      const f=!!SHOPFOLD[t];el.classList.toggle('folded',f);
+      const m=document.createElement('span');m.className='foldmark';m.textContent=f?'▸':'▾';const tg=hd.querySelector('b.serif')||hd;tg.insertBefore(m,tg.firstChild);
+    }
+  }
   function render(){
     if(window.CITY_LAB){labDraw();return}
     if(window.CITY_AUGDEMO){augDemoDraw();return}
@@ -2328,6 +2342,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.lastOv=ovKey;document.documentElement.classList.toggle('ovopen',!!ov);
     const lg=$('log');if(lg)lg.scrollTop=lg.scrollHeight;
     if(s!==lastScreen){window.scrollTo(0,0);lastScreen=s}
+    if(s==='shop')applyShopFold();
     if(s==='birth'&&BC.fresh&&MODE!=='off'){BC.fresh=false;rollAnim()}
     if(s==='level'&&UI.lvFresh&&MODE!=='off'){UI.lvFresh=false;rollAnim()}
     if(s==='result'&&UI.res.anim&&UI.res.roll){UI.res.anim=false;UI.animing=true;resultAnim().then(()=>{UI.animing=false;if(G&&((G.ch.offers||[]).length||(G.ch.picks||[]).length||(G.ch.gearOffers||[]).length||G.ch.packOffer))render()})}
@@ -2652,6 +2667,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       if(E.switchPack(G.ch,i)){UI.packMsg='카드팩을 바꿨다 · 지금 쓰는 팩: '+(G.ch.packName||'기본 카드팩');resave()}else UI.packMsg='지금은 바꿀 수 없다.';
       render();
     },
+    shopfold(i,el){const p=el.closest('.panel');if(!p)return;const f=!p.classList.contains('folded');p.classList.toggle('folded',f);const m=el.querySelector('.foldmark');if(m)m.textContent=f?'▸':'▾';if(f)SHOPFOLD[i]=1;else delete SHOPFOLD[i];try{store.set(SHOPFOLD_K,JSON.stringify(SHOPFOLD))}catch(e){}},
     bag(k){if(UI.bag===k){UI.bag=null;UI.dropAsk=null;UI.bonAsk=null;UI.packSwAsk=null;render();return}UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;UI.packSwAsk=null;render()},
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
     help(){UI.help='card';if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
