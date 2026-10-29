@@ -293,6 +293,8 @@ export const CFG = {
       free: {n: '가주의 장도', fx: {atk: 5, eva: 7}, dice: [2, 6], wx: {hitInk: 1, inkCap: 4}, e: '공+5 · 회피+7 · 피해 2d6 · 적중마다 수흔 +1 · 수흔 스택 한도 +4'}}},
   /* R사 팀 배치 기준: 위에서부터 맞는 것이 있으면 그 팀으로 고정(속도형 토끼 · 체력형 코뿔소 · 회피형 순록), 없으면 무작위 */
   rbTeamRule: [['spd', 4, '토끼팀'], ['eva', 3, '순록팀'], ['maxHp', 71, '코뿔소팀']],
+  /* 해금 출생 줄기(route): 처분 의뢰의 준비물 최대 개수, 준비 뒤 대상을 만나기까지 걸리는 해 */
+  route: {kitMax: 3, huntGap: 2},
   rb: {teamBonus: {'토끼팀': {spd: 3}, '코뿔소팀': {maxHp: 10}, '순록팀': {eva: 3}} /* 부화장 출생 때 고르는 팀 보정 */, total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, team: [[34, '토끼팀'], [67, '순록팀'], [100, '코뿔소팀']], foes: {'까마귀팀': 'rh2', '코뿔소팀': 'rh3', '순록팀': 'rh4', '토끼팀': 'rh5'}, headFrom: 64, headGap: 1, bossGap: 3, head: ['baral'], boss: 'rcorp_boss', xp: 4, trial: {baral: {hp: 0.75, atk: -1}, zena: {hp: 0.75, atk: -1}}},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},

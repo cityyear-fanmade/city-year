@@ -136,13 +136,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     else if(fixO&&!UO)r.o=fixO;
     /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문). 숨은 출생이 talents·flaws·kidTable·noWeapon을 가지면 재능·결점·성장기는 그 표에서, 무기는 맨손(전용 무기)으로 */
     const HO=UO||!J&&(!keep||keep.fate)&&(D.hiddenOrigins||[]).find(x=>x.roll===(keep&&keep.fate?keep.fate:r.o)&&(keep||!(CFG.blankFate.pool||[]).includes(x.roll)));
-    const o=keep?(keep.fate&&HO?HO:BLANK.o):J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{}}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(o.talents||D.talents,r.t),f=keep?BLANK.f:pick(o.flaws||D.flaws,r.f),w=keep||o.noWeapon?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
+    const o=keep?(keep.fate&&HO?HO:BLANK.o):J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{},start:J.start}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(o.talents||D.talents,r.t),f=keep?BLANK.f:pick(o.flaws||D.flaws,r.f),w=keep||o.noWeapon?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
     const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,dr:0,regen:0,defUp:0,hit:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,gearUp:0,egoSight:0,relicApt:0};
     for(const x of [o,t,f])addStats(s,x.fx);
     const kid=keep?keep.kid.map(k=>{addStats(s,k.x.fx);return k}):childhood(s,o);
     const ch={r,o,t,f,w,kid,ci,blank:!!keep&&!(keep.fate&&HO),fated:!!(keep&&keep.fate&&HO),color:D.colors[ci].hex,licensed:false,title:null,aff:null,paths:Object.assign({},o.paths),
       flags:Object.assign({},o.flags),beaten:[],unlocks:[],mind:Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0)),stats:s,hp:s.maxHp,gear:{},money:D.money.start[o.n]||o.money||0,
       deck:o.deck?o.deck.slice():['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
+    /* 해금 출생·히든 직업의 시작 보너스: 레벨과 능력치를 처음부터 올려 시작한다 */
+    if(o.start&&!keep){const S_=o.start;if(S_.lv>1){ch.xp=xpFor(S_.lv);ch.lv=S_.lv}if(S_.fx){addStats(s,S_.fx);ch.hp=s.maxHp}}
     ch.s0={maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,check:s.check};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.fingerEarly){ch.fingerEarly=1;ch.fingerMul=o.fingerMul||1}if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
@@ -1148,6 +1150,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.topPass){const C_=CR[career(ch)];ch.title=isN(ch)&&isEastOuter(ch)?CFG.nWing.eastTitle:C_.topTitle;ch.titleKind='top';ch.topTries=0;ch.topNext=0;(ch.titleLog=ch.titleLog||[]).push(ch.title);addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(lakeOn(ch)){ch.lake=ch.lake||{};ch.lake.captain=true;ch.lake.capYear=ch.year||0;chips.push('목표 · 대재앙 토벌');chips.push(`배를 얻었다 · 배 내구도 ${CFG.lake.hullMax}/${CFG.lake.hullMax}`);chips.push(`전투마다 내구도 -${CFG.lake.hullWear} · 파도에서는 크게 잃는다 · 항구에서 ${CFG.lake.repairCost}안으로 수리 · 0이 되면 침몰`);lakeCards(ch,C_.topRow,chips,'선장')}if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
+    /* 해금 출생 줄기: 처분 의뢰를 받으면(routeHunt) 준비물 고르기가 시작되고, 준비물을 고르면(routeKit) 수색이 시작된다 */
+    if(fx.routeHunt){routeSt(ch).kit={picks:[]};chips.push('처분 대상 수색 · 준비물을 고른다')}
+    if(fx.routeKit){const R_=routeOf(ch),st_=routeSt(ch),H_=R_&&R_.hunt;
+      if(H_&&st_.kit){const max_=H_.kitMax||CFG.route.kitMax;
+        if(fx.routeKit!=='go')st_.kit.picks.push(fx.routeKit);
+        if(fx.routeKit==='go'||st_.kit.picks.length>=max_){const picks=st_.kit.picks,gap_=H_.gap||CFG.route.huntGap;st_.kit=null;st_.hunt={at:(ch.year||0)+gap_,picks,idx:st_.n};
+          chips.push(`처분 대상 수색 · ${gap_}년 뒤 대상을 만난다`);
+          for(const id of picks){const k_=H_.kit.find(x=>x.id===id);if(k_){chips.push(k_.n+' 준비');if(k_.fx)chips.push(...applyFx(ch,k_.fx).chips)}}}
+        else chips.push(`준비물 ${st_.kit.picks.length}/${max_}`)}}
     if(fx.colorPass){if(ch.titleKind==='top'){ch.title2=ch.title;ch.topTries=0}ch.colorDone=true;ch.colorYear=ch.year||0;if(CFG.colorReward){const up=k=>{const b=s[k];s[k]=Math.max(b+1,Math.round(b*CFG.colorMul));return s[k]-b},mh=Math.round(s.maxHp*CFG.colorMul)-s.maxHp;const ga=up('atk'),ge=up('eva'),gs=up('spd');s.maxHp+=mh;ch.hp+=mh;chips.push(`특색 · 모든 능력치 ×${CFG.colorMul} (공격 +${ga} · 회피 +${ge} · 속도 +${gs} · 최대 HP +${mh})`);ch.colorPick=true;chips.push('특색 패시브 · 셋 중 하나를 고른다')}ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';(ch.titleLog=ch.titleLog||[]).push('특색');ch.titlePick=true;chips.push(T.titleLabel+' · '+ch.title);if(ch.colorFx){addStats(s,ch.colorFx);ch.hp+=ch.colorFx.maxHp||0;chips.push('E.G.O 적성자 · 특색 · 모든 능력치 +5')}}
     if(fx.colorFail)topFailed(ch,chips,T.titleLabel+' 심사')
     let licensed=false;
@@ -2090,6 +2101,48 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:`[거미집 ${n}/${total}] ${T.t}`,x:webTok(T.x,ch,w),c,web:true};
   }
   /* 거미집 안에서 해가 지나지 않는 턴(한 해의 2~5번째 턴) */
+  /* ── 해금 출생 줄기(route) ──
+     출생 데이터의 route 이름으로 D.routes[이름]을 읽는다. 줄기가 있는 출생은
+     ① 공방 거리가 없고(shop:false) ② 1막·2막 연례 사건이 줄기의 풀로 바뀌고(yearly.act1/act2)
+     ③ 고정 전투와 등급 전투가 줄기의 목록으로 바뀌며(fixed, grade) ④ 처분 의뢰(hunt)로 대상 수색을 한다.
+     무한 모드에 들어가면 줄기는 끝나고 일반 규칙으로 돌아간다 */
+  const routeOf=ch=>(ch&&ch.o&&ch.o.route&&D.routes&&D.routes[ch.o.route])||null;
+  const routeSt=ch=>ch.rt=ch.rt||{used:{},n:0};
+  const routeEnd=()=>CFG.years+CFG.endless.span*CFG.endless.grades.length;
+  const routeShop=ch=>{const R=routeOf(ch);return !R||R.shop!==false};
+  function routeKitEvent(ch,R,st){
+    const H=R.hunt,max=H.kitMax||CFG.route.kitMax,pk=st.kit.picks,nm=id=>(H.kit.find(k=>k.id===id)||{}).n;
+    return {t:H.kitT,x:`${H.kitX}\n\n고른 것 ${pk.length}/${max}${pk.length?' · '+pk.map(nm).join(', '):''}`,c:[
+      ...H.kit.filter(k=>!pk.includes(k.id)).map(k=>({l:k.n,h:k.h,ok:{t:k.t,fx:{routeKit:k.id}}})),
+      {l:H.go.l,h:H.go.h,ok:{t:H.go.t,fx:{routeKit:'go'}}}]};
+  }
+  function routeFree(G){
+    const ch=G.ch,R=routeOf(ch);if(!R||!R.hunt)return null;const st=routeSt(ch);if(!st.kit)return null;
+    G.free=true;return {type:'event',ev:routeKitEvent(ch,R,st)};
+  }
+  function routeFight(G,R){
+    const y=G.year,fx=(R.fixed||[]).find(x=>x.y===y);
+    if(fx&&!G.ch.beaten.includes(fx.enemy))return {type:'fight',enemy:fx.enemy,enc:{hidden:true,label:fx.label||'줄기의 상대'}};
+    const k=y-CFG.years;
+    if(k>0&&k%CFG.endless.span===0&&R.grade){const id=R.grade[gradeAt(y)];if(id&&!G.ch.beaten.includes(id))return {type:'fight',enemy:id,enc:{hidden:true,label:CFG.endless.grades[gradeAt(y)]+' · 줄기의 상대'}}}
+    return null;
+  }
+  function routeStep(G,R){
+    const ch=G.ch,st=routeSt(ch),y=G.year,A=y>CFG.years?'act2':'act1',H=R.hunt;
+    if(ch.distForm)return null;
+    if(H&&st.hunt&&y>=st.hunt.at){
+      const T=H.targets[Math.min(st.hunt.idx,H.targets.length-1)],kit=st.hunt.picks.map(id=>(H.kit.find(k=>k.id===id)||{}).n).filter(Boolean);
+      st.hunt=null;st.n++;
+      return {t:T.t,x:T.x+(kit.length?`\n\n준비한 것: ${kit.join(' · ')}`:''),c:[{l:T.l,h:T.h,ok:{t:T.ok,fx:{combat:T.enemy}}}]};
+    }
+    if(H&&!st.hunt&&!st.kit&&st.n<H.targets.length){
+      const C=H.choose;
+      return {t:C.t,x:C.x,c:[{l:C.supply.l,h:C.supply.h,ok:{t:C.supply.t,fx:C.supply.fx||{}}},{l:C.hunt.l,h:C.hunt.h,ok:{t:C.hunt.t,fx:{routeHunt:'start'}}}]};
+    }
+    const pool=(R.yearly&&R.yearly[A])||[];
+    if(pool.length){const all=pool.map((_,i)=>i),u=st.used[A]=st.used[A]||[];let left=all.filter(i=>!u.includes(i));if(!left.length){st.used[A]=[];left=all}const i=one(left);st.used[A].push(i);return pool[i]}
+    return null;
+  }
   function webFree(G){
     const w=G.ch.web;if(!w||!w.active||w.turn>=w.total||w.turn%CFG.web.turnsPerYear===0)return null;
     G.free=true;return {type:'event',ev:webEvent(G,w.turn+1)};
@@ -2301,6 +2354,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.wtrain&&mc.wPick&&D.warpWeaponPick)return {type:'event',ev:D.warpWeaponPick};
     {const we=warpEvent(G);if(we)return {type:'event',ev:we}}
     {const wf=webFree(G);if(wf)return wf}
+    {const rf=routeFree(G);if(rf)return rf}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;return {type:'end',win:true,trueEnd:!!G.endless,hw:hk}}
     G.ch.year=G.year;
@@ -2313,6 +2367,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
     if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year*(isFinger(G.ch)&&G.ch.fingerMul||1);
     {const wv=webStep(G);if(wv)return wv}
+    {const R_=routeOf(G.ch);if(R_&&!(G.infinite&&G.year>routeEnd())){const rf=routeFight(G,R_);if(rf)return rf;const rs=routeStep(G,R_);if(rs)return {type:'event',ev:rs}}}
     let f=fixedSpec(G.year);
     /* 무한런 등급 전투: 등급 마지막 해. 도시의 별 등급은 피아니스트(이미 이겼으면 후반 조우), 마지막 등급은 최종 상대 */
     const X_=CFG.endless,k_=G.year-CFG.years;
@@ -2327,6 +2382,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       f=k_%X_.span?null:'table:late';
     }else
     if(k_>0)f=k_%X_.span?null:gradeAt(G.year)===X_.grades.length-1?X_.finalFirst:gradeAt(G.year)===X_.grades.indexOf('도시의 별')&&!(G.ch.minis||[]).includes(X_.star)?X_.star:'table:late';
+    {const R_=routeOf(G.ch);if(R_&&R_.noFight!==false&&!(G.infinite&&G.year>baseEnd))f=null}   // 줄기가 있는 출생은 줄기의 상대만 만난다
     /* R사 루트처럼 마지막 등급 전투 전에 이미 바랄을 쓰러뜨렸다면 같은 상대를 다시 세우지 않는다: 제나가 남았으면 제나가 나서고, 둘 다 쓰러뜨렸다면 평소 해로 넘어간다 */
     if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1&&G.ch.beaten.includes(X_.finalFirst))f=G.ch.beaten.includes(X_.finalNext)?null:X_.finalNext;
     if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1)return {type:'fight',enemy:f,enc:{label:X_.grades[gradeAt(G.year)]+' · 마지막 등급 전투'}};
@@ -3630,6 +3686,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
-    augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     isFounder,equip,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

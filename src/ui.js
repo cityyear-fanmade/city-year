@@ -2390,7 +2390,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     /* 거미집 안에서는 공방 거리가 끼어들지 않는다: 그 해의 기회는 거미집이 끝난 뒤 첫 해로 미룬다(G.shopOwed) */
     let shopDue=lakeHome()?lakeDue:((G.year-1)%CFG.shop.every===0||!!G.shopOwed);
     if(shopDue&&!lakeHome()&&st.type==='event'&&st.ev&&st.ev.web){G.shopOwed=true;shopDue=false}
-    if(shopDue&&!shopDone&&!G.free&&!(G.ch.rb&&!G.ch.rb.out)){G.shopOwed=false;
+    if(shopDue&&!shopDone&&!G.free&&!(G.ch.rb&&!G.ch.rb.out)&&E.routeShop(G.ch)){G.shopOwed=false;
       UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special).filter(k=>!D.special[k].wsOnly),CFG.shop.blackStock).concat(E.wsAuxStock(G.ch)||[]):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
