@@ -263,6 +263,11 @@ export const CFG = {
     pairs: [['rat', 'ox'], ['tiger', 'rabbit'], ['dragon', 'snake'], ['horse', 'goat'], ['monkey', 'rooster'], ['dog', 'pig']]},
   /* 루트 전용 무기(R사 복제 단검 · H사 홍원의 장도): 루트 이정표마다 단계가 오른다. lv 배열의 인덱스가 단계이고 H사 3단계는 host/free 두 갈래 */
   routeWeapon: {
+    /* 까마귀팀 복제체(해금 출생): 처음부터 명장급 세이버를 쥐고, 임무 이정표(routeWpn 1·2)마다 한 단계씩 올라 두 번째 강화에서 히든급이 된다 */
+    crow: {id: 'w_crow', lv: [
+      {n: '검은 세이버', fx: {atk: 8, spd: 1}, dice: [2, 6], wx: {hitBleed: 1}, e: '공+8 · 속도+1 · 피해 2d6 · 적중마다 출혈 +1 (검은 검신에 금색과 주황색 장식)'},
+      {n: '검은 세이버 · 암전', fx: {atk: 10, spd: 2}, dice: [2, 7], wx: {hitBleed: 2}, e: '공+10 · 속도+2 · 피해 2d7 · 적중마다 출혈 +2 (1차 강화)'},
+      {n: '검은 세이버 · 처형', fx: {atk: 13, spd: 3}, dice: [2, 8], wx: {hitBleed: 2, finish: {at: 0.3, dmg: 6}}, e: '공+13 · 속도+3 · 피해 2d8 · 적중마다 출혈 +2 · 상대 HP 30% 이하면 피해 +6 (2차 강화)'}]},
     rb: {id: 'w_clone', lv: [
       {n: '복제 단검', fx: {atk: 3, eva: 2}, dice: [2, 4], e: '공+3 · 회피+2 · 피해 2d4 (부화장에서 쥐여 준 단검)'},
       {n: '번호 없는 단검', fx: {atk: 5, eva: 2}, dice: [2, 5], e: '공+5 · 회피+2 · 피해 2d5'},

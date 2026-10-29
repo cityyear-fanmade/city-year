@@ -1151,6 +1151,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
     /* 해금 출생 줄기: 처분 의뢰를 받으면(routeHunt) 준비물 고르기가 시작되고, 준비물을 고르면(routeKit) 수색이 시작된다 */
+    if(fx.routeWpn!=null&&ch.o&&ch.o.route)routeWeaponUp(ch,ch.o.route,fx.routeWpn,chips);
     if(fx.routeHunt){routeSt(ch).kit={picks:[]};chips.push('처분 대상 수색 · 준비물을 고른다')}
     if(fx.routeKit){const R_=routeOf(ch),st_=routeSt(ch),H_=R_&&R_.hunt;
       if(H_&&st_.kit){const max_=H_.kitMax||CFG.route.kitMax;
@@ -2135,9 +2136,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       st.hunt=null;st.n++;
       return {t:T.t,x:T.x+(kit.length?`\n\n준비한 것: ${kit.join(' · ')}`:''),c:[{l:T.l,h:T.h,ok:{t:T.ok,fx:{combat:T.enemy}}}]};
     }
-    /* 전용 임무: 처분 대상 수색 중이 아닐 때, 연차(from)와 처분 횟수(hunts)가 차면 한 번씩 먼저 나온다 */
-    if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.flag||[].concat(m.flag).some(f=>fl_[f])));if(M){md.push(M.id);return M.ev}}
-    if(H&&!st.hunt&&!st.kit&&st.n<H.targets.length){
+    /* 전용 임무: 처분 대상 수색 중이 아닐 때, 연차(from)·처분 횟수(hunts)·앞 임무(after, 간격 gap년)·기록(flag)이 맞으면 나온다.
+       arc가 같은 임무끼리는 한 줄기로 이어진다: 줄기가 열려 있는 동안(end 임무가 끝날 때까지)은 다른 줄기의 임무도 처분 의뢰도 나오지 않는다.
+       문구의 {c}는 협력한 후보, {r}은 맞서는 후보, {foe}는 싸울 후보의 적 id로 바뀐다 */
+    if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},last=st.mAt||0;
+      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||(md.includes(m.after)&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!st.arc||m.arc===st.arc));
+      if(M){md.push(M.id);st.mAt=y;if(M.arc)st.arc=M.end?null:M.arc;
+        const A=fl_.crow_hwA>0,cn=A?'가환(賈環)':'설보차(薛寶釵)',rn=A?'설보차(薛寶釵)':'유상련(柳湘蓮)',fid=A?'hr_1':'hr_3';
+        return JSON.parse(JSON.stringify(M.ev).replace(/\{c\}/g,cn).replace(/\{r\}/g,rn).replace(/\{foe\}/g,fid))}}
+    if(H&&!st.hunt&&!st.kit&&!st.arc&&st.n<H.targets.length){
       const C=H.choose;
       return {t:C.t,x:C.x,c:[{l:C.supply.l,h:C.supply.h,ok:{t:C.supply.t,fx:C.supply.fx||{}}},{l:C.hunt.l,h:C.hunt.h,ok:{t:C.hunt.t,fx:{routeHunt:'start'}}}]};
     }
