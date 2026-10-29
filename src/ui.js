@@ -2874,3 +2874,24 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testOrigin(n){if(!BC)return;const o=D.origins.find(x=>x.n===n);if(!o)return;E.reseed(BC.seed);let c;for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;render()},
     testOmen(id){if(!G)return;const h=D.hiddenBosses.find(x=>x.id===id);UI.omen={type:'omen',boss:id,omen:h.omen||{},escape:!h.noEscape,spec:'table:early'};UI.screen='event';render()}};
 }
+
+/* 조사 자동 선택: 문구에 이(가)·은(는)·을(를)·과(와)로 적어 두면 화면에 나올 때 앞 글자의 받침을 보고 알맞은 쪽으로 바꾼다 */
+if(typeof document!=='undefined'&&typeof MutationObserver!=='undefined'){
+  const JO={'이(가)':['이','가'],'은(는)':['은','는'],'을(를)':['을','를'],'과(와)':['과','와'],'와(과)':['과','와']},MARK=/(?:이\(가\)|은\(는\)|을\(를\)|[과와]\([와과]\))/;
+  const hasBat=c=>{if(!c)return false;const k=c.charCodeAt(0);if(k>=0xAC00&&k<=0xD7A3)return (k-0xAC00)%28>0;if(/[0136-8]/.test(c))return true;return /[lmnrLMNR]/.test(c)};
+  const tail=s=>s.replace(/\([^)]*\)\s*$/,'').replace(/[^가-힣A-Za-z0-9]+$/,'').slice(-1);
+  const fixJosa=root=>{
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+    for(let n=w.nextNode();n;n=w.nextNode())nodes.push(n);
+    nodes.forEach((n,i)=>{
+      const v=n.nodeValue;if(!MARK.test(v))return;
+      n.nodeValue=v.replace(new RegExp(MARK.source,'g'),(m,off)=>{
+        let pre=v.slice(0,off),j=i;while(!tail(pre)&&j>0)pre=nodes[--j].nodeValue+pre;
+        return JO[m][hasBat(tail(pre))?0:1]})});
+  };
+  let busy=false;
+  new MutationObserver(ms=>{
+    if(busy)return;busy=true;
+    try{for(const m of ms){const t=m.type==='characterData'?m.target.parentNode:m.target;if(t&&t.nodeType===1&&MARK.test(t.textContent||''))fixJosa(t)}}finally{busy=false}
+  }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+}
