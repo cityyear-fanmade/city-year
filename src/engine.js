@@ -2136,7 +2136,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {t:T.t,x:T.x+(kit.length?`\n\n준비한 것: ${kit.join(' · ')}`:''),c:[{l:T.l,h:T.h,ok:{t:T.ok,fx:{combat:T.enemy}}}]};
     }
     /* 전용 임무: 처분 대상 수색 중이 아닐 때, 연차(from)와 처분 횟수(hunts)가 차면 한 번씩 먼저 나온다 */
-    if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0));if(M){md.push(M.id);return M.ev}}
+    if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.flag||[].concat(m.flag).some(f=>fl_[f])));if(M){md.push(M.id);return M.ev}}
     if(H&&!st.hunt&&!st.kit&&st.n<H.targets.length){
       const C=H.choose;
       return {t:C.t,x:C.x,c:[{l:C.supply.l,h:C.supply.h,ok:{t:C.supply.t,fx:C.supply.fx||{}}},{l:C.hunt.l,h:C.hunt.h,ok:{t:C.hunt.t,fx:{routeHunt:'start'}}}]};
