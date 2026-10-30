@@ -1160,6 +1160,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       loseMind(ch,CFG.herm.killMind,t=>chips.push(t));chips.push(`가족을 잃었다 · 인연 사별${n?` · 아이 ${n}명`:''}`);chips.push('카두세우스-헤르메스 · 1차 강화')}
     if(fx.hermCompanion&&ch.bond&&ch.bond.st==='met'){ch.bond.companion=true;chips.push(`${ch.bond.name} · 곁에 남는다 · 결혼하지 않는다`)}
     if(fx.hermRefuse&&!ch.hermPen){ch.hermPen=true;chips.push(`지령 패널티 · 명중 −${CFG.herm.pen.hit} · 회피 −${CFG.herm.pen.eva} (헤르메스의 자비가 내릴 때까지)`)}
+    if(fx.hermLv){ch.hermLv=Math.max(ch.hermLv||0,fx.hermLv);chips.push(`카두세우스-헤르메스 · ${fx.hermLv}차 강화`)}
     if(fx.hermMercy){ch.hermPen=false;ch.hermLv=Math.max(ch.hermLv||0,1);chips.push('헤르메스의 자비 · 지령 패널티가 사라진다','카두세우스-헤르메스 · 1차 강화')}
     if(fx.routeWpn!=null&&ch.o&&ch.o.route)routeWeaponUp(ch,ch.o.route,fx.routeWpn,chips);
     if(fx.routeHunt){routeSt(ch).kit={picks:[]};chips.push('처분 대상 수색 · 준비물을 고른다')}
@@ -1846,9 +1847,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(w.hermK===key)return;
     const fx=Object.assign({},Z.base.fx,{}),kws=[],names=[];
     if(lv&&Z.lv[lv])for(const [k,v] of Object.entries(Z.lv[lv].fx))fx[k]=(fx[k]||0)+v;
+    const lore=Z.base.lore+(lv&&Z.lv[lv]&&Z.lv[lv].lore?' '+Z.lv[lv].lore:'');
     for(let i=0;i<n;i++){const P_=Z.pool[ch.hermFx[i]];for(const [k,v] of Object.entries(P_.fx||{}))fx[k]=(fx[k]||0)+v;if(P_.kw)kws.push([P_.kw,1]);names.push(P_.n)}
-    const wx=Object.assign({},Z.base.wx,{herm:true,dice:Z.base.dice});if(kws.length)wx.hitKw=kws;
-    const it={id:'w_herm',slot:'weapon',grade:5,hermN:n,hermK:key,n:Z.base.n+(lv&&Z.lv[lv]?Z.lv[lv].n:''),e:Z.base.e+(lv&&Z.lv[lv]?` · ${Z.lv[lv].e}`:'')+(n?` · 보관한 히든 무기 ${n}개 · 강화: ${names.join(', ')}`:' · 보관한 히든 무기가 없다'),fx,wx};
+    const wx=Object.assign({},Z.base.wx,(lv&&Z.lv[lv]&&Z.lv[lv].wx)||{},{herm:true,dice:Z.base.dice});if(kws.length)wx.hitKw=kws;
+    const it={id:'w_herm',slot:'weapon',grade:5,lore,hermN:n,hermK:key,n:Z.base.n+(lv&&Z.lv[lv]?Z.lv[lv].n:''),e:Z.base.e+(lv&&Z.lv[lv]?` · ${Z.lv[lv].e}`:'')+(n?` · 보관한 히든 무기 ${n}개 · 강화: ${names.join(', ')}`:' · 보관한 히든 무기가 없다'),fx,wx};
     equip(ch,carryTune(w,it));ch.stash=(ch.stash||[]).filter(x=>x!==w);
   }
   function hermHit(A,B,C,L,push){
@@ -1884,7 +1886,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function routeWeaponUp(ch,kind,key,chips){
     const W=CFG.routeWeapon[kind];let g=W[key]||W.lv[key];if(!g)return;
     {const tv=kind==='rb'&&typeof key==='number'&&ch.rteam&&W.team&&W.team[ch.rteam]&&W.team[ch.rteam][key];if(tv)g=Object.assign({},g,tv)}
-    const it={id:W.id,slot:'weapon',grade:5,lvl:typeof key==='number'?key:9,n:g.n,e:g.e,fx:Object.assign({},g.fx),wx:Object.assign({dice:g.dice},g.wx||{})};
+    const it={id:W.id,slot:'weapon',grade:5,lore:g.lore||W.lore,lvl:typeof key==='number'?key:9,n:g.n,e:g.e,fx:Object.assign({},g.fx),wx:Object.assign({dice:g.dice},g.wx||{})};
     const old=ch.gear.weapon&&ch.gear.weapon.id===W.id?ch.gear.weapon:null;
     if(old){equip(ch,carryTune(old,it));ch.stash=(ch.stash||[]).filter(x=>x!==old)}
     else{const st=ch.stash||[],i=st.findIndex(x=>x.id===W.id);if(i<0)return;st[i]=carryTune(st[i],it)}

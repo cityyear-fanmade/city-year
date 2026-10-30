@@ -718,7 +718,7 @@ export function startUI(E,app){
   }
   function vGear(){
     const ch=G.ch,st=ch.stash||[],cbt=UI.screen==='combat';
-    const eq=Object.entries(D.slots).map(([k,n])=>{const g=ch.gear[k],w=E.slotWhy(ch,k);return `<div class="invr"><span>${n}</span><b>${g?esc(g.n):k==='weapon'?'맨손':'<span class="dim">없음</span>'}</b><span class="mono small" style="color:var(--gold)">${g?esc(g.e||''):''}</span>${w?`<span class="small bad" style="flex-basis:100%">🚫 ${esc(w)}</span>`:''}</div>`}).join('');
+    const eq=Object.entries(D.slots).map(([k,n])=>{const g=ch.gear[k],w=E.slotWhy(ch,k);return `<div class="invr"><span>${n}</span><b>${g?esc(g.n):k==='weapon'?'맨손':'<span class="dim">없음</span>'}</b><span class="mono small" style="color:var(--gold)">${g?esc(g.e||''):''}</span>${g&&g.lore?`<span class="small dim" style="grid-column:1/-1;font-style:italic;line-height:1.6">${esc(g.lore)}</span>`:''}${w?`<span class="small bad" style="flex-basis:100%">🚫 ${esc(w)}</span>`:''}</div>`}).join('');
     /* 보관함 분류: 전체 · 무기 · 방어구 · 의수. 전체에서는 칸 순서(무기→방어구→의수)로 묶어 보여 준다 (장착·재료 번호는 그대로) */
     const slotKeys=Object.keys(D.slots),gt=UI.gTab&&slotKeys.includes(UI.gTab)?UI.gTab:'all',cnt=k=>st.filter(g=>g.slot===k).length;
     const order=st.map((g,i)=>i).filter(i=>gt==='all'||st[i].slot===gt).sort((a,b)=>slotKeys.indexOf(st[a].slot)-slotKeys.indexOf(st[b].slot)||a-b);
