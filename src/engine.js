@@ -3250,7 +3250,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
     if(c.noKill){if(A.noKill){L('sys',`${A.name} · ${c.n} · 이미 그런 마음이다`);return}A.noKill=true;A.eva-=80;A.takenMul=2;L('kw',`${A.name} · ${c.n} · 이번 전투 동안 받는 피해 2배 · 회피 −80`);return}
-    if(c.flesh){A.evaB-=100;A.fleshRound=C.round;L('kw',`${A.name} · ${c.n} · 이번 라운드 회피 −100`)}
+    if(c.flesh){A.evaB-=300;A.fleshRound=C.round;L('kw',`${A.name} · ${c.n} · 이번 라운드 회피 −300`)}
     if(c.cloudGain&&A.kuro)for(let i=0;i<c.cloudGain;i++)addCloud(A,L);
     if(!cloudOk(A,c)){L('sys',`${A.name} · ${c.n} · 구름이 ${c.needCloud} 이상이 아니면 쓸 수 없다 (지금 ${A.cloud||0}) · 불발`);return}
     if(c.inkCall){const ids=A.inkIds||[];if(!ids.length){L('sys',`${A.name} · ${c.n} · 곁에 흑수가 없다 · 불발`);return}if(A.obey>0){A.obey=0;L('kw',`${A.name} · 공허한 순종이 모두 풀렸다`)}L('kw',`${A.name} · ${c.n} · 곁의 흑수 ${ids.length}명이 모두 나선다`);for(const id of ids){if(B.hp<=0)break;act(C,A,D.cards[id],L,push)}return}
