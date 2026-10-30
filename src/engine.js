@@ -1165,6 +1165,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.routeWpn!=null&&ch.o&&ch.o.route)routeWeaponUp(ch,ch.o.route,fx.routeWpn,chips);
     if(fx.routeGuest)routeSt(ch).guestFoe=fx.routeGuest;
     if(fx.libItem&&D.items[fx.libItem]){offerGear(ch,Object.assign({id:fx.libItem},D.items[fx.libItem]));chips.push(`책 속의 물건 · ${D.items[fx.libItem].n} (${D.items[fx.libItem].e}) · 장착할지 고른다`)}
+    if(fx.libSeal){const chips2=[];guestAdvance(ch,chips2);chips.push(...chips2);chips.push('봉인한 책 · 서가에 남았다 (붉은 안개 저지의 도움이 된다)')}
     if(fx.routeGuestTalk)guestDone(ch,fx.routeGuestTalk,chips,true);
     if(fx.routeHunt){routeSt(ch).kit={picks:[]};chips.push('처분 대상 수색 · 준비물을 고른다')}
     if(fx.routeKit){const R_=routeOf(ch),st_=routeSt(ch),H_=R_&&R_.hunt;
@@ -1879,8 +1880,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const R=routeOf(ch),st=routeSt(ch);st.n=4;st.mdone=(R.missions||[]).filter(m=>m.arc!=='cmd').map(m=>m.id);st.mAt=54;st.arc=null;
       ch.bond={st:'married',route:'crow',variant:0,name:'묘',step:3,tries:1,love:3,since:30,next:60,saved:false,kids:[]};year(55);return true}
     if(ch.o&&ch.o.key==='librarian'&&/^lib/.test(key)){
-      const R=routeOf(ch),st=routeSt(ch),Z=R.guest,spec={lib20:[20,10,10],lib42:[42,21,20],lib55:[55,26,28]}[key];if(!spec)return false;
-      st.guests=spec[1];setLv(spec[2]);Z.stages.forEach((S,i)=>{if(i>0&&i<=guestStage(Z,st.guests))bonus(S.fx||{})});year(spec[0]);return true}
+      const R=routeOf(ch),st=routeSt(ch),Z=R.guest,spec={lib20:[20,10,10],lib42:[42,21,20],lib55:[55,26,28],lib56:[56,24,25],lib69:[69,28,30]}[key];if(!spec)return false;
+      st.guests=spec[1];setLv(spec[2]);if(key==='lib69'){st.mdone=['lib2_1','lib2_2','lib2_3','lib2_4','lib2_5','lib2_6','lib2_7','lib2_8','lib2_9'];st.mAt=68;st.arc='lib2';ch.flags.lib_sera=1;ch.flags.lib_absorb=1;ch.flags.redMist=1;ch.beaten.push('lib_mist1','lib_mist2')}
+      Z.stages.forEach((S,i)=>{if(i>0&&i<=guestStage(Z,st.guests))bonus(S.fx||{})});year(spec[0]);return true}
     if(ch.o&&ch.o.herm&&/^herm/.test(key)){
       const R=routeOf(ch),st=routeSt(ch),ids=(R.missions||[]).map(m=>m.id),upto=(...ex)=>ids.filter(i=>!ex.includes(i)&&!/^(kill_order|obey_after|chain_|mercy|hm2_)/.test(i));
       if(key==='herm37'){setLv(20);bonus({maxHp:40,atk:8,eva:4,spd:3});mkBond(37,false);ch.flags.herm_seek=1;ch.flags.herm_met=1;st.mdone=upto();st.mAt=30;year(37);return true}
@@ -2216,7 +2218,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:'책 속에 그대로 둔다',h:'정신력 +1',ok:{t:'물건은 책 안에 남았다.',fx:{mindUp:1}}}]}}
   function guestEvent(G,R){
     const ch=G.ch,Z=R.guest,st=routeSt(ch),n=st.guests||0,si=guestStage(Z,n),S=Z.stages[si],ids=guestPool(Z,S,ch);if(!ids.length)return null;
+    if(st.ruleDue!=null){const ri=st.ruleDue;st.ruleDue=null;(st.rulesDone=st.rulesDone||[]).push(ri);if(Z.rules&&Z.rules[ri])return Z.rules[ri]}
     if(st.itemDue){const bi=bookItemEvent(G,st);if(bi)return bi}
+    /* 책이 요동친다: 서가의 책 한 권에서 환상체가 걸어 나온다. 펼치거나 덮거나 서가에 봉인한다 */
+    if(Z.shake&&G.year>=Z.shake.from&&d(100)<=Z.shake.chance){const left=abnoLeft(ch);if(left.length){const id=one(left);return {t:'책이 요동친다',x:`서가의 책 한 권이 스스로 넘어간다. 표지 틈으로 ${D.enemies[id].n}의 기척이 새어 나온다. 사서는 이런 책을 몇 번 본 적이 있다.`,c:[
+      {l:'책을 펼친다',h:'환상체와 싸운다 · 이기면 전리품',ok:{t:'사서는 책을 열었다.',fx:{combat:id}}},
+      {l:'덮는다',h:'판정 · 실패하면 정신력 −2d3',check:{s:null,dc:Z.shake.dc.cover},ok:{t:'표지를 누르고 한참 기다렸다. 책은 조용해졌다.',fx:{mindUp:1}},fail:{t:'덮은 손 아래에서 책이 한 번 더 뛰었다. 숨이 가쁘다.',fx:{mindLoss:true}}},
+      {l:'서가에 봉인한다',h:'판정 · 성공하면 책으로 남는다(손님 수 +1), 실패하면 전투',check:{s:null,dc:Z.shake.dc.seal},ok:{t:'사서는 책에 끈을 감아 서가의 가장 낮은 칸에 꽂았다. 책은 이름을 얻은 채 조용해졌다.',fx:{libSeal:1,flag:['lib_sealed']}},fail:{t:'끈이 풀렸다. 책 안에서 걸어 나온 것이 사서를 돌아본다.',fx:{combat:id}}}]}}}
     /* 숨 돌리는 해: 손님은 gap년에 한 번 온다. 그 사이 해에는 조용한 사건(rest)이 나온다 */
     if(Z.rest&&Z.rest.length&&st.gLast!=null&&G.year-st.gLast<(Z.gap||1)){const u=st.restUsed=st.restUsed||[];let left=Z.rest.map((_,i)=>i).filter(i=>!u.includes(i));if(!left.length){st.restUsed=[];left=Z.rest.map((_,i)=>i)}const i=one(left);st.restUsed.push(i);return Z.rest[i]}
     st.gLast=G.year;
@@ -2226,11 +2234,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:'대화한다',h:`판정 · 성공하면 책 한 장을 받고 손님 수 +1 · 실패하면 접대로 이어진다`,check:{s:null,dc},ok:{t:'긴 이야기 끝에 손님이 스스로 책 한 장을 내려놓고 돌아갔다.',fx:{routeGuestTalk:id}},fail:{t:'대화가 끊겼다. 손님이 칼을 쥐었다.',fx:{combat:id,routeGuest:id}}},
       {l:'돌려보낸다',h:'손님 수에 들어가지 않는다 · 정신력 +1',ok:{t:'초대장을 돌려주고 문을 닫았다.',fx:{mindUp:1}}}]}}
   /* 손님을 이기거나 설득했을 때: 책 지급, 손님 수 +1, 위상이 오르면 능력치 */
+  function guestAdvance(ch,chips){
+    const R=routeOf(ch),Z=R&&R.guest;if(!Z)return;const st=routeSt(ch),old=guestStage(Z,st.guests||0);
+    st.guests=(st.guests||0)+1;
+    const ni=guestStage(Z,st.guests);if(ni>old){const S=Z.stages[ni];for(const bk of S.books||[])if(!ownsCard(ch,bk))addCard(ch,bk,chips,'전용 책장');if(S.gift)st.itemDue=Math.min(4,((S.ig||[1,1])[1])+1);if(Z.rules&&Z.rules[ni]&&!(st.rulesDone||[]).includes(ni))st.ruleDue=ni;addStats(ch.stats,S.fx||{});if((S.fx||{}).maxHp)ch.hp+=S.fx.maxHp;chips.push(`도서관 위상 · ${S.n}`+(S.fx&&Object.keys(S.fx).length?' · '+Object.entries(S.fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k==='hit'?'명중':k)} +${v}`).join(' · '):''))}
+    if(Z.itemEvery&&st.guests%Z.itemEvery===0&&!st.itemDue){const ig=Z.stages[guestStage(Z,st.guests)].ig||[1,1];st.itemDue=ig[0]+d(ig[1]-ig[0]+1)-1}
+  }
   function guestDone(ch,id,chips,talk){
-    const R=routeOf(ch),Z=R&&R.guest;if(!Z)return false;const st=routeSt(ch),pool=guestBooks(id),old=guestStage(Z,st.guests||0);
+    const R=routeOf(ch),Z=R&&R.guest;if(!Z)return false;const pool=guestBooks(id);
     if(pool.length){if(talk)addCard(ch,one(pool.filter(c=>!ownsCard(ch,c)))||one(pool),chips,'손님의 책',true);else offerPick(ch,pool,chips,'손님의 책')}
-    st.guests=(st.guests||0)+1;chips.push(`손님 ${st.guests}명 · ${D.enemies[id].n}이(가) 책이 되었다`);if(Z.itemEvery&&st.guests%Z.itemEvery===0&&!st.itemDue){const ig=Z.stages[guestStage(Z,st.guests)].ig||[1,1];st.itemDue=ig[0]+d(ig[1]-ig[0]+1)-1}
-    const ni=guestStage(Z,st.guests);if(ni>old){const S=Z.stages[ni];for(const bk of S.books||[])if(!ownsCard(ch,bk))addCard(ch,bk,chips,'전용 책장');if(S.gift)st.itemDue=Math.min(4,((S.ig||[1,1])[1])+1);addStats(ch.stats,S.fx||{});if((S.fx||{}).maxHp)ch.hp+=S.fx.maxHp;chips.push(`도서관 위상 · ${S.n}`+(S.fx&&Object.keys(S.fx).length?' · '+Object.entries(S.fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k==='hit'?'명중':k)} +${v}`).join(' · '):''))}
+    guestAdvance(ch,chips);chips.push(`손님 ${routeSt(ch).guests}명 · ${D.enemies[id].n}이(가) 책이 되었다`);
     return true}
   function routeStep(G,R){
     const ch=G.ch,st=routeSt(ch),y=G.year,A=y>CFG.years?'act2':'act1',H=R.hunt;
@@ -2474,7 +2487,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wf=webFree(G);if(wf)return wf}
     {const rf=routeFree(G);if(rf)return rf}
     G.free=false;G.year++;
-    if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
+    if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
       /* 대호수: 호수에 오래 떠 있을수록 정신이 닳는다. 해마다 mindYear씩 깎이지만 mindKeep 밑으로는 이 깎임만으로 내려가지 않는다(뒤틀림·사망으로 곧장 가지 않게) */
