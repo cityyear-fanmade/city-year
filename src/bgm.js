@@ -58,12 +58,13 @@ export function createBgm(){
   let ctx=null,master=null,bus=null,bright=null,analyser=null,noiseBuf=null,on=false,vol=0.3,mood='base',scene='calm',style='calm',timer=null,hidden=false;
   /* 악기 샘플 곡: 스타일마다 평시·전투 한 곡씩(32마디가 한 바퀴, 끝에서 처음으로 이어진다). 히든 보스 곡도 한 곡(boss_boss.mp3, 도입 4마디 뒤부터 되풀이).
      빌드 파일에서는 window.CITY_BGM에 data 주소로 들어 있고, 개발 서버에서는 assets/bgm/<스타일>_<장면>.mp3를 읽는다. 읽지 못하면 합성음으로 돌아간다 */
+  let bossTrack='boss';   // 'ruen': 뤼엔 전용 곡(잔잔하고 쓸쓸한 곡, 처음부터 되풀이)
   const smp={buf:{},loading:{},bad:{},cur:null,node:null};
   let stage=1;
   /* 시험곡(ext): 외부에서 받은 곡을 평시·전투에 하나씩 배정해 들어 본다. 같은 곡을 둘 다에 배정하면 장면이 바뀌어도 끊기지 않고 이어진다 */
   const ext={idx:1},extOn=()=>typeof window!=='undefined'&&!!(window.CITY_BGM&&window.CITY_BGM.ext);
-  const ONE={passion:1,wave:1},smpKey=(st,sc)=>sc==='boss'?'boss_boss':st==='ext'?'ext_t'+ext.idx+'_'+sc:st+'_'+sc,BOSS_LOOP=4*4*60/66;
-  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st='boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext.idx+'_'+sc])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
+  const ONE={passion:1,wave:1},smpKey=(st,sc)=>sc==='boss'?(bossTrack==='ruen'?'ruen_boss':'boss_boss'):st==='ext'?'ext_t'+ext.idx+'_'+sc:st+'_'+sc,BOSS_LOOP=4*4*60/66;
+  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st=bossTrack==='ruen'?'ruen':'boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext.idx+'_'+sc])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
   const smpUsable=(st,sc)=>!!smpSrc(st,sc)&&!smp.bad[smpKey(st,sc)];
   function smpLoad(key,src){
     if(smp.loading[key])return;
@@ -111,7 +112,7 @@ export function createBgm(){
     if((style==='ext'||ONE[style])&&scene!=='boss'){const ok=smpKey(style,scene==='fight'?'calm':'fight');if(!smp.buf[ok]&&smpSrc(style,scene==='fight'?'calm':'fight'))smpLoad(ok,smpSrc(style,scene==='fight'?'calm':'fight'))}   // 반대 장면도 미리 읽어 둔다
     smpStop(0.6);
     const now=ctx.currentTime,src=ctx.createBufferSource(),g=ctx.createGain();
-    src.buffer=buf;src.loop=true;if(scene==='boss'){src.loopStart=BOSS_LOOP;src.loopEnd=buf.duration}g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
+    src.buffer=buf;src.loop=true;if(scene==='boss'){src.loopStart=bossTrack==='ruen'?0:BOSS_LOOP;src.loopEnd=buf.duration}g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
     src.connect(g);g.connect(master);src.start(now,off);smp.cur=key;smp.node={src,g,ext:scene==='boss'?0:style==='ext'?ext.idx:ONE[style]?style:0,scene,off,t0:now,dur:buf.duration};return true;
   }
   let barT=0,barN=0,lastScene='calm',lastStyle='calm',cur=null,duckUntil=0;
@@ -456,6 +457,7 @@ export function createBgm(){
     setVol(v){vol=Math.max(0,Math.min(1,+v||0));if(on&&ctx)ramp(gainOf(vol),0.3)},
     setMood(k){if(P.moods[k])mood=k},
     setScene(k){scene=k==='boss'?'boss':k==='fight'?'fight':'calm'},
+    setBossTrack(k){bossTrack=k==='ruen'?'ruen':'boss'},
     /* 전투 감정 단계(1~5). 불길 전투곡에서만 들린다 */
     setStage(n){n=Math.max(1,Math.min(5,Math.round(+n)||1));if(n===stage)return;stage=n;stemsApply()},
     stage:()=>stage,
