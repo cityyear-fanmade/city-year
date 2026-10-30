@@ -1158,6 +1158,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.hermKill&&ch.bond){const b=ch.bond,kids=b.kids||[],n=kids.filter(k=>!k.dead).length;
       kids.forEach(k=>{k.dead=true});b.st='lost';b.hermKilled=true;ch.famLoss=(ch.famLoss||0)+n;ch.hermLv=Math.max(ch.hermLv||0,1);
       loseMind(ch,CFG.herm.killMind,t=>chips.push(t));chips.push(`가족을 잃었다 · 인연 사별${n?` · 아이 ${n}명`:''}`);chips.push('카두세우스-헤르메스 · 1차 강화')}
+    if(fx.hermCompanion&&ch.bond&&ch.bond.st==='met'){ch.bond.companion=true;chips.push(`${ch.bond.name} · 곁에 남는다 · 결혼하지 않는다`)}
     if(fx.hermRefuse&&!ch.hermPen){ch.hermPen=true;chips.push(`지령 패널티 · 명중 −${CFG.herm.pen.hit} · 회피 −${CFG.herm.pen.eva} (헤르메스의 자비가 내릴 때까지)`)}
     if(fx.hermMercy){ch.hermPen=false;ch.hermLv=Math.max(ch.hermLv||0,1);chips.push('헤르메스의 자비 · 지령 패널티가 사라진다','카두세우스-헤르메스 · 1차 강화')}
     if(fx.routeWpn!=null&&ch.o&&ch.o.route)routeWeaponUp(ch,ch.o.route,fx.routeWpn,chips);
@@ -1662,6 +1663,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch,b=ch.bond,y=G.year,B=bondTx(ch);
     if(!B||ch.distForm||ch.job||!b)return null;
     const R=bondData(ch);if(!R)return null;
+    if(b.companion&&b.st==='met')return null;   // 청혼하지 않고 곁에 남은 인연(헤르메스): 더 이상 인연 사건이 없다
     if(b.st==='married'||b.st==='lost'){
       const KD=BD.kid,kids=b.kids||(b.kids=[]);
       /* 성인이 된 아이: 사무소·해결사·협회 중 태어날 때 정해진 곳에 들어간다 */
@@ -1713,7 +1715,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const left=BD.tries-(b.tries||0);
     return {t:R.propose.t,x:bondFill(R.propose.x,b),c:[
       {l:B.proposeYes,h:`인연 ${Math.min(b.love||0,BD.steps)}/${BD.steps}${b.extra?` · 더 쌓은 인연 ${b.extra}`:''} · 1d${BD.die} + 인연이 ${BD.marryNeed} 이상이면 결혼 · 남은 기회 ${left}/${BD.tries}`,ok:{t:bondFill('{n}에게 말을 꺼냈다. 답이 돌아오기까지의 시간이 길게 느껴졌다.',b),fx:{bondPropose:true}}},
-      ...(1+marryScore(b)<BD.marryNeed?[{l:B.proposeWait,h:`1d${BD.waitDie} · ${BD.waitDc} 이상이면 인연이 더 쌓인다 · 청혼 기회는 쓰지 않는다 (보정 없음)`,check:{s:null,dc:BD.waitDc,pure:true,die:BD.waitDie},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]:[])]};
+      ...(1+marryScore(b)<BD.marryNeed?[{l:B.proposeWait,h:`1d${BD.waitDie} · ${BD.waitDc} 이상이면 인연이 더 쌓인다 · 청혼 기회는 쓰지 않는다 (보정 없음)`,check:{s:null,dc:BD.waitDc,pure:true,die:BD.waitDie},ok:{t:bondFill(B.proposeWaitOk,b),fx:{bondWait:true}},fail:{t:bondFill(B.proposeWaitFail,b),fx:{bondSlip:true}}}]:[]),
+      ...(ch.o&&ch.o.herm?[{l:'청혼하지 않는다',h:'함께 살지만 가족으로 묶지 않는다 · 곁에 남는다 · 결혼과 아이는 없다',ok:{t:bondFill('{n}에게 말을 꺼내지 않기로 했다. 그래도 같은 식탁에 앉는 날이 이어졌다. 이름 붙이지 않은 자리였다.',b),fx:{hermCompanion:true}}}]:[])]};
   }
   /* 일상: 사건이 있는 해 일부에 온다. 안정적으로 능력치를 조금 올려 주는 사건이고, 인연이 없는 캐릭터는 일부가 인연(조우자)을 만나는 사건이 된다 */
   const DL=CFG.daily;
@@ -2194,7 +2197,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
        arc가 같은 임무끼리는 한 줄기로 이어진다: 줄기가 열려 있는 동안(end 임무가 끝날 때까지)은 다른 줄기의 임무도 처분 의뢰도 나오지 않는다.
        문구의 {c}는 협력한 후보, {r}은 맞서는 후보, {foe}는 싸울 후보의 적 id로 바뀐다 */
     if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},last=st.mAt||0;
-      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend)):true))&&(!st.arc||m.arc===st.arc));
+      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&((ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend))||(ch.bond.st==='met'&&ch.bond.companion))):true))&&(!st.arc||m.arc===st.arc));
       if(M){md.push(M.id);st.mAt=y;if(M.arc)st.arc=M.end?null:M.arc;
         const A=fl_.crow_hwA>0,cn=A?'가환(賈環)':'설보차(薛寶釵)',rn=A?'설보차(薛寶釵)':'유상련(柳湘蓮)',fid=A?'hr_1':'hr_3';
         return JSON.parse(JSON.stringify(M.ev).replace(/\{c\}/g,cn).replace(/\{r\}/g,rn).replace(/\{foe\}/g,fid))}}
