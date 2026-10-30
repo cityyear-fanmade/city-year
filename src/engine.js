@@ -2873,8 +2873,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 푸른 화염: 해방 레바테인에게 화상을 받은 쪽(blue), 또는 화상 blueAt 이상 */
   /* 카드 등급: 연차가 쌓이면 공격 카드가 강해지는 주인공 보정. 쉬움에서는 받지 않는다 */
   /* 조직 서열별 카드 강화(config rankCard): 이 조직의 전용 카드 객체 집합과 현재 서열의 보너스. 없으면 null */
-  function rankCardOf(ch){const a=ch&&ch.aff;if(!a||a.type!=='finger'||ch.hw||!CFG.syn[a.name])return null;const F=D.fingers[a.name];if(!F||!F.pack)return null;
-    const t=CFG.rankCard[Math.min(Math.max(ch.fi||0,0),CFG.rankCard.length-1)];if(!t||!(t.dice||t.b||t.hit))return null;
+  function rankCardOf(ch){const a=ch&&ch.aff;if(!a||a.type!=='finger'||ch.hw)return null;
+    const org=!!CFG.syn[a.name],tab=org?CFG.rankCard:CFG.rankCardF[a.name];if(!tab)return null;
+    const t=tab[Math.min(Math.max(ch.fi||0,0),tab.length-1)];if(!t||!(t.dice||t.b||t.hit))return null;
+    if(!org)return {dice:t.dice,b:t.b,hit:t.hit,set:null};   /* 전용 카드팩이 없는 손가락: 덱의 모든 공격 카드 */
+    const F=D.fingers[a.name];if(!F||!F.pack)return null;
     const ids=[...F.pack,...(F.ranks||[]).flatMap(r=>r.cards||[])];return {dice:t.dice,b:t.b,hit:t.hit,set:new Set(ids.map(i=>D.cards[i]).filter(Boolean))}}
   const cardGrade=(y,ch)=>ch&&ch.easy?CFG.cardGrade[0]:[...CFG.cardGrade].reverse().find(g=>(y||1)>=g.from)||CFG.cardGrade[0];
   /* 레바테인 해방 단계: 봉인(0) · 1단계 ¼ · 2단계 ½ · 완료 1 */
@@ -3304,7 +3307,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 검은 침묵의 장갑: 공격마다 1d9로 무기가 바뀐다 */
       let sub=null;
       if(A.wx&&A.wx.arsenal){const i=d(A.wx.arsenal.length);sub=A.wx.arsenal[i-1];(C.ars=C.ars||[]);if(!C.ars.includes(i))C.ars.push(i);pnote+=` 장갑 1d9 ${i}·${sub.n}`}
-      const gr=A.isP&&A.cg&&c.t==='atk'?A.cg:null,rk=A.isP&&A.rk&&c.t==='atk'&&A.rk.set.has(c)?A.rk:null;
+      const gr=A.isP&&A.cg&&c.t==='atk'?A.cg:null,rk=A.isP&&A.rk&&c.t==='atk'&&(!A.rk.set||A.rk.set.has(c))?A.rk:null;
       const acA=A.wx&&A.wx.accel?(A.accel||0)*A.wx.accel.hit:0,acB=B.wx&&B.wx.accel?(B.accel||0)*B.wx.accel.eva:0;
       const trH=(A.trait==='bloodscent'&&B.bleed>0?15:0)+(A.trait==='enrage'&&A.hp<=A.maxHp/2?15:0),trE=B.trait==='coward'&&B.hp<=B.maxHp/2?20:0;
       const exH=(c.execHit&&(B.disp||0)>0?c.execHit:0)+trH;if(exH)pnote+=` 처분 표식 명중+${exH}`;

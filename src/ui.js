@@ -596,7 +596,7 @@ export function startUI(E,app){
   function vPassive(ch){
     const P=[];const af=ch.aff&&ch.aff.name;
     {const t=fingerPassive(af,ch.fi||0);if(t)P.push(t)}
-    if(CFG.syn[af]&&D.fingers[af]&&D.fingers[af].pack){const t=CFG.rankCard[Math.min(Math.max(ch.fi||0,0),CFG.rankCard.length-1)];if(t&&(t.dice||t.b||t.hit))P.push(`서열 카드 강화 · 전용 카드 공격 · 주사위 +${t.dice} · 피해 +${t.b} · 명중 +${t.hit}`)}
+    {const tab=CFG.syn[af]?(D.fingers[af]&&D.fingers[af].pack?CFG.rankCard:null):CFG.rankCardF[af];if(tab&&!ch.hw&&ch.aff&&ch.aff.type==='finger'){const t=tab[Math.min(Math.max(ch.fi||0,0),tab.length-1)];if(t&&(t.dice||t.b||t.hit))P.push(`서열 카드 강화 · ${CFG.syn[af]?'전용 카드':'모든'} 공격 · 주사위 +${t.dice} · 피해 +${t.b} · 명중 +${t.hit}`)}}
     if(ch.fate)P.push(`운명 · 모든 판정 +${CFG.nWing.fate} (사건 판정 · 전투 명중·회피) · 못 패시브 대신`);
     if(ch.oracle)P.push(`신탁대행자 · 지령 독촉 · 지령 스택 최대 ${CFG.oracle.presc} · 지령을 수행하지 못하면 다음 라운드 명중 −${CFG.oracle.missHit} · 회피 −${CFG.oracle.missEva}`);
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 '+CFG.artSense.every+'번 쓰러뜨릴 때마다 +1 (영구)':''}`);
