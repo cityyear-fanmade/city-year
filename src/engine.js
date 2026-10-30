@@ -216,7 +216,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const calcDmin=ch=>Math.min(CFG.dminCap,Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1))+(ch.stats.dminUp||0));
   function equip(ch,item){
     /* 육신 뒤틀림: 장비를 낄 수 없다 (보관함으로) · N사 날개: 의수를 끼지 않는다 (보관함으로) */
-    if((ch.distForm&&!ch.distStable)||(item.slot==='aug'&&isN(ch))){(ch.stash=ch.stash||[]).push(item);return}
+    if((ch.distForm&&!ch.distStable)||(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')){(ch.stash=ch.stash||[]).push(item);return}
     const s=ch.stats,old=ch.gear[item.slot];
     /* 공방 해결사의 전용 무기·방어구·의수는 빼거나 다른 장비로 바꿀 수 없다 (다른 장비는 보관함으로) */
     if(old&&old.id==='ws_'+item.slot&&item.id!==old.id&&isWs(ch)){(ch.stash=ch.stash||[]).push(item);return}
@@ -2746,11 +2746,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(foe.lead&&!foe.hidden){ch.leads=ch.leads||{};ch.leads[foe.lead]=(ch.leads[foe.lead]||0)+1;if(ch.leads[foe.lead]===3)chips.push(`단서 · ${CFG.leads[foe.lead]} (3번째)`)}
     /* 인연: 결혼 중 히든 보스를 이길 때마다 배우자 사망 위험이 0.1%씩 쌓인다 (엔딩까지 가려면 거의 반드시 잡아야 하는 상대) */
     if(ch.bond&&ch.bond.st==='married'&&foe.hidden&&!(ch.flags&&ch.flags.spouseAge))ch.bond.risk=(ch.bond.risk||0)+BD.riskStep;
-    /* 피의 각인된 갈망: 전투가 끝나면 자식이 흩어지고(각자 확률), 이긴 일반·보스 적은 새 자식이 된다. 히든 보스·환상체는 안 된다 */
+    /* 피에 각인된 갈망: 전투가 끝나면 자식이 흩어지고(각자 확률), 이긴 일반·보스 적은 새 자식이 된다. 히든 보스·환상체는 안 된다 */
     if(kidsOn(ch)){
       const KD=CFG.kids,before=ch.kids||0;let keep=0;for(let i=0;i<before;i++)if(d(100)>KD.lose)keep++;
       ch.kids=keep;if(before>keep)chips.push(`자식 ${before-keep}명이 흩어졌다 (${keep}/${KD.max})`);
-      if(!foe.hidden&&!foe.abno&&ch.kids<KD.max){ch.kids++;chips.push(`피의 각인된 갈망 · ${foe.n}이(가) 혈귀가 되어 자식이 된다 (${ch.kids}/${KD.max})`)}
+      if(!foe.hidden&&!foe.abno&&ch.kids<KD.max){ch.kids++;chips.push(`피에 각인된 갈망 · ${foe.n}이(가) 혈귀가 되어 자식이 된다 (${ch.kids}/${KD.max})`)}
     }
     if(foe.hidden&&!C.echo){
       if(!ch.beaten.includes(C.id))ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
@@ -2970,10 +2970,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       X.light=Math.min(CFG.lightMax+X.lightUp+X.lightNext+el,CFG.light+X.lightUp+X.lightNext+el+(X.lead?CFG.orderBonusLight:0));
       X.passHit=X.passHitNext;X.passHitNext=0;X.lightNext=0;X.matBonus=X.matNext||0;X.matNext=0;
     }
-    /* 피의 각인된 갈망: 자식 1명당 라운드마다 혈찬 스택 per를 바로 얻는다 */
+    /* 피에 각인된 갈망: 자식 1명당 라운드마다 혈찬 스택 per를 바로 얻는다 */
     {const kn=kidsOn(C.ch)&&P.hyeolchan?C.ch.kids||0:0;
       if(kn>0&&P.hp>0){P.hc=(P.hc||0)+CFG.kids.per*kn;let h=0;while(P.hc>=5){P.hc-=5;const x=hcHeal(P);P.hp+=x;h+=x}HG(P,h);
-        C.kidNote=`${P.name} · 피의 각인된 갈망 · 자식 ${kn}명 · 혈찬 +${CFG.kids.per*kn}${h?` · HP +${h}`:''}`}}
+        C.kidNote=`${P.name} · 피에 각인된 갈망 · 자식 ${kn}명 · 혈찬 +${CFG.kids.per*kn}${h?` · HP +${h}`:''}`}}
     if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-(X.blade?(X.bladeBoost&&X.synT>=2?0:CFG.syn['검계'].decay[X.synT]):CFG.breath.decay));
     if(P.blade){const g=P.synT>=2?2:1;P.breath=Math.min(CFG.breath.cap,P.breath+g);if(!C.quiet){const m={t:'kw',s:`${P.name} · 호흡결 · 호흡 +${g} (지금 ${P.breath})`};C.log.push(m);C.cur.push(m)}}
     {const cdOk=id=>!((D.cards[id].cd||0)&&((C.cdUntil||{})[id]||0)>C.round),dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))&&cdOk(id));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
