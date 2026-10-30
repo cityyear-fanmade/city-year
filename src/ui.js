@@ -58,7 +58,7 @@ export function startUI(E,app){
   /* 인생 주사위: free(태어난 뒤엔 매번 다르게) / fixed(시드 하나로 인생 전체가 같게, 재현용) */
   let DICE=store.get('cityYearDice')||'free';
   /* 히든 직업 해금 기록: 이 브라우저에만 남는다 */
-  const loadUnlocks=()=>{try{return JSON.parse(store.get('cityYearUnlocks')||'[]')}catch(e){return []}};
+  const loadUnlocks=()=>{let u=[];try{u=JSON.parse(store.get('cityYearUnlocks')||'[]')}catch(e){u=[]}if(typeof UNLOCKTEST!=='undefined'&&UNLOCKTEST){const all=[...(D.unlockOrigins||[]).map(o=>'origin:'+o.key),...Object.keys(D.hiddenJobs||{})];u=[...new Set([...u,...all])]}return u};
   const addUnlock=k=>{const u=loadUnlocks();if(!u.includes(k)){u.push(k);store.set('cityYearUnlocks',JSON.stringify(u))}};
   if(!SKINS.some(s=>s.k===SKIN))SKIN='base';
   /* 배경음악: 기본은 꺼짐. 켜 둔 채 다시 열면 첫 터치 때 서서히 시작한다 (브라우저는 터치 전에 소리를 낼 수 없다) */
@@ -1098,6 +1098,7 @@ export function startUI(E,app){
     const left=Math.max(0,Math.ceil((EXP-Date.now())/60000)),t=left>=120?`약 ${Math.floor(left/60)}시간`:`약 ${left}분`;
     return `<div class="check" style="border-color:var(--bleed)"><b>테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
+  const UNLOCKTEST=false; /* build --unlocktest: 해금 출생·히든 직업을 전부 열고, 출생 화면에서 중간 연차로 바로 시작할 수 있는 시험판 */
   const FINGERTEST=false; /* build --finger: 손가락 루트 전용 시험판. 출생 화면에 조직 출신·보냐텔리·별에 선택받은 자로 태어나는 버튼이 생긴다 */
   const fingerBtns=()=>FINGERTEST?`<div class="panel stack" style="gap:6px;border:2px solid var(--gold)"><div class="eyebrow">손가락 시험판 · 바로 태어나기</div><button class="btn" data-a="fbirth" data-i="조직"><b>조직 출신으로 태어나기</b><span class="dim small">1년차에 손가락이 먼저 찾아온다 · 2년차에 거미집 초대</span></button><button class="btn" data-a="fbirth" data-i="보냐텔리"><b>보냐텔리 가문으로 태어나기</b><span class="dim small">엄지 · 가문 전용 · 서열 점수 ×2</span></button><button class="btn" data-a="fbirth" data-i="별"><b>별에 선택받은 자(소지)로 태어나기</b><span class="dim small">정식 소지가 되면 거미집 초대</span></button></div>`:'';
   const MINDTEST=false; /* build --mind: 정신력 10 이하 연출만 시험하는 판 */
@@ -1504,7 +1505,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
         <div class="chips">${b.deck.map(id=>`<span class="chip">${D.cards[id].n}</span>`).join('')}</div></div>
       ${b.teamPick?`<div class="panel stack" style="gap:8px"><span class="eyebrow">부화장 팀 · 하나를 고른다</span><p class="small dim">어느 팀의 개체로 길러졌는지에 따라 몸이 다르다. 고르지 않은 두 팀의 추격자가 나중에 쫓아온다.</p>${Object.entries(CFG.rb.teamBonus).map(([t,B])=>`<button class="btn${UI.team===t?' primary':''}" data-a="rbteam" data-i="${t}"><b>${esc(t)}</b><span class="mono small" style="color:var(--gold)">${Object.entries(B).map(([k,v])=>`${{spd:'속도',maxHp:'최대 HP',eva:'회피'}[k]} +${v}`).join(' · ')}</span></button>`).join('')}</div>`:''}
       ${b.relicPick?`<div class="panel stack" style="gap:8px"><span class="eyebrow">유물 적성 · 하나를 고른다</span><p class="small dim">적성은 가지고 있으나 온전히 다루기 어렵다.</p>${Object.entries(D.relics).map(([k,r])=>`<button class="btn${UI.relic===k?' primary':''}" data-a="relic" data-i="${k}"><b>${esc(r.n)}</b><span class="mono small" style="color:var(--gold)">${esc(r.e)}</span></button>`).join('')}</div>`:''}
-      ${vJobRoll()}${vJobPick()}${vOriginPick()}
+      ${vJobRoll()}${vJobPick()}${vOriginPick()}${testPresetPanel()}
       ${b.fateChoices&&!b.fated?`<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">운명이 찾아왔다 · 하나를 고르거나 거절한다</span><span class="small">아무것도 쥐지 않고 태어났지만, 이름 없는 존재에게도 길이 두 갈래로 놓였다.</span>${b.fateChoices.map(r_=>{const h=D.hiddenOrigins.find(x=>x.roll===r_);return `<button class="btn" data-a="fate" data-i="${r_}"><b>${esc(h.n)}</b><span class="small">${esc(h.t)}</span><span class="mono small" style="color:var(--gold)">${esc(h.e)}</span></button>`}).join('')}<button class="btn" data-a="nofate"><b>운명을 거절한다</b><span class="small">아무것도 쥐지 않은 채 그대로 시작한다. 이름 없는 삶, 솔로 엔딩을 노리는 길이다.</span></button></div>`:''}
       <div class="stack"><button class="btn primary" data-a="live" ${(b.relicPick&&!UI.relic)||(b.teamPick&&!UI.team)||(b.fateChoices&&!b.fated)?'disabled':''}>${b.fateChoices&&!b.fated?'운명을 먼저 고른다':b.relicPick&&!UI.relic?'유물을 먼저 고른다':b.teamPick&&!UI.team?'팀을 먼저 고른다':'이 삶을 산다'}</button>
       ${fingerBtns()}${b.blank||UI.job?'':'<button class="btn quiet" data-a="blank">어떤 출생 보정도 없이 시작한다</button>'}<button class="btn quiet" data-a="title"><b>첫 화면으로</b><span class="dim small">출생 굴림을 접고 처음으로 돌아간다</span></button></div>${vSettings()}`;
@@ -1545,6 +1546,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <p class="small dim">고르면 출생이 고정된다. 다시 태어나면 재능·결점·무기·성장기·타고난 것만 새로 굴린다.</p>
       <button class="btn${!cur?' primary':''}" data-a="origin" data-i="">굴림에 맡긴다</button>
       ${L.map(o=>`<button class="btn${cur===o.key?' primary':''}" data-a="origin" data-i="${o.key}"><b>${esc(o.n)}</b><span class="small">${esc(o.t)}</span></button>`).join('')}</div>`;
+  }
+  /* 시험판: 고른 출생에 맞는 시작 상황 (중간 연차에서 바로 시작) */
+  const TEST_PRESETS=[['','처음부터 (1년차)',''],['crow55','까마귀팀 · 55년차 (1막 끝, 2막 직전)','crow'],['herm37','헤르메스 · 37년차 (결혼·아이 있음, 곧 가족을 없애라)','hermes'],['herm55a','헤르메스 · 55년차 (지령을 따른 뒤)','hermes'],['herm55b','헤르메스 · 55년차 (지령을 거부하고 자비를 받은 뒤)','hermes']];
+  function testPresetPanel(){
+    if(!UNLOCKTEST)return '';
+    const key=UI.origin||'',cur=UI.testPreset||'';
+    return `<div class="panel stack" style="gap:6px;border:2px dashed var(--gold)"><span class="eyebrow">테섭 · 시작 상황</span><p class="small dim">위에서 해금 출생을 먼저 고른 뒤, 아래에서 시작 상황을 고른다. 출생과 맞지 않으면 처음부터 시작한다.</p>${TEST_PRESETS.map(([k,n,o])=>`<button class="btn${cur===k?' primary':''}" data-a="tpreset" data-i="${k}"${o&&o!==key?' style="opacity:.55"':''}>${n}</button>`).join('')}</div>`;
   }
   function vJobPick(){
     const u=loadUnlocks().filter(k=>D.hiddenJobs[k]);if(!u.length)return '';
@@ -2677,9 +2685,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     relic(k){UI.relic=k;render()},
     rbteam(t){UI.team=t;render()},
     origin(k){UI.origin=k||null;if(UI.origin){UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
+    tpreset(k){UI.testPreset=k||null;render()},
     job(k){if(k)UI.origin=null;UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);nextYear()},
+    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.wsMsg=null;E.wsEnsure(G.ch);UI.showIncome=false;UI.screen='shop';render()},

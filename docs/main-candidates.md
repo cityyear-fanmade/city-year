@@ -29,3 +29,6 @@
 ## 옮길 때 주의
 - 같은 파일(`src/engine.js`, `src/ui.js`, `data/birth.json`)에 후보와 테스트 중 항목이 섞여 있으므로, 후보 커밋만 골라 패치로 만들고 위 '테스트 중' 항목이 따라가지 않는지 확인한다.
 - 옮긴 뒤 `npm run -s check`, `npm run -s pages`를 돌리고 `main-deploy`에서 확인한 다음 푸시한다.
+
+## 테섭 빌드 (해금 출생 시험판)
+`npm run build -- --unlocktest` → `dist/city-year-unlock-test.html`: 해금 출생·히든 직업이 모두 열려 있고, 출생 화면의 "테섭 · 시작 상황"에서 까마귀팀 55년차, 헤르메스 37년차·55년차(따른 뒤/자비 뒤)로 바로 시작할 수 있다. 본섭에는 올리지 않는다.
