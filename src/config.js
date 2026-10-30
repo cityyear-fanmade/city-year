@@ -173,7 +173,7 @@ export const CFG = {
   shieldCap: 150,
   /* 검지 히든 직업 신탁대행자: 최종 서열 뒤 해마다 chance%로 단말기 사건, tries번 기회, 줍기는 1d100 ≥ dc. 지령 스택 최대 presc, 지령 미수행 시 다음 라운드 명중 −missHit · 회피 −missEva */
   /* 조직: 덱이 at[0](8)장 이상일 때 패시브가 열리고(그 아래로 압축하면 닫힌다), at[1](10)장에서 최종 단계가 된다. 흑운회: 시작 구름 start[단계] · max에 닿으면 흑운(주사위마다 +die · 적중 출혈 +bleedPlus · 마지막 단계에서 받는 피해 ×half) · 라운드 끝에 구름 reset.
-     검계: 호흡 최대 cap(30) · 치명 배수 crit + critPer×(호흡−10) · 폭발은 사용한 호흡의 절반만 소모 · 라운드 시작 호흡 +1(8장부터 +2) · 호흡 자연 감소 decay[단계] · 호흡 2당 모든 카드 +1. 밤의 송곳: 속도 굴림 +init[단계] · 출혈 걸린 적에게 명중 +bleedHit · 선공이면 상대 회피 절반 */
+     검계: 호흡 최대 cap(30) · 치명 배수 crit + critPer×(호흡−10) · 폭발은 사용한 호흡의 절반만 소모 · 라운드 시작 호흡 +1(8장부터 +2) · 호흡 자연 감소 decay[단계] · 호흡 2당 모든 카드 +1. 밤의 송곳: 급소(출혈 걸린 적을 맞히면 +bleed, 선공 첫 적중 +lead, 최대 cap, 라운드마다 −decay) 2당 모든 카드 피해 +1 · 급소 burst.at 이상이면 적중에 상대 출혈 스택×mul[단계]를 더하고 급소 at 소모 · 속도 굴림 +init[단계] · 출혈 걸린 적에게 명중 +bleedHit · 선공이면 상대 회피 절반 */
   /* 조직 루트: 엄지 전향 제안(흑운회·밤의 송곳의 최고 서열) → 몇 해 뒤 숙청 소문 → 반역하면 엄지의 대모 · 검계 최고 서열 → 뒤틀린 쥰 → 역적 → S사 절도사 */
   synRoute: {offerChance: 55, purgeGap: 3, fleeHp: 6},
   /* 무한 모드 추가 엔딩(죽는 것 말고): 균열로 흘러드는 히든 보스를 모두 쓰러뜨리면 균열이 닫힌다(sealBeasts는 더 쓰지 않음) · 히든 보스 starHidden마리를 이기면 별 · 가족이 있고 무한 모드 settleYears년이 지나면 정착. 각각 한 번, 끝낸 뒤에도 이어서 살 수 있다 */
@@ -181,7 +181,7 @@ export const CFG = {
   syn: {at: [8, 10],
     '흑운회': {key: 'kuro', start: [1, 2, 3, 4], max: 5, reset: 2, die: 2, bleedPlus: 1, half: 0.5, counter: [0.3, 0.5, 0.7, 0.9]},
     '검계': {key: 'blade', cap: 30, decay: [2, 1, 1, 0], per: 3, crit: 1.25, critPer: 0.03, boostPer: 2, boostCrit: 1.5, burst: {at: 8, max: 20, per: [0.6, 0.8, 1, 1.2], every: 2}},
-    '밤의 송곳': {key: 'awl', init: [0, 5, 10, 15], bleedHit: 10}},
+    '밤의 송곳': {key: 'awl', init: [0, 5, 10, 15], bleedHit: 10, mark: {cap: 10, per: 2, lead: 2, bleed: 1, decay: 1, burst: {at: 5, mul: [0, 0, 2, 3]}}}},
   /* 검지 지령 수행: 스택이 가득 찬 뒤 지령 카드를 every번 더 수행할 때마다 카드 수치(피해 · 회피 · 보호막) +1, 최대 max */
   prescPlus: {every: 2, max: 5},
   oracle: {chance: 25, tries: 2, every: 5, dc: 40, presc: 10, missHit: 15, missEva: 5},

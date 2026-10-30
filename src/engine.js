@@ -2963,7 +2963,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const dn=(ch.deck||[]).length,DB=CFG.deck.bonus,db=dn>=DB.from?(Math.floor((dn-DB.from)/DB.per)+1)*DB.atk:0;if(db){P.atk+=db;mindNote.push(`덱 ${dn}장 · 공격 +${db}`)}}
     if(P.kuro){const k=CFG.syn['흑운회'];P.cloud=k.start[P.synT];mindNote.push(`암운 · 구름 ${P.cloud} (덱 ${ch.deck.length}장)`)}
     if(P.blade)mindNote.push(`호흡결 · 호흡 최대 ${CFG.syn['검계'].cap} · 매 라운드 호흡 +${P.synT>=2?2:1} · 자연 감소 ${CFG.syn['검계'].decay[P.synT]} (덱 ${ch.deck.length}장)`);
-    if(P.awl){const w=CFG.syn['밤의 송곳'];P.synInit=w.init[P.synT];mindNote.push(`뒷골목의 룰 · 속도 굴림 +${P.synInit} (덱 ${ch.deck.length}장)`)}
+    if(P.awl){const w=CFG.syn['밤의 송곳'];P.synInit=w.init[P.synT];mindNote.push(`뒷골목의 룰 · 속도 굴림 +${P.synInit} · 급소 최대 ${w.mark.cap} (덱 ${ch.deck.length}장)`)}
     const ms=mindStat(ch);if(ms){P.atk+=ms;P.eva+=ms;P.spd+=ms;P.maxHp+=ms;P.hp+=ms;mindNote.push(`정신력 ${ch.mind} · 모든 능력치 +${ms}`)}
     if(mt){const tb=Math.min(Math.round(mt.breath*tm),Math.max(0,bcap(P)-P.breath)),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     /* 굳은 정신: 기본 정신력 보정에 더해, 정신력 15부터 5마다 한 단계(최대 100까지 willSteps단계): 단계마다 호흡 +1 · 최대 HP +willHp, 2단계마다 회피 +1, 3단계마다 모든 능력치 +1 */
@@ -3030,7 +3030,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const X of [P,E]){X.swiftR=!!X.swiftNext;X.swiftNext=false}
     for(const X of [P,E]){X.r=d(100);X.cu=X.catchup;X.tot=X.r+X.spd*CFG.spdMul+(X.synInit||0)+(X.catchup?CFG.catchupBonus:0)+(X.warpLead>=C.round?200:0)+(X.swift||X.swiftR?1000:0)}
     for(const [X,Y] of [[P,E],[E,P]]){
-      X.lead=X.tot>Y.tot;X.awlUsed=false;X.fsOn=X.fs=X.tot-Y.tot>=CFG.gapFirst;X.catchup=X.tot<Y.tot;X.advUsed=false;
+      X.lead=X.tot>Y.tot;X.awlUsed=false;X.awlMk=false;X.fsOn=X.fs=X.tot-Y.tot>=CFG.gapFirst;X.catchup=X.tot<Y.tot;X.advUsed=false;
       const el=(X.egoLight&&C.round<=X.egoRounds?X.egoLight:0)+(X.burstLight&&C.round<=X.burstTo?X.burstLight:0);
       X.light=Math.min(CFG.lightMax+X.lightUp+X.lightNext+el,CFG.light+X.lightUp+X.lightNext+el+(X.lead?CFG.orderBonusLight:0));
       X.passHit=X.passHitNext;X.passHitNext=0;X.lightNext=0;X.matBonus=X.matNext||0;X.matNext=0;
@@ -3039,6 +3039,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const kn=kidsOn(C.ch)&&P.hyeolchan?C.ch.kids||0:0;
       if(kn>0&&P.hp>0){P.hc=(P.hc||0)+CFG.kids.per*kn;let h=0;while(P.hc>=5){P.hc-=5;const x=hcHeal(P);P.hp+=x;h+=x}HG(P,h);
         C.kidNote=`${P.name} · 피에 각인된 갈망 · 자식 ${kn}명 · 혈찬 +${CFG.kids.per*kn}${h?` · HP +${h}`:''}`}}
+    if(C.round>1)for(const X of [P,E])if(X.awl&&X.awlMark>0)X.awlMark=Math.max(0,X.awlMark-CFG.syn['밤의 송곳'].mark.decay);
     if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-(X.blade?(X.bladeBoost&&X.synT>=2?0:CFG.syn['검계'].decay[X.synT]):CFG.breath.decay));
     if(P.blade){const g=P.synT>=2?2:1;P.breath=Math.min(bcap(P),P.breath+g);if(!C.quiet){const m={t:'kw',s:`${P.name} · 호흡결 · 호흡 +${g} (지금 ${P.breath})`};C.log.push(m);C.cur.push(m)}}
     {const cdOk=id=>!((D.cards[id].cd||0)&&((C.cdUntil||{})[id]||0)>C.round),dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))&&cdOk(id));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
@@ -3383,6 +3384,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         pnote+=` 합산 (본인 ${S_} + ${C.ally.name} ${SP_})×${w_}=${mix}`}
       const ig=(A.blade&&A.breath>=CFG.breath.sure)||c.pierce;
       if(A.kuro&&A.black){const x=rolls.length*CFG.syn['흑운회'].die;dmg+=x;pnote+=` 흑운 · 주사위 ${rolls.length}개 +${x}`}
+      if(A.awl&&A.synT>=2&&(A.awlMark||0)>0){const x=Math.floor(A.awlMark/CFG.syn['밤의 송곳'].mark.per);if(x>0){dmg+=x;pnote+=` 급소 ${A.awlMark} → +${x}`}}
       if(A.blade){const x=Math.floor(A.breath/(A.bladeBoost?CFG.syn['검계'].boostPer:CFG.syn['검계'].per));if(x>0){dmg+=x;pnote+=` 본국 검술 · 호흡 ${A.breath} → +${x}`}}
       if(c.breathDice&&A.breath>0){dmg+=A.breath;pnote+=` 골단 · 호흡 ${A.breath} 가산`}
       /* 뒤틀린 책장: 도박 카드 (주사위 한 번, 맞으면 큰 피해) */
@@ -3408,6 +3410,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(c.forceCrit||d(100)<=critPct(A.breath)){const cm=(A.blade?(A.bladeBoost?CFG.syn['검계'].boostCrit:CFG.syn['검계'].crit)+CFG.syn['검계'].critPer*Math.max(0,A.breath-CFG.breath.sure):CFG.critMult)+(A.hwando?0.1*Math.min(A.breath,CFG.breath.hwandoCap):0);dmg=Math.floor(dmg*cm);note+=A.hwando?` 치명(환도 ×${cm.toFixed(1)})`:' 치명'}
       }
       if(A.blade&&A.breath>=CFG.syn['검계'].burst.at&&(A.bbRound==null||C.round-A.bbRound>=CFG.syn['검계'].burst.every)){const bs=CFG.syn['검계'].burst,sp=Math.min(A.breath,bs.max),x=Math.floor(sp*bs.per[A.synT||0]);A.bbRound=C.round;A.breath-=Math.ceil(sp/2);dmg+=x;note+=` 호흡 폭발 · 호흡 ${sp} 사용(절반 ${Math.ceil(sp/2)} 소모) → +${x}`}
+      if(A.awl&&A.synT>=2&&(A.awlMark||0)>=CFG.syn['밤의 송곳'].mark.burst.at&&B.bleed>0){const mk=CFG.syn['밤의 송곳'].mark,x=B.bleed*mk.burst.mul[A.synT];A.awlMark-=mk.burst.at;dmg+=x;note+=` 송곳 박기 · 출혈 ${B.bleed} → +${x}`}
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.ring&&A.work>0){dmg+=CFG.ring.dmg*A.work;note+=` 작품 ${A.work}+${CFG.ring.dmg*A.work}`;if(A.work>=CFG.ring.max){dmg=Math.floor(dmg*CFG.ring.finish);A.work=CFG.ring.after;note+=` 완성×${CFG.ring.finish}`}}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
@@ -3507,6 +3510,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.erase&&B.hp>0){B.lightUp=0;B.lightNext=0;const ks=['bleed','rupture','burn','flame','nail','sink'].filter(k=>(B[k]||0)>0);for(const k of ks)B[k]=Math.min(k==='bleed'?bleedCap(B):CFG.stackCap,Math.floor(B[k]*1.5));L('kw',`  ${A.name} · ${c.n} · ${B.name}이(가) 아껴 둔 빛이 증발했다${ks.length?' · '+ks.map(k=>`${D.keywords[k].n} ${B[k]}`).join(' · ')+' (×1.5)':''}`)}
       if(A.rv&&B.hp>0){const k=CFG.raven.buffs.find(k=>(B[k]||0)>0);if(k){const nm={shield:'보호막',breath:'호흡',charge:'충전',cloud:'구름',passHit:'명중 보정'}[k];if(k==='passHit')B.passHit=0;else B[k]--;L('kw',`  ${A.name} · 까마귀의 눈 · ${B.name}의 ${nm} 1 말소`)}}
       if(A.kuro&&A.black&&B.hp>0){B.bleed=Math.min(bleedCap(B),B.bleed+CFG.syn['흑운회'].bleedPlus);L('kw',`  ${A.name} · 흑운 · ${B.name}에게 출혈 +${CFG.syn['흑운회'].bleedPlus} (지금 ${B.bleed})`)}
+      if(A.awl&&A.synT>=2){const mk=CFG.syn['밤의 송곳'].mark;let g=(B.bleed>0?mk.bleed:0)+(A.lead&&!A.awlMk?mk.lead:0);A.awlMk=true;if(g>0){A.awlMark=Math.min(mk.cap,(A.awlMark||0)+g);L('kw',`  ${A.name} · 급소 +${g} (지금 ${A.awlMark}/${mk.cap})`)}}
       if(A.awl&&A.synT>=3&&A.lead&&!A.awlUsed&&B.hp>0){A.awlUsed=true;B.bleed=Math.min(bleedCap(B),B.bleed+1);L('kw',`  ${A.name} · 선공 첫 적중 · ${B.name}에게 출혈 +1 (지금 ${B.bleed})`);if(A.kuro)addCloud(A,L)}
       if(A.ring&&A.work<CFG.ring.max){A.work++;L('kw',`  ${A.name} · 작품 ${A.work}/${CFG.ring.max}`)}
       if(A.herm&&B.hp>0&&(A.isP?(!A.herm.wait&&A.starId&&c===D.cards[A.starId]):true))hermHit(A,B,C,L,push);   // 지령(☆) 카드로 적중한 만큼 타수가 쌓인다
