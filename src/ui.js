@@ -1869,14 +1869,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const cost=UI.sel.reduce((a,i)=>a+E.cardCost(P,D.cards[P.hand[i]])-(D.cards[P.hand[i]].gain||0),0),left=P.light-cost;
     const cards=P.hand.map((id,i)=>{
       const c=D.cards[id],si=UI.sel.indexOf(i),lk=i===P.locked,dis=lk||(si<0&&E.cardCost(P,c)>left)||(c.needLow&&X.hp>X.maxHp*CFG.raven.low);
-      return `<button class="card ${si>=0?'sel':''}${P.index&&i===P.starSlot?' presc':''}" data-a="pick" data-i="${i}" ${dis?'disabled':''}>
-        <span class="cost">${E.cardCost(P,c)}</span>${si>=0?`<em class="ord">${si+1}</em>`:''}${P.index&&i===P.starSlot?'<span class="prescTag">📜 지령</span>':''}
+      return `<button class="card ${si>=0?'sel':''}${P.index&&i===P.starSlot?(P.oracle?' presc term':' presc'):''}" data-a="pick" data-i="${i}" ${dis?'disabled':''}>
+        <span class="cost">${E.cardCost(P,c)}</span>${si>=0?`<em class="ord">${si+1}</em>`:''}${P.index&&i===P.starSlot&&!P.oracle?'<span class="prescTag">📜 지령</span>':''}
         <span class="nm">${kindBadge(c)} ${c.n}${c.t==='atk'&&P.cg&&P.cg.n?` <b style="color:var(--gold)">${P.cg.n}</b>`:''}${lk?` <span class="bad small">잠김 · ${esc(C.E.passive.n)}</span>`:''}</span>${c.t==='atk'?`<span class="mono small" style="color:var(--gold)">최종 명중 ${sg(P.atk+c.hit+(P.passHit||0)+(P.cg?P.cg.hit:0))}${P.fsOn&&P.fs?' (+선제 '+CFG.firstHit+')':''}</span>`:''}<span class="cd">${cardLine(c,c.t==='atk'?P.cg:null,P.wx)}</span>
         ${c.needCloud&&!(P.black||(P.cloud||0)>=c.needCloud)?`<span class="bad small">내는 순서가 올 때 구름이 ${c.needCloud} 이상이어야 효과가 난다 · 구름 ${P.cloud||0}/${c.needCloud} (출혈을 걸거나 맞을 때마다 +1, 앞선 카드로 채운다)</span>`:''}${c.needLow&&X.hp>X.maxHp*CFG.raven.low?`<span class="bad small">상대 HP ${Math.round(CFG.raven.low*100)}% 이하일 때만 낼 수 있다</span>`:''}
         ${c.kw?`<span class="chips">${kwChips(c)}</span>`:''}</button>`;
     }).join('');
     return `${M?duo({E:X,P})+vOrder(true):entHtml('E',X,X)+arenaHtml(false)+entHtml('P',P,P)+vOrder()+log}
-      ${P.index&&P.starId?`<div class="prescBar"><b>📜 이번 라운드 지령</b> · <b>${esc(D.cards[P.starId].n)}</b>을(를) 내라 <span class="small">→ 지령 수행 +1 (지금 ${P.presc||0}/5) · 호흡 +4 · 받는 피해 −5%씩</span>${UI.sel.some(j=>j===P.starSlot)?' <b class="good">✔ 지령 카드를 골랐다</b>':''}</div>`:''}
+      ${P.index&&P.starId?(P.oracle?`<div class="termBar" data-k="${C.round}:${P.starId}" data-t="${esc('지령 · '+D.cards[P.starId].n)}"><div class="tm">· · · · ·</div><div class="small">지령 수행 +1 (지금 ${P.presc||0}/${CFG.oracle.presc}) · 호흡 +4 · 받는 피해 −5%씩${P.herm?` · 타수 ${P.herm.wait?'(퓨리오소를 쓸 때까지 멈춤)':P.herm.n}`:''}${UI.sel.some(j=>j===P.starSlot)?' · <b class="good">✔ 수신한 지령을 따른다</b>':''}</div></div>`:`<div class="prescBar"><b>📜 이번 라운드 지령</b> · <b>${esc(D.cards[P.starId].n)}</b>을(를) 내라 <span class="small">→ 지령 수행 +1 (지금 ${P.presc||0}/5) · 호흡 +4 · 받는 피해 −5%씩</span>${UI.sel.some(j=>j===P.starSlot)?' <b class="good">✔ 지령 카드를 골랐다</b>':''}</div>`):''}
       ${triBar(P)}${formBar(P)}
       ${egoBar(C.ch)}
       <div class="row between"><span class="eyebrow">손패 · 고른 순서대로 위 순서에 들어간다</span><span class="mono" style="color:var(--gold)">${P.distorted?'빛 없음':`빛 ${left}/${P.light}`}</span></div>
@@ -2320,6 +2320,21 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 공방 거리: 상점마다 머리글을 눌러 접고 펼친다. 접은 상태는 이 브라우저에 기억한다 */
   const SHOPFOLD_K='cityYearShopFold';
   let SHOPFOLD={};try{SHOPFOLD=JSON.parse(store.get(SHOPFOLD_K)||'{}')||{}}catch(e){SHOPFOLD={}}
+  /* 단말기 지령(신탁대행자·헤르메스): '· · · · ·'이 깜빡이다가 글자가 흔들리며 한 글자씩 자리를 잡는다. 같은 라운드에는 한 번만 움직인다 */
+  function termRun(){
+    const el=document.querySelector('.termBar');if(!el)return;
+    const tm=el.querySelector('.tm'),key=el.dataset.k,fin=el.dataset.t||'';
+    if(UI.termKey!==key){UI.termKey=key;UI.termT0=performance.now()}   // 같은 라운드에 화면이 다시 그려져도 처음 시각부터 이어서 움직인다
+    const G_='·:;░▒▓<>/|#@%&*+=?~',t0=UI.termT0,DOT=700,STEP=75;
+    const tick=()=>{
+      if(!document.body.contains(tm))return;
+      const x=performance.now()-t0;
+      if(x<DOT){tm.textContent=Array(1+Math.floor(x/140)%5).fill('·').join(' ')}
+      else if(x<DOT+fin.length*STEP+250){const k=Math.max(0,Math.floor((x-DOT)/STEP));tm.textContent=fin.slice(0,k)+Array.from(fin.slice(k)).map(c=>c===' '?' ':G_[Math.floor(Math.random()*G_.length)]).join('')}
+      else{tm.textContent=fin;return}
+      requestAnimationFrame(tick)};
+    tick();
+  }
   function applyShopFold(){
     const mb=document.querySelector('.wrap .moneybar');if(!mb)return;
     for(let el=mb.nextElementSibling;el;el=el.nextElementSibling){
@@ -2363,6 +2378,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const lg=$('log');if(lg)lg.scrollTop=lg.scrollHeight;
     if(s!==lastScreen){window.scrollTo(0,0);lastScreen=s}
     if(s==='shop')applyShopFold();
+    if(s==='combat')termRun();
     if(s==='birth'&&BC.fresh&&MODE!=='off'){BC.fresh=false;rollAnim()}
     if(s==='level'&&UI.lvFresh&&MODE!=='off'){UI.lvFresh=false;rollAnim()}
     if(s==='result'&&UI.res.anim&&UI.res.roll){UI.res.anim=false;UI.animing=true;resultAnim().then(()=>{UI.animing=false;if(G&&((G.ch.offers||[]).length||(G.ch.picks||[]).length||(G.ch.gearOffers||[]).length||G.ch.packOffer))render()})}
