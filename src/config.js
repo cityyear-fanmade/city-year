@@ -184,7 +184,9 @@ export const CFG = {
   rankCardF: {'엄지': [{dice: 0, b: 0, hit: 0}, {dice: 0, b: 2, hit: 3}, {dice: 1, b: 3, hit: 5}, {dice: 1, b: 6, hit: 8}],
     '검지': [{dice: 0, b: 1, hit: 3}, {dice: 1, b: 3, hit: 6}],
     '중지': [{dice: 0, b: 0, hit: 0}, {dice: 0, b: 1, hit: 3}, {dice: 1, b: 2, hit: 5}, {dice: 1, b: 5, hit: 8}],
-    '약지': [{dice: 0, b: 1, hit: 0}, {dice: 1, b: 2, hit: 3}, {dice: 1, b: 4, hit: 6}]},
+    '약지': [{dice: 0, b: 1, hit: 0}, {dice: 1, b: 2, hit: 3}, {dice: 1, b: 4, hit: 6}],
+    /* 소지는 서열이 아니라 모은 인·의·예·지 별 개수(0~4)로 올라간다 */
+    '소지': [{dice: 0, b: 0, hit: 0}, {dice: 0, b: 1, hit: 3}, {dice: 1, b: 2, hit: 5}, {dice: 1, b: 4, hit: 7}, {dice: 2, b: 6, hit: 10}]},
   syn: {at: [8, 10],
     '흑운회': {key: 'kuro', start: [1, 2, 3, 4], max: 5, reset: 2, die: 2, bleedPlus: 1, half: 0.5, counter: [0.3, 0.5, 0.7, 0.9]},
     '검계': {key: 'blade', cap: 30, decay: [2, 1, 1, 0], per: 3, crit: 1.25, critPer: 0.03, boostPer: 2, boostCrit: 1.5, burst: {at: 8, max: 20, per: [0.6, 0.8, 1, 1.2], every: 2}},
