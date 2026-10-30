@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.2.9';
+  const VERSION='v10.2.10';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -603,7 +603,7 @@ export function startUI(E,app){
     if(ch.colorPasv&&E.colorPasv[ch.colorPasv])P.push(`특색 패시브 · ${E.colorPasv[ch.colorPasv].n} · ${E.colorPasv[ch.colorPasv].e}`);
     if(ch.aff&&ch.aff.name==='W사 날개'){const WC=CFG.charge.orgs['W사 날개'];P.push(`W사 · 열차 충전 · 전투 시작 충전 ${WC.start} · 라운드마다 +${WC.round}(직급이 오르면 3~4) · 충전 ${WC.express.at} 이상일 때 쓰면 충전 소모 카드의 고정 피해 ×${WC.express.mul}(급행)`)}
     if(ch.race==='hyeolgwi')P.push(`혈귀 · 혈찬 · 상대의 출혈이 5번 발동할 때마다 HP ${CFG.hyeolchan.heal} 회복`);
-    if(ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea'))P.push(`피의 각인된 갈망 · 자식 ${ch.kids||0}/${CFG.kids.max} · 라운드마다 혈찬 +${CFG.kids.per}×자식 · 전투가 끝나면 자식마다 ${CFG.kids.lose}% 흩어짐`);
+    if(ch.race==='hyeolgwi'&&(ch.beaten||[]).includes('dulcinea'))P.push(`피에 각인된 갈망 · 자식 ${ch.kids||0}/${CFG.kids.max} · 라운드마다 혈찬 +${CFG.kids.per}×자식 · 전투가 끝나면 자식마다 ${CFG.kids.lose}% 흩어짐`);
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.push(`레벨 ${CFG.lvLight.at}마다 · 전투 중 빛과 빛 최대치 +${CFG.lvLight.up*n} (지금 레벨 ${ch.lv})`)}
     for(const [k,t] of Object.entries(CFG.lake.loot))if(ch.flags&&ch.flags['lkL_'+k])P.push('고래 전리품 · '+t);
     if(ch.flags&&ch.flags.redMist)P.push('붉은 안개 · 적을 쓰러뜨리면 HP '+CFG.redMist.heal+' + 최대 HP의 '+Math.round(CFG.redMist.healPct*100)+'% 회복 · 미미크리 적중 '+CFG.redMist.gauge+'번 → 대절단 가로');
