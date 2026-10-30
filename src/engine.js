@@ -1164,6 +1164,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.hermMercy){ch.hermPen=false;ch.hermLv=Math.max(ch.hermLv||0,1);chips.push('헤르메스의 자비 · 지령 패널티가 사라진다','카두세우스-헤르메스 · 1차 강화')}
     if(fx.routeWpn!=null&&ch.o&&ch.o.route)routeWeaponUp(ch,ch.o.route,fx.routeWpn,chips);
     if(fx.routeGuest)routeSt(ch).guestFoe=fx.routeGuest;
+    if(fx.libItem&&D.items[fx.libItem]){offerGear(ch,Object.assign({id:fx.libItem},D.items[fx.libItem]));chips.push(`책 속의 물건 · ${D.items[fx.libItem].n} (${D.items[fx.libItem].e}) · 장착할지 고른다`)}
     if(fx.routeGuestTalk)guestDone(ch,fx.routeGuestTalk,chips,true);
     if(fx.routeHunt){routeSt(ch).kit={picks:[]};chips.push('처분 대상 수색 · 준비물을 고른다')}
     if(fx.routeKit){const R_=routeOf(ch),st_=routeSt(ch),H_=R_&&R_.hunt;
@@ -2202,8 +2203,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return hid.length?hid:tier}
   /* 손님의 책: 손님의 덱에서 플레이어가 쓸 수 있는 카드(공격·방어·버프) */
   function guestBooks(id){return [...new Set((D.enemies[id].deck||[]).filter(c=>D.cards[c]&&['atk','def','buff'].includes(D.cards[c].t)&&!D.cards[c].fixed))]}
+  /* 책 속의 물건: 손님이 책이 될 때 그 손님이 쓰던 물건이 책 안에 남는다. 등급에 맞는 무기·방어구·보조 장비 3개 중 하나를 고른다 */
+  function bookItems(ch,grade){
+    const ok=id=>{const it=D.items[id];return it&&it.grade===grade&&['weapon','armor','aug'].includes(it.slot)&&!it.hw&&!it.lake&&!it.tool&&!it.perm&&!(it.slot==='aug'&&isN(ch)&&(it.kind||'의수')==='의수')&&!(ch.gear[it.slot]&&ch.gear[it.slot].id===id)&&!inStash(ch,id)&&!(ch.gearOffers||[]).some(g=>g.id===id)};
+    const all=Object.keys(D.items).filter(ok),out=[];
+    for(const sl of ['weapon','armor','aug']){const p=all.filter(id=>D.items[id].slot===sl&&!out.includes(id));if(p.length)out.push(one(p))}
+    return out}
+  function bookItemEvent(G,st){
+    const ch=G.ch,g=st.itemDue,ids=bookItems(ch,g);st.itemDue=0;if(!ids.length)return null;
+    return {t:'책 속의 물건',x:'손님이 책이 되고 난 자리에 그가 쓰던 물건이 남아 있다. 서가에 꽂아 둘 수 있는 것은 하나뿐이다.',c:[
+      ...ids.map(id=>({l:D.items[id].n,h:D.items[id].e,ok:{t:`${D.items[id].n}을(를) 서가에서 꺼냈다.`,fx:{libItem:id}}})),
+      {l:'책 속에 그대로 둔다',h:'정신력 +1',ok:{t:'물건은 책 안에 남았다.',fx:{mindUp:1}}}]}}
   function guestEvent(G,R){
     const ch=G.ch,Z=R.guest,st=routeSt(ch),n=st.guests||0,si=guestStage(Z,n),S=Z.stages[si],ids=guestPool(Z,S,ch);if(!ids.length)return null;
+    if(st.itemDue){const bi=bookItemEvent(G,st);if(bi)return bi}
     /* 숨 돌리는 해: 손님은 gap년에 한 번 온다. 그 사이 해에는 조용한 사건(rest)이 나온다 */
     if(Z.rest&&Z.rest.length&&st.gLast!=null&&G.year-st.gLast<(Z.gap||1)){const u=st.restUsed=st.restUsed||[];let left=Z.rest.map((_,i)=>i).filter(i=>!u.includes(i));if(!left.length){st.restUsed=[];left=Z.rest.map((_,i)=>i)}const i=one(left);st.restUsed.push(i);return Z.rest[i]}
     st.gLast=G.year;
@@ -2216,8 +2229,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function guestDone(ch,id,chips,talk){
     const R=routeOf(ch),Z=R&&R.guest;if(!Z)return false;const st=routeSt(ch),pool=guestBooks(id),old=guestStage(Z,st.guests||0);
     if(pool.length){if(talk)addCard(ch,one(pool.filter(c=>!ownsCard(ch,c)))||one(pool),chips,'손님의 책',true);else offerPick(ch,pool,chips,'손님의 책')}
-    st.guests=(st.guests||0)+1;chips.push(`손님 ${st.guests}명 · ${D.enemies[id].n}이(가) 책이 되었다`);
-    const ni=guestStage(Z,st.guests);if(ni>old){const S=Z.stages[ni];addStats(ch.stats,S.fx||{});if((S.fx||{}).maxHp)ch.hp+=S.fx.maxHp;chips.push(`도서관 위상 · ${S.n}`+(S.fx&&Object.keys(S.fx).length?' · '+Object.entries(S.fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · '):''))}
+    st.guests=(st.guests||0)+1;chips.push(`손님 ${st.guests}명 · ${D.enemies[id].n}이(가) 책이 되었다`);if(Z.itemEvery&&st.guests%Z.itemEvery===0&&!st.itemDue){const ig=Z.stages[guestStage(Z,st.guests)].ig||[1,1];st.itemDue=ig[0]+d(ig[1]-ig[0]+1)-1}
+    const ni=guestStage(Z,st.guests);if(ni>old){const S=Z.stages[ni];for(const bk of S.books||[])if(!ownsCard(ch,bk))addCard(ch,bk,chips,'전용 책장');if(S.gift)st.itemDue=Math.min(4,((S.ig||[1,1])[1])+1);addStats(ch.stats,S.fx||{});if((S.fx||{}).maxHp)ch.hp+=S.fx.maxHp;chips.push(`도서관 위상 · ${S.n}`+(S.fx&&Object.keys(S.fx).length?' · '+Object.entries(S.fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k==='hit'?'명중':k)} +${v}`).join(' · '):''))}
     return true}
   function routeStep(G,R){
     const ch=G.ch,st=routeSt(ch),y=G.year,A=y>CFG.years?'act2':'act1',H=R.hunt;
