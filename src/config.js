@@ -300,6 +300,10 @@ export const CFG = {
   rbTeamRule: [['spd', 4, '토끼팀'], ['eva', 3, '순록팀'], ['maxHp', 71, '코뿔소팀']],
   /* 해금 출생 줄기(route): 처분 의뢰의 준비물 최대 개수, 준비 뒤 대상을 만나기까지 걸리는 해 */
   route: {kitMax: 3, huntGap: 2},
+  /* 카두세우스-헤르메스(신탁대행자 해금 출생): 기본 무기와 보관한 히든 무기 수만큼 받는 무작위 강화, 3-6-9 타수 효과 */
+  herm: {base: {n: '카두세우스-헤르메스', fx: {atk: 9, spd: 2}, dice: [2, 6], wx: {}, e: '공+9 · 속도+2 · 피해 2d6 · 지령(☆) 카드로 적중한 횟수를 센다: 3타 트와(고정 피해) · 6타 시스(보호막·호흡) · 9타 네프(퓨리오소 지급, 쓰기 전까지 타수가 쌓이지 않음)'},
+    trois: 6, sixShield: 6, sixBreath: 2,
+    pool: [{n: '공격 +2', fx: {atk: 2}}, {n: '회피 +2', fx: {eva: 2}}, {n: '명중 +3', fx: {hit: 3}}, {n: '속도 +1', fx: {spd: 1}}, {n: '피해 +1', fx: {dmgB: 1}}, {n: '출혈 부여', kw: 'bleed'}, {n: '파열 부여', kw: 'rupture'}, {n: '화상 부여', kw: 'burn'}]},
   rb: {teamBonus: {'토끼팀': {spd: 3}, '코뿔소팀': {maxHp: 10}, '순록팀': {eva: 3}} /* 부화장 출생 때 고르는 팀 보정 */, total: 13, healPct: 0.5, fleeAt: 38, fleeRand: 4, chaseGap: 3, hides: 2, team: [[34, '토끼팀'], [67, '순록팀'], [100, '코뿔소팀']], foes: {'까마귀팀': 'rh2', '코뿔소팀': 'rh3', '순록팀': 'rh4', '토끼팀': 'rh5'}, headFrom: 64, headGap: 1, bossGap: 3, head: ['baral'], boss: 'rcorp_boss', xp: 4, trial: {baral: {hp: 0.75, atk: -1}, zena: {hp: 0.75, atk: -1}}},
   /* 오딘의 눈: 일반은 순간의 예지(첫 라운드 first, 이후 after). 보냐텔리 가문은 패시브 가속하는 미래(cycle 순서로 반복, 마지막 칸은 과부하)와 버프 예지안(전용 검술 카드 피해 +yeji) */
   odin: {midStart: 2, midHit: 1, first: 30, after: 15, cycle: [40, 35, 30, -10], yeji: 2},

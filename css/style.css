@@ -255,6 +255,7 @@ button.chip:hover{background:color-mix(in srgb,var(--gold) 14%,transparent)}
 .chip.stk{display:inline-flex;align-items:baseline;gap:6px;color:var(--kc);border-color:var(--kc);background:color-mix(in srgb,var(--kc) 16%,transparent);font-size:13px;padding:5px 8px}
 .chip.stk small{font-size:11px;opacity:.8}
 .float.kwf{top:auto;bottom:10px;left:14px;right:auto;font-size:16px}
+.float.herm{top:-12px;bottom:auto;right:12px;left:auto;font-size:13px;white-space:nowrap;letter-spacing:.02em;background:rgba(10,12,18,.85);padding:3px 10px;border-radius:12px;border:1px solid var(--gold);z-index:5}
 .chip.stk{flex-wrap:wrap;white-space:normal;max-width:100%}
 
 /* 소지품 칸 */

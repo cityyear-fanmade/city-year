@@ -145,6 +145,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       deck:o.deck?o.deck.slice():['slash','thrust','smash','guard',o.card],xp:0,lv:1,lvPend:0,lvOpts:null};
     /* 해금 출생·히든 직업의 시작 보너스: 레벨과 능력치를 처음부터 올려 시작한다 */
     if(o.start&&!keep){const S_=o.start;if(S_.lv>1){ch.xp=xpFor(S_.lv);ch.lv=S_.lv}if(S_.fx){addStats(s,S_.fx);ch.hp=s.maxHp}}
+    if(o.oracle){ch.oracle=true;(ch.relics=ch.relics||[]).push('신탁대행자 · 헤르메스')}
     ch.s0={maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,check:s.check};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.fingerEarly){ch.fingerEarly=1;ch.fingerMul=o.fingerMul||1}if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
@@ -216,7 +217,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const calcDmin=ch=>Math.min(CFG.dminCap,Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1))+(ch.stats.dminUp||0));
   function equip(ch,item){
     /* 육신 뒤틀림: 장비를 낄 수 없다 (보관함으로) · N사 날개: 의수를 끼지 않는다 (보관함으로) */
-    if((ch.distForm&&!ch.distStable)||(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')){(ch.stash=ch.stash||[]).push(item);return}
+    if((ch.distForm&&!ch.distStable)||(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')||(item.slot==='weapon'&&ch.o&&ch.o.herm&&item.id!=='w_herm')){(ch.stash=ch.stash||[]).push(item);return}
     const s=ch.stats,old=ch.gear[item.slot];
     /* 공방 해결사의 전용 무기·방어구·의수는 빼거나 다른 장비로 바꿀 수 없다 (다른 장비는 보관함으로) */
     if(old&&old.id==='ws_'+item.slot&&item.id!==old.id&&isWs(ch)){(ch.stash=ch.stash||[]).push(item);return}
@@ -237,7 +238,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const wsLock=(ch,item)=>{const old=ch.gear[item.slot];return !!(old&&old.id==='ws_'+item.slot&&item.id!==old.id&&isWs(ch))};
   /* 칸마다 보여 줄 '착용 불가' 안내 (빈 문자열이면 문제없음) */
   const slotWhy=(ch,slot)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':wsLock(ch,{slot,id:''})?'공방 해결사 전용 장비 · 바꿀 수 없다 (산 장비는 재료로 녹인다)':(slot==='aug'&&isN(ch))?'N사 날개 · 의수는 쓰지 않는다 (의복·지팡이 등은 가능)':'';
-  const equipWhy=(ch,item)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')?'N사 날개 · 의체를 쓰지 않는다':wsLock(ch,item)?'공방 해결사 · 전용 장비는 바꿀 수 없다':'';
+  const equipWhy=(ch,item)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':(item.slot==='weapon'&&ch.o&&ch.o.herm&&item.id!=='w_herm')?'카두세우스-헤르메스 · 다른 무기는 쥘 수 없다 (보관한 히든 무기는 헤르메스의 강화가 된다)':(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')?'N사 날개 · 의체를 쓰지 않는다':wsLock(ch,item)?'공방 해결사 · 전용 장비는 바꿀 수 없다':'';
   /* 특색에 닿은 사람은 이미 전용 의수를 쓰고 있어서 N사 날개(의수 불가)에는 들어갈 수 없다 */
   const nBlocked=ch=>!!(ch.colorDone||ch.titleKind==='color');
   const isEastOuter=ch=>!!(ch.o&&ch.o.n==='동부 출신 외곽 생존자');
@@ -1821,6 +1822,29 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return null;
   }
   /* 루트 전용 무기 강화: kind rb|hw, key = 단계 인덱스 또는 'host'|'free'. 끼고 있거나 보관함에 있는 같은 id의 무기를 새 단계로 바꾼다 */
+  /* ── 카두세우스-헤르메스(신탁대행자 해금 출생) ──
+     다른 무기는 쥘 수 없고, 보관함에 둔 히든 무기(상점에서 팔지 않는 무기) 하나마다 CFG.herm.pool에서 무작위 강화 효과를 하나씩 얻는다.
+     전투에서는 지령(☆) 카드로 적중한 횟수(타수)를 센다: 3타 트와(소형 무기 사출) · 6타 시스(보호막·호흡) · 9타 네프(퓨리오소 지급).
+     9타가 차면 퓨리오소를 쓸 때까지 타수가 쌓이지 않는다. 사이클마다 퓨리오소가 강해진다(레플리카 → 크레센도 → 라크리모사 크레센도) */
+  const isHidWpn=it=>!!it&&it.slot==='weapon'&&!!it.id&&it.id!=='w_herm'&&!D.items[it.id]&&!(D.weapons||[]).some(w=>w.id===it.id);
+  function hermSync(ch){
+    const w=ch.gear&&ch.gear.weapon;if(!w||w.id!=='w_herm')return;
+    const Z=CFG.herm,n=(ch.stash||[]).filter(isHidWpn).length;
+    ch.hermFx=ch.hermFx||[];while(ch.hermFx.length<n)ch.hermFx.push(d(Z.pool.length)-1);
+    if(w.hermN===n)return;
+    const fx=Object.assign({},Z.base.fx),kws=[],names=[];
+    for(let i=0;i<n;i++){const P_=Z.pool[ch.hermFx[i]];for(const [k,v] of Object.entries(P_.fx||{}))fx[k]=(fx[k]||0)+v;if(P_.kw)kws.push([P_.kw,1]);names.push(P_.n)}
+    const wx=Object.assign({},Z.base.wx,{herm:true,dice:Z.base.dice});if(kws.length)wx.hitKw=kws;
+    const it={id:'w_herm',slot:'weapon',grade:5,hermN:n,n:Z.base.n,e:Z.base.e+(n?` · 보관한 히든 무기 ${n}개 · 강화: ${names.join(', ')}`:' · 보관한 히든 무기가 없다'),fx,wx};
+    equip(ch,carryTune(w,it));ch.stash=(ch.stash||[]).filter(x=>x!==w);
+  }
+  function hermHit(A,B,C,L,push){
+    const H=A.herm,Z=CFG.herm;H.n++;if(H.n%3!==0)return;
+    const step=(H.n/3-1)%3;
+    if(step===0){const x=Z.trois;hpLoss(C,B,x,L);L('kw',`  ${A.name} · 카두세우스 · "하나, 둘, 트와." · 소형 무기가 사출된다 · ${B.name}에게 고정 피해 ${x}`);push({k:'herm',side:A.uid,txt:'트와 · 앞으로 여섯'})}
+    else if(step===1){A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+Z.sixShield);A.breath=Math.min(CFG.breath.cap,(A.breath||0)+Z.sixBreath);L('kw',`  ${A.name} · 카두세우스 · "넷, 다섯, 시스." · 보호막 +${Z.sixShield} · 호흡 +${Z.sixBreath}`);push({k:'herm',side:A.uid,txt:'시스 · 앞으로 셋'})}
+    else{const lv=Math.min(3,H.n/9);H.wait=true;(A.grantWait=A.grantWait||[]).push('hm_f'+lv);L('kw',`  ${A.name} · 카두세우스 · "일곱 앞으로 둘, 여덟 앞으로 하나, 네프 완료." · ${D.cards['hm_f'+lv].n} 지급 (0코스트) · 쓰기 전까지 타수가 쌓이지 않는다`);push({k:'herm',side:A.uid,txt:'네프 · 완료'})}
+  }
   function routeWeaponUp(ch,kind,key,chips){
     const W=CFG.routeWeapon[kind];let g=W[key]||W.lv[key];if(!g)return;
     {const tv=kind==='rb'&&typeof key==='number'&&ch.rteam&&W.team&&W.team[ch.rteam]&&W.team[ch.rteam][key];if(tv)g=Object.assign({},g,tv)}
@@ -2290,7 +2314,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
          {l:'조용히 걸어 나간다',ok:{t:'문을 열고 나서자 외곽의 밤이 그대로 있었다.',fx:{}}}]}
   }
   function advanceYear(G){
-    riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);
+    hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
     G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);starPinky(mc);if(isWs(mc))for(const id of (mc.relicIds||[]))if(!(mc.wsRelic&&mc.wsRelic[id]))wsAbsorb(mc,id);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
     if(mc.distPick)setDistort(mc,'');
@@ -2844,9 +2868,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const infEvaCut=ch=>Math.min(Math.max(0,ch.stats.eva),Math.floor(infYears(ch)*CFG.infinite.evaDown));
   const infYears=ch=>ch.infinite?Math.max(0,(ch.year||0)-(CFG.years+CFG.endless.span*CFG.endless.grades.length)):0;
   function mkCombat(ch,id,quiet){
+    hermSync(ch);
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',hunger:ch.flags&&ch.flags.hunger?0:null,name:(eqT(ch)?`[${eqT(ch)}] `:'')+(ch.name||T.you),tt:eqT(ch)||'',color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:Math.max(0,s.eva-Math.floor(infYears(ch)*CFG.infinite.evaDown)),spd:s.spd,
-      bleed:s.startBleed,breath:Math.min(CFG.breath.cap,s.startBreath||0),dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지'),thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)?ch.gear.aug.dsp.ammo:0):0,thumbFi:ch.fi||0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,kwPlus:ch.colorPasv==='brand'?2:0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
+      bleed:s.startBleed,breath:Math.min(CFG.breath.cap,s.startBreath||0),dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지')||!!(ch.o&&ch.o.herm),herm:(ch.gear.weapon&&ch.gear.weapon.wx&&ch.gear.weapon.wx.herm)?{n:0,wait:false}:null,thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)?ch.gear.aug.dsp.ammo:0):0,thumbFi:ch.fi||0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,kwPlus:ch.colorPasv==='brand'?2:0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     if(ch.flags&&ch.flags.redMist&&ch.gear&&ch.gear.weapon&&ch.gear.weapon.id==='w_mimicry_p'){P.rmGauge=0;P.rmOpen=0}
     if(ch.flags&&ch.flags.redMist&&CFG.redMist.shieldPct)P.shield=Math.max(P.shield||0,Math.round(s.maxHp*CFG.redMist.shieldPct));   // 붉은 안개 책장: 전투 시작 때 보호막
     P.ample=ch.ample||0;P.hitB=s.hit||0;P.auxExtra=(ch.gear&&ch.gear.aug&&ch.gear.aug.extraHit)||0;P.auxShield=(ch.gear&&ch.gear.aug&&ch.gear.aug.rShield)||0;P.auxFirst=(ch.gear&&ch.gear.aug&&ch.gear.aug.rFirst)||0;P.auxFoeSink=(ch.gear&&ch.gear.aug&&ch.gear.aug.foeSink)||0;{const kc=ch.gear&&ch.gear.aug&&ch.gear.aug.kwCap;P.kwCapUp=kc?{[kc[0]]:kc[1]}:null}P.auxKw=((ch.gear&&ch.gear.aug&&ch.gear.aug.kw)||[]).concat(ch.surg&&D.surgeries&&D.surgeries[ch.surg.kind]&&ch.surg.lv>=3&&D.surgeries[ch.surg.kind].lv[2].kw||[]);if(!P.auxKw.length)P.auxKw=null;P.surgThr=(ch.surg&&ch.surg.kind==='fun'&&ch.surg.lv>=3)?(D.surgeries.fun.lv[2].thr||2):0;P.riteGuard=(ch.gear&&ch.gear.aug&&ch.gear.aug.guard)||null;P.dsp=(ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)||null;P.auxMat=(ch.gear&&ch.gear.aug&&ch.gear.aug.matHit)||0;P.auxDebuff=(ch.gear&&ch.gear.aug&&ch.gear.aug.debuff)||null;if(P.wx&&P.wx.forms)P.form='a';if(P.wx&&P.wx.dimShift)P.dimCharge=1;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
@@ -3208,6 +3233,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.dsp&&B.hp>0){const k=A.dsp.cycle[(A.dspN||0)%A.dsp.cycle.length];A.dspN=(A.dspN||0)+1;const lim=Math.min(5,k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):CFG.stackCap),nm={burn:'소이탄',rupture:'관통탄',bleed:'갈고리탄'}[k];if((B[k]||0)<lim){B[k]=Math.min(lim,(B[k]||0)+1);L('kw',`  ${A.name} · 데스페라도 · ${nm} · ${B.name}에게 ${D.keywords[k].n} +1`)}}}
     if(c.t==='atk'&&c.serum)addSerum(A,c,L);
     if(c.t==='atk'&&A.wx&&A.wx.accel&&A.accRound!==C.round&&(A.accel||0)<A.wx.accel.max){A.accRound=C.round;A.accel=(A.accel||0)+1;L('kw',`${A.name} · 가속 ${A.accel}/${A.wx.accel.max} (명중·회피 +${A.accel*A.wx.accel.hit})`)}
+    if(c.hermF&&A.herm&&A.herm.wait){A.herm.wait=false;L('kw',`${A.name} · 퓨리오소 · 타수가 다시 쌓인다 (${A.herm.n}타)`)}
     for(let h=0;h<hits;h++){
       if(A.hp<=0||B.hp<=0)return;
       /* 출혈: 공격할 때마다(명중 여부 무관) 스택만큼 피해, 그 뒤 1 감소 */
@@ -3442,6 +3468,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.kuro&&A.black&&B.hp>0){B.bleed=Math.min(bleedCap(B),B.bleed+CFG.syn['흑운회'].bleedPlus);L('kw',`  ${A.name} · 흑운 · ${B.name}에게 출혈 +${CFG.syn['흑운회'].bleedPlus} (지금 ${B.bleed})`)}
       if(A.awl&&A.synT>=3&&A.lead&&!A.awlUsed&&B.hp>0){A.awlUsed=true;B.bleed=Math.min(bleedCap(B),B.bleed+1);L('kw',`  ${A.name} · 선공 첫 적중 · ${B.name}에게 출혈 +1 (지금 ${B.bleed})`);if(A.kuro)addCloud(A,L)}
       if(A.ring&&A.work<CFG.ring.max){A.work++;L('kw',`  ${A.name} · 작품 ${A.work}/${CFG.ring.max}`)}
+      if(A.herm&&A.isP&&!A.herm.wait&&A.starId&&c===D.cards[A.starId]&&B.hp>0)hermHit(A,B,C,L,push);   // 지령(☆) 카드로 적중한 만큼 타수가 쌓인다
       if(A.nailHit&&B.hp>0){const n=B.aug?CFG.nail.augHit:A.nailHit;B.nail=Math.min(CFG.nail.cap,(B.nail||0)+n);L('kw',`  ${B.name}에게 못 +${n} (지금 ${B.nail})`)}
       if(c.nailBurst&&B.hp>0&&(B.nail||0)>0){const used=B.nail;B.nail=0;L('kw',`  ${B.name} · 못 ${used}개를 흐트러짐으로`);addStagger(C,B,Math.round(used*c.nailBurst.mul)+(c.nailBurst.add||0),L)}
       if(c.nextSwift){A.swiftNext=true;L('kw',`  ${A.name} · 다음 라운드 신속`)}
