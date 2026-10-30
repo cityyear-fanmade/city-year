@@ -1163,10 +1163,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.hermLv){ch.hermLv=Math.max(ch.hermLv||0,fx.hermLv);chips.push(`카두세우스-헤르메스 · ${fx.hermLv}차 강화`)}
     if(fx.hermMercy){ch.hermPen=false;ch.hermLv=Math.max(ch.hermLv||0,1);chips.push('헤르메스의 자비 · 지령 패널티가 사라진다','카두세우스-헤르메스 · 1차 강화')}
     if(fx.routeWpn!=null&&ch.o&&ch.o.route)routeWeaponUp(ch,ch.o.route,fx.routeWpn,chips);
-    if(fx.routeGuest)routeSt(ch).guestFoe=fx.routeGuest;
+    if(fx.routeGuest){const s_=routeSt(ch);s_.guestFoe=fx.routeGuest;s_.guestTalk=null}
     if(fx.libItem&&D.items[fx.libItem]){offerGear(ch,Object.assign({id:fx.libItem},D.items[fx.libItem]));chips.push(`책 속의 물건 · ${D.items[fx.libItem].n} (${D.items[fx.libItem].e}) · 장착할지 고른다`)}
     if(fx.libSeal){const chips2=[];guestAdvance(ch,chips2);chips.push(...chips2);chips.push('봉인한 책 · 서가에 남았다 (붉은 안개 저지의 도움이 된다)')}
-    if(fx.routeGuestTalk)guestDone(ch,fx.routeGuestTalk,chips,true);
+    if(fx.routeGuestTalk){routeSt(ch).guestTalk=fx.routeGuestTalk;chips.push(fx.routeGuestTalk==='good'?'손님의 약점을 알았다 · 접대에서 상대가 약해진다':'손님이 격앙했다 · 접대에서 상대가 강해진다')}
     if(fx.routeHunt){routeSt(ch).kit={picks:[]};chips.push('처분 대상 수색 · 준비물을 고른다')}
     if(fx.routeKit){const R_=routeOf(ch),st_=routeSt(ch),H_=R_&&R_.hunt;
       if(H_&&st_.kit){const max_=H_.kitMax||CFG.route.kitMax;
@@ -2216,6 +2216,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:'책 속의 물건',x:'손님이 책이 되고 난 자리에 그가 쓰던 물건이 남아 있다. 서가에 꽂아 둘 수 있는 것은 하나뿐이다.',c:[
       ...ids.map(id=>({l:D.items[id].n,h:D.items[id].e,ok:{t:`${D.items[id].n}을(를) 서가에서 꺼냈다.`,fx:{libItem:id}}})),
       {l:'책 속에 그대로 둔다',h:'정신력 +1',ok:{t:'물건은 책 안에 남았다.',fx:{mindUp:1}}}]}}
+  /* 손님의 강화(위상별) + 접대 전 대화의 결과: 이야기를 들었으면 손님이 약해지고, 대화가 틀어졌으면 격앙한다 */
+  function guestMul(ch,R){const m=R.guest.stages[guestStage(R.guest,ch.rt.guests||0)].mul||{hp:1,atk:0},k=ch.rt.guestTalk;return k==='good'?{hp:m.hp*0.75,atk:m.atk-2}:k==='bad'?{hp:m.hp*1.1,atk:m.atk+2}:m}
   function guestEvent(G,R){
     const ch=G.ch,Z=R.guest,st=routeSt(ch),n=st.guests||0,si=guestStage(Z,n),S=Z.stages[si],ids=guestPool(Z,S,ch);if(!ids.length)return null;
     if(st.ruleDue!=null){const ri=st.ruleDue;st.ruleDue=null;(st.rulesDone=st.rulesDone||[]).push(ri);if(Z.rules&&Z.rules[ri])return Z.rules[ri]}
@@ -2231,7 +2233,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const id=one(ids),E_=D.enemies[id],dc=45+si*5;
     return {t:`${Z.t} · ${E_.n}`,x:`${E_.intro||'초대장을 든 손님이 서가 입구에 서 있다.'}\n\n도서관 ${S.n} · 손님 ${n}명째`,c:[
       {l:'접대한다',h:'이기면 손님이 책이 된다 · 지면 사서도 책이 된다',ok:{t:'손님을 서가 안쪽으로 안내했다.',fx:{combat:id,routeGuest:id}}},
-      {l:'대화한다',h:`판정 · 성공하면 책 한 장을 받고 손님 수 +1 · 실패하면 접대로 이어진다`,check:{s:null,dc},ok:{t:'긴 이야기 끝에 손님이 스스로 책 한 장을 내려놓고 돌아갔다.',fx:{routeGuestTalk:id}},fail:{t:'대화가 끊겼다. 손님이 칼을 쥐었다.',fx:{combat:id,routeGuest:id}}},
+      {l:'먼저 이야기를 나눈다',h:`판정 · 성공하면 손님의 약점을 알아 접대 전투에서 상대가 약해진다 · 실패하면 손님이 격앙해 더 강해진다 · 어느 쪽이든 접대로 이어진다`,check:{s:null,dc},ok:{t:'이야기 끝에 손님이 스스로 약점을 흘렸다. 접대는 피할 수 없다.',fx:{combat:id,routeGuest:id,routeGuestTalk:'good'}},fail:{t:'대화가 어긋났다. 손님이 칼을 쥐었다. 접대는 피할 수 없다.',fx:{combat:id,routeGuest:id,routeGuestTalk:'bad'}}},
       {l:'돌려보낸다',h:'손님 수에 들어가지 않는다 · 정신력 +1',ok:{t:'초대장을 돌려주고 문을 닫았다.',fx:{mindUp:1}}}]}}
   /* 손님을 이기거나 설득했을 때: 책 지급, 손님 수 +1, 위상이 오르면 능력치 */
   function guestAdvance(ch,chips){
@@ -2989,7 +2991,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 보스별 난이도 보정(hard): 체력 배수, 공격·회피 가산 */
     const IM_=ch.infinite&&id===X_.final?(ch.infImp||0):0;
     const SI_=ch.infinite?Math.max(0,gradeRaw(yH)-X_.grades.length+1):0;
-    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||(()=>{const R_=routeOf(ch);return R_&&((R_.guest&&ch.rt&&ch.rt.guestFoe===id&&R_.guest.stages[guestStage(R_.guest,ch.rt.guests||0)].mul)||(R_.trial&&R_.trial[id]))||null})(),ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
+    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||(()=>{const R_=routeOf(ch);return R_&&((R_.guest&&ch.rt&&ch.rt.guestFoe===id&&guestMul(ch,R_))||(R_.trial&&R_.trial[id]))||null})(),ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
     /* 무한 모드 불순물: 100살(나이)마다 정해 둔 체력표를 쓴다 (첫 100살은 잡을 만하게, 200살부터 조금 많이, 300살부터 확 오른다) */
     /* 100살 구간의 첫 불순물은 표의 딱 맞는 숫자, 그 구간에서 불순물을 쓰러뜨릴 때마다 뒷자리가 조금씩 늘어난다 (구간 안에서 최대 hpBandMax) */
     const infTab=ch.infinite&&id===X_.final?(()=>{const A_=CFG.startAge+(ch.year||0)-1,T_=CFG.infinite.hpTable,IF2=CFG.infinite;let v=T_[0][1],bi=0;T_.forEach(([at,hp],i)=>{if(A_>=at){v=hp;bi=i}});
