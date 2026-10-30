@@ -590,7 +590,7 @@ export function startUI(E,app){
     :af==='중지'?'되갚음 · 맞을 때마다 1(최대 10) · 스택 1당 받는 피해 −2 · 다음 적중에서 스택을 모두 써 피해 +스택 · 소모한 스택 1당 HP 1 회복 · 방어 카드를 낸 라운드에 맞으면 스택 × 3의 고정 피해로 반격'
     :af==='약지'?`작품 · 적중할 때마다 +1(전투 한정, 최대 ${CFG.ring.max}) · 스택당 명중 +${CFG.ring.hit} · 최대면 다음 적중 피해 ×${CFG.ring.finish} 후 ${CFG.ring.after}로`
     :af==='흑운회'?`암운 · 덱 8장부터 열린다 (그 아래로 줄이면 닫힘) · 전투 시작 구름 3 (10장이면 4) · 출혈을 걸거나 맞을 때마다 구름 +1 · 5가 되면 흑운: 피해 주사위마다 +${CFG.syn['흑운회'].die} · 적중 시 출혈 +1 · 라운드 끝에 구름 2로 · 덱 10장이면 흑운 중 받는 피해 ×${CFG.syn['흑운회'].half} · 맞을 때마다 구름 수치(흑운일 땐 ${CFG.syn['흑운회'].max}) × ${CFG.syn['흑운회'].counter[2]}(8장) · ${CFG.syn['흑운회'].counter[3]}(10장)의 고정 피해로 자동 반격`
-    :af==='검계'?'호흡결 · 덱 8장부터 열린다 (그 아래로 줄이면 닫힘) · 매 라운드 호흡 +2 · 호흡 자연 감소 1 (10장이면 줄지 않음) · 호흡 '+CFG.syn['검계'].per+'당 모든 카드 피해 +1 · 호흡 10 이상 적중은 방어·보호막 무시 · 호흡 '+CFG.syn['검계'].burst.at+' 이상이면 호흡을 크게 소모해 폭발(최대 '+CFG.syn['검계'].burst.max+', 호흡 1당 고정 피해 '+CFG.syn['검계'].burst.per[2]+'(8장) · '+CFG.syn['검계'].burst.per[3]+'(10장), '+CFG.syn['검계'].burst.every+'라운드에 한 번)'
+    :af==='검계'?'호흡결 · 덱 8장부터 열린다 (그 아래로 줄이면 닫힘) · 호흡 최대 '+CFG.syn['검계'].cap+' · 매 라운드 호흡 +2 · 호흡 자연 감소 1 (10장이면 줄지 않음) · 호흡 '+CFG.syn['검계'].per+'당 모든 카드 피해 +1 · 호흡 10 이상 적중은 방어·보호막 무시 · 호흡 10을 넘는 만큼 치명 배수 +'+CFG.syn['검계'].critPer+'씩 · 호흡 '+CFG.syn['검계'].burst.at+' 이상이면 호흡을 모아 폭발(최대 '+CFG.syn['검계'].burst.max+', 쓴 호흡의 절반만 소모, 호흡 1당 고정 피해 '+CFG.syn['검계'].burst.per[2]+'(8장) · '+CFG.syn['검계'].burst.per[3]+'(10장), '+CFG.syn['검계'].burst.every+'라운드에 한 번)'
     :af==='밤의 송곳'?'뒷골목의 룰 · 덱 8장부터 열린다 (그 아래로 줄이면 닫힘) · 출혈이 걸린 적에게 명중 +'+CFG.syn['밤의 송곳'].bleedHit+' · 선공이면 상대 회피 절반 · 속도 굴림 +10 (10장이면 +15, 선공 첫 적중 출혈 +1)':null;
   /* 지속형 패시브: 손가락·히든 출생 등 늘 켜져 있는 효과를 HUD에 한 줄로 */
   function vPassive(ch){
@@ -802,7 +802,7 @@ export function startUI(E,app){
     return [
       [K.bleed.n,'bleed',`최대 ${CFG.stackCap}스택(내가 적에게 거는 출혈은 ${CFG.bleedMax}스택). 공격할 때마다(빗나가도) 스택만큼 피해를 입고, 그 뒤 1 줄어든다. 내가 방어 자세면 절반으로 지혈한다.`],
       [K.rupture.n,'rupture',`최대 ${CFG.rupture.max}스택. 피격 시 스택만큼 추가 피해를 입고, 피격마다 1 줄어든다.`],
-      [K.breath.n,'breath',`최대 ${CFG.breath.cap}, 라운드마다 ${CFG.breath.decay} 줄어든다. 4~9는 치명 ${CFG.breath.base}%에서 90%까지(×${CFG.critMult}), ${CFG.breath.sure} 이상은 확정 치명, 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}.`],
+      [K.breath.n,'breath',`최대 ${CFG.breath.cap}(검계는 ${CFG.syn['검계'].cap}), 라운드마다 ${CFG.breath.decay} 줄어든다. 4~9는 치명 ${CFG.breath.base}%에서 90%까지(×${CFG.critMult}), ${CFG.breath.sure} 이상은 확정 치명, 1~${CFG.breath.evaMax}는 회피 +${CFG.breath.eva}.`],
       [K.ink.n,'ink',`라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.ink.cap}스택.`],
       [K.burn.n,'burn',`라운드가 끝날 때 스택당 ${CFG.burn.dmg} 피해(내가 받으면 ${CFG.burn.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.burn.max}스택. 적이 거는 화상은 쌓이는 양이 절반이다.`],
       [K.flame.n,'flame',`(레바테인 전용) 최대 ${CFG.stackCap}스택. 받는 피해 ×1.5, 라운드 끝에 1 감소. ${CFG.laev.blueAt}스택 이상이면 푸른 화염이 되어 받는 피해 ×${CFG.laev.blueMul}, 라운드 끝에 스택당 ${CFG.laev.blueDot} 피해를 주고 1 감소한다.`],

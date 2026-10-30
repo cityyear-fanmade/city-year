@@ -2962,12 +2962,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const mt=mindTier(ch),ct=corpType(ch),tm=ct&&ct.tier?ct.tier+corpLv(ch)*(ct.tierPer||0):1;
     {const dn=(ch.deck||[]).length,DB=CFG.deck.bonus,db=dn>=DB.from?(Math.floor((dn-DB.from)/DB.per)+1)*DB.atk:0;if(db){P.atk+=db;mindNote.push(`덱 ${dn}장 · 공격 +${db}`)}}
     if(P.kuro){const k=CFG.syn['흑운회'];P.cloud=k.start[P.synT];mindNote.push(`암운 · 구름 ${P.cloud} (덱 ${ch.deck.length}장)`)}
-    if(P.blade)mindNote.push(`호흡결 · 매 라운드 호흡 +${P.synT>=2?2:1} · 자연 감소 ${CFG.syn['검계'].decay[P.synT]} (덱 ${ch.deck.length}장)`);
+    if(P.blade)mindNote.push(`호흡결 · 호흡 최대 ${CFG.syn['검계'].cap} · 매 라운드 호흡 +${P.synT>=2?2:1} · 자연 감소 ${CFG.syn['검계'].decay[P.synT]} (덱 ${ch.deck.length}장)`);
     if(P.awl){const w=CFG.syn['밤의 송곳'];P.synInit=w.init[P.synT];mindNote.push(`뒷골목의 룰 · 속도 굴림 +${P.synInit} (덱 ${ch.deck.length}장)`)}
     const ms=mindStat(ch);if(ms){P.atk+=ms;P.eva+=ms;P.spd+=ms;P.maxHp+=ms;P.hp+=ms;mindNote.push(`정신력 ${ch.mind} · 모든 능력치 +${ms}`)}
-    if(mt){const tb=Math.min(Math.round(mt.breath*tm),Math.max(0,CFG.breath.cap-P.breath)),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
+    if(mt){const tb=Math.min(Math.round(mt.breath*tm),Math.max(0,bcap(P)-P.breath)),te=Math.round(mt.eva*tm);P.breath+=tb;P.eva+=te;mindNote.push(`정신력 ${ch.mind} · 호흡 +${tb}${te?` · 회피 +${te}`:''}${tm>1?' (월광석)':''}`)}
     /* 굳은 정신: 기본 정신력 보정에 더해, 정신력 15부터 5마다 한 단계(최대 100까지 willSteps단계): 단계마다 호흡 +1 · 최대 HP +willHp, 2단계마다 회피 +1, 3단계마다 모든 능력치 +1 */
-    if(!ch.distForm&&hasInn(ch,'will')&&ch.mind>=CFG.innate.willFrom){const I=CFG.innate,n=Math.min(I.willSteps,Math.floor((ch.mind-I.willFrom)/5)+1),ev=Math.floor(n/2),st=Math.floor(n/3),br=Math.min(n,Math.max(0,CFG.breath.cap-P.breath)),hp=n*I.willHp+st;
+    if(!ch.distForm&&hasInn(ch,'will')&&ch.mind>=CFG.innate.willFrom){const I=CFG.innate,n=Math.min(I.willSteps,Math.floor((ch.mind-I.willFrom)/5)+1),ev=Math.floor(n/2),st=Math.floor(n/3),br=Math.min(n,Math.max(0,bcap(P)-P.breath)),hp=n*I.willHp+st;
       P.breath+=br;P.eva+=ev+st;P.atk+=st;P.spd+=st;P.maxHp+=hp;P.hp+=hp;mindNote.push(`굳은 정신 · 정신력 ${ch.mind} (${n}단계) · 호흡 +${br} · 회피 +${ev+st} · 최대 HP +${hp}${st?` · 공격·속도 +${st}`:''}`)}
     /* 특색 + 소지: 신(心) — 전투를 시작할 때 정신력을 쓰고 받는 피해를 줄이며 주는 피해를 늘린다. 3라운드마다 망이 하나씩 감긴다 (newRound) */
     {const SM=CFG.shinmang,isC=ch.titleKind==='color'||ch.colorDone;
@@ -3040,7 +3040,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(kn>0&&P.hp>0){P.hc=(P.hc||0)+CFG.kids.per*kn;let h=0;while(P.hc>=5){P.hc-=5;const x=hcHeal(P);P.hp+=x;h+=x}HG(P,h);
         C.kidNote=`${P.name} · 피에 각인된 갈망 · 자식 ${kn}명 · 혈찬 +${CFG.kids.per*kn}${h?` · HP +${h}`:''}`}}
     if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-(X.blade?(X.bladeBoost&&X.synT>=2?0:CFG.syn['검계'].decay[X.synT]):CFG.breath.decay));
-    if(P.blade){const g=P.synT>=2?2:1;P.breath=Math.min(CFG.breath.cap,P.breath+g);if(!C.quiet){const m={t:'kw',s:`${P.name} · 호흡결 · 호흡 +${g} (지금 ${P.breath})`};C.log.push(m);C.cur.push(m)}}
+    if(P.blade){const g=P.synT>=2?2:1;P.breath=Math.min(bcap(P),P.breath+g);if(!C.quiet){const m={t:'kw',s:`${P.name} · 호흡결 · 호흡 +${g} (지금 ${P.breath})`};C.log.push(m);C.cur.push(m)}}
     {const cdOk=id=>!((D.cards[id].cd||0)&&((C.cdUntil||{})[id]||0)>C.round),dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))&&cdOk(id));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
     if(P.form)P.hand=P.hand.map(id=>formId(id,P.form));
     if(P.handPlusNext){const dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))),ex=sample(dk.length?dk:P.deck,P.handPlusNext);P.hand=P.hand.concat(ex);P.handPlusNext=0}
@@ -3185,6 +3185,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return plan;
   }
   /* 호흡 → 치명 확률(%) */
+  const bcap=X=>X&&X.blade?CFG.syn['검계'].cap:CFG.breath.cap;
   const critPct=b=>{const H=CFG.breath;return b>=H.sure?100:b>=H.from?Math.min(90,H.base+(b-H.from)*H.step):0};
   const cutStacks=A=>{const F=CFG.defCut;if(A.bleed>0)A.bleed=Math.floor(A.bleed*F.bleed);if(A.rupture>0)A.rupture=Math.floor(A.rupture*F.rupture)};
   /* N사 날개 · 못과 흐트러짐: 적중할 때마다 상대에게 못이 쌓이고(의체 적은 더 많이), 3·4코스트 망치 카드가 못을 모두 흐트러짐으로 바꾼다.
@@ -3232,7 +3233,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
       if(k==='burn'&&to!=='s'&&A.wx&&A.wx.burnPlus)n+=A.wx.burnPlus;
       if(A.kwPlus&&to!=='s'&&(k==='bleed'||k==='burn'||k==='rupture'||k==='stagger'||k==='sink'||k==='nail'))n+=A.kwPlus;
-      let cap_=k==='breath'?CFG.breath.cap:k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
+      let cap_=k==='breath'?bcap(X):k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
       if(to!=='s'&&A.kwCapUp&&A.kwCapUp[k])cap_+=A.kwCapUp[k];
       X[k]=Math.min(cap_,b4_+n);
       {const R_=RS_;const gn_=X[k]-b4_;if(R_&&gn_>0){if(A.isP){if(to==='s')R_.buff=(R_.buff||0)+gn_;else R_.debuff=(R_.debuff||0)+gn_}else if(X.isP&&to!=='s')R_.debuffTaken=(R_.debuffTaken||0)+gn_}}
@@ -3342,7 +3343,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(sa<=sd){
         if(B.passive&&B.passive.id==='godfather'&&!B.gfBonus){B.gfBonus=true;L('kw',`  ${B.name} · ${B.passive.n} · 다음 적중 피해 +1d2`)}
         L('miss',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs 회피 ${sd}${B.maskOn?` (${B.passive.n} +${B.passive.eva})`:''} · 빗나감`);
-        if(c.onMiss&&A.hp>0){A.breath=Math.min(CFG.breath.cap,A.breath+c.onMiss.breath);A.passHitNext=(A.passHitNext||0)+c.onMiss.hitNext;L('kw',`  ${A.name} · ${c.n} · 빗나갔다 · 호흡 +${c.onMiss.breath} (지금 ${A.breath}) · 다음 라운드 명중 +${c.onMiss.hitNext}`)}
+        if(c.onMiss&&A.hp>0){A.breath=Math.min(bcap(A),A.breath+c.onMiss.breath);A.passHitNext=(A.passHitNext||0)+c.onMiss.hitNext;L('kw',`  ${A.name} · ${c.n} · 빗나갔다 · 호흡 +${c.onMiss.breath} (지금 ${A.breath}) · 다음 라운드 명중 +${c.onMiss.hitNext}`)}
         push(Object.assign(base,{hit:false,rolls:[],dmg:0,note:''}));
         continue;
       }
@@ -3374,7 +3375,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(c.spdFinal&&A.spd>B.spd)dmg+=c.spdFinal*nr;
         if(c.lowHpB&&A.hp<A.maxHp*0.5)dmg+=c.lowHpB*nr;
         if(c.burnDmg)dmg=Math.floor(dmg*(1+Math.min(0.3,(B.burn||0)*c.burnDmg/100)));
-        if(c.ruptBreath&&(B.rupture||0)>=5){A.breath=Math.min(CFG.breath.cap,(A.breath||0)+c.ruptBreath);L('kw',`  ${A.name} · ${c.n} · 파열 5 이상 · 호흡 +${c.ruptBreath}`)}}
+        if(c.ruptBreath&&(B.rupture||0)>=5){A.breath=Math.min(bcap(A),(A.breath||0)+c.ruptBreath);L('kw',`  ${A.name} · ${c.n} · 파열 5 이상 · 호흡 +${c.ruptBreath}`)}}
       /* 인연과 함께 싸우는 보스: 배우자가 같은 공격을 같이 굴린다. 피해 주사위 합 = (본인 + 배우자)의 ¾씩 */
       let spR=null;
       if(A.isP&&C.ally&&rolls.length){const dd=wd?wd[1]:die;spR=rolls.map(()=>c.range&&!wd?c.range[0]-1+d(c.range[1]-c.range[0]+1):Math.max(lo2,d(dd)));
@@ -3404,9 +3405,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(A.passive.id==='claw'){const x=d(A.passive.dice||4);dmg+=x;note+=` ${A.passive.n}+${x}`}
       }
       if(A.breath>0||c.forceCrit){
-        if(c.forceCrit||d(100)<=critPct(A.breath)){const cm=(A.blade?(A.bladeBoost?CFG.syn['검계'].boostCrit:CFG.syn['검계'].crit):CFG.critMult)+(A.hwando?0.1*Math.min(A.breath,CFG.breath.hwandoCap):0);dmg=Math.floor(dmg*cm);note+=A.hwando?` 치명(환도 ×${cm.toFixed(1)})`:' 치명'}
+        if(c.forceCrit||d(100)<=critPct(A.breath)){const cm=(A.blade?(A.bladeBoost?CFG.syn['검계'].boostCrit:CFG.syn['검계'].crit)+CFG.syn['검계'].critPer*Math.max(0,A.breath-CFG.breath.sure):CFG.critMult)+(A.hwando?0.1*Math.min(A.breath,CFG.breath.hwandoCap):0);dmg=Math.floor(dmg*cm);note+=A.hwando?` 치명(환도 ×${cm.toFixed(1)})`:' 치명'}
       }
-      if(A.blade&&A.breath>=CFG.syn['검계'].burst.at&&(A.bbRound==null||C.round-A.bbRound>=CFG.syn['검계'].burst.every)){const bs=CFG.syn['검계'].burst,sp=Math.min(A.breath,bs.max),x=Math.floor(sp*bs.per[A.synT||0]);A.bbRound=C.round;A.breath-=sp;dmg+=x;note+=` 호흡 폭발 · 호흡 ${sp} 소모 → +${x}`}
+      if(A.blade&&A.breath>=CFG.syn['검계'].burst.at&&(A.bbRound==null||C.round-A.bbRound>=CFG.syn['검계'].burst.every)){const bs=CFG.syn['검계'].burst,sp=Math.min(A.breath,bs.max),x=Math.floor(sp*bs.per[A.synT||0]);A.bbRound=C.round;A.breath-=Math.ceil(sp/2);dmg+=x;note+=` 호흡 폭발 · 호흡 ${sp} 사용(절반 ${Math.ceil(sp/2)} 소모) → +${x}`}
       if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
       if(A.ring&&A.work>0){dmg+=CFG.ring.dmg*A.work;note+=` 작품 ${A.work}+${CFG.ring.dmg*A.work}`;if(A.work>=CFG.ring.max){dmg=Math.floor(dmg*CFG.ring.finish);A.work=CFG.ring.after;note+=` 완성×${CFG.ring.finish}`}}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
@@ -3538,7 +3539,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(X.mist&&B.hp>0){const x_=Math.max(1,Math.round(B.maxHp*X.mist.pct));hpLoss(C,B,x_,L);L('dmg',`  ${A.name} · 붉은 안개 · ${B.name} 최대 HP의 ${Math.round(X.mist.pct*100)}% (${x_})`);A.mistN=(A.mistN||0)+1;
           if(A.mistN%X.mist.every===0&&A.hp>0&&A.hp<A.maxHp){const h_=Math.min(X.mist.heal,A.maxHp-A.hp);A.hp+=h_;HG(A,h_);L('kw',`  ${A.name} · 붉은 안개 · ${X.mist.every}번째 적중 · HP +${h_}`)}}
         if(X.echo){B.wecho=(B.wecho||0)+1;L('kw',`  ${B.name}에게 ${X.echo.n||'잔향'} ${B.wecho}/${X.echo.need}`);if(B.wecho>=X.echo.need){hpLoss(C,B,X.echo.dmg,L);B.wecho=0;L('dmg',`  ${X.echo.n||'잔향'}이 울린다 · ${B.name} 고정 피해 ${X.echo.dmg}`)}}
-        if(X.breathHit){A.breath=Math.min(CFG.breath.cap,A.breath+X.breathHit)}
+        if(X.breathHit){A.breath=Math.min(bcap(A),A.breath+X.breathHit)}
         /* ALEPH E.G.O: 미미크리 흡수, 다 카포 악장 */
         if((X.drain||X.mist)&&A.isP&&A.rmGauge!=null&&B.hp>0){A.rmGauge++;if(A.rmGauge>=CFG.redMist.gauge){A.rmGauge=0;A.rmOpen=(A.rmOpen||0)+1;giveNext(A,'rp_cut6');A.burstLight=CFG.redMist.burstLight;A.burstTo=C.round+CFG.redMist.burstRounds;L('sys',`  ${A.name} · 붉은 안개 개방 · 다음 손패에 ${D.cards.rp_cut6.n}`)}else L('kw',`  ${A.name} · 붉은 안개 ${A.rmGauge}/${CFG.redMist.gauge}`)}
         if(X.drain&&A.hp>0){if(A.drainRd!==C.round){A.drainRd=C.round;A.drainN=0}if(A.drainN<CFG.drainCap){A.drainN++;const h=Math.min(X.drain,A.maxHp-A.hp);if(h>0){A.hp+=h;HG(A,h);L('kw',`  ${A.name} · 흡수 ${A.drainN}/${CFG.drainCap} · HP +${h}`)}}}
