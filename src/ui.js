@@ -1534,7 +1534,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 해금한 사람이 평범하게 굴려 출신 1(발톱)·100(조율자)이 나오면 원래 출신과 히든 직업 중 고른다 */
   function vJobRoll(){
     const b=BC,u=loadUnlocks();if(UI.job&&!UI.jobAuto)return '';
-    const k=Object.keys(D.hiddenJobs).find(j=>u.includes(j)&&D.hiddenJobs[j].roll===(UI.jobAuto?D.hiddenJobs[UI.job].roll:b.r.o));if(!k)return '';
+    const k=Object.keys(D.hiddenJobs).find(j=>u.includes(j)&&!(D.unlockOrigins||[]).some(o=>o.job===j)&&D.hiddenJobs[j].roll===(UI.jobAuto?D.hiddenJobs[UI.job].roll:b.r.o));if(!k)return '';
     const J=D.hiddenJobs[k],base=UI.jobAuto?UI.jobBase:b.o.n;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">출신 ${J.roll} · 히든 직업을 고를 수 있다</span>
       <div class="row" style="gap:8px"><button class="btn${!UI.jobAuto?' primary':''}" style="flex:1" data-a="jobroll" data-i="">${esc(base)}</button><button class="btn${UI.jobAuto?' primary':''}" style="flex:1" data-a="jobroll" data-i="${k}">${esc(J.n)}</button></div></div>`;
@@ -1557,7 +1557,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     return `<div class="panel stack" style="gap:6px;border:2px dashed var(--gold)"><span class="eyebrow">테섭 · 시작 상황</span><p class="small dim">위에서 해금 출생을 먼저 고른 뒤, 아래에서 시작 상황을 고른다. 출생과 맞지 않으면 처음부터 시작한다.</p>${TEST_PRESETS.map(([k,n,o])=>`<button class="btn${cur===k?' primary':''}" data-a="tpreset" data-i="${k}"${o&&o!==key?' style="opacity:.55"':''}>${n}</button>`).join('')}</div>`;
   }
   function vJobPick(){
-    const u=loadUnlocks().filter(k=>D.hiddenJobs[k]);if(!u.length)return '';
+    const u=loadUnlocks().filter(k=>D.hiddenJobs[k]&&!(D.unlockOrigins||[]).some(o=>o.job===k));if(!u.length)return '';
     const cur=UI.job&&!UI.jobAuto&&u.includes(UI.job)?UI.job:null;
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">히든 직업 · 해금됨</span>
       <p class="small dim">머리 소속으로 시작한다. 승급과 해결사 등록은 없고, 전용 의뢰가 찾아온다.</p>
