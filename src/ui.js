@@ -1550,7 +1550,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${L.map(o=>`<button class="btn${cur===o.key?' primary':''}" data-a="origin" data-i="${o.key}"><b>${esc(o.n)}</b><span class="small">${esc(o.t)}</span></button>`).join('')}</div>`;
   }
   /* 시험판: 고른 출생에 맞는 시작 상황 (중간 연차에서 바로 시작) */
-  const TEST_PRESETS=[['','처음부터 (1년차)',''],['crow55','까마귀팀 · 55년차 (1막 끝, 2막 직전)','crow'],['lib20','도서관 지정사서 · 20년차 (손님 18명, 도시전설)','librarian'],['lib42','도서관 지정사서 · 42년차 (손님 42명, 도시악몽)','librarian'],['lib55','도서관 지정사서 · 55년차 (손님 50명, 도시악몽 후반)','librarian'],['herm37','헤르메스 · 37년차 (결혼·아이 있음, 곧 가족을 없애라)','hermes'],['herm55a','헤르메스 · 55년차 (지령을 따른 뒤)','hermes'],['herm55b','헤르메스 · 55년차 (지령을 거부하고 자비를 받은 뒤)','hermes']];
+  const TEST_PRESETS=[['','처음부터 (1년차)',''],['crow55','까마귀팀 · 55년차 (1막 끝, 2막 직전)','crow'],['lib20','도서관 지정사서 · 20년차 (손님 10명, 도시전설)','librarian'],['lib42','도서관 지정사서 · 42년차 (손님 21명, 도시질병)','librarian'],['lib55','도서관 지정사서 · 55년차 (손님 26명, 도시악몽)','librarian'],['herm37','헤르메스 · 37년차 (결혼·아이 있음, 곧 가족을 없애라)','hermes'],['herm55a','헤르메스 · 55년차 (지령을 따른 뒤)','hermes'],['herm55b','헤르메스 · 55년차 (지령을 거부하고 자비를 받은 뒤)','hermes']];
   function testPresetPanel(){
     if(!UNLOCKTEST)return '';
     const key=UI.origin||'',cur=UI.testPreset||'';

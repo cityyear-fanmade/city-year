@@ -1878,7 +1878,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const R=routeOf(ch),st=routeSt(ch);st.n=4;st.mdone=(R.missions||[]).filter(m=>m.arc!=='cmd').map(m=>m.id);st.mAt=54;st.arc=null;
       ch.bond={st:'married',route:'crow',variant:0,name:'묘',step:3,tries:1,love:3,since:30,next:60,saved:false,kids:[]};year(55);return true}
     if(ch.o&&ch.o.key==='librarian'&&/^lib/.test(key)){
-      const R=routeOf(ch),st=routeSt(ch),Z=R.guest,spec={lib20:[20,18,10],lib42:[42,42,22],lib55:[55,50,28]}[key];if(!spec)return false;
+      const R=routeOf(ch),st=routeSt(ch),Z=R.guest,spec={lib20:[20,10,10],lib42:[42,21,20],lib55:[55,26,28]}[key];if(!spec)return false;
       st.guests=spec[1];setLv(spec[2]);Z.stages.forEach((S,i)=>{if(i>0&&i<=guestStage(Z,st.guests))bonus(S.fx||{})});year(spec[0]);return true}
     if(ch.o&&ch.o.herm&&/^herm/.test(key)){
       const R=routeOf(ch),st=routeSt(ch),ids=(R.missions||[]).map(m=>m.id),upto=(...ex)=>ids.filter(i=>!ex.includes(i)&&!/^(kill_order|obey_after|chain_|mercy|hm2_)/.test(i));
@@ -2204,6 +2204,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function guestBooks(id){return [...new Set((D.enemies[id].deck||[]).filter(c=>D.cards[c]&&['atk','def','buff'].includes(D.cards[c].t)&&!D.cards[c].fixed))]}
   function guestEvent(G,R){
     const ch=G.ch,Z=R.guest,st=routeSt(ch),n=st.guests||0,si=guestStage(Z,n),S=Z.stages[si],ids=guestPool(Z,S,ch);if(!ids.length)return null;
+    /* 숨 돌리는 해: 손님은 gap년에 한 번 온다. 그 사이 해에는 조용한 사건(rest)이 나온다 */
+    if(Z.rest&&Z.rest.length&&st.gLast!=null&&G.year-st.gLast<(Z.gap||1)){const u=st.restUsed=st.restUsed||[];let left=Z.rest.map((_,i)=>i).filter(i=>!u.includes(i));if(!left.length){st.restUsed=[];left=Z.rest.map((_,i)=>i)}const i=one(left);st.restUsed.push(i);return Z.rest[i]}
+    st.gLast=G.year;
     const id=one(ids),E_=D.enemies[id],dc=45+si*5;
     return {t:`${Z.t} · ${E_.n}`,x:`${E_.intro||'초대장을 든 손님이 서가 입구에 서 있다.'}\n\n도서관 ${S.n} · 손님 ${n}명째`,c:[
       {l:'접대한다',h:'이기면 손님이 책이 된다 · 지면 사서도 책이 된다',ok:{t:'손님을 서가 안쪽으로 안내했다.',fx:{combat:id,routeGuest:id}}},
