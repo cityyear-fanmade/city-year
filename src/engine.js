@@ -130,13 +130,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return out.filter(k=>D.innate[k]);
   }
   function newChar(job,fixO,keep){
+    /* 해금 출생이 직업을 가리키면(발톱·조율자) 그 직업으로 시작하고 줄기(route)를 붙인다 */
+    const UJ=!keep&&!job&&typeof fixO==='string'&&(D.unlockOrigins||[]).find(x=>x.key===fixO&&x.job&&D.hiddenJobs[x.job])||null;if(UJ)job=UJ.job;
     const r=keep?Object.assign({},keep.r):{o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=!keep&&job&&D.hiddenJobs[job];
     const UO=!J&&!keep&&typeof fixO==='string'&&(D.unlockOrigins||[]).find(x=>x.key===fixO)||null;   // 해금 출생(D.unlockOrigins): 굴림 번호 없이 고른 출생
     if(J)r.o=J.roll;
     else if(fixO&&!UO)r.o=fixO;
     /* 6시즌 히든 출생: 출신 굴림이 정확히 그 숫자면 표의 칸 대신 숨은 출신 (예: 90 → 보냐텔리 가문). 숨은 출생이 talents·flaws·kidTable·noWeapon을 가지면 재능·결점·성장기는 그 표에서, 무기는 맨손(전용 무기)으로 */
     const HO=UO||!J&&(!keep||keep.fate)&&(D.hiddenOrigins||[]).find(x=>x.roll===(keep&&keep.fate?keep.fate:r.o)&&(keep||!(CFG.blankFate.pool||[]).includes(x.roll)));
-    const o=keep?(keep.fate&&HO?HO:BLANK.o):J?{n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{},start:J.start}:HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(o.talents||D.talents,r.t),f=keep?BLANK.f:pick(o.flaws||D.flaws,r.f),w=keep||o.noWeapon?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
+    const o=keep?(keep.fate&&HO?HO:BLANK.o):J?Object.assign({n:J.n,t:J.t,e:J.e,fx:J.fx,card:J.cards[0],paths:{},flags:{},start:J.start},UJ?{route:UJ.route,key:UJ.key}:{}):HO||pick(D.origins,r.o),t=keep?BLANK.t:pick(o.talents||D.talents,r.t),f=keep?BLANK.f:pick(o.flaws||D.flaws,r.f),w=keep||o.noWeapon?BLANK.w:pick(D.weapons,r.w),ci=Math.floor((r.n-1)/10);
     const s={maxHp:CFG.baseHp,atk:0,eva:0,spd:0,check:0,startBleed:0,startBreath:0,enemyHp:0,dmin:1,dminUp:0,dr:0,regen:0,defUp:0,hit:0,adv:0,extraD2:0,dmgB:0,burnHit:0,pdie:6,advDie:0,mindMax:0,gearUp:0,egoSight:0,relicApt:0};
     for(const x of [o,t,f])addStats(s,x.fx);
     const kid=keep?keep.kid.map(k=>{addStats(s,k.x.fx);return k}):childhood(s,o);
@@ -2489,7 +2491,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wf=webFree(G);if(wf)return wf}
     {const rf=routeFree(G);if(rf)return rf}
     G.free=false;G.year++;
-    if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
+    if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):G.endless&&G.ch.o&&G.ch.o.key==='claw'&&G.ch.flags.rt_done?(G.ch.flags.cl_return?'clawreturn':'clawstay'):G.endless&&G.ch.o&&G.ch.o.key==='arbiter'&&G.ch.flags.rt_done?(G.ch.flags.ab_keep?'arbkeep':'arbdown'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
       /* 대호수: 호수에 오래 떠 있을수록 정신이 닳는다. 해마다 mindYear씩 깎이지만 mindKeep 밑으로는 이 깎임만으로 내려가지 않는다(뒤틀림·사망으로 곧장 가지 않게) */

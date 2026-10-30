@@ -8322,6 +8322,67 @@
    "endText": "해결사가 통지서를 떨어뜨리고 물러났다. 통지서는 서가의 바닥에서 한참 뒤에야 주워졌다.",
    "tier": "hidden",
    "hidden": true
+  },
+  "out_scout": {
+   "n": "외곽의 사냥꾼",
+   "color": "#3c3f48",
+   "hp": 330,
+   "atk": 19,
+   "eva": 12,
+   "spd": 12,
+   "deck": [
+    "x_furioso",
+    "x_blade",
+    "x_blade",
+    "guard"
+   ],
+   "hidden": true,
+   "intro": "도시의 길이 끝나는 자리에서 낯선 걸음이 따라온다. 도시의 어떤 소속에도 맞지 않는 장비를 쥐고 있다. 눈이 이쪽의 이름이 아닌 기척을 좇는다.",
+   "endText": "사냥꾼이 쓰러졌다. 그가 쥔 장비는 이쪽의 말로는 이름이 없었다.",
+   "passive": {
+    "id": "mask",
+    "n": "인식 저해 가면",
+    "every": 4,
+    "eva": 9,
+    "d": "4라운드마다 그 라운드 동안 회피 +9"
+   },
+   "hard": {
+    "hp": 1.68,
+    "atk": 2,
+    "eva": 2
+   },
+   "tier": "hidden"
+  },
+  "outsider": {
+   "n": "외곽에서 온 존재",
+   "color": "#f6dc8c",
+   "hp": 720,
+   "atk": 27,
+   "eva": 14,
+   "spd": 13,
+   "deck": [
+    "x_bind",
+    "x_pillar",
+    "x_bind",
+    "x_bluewave",
+    "x_citysound",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "intro": "길이 끊긴 곳에 무언가가 서 있다. 형체는 보이는데 이름을 붙일 수 없다. 도시의 어떤 서열에도 닿지 않는 소리로 이쪽을 불러세운다.",
+   "endText": "그것은 쓰러지기 전에 한 번 이쪽을 보았다. 무엇을 보았는지는 끝내 알 수 없다.",
+   "passive": {
+    "id": "lock",
+    "n": "봉인",
+    "every": 2,
+    "d": "2라운드마다 내 손패 1장을 그 라운드 동안 잠근다"
+   },
+   "hard": {
+    "hp": 1.66,
+    "atk": 2,
+    "eva": 1
+   }
   }
  },
  "fixedFights": {
