@@ -600,6 +600,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.gear[it.slot]&&ch.gear[it.slot].id===id)return 'owned';
     if(ch.distForm&&!ch.distStable)return 'distort';
     if(it.slot==='aug'&&isN(ch)&&(it.kind||'의수')==='의수')return 'nwing';
+    if(it.slot==='weapon'&&ch.o&&ch.o.herm)return 'herm';
     if(inStash(ch,id))return 'stash';
     if(it.grade>shopAccess(ch)&&!it.hw)return 'locked';
     if(ch.money<priceOf(ch,id))return 'money';
@@ -1154,6 +1155,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
     /* 해금 출생 줄기: 처분 의뢰를 받으면(routeHunt) 준비물 고르기가 시작되고, 준비물을 고르면(routeKit) 수색이 시작된다 */
+    if(fx.hermKill&&ch.bond){const b=ch.bond,kids=b.kids||[],n=kids.filter(k=>!k.dead).length;
+      kids.forEach(k=>{k.dead=true});b.st='lost';b.hermKilled=true;ch.famLoss=(ch.famLoss||0)+n;ch.hermLv=Math.max(ch.hermLv||0,1);
+      loseMind(ch,CFG.herm.killMind,t=>chips.push(t));chips.push(`가족을 잃었다 · 인연 사별${n?` · 아이 ${n}명`:''}`);chips.push('카두세우스-헤르메스 · 1차 강화')}
+    if(fx.hermRefuse&&!ch.hermPen){ch.hermPen=true;chips.push(`지령 패널티 · 명중 −${CFG.herm.pen.hit} · 회피 −${CFG.herm.pen.eva} (헤르메스의 자비가 내릴 때까지)`)}
+    if(fx.hermMercy){ch.hermPen=false;ch.hermLv=Math.max(ch.hermLv||0,1);chips.push('헤르메스의 자비 · 지령 패널티가 사라진다','카두세우스-헤르메스 · 1차 강화')}
     if(fx.routeWpn!=null&&ch.o&&ch.o.route)routeWeaponUp(ch,ch.o.route,fx.routeWpn,chips);
     if(fx.routeHunt){routeSt(ch).kit={picks:[]};chips.push('처분 대상 수색 · 준비물을 고른다')}
     if(fx.routeKit){const R_=routeOf(ch),st_=routeSt(ch),H_=R_&&R_.hunt;
@@ -1833,17 +1839,23 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const w=ch.gear&&ch.gear.weapon;if(!w||w.id!=='w_herm')return;
     const Z=CFG.herm,n=(ch.stash||[]).filter(isHidWpn).length;
     ch.hermFx=ch.hermFx||[];while(ch.hermFx.length<n)ch.hermFx.push(d(Z.pool.length)-1);
-    if(w.hermN===n)return;
-    const fx=Object.assign({},Z.base.fx),kws=[],names=[];
+    const lv=ch.hermLv||0,key=n+'/'+lv;
+    if(w.hermK===key)return;
+    const fx=Object.assign({},Z.base.fx,{}),kws=[],names=[];
+    if(lv&&Z.lv[lv])for(const [k,v] of Object.entries(Z.lv[lv].fx))fx[k]=(fx[k]||0)+v;
     for(let i=0;i<n;i++){const P_=Z.pool[ch.hermFx[i]];for(const [k,v] of Object.entries(P_.fx||{}))fx[k]=(fx[k]||0)+v;if(P_.kw)kws.push([P_.kw,1]);names.push(P_.n)}
     const wx=Object.assign({},Z.base.wx,{herm:true,dice:Z.base.dice});if(kws.length)wx.hitKw=kws;
-    const it={id:'w_herm',slot:'weapon',grade:5,hermN:n,n:Z.base.n,e:Z.base.e+(n?` · 보관한 히든 무기 ${n}개 · 강화: ${names.join(', ')}`:' · 보관한 히든 무기가 없다'),fx,wx};
+    const it={id:'w_herm',slot:'weapon',grade:5,hermN:n,hermK:key,n:Z.base.n+(lv&&Z.lv[lv]?Z.lv[lv].n:''),e:Z.base.e+(lv&&Z.lv[lv]?` · ${Z.lv[lv].e}`:'')+(n?` · 보관한 히든 무기 ${n}개 · 강화: ${names.join(', ')}`:' · 보관한 히든 무기가 없다'),fx,wx};
     equip(ch,carryTune(w,it));ch.stash=(ch.stash||[]).filter(x=>x!==w);
   }
   function hermHit(A,B,C,L,push){
     const H=A.herm,Z=CFG.herm;H.n++;if(H.n%3!==0)return;
     const step=(H.n/3-1)%3;
-    if(step===0){const x=Z.trois;hpLoss(C,B,x,L);L('kw',`  ${A.name} · 카두세우스 · "하나, 둘, 트와." · 소형 무기가 사출된다 · ${B.name}에게 고정 피해 ${x}`);push({k:'herm',side:A.uid,txt:'트와 · 앞으로 여섯'})}
+    if(step===0){const bag=[];Z.weapons.forEach(w=>{for(let q=0;q<(w.w||1);q++)bag.push(w)});const W=bag[d(bag.length)-1];let note='';
+      if(W.dmg){hpLoss(C,B,W.dmg,L);note=`고정 피해 ${W.dmg}`}
+      if(W.kw&&B.hp>0){const [k,n0]=W.kw,lim=k==='rupture'?CFG.rupture.max:k==='bleed'?bleedCap(B):k==='burn'?CFG.burn.max:CFG.stackCap;if((B[k]||0)<lim){B[k]=Math.min(lim,(B[k]||0)+n0);note+=(note?' · ':'')+`${D.keywords[k].n} +${n0}`}}
+      if(W.shield){A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+W.shield);note+=(note?' · ':'')+`보호막 +${W.shield}`}
+      L('kw',`  ${A.name} · 카두세우스 · "하나, 둘, 트와." · 금속 액체가 굳는다 · 무기: ${W.n} · ${B.name}에게 ${note}`);L('kw',`    "${W.line}"`);push({k:'herm',side:A.uid,txt:'트와 · 앞으로 여섯'})}
     else if(step===1){A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+Z.sixShield);A.breath=Math.min(CFG.breath.cap,(A.breath||0)+Z.sixBreath);L('kw',`  ${A.name} · 카두세우스 · "넷, 다섯, 시스." · 보호막 +${Z.sixShield} · 호흡 +${Z.sixBreath}`);push({k:'herm',side:A.uid,txt:'시스 · 앞으로 셋'})}
     else{const lv=Math.min(3,H.n/9);H.wait=true;(A.grantWait=A.grantWait||[]).push('hm_f'+lv);L('kw',`  ${A.name} · 카두세우스 · "일곱 앞으로 둘, 여덟 앞으로 하나, 네프 완료." · ${D.cards['hm_f'+lv].n} 지급 (0코스트) · 쓰기 전까지 타수가 쌓이지 않는다`);push({k:'herm',side:A.uid,txt:'네프 · 완료'})}
   }
@@ -2166,7 +2178,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
        arc가 같은 임무끼리는 한 줄기로 이어진다: 줄기가 열려 있는 동안(end 임무가 끝날 때까지)은 다른 줄기의 임무도 처분 의뢰도 나오지 않는다.
        문구의 {c}는 협력한 후보, {r}은 맞서는 후보, {foe}는 싸울 후보의 적 id로 바뀐다 */
     if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},last=st.mAt||0;
-      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!st.arc||m.arc===st.arc));
+      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend)):true))&&(!st.arc||m.arc===st.arc));
       if(M){md.push(M.id);st.mAt=y;if(M.arc)st.arc=M.end?null:M.arc;
         const A=fl_.crow_hwA>0,cn=A?'가환(賈環)':'설보차(薛寶釵)',rn=A?'설보차(薛寶釵)':'유상련(柳湘蓮)',fid=A?'hr_1':'hr_3';
         return JSON.parse(JSON.stringify(M.ev).replace(/\{c\}/g,cn).replace(/\{r\}/g,rn).replace(/\{foe\}/g,fid))}}
@@ -2876,7 +2888,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       bleed:s.startBleed,breath:Math.min(CFG.breath.cap,s.startBreath||0),dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지')||!!(ch.o&&ch.o.herm),herm:(ch.gear.weapon&&ch.gear.weapon.wx&&ch.gear.weapon.wx.herm)?{n:0,wait:false}:null,thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)?ch.gear.aug.dsp.ammo:0):0,thumbFi:ch.fi||0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),wx:ch.gear.weapon&&ch.gear.weapon.wx||null,jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,kwPlus:ch.colorPasv==='brand'?2:0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     if(ch.flags&&ch.flags.redMist&&ch.gear&&ch.gear.weapon&&ch.gear.weapon.id==='w_mimicry_p'){P.rmGauge=0;P.rmOpen=0}
     if(ch.flags&&ch.flags.redMist&&CFG.redMist.shieldPct)P.shield=Math.max(P.shield||0,Math.round(s.maxHp*CFG.redMist.shieldPct));   // 붉은 안개 책장: 전투 시작 때 보호막
-    P.ample=ch.ample||0;P.hitB=s.hit||0;P.auxExtra=(ch.gear&&ch.gear.aug&&ch.gear.aug.extraHit)||0;P.auxShield=(ch.gear&&ch.gear.aug&&ch.gear.aug.rShield)||0;P.auxFirst=(ch.gear&&ch.gear.aug&&ch.gear.aug.rFirst)||0;P.auxFoeSink=(ch.gear&&ch.gear.aug&&ch.gear.aug.foeSink)||0;{const kc=ch.gear&&ch.gear.aug&&ch.gear.aug.kwCap;P.kwCapUp=kc?{[kc[0]]:kc[1]}:null}P.auxKw=((ch.gear&&ch.gear.aug&&ch.gear.aug.kw)||[]).concat(ch.surg&&D.surgeries&&D.surgeries[ch.surg.kind]&&ch.surg.lv>=3&&D.surgeries[ch.surg.kind].lv[2].kw||[]);if(!P.auxKw.length)P.auxKw=null;P.surgThr=(ch.surg&&ch.surg.kind==='fun'&&ch.surg.lv>=3)?(D.surgeries.fun.lv[2].thr||2):0;P.riteGuard=(ch.gear&&ch.gear.aug&&ch.gear.aug.guard)||null;P.dsp=(ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)||null;P.auxMat=(ch.gear&&ch.gear.aug&&ch.gear.aug.matHit)||0;P.auxDebuff=(ch.gear&&ch.gear.aug&&ch.gear.aug.debuff)||null;if(P.wx&&P.wx.forms)P.form='a';if(P.wx&&P.wx.dimShift)P.dimCharge=1;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
+    P.ample=ch.ample||0;P.hitB=(s.hit||0)-(ch.hermPen?CFG.herm.pen.hit:0);if(ch.hermPen)P.eva=Math.max(0,P.eva-CFG.herm.pen.eva);P.auxExtra=(ch.gear&&ch.gear.aug&&ch.gear.aug.extraHit)||0;P.auxShield=(ch.gear&&ch.gear.aug&&ch.gear.aug.rShield)||0;P.auxFirst=(ch.gear&&ch.gear.aug&&ch.gear.aug.rFirst)||0;P.auxFoeSink=(ch.gear&&ch.gear.aug&&ch.gear.aug.foeSink)||0;{const kc=ch.gear&&ch.gear.aug&&ch.gear.aug.kwCap;P.kwCapUp=kc?{[kc[0]]:kc[1]}:null}P.auxKw=((ch.gear&&ch.gear.aug&&ch.gear.aug.kw)||[]).concat(ch.surg&&D.surgeries&&D.surgeries[ch.surg.kind]&&ch.surg.lv>=3&&D.surgeries[ch.surg.kind].lv[2].kw||[]);if(!P.auxKw.length)P.auxKw=null;P.surgThr=(ch.surg&&ch.surg.kind==='fun'&&ch.surg.lv>=3)?(D.surgeries.fun.lv[2].thr||2):0;P.riteGuard=(ch.gear&&ch.gear.aug&&ch.gear.aug.guard)||null;P.dsp=(ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)||null;P.auxMat=(ch.gear&&ch.gear.aug&&ch.gear.aug.matHit)||0;P.auxDebuff=(ch.gear&&ch.gear.aug&&ch.gear.aug.debuff)||null;if(P.wx&&P.wx.forms)P.form='a';if(P.wx&&P.wx.dimShift)P.dimCharge=1;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
     const IFH=CFG.infinite,yH=ch.infinite&&id===CFG.endless.final?Math.min(IFH.hpEnd,(Math.floor((CFG.startAge+(ch.year||0)-1)/IFH.hpStep)+1)*IFH.hpStep-CFG.startAge+1):(ch.year||0),growH=e.hidden?0:Math.max(0,yH-S_.from)*(EZ?EZ.grow:1);
     const H_=CFG.hidden,HL=CFG.hiddenLate,hy=e.hidden?Math.max(0,(ch.year||0)-HL.from)*(EZ?EZ.late:1):0,g=((ch.infinite?gradeRaw(ch.year||0):gradeAt(ch.year||0))+1)*(EZ?EZ.endless:1),X_=CFG.endless;
