@@ -146,6 +146,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 해금 출생·히든 직업의 시작 보너스: 레벨과 능력치를 처음부터 올려 시작한다 */
     if(o.start&&!keep){const S_=o.start;if(S_.lv>1){ch.xp=xpFor(S_.lv);ch.lv=S_.lv}if(S_.fx){addStats(s,S_.fx);ch.hp=s.maxHp}}
     if(o.oracle){ch.oracle=true;(ch.relics=ch.relics||[]).push('신탁대행자 · 헤르메스')}
+    /* 신탁대행자 · 헤르메스: 검지 최고 서열(대행자)로 시작한다. 거미집(보류)은 열리지 않는다 */
+    if(o.herm){ch.aff={type:'finger',name:'검지'};ch.affLog=['검지'];ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0;ch.webDone=true;fingerStep(ch);fingerStep(ch,0);ch.fi=1}
     ch.s0={maxHp:s.maxHp,atk:s.atk,eva:s.eva,spd:s.spd,check:s.check};
     if(o.race)ch.race=o.race;if(o.relicPick)ch.relicPick=true;if(o.thumbBias)ch.thumbBias=o.thumbBias;if(o.fingerEarly){ch.fingerEarly=1;ch.fingerMul=o.fingerMul||1}if(o.cardMoney)ch.cardMoney=true;if(o.relicBase)ch.relicBase=o.relicBase;
     if(o.sub){ch.relics=[...(ch.relics||[]),o.sub.n];if(o.sub.hwando)ch.hwando=true}
@@ -911,10 +913,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 조직(흑운회·검계·밤의 송곳): 손가락 서열표를 쓰되 패시브는 덱 장수(6·8·10)로 단계가 열린다 */
   const synOf=ch=>isFinger(ch)&&CFG.syn[ch.aff.name]?CFG.syn[ch.aff.name].key:null;
   const synTier=n=>n>=CFG.syn.at[1]?3:n>=CFG.syn.at[0]?2:-1;
-  function fingerStep(ch){
+  function fingerStep(ch,forceBranch){
     const F=D.fingers[ch.aff.name],next=F.ranks[(ch.fi??-1)+1];
     if(!next)return null;
-    const r=next.branch?next.branch[d(100)<=50?0:1]:next;
+    const r=next.branch?next.branch[forceBranch!=null?forceBranch:(d(100)<=50?0:1)]:next;
     ch.fi=(ch.fi??-1)+1;ch.fr=r;
     addStats(ch.stats,r.fx);if(r.fx.maxHp)ch.hp+=r.fx.maxHp;
     if(r.card&&!ownsCard(ch,r.card))putCard(ch,r.card);
@@ -1628,7 +1630,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const FINGER_ROUTE={'엄지':'thumb','검지':'pointer','중지':'middle','약지':'ring'};
   /* 호수 출생은 인연·가족 공통 문구를 D.bond.lake 로 덮어 쓴다(배에서 사는 사람의 말투) */
   const bondTx=ch=>(lakeOn(ch)&&D.bond&&D.bond.lake)?Object.assign({},D.bond,D.bond.lake):D.bond;
-  const bondRouteOf=ch=>(ch.o&&ch.o.key==='crow')?'crow':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
+  const bondRouteOf=ch=>(ch.o&&ch.o.herm)?(ch.bond?'hermes':null):(ch.o&&ch.o.key==='crow')?'crow':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
   function bondMeetEvent(ch){
@@ -2164,7 +2166,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
        arc가 같은 임무끼리는 한 줄기로 이어진다: 줄기가 열려 있는 동안(end 임무가 끝날 때까지)은 다른 줄기의 임무도 처분 의뢰도 나오지 않는다.
        문구의 {c}는 협력한 후보, {r}은 맞서는 후보, {foe}는 싸울 후보의 적 id로 바뀐다 */
     if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},last=st.mAt||0;
-      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||(md.includes(m.after)&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!st.arc||m.arc===st.arc));
+      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!st.arc||m.arc===st.arc));
       if(M){md.push(M.id);st.mAt=y;if(M.arc)st.arc=M.end?null:M.arc;
         const A=fl_.crow_hwA>0,cn=A?'가환(賈環)':'설보차(薛寶釵)',rn=A?'설보차(薛寶釵)':'유상련(柳湘蓮)',fid=A?'hr_1':'hr_3';
         return JSON.parse(JSON.stringify(M.ev).replace(/\{c\}/g,cn).replace(/\{r\}/g,rn).replace(/\{foe\}/g,fid))}}
@@ -2173,7 +2175,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {t:C.t,x:C.x,c:[{l:C.supply.l,h:C.supply.h,ok:{t:C.supply.t,fx:C.supply.fx||{}}},{l:C.hunt.l,h:C.hunt.h,ok:{t:C.hunt.t,fx:{routeHunt:'start'}}}]};
     }
     {const bv=bondEvent(G);if(bv)return bv}
-    if(!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&(y>=BD.by||d(100)<=BD.meetChance)){const bm=bondMeetEvent(ch);if(bm)return bm}   // 줄기의 해에는 일상 사건이 없으므로 인연 만남도 여기서
+    if(!R.noBondMeet&&!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&(y>=BD.by||d(100)<=BD.meetChance)){const bm=bondMeetEvent(ch);if(bm)return bm}   // 줄기의 해에는 일상 사건이 없으므로 인연 만남도 여기서
     const pool=(R.yearly&&R.yearly[A])||[];
     if(pool.length){const all=pool.map((_,i)=>i),u=st.used[A]=st.used[A]||[];let left=all.filter(i=>!u.includes(i));if(!left.length){st.used[A]=[];left=all}const i=one(left);st.used[A].push(i);return pool[i]}
     return null;
