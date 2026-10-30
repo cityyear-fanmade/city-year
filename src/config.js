@@ -178,6 +178,8 @@ export const CFG = {
   synRoute: {offerChance: 55, purgeGap: 3, fleeHp: 6},
   /* 무한 모드 추가 엔딩(죽는 것 말고): 균열로 흘러드는 히든 보스를 모두 쓰러뜨리면 균열이 닫힌다(sealBeasts는 더 쓰지 않음) · 히든 보스 starHidden마리를 이기면 별 · 가족이 있고 무한 모드 settleYears년이 지나면 정착. 각각 한 번, 끝낸 뒤에도 이어서 살 수 있다 */
   outEnds: {sealBeasts: 3, starHidden: 16, settleYears: 12},
+  /* 조직(흑운회·검계·밤의 송곳) 서열별 카드 강화: 서열 인덱스(조직원 0 → 최고 3)마다 그 조직 전용 카드(카드팩 + 최고 서열 카드)의 공격 카드에 더한다. dice 주사위 개수 · b 고정 피해 · hit 명중 */
+  rankCard: [{dice: 0, b: 0, hit: 0}, {dice: 0, b: 0, hit: 5}, {dice: 1, b: 3, hit: 5}, {dice: 2, b: 6, hit: 10}],
   syn: {at: [8, 10],
     '흑운회': {key: 'kuro', start: [1, 2, 3, 4], max: 5, reset: 2, die: 2, bleedPlus: 1, half: 0.5, counter: [0.3, 0.5, 0.7, 0.9]},
     '검계': {key: 'blade', cap: 30, decay: [2, 1, 1, 0], per: 3, crit: 1.25, critPer: 0.03, boostPer: 2, boostCrit: 1.5, burst: {at: 8, max: 20, per: [0.6, 0.8, 1, 1.2], every: 2}},
