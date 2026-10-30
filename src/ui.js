@@ -1550,7 +1550,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${L.map(o=>`<button class="btn${cur===o.key?' primary':''}" data-a="origin" data-i="${o.key}"><b>${esc(o.n)}</b><span class="small">${esc(o.t)}</span></button>`).join('')}</div>`;
   }
   /* 시험판: 고른 출생에 맞는 시작 상황 (중간 연차에서 바로 시작) */
-  const TEST_PRESETS=[['','처음부터 (1년차)',''],['crow55','까마귀팀 · 55년차 (1막 끝, 2막 직전)','crow'],['herm37','헤르메스 · 37년차 (결혼·아이 있음, 곧 가족을 없애라)','hermes'],['herm55a','헤르메스 · 55년차 (지령을 따른 뒤)','hermes'],['herm55b','헤르메스 · 55년차 (지령을 거부하고 자비를 받은 뒤)','hermes']];
+  const TEST_PRESETS=[['','처음부터 (1년차)',''],['crow55','까마귀팀 · 55년차 (1막 끝, 2막 직전)','crow'],['lib20','도서관 지정사서 · 20년차 (손님 18명, 도시전설)','librarian'],['lib42','도서관 지정사서 · 42년차 (손님 42명, 도시악몽)','librarian'],['lib55','도서관 지정사서 · 55년차 (손님 50명, 도시악몽 후반)','librarian'],['herm37','헤르메스 · 37년차 (결혼·아이 있음, 곧 가족을 없애라)','hermes'],['herm55a','헤르메스 · 55년차 (지령을 따른 뒤)','hermes'],['herm55b','헤르메스 · 55년차 (지령을 거부하고 자비를 받은 뒤)','hermes']];
   function testPresetPanel(){
     if(!UNLOCKTEST)return '';
     const key=UI.origin||'',cur=UI.testPreset||'';
@@ -2472,7 +2472,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||G.infinite),u0=loadUnlocks();
       if(cleared)for(const o of D.unlockOrigins||[]){const k='origin:'+o.key,cd=o.cond||{};if(u0.includes(k))continue;
         const has=cd.item?[...Object.values(cc.gear||{}),...(cc.stash||[])].some(x=>x&&x.id===cd.item):false;
-        if((cd.origin&&cc.o&&cc.o.n===cd.origin)||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=o.n}}}
+        if((cd.origin&&cc.o&&cc.o.n===cd.origin&&(!cd.beat||(cc.beaten||[]).includes(cd.beat)))||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=o.n}}}
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:w&&UI.overflowEnd?'overflow':(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
     if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;r.ghost={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp}}

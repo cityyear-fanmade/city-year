@@ -1163,6 +1163,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.hermLv){ch.hermLv=Math.max(ch.hermLv||0,fx.hermLv);chips.push(`카두세우스-헤르메스 · ${fx.hermLv}차 강화`)}
     if(fx.hermMercy){ch.hermPen=false;ch.hermLv=Math.max(ch.hermLv||0,1);chips.push('헤르메스의 자비 · 지령 패널티가 사라진다','카두세우스-헤르메스 · 1차 강화')}
     if(fx.routeWpn!=null&&ch.o&&ch.o.route)routeWeaponUp(ch,ch.o.route,fx.routeWpn,chips);
+    if(fx.routeGuest)routeSt(ch).guestFoe=fx.routeGuest;
+    if(fx.routeGuestTalk)guestDone(ch,fx.routeGuestTalk,chips,true);
     if(fx.routeHunt){routeSt(ch).kit={picks:[]};chips.push('처분 대상 수색 · 준비물을 고른다')}
     if(fx.routeKit){const R_=routeOf(ch),st_=routeSt(ch),H_=R_&&R_.hunt;
       if(H_&&st_.kit){const max_=H_.kitMax||CFG.route.kitMax;
@@ -1875,6 +1877,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       setLv(30);bonus({maxHp:70,atk:14,eva:7,spd:5});routeWeaponUp(ch,'crow',2);
       const R=routeOf(ch),st=routeSt(ch);st.n=4;st.mdone=(R.missions||[]).filter(m=>m.arc!=='cmd').map(m=>m.id);st.mAt=54;st.arc=null;
       ch.bond={st:'married',route:'crow',variant:0,name:'묘',step:3,tries:1,love:3,since:30,next:60,saved:false,kids:[]};year(55);return true}
+    if(ch.o&&ch.o.key==='librarian'&&/^lib/.test(key)){
+      const R=routeOf(ch),st=routeSt(ch),Z=R.guest,spec={lib20:[20,18,10],lib42:[42,42,22],lib55:[55,50,28]}[key];if(!spec)return false;
+      st.guests=spec[1];setLv(spec[2]);Z.stages.forEach((S,i)=>{if(i>0&&i<=guestStage(Z,st.guests))bonus(S.fx||{})});year(spec[0]);return true}
     if(ch.o&&ch.o.herm&&/^herm/.test(key)){
       const R=routeOf(ch),st=routeSt(ch),ids=(R.missions||[]).map(m=>m.id),upto=(...ex)=>ids.filter(i=>!ex.includes(i)&&!/^(kill_order|obey_after|chain_|mercy|hm2_)/.test(i));
       if(key==='herm37'){setLv(20);bonus({maxHp:40,atk:8,eva:4,spd:3});mkBond(37,false);ch.flags.herm_seek=1;ch.flags.herm_met=1;st.mdone=upto();st.mAt=30;year(37);return true}
@@ -2190,6 +2195,27 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(k>0&&k%CFG.endless.span===0&&R.grade){const id=R.grade[gradeAt(y)];if(id&&!G.ch.beaten.includes(id))return {type:'fight',enemy:id,enc:{hidden:true,label:CFG.endless.grades[gradeAt(y)]+' · 줄기의 상대'}}}
     return null;
   }
+  /* ── 도서관 지정사서(R.guest): 해마다 초대장을 받은 손님이 온다. 손님 수(st.guests)로 도서관 위상(stages)이 오르고, 이기면 손님이 책(카드)이 된다 ── */
+  const guestStage=(Z,n)=>{let i=0;Z.stages.forEach((s,k)=>{if(n>=s.at)i=k});return i};
+  function guestPool(Z,S,ch){
+    const skip=Z.skip||[],hid=(S.ids||[]).filter(id=>D.enemies[id]&&!ch.beaten.includes(id)),tier=Object.keys(D.enemies).filter(id=>!skip.includes(id)&&(S.tiers||[]).includes(D.enemies[id].tier)&&!D.enemies[id].breach&&!D.enemies[id].quest);
+    return hid.length?hid:tier}
+  /* 손님의 책: 손님의 덱에서 플레이어가 쓸 수 있는 카드(공격·방어·버프) */
+  function guestBooks(id){return [...new Set((D.enemies[id].deck||[]).filter(c=>D.cards[c]&&['atk','def','buff'].includes(D.cards[c].t)&&!D.cards[c].fixed))]}
+  function guestEvent(G,R){
+    const ch=G.ch,Z=R.guest,st=routeSt(ch),n=st.guests||0,si=guestStage(Z,n),S=Z.stages[si],ids=guestPool(Z,S,ch);if(!ids.length)return null;
+    const id=one(ids),E_=D.enemies[id],dc=45+si*5;
+    return {t:`${Z.t} · ${E_.n}`,x:`${E_.intro||'초대장을 든 손님이 서가 입구에 서 있다.'}\n\n도서관 ${S.n} · 손님 ${n}명째`,c:[
+      {l:'접대한다',h:'이기면 손님이 책이 된다 · 지면 사서도 책이 된다',ok:{t:'손님을 서가 안쪽으로 안내했다.',fx:{combat:id,routeGuest:id}}},
+      {l:'대화한다',h:`판정 · 성공하면 책 한 장을 받고 손님 수 +1 · 실패하면 접대로 이어진다`,check:{s:null,dc},ok:{t:'긴 이야기 끝에 손님이 스스로 책 한 장을 내려놓고 돌아갔다.',fx:{routeGuestTalk:id}},fail:{t:'대화가 끊겼다. 손님이 칼을 쥐었다.',fx:{combat:id,routeGuest:id}}},
+      {l:'돌려보낸다',h:'손님 수에 들어가지 않는다 · 정신력 +1',ok:{t:'초대장을 돌려주고 문을 닫았다.',fx:{mindUp:1}}}]}}
+  /* 손님을 이기거나 설득했을 때: 책 지급, 손님 수 +1, 위상이 오르면 능력치 */
+  function guestDone(ch,id,chips,talk){
+    const R=routeOf(ch),Z=R&&R.guest;if(!Z)return false;const st=routeSt(ch),pool=guestBooks(id),old=guestStage(Z,st.guests||0);
+    if(pool.length){if(talk)addCard(ch,one(pool.filter(c=>!ownsCard(ch,c)))||one(pool),chips,'손님의 책',true);else offerPick(ch,pool,chips,'손님의 책')}
+    st.guests=(st.guests||0)+1;chips.push(`손님 ${st.guests}명 · ${D.enemies[id].n}이(가) 책이 되었다`);
+    const ni=guestStage(Z,st.guests);if(ni>old){const S=Z.stages[ni];addStats(ch.stats,S.fx||{});if((S.fx||{}).maxHp)ch.hp+=S.fx.maxHp;chips.push(`도서관 위상 · ${S.n}`+(S.fx&&Object.keys(S.fx).length?' · '+Object.entries(S.fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · '):''))}
+    return true}
   function routeStep(G,R){
     const ch=G.ch,st=routeSt(ch),y=G.year,A=y>CFG.years?'act2':'act1',H=R.hunt;
     if(ch.distForm)return null;
@@ -2214,6 +2240,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     {const bv=bondEvent(G);if(bv)return bv}
     if(!R.noBondMeet&&!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&(y>=BD.by||d(100)<=BD.meetChance)){const bm=bondMeetEvent(ch);if(bm)return bm}   // 줄기의 해에는 일상 사건이 없으므로 인연 만남도 여기서
+    if(R.guest&&!ch.distForm){const gv=guestEvent(G,R);if(gv)return gv}
     const pool=(R.yearly&&R.yearly[A])||[];
     if(pool.length){const all=pool.map((_,i)=>i),u=st.used[A]=st.used[A]||[];let left=all.filter(i=>!u.includes(i));if(!left.length){st.used[A]=[];left=all}const i=one(left);st.used[A].push(i);return pool[i]}
     return null;
@@ -2795,7 +2822,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         /* 재갈마다 흑수 카드와 전리품(흑수 · ○○)을 준다. 덱이 넘치면 일반 카드가 카드함으로 간다 */
         for(const k of cw){const cid='zp_'+k;if(!D.cards[cid])continue;forceAdd(ch,cid);chips.push('흑수 카드 · '+D.cards[cid].n);(ch.relics=ch.relics||[]).push('흑수 · '+D.cards[cid].n.replace('흑수 · ',''))}
         while(ch.deck.length>deckMax(ch)){const j=ch.deck.findIndex(id=>!D.cards[id].fixed&&!id.startsWith('zp_'));if(j<0)break;(ch.side=ch.side||[]).push(...ch.deck.splice(j,1))}}}ch.marks=(ch.marks||[]).filter(x=>x!=='가주 후보');ch.marks.push('홍원의 가주')}}
-    offerPick(ch,D.rewards,chips,null);
+    if(ch.rt&&ch.rt.guestFoe===C.id){ch.rt.guestFoe=null;guestDone(ch,C.id,chips,false)}else offerPick(ch,D.rewards,chips,null);
     const bounty=earn(ch,D.money.bounty[D.enemies[C.id].tier]||0);if(bounty){ch.money+=bounty;chips.push('현상금 +'+money(bounty))}
     {const BN=D.enemies[C.id].bonus;if(BN){if(BN.money){const m_=earn(ch,BN.money+(BN.moneyPer||0)*(ch.infImp||0));if(m_){ch.money+=m_;chips.push(`${BN.n||'전리품'} · +${money(m_)}`)}}if(BN.xp){gainXp(ch,BN.xp);chips.push(`${BN.n||'전리품'} · 경험치 +${BN.xp}`)}if(BN.fx&&!C.bonusMerged){addStats(ch.stats,BN.fx);if(BN.fx.maxHp)ch.hp+=BN.fx.maxHp;chips.push(`${BN.n||'전리품'} · ${BN.e} (영구)`)}}}
     let up=gainXp(ch,CFG.xp.win);chips.push('경험치 +'+CFG.xp.win);
@@ -2933,7 +2960,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 보스별 난이도 보정(hard): 체력 배수, 공격·회피 가산 */
     const IM_=ch.infinite&&id===X_.final?(ch.infImp||0):0;
     const SI_=ch.infinite?Math.max(0,gradeRaw(yH)-X_.grades.length+1):0;
-    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||(()=>{const R_=routeOf(ch);return R_&&R_.trial&&R_.trial[id]||null})(),ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
+    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||(()=>{const R_=routeOf(ch);return R_&&((R_.guest&&ch.rt&&ch.rt.guestFoe===id&&R_.guest.stages[guestStage(R_.guest,ch.rt.guests||0)].mul)||(R_.trial&&R_.trial[id]))||null})(),ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
     /* 무한 모드 불순물: 100살(나이)마다 정해 둔 체력표를 쓴다 (첫 100살은 잡을 만하게, 200살부터 조금 많이, 300살부터 확 오른다) */
     /* 100살 구간의 첫 불순물은 표의 딱 맞는 숫자, 그 구간에서 불순물을 쓰러뜨릴 때마다 뒷자리가 조금씩 늘어난다 (구간 안에서 최대 hpBandMax) */
     const infTab=ch.infinite&&id===X_.final?(()=>{const A_=CFG.startAge+(ch.year||0)-1,T_=CFG.infinite.hpTable,IF2=CFG.infinite;let v=T_[0][1],bi=0;T_.forEach(([at,hp],i)=>{if(A_>=at){v=hp;bi=i}});
