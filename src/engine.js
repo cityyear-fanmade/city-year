@@ -1584,7 +1584,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch,I=D.infinite,K=CFG.infinite.century;if(!G.infinite||!ch.infinite||!I)return null;
     const LI=lakeOn(ch)&&D.lake&&D.lake.infinite;
     if(!ch.infIntro&&LI){ch.infIntro=1;return {t:LI.intro.t,x:LI.intro.x,c:[{l:LI.intro.a,h:'집은 짓지 않는다 · 호수에서 호수로 항해가 반복된다',ok:{t:LI.intro.at,fx:{lakeOuter:1}}}]}}
-    if(!ch.infIntro){ch.infIntro=1;return {t:I.intro.t,x:I.intro.x,c:[{l:I.intro.a,h:'외곽에 작은 집을 짓는다 · 혼자여도, 곁에 사람이 있어도 이 집이 돌아오는 자리가 된다',ok:{t:I.intro.at+(ch.bond&&ch.bond.st==='married'&&ch.bond.name&&I.introWith?I.introWith.replace('{n}',ch.bond.name):''),fx:{infHome:1}}}]}}
+    if(!ch.infIntro){ch.infIntro=1;return {t:I.intro.t,x:(ch.o&&ch.o.key==='crow'&&I.introCrow?I.introCrow+' ':'')+I.intro.x,c:[{l:I.intro.a,h:'외곽에 작은 집을 짓는다 · 혼자여도, 곁에 사람이 있어도 이 집이 돌아오는 자리가 된다',ok:{t:I.intro.at+(ch.bond&&ch.bond.st==='married'&&ch.bond.name&&I.introWith?I.introWith.replace('{n}',ch.bond.name):''),fx:{infHome:1}}}]}}
     const have=ch.infCent||[],n=(()=>{for(let i=1;i<=Math.floor(age(G)/K.every);i++)if(!have.includes(i))return i;return 0})();
     /* 선원의 변화: 무한 모드에서 선원이 한 단계씩 호수를 닮아 가다가 어느 날 젖은 옷만 남기고 사라진다. 이름은 붙이지 않고 장면만 보여 준다 */
     if(!n&&ch.infIntro&&LI&&LI.morph){const L=ch.lake=ch.lake||{},Mo=CFG.lake.morph,crew=L.crew||[];
@@ -1627,18 +1627,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const FINGER_ROUTE={'엄지':'thumb','검지':'pointer','중지':'middle','약지':'ring'};
   /* 호수 출생은 인연·가족 공통 문구를 D.bond.lake 로 덮어 쓴다(배에서 사는 사람의 말투) */
   const bondTx=ch=>(lakeOn(ch)&&D.bond&&D.bond.lake)?Object.assign({},D.bond,D.bond.lake):D.bond;
-  const bondRouteOf=ch=>lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
+  const bondRouteOf=ch=>(ch.o&&ch.o.key==='crow')?'crow':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
   function bondMeetEvent(ch){
     const B=bondTx(ch);let rt=bondRouteOf(ch);
     /* 히든: 해결사 급수가 BD.hidden.rank급 이상(숫자 rank<=)이면 가끔 처음부터 2~1급 해결사인 상대를 만난다 */
     if(['thumb','pointer','middle','ring'].includes(rt)&&B.routes.finger&&d(100)<=BD.fingerGeneric)rt='finger';
-    if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&rt!=='hcorp'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
+    if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&rt!=='hcorp'&&rt!=='crow'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
     const R0=rt&&B&&B.routes[rt];
     if(!R0)return null;
     const vi=rt==='hcorp'&&R0.variants?(ch.hw&&ch.hw.beast?1:0):R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;
-    const yes={l:B.meetYes,h:'동반자의 이름을 정한다 · 이후 몇 해마다 사건이 온다',ok:{t:B.meetYesT,fx:{bondMeet:rt,bondVariant:vi}}};
+    const yes={l:B.meetYes,h:rt==='crow'?'인연이 시작된다 · 이후 몇 해마다 사건이 온다':'동반자의 이름을 정한다 · 이후 몇 해마다 사건이 온다',ok:{t:B.meetYesT,fx:{bondMeet:rt,bondVariant:vi}}};
     /* 흑수 루트: 약한 가주 후보와의 만남은 반드시 일어난다 */
     if(rt==='hcorp'&&ch.hw&&ch.hw.beast)return {t:R.meet.t,x:R.meet.x,c:[yes]};
     return {t:R.meet.t,x:R.meet.x,c:[
@@ -2148,6 +2148,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const C=H.choose;
       return {t:C.t,x:C.x,c:[{l:C.supply.l,h:C.supply.h,ok:{t:C.supply.t,fx:C.supply.fx||{}}},{l:C.hunt.l,h:C.hunt.h,ok:{t:C.hunt.t,fx:{routeHunt:'start'}}}]};
     }
+    {const bv=bondEvent(G);if(bv)return bv}
+    if(!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&(y>=BD.by||d(100)<=BD.meetChance)){const bm=bondMeetEvent(ch);if(bm)return bm}   // 줄기의 해에는 일상 사건이 없으므로 인연 만남도 여기서
     const pool=(R.yearly&&R.yearly[A])||[];
     if(pool.length){const all=pool.map((_,i)=>i),u=st.used[A]=st.used[A]||[];let left=all.filter(i=>!u.includes(i));if(!left.length){st.used[A]=[];left=all}const i=one(left);st.used[A].push(i);return pool[i]}
     return null;
@@ -2365,7 +2367,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wf=webFree(G);if(wf)return wf}
     {const rf=routeFree(G);if(rf)return rf}
     G.free=false;G.year++;
-    if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;return {type:'end',win:true,trueEnd:!!G.endless,hw:hk}}
+    if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
       /* 대호수: 호수에 오래 떠 있을수록 정신이 닳는다. 해마다 mindYear씩 깎이지만 mindKeep 밑으로는 이 깎임만으로 내려가지 않는다(뒤틀림·사망으로 곧장 가지 않게) */
@@ -2595,7 +2597,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.singGrow)corpGrow(ch,chips);
     if(fx.singUp)corpUp(ch,chips);
     if(fx.corpForb)corpForb(ch,chips);
-    if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
+    if(fx.bondMeet==='crow'){const y_=ch.year||0;ch.bond={st:'met',route:'crow',variant:0,name:'묘',step:0,tries:0,love:0,since:y_,next:y_+bondGap()};chips.push('인연 · 묘')}   // 원본 인물이라 이름을 짓지 않는다
+    else if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
     if(fx.bondDecline)ch.bond={st:'declined'};
     if(fx.bondDeath&&ch.bond&&ch.bond.st==='married'){bondDeath(ch,chips);ch.bond.dieBy=fx.bondDie||'risk';ch.bond.dieYear=ch.year||0}
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0,race:kk.race||(ch.race==='hyeolgwi'?'hyeolgwi':'human')};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}

@@ -535,7 +535,7 @@ export function startUI(E,app){
       <div class="volbox"><button class="qb${UI.volOpen?' on':''}" data-a="qvol" aria-label="음량 조절" title="음량"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ic}</svg></button>${UI.volOpen?`<div class="volpop"><input type="range" id="bgmQuick" min="0" max="100" step="1" value="${v}" aria-label="배경음악 음량"><b class="mono" id="bgmQuickPct">${v}%</b></div>`:''}</div>`;
   }
   /* 엔딩 화면에서 이어서 살 수 있는 경우(여기서 끝낸다 버튼이 있는 경우). 이때 다시 태어나면 이어 살 판이 사라지므로 한 번 더 누르게 한다 */
-  const endCanResume=()=>!!(UI.endWin&&G&&((!G.endless)||UI.outEnd||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite)));
+  const endCanResume=()=>!!(UI.endWin&&G&&((!G.endless)||UI.outEnd||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite)||(UI.crowEnd==='crowrefuse'&&!G.infinite)));
   function vSettings(){
     const b=(a,k,l,cur)=>`<button class="${cur===k?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`;
     return `${FS.ok()?`<div class="stack" style="gap:6px"><span class="eyebrow">전체 화면</span><div class="seg">${b('fs','off','끔',FS.on()?'':'off')}${b('fs','on','켬',FS.on()?'on':'')}</div><span class="small dim">브라우저 주소창·탭 줄을 숨깁니다 · 방송이나 넓은 화면용 · Esc로도 끝낼 수 있습니다</span></div>`:''}<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
@@ -1189,9 +1189,9 @@ export function startUI(E,app){
   const TITLE_REC=['흑수 필두','본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','의리를 지킨 자','의리를 찢은 자','끝내 갚지 않은 자','배신자를 갚은 자','허무를 넘어선 자','정리 요원장','열차를 내린 자','혈귀를 잠재운 자','특색'];
   /* 기록실 힌트: 아직 열리지 않은 칭호와 엔딩이 어떤 길 끝에 있는지 짐작만 하게 한다 */
   const TITLE_HINT={'흑수 필두':'홍원에서 승계를 포기하고 흑수로 활동해 필두에 오른다','본부 직속':'협회 최고 자리에 올라 본부의 부름을 넘긴다','특이점 부서':'날개 임원에 오른 뒤 핵심 부서의 심사를 통과한다','상석':'손가락의 서열 맨 위에서 마지막 부름을 통과한다',[CFG.nWing.eastTitle]:'동쪽 외곽 출신으로 N사 날개에 들어가 끝까지 오른다','피의 왈츠':'인연과 함께 핏빛 존재와 맞선다','엄지를 넘어선 자':'엄지의 아랫 조직 끝에서 엄지에게 칼을 뽑는다','정해진 운명':'엄지의 가장 높은 이에게 맞섰다가 쓰러진다','곰과 범을 넘어선 자':'검계의 끝에서 본국의 칼을 마주한다','의리를 지킨 자':'중지의 동생이 되어 받은 장부를 갚고 큰누님의 여섯 대를 버틴다','배신자를 갚은 자':'큰형님이 되어 큰누님을 쓰러뜨린 뒤, 달아난 마티아스를 쫓는다','허무를 넘어선 자':'격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤, 하나가 된 무언가를 마주한다','의리를 찢은 자':'중지의 마지막 장부를 받아들이지 않고 찢는다','끝내 갚지 않은 자':'의리를 찢은 뒤 쫓아오는 중지의 사슬을 끊어낸다','특색':'해결사 1급에서 도시가 색을 불러 줄지 심사를 받는다'};
-  const END_HINT={wfree:'W사 열차 직원으로 무한 모드에 들어가 퇴직 서류에 서명한다',wrival:'W사 열차 직원으로 무한 모드에 들어가 웨이페어러 컴퍼니의 제안을 받는다',wstay:'W사 열차 직원으로 무한 모드에 들어가 서류를 접어 서랍에 넣고 열차에 남는다',hwmaker:'흑수 필두로서 약한 후보를 차기 가주로 세운 뒤, 철함사에 혼자 들어가는 가주를 문 밖에서 지킨다',hwflee:'흑수 필두로서 후보가 철함사에서 알아낸 것을 쥐고 나올 때, 후보를 데리고 가문에서 도망친다',hwlose:'붉은 누각의 등이 켜진다',hwhost:'선황충을 받아들이고 가주의 자리에 앉는다',hwfree:'선황충을 받아들이지 않고 가주의 자리에 앉는다',hwbreak:'흑수 부하의 재갈을 많이 모아 철함사를 친다',rcorp:'존재를 끝까지 증명한다',death:'어딘가에서 쓰러진다',mind:'정신력이 0이 된다',distort:'정신력이 한계에 닿아 몸이 뒤틀린다',win:CFG.years+'년을 끝까지 산다',true:'제 2막 마지막 등급을 넘는다',outer:'무한 모드에서 스스로 외곽에서 끝낸다',out_seal:'무한 모드에서 균열로 흘러드는 히든 보스를 모두 쓰러뜨린다',out_star:'무한 모드에서 이름난 상대를 아주 많이 이긴다',out_settle:'무한 모드에서 가족과 오래 산다',distwin:'뒤틀린 채로 '+CFG.years+'년을 넘긴다',old:'무한 모드에서 백 살을 넘겨 산다',blank:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 시작하고, 결혼하지 않은 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',blankwed:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 아무것도 없이 시작하고, 결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',wed:'결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',lovekill:'뒤틀린 채 사랑하던 이에게 쓰러진다',overflow:''};
+  const END_HINT={crowsucceed:'까마귀팀 복제체의 길 끝, 총사령관의 자리에 오른다',crowrefuse:'까마귀팀 복제체의 길 끝, 사령관의 자리를 지킨 채 도시로 돌아가지 못한다',wfree:'W사 열차 직원으로 무한 모드에 들어가 퇴직 서류에 서명한다',wrival:'W사 열차 직원으로 무한 모드에 들어가 웨이페어러 컴퍼니의 제안을 받는다',wstay:'W사 열차 직원으로 무한 모드에 들어가 서류를 접어 서랍에 넣고 열차에 남는다',hwmaker:'흑수 필두로서 약한 후보를 차기 가주로 세운 뒤, 철함사에 혼자 들어가는 가주를 문 밖에서 지킨다',hwflee:'흑수 필두로서 후보가 철함사에서 알아낸 것을 쥐고 나올 때, 후보를 데리고 가문에서 도망친다',hwlose:'붉은 누각의 등이 켜진다',hwhost:'선황충을 받아들이고 가주의 자리에 앉는다',hwfree:'선황충을 받아들이지 않고 가주의 자리에 앉는다',hwbreak:'흑수 부하의 재갈을 많이 모아 철함사를 친다',rcorp:'존재를 끝까지 증명한다',death:'어딘가에서 쓰러진다',mind:'정신력이 0이 된다',distort:'정신력이 한계에 닿아 몸이 뒤틀린다',win:CFG.years+'년을 끝까지 산다',true:'제 2막 마지막 등급을 넘는다',outer:'무한 모드에서 스스로 외곽에서 끝낸다',out_seal:'무한 모드에서 균열로 흘러드는 히든 보스를 모두 쓰러뜨린다',out_star:'무한 모드에서 이름난 상대를 아주 많이 이긴다',out_settle:'무한 모드에서 가족과 오래 산다',distwin:'뒤틀린 채로 '+CFG.years+'년을 넘긴다',old:'무한 모드에서 백 살을 넘겨 산다',blank:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 시작하고, 결혼하지 않은 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',blankwed:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 아무것도 없이 시작하고, 결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',wed:'결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',lovekill:'뒤틀린 채 사랑하던 이에게 쓰러진다',overflow:''};
   /* 엔딩 힌트: 그 엔딩으로 이어지는 갈림길을 한 번이라도 지나치면, 소개 문구가 정확한 조건으로 바뀐다 */
-  const END_EXACT={wfree:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "퇴직 서류에 서명한다"를 고른다.',wrival:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "웨이페어러 컴퍼니의 제안을 받는다"를 고른다.',wstay:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "서류를 접어 서랍에 넣는다"를 고른다. ("조금 더 생각해 본다"는 5년 뒤 같은 서류가 다시 온다.)',
+  const END_EXACT={crowsucceed:'까마귀팀 복제체로 2막 끝(73년차)의 "처분 판정서를 쓰는 사람"에서 "총사령관의 자리를 잇는다"를 고르고 총사령관 니콜라이를 쓰러뜨린다.',crowrefuse:'까마귀팀 복제체로 2막 끝(73년차)의 "처분 판정서를 쓰는 사람"에서 "자리를 거부하고 사령관으로 남는다"를 고르고 총사령관 니콜라이를 쓰러뜨린다.',wfree:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "퇴직 서류에 서명한다"를 고른다.',wrival:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "웨이페어러 컴퍼니의 제안을 받는다"를 고른다.',wstay:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "서류를 접어 서랍에 넣는다"를 고른다. ("조금 더 생각해 본다"는 5년 뒤 같은 서류가 다시 온다.)',
     hwmaker:'홍원 2년차에 승계를 내려놓고 흑수가 되어 필두까지 오른다. 후보를 차기 가주로 세우고, 45년차 이후 "철함사의 문 앞"에서 "문 밖에서 주위를 지킨다"를 고른 뒤 55년을 채운다.',
     hwflee:'홍원 2년차에 승계를 내려놓고 흑수가 되어 필두까지 오른다. 후보를 차기 가주로 세우고, 45년차 이후 "철함사의 문 앞"에서 "곁에서 지킨다"를 고른 뒤 추격 4팀(방계 자객조, 추격하는 흑수들, 흑수 필두들, 홍루)을 모두 쓰러뜨린다.',
     hwhost:'홍원 가주 후보 루트에서 "철함사의 소요"의 "선황충을 품는다"를 고르고, 이어지는 "홍루의 시험"에서 홍루를 쓰러뜨린다.',
@@ -1217,7 +1217,7 @@ export function startUI(E,app){
   const vRecords=()=>{const f=recFold();return vRecords0().replace(/<div class="panel stack"( style="[^"]*")?><span class="eyebrow">([^<]*)<\/span>/g,(m,st,t)=>{const k=t.replace(/\s*·.*$/,'').replace(/\s*[0-9].*$/,'')||t,c=f.includes(k);return `<div class="panel stack rfold${c?' closed':''}"${st||''}><span class="eyebrow rfh" data-a="rfold" data-i="${esc(k)}" role="button" aria-expanded="${!c}">${c?'▸':'▾'} ${t}</span>`})};
   function vRecords0(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
-    const ends0=[['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
+    const ends0=[['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
     /* 오버플로우(무한 모드 1000살)는 달성하기 전에는 칸도 개수도 보이지 않는다 */
     const ends=ends0.filter(([k])=>k!=='overflow'||r.endings.includes('overflow'));
     const groups=[['초반','early'],['중반','mid'],['후반','late'],['보스·이름난 상대','boss'],['히든','hidden']];
@@ -1985,8 +1985,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   /* 흑수 루트 엔딩 끝: 연인이면 함께, 아니면 역할을 다하고 가주와 헤어진다 */
   const hwTail=(c,k)=>{if(!c||!c.hw||k!=='hwflee')return '';const nm=(c.bond&&c.bond.name)||'후보';
     return c.hw.loved?(k==='hwmaker'?` ${nm}은(는) 가주의 자리에서도 곁의 자리 하나를 비워 두었다. 그 뒤로도 두 사람은 함께였다.`:` ${nm}의 손은 그 뒤로도 당신의 소매를 놓지 않았다. 두 사람은 함께 걸었다.`):` 당신은 당신의 역할을 다했다. ${nm}과(와)는 여기서 헤어졌다. 서로 이름을 부르지 않은 채, 각자의 길로.`};
-  const blankEnd=(c,w)=>{if(UI.rbEnd&&w)return 'rcorp';if(UI.hwEnd&&w)return UI.hwEnd;if(!(w&&c&&!c.distForm&&!G.endless&&!UI.oldEnd&&!UI.overflowEnd&&!UI.trueEnd))return '';const m=!!(E.bondMarried&&E.bondMarried(c));return c.rb&&c.rb.done?'rcorp':c.blank?(m?'blankwed':'blank'):m?'wed':''};
-  const BLANK_END={wfree:['열차를 내린 사람','승강장에 처음으로 해가 졌다. 서류에는 서명이 남았고, 손에는 닳은 공구가 쥐여 있었다. 열차는 당신 없이 출발 신호음을 울렸다. 열 번을 세기도 전에 끝나는 소리였다. 당신은 그 소리를 등지고 걸었다. 특이점이라는 말도, 열차 안의 일도 이제 입에 올릴 수 없다. 어떠한 이유에서인지는 알 수 없다. 도시에는 아직 당신이 모르는 길이 많다.'],
+  const blankEnd=(c,w)=>{if(UI.crowEnd&&w)return UI.crowEnd;if(UI.rbEnd&&w)return 'rcorp';if(UI.hwEnd&&w)return UI.hwEnd;if(!(w&&c&&!c.distForm&&!G.endless&&!UI.oldEnd&&!UI.overflowEnd&&!UI.trueEnd))return '';const m=!!(E.bondMarried&&E.bondMarried(c));return c.rb&&c.rb.done?'rcorp':c.blank?(m?'blankwed':'blank'):m?'wed':''};
+  const BLANK_END={crowsucceed:['처분 판정서의 마지막 장','서명란에 이름이 올라가는 순간 방의 불이 한 번 깜빡였다. 니콜라이가 앉아 있던 자리는 비었고, 그 자리에는 이제 당신이 앉는다. 총사령관의 책상에는 처분 판정서가 한 장 놓여 있다. 첫 줄의 대상은 비어 있다. 이 장부는 앞으로 한 줄씩 채워질 것이다. 책상 옆에서 검은 세이버가 한 번 반짝였다. 처음으로, 쓰는 쪽에 앉았다.'],
+    crowrefuse:['돌아가지 못한 사령관','명령서는 찢어졌지만 자리는 비우지 않았다. 사령관의 자리를 지킨 채 도시 밖의 임무에 나섰다. 불순물의 흔적을 따라간 곳에서 길이 어긋났다. 돌아가는 길을 몇 번이나 되짚었지만 도착하는 곳은 도시가 아니었다. 외곽의 차원이 방향을 틀어 놓았고, 도시는 더 이상 돌아갈 수 있는 자리가 아니었다.'],
+    wfree:['열차를 내린 사람','승강장에 처음으로 해가 졌다. 서류에는 서명이 남았고, 손에는 닳은 공구가 쥐여 있었다. 열차는 당신 없이 출발 신호음을 울렸다. 열 번을 세기도 전에 끝나는 소리였다. 당신은 그 소리를 등지고 걸었다. 특이점이라는 말도, 열차 안의 일도 이제 입에 올릴 수 없다. 어떠한 이유에서인지는 알 수 없다. 도시에는 아직 당신이 모르는 길이 많다.'],
     wrival:['열차를 쓰지 않는 계약','웨이페어러 컴퍼니의 안내원이 서류를 내밀었다. 열차 없이 문과 문을 잇는 계약이었다. 계약금으로 오랜만에 따뜻한 끼니를 먹었다. W사의 날개 자리는 흔들리고, 그 흔들림 안에서 당신은 이름 없는 직원 하나로 남았다. 시간을 도둑맞지 않는 길도 있다는 것이 이상하게 느껴졌다.'],
     wstay:['출발 신호음 없는 열차','서류는 서랍 안에서 번호표가 되었다. 정리 요원장이 된 당신은 도착한 열차마다 이름 없는 조각을 가려 좌석에 앉힌다. 승객은 열 번을 세기 전에 도착했다고 믿는다. 당신은 그 열 번 사이에 일어난 모든 일을 기억하는 몇 안 되는 사람이다. 다음 열차가 들어온다.'],
     hwmaker:['가주메이커','가주는 문 안에서 나왔다. 같은 얼굴이지만 무언가 바뀐 가주와 함께한다. 어째선지 모르겠지만, 무언가 놓친 것 같다. 하지만 흑수 필두로서 가주를 지킬 뿐이다.'],
@@ -2039,12 +2041,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${w&&UI.outEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">무한 모드 엔딩</span><p class="small">여기서 끝내도 된다. 계속 살아가면 무한 모드가 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
       ${w&&UI.oldEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 엔딩</span><p class="small">여기서 끝내도 된다. 계속 살아가면 무한 모드가 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
       ${w&&(UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">이야기의 끝</span><p class="small">여기서 끝내도 된다. 계속 살아가면 제 2막이 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
+      ${w&&UI.crowEnd==='crowrefuse'&&!G.infinite?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 2막 · 무한 모드</span><p class="small">여기서 끝내도 된다. 계속 살아가면 외곽의 차원에 발이 묶인 채 위협 보정이 끝없이 오르고, ${CFG.infinite.every}년마다 외곽의 괴수(더 강해진 불순물)가 나타나며, 루트 전용 히든 보스를 만날 확률이 오른다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="infinite">무한 모드로 계속한다</button></div>`:''}
       ${w&&UI.trueEnd&&!G.infinite?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 2막 · 무한 모드</span><p class="small">여기서 끝내도 된다. 계속 살아가면 머리에게 외곽으로 쫓겨난 셈이 되어 위협 보정이 끝없이 오르고, ${CFG.infinite.every}년마다 외곽의 괴수(더 강해진 불순물)가 나타나며, 루트 전용 히든 보스를 만날 확률이 오른다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="infinite">무한 모드로 계속한다</button></div>`:''}
       ${(()=>{const L=shTitles(c);if(L.length<1)return '';const cur=shTitle(c);return `<div class="row between" style="gap:8px;align-items:center"><span class="small dim">공유에 쓸 칭호</span><select id="shTitle" style="flex:1;max-width:60%;font:inherit;font-size:13px">${L.map(t=>`<option value="${esc(t)}"${cur===t?' selected':''}>『${esc(t)}』</option>`).join('')}<option value=""${cur===''?' selected':''}>칭호 없음</option></select></div>`})()}
       <div class="row" style="gap:8px"><button class="btn quiet" style="flex:1" data-a="share">기록 공유</button><button class="btn quiet" style="flex:1" data-a="saveimg">이미지로 저장</button></div>
       ${UI.imgUrl?`<p class="small dim">저장이 막힌 환경이다. 아래 이미지를 길게 눌러 저장한다.</p><img src="${UI.imgUrl}" alt="엔딩 기록 이미지" style="width:100%;border-radius:8px">`:''}
       ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<input id="shareBox" readonly value="${esc(UI.shareText)}" onclick="this.select()" style="width:100%;font:inherit;font-size:13px">`:''}
-      ${w&&((!G.endless)||UI.outEnd||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite))?'<button class="btn quiet" data-a="finish">여기서 끝낸다 (이 판의 저장 삭제)</button>':''}
+      ${w&&((!G.endless)||UI.outEnd||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite)||(UI.crowEnd==='crowrefuse'&&!G.infinite))?'<button class="btn quiet" data-a="finish">여기서 끝낸다 (이 판의 저장 삭제)</button>':''}
       ${UI.confirmNew==='start'&&endCanResume()?'<p class="small bad" style="margin:0 0 6px">이 판은 여기서 끝나고, 이어서 살 수 없게 된다. 정말 다시 태어나려면 한 번 더 누른다.</p>':''}<div class="endbar"><button class="btn ${w&&!G.endless?'quiet':'primary'}" data-a="start">${UI.confirmNew==='start'&&endCanResume()?'정말 다시 태어난다':'다시 태어난다'}</button><button class="btn quiet" data-a="title">처음 화면</button></div>`;
   }
   /* 기록 링크: 기록을 주소(#r=...) 안에 담는다. 서버 없이 열린다 */
@@ -2069,7 +2072,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       o.push(k.dead?`아이 · ${k.n} (${k.dead==='old'?'수명을 다해 세상을 떠났다':'토벌 의뢰에서 쓰러졌다'}${k.dieYear?' · '+k.dieYear+'년차':''})`:`아이 · ${k.n} ${a}세${a>=CFG.bond.kid.adult?' · '+((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l||''):''}`)}
     return o;
   }
-  const shLife=(c,w)=>{try{return epilogue(c,w,UI.trueEnd).map(shPlain).filter(t=>!t.startsWith('그 사이 도시가 감춰')).join('\n')}catch(e){return ''}};
+  const shLife=(c,w)=>{try{return epilogue(c,w,UI.trueEnd||!!UI.crowEnd).map(shPlain).filter(t=>!t.startsWith('그 사이 도시가 감춰')).join('\n')}catch(e){return ''}};
   /* 링크용 기록: 이름이 아니라 id를 담아 짧게 만든다(받는 쪽에서 이름으로 바꾼다) */
   function shareRec(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
@@ -2190,7 +2193,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     g.strokeStyle='#2c2b30';g.beginPath();g.moveTo(140,y);g.lineTo(W-140,y);g.stroke();y+=70;
     /* 행적: 에필로그에서 출신 · 진로 · 마지막 문장만 뽑아 넣는다 */
     if(w){const plain=t=>t.replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-      const ep=epilogue(c,w,UI.trueEnd).map(plain),pick=[ep[0],ep[1],ep[ep.length-1]].filter((t,i,a)=>t&&a.indexOf(t)===i);
+      const ep=epilogue(c,w,UI.trueEnd||!!UI.crowEnd).map(plain),pick=[ep[0],ep[1],ep[ep.length-1]].filter((t,i,a)=>t&&a.indexOf(t)===i);
       const wrap=(t,mx,f)=>{g.font=f;const out=[];let line='';for(const word of t.split(' ')){const tt=line?line+' '+word:word;if(g.measureText(tt).width>mx&&line){out.push(line);line=word}else line=tt}if(line)out.push(line);return out};
       T_('행적',140,y,`400 28px ${sans}`,gold);y+=52;
       for(const t of pick){for(const l of wrap(t,W-280,`400 30px ${sans}`).slice(0,4)){T_(l,140,y,`400 30px ${sans}`,ink);y+=46}y+=14}
@@ -2381,7 +2384,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     UI.fight=null;UI.pending=null;UI.curSt=st;UI.oldEnd=false;UI.overflowEnd=false;
     /* 100살 히든 엔딩은 한 번 본 뒤로는 다시 뜨지 않는다 (이미 본 기록이 있으면 그냥 이어서 간다) */
     if(st.type==='end'&&st.old&&loadRec().endings.includes('old')){nextYear();return}
-    if(st.type==='end'){UI.confirmNew=null;UI.outEnd=st.out||null;UI.outerEnd=false;UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.oldEnd=!!st.old;UI.overflowEnd=!!st.overflow;UI.rbEnd=!!st.rb;UI.hwEnd=st.hw||null;UI.death=st.cause?{year:G.year,foe:st.cause==='sunk'?'침몰':st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;recordEnd();UI.screen='end';render();return}
+    if(st.type==='end'){UI.confirmNew=null;UI.outEnd=st.out||null;UI.outerEnd=false;UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.crowEnd=st.crow||null;UI.oldEnd=!!st.old;UI.overflowEnd=!!st.overflow;UI.rbEnd=!!st.rb;UI.hwEnd=st.hw||null;UI.death=st.cause?{year:G.year,foe:st.cause==='sunk'?'침몰':st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;recordEnd();UI.screen='end';render();return}
     UI.omen=null;UI.showIncome=G.year>1;
     if(st.type==='omen')UI.omen=st;
     else if(st.type==='fight'){UI.fight=st.enemy;UI.enc=st.enc}else{UI.ev=st.ev;noteHint(st.ev)}
@@ -2436,7 +2439,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     syncTitles();
     checkInnateUnlock();
     /* 해금 출생(D.unlockOrigins): 무한 모드 전 2막 끝까지 간 판이 cond의 출생(origin 이름) 또는 아이템(item id)을 만족하면 열린다. 굴림 번호 히든 출생과는 별개 */
-    {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||G.infinite),u0=loadUnlocks();
+    {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||G.infinite),u0=loadUnlocks();
       if(cleared)for(const o of D.unlockOrigins||[]){const k='origin:'+o.key,cd=o.cond||{};if(u0.includes(k))continue;
         const has=cd.item?[...Object.values(cc.gear||{}),...(cc.stash||[])].some(x=>x&&x.id===cd.item):false;
         if((cd.origin&&cc.o&&cc.o.n===cd.origin)||has){addUnlock(k);UI.newOrigin=o.n}}}
@@ -2835,6 +2838,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
     testRouteEnd(k,act2){if(!G)return;G.endless=!!act2;G.year=G.ch.year=act2?66:CFG.years;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=k==='rcorp';UI.hwEnd=k==='rcorp'?null:(k||'hwhost');UI.death=null;UI.screen='end';render()},
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
+    testCrowEnd(k){if(!G)return;G.endless=true;G.ch.year=G.year=73;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=false;UI.hwEnd=null;UI.crowEnd=k;UI.death=null;UI.screen='end';render()},
     testRec(){if(!G)return;recordEnd();render()},
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
