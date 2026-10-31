@@ -1755,7 +1755,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const R=E.bondData(ch)||{who:''},st=b.st;
     const head=st==='married'?(ch.distForm?'당신을 알아보지 못한다':'배우자'):st==='lost'?'배우자의 죽음':st==='left'?'떠났다':`인연 · ${R.who}`;
     const rows=[];
-    if(R.look)rows.push(['특징',R.look]);
+    {const Lk=R.looks,lt=Lk?(st==='met'?(Lk.met||[])[Math.min(b.step||0,(Lk.met||[]).length-1)]:Lk[st]):null;if(lt||R.look)rows.push(['특징',lt||R.look])}
     if(b.alias)rows.push(['특색',`${b.alias} (${b.col.adj})`]);
     if(st==='married'){
       rows.push(['결혼한 해',b.since+'년차']);
