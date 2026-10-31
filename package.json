@@ -9,6 +9,8 @@
     "check": "node tools/check.mjs",
     "dev": "node tools/serve.mjs",
     "build": "node tools/build.mjs",
+    "build:lake": "node tools/build.mjs --lake",
+    "build:mind": "node tools/build.mjs --mind",
     "pages": "node tools/build.mjs --pages",
     "guide": "node tools/guide.mjs"
   },

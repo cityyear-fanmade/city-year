@@ -16,10 +16,10 @@ export function createBgm(){
     maxGain:2,          // 음량 100%일 때 마스터 음량 (컴프레서가 최고점을 눌러 준다)
     fadeIn:3,           // 켤 때 서서히 커지는 시간(초)
     fadeOut:0.8,        // 끌 때 서서히 줄어드는 시간(초)
-    bpm:{calm:{calm:100,fight:132},passion:{calm:150,fight:168},library:{calm:116,fight:176},wave:{calm:100,fight:132}},   // [스타일][장면]
+    bpm:{calm:{calm:100,fight:132},passion:{calm:150,fight:168},library:{calm:116,fight:176},wave:{calm:100,fight:132},ext:{calm:100,fight:132}},   // [스타일][장면]
     bossBpm:{intro:66,main:144},bossGain:0.62,bossCut:2400,
-    styleGain:{calm:0.7,passion:0.6,library:1.0,wave:1.0},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
-    cutMul:{calm:{calm:0.8,fight:1},passion:{calm:1.1,fight:1.3},library:{calm:1.9,fight:2.3},wave:{calm:1.5,fight:1.5}}, // 장면별 밝기
+    styleGain:{calm:0.7,passion:0.6,library:1.0,wave:1.0,ext:1.0},   // 스타일별 전체 음량 보정 (격정은 피아노 중심이라 잔잔과 비슷한 크기로 맞춘다)
+    cutMul:{calm:{calm:0.8,fight:1},passion:{calm:1.1,fight:1.3},library:{calm:1.9,fight:2.3},wave:{calm:1.5,fight:1.5},ext:{calm:1.5,fight:1.5}}, // 장면별 밝기
     /* 코드(C=0 기준 반음): b=베이스 근음, t=구성음(피아노 · 현), sc=선율 음계 */
     /* 코드(C=0 기준 반음): b=베이스 근음, f=베이스 5음(근음 기준), t=반주 구성음 (가운데 도=0) */
     /* 불길(D 단조): Dm → Bb → F → C → Dm → Bb → Gm → A */
@@ -58,9 +58,13 @@ export function createBgm(){
   let ctx=null,master=null,bus=null,bright=null,analyser=null,noiseBuf=null,on=false,vol=0.3,mood='base',scene='calm',style='calm',timer=null,hidden=false;
   /* 악기 샘플 곡: 스타일마다 평시·전투 한 곡씩(32마디가 한 바퀴, 끝에서 처음으로 이어진다). 히든 보스 곡도 한 곡(boss_boss.mp3, 도입 4마디 뒤부터 되풀이).
      빌드 파일에서는 window.CITY_BGM에 data 주소로 들어 있고, 개발 서버에서는 assets/bgm/<스타일>_<장면>.mp3를 읽는다. 읽지 못하면 합성음으로 돌아간다 */
+  let bossTrack='boss';   // 'ruen': 뤼엔 전용 곡(잔잔하고 쓸쓸한 곡, 처음부터 되풀이)
   const smp={buf:{},loading:{},bad:{},cur:null,node:null};
-  const ONE={passion:1,wave:1},smpKey=(st,sc)=>sc==='boss'?'boss_boss':st+'_'+sc,BOSS_LOOP=4*4*60/66;
-  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st='boss'}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
+  let stage=1;
+  /* 시험곡(ext): 외부에서 받은 곡을 평시·전투에 하나씩 배정해 들어 본다. 같은 곡을 둘 다에 배정하면 장면이 바뀌어도 끊기지 않고 이어진다 */
+  const ext={idx:1},extOn=()=>typeof window!=='undefined'&&!!(window.CITY_BGM&&window.CITY_BGM.ext);
+  const ONE={passion:1,wave:1},smpKey=(st,sc)=>sc==='boss'?(bossTrack==='ruen'?'ruen_boss':'boss_boss'):st==='ext'?'ext_t'+ext.idx+'_'+sc:st+'_'+sc,BOSS_LOOP=4*4*60/66;
+  const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st=bossTrack==='ruen'?'ruen':'boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext.idx+'_'+sc])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
   const smpUsable=(st,sc)=>!!smpSrc(st,sc)&&!smp.bad[smpKey(st,sc)];
   function smpLoad(key,src){
     if(smp.loading[key])return;
@@ -79,14 +83,14 @@ export function createBgm(){
     if(!smpUsable(style,scene)){smpStop(0.5);return false}
     const key=smpKey(style,scene);if(smp.cur===key)return true;
     if(!smp.buf[key]){smpLoad(key,smpSrc(style,scene));return !smp.bad[key]}   // 읽는 동안은 조용히 기다린다
-    /* 불길·물결: 평시본과 전투본(같은 곡, 전투가 1.25배 빠름)은 길이 비율만큼 위치를 옮겨 같은 곳에서 이어 붙인다 */
-    let off=0;const o0=smp.node,buf=smp.buf[key],one=ONE[style]&&scene!=='boss';
-    if(one&&o0&&o0.one===style&&o0.scene&&o0.scene!==scene&&o0.dur){const pos=((o0.off+(ctx.currentTime-o0.t0))%o0.dur+o0.dur)%o0.dur;off=pos*buf.duration/o0.dur}
-    if(one){const ok=smpKey(style,scene==='fight'?'calm':'fight');if(!smp.buf[ok]&&smpSrc(style,scene==='fight'?'calm':'fight'))smpLoad(ok,smpSrc(style,scene==='fight'?'calm':'fight'))}   // 반대 장면도 미리 읽어 둔다
+    /* 시험곡: 같은 곡의 평시본과 전투본(템포만 빠름)은 길이 비율만큼 위치를 옮겨 같은 곳에서 이어 붙인다 */
+    let off=0;const o0=smp.node,buf=smp.buf[key];
+    if((style==='ext'||ONE[style])&&scene!=='boss'&&o0&&o0.ext===(style==='ext'?ext.idx:style)&&o0.scene&&o0.scene!==scene&&o0.dur){const pos=((o0.off+(ctx.currentTime-o0.t0))%o0.dur+o0.dur)%o0.dur;off=pos*buf.duration/o0.dur}
+    if((style==='ext'||ONE[style])&&scene!=='boss'){const ok=smpKey(style,scene==='fight'?'calm':'fight');if(!smp.buf[ok]&&smpSrc(style,scene==='fight'?'calm':'fight'))smpLoad(ok,smpSrc(style,scene==='fight'?'calm':'fight'))}   // 반대 장면도 미리 읽어 둔다
     smpStop(0.6);
     const now=ctx.currentTime,src=ctx.createBufferSource(),g=ctx.createGain();
-    src.buffer=smp.buf[key];src.loop=true;if(scene==='boss'){src.loopStart=BOSS_LOOP;src.loopEnd=smp.buf[key].duration}g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
-    src.connect(g);g.connect(master);src.start(now,off);smp.cur=key;smp.node={src,g,one:one?style:0,scene,off,t0:now,dur:buf.duration};return true;
+    src.buffer=buf;src.loop=true;if(scene==='boss'){src.loopStart=bossTrack==='ruen'?0:BOSS_LOOP;src.loopEnd=buf.duration}g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+0.8);
+    src.connect(g);g.connect(master);src.start(now,off);smp.cur=key;smp.node={src,g,ext:scene==='boss'?0:style==='ext'?ext.idx:ONE[style]?style:0,scene,off,t0:now,dur:buf.duration};return true;
   }
   let barT=0,barN=0,lastScene='calm',lastStyle='calm',cur=null,duckUntil=0;
   const AC=typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext);
@@ -423,13 +427,20 @@ export function createBgm(){
     supported:!!AC,
     isOn:()=>on,vol:()=>vol,
     level:()=>{if(!analyser)return null;const d=new Float32Array(2048);analyser.getFloatTimeDomainData(d);let p=0,q=0;for(const v of d){const a=Math.abs(v);if(a>p)p=a;q+=v*v}return {peakDb:+(20*Math.log10(p+1e-9)).toFixed(1),rmsDb:+(10*Math.log10(q/d.length+1e-12)).toFixed(1)}},
-    debug:()=>({state:ctx&&ctx.state,gain:master?master.gain.value:null,on,vol,mood,scene,style,sample:smp.cur,sampleBad:Object.keys(smp.bad)}),
+    pos:()=>{const o=smp.node;return o&&o.dur&&ctx?{scene:o.scene,off0:+o.off.toFixed(2),pos:+((((o.off+(ctx.currentTime-o.t0))%o.dur)+o.dur)%o.dur).toFixed(2),dur:+o.dur.toFixed(2)}:null},
+    debug:()=>({state:ctx&&ctx.state,gain:master?master.gain.value:null,on,vol,mood,scene,style,sample:smp.cur,stage,stems:smp.node&&smp.node.sg?smp.node.sg.map(x=>+x.gain.value.toFixed(2)):null,sampleBad:Object.keys(smp.bad)}),
     /* 켜기/끄기: 켜는 것은 사용자가 누른 순간(클릭 처리 안)에서만 호출해야 한다 */
     set(v){if(v===on)return on;on=!!v;if(on)start();else stop();return on},
     setVol(v){vol=Math.max(0,Math.min(1,+v||0));if(on&&ctx)ramp(gainOf(vol),0.3)},
     setMood(k){if(P.moods[k])mood=k},
     setScene(k){scene=k==='boss'?'boss':k==='fight'?'fight':'calm'},
+    setBossTrack(k){bossTrack=k==='ruen'?'ruen':'boss'},
+    /* 전투 감정 단계(1~5). 불길 전투곡에서만 들린다 */
+    setStage(n){n=Math.max(1,Math.min(5,Math.round(+n)||1));if(n===stage)return;stage=n;stemsApply()},
+    stage:()=>stage,
     style:()=>style,
-    setStyle(k){if(k==='calm'||k==='passion'||k==='library'||k==='wave')style=k}
+    setStyle(k){if(k==='calm'||k==='passion'||k==='library'||k==='wave'||(k==='ext'&&extOn()))style=k},
+    extOn,ext:()=>ext.idx,
+    setExt(i){if(i>=1&&i<=5)ext.idx=i}
   };
 }

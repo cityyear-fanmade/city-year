@@ -10,7 +10,7 @@ const runs=+pos[0]||5,url=pos[1]||'file://'+path.resolve(__dirname,'..','dist','
     const p=await b.newPage({viewport:{width:390,height:844}});
     p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error'||m.type()==='warning')errs.push(m.text())});
     await p.addInitScript(m=>{try{localStorage.setItem('cityYearMode',m)}catch(e){}},run===0?'fast':'off');
-    await p.goto(url);await p.waitForSelector('[data-a=start]');
+    await p.goto(url);await p.waitForSelector('[data-a=start]');{const nk=await p.$('[data-a=noticeok]');if(nk)await nk.click().catch(()=>{})}
     await p.click('[data-a=start]');
     const seen=new Set();let steps=0;
     while(steps++<2000){
