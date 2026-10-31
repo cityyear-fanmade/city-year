@@ -6014,8 +6014,8 @@
    },
    "trial": {
     "out_scout": {
-     "hp": 0.32,
-     "atk": -9
+     "hp": 0.22,
+     "atk": -12
     },
     "outsider": {
      "hp": 0.3,
@@ -7076,8 +7076,8 @@
    },
    "trial": {
     "out_scout": {
-     "hp": 0.4,
-     "atk": -7
+     "hp": 0.28,
+     "atk": -10
     },
     "outsider": {
      "hp": 0.33,
