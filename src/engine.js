@@ -1659,14 +1659,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const FINGER_ROUTE={'엄지':'thumb','검지':'pointer','중지':'middle','약지':'ring'};
   /* 호수 출생은 인연·가족 공통 문구를 D.bond.lake 로 덮어 쓴다(배에서 사는 사람의 말투) */
   const bondTx=ch=>(lakeOn(ch)&&D.bond&&D.bond.lake)?Object.assign({},D.bond,D.bond.lake):D.bond;
-  const bondRouteOf=ch=>(ch.o&&ch.o.herm)?(ch.bond?'hermes':null):(ch.o&&ch.o.key==='crow')?'crow':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
+  const bondRouteOf=ch=>(ch.o&&ch.o.herm)?(ch.bond?'hermes':null):(ch.o&&ch.o.key==='crow')?'crow':(ch.o&&ch.o.key==='gweapon'&&ch.flags&&ch.flags.gw_fall)?'gweapon':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
   function bondMeetEvent(ch){
     const B=bondTx(ch);let rt=bondRouteOf(ch);
     /* 히든: 해결사 급수가 BD.hidden.rank급 이상(숫자 rank<=)이면 가끔 처음부터 2~1급 해결사인 상대를 만난다 */
     if(['thumb','pointer','middle','ring'].includes(rt)&&B.routes.finger&&d(100)<=BD.fingerGeneric)rt='finger';
-    if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&rt!=='hcorp'&&rt!=='crow'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
+    if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&rt!=='hcorp'&&rt!=='crow'&&rt!=='gweapon'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
     const R0=rt&&B&&B.routes[rt];
     if(!R0)return null;
     const vi=rt==='hcorp'&&R0.variants?(ch.hw&&ch.hw.beast?1:0):R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;
@@ -1919,8 +1919,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch;if(!ch.o||ch.o.key!=='gweapon'||!ch.flags.gw_fall||ch.distForm)return null;const Z=CFG.gweapon;
     /* 날개 시술 제안 */
     if(!ch.gw){
+      {const FE=(gwRoute()||{}).fallEvents||[];ch.gwFE=ch.gwFE||[];const e=FE.find(f=>!ch.gwFE.includes(f.at)&&(ch.year||0)>=(ch.gwFallYear||0)+f.at);if(e){ch.gwFE.push(e.at);return JSON.parse(JSON.stringify(e.ev))}}
+      if(!ch.bond&&(ch.year||0)>=(ch.gwFallYear||0)+Z.procFrom-1){const bm=bondMeetEvent(ch);if(bm)return bm}   // 몰락 뒤 시술 전에 같은 처지의 사람을 만난다
       if((ch.year||0)<(ch.gwFallYear||0)+Z.procFrom)return null;
-      return {t:'날개 시술 제안',x:'몰락한 G사의 연구동에서 마지막 연구원이 찾아왔다. 전쟁에서 입은 몸을 고쳐 줄 수 있다고 한다. 병기의 몸에 날개의 시술을 덧붙이면 다시 쓸 만한 몸이 된다. 대신 몸이 방어구 말고는 아무것도 쥐지 않게 된다. 쥘 수 없는 장비는 먹으면 된다고 연구원은 말한다. 먹을수록 몸이 자란다고 한다. 연구원은 몸 안에서 가장 깊은 곳은 아직 깨어나지 않았다고 덧붙인다.',c:Object.entries(Z.proc).map(([k,v])=>({l:v.n,h:v.e,ok:{t:`시술이 끝났다. ${v.n}이 몸에 자리를 잡았다. 몸 안 어딘가에서 아주 작은 것이 뒤척였다.`,fx:{gwProc:k}}}))}}
+      return {t:'날개 시술 제안',x:'소문으로만 돌던 마지막 연구원이 직접 찾아왔다. 불타지 않은 자료를 몸에 가지고 나왔다고 한다. 조정을 받지 못해 어긋나는 병기의 몸을 날개의 시술로 다시 쓸 만하게 만들 수 있다고 한다. 약해진 몸에 던지는 거래다. 대신 몸이 방어구 말고는 아무것도 쥐지 않게 된다. 대신 몸이 방어구 말고는 아무것도 쥐지 않게 된다. 쥘 수 없는 장비는 먹으면 된다고 연구원은 말한다. 먹을수록 몸이 자란다고 한다. 연구원은 몸 안에서 가장 깊은 곳은 아직 깨어나지 않았다고 덧붙인다.',c:Object.entries(Z.proc).map(([k,v])=>({l:v.n,h:v.e,ok:{t:`시술이 끝났다. ${v.n}이 몸에 자리를 잡았다. 몸 안 어딘가에서 아주 작은 것이 뒤척였다.`,fx:{gwProc:k}}}))}}
     /* 히든급 장비를 hiddenNeed개 먹으면 왕족 인자가 발현한다 */
     if(ch.gw.royal&&!ch.gw.form){
       return {t:'왕족 인자 발현',x:'히든급 장비를 세 개째 삼킨 밤, 몸 깊은 곳에서 오래 잠들어 있던 것이 눈을 뜬다. 왕족의 인자다. 해충의 왕족은 한 명만 이 몸을 가질 수 있다. 어느 쪽으로 변할지는 병기가 정한다.',c:Object.entries(Z.forms).map(([k,v])=>({l:v.n,h:v.e,ok:{t:`몸이 ${v.n}으로 변했다. 이음매마다 다른 것이 자리를 잡았다.`,fx:{gwForm:k}}}))}}
