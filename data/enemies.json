@@ -8591,6 +8591,70 @@
     "eva": 10,
     "d": "4라운드마다 그 라운드 동안 회피 +10"
    }
+  },
+  "peer_arb": {
+   "n": "조율자 · 같은 직속의 동료",
+   "color": "#f6dc8c",
+   "hp": 850,
+   "atk": 28,
+   "eva": 17,
+   "spd": 12,
+   "deck": [
+    "x_bind",
+    "x_pillar",
+    "x_bind",
+    "x_bluewave",
+    "x_citysound",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "intro": "서가 사이로 낯익은 걸음이 따라온다. 같은 머리의 직속, 조율자다. 서두르는 기색이 없다. 기척이 묻은 말을 판에서 내리러 왔다. 이것은 처벌이 아니다.",
+   "endText": "동료가 무릎을 꿇었다. 인장이 바닥에 닿는 소리가 서가 사이로 오래 울렸다.",
+   "passive": {
+    "id": "lock",
+    "n": "봉인",
+    "every": 2,
+    "d": "2라운드마다 내 손패 1장을 그 라운드 동안 잠근다"
+   },
+   "hard": {
+    "hp": 1.66,
+    "atk": 2,
+    "eva": 1
+   }
+  },
+  "peer_claw": {
+   "n": "발톱 · 같은 직속의 동료",
+   "color": "#f0ead8",
+   "hp": 650,
+   "atk": 28,
+   "eva": 16,
+   "spd": 15,
+   "deck": [
+    "x_exec",
+    "x_blink",
+    "x_blink",
+    "x_blink",
+    "x_lh_triple",
+    "guard"
+   ],
+   "hidden": true,
+   "tier": "hidden",
+   "trait": "bloodscent",
+   "chain": "zena",
+   "intro": "서가 끝에서 낯익은 걸음이 멈춘다. 같은 머리의 직속, 발톱이다. 말은 짧다. 기척이 묻은 말은 판에서 내려진다. 그것이 명령서의 전부다.",
+   "endText": "동료가 칼을 거뒀다. 칼날이 칼집에 들어가는 소리만 짧게 났다.",
+   "passive": {
+    "id": "claw",
+    "n": "바랄의 발톱",
+    "dice": 6,
+    "d": "적중할 때마다 피해 주사위 1d6을 하나 더 굴린다"
+   },
+   "hard": {
+    "hp": 1.64,
+    "atk": 2,
+    "eva": 1
+   }
   }
  },
  "fixedFights": {
