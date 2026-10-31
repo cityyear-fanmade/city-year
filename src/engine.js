@@ -1618,7 +1618,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch,I=D.infinite,K=CFG.infinite.century;if(!G.infinite||!ch.infinite||!I)return null;
     const LI=lakeOn(ch)&&D.lake&&D.lake.infinite;
     if(!ch.infIntro&&LI){ch.infIntro=1;return {t:LI.intro.t,x:LI.intro.x,c:[{l:LI.intro.a,h:'집은 짓지 않는다 · 호수에서 호수로 항해가 반복된다',ok:{t:LI.intro.at,fx:{lakeOuter:1}}}]}}
-    if(!ch.infIntro){ch.infIntro=1;return {t:I.intro.t,x:(ch.o&&ch.o.key==='crow'&&I.introCrow?I.introCrow+' ':'')+I.intro.x,c:[{l:I.intro.a,h:'외곽에 작은 집을 짓는다 · 혼자여도, 곁에 사람이 있어도 이 집이 돌아오는 자리가 된다',ok:{t:I.intro.at+(ch.bond&&ch.bond.st==='married'&&ch.bond.name&&I.introWith?I.introWith.replace('{n}',ch.bond.name):''),fx:{infHome:1}}}]}}
+    if(!ch.infIntro){ch.infIntro=1;return {t:I.intro.t,x:(ch.o&&ch.o.key==='crow'&&!(ch.flags&&ch.flags.crow_succeed)&&I.introCrow?I.introCrow+' ':'')+((I.introBy&&I.introBy[infKey(ch)])?I.introBy[infKey(ch)]+' ':'')+I.intro.x,c:[{l:I.intro.a,h:'외곽에 작은 집을 짓는다 · 혼자여도, 곁에 사람이 있어도 이 집이 돌아오는 자리가 된다',ok:{t:I.intro.at+(ch.bond&&ch.bond.st==='married'&&ch.bond.name&&I.introWith?I.introWith.replace('{n}',ch.bond.name):''),fx:{infHome:1}}}]}}
     const have=ch.infCent||[],n=(()=>{for(let i=1;i<=Math.floor(age(G)/K.every);i++)if(!have.includes(i))return i;return 0})();
     /* 선원의 변화: 무한 모드에서 선원이 한 단계씩 호수를 닮아 가다가 어느 날 젖은 옷만 남기고 사라진다. 이름은 붙이지 않고 장면만 보여 준다 */
     if(!n&&ch.infIntro&&LI&&LI.morph){const L=ch.lake=ch.lake||{},Mo=CFG.lake.morph,crew=L.crew||[];
@@ -1661,6 +1661,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const FINGER_ROUTE={'엄지':'thumb','검지':'pointer','중지':'middle','약지':'ring'};
   /* 호수 출생은 인연·가족 공통 문구를 D.bond.lake 로 덮어 쓴다(배에서 사는 사람의 말투) */
   const bondTx=ch=>(lakeOn(ch)&&D.bond&&D.bond.lake)?Object.assign({},D.bond,D.bond.lake):D.bond;
+  /* 해금 출생이 2막 끝에서 이어 살 때 쓰는 엔딩 키: 무한 모드 도입 문구가 이 키로 갈린다 */
+  const infKey=ch=>{const o=ch&&ch.o&&ch.o.key,f=(ch&&ch.flags)||{};return o==='crow'&&f.crow_succeed?'crowsucceed':(o==='hermes'||(ch&&ch.o&&ch.o.herm))?(f.herm_obey?'hermobey':'hermfree'):o==='librarian'?(f.lib_block?'libclose':'libstay'):o==='claw'?(f.cl_return?'clawreturn':'clawstay'):o==='arbiter'?(f.ab_keep?'arbkeep':'arbdown'):o==='gweapon'?(f.gw_king&&ch.gw&&ch.gw.form?'gw'+ch.gw.form:'gwhuman'):''};
   const bondRouteOf=ch=>(ch.o&&ch.o.herm)?(ch.bond?'hermes':null):(ch.o&&(ch.o.key==='claw'||ch.o.key==='arbiter'))?ch.o.key:(ch.o&&ch.o.key==='librarian')?'librarian':(ch.o&&ch.o.key==='crow')?'crow':(ch.o&&ch.o.key==='gweapon'&&ch.flags&&ch.flags.gw_fall)?'gweapon':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
