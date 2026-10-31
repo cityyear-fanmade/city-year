@@ -1223,7 +1223,22 @@ export function startUI(E,app){
     hwhost:'홍원 가주 후보 루트에서 "철함사의 소요"의 "선황충을 품는다"를 고르고, 이어지는 "홍루의 시험"에서 홍루를 쓰러뜨린다.',
     hwfree:'홍원 가주 후보 루트에서 "철함사의 소요"의 "거부하고 어르신들과 싸운다"를 고르고 철함사의 원로를 쓰러뜨린다.',
     hwbreak:'홍원 가주 후보 루트에서 흑수 선인에게 재갈을 4개 이상 모은 뒤, "철함사의 소요"에서 "철함사의 목을 친다"를 고르고 철함사의 가모를 쓰러뜨린다.',
-    hwlose:'홍원 가주 후보 루트에서 "선황충을 품는다"를 고르고, "홍루의 시험"에서 홍루에게 쓰러진다.'};
+    hwlose:'홍원 가주 후보 루트에서 "선황충을 품는다"를 고르고, "홍루의 시험"에서 홍루에게 쓰러진다.',
+    rcorp:'R사 부화장 개체로 태어나 R사의 추격을 이겨 내고, 머리의 사자가 나타난 뒤 제 2막의 마지막 상대 "조율자 · 제나"를 쓰러뜨려 금기의 끝에 닿는다',
+    death:'전투에서 HP가 0이 되어 쓰러진다',
+    mind:'정신력이 바닥나 마음이 무너진다. 결혼한 인연이 있으면 목소리가 한 번만 붙잡아 준다',
+    distort:'정신력이 바닥난 상태에서 목소리를 전혀 밀어내지 못해 개화하지 못하면 육신이 뒤틀리고, 뒤틀림의 이름을 정한다',
+    true:'무한 모드에서 제 2막의 위협 등급을 끝까지 올라 마지막 등급 "발톱과 조율자"를 넘긴다',
+    outer:'무한 모드에서 제 2막을 넘겨 외곽으로 나간 뒤, "외곽에서 이야기를 끝낸다"를 직접 고른다',
+    out_seal:'무한 모드 외곽에서 균열로 흘러드는 히든 보스를 모두 쓰러뜨린다',
+    out_star:'무한 모드 외곽에서 쓰러뜨린 상대가 16명 이상이 된다',
+    out_settle:'무한 모드 외곽에서 결혼한 채 자식이 성인이 되고, 제 2막을 넘긴 뒤 12년이 지난다',
+    distwin:'뒤틀린 몸으로 '+CFG.years+'년을 넘긴다',
+    old:'무한 모드에서 나이가 100살을 넘긴다',
+    blank:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 시작하고, 결혼하지 않은 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',
+    blankwed:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 시작하고, 결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',
+    wed:'결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',
+    lovekill:'뒤틀린 몸으로 살아가다 찾아온 사냥에서, 사랑하던 이에게 쓰러진다'};
   const HINT_TRIG=[{t:'열차에서 내릴 수 있다면',k:['wfree','wrival','wstay']},{t:'철함사의 문 앞',k:['hwmaker','hwflee']},{t:'철함사의 소요',l:'선황충을 품는다',k:['hwhost','hwfree','hwbreak']},{t:'홍루의 시험',k:['hwhost','hwlose']}];
   function noteHint(ev){
     if(!ev||!ev.t)return;const ks=[];for(const h of HINT_TRIG)if(ev.t===h.t&&(!h.l||(ev.c||[]).some(c=>c.l===h.l)))ks.push(...h.k);
@@ -1258,7 +1273,7 @@ export function startUI(E,app){
         <div class="row between"><span>끝낸 판</span><b class="mono">${r.runs}</b></div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">칭호 · 최고 등급에 오른 횟수</span><div class="stack" style="gap:6px">${TITLE_REC.map(n=>{const c=(r.titles||{})[n]||0;return hintRow(c,`${esc(n)} ×${c}`,TITLE_HINT[n])}).join('')}</div></div>
       ${(()=>{const LR={office:'사무소',assoc:'협회',wing:'날개',finger:'소지',thumb:'엄지',pointer:'검지',middle:'중지',ring:'약지',kuro:'흑운회',blade:'검계',awl:'밤의 송곳',hyeolgwi:'혈귀',freelance:'무소속',east:'동부 외곽 출신',highfixer:'고급 해결사',rcorp:'R사',hcorp:'H사',lake:'대호수'},lov=r.lovers||{},rows=[];
-        for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++){const V=R.variants?R.variants[vi]:R,lv=lov[rk+':'+vi]||0;rows.push([lv,lv?`${lv>1?'♥':'✓'} ${V.who}`:'???',lv?`${LR[rk]||rk} · ${V.look||''}`:rk==='finger'?'소지 표식을 가진 채 손가락 조직원이 아닌 곳(사무소·협회·날개·무소속)에서 지내면, 말수가 적은 사람이 먼저 눈을 마주친다':`${LR[rk]||rk} 쪽에서 만난다`])}
+        for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++){const V=R.variants?R.variants[vi]:R,lv=lov[rk+':'+vi]||0;rows.push([lv,lv?`${lv>1?'♥':'✓'} ${V.who}`:'???',lv?`${LR[rk]||rk} · ${V.look||''}`:r.hardClear&&V.meet?`[하드 완주 보상] ${LR[rk]||rk} 쪽에서 만난다 · ${V.who} · 만남 사건 「${V.meet.t}」`:rk==='finger'?'소지 표식을 가진 채 손가락 조직원이 아닌 곳(사무소·협회·날개·무소속)에서 지내면, 말수가 적은 사람이 먼저 눈을 마주친다':`${LR[rk]||rk} 쪽에서 만난다`])}
         const met=rows.filter(x=>x[0]).length,wed=rows.filter(x=>x[0]>1).length;
         return `<div class="panel stack" style="gap:6px"><span class="eyebrow">인연 · 만난 ${met}/${rows.length} · 결혼 ${wed}</span><div class="stack" style="gap:6px">${rows.map(([lv,l,h])=>`<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${lv?'':' dim'}" style="justify-self:start${lv>1?';color:var(--bleed);border-color:var(--bleed)':''}">${esc(l)}</span><span class="small dim">${esc(h)}</span></div>`).join('')}</div><p class="small dim">✓ 만나 본 인연 · ♥ 결혼까지 간 인연. 소속마다 만나는 사람이 다르다.</p></div>`})()}
       ${(()=>{const H=D.hiddenOrigins||[],got=r.births||[];return H.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 출생 ${H.filter(x=>got.includes(x.n)).length}/${H.length}</span><div class="stack" style="gap:6px">${H.map(x=>{const o=got.includes(x.n);return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${o?'':' dim'}" style="justify-self:start">${o?esc(x.n):'???'}</span><span class="small dim">${o?esc(String(x.t||'').split(/(?<=[.다])\s/)[0]):'아직 태어나 보지 못했다'}</span></div>`}).join('')}</div><p class="small dim">그 출생으로 한 번이라도 시작하면 열린다.</p></div>`:''})()}
