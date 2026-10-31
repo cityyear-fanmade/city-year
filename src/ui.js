@@ -1243,7 +1243,7 @@ export function startUI(E,app){
   function noteHint(ev){
     if(!ev||!ev.t)return;const ks=[];for(const h of HINT_TRIG)if(ev.t===h.t&&(!h.l||(ev.c||[]).some(c=>c.l===h.l)))ks.push(...h.k);
     if(!ks.length)return;const r=loadRec();r.hints=r.hints||{};let ch=false;for(const k of ks)if(!r.hints[k]){r.hints[k]=1;ch=true}if(ch)store.set(REC,JSON.stringify(r))}
-  const hintRow=(open,label,hint)=>`<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${open?'':' dim'}" style="justify-self:start">${open?label:'???'}</span><span class="small dim">${esc(hint||'')}</span></div>`;
+  const hintRow=(open,label,hint)=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${open?'':' dim'}">${open?label:'???'}</span><span class="small dim" style="white-space:pre-line">${esc(hint||'')}</span></div>`;
   /* 기록실: 대호수 도감. 대호수로 태어났거나 호수의 적을 한 번이라도 만난 기록이 있으면 보인다 */
   function vLakeRec(r){
     const ids=Object.keys(D.enemies).filter(id=>/^lake_(ywhale|whale|indigo)/.test(id));
@@ -1254,8 +1254,36 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">대호수 도감 · 대재앙 ${w.filter(id=>r.beaten.includes(id)).length}/${w.length} · 어린 고래 ${y.filter(id=>r.beaten.includes(id)).length}/${y.length}</span>${rows(w,'대재앙')}${rows(y,'보스급 고래')}${rows(o,'그 밖에')}</div>`
   }
   /* 기록실: 칸 제목을 누르면 그 칸이 접히고 펼쳐진다 (브라우저에 기억) */
+  const BOND_COND={office:'사무소 소속일 때',assoc:'협회 소속일 때',wing:'날개 소속일 때',freelance:'해결사로 등록하고 소속 없이 지내거나 자기 사무소를 열었을 때',thumb:'엄지 소속일 때',pointer:'검지 소속일 때',middle:'중지 소속일 때',ring:'약지 소속일 때',kuro:'흑운회 소속일 때',blade:'검계 소속일 때',awl:'밤의 송곳 소속일 때',hyeolgwi:'혈귀로 태어났을 때',east:'동부 출신 외곽 생존자로 태어났을 때',highfixer:'해결사 '+CFG.bond.hidden.rank+'급 이상일 때 ('+CFG.bond.hidden.chance+'%)',rcorp:'R사 부화장에서 쫓기는 줄기일 때',hcorp:'홍원(H사) 줄기일 때',hermes:'신탁대행자 · 헤르메스로 태어났을 때',crow:'까마귀팀 복제체로 태어났을 때',lake:'대호수로 나간 자일 때',finger:'소지 표식을 가진 채 손가락 조직원이 아닌 곳에서 지낼 때'};
+  const FLAG_TX={giri:'중지의 의리 줄기를 탄',giriDone:'의리 줄기를 끝까지 마친',giriObey:'의리에 순종한',giriTraitor:'의리를 배신한',thumbRebel:'엄지에 반역한',traitor:'배신 줄기를 탄',prophecy:'예언 줄기를 탄',starborn:'별 태생인',lamancha:'라만차 줄기를 탄',taboo:'금기를 어긴',libraryGuest:'도서관의 손님 줄기를 탄',defied:'지령을 어긴',synTop:'조직 최상위에 오른',nihil:'허무 줄기를 탄'};
+  const reqPart=t=>{const nm=id=>(D.enemies[id]||{}).n||id;let m;
+    if(t==='nojob')return '직업 없이';if(t==='pinky')return '소지 표식을 가진 채';if(t==='bondmarried')return '결혼한 채';if(t==='wtrain')return '혈귀 훈련 줄기일 때';
+    if(m=t.match(/^affname:(.+)$/))return m[1]+' 소속일 때';if(m=t.match(/^notaffname:(.+)$/))return m[1]+' 소속이 아닐 때';
+    if(m=t.match(/^rank<=(\d+)$/))return m[1]+'급 이상일 때';if(m=t.match(/^fi>=(\d+)$/))return '손가락 '+m[1]+'단계 이상일 때';
+    if(t==='beat:any')return '히든 보스를 한 번 이긴 뒤';
+    if(m=t.match(/^beat:(.+)$/))return m[1].split('|').map(nm).join(' · ')+(m[1].includes('|')?' 중 하나':'')+'를 이긴 뒤';
+    if(m=t.match(/^flag:(\w+)>=(\d+)$/))return (FLAG_TX[m[1]]||m[1])+' 횟수가 '+m[2]+'번 이상일 때';
+    if(m=t.match(/^flag:(\w+)$/))return (FLAG_TX[m[1]]||m[1])+' 상태일 때';
+    return '';};
+  const reqText=q=>{const out=[];const walk=x=>{if(!x)return;if(Array.isArray(x))x.forEach(walk);else if(typeof x==='object'){if(x.any)out.push((x.any.map(reqPart).filter(Boolean)).join(' 또는 '))}else{const t=reqPart(x);if(t)out.push(t)}};walk(q);return out.join(' · ')};
+  /* 히든 보스 도감: 하드 완주 전에는 ???, 하드 완주 후에는 1차(어디서·어떤 조건) 설명, 한 번이라도 만나면 2차(획득 방법) 설명 */
+  function hiddenDex(r){
+    const hb=D.hiddenBosses||[],ids=[...new Set(hb.map(h=>h.id))].filter(id=>D.enemies[id]);
+    const rows=ids.map(id=>{const e=D.enemies[id],hs=hb.filter(h=>h.id===id),seen=(r.seen||[]).includes(id),won=(r.beaten||[]).includes(id);
+      const conds=hs.map(h=>reqText(h.req)).filter(Boolean),from=Math.min(...hs.map(h=>h.from||1));
+      const route=hs.some(h=>JSON.stringify(h.req||'').includes('affname'))?'소속 줄기':'갈림길';
+      const d=e.drop||{},gears=[...(d.gears||[]).map(g=>g.n),...(d.gear?[d.gear.n]:[])];
+      let tx;
+      if(seen)tx=`만난 곳: ${conds.join(' / ')||'조건 없음'} · ${from}년차부터\n이기면: ${gears.length?gears.join(' · ')+' 획득':(d.n?d.n+' 획득':'쓰러뜨린 기록이 남는다')}${won?'':'\n지면: 이야기가 거기서 끝난다'}${won?'\n✓ 쓰러뜨렸다':''}`;
+      else if(r.hardClear)tx=`[하드 완주 보상] ${route}에서 만날 수 있다\n조건: ${conds.join(' / ')||'조건 없음'} · ${from}년차부터`;
+      else tx='';
+      return [seen,seen?esc(e.n)+(won?' ✓':''):'???',tx||(seen?'':'하드 완주 후에 어디서 만나는지 알 수 있다')]});
+    const got=rows.filter(x=>x[0]).length;
+    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 보스 도감 · 만난 ${got}/${rows.length}</span><div class="stack" style="gap:10px">${rows.map(([o,l,h])=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${o?'':' dim'}">${l}</span><span class="small dim" style="white-space:pre-line">${esc(h)}</span></div>`).join('')}</div><p class="small dim">${r.hardClear?'하드 완주 보상: 만나지 못한 상대는 어디서 만나는지, 만난 상대는 얻는 방법이 열려 있다.':'하드 완주를 하면 만나지 못한 상대가 어디서 나오는지 알 수 있다.'}</p></div>`}
+  const REC_TABS=['요약','칭호','인연','엔딩','히든 보스','출생·소속','장비','상대'];
+  const recTabOf=t=>/^(최고 기록|판 통계)/.test(t)?'요약':/^칭호/.test(t)?'칭호':/^인연/.test(t)?'인연':/^엔딩/.test(t)?'엔딩':/^히든 보스/.test(t)?'히든 보스':/^(히든 출생|소속|타고난 것)/.test(t)?'출생·소속':/^특수 장비/.test(t)?'장비':'상대';
   const RFK='cy_recfold',recFold=()=>{try{return JSON.parse(localStorage.getItem(RFK)||'[]')||[]}catch(e){return []}};
-  const vRecords=()=>{const f=recFold();return vRecords0().replace(/<div class="panel stack"( style="[^"]*")?><span class="eyebrow">([^<]*)<\/span>/g,(m,st,t)=>{const k=t.replace(/\s*·.*$/,'').replace(/\s*[0-9].*$/,'')||t,c=f.includes(k);return `<div class="panel stack rfold${c?' closed':''}"${st||''}><span class="eyebrow rfh" data-a="rfold" data-i="${esc(k)}" role="button" aria-expanded="${!c}">${c?'▸':'▾'} ${t}</span>`})};
+  const vRecords=()=>{const f=recFold(),tab=UI.recTab||'요약';const html=vRecords0().replace(/<div class="panel stack"( style="[^"]*")?><span class="eyebrow">([^<]*)<\/span>/g,(m,st,t)=>{const k=t.replace(/\s*·.*$/,'').replace(/\s*[0-9].*$/,'')||t,c=f.includes(k);return `<div class="panel stack rfold${c?' closed':''}"${(()=>{const hide=recTabOf(t)!==tab;if(!hide)return st||'';return st?st.replace(/"$/,';display:none"'):' style="display:none"'})()}><span class="eyebrow rfh" data-a="rfold" data-i="${esc(k)}" role="button" aria-expanded="${!c}">${c?'▸':'▾'} ${t}</span>`});return html};
   function vRecords0(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
     const ends0=[['gwmoth','나방 공주의 밤'],['gwroach','바퀴 황제의 왕좌'],['gwfly','파리 대왕의 식탁'],['gwhuman','인간으로 남은 병기'],['clawreturn','돌아온 발톱'],['clawstay','길을 닫은 발톱'],['arbkeep','한쪽을 남긴 조율자'],['arbdown','내려온 조율자'],['libstay','책이 된 사서'],['libclose','문을 닫는 사서'],['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['hermobey','끝난 지령'],['hermfree','지령 없는 아침'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
@@ -1265,6 +1293,7 @@ export function startUI(E,app){
     const foes=g=>Object.entries(D.enemies).filter(([,e])=>e.tier===g);
     const total=Object.keys(D.enemies).length;
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저의 기록</div><h2>기록실</h2></div>
+      <div class="seg kinds" style="margin:4px 0">${REC_TABS.map(k=>`<button class="${(UI.recTab||'요약')===k?'on':''}" data-a="rectab" data-i="${k}">${k}</button>`).join('')}</div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">최고 기록</span>
         <div class="row between"><span>가장 오래 산 햇수</span><b class="mono">${r.best.years}년</b></div>
         ${r.hardClear?`<div class="row between"><span>하드 완주</span><b class="mono">${r.hardClear}회</b></div>`:''}${r.easyClear?`<div class="row between"><span>쉬움 완주</span><b class="mono">${r.easyClear}회</b></div>`:''}
@@ -1272,13 +1301,14 @@ export function startUI(E,app){
         <div class="row between"><span>도달한 위협 등급</span><b class="mono">${r.best.grade>=0?X.grades[r.best.grade]:'—'}</b></div>
         <div class="row between"><span>끝낸 판</span><b class="mono">${r.runs}</b></div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">칭호 · 최고 등급에 오른 횟수</span><div class="stack" style="gap:6px">${TITLE_REC.map(n=>{const c=(r.titles||{})[n]||0;return hintRow(c,`${esc(n)} ×${c}`,TITLE_HINT[n])}).join('')}</div></div>
-      ${(()=>{const LR={office:'사무소',assoc:'협회',wing:'날개',finger:'소지',thumb:'엄지',pointer:'검지',middle:'중지',ring:'약지',kuro:'흑운회',blade:'검계',awl:'밤의 송곳',hyeolgwi:'혈귀',freelance:'무소속',east:'동부 외곽 출신',highfixer:'고급 해결사',rcorp:'R사',hcorp:'H사',lake:'대호수'},lov=r.lovers||{},rows=[];
-        for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++){const V=R.variants?R.variants[vi]:R,lv=lov[rk+':'+vi]||0;rows.push([lv,lv?`${lv>1?'♥':'✓'} ${V.who}`:'???',lv?`${LR[rk]||rk} · ${V.look||''}`:r.hardClear&&V.meet?`[하드 완주 보상] ${LR[rk]||rk} 쪽에서 만난다 · ${V.who} · 만남 사건 「${V.meet.t}」`:rk==='finger'?'소지 표식을 가진 채 손가락 조직원이 아닌 곳(사무소·협회·날개·무소속)에서 지내면, 말수가 적은 사람이 먼저 눈을 마주친다':`${LR[rk]||rk} 쪽에서 만난다`])}
+      ${(()=>{const BDc0=CFG.bond,LR={office:'사무소',assoc:'협회',wing:'날개',finger:'소지',thumb:'엄지',pointer:'검지',middle:'중지',ring:'약지',kuro:'흑운회',blade:'검계',awl:'밤의 송곳',hyeolgwi:'혈귀',freelance:'무소속',east:'동부 외곽 출신',highfixer:'고급 해결사',rcorp:'R사',hcorp:'H사',lake:'대호수'},lov=r.lovers||{},rows=[];
+        for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++){const V=R.variants?R.variants[vi]:R,lv=lov[rk+':'+vi]||0;rows.push([lv,lv?`${lv>1?'♥':'✓'} ${V.who}`:'???',lv?`${LR[rk]||rk} · ${V.look||''}`:r.hardClear&&V.meet?`[하드 완주 보상] ${LR[rk]||rk} 줄기에서 만날 수 있다\n조건: ${BOND_COND[rk]||'해당 줄기일 때'} · ${BDc0.from}년차부터\n만남 사건 「${V.meet.t}」`:rk==='finger'?'소지 표식을 가진 채 손가락 조직원이 아닌 곳(사무소·협회·날개·무소속)에서 지내면, 말수가 적은 사람이 먼저 눈을 마주친다':`${LR[rk]||rk} 쪽에서 만난다`])}
         const met=rows.filter(x=>x[0]).length,wed=rows.filter(x=>x[0]>1).length;
-        return `<div class="panel stack" style="gap:6px"><span class="eyebrow">인연 · 만난 ${met}/${rows.length} · 결혼 ${wed}</span><div class="stack" style="gap:6px">${rows.map(([lv,l,h])=>`<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${lv?'':' dim'}" style="justify-self:start${lv>1?';color:var(--bleed);border-color:var(--bleed)':''}">${esc(l)}</span><span class="small dim">${esc(h)}</span></div>`).join('')}</div><p class="small dim">✓ 만나 본 인연 · ♥ 결혼까지 간 인연. 소속마다 만나는 사람이 다르다.</p></div>`})()}
+        return `<div class="panel stack" style="gap:6px"><span class="eyebrow">인연 · 만난 ${met}/${rows.length} · 결혼 ${wed}</span><div class="stack" style="gap:6px">${rows.map(([lv,l,h])=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${lv?'':' dim'}" style="${lv>1?'color:var(--bleed);border-color:var(--bleed)':''}">${esc(l)}</span><span class="small dim" style="white-space:pre-line">${esc(h)}</span></div>`).join('')}</div><p class="small dim">✓ 만나 본 인연 · ♥ 결혼까지 간 인연. 소속마다 만나는 사람이 다르다.</p></div>`})()}
       ${(()=>{const H=D.hiddenOrigins||[],got=r.births||[];return H.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 출생 ${H.filter(x=>got.includes(x.n)).length}/${H.length}</span><div class="stack" style="gap:6px">${H.map(x=>{const o=got.includes(x.n);return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${o?'':' dim'}" style="justify-self:start">${o?esc(x.n):'???'}</span><span class="small dim">${o?esc(String(x.t||'').split(/(?<=[.다])\s/)[0]):'아직 태어나 보지 못했다'}</span></div>`}).join('')}</div><p class="small dim">그 출생으로 한 번이라도 시작하면 열린다.</p></div>`:''})()}
       ${(()=>{const GR=[['날개','wing'],['협회','assoc'],['사무소','office'],['손가락','finger'],['조직','syn']],all=GR.flatMap(([,k])=>D.orgs[k]||[]),got=(r.affs||[]).filter(n=>all.includes(n));
         return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소속 ${got.length}/${all.length}</span>${GR.map(([n,k])=>`<div><span class="small dim">${n}</span><div class="chips">${(D.orgs[k]||[]).map(o=>`<span class="chip${(r.affs||[]).includes(o)?'':' dim'}">${(r.affs||[]).includes(o)?esc(o):'???'}</span>`).join('')}</div></div>`).join('')}<p class="small dim">한 번이라도 들어간 소속이 열린다.</p></div>`})()}
+      ${hiddenDex(r)}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span>${r.hardClear?'<span class="small dim">하드 완주 보상 · 모든 엔딩의 정확한 조건이 열려 있습니다</span>':''}<div class="stack" style="gap:6px">${ends.map(([k,n])=>{const op=r.endings.includes(k),pass=!!(r.hints&&r.hints[k])&&END_EXACT[k],hd=!!r.hardClear&&END_EXACT[k];return hintRow(op,esc(n),(op||pass||hd)&&END_EXACT[k]?(!op?(pass?'[갈림길을 지나쳤다] ':'[하드 완주 보상] '):'')+END_EXACT[k]:END_HINT[k])}).join('')}</div></div>
       ${(()=>{const cat=specCat(),ids=Object.keys(cat.g),gs=r.gears||[],pk=Object.keys(cat.p),pg=r.packs||[];return `<div class="panel stack" style="gap:8px"><span class="eyebrow">특수 장비 ${ids.filter(k=>gs.includes(k)).length}/${ids.length}</span><div class="chips">${ids.map(k=>`<span class="chip${gs.includes(k)?'':' dim'}">${gs.includes(k)?esc(cat.g[k]):'???'}</span>`).join('')}</div>
         <span class="eyebrow">전용 카드팩 ${pk.filter(k=>pg.includes(k)).length}/${pk.length}</span><div class="chips">${pk.map(k=>`<span class="chip${pg.includes(k)?'':' dim'}">${pg.includes(k)?esc(k)+' · '+cat.p[k]+'장':'???'}</span>`).join('')}</div>
@@ -2786,6 +2816,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
     help(){UI.help='card';if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
     helptab(k){UI.help=k;render()},
+    rectab(k){UI.recTab=k;render()},
     bagclose(){if(UI.help){UI.help=null;render();return}if(UI.cfg){UI.cfg=false;render();return}UI.bag=null;UI.dropAsk=null;render()},
     fs(i){if(i==null||(i==='on')!==FS.on())FS.toggle()},
     cfg(){UI.cfg=true;UI.homeAsk=false;if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
