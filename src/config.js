@@ -279,6 +279,10 @@ export const CFG = {
     {key: 'scythe', n: '혈낫', lore: '갈고리처럼 휘어진 날에 피가 마르지 않고 맺혀 있다. 쓰러뜨릴 때보다 쓰러뜨리기 직전에 가장 잘 든다.', fx: {atk: 5, eva: 2}, dice: [2, 4], wx: {hitBleed: 1, finish: {at: 0.4, dmg: 5}}, e: '공+5 · 회피+2 · 피해 2d4 · 적중마다 출혈 +1 · 상대 HP 40% 이하면 피해 +5'},
     {key: 'whip', n: '핏빛 채찍', lore: '혈관을 길게 뽑아 꼬아 놓은 줄이다. 한 번 휘두르면 두 번 닿는다.', fx: {atk: 4, spd: 2}, dice: [1, 6], wx: {extraHit: 1, hitBleed: 1}, e: '공+4 · 속+2 · 피해 1d6 · 공격 카드 적중 +1회 · 적중마다 출혈 +1'},
     {key: 'spear', n: '혈창', lore: '피가 응고하기 전에 길게 뽑아낸 창이다. 먼저 움직인 쪽의 심장을 먼저 겨눈다.', fx: {atk: 5, spd: 2}, dice: [2, 4], wx: {hitBleed: 1, leadDmg: 8, hitB: 5}, e: '공+5 · 속+2 · 피해 2d4 · 명중+5 · 적중마다 출혈 +1 · 선공이면 그 라운드 첫 적중 피해 +8'}],
+  /* G사 병기 출신(해금 출생): 13년차 몰락 뒤 보정(fall)을 받고 해결사로 등록한다. 17년차부터 날개 시술(벌레팔·해충 병기)로 무기·보조 장비를 쥘 수 없게 되는 대신 장비를 먹어(등급마다 perGrade) 해충 황제 발현도(max)를 올리고, 가득 차면 발현(emerge)해 특색급 능력치와 전용 책장을 얻는다. 먹은 장비 능력치의 absorb 비율을 영구히 흡수한다 */
+  gweapon: {fall: {maxHp: -15, atk: -2}, procFrom: 4, perGrade: 7, max: 100, absorb: 0.3, absorbKeys: ['atk', 'eva', 'spd', 'maxHp', 'check'],
+    emerge: {maxHp: 60, atk: 12, eva: 6, spd: 6, check: 3}, pack: ['gw_0', 'gw_1', 'gw_2', 'gw_3', 'gw_4', 'gw_5', 'gw_6', 'gw_7', 'gw_8', 'gw_9'],
+    proc: {arm: {n: '벌레팔', fx: {atk: 6, spd: 2, dmgB: 3}, wx: {hitBleed: 1}, e: '공격+6 · 속도+2 · 피해+3 · 적중마다 출혈 +1'}, pest: {n: '해충 병기', fx: {atk: 5, eva: 3, dmgB: 2}, wx: {crush: 6, crushN: '해충'}, e: '공격+5 · 회피+3 · 피해+2 · 라운드마다 첫 적중 피해 +6'}}},
   routeWeapon: {
     /* 머리의 발톱 · 조율자(해금 출생): 직업 전용 무기가 줄기의 이정표(routeWpn 1·2)마다 한 단계씩 올라 두 번째 강화에서 히든급이 된다. lv[0]은 직업 시작 무기와 같다 */
     claw: {id: 'job_claw', lv: [

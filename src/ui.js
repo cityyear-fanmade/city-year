@@ -598,6 +598,7 @@ export function startUI(E,app){
     {const t=fingerPassive(af,ch.fi||0);if(t)P.push(t)}
     if(ch.pinky&&!ch.hw&&CFG.rankCardF['소지']){const tab=CFG.rankCardF['소지'],n=(ch.pinkyKeys||[]).length,t=tab[Math.min(n,tab.length-1)];if(t&&(t.dice||t.b||t.hit))P.push(`별 카드 강화 (인의예지 ${n}/4) · 모든 공격 · 주사위 +${t.dice} · 피해 +${t.b} · 명중 +${t.hit}`)}
     else {const tab=CFG.syn[af]?(D.fingers[af]&&D.fingers[af].pack?CFG.rankCard:null):CFG.rankCardF[af];if(tab&&!ch.hw&&ch.aff&&ch.aff.type==='finger'){const t=tab[Math.min(Math.max(ch.fi||0,0),tab.length-1)];if(t&&(t.dice||t.b||t.hit))P.push(`서열 카드 강화 · ${CFG.syn[af]?'전용 카드':'모든'} 공격 · 주사위 +${t.dice} · 피해 +${t.b} · 명중 +${t.hit}`)}}
+    if(ch.gw&&ch.gw.proc){const Z_=CFG.gweapon,Pr=Z_.proc[ch.gw.proc];P.push(`날개 시술 · ${Pr.n} · 방어구 말고는 장비를 쥘 수 없다 · 장비를 먹으면 해충 황제 발현도가 오른다 (${ch.gw.emerged?'발현함':(ch.gw.gauge||0)+'/'+Z_.max})`)}
     if(ch.fate)P.push(`운명 · 모든 판정 +${CFG.nWing.fate} (사건 판정 · 전투 명중·회피) · 못 패시브 대신`);
     if(ch.oracle)P.push(`신탁대행자 · 지령 독촉 · 지령 스택 최대 ${CFG.oracle.presc} · 지령을 수행하지 못하면 다음 라운드 명중 −${CFG.oracle.missHit} · 회피 −${CFG.oracle.missEva}`);
     if(af==='약지'||ch.artSense)P.push(`예술적 감각 ${ch.artSense||0}/${CFG.artSense.max} · 선택지 판정 주사위 1d${E.checkDie(ch)}${af==='약지'?' · 적을 '+CFG.artSense.every+'번 쓰러뜨릴 때마다 +1 (영구)':''}`);
@@ -727,7 +728,7 @@ export function startUI(E,app){
     const gtabs=st.length?`<div class="seg" style="margin:6px 0">${[['all','전체',st.length],...slotKeys.map(k=>[k,D.slots[k],cnt(k)])].map(([k,n,c])=>`<button class="${gt===k?'on':''}" data-a="gtab" data-i="${k}">${n} ${c}</button>`).join('')}</div>`:'';
     const sl=order.map(i=>{const g=st[i],cur=ch.gear[g.slot],df=fxDiff(g,cur);
       return `<div class="invr stash"><span>${D.slots[g.slot]}</span><div class="stack" style="gap:2px;min-width:0"><b>${esc(g.n)}</b><span class="mono small" style="color:var(--gold)">${esc(g.e||'')}</span>${df?`<span class="mono small">지금 장비보다 · ${df}</span>`:''}</div>
-        ${cbt?'<span class="small dim">전투 중 교체 불가</span>':E.equipWhy(ch,g)?`<span class="small bad">${esc(E.equipWhy(ch,g))}</span>`:`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}</div>`}).join('');
+        ${cbt?'<span class="small dim">전투 중 교체 불가</span>':E.equipWhy(ch,g)?`<span class="small bad">${esc(E.equipWhy(ch,g))}</span>`:`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}${ch.gw&&ch.gw.proc&&!ch.gw.emerged&&!cbt?`<button class="chip warn" data-a="geats" data-i="${i}">먹는다 (+${CFG.gweapon.perGrade*Math.max(1,g.grade||1)})</button>`:''}</div>`}).join('');
     const w=ch.gear.weapon,need=E.bonNeed(ch);
     const up=w&&(w.id==='bonatelli'||w.id==='star')?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b class="serif">${esc(w.n)}</b><span class="mono" style="color:var(--gold)">강화 ${w.lvl}/${w.id==='star'?CFG.star.max:CFG.bon.max}</span></div>
       ${need==null?'<p class="small dim">최대로 강화했다.</p>':`<p class="small">보관함의 장비 하나를 녹여 한 단계 강화한다. 다음 단계 재료 · ${need?need+'등급 이상':'아무 장비'}${need>=5?' (유물·히든 장비)':''}</p>
@@ -737,7 +738,7 @@ export function startUI(E,app){
     const lp=lv_?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b class="serif">레바테인</b><span class="mono" style="color:var(--gold)">붉은 화염 ${ln}회</span></div>
       <p class="small">${lnx?`다음 단계 · ${esc(lnx.n)}까지 ${lnx.at-ln}번 남았다 (${ln}/${lnx.at})`:'해방을 마쳤다.'}</p>
       <p class="small dim">붉은 화염을 건 횟수는 영구히 쌓인다. 단계가 올라 무기가 바뀌어도 쌓은 횟수와 공방에서 한 정비(공격·회피 강화)는 그대로 이어진다.</p></div>`:'';
-    return `<div><span class="eyebrow">장착 중</span>${eq}</div>${lp}${up}
+    return `${UI.eatMsg?`<p class="good small">${esc(UI.eatMsg)}</p>`:''}<div><span class="eyebrow">장착 중</span>${eq}</div>${lp}${up}
       <div><span class="eyebrow">보관함 ${st.length}</span>${gtabs}${sl||(st.length?'<p class="small dim">이 분류에는 장비가 없다.</p>':'<p class="small dim">보관함이 비어 있다. 새 장비를 얻으면 장착할지 보관할지 고를 수 있고, 장착하면 이전 장비가 여기로 온다.</p>')}</div>
       ${st.length?`<p class="small dim">장착을 누르면 같은 칸의 지금 장비와 자리를 바꾼다. 아무것도 사라지지 않는다.</p>`:''}`;
   }
@@ -913,11 +914,12 @@ export function startUI(E,app){
     /* 전용 카드팩 제안은 장비보다 먼저 보여 준다 (전리품을 얻자마자 바로 고른다) */
     if((ch.gearOffers||[]).length&&!ch.packOffer){
       const it=ch.gearOffers[0],cur=ch.gear[it.slot],df=fxDiff(it,cur);
-      return sheet(`<span class="eyebrow">새 장비 · ${D.slots[it.slot]}${ch.gearOffers.length>1?` · 남은 ${ch.gearOffers.length}개`:''}</span><h2>${esc(it.n)}</h2>
+      return sheet(`${UI.eatMsg?`<p class="good small">${esc(UI.eatMsg)}</p>`:''}<span class="eyebrow">새 장비 · ${D.slots[it.slot]}${ch.gearOffers.length>1?` · 남은 ${ch.gearOffers.length}개`:''}</span><h2>${esc(it.n)}</h2>
         <div class="cmp"><div class="panel stack" style="gap:4px"><span class="eyebrow">지금 장착 중</span><b>${cur?esc(cur.n):'없음'}</b><span class="mono small dim">${cur?esc(cur.e||''):''}</span></div>
           <div class="panel stack" style="gap:4px;border-color:var(--gold)"><span class="eyebrow">새 장비</span><b>${esc(it.n)}</b><span class="mono small" style="color:var(--gold)">${esc(it.e||'')}</span>${it.t?`<span class="small dim" style="line-height:1.55">${esc(it.t)}</span>`:''}</div></div>
         <div class="mono small">바꾸면 · ${df||'능력치 변화 없음'}</div>
         ${E.equipWhy(ch,it)?`<p class="small bad">장착할 수 없다 · ${esc(E.equipWhy(ch,it))}</p>`:`<button class="btn primary" data-a="gwear">장착한다${cur?` · ${esc(cur.n)}은(는) 보관함으로`:''}</button>`}
+        ${ch.gw&&ch.gw.proc&&!ch.gw.emerged?`<button class="btn" data-a="geat"><b>먹는다</b><span class="mono small dim">해충 황제 발현도 +${CFG.gweapon.perGrade*Math.max(1,it.grade||1)} (${ch.gw.gauge||0}/${CFG.gweapon.max})</span></button>`:''}
         <button class="btn" data-a="gkeep">보관함에 넣어 둔다</button>
         <p class="small dim">보관함의 장비는 전투 밖이면 언제든 가방 → 장비에서 바꿔 낄 수 있다.</p>`,'offer',false);
     }
@@ -1574,7 +1576,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${L.map(o=>`<button class="btn${cur===o.key?' primary':''}" data-a="origin" data-i="${o.key}"><b>${esc(o.n)}</b><span class="small">${esc(o.t)}</span></button>`).join('')}</div>`;
   }
   /* 시험판: 고른 출생에 맞는 시작 상황 (중간 연차에서 바로 시작) */
-  const TEST_PRESETS=[['','처음부터 (1년차)',''],['crow55','까마귀팀 · 55년차 (1막 끝, 2막 직전)','crow'],['lib56','도서관 지정사서 · 56년차 (2막 시작 직전, 손님 24명)','librarian'],['lib69','도서관 지정사서 · 69년차 (붉은 안개와 침묵의 오케스트라까지 마침, 종막 직전)','librarian'],['lib20','도서관 지정사서 · 20년차 (손님 10명, 도시전설)','librarian'],['lib42','도서관 지정사서 · 42년차 (손님 21명, 도시질병)','librarian'],['lib55','도서관 지정사서 · 55년차 (손님 26명, 도시악몽)','librarian'],['herm37','헤르메스 · 37년차 (결혼·아이 있음, 곧 가족을 없애라)','hermes'],['herm55a','헤르메스 · 55년차 (지령을 따른 뒤)','hermes'],['herm55b','헤르메스 · 55년차 (지령을 거부하고 자비를 받은 뒤)','hermes']];
+  const TEST_PRESETS=[['','처음부터 (1년차)',''],['crow55','까마귀팀 · 55년차 (1막 끝, 2막 직전)','crow'],['lib56','도서관 지정사서 · 56년차 (2막 시작 직전, 손님 24명)','librarian'],['lib69','도서관 지정사서 · 69년차 (붉은 안개와 침묵의 오케스트라까지 마침, 종막 직전)','librarian'],['gw20','G사 병기 출신 · 21년차 (몰락 뒤 시술 직전)','gweapon'],['gw40','G사 병기 출신 · 40년차 (벌레팔 시술 · 발현도 70)','gweapon'],['lib20','도서관 지정사서 · 20년차 (손님 10명, 도시전설)','librarian'],['lib42','도서관 지정사서 · 42년차 (손님 21명, 도시질병)','librarian'],['lib55','도서관 지정사서 · 55년차 (손님 26명, 도시악몽)','librarian'],['herm37','헤르메스 · 37년차 (결혼·아이 있음, 곧 가족을 없애라)','hermes'],['herm55a','헤르메스 · 55년차 (지령을 따른 뒤)','hermes'],['herm55b','헤르메스 · 55년차 (지령을 거부하고 자비를 받은 뒤)','hermes']];
   function testPresetPanel(){
     if(!UNLOCKTEST)return '';
     const key=UI.origin||'',cur=UI.testPreset||'';
@@ -2503,7 +2505,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||G.infinite),u0=loadUnlocks();
       if(cleared)for(const o of D.unlockOrigins||[]){const k='origin:'+o.key,cd=o.cond||{};if(u0.includes(k))continue;
         const has=cd.item?[...Object.values(cc.gear||{}),...(cc.stash||[])].some(x=>x&&x.id===cd.item):false;
-        if((cd.origin&&cc.o&&cc.o.n===cd.origin&&(!cd.beat||(cc.beaten||[]).includes(cd.beat)))||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=o.n}}}
+        if((cd.origin&&cc.o&&cc.o.n===cd.origin&&(!cd.beat||(cc.beaten||[]).includes(cd.beat)))||(cd.aff&&((cc.aff&&cc.aff.name===cd.aff)||(cc.affLog||[]).includes(cd.aff)))||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=o.n}}}
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:w&&UI.overflowEnd?'overflow':(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
     if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;r.ghost={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp}}
@@ -2778,6 +2780,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     packalt(){UI.packAsk=false;const P=G.ch.packOffer;if(!P||!P.alt)return;if(E.acceptPackAlt(G.ch)){UI.res.chips=[...UI.res.chips,`${P.alt.label} · 후보 시절 카드를 덜어내고 흑수의 카드를 더했다`];resave();render()}},
     packno(){UI.packAsk=false;const n=G.ch.packOffer.n;if(E.declinePack(G.ch)){UI.res.chips=[...UI.res.chips,`${n} · 지금 덱을 지켰다`];resave();render()}},
     gwear(){E.resolveGear(G.ch,0,true);resave();render()},
+    geat(){const c=E.gwEatOffer(G.ch);if(c){UI.eatMsg=c.join(' · ');resave();render()}},
+    geats(i){const c=E.gwEatStash(G.ch,+i);if(c){UI.eatMsg=c.join(' · ');resave();render()}},
     gkeep(){E.resolveGear(G.ch,0,false);resave();render()},
     otake(to){if(E.takeOffer(G.ch,0,to)){UI.swap=false;resave();render()}},
     oswapmode(){UI.swap=!UI.swap;render()},
