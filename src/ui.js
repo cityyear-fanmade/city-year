@@ -977,7 +977,20 @@ export function startUI(E,app){
       <button class="btn" data-a="heal" ${ok?'':'disabled'}><b>치료 받는다</b><span class="mono small dim">HP ${ch.hp}/${ch.stats.maxHp}${full?' · 이미 멀쩡하다':left<=0?' · 오늘은 더 받을 수 없다':ch.money<cp?' · 돈이 모자란다':''}</span></button></button></div>
     ${hwHome()?'':`<div class="panel stack" style="gap:8px;border-color:var(--bleed)"><div class="row between"><b class="serif">${A.name}</b><span class="mono" style="color:var(--gold)">${E.money(ap)}</span></div>
       <p class="small dim">암시장에서 도는 전리품. 전투 중 HP가 최대 HP의 ${Math.round(A.belowPct*100)}% 이하가 되면 자동으로 쓰여 최대 HP의 ${Math.round(A.healPct*100)}%를 회복한다. 한 번에 쓰러질 만한 피해를 받으면 쓰러지기 전에 먼저 쓰이고(받은 피해만큼 회복이 줄어든다), 전투 중 횟수 제한 없이 한 번에 1개씩 쓰이고, 최대 ${A.carry}개까지 지닌다. 쓰고 나면 다음 공방에서 다시 살 수 있다. ${ch.infinite?`2막 무한 모드에서는 구매 횟수 제한이 없고 값이 ${E.money(A.priceInf)}이다.`:`한 판에 모두 ${A.limit}개까지만 살 수 있다 (2막 무한 모드에 들어서면 제한이 없어지고 값이 ${E.money(A.priceInf)}이 된다).`}</p>
-      <button class="btn" data-a="ample" ${aok?'':'disabled'}><b>${A.name} 구입</b><span class="mono small dim">지닌 수 ${have}/${A.carry} · 산 수 ${bought}${ch.infinite?' (제한 없음)':'/'+A.limit}${bought>=A.limit&&!ch.infinite?' · 더는 살 수 없다':have>=A.carry?' · 더는 지닐 수 없다':ch.money<ap?' · 돈이 모자란다':''}</span></button></div>`}`;
+      <button class="btn" data-a="ample" ${aok?'':'disabled'}><b>${A.name} 구입</b><span class="mono small dim">지닌 수 ${have}/${A.carry} · 산 수 ${bought}${ch.infinite?' (제한 없음)':'/'+A.limit}${bought>=A.limit&&!ch.infinite?' · 더는 살 수 없다':have>=A.carry?' · 더는 지닐 수 없다':ch.money<ap?' · 돈이 모자란다':''}</span></button></div>`}${vEnchant()}`;
+  }
+  /* 무한 모드: 월광석 효과 부여. 장착한 무기·방어구·보조 장비 각각에 효과를 새기고, 다시 새기면 이전 효과가 지워지고 다른 효과로 바뀐다 */
+  function vEnchant(){
+    const ch=G.ch,K=CFG.enchant;if(!E.enchantable(ch)||hwHome())return '';
+    const row=(sl,lb)=>{const it=ch.gear[sl];if(!it)return `<div class="row between small dim"><span>${lb}</span><span>장착한 장비가 없다</span></div>`;
+      const pr=E.enchantPrice(ch,sl),ok=ch.money>=pr,en=it.ench;
+      return `<div class="stack" style="gap:4px"><div class="row between"><b>${lb} · ${esc(it.n)}</b><span class="mono small" style="color:var(--gold)">${E.money(pr)}</span></div>
+        <p class="small ${en?'':'dim'}">${en?`<b>${esc(en.n)}</b> · ${esc(en.type)} · ${esc(en.e)}`:'새겨진 효과 없음'}</p>
+        <button class="btn" data-a="enchant" data-i="${sl}" ${ok?'':'disabled'}><b>${en?'효과를 바꾼다':'효과를 새긴다'}</b><span class="mono small dim">${it.enchN?`지금까지 ${it.enchN}번`:'처음'}${ok?'':' · 돈이 모자란다'}</span></button></div>`};
+    return `<div class="panel stack" style="gap:10px;border-color:var(--rupture)"><div class="row between"><b class="serif">월광석 · 효과 부여</b><span class="mono small dim">${E.money(K.base)} ~ ${E.money(K.max)}</span></div>
+      <p class="small dim">돈을 내고 장비에 효과를 새긴다. 다시 새기면 이전 효과가 지워지고 다른 효과로 바뀐다(쌓이지 않는다). 첫 값은 ${E.money(K.base)}이고, 새길 때마다 ${E.money(K.step)}씩 올라 ${E.money(K.max)}에서 멈춘다. 횟수 제한은 없다. 효과는 버프형 · 디버프형 · 스탯형 · 스택형 · 패시브형 중에서 나온다.</p>
+      ${UI.enchMsg?`<p class="good small">${esc(UI.enchMsg)}</p>`:''}
+      ${row('weapon','무기')}${row('armor','방어구')}${row('aug','보조 장비')}</div>`;
   }
   const auxLbl=it=>it.kind?it.kind+' · '+({'공':'공격형','방':'방어형','유':'유틸형'}[it.tag]||it.tag):D.slots[it.slot];
   function vShop(){
@@ -1507,7 +1520,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
         <div class="chips">${b.deck.map(id=>`<span class="chip">${D.cards[id].n}</span>`).join('')}</div></div>
       ${b.teamPick?`<div class="panel stack" style="gap:8px"><span class="eyebrow">부화장 팀 · 하나를 고른다</span><p class="small dim">어느 팀의 개체로 길러졌는지에 따라 몸이 다르다. 고르지 않은 두 팀의 추격자가 나중에 쫓아온다.</p>${Object.entries(CFG.rb.teamBonus).map(([t,B])=>`<button class="btn${UI.team===t?' primary':''}" data-a="rbteam" data-i="${t}"><b>${esc(t)}</b><span class="mono small" style="color:var(--gold)">${Object.entries(B).map(([k,v])=>`${{spd:'속도',maxHp:'최대 HP',eva:'회피'}[k]} +${v}`).join(' · ')}</span></button>`).join('')}</div>`:''}
       ${b.relicPick?`<div class="panel stack" style="gap:8px"><span class="eyebrow">유물 적성 · 하나를 고른다</span><p class="small dim">적성은 가지고 있으나 온전히 다루기 어렵다.</p>${Object.entries(D.relics).map(([k,r])=>`<button class="btn${UI.relic===k?' primary':''}" data-a="relic" data-i="${k}"><b>${esc(r.n)}</b><span class="mono small" style="color:var(--gold)">${esc(r.e)}</span></button>`).join('')}</div>`:''}
-      ${vJobRoll()}${vJobPick()}${vOriginPick()}${testPresetPanel()}
+      ${vJobRoll()}${vJobPick()}${vOriginPick()}${vBloodPick()}${testPresetPanel()}
       ${b.fateChoices&&!b.fated?`<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">운명이 찾아왔다 · 하나를 고르거나 거절한다</span><span class="small">아무것도 쥐지 않고 태어났지만, 이름 없는 존재에게도 길이 두 갈래로 놓였다.</span>${b.fateChoices.map(r_=>{const h=D.hiddenOrigins.find(x=>x.roll===r_);return `<button class="btn" data-a="fate" data-i="${r_}"><b>${esc(h.n)}</b><span class="small">${esc(h.t)}</span><span class="mono small" style="color:var(--gold)">${esc(h.e)}</span></button>`}).join('')}<button class="btn" data-a="nofate"><b>운명을 거절한다</b><span class="small">아무것도 쥐지 않은 채 그대로 시작한다. 이름 없는 삶, 솔로 엔딩을 노리는 길이다.</span></button></div>`:''}
       <div class="stack"><button class="btn primary" data-a="live" ${(b.relicPick&&!UI.relic)||(b.teamPick&&!UI.team)||(b.fateChoices&&!b.fated)?'disabled':''}>${b.fateChoices&&!b.fated?'운명을 먼저 고른다':b.relicPick&&!UI.relic?'유물을 먼저 고른다':b.teamPick&&!UI.team?'팀을 먼저 고른다':'이 삶을 산다'}</button>
       ${fingerBtns()}${b.blank||UI.job?'':'<button class="btn quiet" data-a="blank">어떤 출생 보정도 없이 시작한다</button>'}<button class="btn quiet" data-a="title"><b>첫 화면으로</b><span class="dim small">출생 굴림을 접고 처음으로 돌아간다</span></button></div>${vSettings()}`;
@@ -1541,6 +1554,15 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   }
   /* 해금 출생: 무한 모드 전 2막 끝까지 간 숨은 출생은 이 목록에서 골라 시작할 수 있다. 다시 태어나도 출생은 그대로, 나머지만 다시 굴린다 */
   const openOrigins=()=>{const u=loadUnlocks();return (D.unlockOrigins||[]).filter(o=>u.includes('origin:'+o.key)||(o.job&&u.includes(o.job)))};
+  /* 혈귀 출생: 피로 벼린 무기 4종 중에서 시작 무기를 고른다 */
+  function vBloodPick(){
+    if(!BC||!BC.o||BC.o.race!=='hyeolgwi'||UI.job)return '';
+    const cur=UI.bloodW||null;
+    return `<div class="panel stack" style="gap:8px;border-color:var(--bleed)"><span class="eyebrow">혈귀의 무기</span>
+      <p class="small dim">피로 벼린 무기를 고르면 굴림으로 받은 무기를 대신한다.</p>
+      <button class="btn${!cur?' primary':''}" data-a="bloodw" data-i="">굴림으로 받은 무기를 쓴다</button>
+      ${(CFG.bloodWeapons||[]).map(w=>`<button class="btn${cur===w.key?' primary':''}" data-a="bloodw" data-i="${w.key}"><b>${esc(w.n)}</b><span class="small">${esc(w.lore)}</span><span class="mono small" style="color:var(--gold)">${esc(w.e)}</span></button>`).join('')}</div>`;
+  }
   function vOriginPick(){
     const L=openOrigins();if(!L.length||UI.daily)return '';
     const cur=UI.origin&&!UI.job&&L.some(o=>o.key===UI.origin)?UI.origin:null;
@@ -2696,11 +2718,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     color(i){E.setColor(BC,+i);BC.fresh=false;render()},
     relic(k){UI.relic=k;render()},
     rbteam(t){UI.team=t;render()},
+    bloodw(k){UI.bloodW=k||null;render()},
     origin(k){UI.origin=k||null;if(UI.origin){UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
     tpreset(k){UI.testPreset=k||null;render()},
     job(k){if(k)UI.origin=null;UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);nextYear()},
+    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.o&&BC.o.race==='hyeolgwi'&&UI.bloodW&&!UI.job)E.bloodWeapon(BC,UI.bloodW);if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.wsMsg=null;E.wsEnsure(G.ch);UI.showIncome=false;UI.screen='shop';render()},
@@ -2770,6 +2793,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     mindcare(){if((UI.mindHealed||0)>=CFG.clinic.mindMaxBuy)return;const g=E.buyMind(G.ch);if(g){UI.mindHealed=(UI.mindHealed||0)+1;UI.mindMsg=`정신력 +${g}`;resave();render()}},
     heal(){if((UI.healed||0)>=CFG.clinic.max)return;const h=E.buyHeal(G.ch);if(h){UI.healed=(UI.healed||0)+1;UI.healMsg=`HP +${h}`;resave();render()}},
     ample(){if(E.buyAmple(G.ch)){resave();render()}},
+    enchant(sl){const r=E.enchant(G.ch,sl);if(r){UI.enchMsg=`${r.item.baseN}에 ${r.eff.n}의 효과를 새겼다 (${r.eff.type} · ${r.eff.e}) · ${E.money(r.price)}`;resave();render()}},
     repairhull(){if(E.repairHull(G.ch)){resave();render()}},
     buysupply(id){if(E.buySupply(G.ch,id)){resave();render()}},
     usesupply(id){const m=E.useSupply(G.ch,id,null);UI.supMsg=m||'지금은 쓸 데가 없다.';if(m)resave();render()},
@@ -2900,6 +2924,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       c.bond={st:k,route:c.aff.type==='office'?'office':c.aff.type,name:k==='pick'?'':'하나',step:2,tries:1,love:2,since:G.year,saved:false};if(k==='pick')c.bondPick=true;if(kids)c.bond.kids=[{n:'하늘',born:G.year-23,job:'assoc',told:true},{n:'이슬',born:G.year-4,job:'fixer',told:false}];if(dist)c.distForm={n:'이름 없는 뒤틀림'};UI.res={t:'인연 시험',chips:[]};UI.screen='result';render()},
     testPick(k,v){if(!G)return;G.ch[k]=k==='orgPick'?(v||'wing'):true;if(k==='singPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0}}if(k==='wingPick'){G.ch.corp=G.ch.corp||{st:'dev',stack:0,n:'ゼロ'}}if(k==='titlePick'){G.ch.licensed=true;G.ch.rank=5;G.ch.title=D.colors[G.ch.ci].adj+' 임시'}if(k==='officePick'){G.ch.licensed=true;G.ch.rank=5}UI.res={t:'이름 시험',chips:[]};UI.screen='result';render()},
     testMoney(n){if(G){G.ch.money=n;render()}},
+    testCh(f){if(G&&typeof f==='function'){f(G.ch);render()}},
     testForm(assoc){if(!G)return;const dr=D.enemies.violet.drop;E.equip(G.ch,structuredClone(dr.gear));G.ch.deck=dr.cards.slice();G.ch.deckLocked=true;if(assoc)G.ch.aff={type:'assoc',name:'하나 협회'};startCombat('thug');C.E.hp=400;C.E.maxHp=400;render()},
     testWs(yrs){if(!G)return;const c=G.ch;c.licensed=true;c.rank=5;c.aff={type:'workshop',name:'공방 해결사'};c.year=G.year=yrs||14;E.wsEnsure(c);c.stash=(c.stash||[]).concat([{id:'club',slot:'weapon',n:'무거운 쇠몽둥이',grade:1,e:'공+1',fx:{}},{id:'h_w',slot:'weapon',n:'히든 시험 무기',grade:5,e:'공+14',fx:{}},{id:'leather',slot:'armor',n:'덧댄 가죽옷',grade:1,e:'HP+6',fx:{}},{id:'rustpart',slot:'aug',n:'녹슨 특이점 부품',grade:5,e:'시험',fx:{}}]);UI.screen='shop';render()},
     testShop(){if(!G)return;G.ch.money=5000;G.ch.hp=Math.floor(G.ch.stats.maxHp/2);UI.stock=Object.keys(D.special).slice(0,2);UI.cardBox=true;UI.aid=true;UI.swapped=null;UI.tuneMsg=null;UI.bought=null;UI.deleted=null;UI.sold=null;UI.rested=null;UI.broker=null;UI.screen='shop';render()},
