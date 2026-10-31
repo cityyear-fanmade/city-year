@@ -764,7 +764,7 @@ export function startUI(E,app){
   /* 성장기 이야기: 출신별 4줄(5·9·13·16세)이 줄 본문이고, 굴림 결과(이름과 효과)는 그 아래 작은 줄로 붙는다. 같은 결과가 여러 번 나와도 줄거리는 겹치지 않는다 */
   /* 같은 결과가 여러 번 나오면 줄마다 '이번에도 · 또다시 · 끝내'로 이어 쓰고, 끝에 요약 한 줄을 붙인다 */
   const kidRep=(kid,i)=>{const n=kid[i].x.n;let c=0;for(let j=0;j<=i;j++)if(kid[j].x.n===n)c++;return {c,tot:kid.filter(k=>k.x.n===n).length}};
-  const kidLabel=(kid,i)=>{const r=kidRep(kid,i),w=r.tot>1?['','이번에도 ','또다시 ','끝내 '][Math.min(r.c-1,3)]:'';return `${w}${kid[i].x.n}${r.tot>1?` ×${r.c}`:''}`};
+  const kidLabel=(kid,i)=>{const r=kidRep(kid,i),n=kid[i].x.n;let st=1;while(i-st>=0&&kid[i-st].x.n===n)st++;const w=r.tot>1&&r.c>1?(st>1?['','이번에도 ','또다시 ','끝내 '][Math.min(st-1,3)]:'다시 '):'';return `${w}${n}${r.tot>1?` ×${r.c}`:''}`};
   const kidSum=kid=>{const seen=new Set(),out=[];kid.forEach((k,i)=>{const r=kidRep(kid,i);if(r.tot>=2&&!seen.has(k.x.n)){seen.add(k.x.n);out.push(r.tot>=kid.length?`네 번을 모두 「${k.x.n}」으로 채웠다. 몸이 그 하나만 기억한다. (효과가 ${r.tot}번 그대로 쌓인다)`:`「${k.x.n}」을(를) ${r.tot}번 되풀이했다. (효과가 ${r.tot}번 쌓인다)`)}});return out.length?`<p class="small" style="margin:6px 0 0;border-left:2px solid var(--gold);padding-left:10px;line-height:1.6">${esc(out.join(' '))}</p>`:''};
   const kidStory=(o,i)=>{const P=o&&D.prologue&&D.prologue[o.n];return P&&P.kid&&P.kid[i]||''};
   function vStat(){
