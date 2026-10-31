@@ -279,10 +279,18 @@ export const CFG = {
     {key: 'scythe', n: '혈낫', lore: '갈고리처럼 휘어진 날에 피가 마르지 않고 맺혀 있다. 쓰러뜨릴 때보다 쓰러뜨리기 직전에 가장 잘 든다.', fx: {atk: 5, eva: 2}, dice: [2, 4], wx: {hitBleed: 1, finish: {at: 0.4, dmg: 5}}, e: '공+5 · 회피+2 · 피해 2d4 · 적중마다 출혈 +1 · 상대 HP 40% 이하면 피해 +5'},
     {key: 'whip', n: '핏빛 채찍', lore: '혈관을 길게 뽑아 꼬아 놓은 줄이다. 한 번 휘두르면 두 번 닿는다.', fx: {atk: 4, spd: 2}, dice: [1, 6], wx: {extraHit: 1, hitBleed: 1}, e: '공+4 · 속+2 · 피해 1d6 · 공격 카드 적중 +1회 · 적중마다 출혈 +1'},
     {key: 'spear', n: '혈창', lore: '피가 응고하기 전에 길게 뽑아낸 창이다. 먼저 움직인 쪽의 심장을 먼저 겨눈다.', fx: {atk: 5, spd: 2}, dice: [2, 4], wx: {hitBleed: 1, leadDmg: 8, hitB: 5}, e: '공+5 · 속+2 · 피해 2d4 · 명중+5 · 적중마다 출혈 +1 · 선공이면 그 라운드 첫 적중 피해 +8'}],
-  /* G사 병기 출신(해금 출생): 13년차 몰락 뒤 보정(fall)을 받고 해결사로 등록한다. 17년차부터 날개 시술(벌레팔·해충 병기)로 무기·보조 장비를 쥘 수 없게 되는 대신 장비를 먹어(등급마다 perGrade) 해충 황제 발현도(max)를 올리고, 가득 차면 발현(emerge)해 특색급 능력치와 전용 책장을 얻는다. 먹은 장비 능력치의 absorb 비율을 영구히 흡수한다 */
-  gweapon: {fall: {maxHp: -15, atk: -2}, procFrom: 4, perGrade: 7, max: 100, absorb: 0.3, absorbKeys: ['atk', 'eva', 'spd', 'maxHp', 'check'],
-    emerge: {maxHp: 60, atk: 12, eva: 6, spd: 6, check: 3}, pack: ['gw_0', 'gw_1', 'gw_2', 'gw_3', 'gw_4', 'gw_5', 'gw_6', 'gw_7', 'gw_8', 'gw_9'],
-    proc: {arm: {n: '벌레팔', fx: {atk: 6, spd: 2, dmgB: 3}, wx: {hitBleed: 1}, e: '공격+6 · 속도+2 · 피해+3 · 적중마다 출혈 +1'}, pest: {n: '해충 병기', fx: {atk: 5, eva: 3, dmgB: 2}, wx: {crush: 6, crushN: '해충'}, e: '공격+5 · 회피+3 · 피해+2 · 라운드마다 첫 적중 피해 +6'}}},
+  /* G사 병기 출신(해금 출생): 13년차 몰락 뒤 보정(fall)을 받고 해결사로 등록한다. 몰락 4년 뒤(procFrom) 날개 시술(벌레팔·해충 병기)을 받으면 무기·보조 장비를 쥘 수 없지만 시술 무기(생체 변형)와 전용 보조무기를 쓰고, G사 책장(pack)을 얻는다.
+     장비를 먹을 때마다(섭식) 능력치가 오르고(flat + 먹은 장비 능력치의 absorb), 4번·8번째 섭식에서 생체 변형이 강해진다(bio). 히든급(grade 5 이상) 장비를 hiddenNeed개 먹으면 왕족인자가 발현해 나방 공주·바퀴 황제·파리 대왕 중 하나로 변할 수 있다(forms: 능력치 fx · 전용 패시브 wx · 전용 책장 pack) */
+  gweapon: {fall: {maxHp: -15, atk: -2}, procFrom: 4, flat: {maxHp: 3}, absorb: 0.3, absorbKeys: ['atk', 'eva', 'spd', 'maxHp', 'check'], hiddenNeed: 3,
+    pack: ['gw_0', 'gw_1', 'gw_2', 'gw_3', 'gw_4', 'gw_5', 'gw_6', 'gw_7', 'gw_8', 'gw_9'],
+    bio: [{at: 4, fx: {atk: 3, dmgB: 2}, e: '생체 변형이 한 단계 자랐다'}, {at: 8, fx: {atk: 4, dmgB: 3, spd: 1}, e: '생체 변형이 두 번째로 자랐다'}],
+    proc: {
+      arm: {n: '벌레팔', fx: {atk: 6, spd: 2, dmgB: 3}, wx: {hitBleed: 1}, e: '공격+6 · 속도+2 · 피해+3 · 적중마다 출혈 +1', aux: {id: 'gw_aux_arm', slot: 'aug', kind: '전용 보조무기', n: 'G사 시제 보조팔', grade: 3, gw: true, fx: {atk: 3, hit: 3}, e: '공+3 · 명중+3 (G사 전용 보조무기)'}},
+      pest: {n: '해충 병기', fx: {atk: 5, eva: 3, dmgB: 2}, wx: {crush: 6, crushN: '해충'}, e: '공격+5 · 회피+3 · 피해+2 · 라운드마다 첫 적중 피해 +6', aux: {id: 'gw_aux_pest', slot: 'aug', kind: '전용 보조무기', n: 'G사 시제 집게', grade: 3, gw: true, fx: {eva: 2, dmgB: 2}, e: '회피+2 · 피해+2 (G사 전용 보조무기)'}}},
+    forms: {
+      moth: {n: '나방 공주', fx: {eva: 8, spd: 4, maxHp: 30, check: 4}, wx: {hitKw: [['sink', 1]], thornKw: [['sink', 1]]}, pack: ['gwm_0', 'gwm_1', 'gwm_2', 'gwm_3', 'gwm_4', 'gwm_5', 'gwm_6', 'gwm_7', 'gwm_8', 'gwm_9'], pn: '나방 공주의 책장', e: '적중하거나 맞을 때마다 상대에게 침잠 +1 · 회피+8 속도+4 최대 HP+30 판정+4'},
+      roach: {n: '바퀴 황제', fx: {maxHp: 80, dr: 6, atk: 6}, wx: {survive: 1}, pack: ['gwr_0', 'gwr_1', 'gwr_2', 'gwr_3', 'gwr_4', 'gwr_5', 'gwr_6', 'gwr_7', 'gwr_8', 'gwr_9'], pn: '바퀴 황제의 책장', e: '전투마다 한 번 치명적인 피해를 HP 1로 버틴다 · 최대 HP+80 받는 피해 −6% 공격+6'},
+      fly: {n: '파리 대왕', fx: {atk: 12, dmgB: 3, spd: 3}, wx: {hitKw: [['rupture', 1]], crush: 10, crushN: '군집'}, pack: ['gwf_0', 'gwf_1', 'gwf_2', 'gwf_3', 'gwf_4', 'gwf_5', 'gwf_6', 'gwf_7', 'gwf_8', 'gwf_9'], pn: '파리 대왕의 책장', e: '적중마다 상대에게 파열 +1 · 라운드마다 첫 적중 피해 +10 · 공격+12 피해+3 속도+3'}}},
   routeWeapon: {
     /* 머리의 발톱 · 조율자(해금 출생): 직업 전용 무기가 줄기의 이정표(routeWpn 1·2)마다 한 단계씩 올라 두 번째 강화에서 히든급이 된다. lv[0]은 직업 시작 무기와 같다 */
     claw: {id: 'job_claw', lv: [

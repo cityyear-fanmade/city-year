@@ -222,7 +222,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const calcDmin=ch=>Math.min(CFG.dminCap,Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1))+(ch.stats.dminUp||0));
   function equip(ch,item){
     /* 육신 뒤틀림: 장비를 낄 수 없다 (보관함으로) · N사 날개: 의수를 끼지 않는다 (보관함으로) */
-    if((ch.distForm&&!ch.distStable)||(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')||(item.slot==='weapon'&&ch.o&&ch.o.herm&&item.id!=='w_herm')||(ch.gw&&ch.gw.proc&&(item.slot==='weapon'||item.slot==='aug'))){(ch.stash=ch.stash||[]).push(item);return}
+    if((ch.distForm&&!ch.distStable)||(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')||(item.slot==='weapon'&&ch.o&&ch.o.herm&&item.id!=='w_herm')||(ch.gw&&ch.gw.proc&&!item.gw&&(item.slot==='weapon'||item.slot==='aug'))){(ch.stash=ch.stash||[]).push(item);return}
     const s=ch.stats,old=ch.gear[item.slot];
     /* 공방 해결사의 전용 무기·방어구·의수는 빼거나 다른 장비로 바꿀 수 없다 (다른 장비는 보관함으로) */
     if(old&&old.id==='ws_'+item.slot&&item.id!==old.id&&isWs(ch)){(ch.stash=ch.stash||[]).push(item);return}
@@ -243,7 +243,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const wsLock=(ch,item)=>{const old=ch.gear[item.slot];return !!(old&&old.id==='ws_'+item.slot&&item.id!==old.id&&isWs(ch))};
   /* 칸마다 보여 줄 '착용 불가' 안내 (빈 문자열이면 문제없음) */
   const slotWhy=(ch,slot)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':wsLock(ch,{slot,id:''})?'공방 해결사 전용 장비 · 바꿀 수 없다 (산 장비는 재료로 녹인다)':(slot==='aug'&&isN(ch))?'N사 날개 · 의수는 쓰지 않는다 (의복·지팡이 등은 가능)':'';
-  const equipWhy=(ch,item)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':(item.slot==='weapon'&&ch.o&&ch.o.herm&&item.id!=='w_herm')?'카두세우스-헤르메스 · 다른 무기는 쥘 수 없다 (보관한 히든 무기는 헤르메스의 강화가 된다)':(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')?'N사 날개 · 의체를 쓰지 않는다':(ch.gw&&ch.gw.proc&&(item.slot==='weapon'||item.slot==='aug'))?'날개 시술 · 방어구 말고는 쥘 수 없다 (먹을 수 있다)':wsLock(ch,item)?'공방 해결사 · 전용 장비는 바꿀 수 없다':'';
+  const equipWhy=(ch,item)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':(item.slot==='weapon'&&ch.o&&ch.o.herm&&item.id!=='w_herm')?'카두세우스-헤르메스 · 다른 무기는 쥘 수 없다 (보관한 히든 무기는 헤르메스의 강화가 된다)':(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')?'N사 날개 · 의체를 쓰지 않는다':(ch.gw&&ch.gw.proc&&!item.gw&&(item.slot==='weapon'||item.slot==='aug'))?'날개 시술 · 방어구 말고는 쥘 수 없다 (먹을 수 있다)':wsLock(ch,item)?'공방 해결사 · 전용 장비는 바꿀 수 없다':'';
   /* 특색에 닿은 사람은 이미 전용 의수를 쓰고 있어서 N사 날개(의수 불가)에는 들어갈 수 없다 */
   const nBlocked=ch=>!!(ch.colorDone||ch.titleKind==='color');
   const isEastOuter=ch=>!!(ch.o&&ch.o.n==='동부 출신 외곽 생존자');
@@ -1169,9 +1169,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.routeGuest){const s_=routeSt(ch);s_.guestFoe=fx.routeGuest;s_.guestTalk=null}
     if(fx.libItem&&D.items[fx.libItem]){offerGear(ch,Object.assign({id:fx.libItem},D.items[fx.libItem]));chips.push(`책 속의 물건 · ${D.items[fx.libItem].n} (${D.items[fx.libItem].e}) · 장착할지 고른다`)}
     if(fx.gwFall&&ch.o&&ch.o.key==='gweapon'&&!ch.flags.gw_fall){const Z_=CFG.gweapon.fall;ch.flags.gw_fall=1;ch.flags.route_off=1;ch.gwFallYear=ch.year||0;addStats(ch.stats,Z_);ch.hp=Math.max(1,Math.min(ch.stats.maxHp,ch.hp+(Z_.maxHp||0)));ch.aff=null;chips.push(`G사의 몰락 · 최대 HP ${Z_.maxHp} · 공격 ${Z_.atk} · 소속 없음`)}
-    if(fx.gwProc&&CFG.gweapon.proc[fx.gwProc]&&!ch.gw){const Pr=CFG.gweapon.proc[fx.gwProc];ch.gw={proc:fx.gwProc,gauge:0,emerged:false,wx:JSON.parse(JSON.stringify(Pr.wx||{}))};
+    if(fx.gwProc&&CFG.gweapon.proc[fx.gwProc]&&!ch.gw){const Pr=CFG.gweapon.proc[fx.gwProc];ch.gw={proc:fx.gwProc,eaten:0,hidden:0,form:null,royal:false,wx:JSON.parse(JSON.stringify(Pr.wx||{}))};
       for(const sl of ['weapon','aug'])if(ch.gear[sl])unequip(ch,sl);
-      addStats(ch.stats,Pr.fx);(ch.relics=ch.relics||[]).push(`날개 시술 · ${Pr.n}`);chips.push(`날개 시술 · ${Pr.n} (${Pr.e}) · 이제 방어구 말고는 장비를 쥘 수 없다. 장비는 먹을 수 있다`)}
+      addStats(ch.stats,Pr.fx);(ch.relics=ch.relics||[]).push(`날개 시술 · ${Pr.n}`);
+      equip(ch,Object.assign({},Pr.aux,{fx:Object.assign({},Pr.aux.fx)}));
+      ch.packOffer={n:'G사 병기 책장',cards:CFG.gweapon.pack.slice(),passive:null,e:'G사의 병기 카드 10장 · 장비를 먹을수록 능력치가 오른다'};
+      chips.push(`날개 시술 · ${Pr.n} (${Pr.e}) · 전용 보조무기 ${Pr.aux.n} · 이제 방어구 말고는 장비를 쥘 수 없다. 장비는 먹을 수 있다 · G사 병기 책장을 얻는다`)}
+    if(fx.gwForm&&ch.gw&&ch.gw.royal&&!ch.gw.form&&CFG.gweapon.forms[fx.gwForm]){const F=CFG.gweapon.forms[fx.gwForm];ch.gw.form=fx.gwForm;ch.flags.gw_royal=1;addStats(ch.stats,F.fx);ch.hp+=F.fx.maxHp||0;
+      for(const [k,v] of Object.entries(F.wx||{})){const w=ch.gw.wx;if(Array.isArray(v))w[k]=(w[k]||[]).concat(v);else if(typeof v==='number')w[k]=(w[k]||0)+v;else w[k]=v}
+      (ch.relics=ch.relics||[]).push(`왕족 인자 · ${F.n}`);ch.titles=ch.titles||[];if(!ch.titles.includes(F.n)){ch.titles.push(F.n);(ch.titleLog=ch.titleLog||[]).push(F.n)}
+      ch.packOffer={n:F.pn,cards:F.pack.slice(),passive:null,e:F.e};
+      chips.push(`왕족 인자 발현 · ${F.n} · ${F.e} · 전용 책장을 얻는다`)}
     if(fx.libSeal){const chips2=[];guestAdvance(ch,chips2);chips.push(...chips2);chips.push('봉인한 책 · 서가에 남았다 (붉은 안개 저지의 도움이 된다)')}
     if(fx.routeGuestTalk){routeSt(ch).guestTalk=fx.routeGuestTalk;chips.push(fx.routeGuestTalk==='good'?'손님의 약점을 알았다 · 접대에서 상대가 약해진다':'손님이 격앙했다 · 접대에서 상대가 강해진다')}
     if(fx.routeHunt){routeSt(ch).kit={picks:[]};chips.push('처분 대상 수색 · 준비물을 고른다')}
@@ -1889,7 +1897,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.o&&ch.o.key==='gweapon'&&/^gw/.test(key)){
       const R=routeOf(ch);ch.flags.gw_fall=1;ch.flags.route_off=1;ch.gwFallYear=12;addStats(ch.stats,CFG.gweapon.fall);ch.aff=null;if(!ch.licensed)license(ch);
       if(key==='gw20'){setLv(20);bonus({maxHp:30,atk:6,eva:3,spd:3});year(21);return true}
-      if(key==='gw40'){setLv(32);bonus({maxHp:50,atk:10,eva:5,spd:5});applyFx(ch,{gwProc:'arm'});ch.gw.gauge=70;year(40);return true}}
+      if(key==='gw40'){setLv(32);bonus({maxHp:50,atk:10,eva:5,spd:5});applyFx(ch,{gwProc:'arm'});ch.gw.eaten=6;ch.gw.hidden=2;year(40);return true}
+      if(key==='gw56'){setLv(38);bonus({maxHp:80,atk:14,eva:7,spd:7});applyFx(ch,{gwProc:'arm'});ch.gw.eaten=10;ch.gw.hidden=2;ch.packOffer=null;year(56);return true}}
     if(ch.o&&ch.o.key==='librarian'&&/^lib/.test(key)){
       const R=routeOf(ch),st=routeSt(ch),Z=R.guest,spec={lib20:[20,10,10],lib42:[42,21,20],lib55:[55,26,28],lib56:[56,24,25],lib69:[69,28,30]}[key];if(!spec)return false;
       st.guests=spec[1];setLv(spec[2]);if(key==='lib69'){st.mdone=['lib2_1','lib2_2','lib2_3','lib2_4','lib2_5','lib2_6','lib2_7','lib2_8','lib2_9'];st.mAt=68;st.arc='lib2';ch.flags.lib_sera=1;ch.flags.lib_absorb=1;ch.flags.redMist=1;ch.beaten.push('lib_mist1','lib_mist2')}
@@ -1902,23 +1911,30 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     return false;
   }
-  /* ── G사 병기 출신: 날개 시술 제안과 장비 먹기(해충 황제 발현도) ── */
+  /* ── G사 병기 출신: 날개 시술 제안, 장비 먹기(섭식), 왕족 인자 발현, 2막 ── */
+  const gwRoute=()=>D.routes&&D.routes.gweapon;
   function gwStep(G){
-    const ch=G.ch;if(!ch.o||ch.o.key!=='gweapon'||!ch.flags.gw_fall||ch.gw||ch.distForm)return null;
-    if((ch.year||0)<(ch.gwFallYear||0)+CFG.gweapon.procFrom)return null;
-    const Pr=CFG.gweapon.proc;
-    return {t:'날개 시술 제안',x:'몰락한 G사의 연구동에서 마지막 연구원이 찾아왔다. 전쟁에서 입은 몸을 고쳐 줄 수 있다고 한다. 병기의 몸에 날개의 시술을 덧붙이면 다시 쓸 만한 몸이 된다. 대신 몸이 방어구 말고는 아무것도 쥐지 않게 된다. 쥘 수 없는 장비는 먹으면 된다고 연구원은 말한다. 먹는 것이 몸 안에 잠든 것을 깨운다고 한다.',c:Object.entries(Pr).map(([k,v])=>({l:v.n,h:v.e,ok:{t:`시술이 끝났다. ${v.n}이 몸에 자리를 잡았다. 몸 안 어딘가에서 아주 작은 것이 뒤척였다.`,fx:{gwProc:k}}}))}}
-  /* 장비를 먹는다: 장비는 사라지고 해충 황제 발현도가 오른다. 능력치의 일부를 영구히 흡수한다. 가득 차면 해충 황제가 발현한다 */
+    const ch=G.ch;if(!ch.o||ch.o.key!=='gweapon'||!ch.flags.gw_fall||ch.distForm)return null;const Z=CFG.gweapon;
+    /* 날개 시술 제안 */
+    if(!ch.gw){
+      if((ch.year||0)<(ch.gwFallYear||0)+Z.procFrom)return null;
+      return {t:'날개 시술 제안',x:'몰락한 G사의 연구동에서 마지막 연구원이 찾아왔다. 전쟁에서 입은 몸을 고쳐 줄 수 있다고 한다. 병기의 몸에 날개의 시술을 덧붙이면 다시 쓸 만한 몸이 된다. 대신 몸이 방어구 말고는 아무것도 쥐지 않게 된다. 쥘 수 없는 장비는 먹으면 된다고 연구원은 말한다. 먹을수록 몸이 자란다고 한다. 연구원은 몸 안에서 가장 깊은 곳은 아직 깨어나지 않았다고 덧붙인다.',c:Object.entries(Z.proc).map(([k,v])=>({l:v.n,h:v.e,ok:{t:`시술이 끝났다. ${v.n}이 몸에 자리를 잡았다. 몸 안 어딘가에서 아주 작은 것이 뒤척였다.`,fx:{gwProc:k}}}))}}
+    /* 히든급 장비를 hiddenNeed개 먹으면 왕족 인자가 발현한다 */
+    if(ch.gw.royal&&!ch.gw.form){
+      return {t:'왕족 인자 발현',x:'히든급 장비를 세 개째 삼킨 밤, 몸 깊은 곳에서 오래 잠들어 있던 것이 눈을 뜬다. 왕족의 인자다. 해충의 왕족은 한 명만 이 몸을 가질 수 있다. 어느 쪽으로 변할지는 병기가 정한다.',c:Object.entries(Z.forms).map(([k,v])=>({l:v.n,h:v.e,ok:{t:`몸이 ${v.n}으로 변했다. 이음매마다 다른 것이 자리를 잡았다.`,fx:{gwForm:k}}}))}}
+    /* 2막: 결전의 해 */
+    const R=gwRoute(),A=R&&R.act2;if(A&&(G.year||0)>=A[0].from){const e=A[ch.gwAct||0];if(e&&G.year>=e.from){ch.gwAct=(ch.gwAct||0)+1;return JSON.parse(JSON.stringify(e.ev))}}
+    return null}
+  /* 장비를 먹는다(섭식): 장비는 사라지고 능력치가 오른다(먹을 때마다 flat + 장비 능력치의 일부). 히든급(grade 5 이상)을 hiddenNeed개 먹으면 왕족 인자가 발현한다 */
   function gwEat(ch,item,chips){
-    const Z=CFG.gweapon;if(!ch.gw||!ch.gw.proc||ch.gw.emerged||!item)return false;
-    const g=Math.max(1,item.grade||1),add=Z.perGrade*g,fx={};
-    for(const k of Z.absorbKeys){const v=Math.floor(((item.fx||{})[k]||0)*Z.absorb);if(v>0)fx[k]=v}
+    const Z=CFG.gweapon;if(!ch.gw||!ch.gw.proc||!item)return false;
+    const fx=Object.assign({},Z.flat);
+    for(const k of Z.absorbKeys){const v=Math.floor(((item.fx||{})[k]||0)*Z.absorb);if(v>0)fx[k]=(fx[k]||0)+v}
     addStats(ch.stats,fx);if(fx.maxHp)ch.hp+=fx.maxHp;
-    ch.gw.gauge=Math.min(Z.max,(ch.gw.gauge||0)+add);
-    chips.push(`${item.n}을(를) 먹었다 · 해충 황제 발현도 +${add} (${ch.gw.gauge}/${Z.max})${Object.keys(fx).length?' · '+Object.entries(fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · '):''}`);
-    if(ch.gw.gauge>=Z.max){ch.gw.emerged=true;addStats(ch.stats,Z.emerge);ch.hp+=Z.emerge.maxHp||0;(ch.relics=ch.relics||[]).push('해충 황제 발현');(ch.titles=ch.titles||[]).includes('해충 황제')||(ch.titles.push('해충 황제'),(ch.titleLog=ch.titleLog||[]).push('해충 황제'));
-      ch.packOffer={n:'해충 황제의 책장',cards:Z.pack.slice(),passive:null,e:'해충 황제가 깨어났다 · 특색급 능력치 (HP +'+Z.emerge.maxHp+' · 공격 +'+Z.emerge.atk+' · 회피 +'+Z.emerge.eva+' · 속도 +'+Z.emerge.spd+')'};
-      chips.push('해충 황제가 발현했다 · 최대 HP +'+Z.emerge.maxHp+' · 공격 +'+Z.emerge.atk+' · 회피 +'+Z.emerge.eva+' · 속도 +'+Z.emerge.spd+' · 전용 책장을 얻는다')}
+    ch.gw.eaten=(ch.gw.eaten||0)+1;const hid=(item.grade||0)>=5;if(hid)ch.gw.hidden=(ch.gw.hidden||0)+1;
+    chips.push(`${item.n}을(를) 먹었다 · 섭식 ${ch.gw.eaten}번${hid?` · 히든 ${ch.gw.hidden}/${Z.hiddenNeed}`:''} · ${Object.entries(fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · ')}`);
+    for(const L of Z.bio)if(ch.gw.eaten===L.at){addStats(ch.stats,L.fx);chips.push(`생체 변형 · ${L.e} · ${Object.entries(L.fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='dmgB'?'피해':k)} +${v}`).join(' · ')}`)}
+    if(!ch.gw.royal&&(ch.gw.hidden||0)>=Z.hiddenNeed){ch.gw.royal=true;chips.push('왕족 인자가 깨어난다 · 다음 해에 해충황족으로 변할 수 있다')}
     return true}
   function gwEatStash(ch,i){const it=(ch.stash||[])[i];if(!it)return null;const chips=[];if(!gwEat(ch,it,chips))return null;ch.stash.splice(i,1);return chips}
   function gwEatOffer(ch){const it=(ch.gearOffers||[])[0];if(!it)return null;const chips=[];if(!gwEat(ch,it,chips))return null;ch.gearOffers.shift();return chips}
@@ -2551,7 +2567,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!mc.prologueDone&&(G.year||0)===0){mc.prologueDone=true;const PR=D.prologue&&mc.o&&D.prologue[mc.o.n];if(PR)return {type:'event',ev:{t:`${CFG.startAge}세 · 출발`,x:PR.leave,c:[{l:PR.go||'길을 나선다',h:`${CFG.startAge}세의 해가 시작된다`,ok:{t:'문이 닫혔다. 길이 이어진다.',fx:{}}}]}}}
     {const rf=routeFree(G);if(rf)return rf}
     G.free=false;G.year++;
-    if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):G.endless&&G.ch.o&&G.ch.o.key==='claw'&&G.ch.flags.rt_done?(G.ch.flags.cl_return?'clawreturn':'clawstay'):G.endless&&G.ch.o&&G.ch.o.key==='arbiter'&&G.ch.flags.rt_done?(G.ch.flags.ab_keep?'arbkeep':'arbdown'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
+    if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):G.endless&&G.ch.o&&G.ch.o.key==='claw'&&G.ch.flags.rt_done?(G.ch.flags.cl_return?'clawreturn':'clawstay'):G.endless&&G.ch.o&&G.ch.o.key==='arbiter'&&G.ch.flags.rt_done?(G.ch.flags.ab_keep?'arbkeep':'arbdown'):G.endless&&G.ch.o&&G.ch.o.key==='gweapon'&&G.ch.flags.gw_done?(G.ch.flags.gw_king&&G.ch.gw&&G.ch.gw.form?'gw'+G.ch.gw.form:'gwhuman'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
     G.ch.year=G.year;
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
       /* 대호수: 호수에 오래 떠 있을수록 정신이 닳는다. 해마다 mindYear씩 깎이지만 mindKeep 밑으로는 이 깎임만으로 내려가지 않는다(뒤틀림·사망으로 곧장 가지 않게) */
@@ -3054,7 +3070,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 보스별 난이도 보정(hard): 체력 배수, 공격·회피 가산 */
     const IM_=ch.infinite&&id===X_.final?(ch.infImp||0):0;
     const SI_=ch.infinite?Math.max(0,gradeRaw(yH)-X_.grades.length+1):0;
-    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||(()=>{const R_=routeOf(ch);return R_&&((R_.guest&&ch.rt&&ch.rt.guestFoe===id&&guestMul(ch,R_))||(R_.trial&&R_.trial[id]))||null})(),ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
+    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||(()=>{const R_=routeOf(ch)||(ch.o&&ch.o.key==='gweapon'&&ch.flags&&ch.flags.gw_fall?gwRoute():null);return R_&&((R_.guest&&ch.rt&&ch.rt.guestFoe===id&&guestMul(ch,R_))||(R_.trial&&R_.trial[id]))||null})(),ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
     /* 무한 모드 불순물: 100살(나이)마다 정해 둔 체력표를 쓴다 (첫 100살은 잡을 만하게, 200살부터 조금 많이, 300살부터 확 오른다) */
     /* 100살 구간의 첫 불순물은 표의 딱 맞는 숫자, 그 구간에서 불순물을 쓰러뜨릴 때마다 뒷자리가 조금씩 늘어난다 (구간 안에서 최대 hpBandMax) */
     const infTab=ch.infinite&&id===X_.final?(()=>{const A_=CFG.startAge+(ch.year||0)-1,T_=CFG.infinite.hpTable,IF2=CFG.infinite;let v=T_[0][1],bi=0;T_.forEach(([at,hp],i)=>{if(A_>=at){v=hp;bi=i}});
@@ -3847,6 +3863,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* K사 엠플: 살아 있고 HP가 최대 HP의 belowPct 이하이면 자동으로 쓴다 (한 번에 1개, 전투당 제한 없음) */
   /* HP를 잃는다. 플레이어가 한 번에 쓰러질 피해(공격·출혈·화상·고정 피해 모두)를 받으면, 쓰러지기 전에 K사 엠플이 먼저 쓰이고 받은 피해만큼 회복이 깎인다 (HP − 피해 + 회복) */
   function hpLoss(C,X,x,L){
+    if(X.isP&&X.wx&&X.wx.survive&&!X.survUsed&&x>=X.hp&&!X.distorted){X.survUsed=true;X.hp=1;L('amp',`${X.name} · 바퀴 황제의 끈질김 · 치명적인 피해 ${x}를 HP 1로 버텼다`);return}
     if(X.isP&&X.ample>0&&x>=X.hp&&!X.distorted){
       const K=CFG.ample;let h=X.hp-x,u=0;
       const ah_=Math.floor(X.maxHp*K.healPct);while(X.ample>0&&h<=0){X.ample--;u++;h+=ah_}
