@@ -58,7 +58,10 @@ export function startUI(E,app){
   /* 인생 주사위: free(태어난 뒤엔 매번 다르게) / fixed(시드 하나로 인생 전체가 같게, 재현용) */
   let DICE=store.get('cityYearDice')||'free';
   /* 히든 직업 해금 기록: 이 브라우저에만 남는다 */
-  const loadUnlocks=()=>{let u=[];try{u=JSON.parse(store.get('cityYearUnlocks')||'[]')}catch(e){u=[]}if(typeof UNLOCKTEST!=='undefined'&&UNLOCKTEST){const all=[...(D.unlockOrigins||[]).map(o=>'origin:'+o.key),...Object.keys(D.hiddenJobs||{})];u=[...new Set([...u,...all])]}return u};
+  const loadUnlocks=()=>{let u=[];try{u=JSON.parse(store.get('cityYearUnlocks')||'[]')}catch(e){u=[]}if(typeof UNLOCKTEST!=='undefined'&&UNLOCKTEST){const all=[...(D.unlockOrigins||[]).map(o=>'origin:'+o.key),...Object.keys(D.hiddenJobs||{})];u=[...new Set([...u,...all])]}
+    /* 직업 해금(발톱·조율자)은 'claw'·'arbiter'로 저장돼 있으니 같은 해금 출생도 열린 것으로 읽는다 */
+    for(const o of D.unlockOrigins||[])if(o.job&&u.includes(o.job)&&!u.includes('origin:'+o.key))u=[...u,'origin:'+o.key];
+    return u};
   const addUnlock=k=>{const u=loadUnlocks();if(!u.includes(k)){u.push(k);store.set('cityYearUnlocks',JSON.stringify(u))}};
   if(!SKINS.some(s=>s.k===SKIN))SKIN='base';
   /* 배경음악: 기본은 꺼짐. 켜 둔 채 다시 열면 첫 터치 때 서서히 시작한다 (브라우저는 터치 전에 소리를 낼 수 없다) */
