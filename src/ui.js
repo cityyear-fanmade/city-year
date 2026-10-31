@@ -2859,7 +2859,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     fin(){
       if(C.over==='lose')checkInnateUnlock();
       if(C.over==='lose'){UI.outEnd=null;UI.outerEnd=false;UI.endWin=false;UI.trueEnd=false;UI.death=G.ch.mindDead?{year:G.year,foe:'정신 붕괴',cause:'mind'}:{year:G.year,id:C.id,foe:D.enemies[C.id].n,hidden:!!D.enemies[C.id].hidden,hunt:C.id==='kid_hunt'?G.ch.kidFoe:null};recordEnd();UI.screen='end';render();return}
-      const r=E.winRewards(G,C);syncTitles();recAdd('beaten',C.id);const unl=checkInnateUnlock();saveGame({after:true,pending:null});
+      const r=E.winRewards(G,C);syncTitles();recAdd('beaten',C.id);const unl=checkInnateUnlock();
+      {const q=G.ch.fightQ;if(q&&q.length){UI.pending=q.shift();(r.chips=r.chips||[]).push(`연전 · 다음 상대가 온다 (남은 ${q.length+1}번)`)}else if(q)delete G.ch.fightQ}
+      saveGame({after:true,pending:UI.pending||null});
       if(r.unlock)addUnlock(r.unlock);
       if(r.endText)UI.endText=r.endText;
       UI.res={t:`${r.hidden?r.endText:C.E.name+'이(가) 물러난 자리에서 쓸 만한 것을 얻었다.'}${r.newly?' 소문이 돌아 이름이 '+T.licensed+' 명부에 올랐다.':''}${r.colorRoll?(r.colorRoll.ok?' 도시가 당신의 색을 기억하기 시작했다.':' 아직 도시는 당신의 색을 부르지 않는다.'):''}`,chips:r.chips,roll:r.colorRoll,anim:!!r.colorRoll&&MODE!=='off',title:r.title,tlabel:r.tlabel};

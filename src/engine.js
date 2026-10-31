@@ -59,6 +59,7 @@ export function validateData(D){
     if(!r.fx)continue;
     if(r.fx.card)card(r.fx.card,`사건 "${ev.t}"`);
     if(r.fx.combat)spec(r.fx.combat,`사건 "${ev.t}"`);
+    for(const q of r.fx.combatQ||[])spec(q,`사건 "${ev.t}"`);
     if(r.fx.join&&r.fx.join.from&&!(D.orgs[r.fx.join.from]||[]).length)err.push(`사건 "${ev.t}": 소속 목록 orgs.${r.fx.join.from} 없음`);
     if(r.fx.join&&!r.fx.join.from&&!r.fx.join.name)err.push(`사건 "${ev.t}": join에 name 또는 from 필요`);
     if(c.check&&c.check.path&&!D.text.paths[c.check.path])err.push(`사건 "${ev.t}": 없는 진로 "${c.check.path}"`);
@@ -2838,6 +2839,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(roll&&roll.ok&&!fx.examPass&&!fx.colorPass&&!fx.topPass)addPts(ch,CFG.promo.gain.check,chips);
     if(ev.web)xp=0;   // 거미집 턴은 경험치를 주지 않는다(40턴이 레벨 흐름을 흔들지 않게)
     const up=xp?gainXp(ch,xp):0;if(xp)chips.push('경험치 +'+xp);if(up)chips.push('레벨 업 · Lv '+ch.lv);
+    if(fx.combatQ)ch.fightQ=fx.combatQ.slice();
     let enc=fx.combat?encounter(ch,fx.combat):null;
     if(ch.purge){enc={id:ch.purge};delete ch.purge;chips.push('숙청 · '+D.enemies[enc.id].n)}
     if(ch.lakeNow){const n_=ch.lakeNow;delete ch.lakeNow;enc={id:n_.id,roll:null,table:null,hidden:n_.hidden,label:n_.label}}
