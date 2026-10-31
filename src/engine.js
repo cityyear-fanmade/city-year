@@ -1021,6 +1021,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){forceAdd(ch,'o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
     for(const f of [].concat(fx.flag||[]))ch.flags[f]=(ch.flags[f]||0)+1;
+    if(fx.title){ch.titles=ch.titles||[];if(!ch.titles.includes(fx.title)){ch.titles.push(fx.title);(ch.titleLog=ch.titleLog||[]).push(fx.title);chips.push('칭호 · '+fx.title)}}
     if([].concat(fx.flag||[]).includes('taboo'))bondTaboo(ch);
     /* 열차를 내린 뒤 일반 흐름으로: 해결사로 등록하고 급수를 한꺼번에 받는다 (협회나 해결사 길만 열려 있다). 받는 급수에 맞는 능력치 보너스도 같이 */
     if(fx.setRank&&!ch.wtrain){const R_=fx.setRank,B_=CFG.warp.after.bonus[R_.rank];if(!ch.licensed)license(ch);
