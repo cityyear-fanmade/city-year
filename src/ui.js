@@ -1801,6 +1801,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const head=st==='married'?(ch.distForm?'당신을 알아보지 못한다':'배우자'):st==='lost'?'배우자의 죽음':st==='left'?'떠났다':`인연 · ${R.who}`;
     const rows=[];
     {const Lk=R.looks,lt=Lk?(st==='met'?(Lk.met||[])[Math.min(b.step||0,(Lk.met||[]).length-1)]:Lk[st]):null;if(lt||R.look)rows.push(['특징',lt||R.look])}
+    if(R.immortal)rows.push(['도서관','이 도서관에서는 늙지도 떠나지도 않는다 · 아이도 지정사서가 된다'])
     if(b.alias)rows.push(['특색',`${b.alias} (${b.col.adj})`]);
     if(st==='married'){
       rows.push(['결혼한 해',b.since+'년차']);

@@ -1578,7 +1578,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 결혼 전에 기회를 모두 쓰면 상대가 떠난다 (작은 대가) */
   function bondLeft(ch,chips){
-    const b=ch.bond,R=bondData(ch);b.st='left';
+    const b=ch.bond,R=bondData(ch);
+    if(R&&R.immortal){b.companion=true;chips.push(`${b.name} · 도서관에 남는다 · 결혼하지 않는다`);if(R.stay)chips.push(bondFill(R.stay,b));return}   // 도서관에 사는 사람은 떠나지 않는다
+    b.st='left';
     ch.stats.mindMax=(ch.stats.mindMax||0)-BD.leaveMind;ch.mind=Math.min(ch.mind,mindMax(ch));
     chips.push(`떠났다 · ${b.name}`);chips.push(bondFill(R.left,b));chips.push(`최대 정신력 −${BD.leaveMind} (영구)`);
   }
@@ -1694,11 +1696,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       /* 아이도 늙는다: oldFrom살부터 해마다 확률로 눈을 감는다 (배우자만 죽고 아이가 몇백 살까지 사는 것은 이상하다는 의견) */
-      {const KO=B.kidOld,od=KO&&kids.find(k=>!k.dead&&!k.pend&&kidAge(k,y)>=lifeAt(k,kidHy(ch,k)));
+      {const KO=B.kidOld,od=KO&&kids.find(k=>!k.dead&&!k.pend&&k.job!=='librarian'&&kidAge(k,y)>=lifeAt(k,kidHy(ch,k)));
         if(od){const over=age(G)>100&&B.kidOldOver,GF=CFG.infinite.grief;
           return {t:KO.t,x:kf(over?B.kidOldOver.x:KO.x,od.n),c:[{l:KO.a,h:`정신력 −${KD.oldMind}`+(over?` · 슬픔이 몸에 굳는다 (공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100)}% 영구)`:''),ok:{t:kf(over?B.kidOldOver.at:KO.at,od.n),fx:over?{kidOld:od.n,famGrief:1}:{kidOld:od.n}}}]}}}
       /* 손주: 성인이 된 아이가 30~50살 사이에 아이를 하나 낳는다. 이름은 무작위로 굴린다 */
-      {const GR=BD.grand,gk=kids.find(k=>!k.dead&&!k.pend&&!k.grand&&kidAge(k,y)>=GR.from&&kidAge(k,y)<=GR.to&&d(100)<=GR.chance);
+      {const GR=BD.grand,gk=kids.find(k=>!k.dead&&!k.pend&&!k.grand&&k.job!=='librarian'&&kidAge(k,y)>=GR.from&&kidAge(k,y)<=GR.to&&d(100)<=GR.chance);
         if(gk){const used=[...kids.map(k=>k.n),...kids.filter(k=>k.grand).map(k=>k.grand.n),ch.name||'',...(b.st!=='lost'&&b.name?[b.name]:[])],all=[...B.kidNames,...(D.namePool||[])],pool=all.filter(n=>!used.includes(n));
           /* 일대기에 남은 이름(지난 삶의 나·연인·아이)을 일정 확률로 물려받는다 */
           let gn,lg=null;{const L=(legacyFn?legacyFn():[]).filter(x=>x&&x.n&&!used.includes(x.n));if(L.length&&d(100)<=BD.grand.legacy)lg=one(L)}
@@ -1707,7 +1709,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           return {t:B.grand.t,x:kf(B.grand.x,gk.n).replace(/\{g\}/g,gn)+lgx,c:[{l:B.grand.a,h:`${gk.n}의 아이 · 이름은 ${gn}`,ok:{t:kf(B.grand.at,gk.n).replace(/\{g\}/g,gn),fx:{bondGrand:{k:gk.n,g:gn}}}}]}}}
       if(b.st!=='married')return null;
       const spAge=age(G),spHy=spouseHy(ch,b),ageDie=ch.flags&&ch.flags.spouseAge&&spAge>=lifeAt(b,spHy);   // 배우자는 주인공과 같은 나이로 센다
-      if(ageDie||d(1000)<=bondRisk(b,y,ch)*10)
+      if(!R.immortal&&(ageDie||d(1000)<=bondRisk(b,y,ch)*10))
         {const over=age(G)>100&&B.deathOld,GF=CFG.infinite.grief;
         return {t:B.deathT,x:bondFill(over?B.deathOld.x:R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`+(over?` · 슬픔이 몸에 굳는다 (공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100)}% 영구)`:''),ok:{t:bondFill(over?B.deathOld.at:B.deathAT,b),fx:over?{bondDeath:true,famGrief:1,bondDie:ageDie?'age':'risk'}:{bondDeath:true,bondDie:ageDie?'age':'risk'}}}]}}
       const last=kids.length?kids[kids.length-1].born:-99;
@@ -2811,7 +2813,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondDeath&&ch.bond&&ch.bond.st==='married'){bondDeath(ch,chips);ch.bond.dieBy=fx.bondDie||'risk';ch.bond.dieYear=ch.year||0}
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0,race:kk.race||(ch.race==='hyeolgwi'?'hyeolgwi':'human')};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondCol&&ch.bond&&!ch.bond.col){const ci=one(D.colors.map((c,i)=>i).filter(i=>i!==ch.ci)),C_=D.colors[ci];ch.bond.col={adj:C_.adj,hex:C_.hex};ch.bondColPick=true;chips.push(`${ch.bond.name} · ${C_.adj} 특색`)}
-    if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:one(D.bond.kidJobs).k,told:false,race:((ch.o&&ch.o.race==='hyeolgwi')||spouseHy(ch,ch.bond)||(ch.race==='hyeolgwi'&&d(2)===1))?'hyeolgwi':'human'};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
+    if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:ch.bond.route==='librarian'?'librarian':one(D.bond.kidJobs.filter(j=>j.k!=='librarian')).k,told:false,race:((ch.o&&ch.o.race==='hyeolgwi')||spouseHy(ch,ch.bond)||(ch.race==='hyeolgwi'&&d(2)===1))?'hyeolgwi':'human'};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
     if(fx.limit){const Lm=CFG.infinite.limit,m=ch.colorDone?Lm.traitMul:1;
       if(fx.limit==='atk'){const g=Math.max(1,Math.round(ch.stats.atk*Lm.atkPct*m));ch.stats.atk+=g;chips.push(`한계 돌파 · 공격 +${g}`)}
       else if(fx.limit==='dmg'){ch.limDmg=(ch.limDmg||0)+Lm.dmgPct*m;chips.push(`한계 돌파 · 주는 피해 +${Math.round(Lm.dmgPct*m*1000)/10}% (누적 ${Math.round(ch.limDmg*1000)/10}%)`)}
