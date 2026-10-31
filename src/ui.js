@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.3.0';
+  const VERSION='v10.3.1';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -1529,7 +1529,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function vOrigins(){
     const u=loadUnlocks();if(!(D.unlockOrigins||[]).length)return '';
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="row between"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>`).join('')}
-      <p class="small dim">정해진 출생으로 태어나거나 정해진 물건을 들고 무한 모드 전, 제 2막의 끝까지 가면 열린다. 금기를 어긴 대가로 찾아오는 ${D.enemies.claw.n}과 ${D.enemies.arbiter.n}를 한 번 이상 이기면 머리의 발톱과 조율자가 각각 열린다.</p></div>`;
+      <p class="small dim">정해진 출생으로 태어나거나 정해진 물건을 들고 무한 모드 전, 제 2막의 끝까지 가면 열린다. 무한 모드(제 2막)의 마지막 상대 ${D.enemies.baral.n}과 ${D.enemies.zena.n}을 보통 이상 난이도에서 이기면 머리의 발톱과 조율자가 각각 열린다. 쉬움에서는 열리지 않는다.</p></div>`;
   }
   function vJobs(){
     const u=loadUnlocks();
