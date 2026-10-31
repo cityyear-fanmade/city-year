@@ -1979,6 +1979,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function bloodWeapon(ch,key){
     const W=(CFG.bloodWeapons||[]).find(x=>x.key===key);if(!W||!ch||!ch.o||ch.o.race!=='hyeolgwi'||ch.turned)return false;
     equip(ch,{id:'w_blood_'+W.key,slot:'weapon',grade:4,lvl:0,n:W.n,e:W.e,lore:W.lore,fx:Object.assign({},W.fx),wx:Object.assign({dice:W.dice.slice()},W.wx)});return true}
+  /* 혈귀 무기 단계 강화: 혈귀 무기를 쥐고 이길 때마다 혈량이 쌓이고, 문턱(need)에 닿으면 무기가 한 단계씩 오른다 */
+  function bloodTierUp(ch,tier,chips){
+    const BT=CFG.bloodTiers,wp=ch.gear&&ch.gear.weapon&&/^w_blood_/.test(ch.gear.weapon.id)?ch.gear.weapon:null;if(!wp)return false;
+    const key=wp.id.slice(8),g=(BT.tiers[key]||[])[tier-1];if(!g)return false;
+    const it={id:wp.id,slot:'weapon',grade:4+(tier>=3?1:0),lvl:tier,n:g.n,e:g.e,lore:g.lore,fx:Object.assign({},g.fx),wx:Object.assign({dice:g.dice.slice()},g.wx)};
+    equip(ch,carryTune(wp,it));ch.stash=(ch.stash||[]).filter(x=>x!==wp);ch.bloodTier=tier;chips&&chips.push(`혈귀 무기 강화 · ${g.n} (${g.e})`);return true}
+  function bloodGain(ch,C,chips){
+    const BT=CFG.bloodTiers;if(!BT||!ch||!ch.o||ch.o.race!=='hyeolgwi'||ch.turned||ch.distForm)return;
+    const wp=ch.gear&&ch.gear.weapon;if(!wp||!/^w_blood_/.test(wp.id))return;
+    const en=D.enemies[C.id],gain=en&&en.hidden?BT.hidden:1;ch.bloodCnt=(ch.bloodCnt||0)+gain;chips&&chips.push(`혈량 +${gain} (${ch.bloodCnt})`);
+    const tier=BT.need.filter(n=>ch.bloodCnt>=n).length;while((ch.bloodTier||0)<tier){const ok=bloodTierUp(ch,(ch.bloodTier||0)+1,chips);if(!ok){ch.bloodTier=tier;break}}}
   function routeWeaponUp(ch,kind,key,chips){
     const W=CFG.routeWeapon[kind];let g=W[key]||W.lv[key];if(!g)return;
     {const tv=kind==='rb'&&typeof key==='number'&&ch.rteam&&W.team&&W.team[ch.rteam]&&W.team[ch.rteam][key];if(tv)g=Object.assign({},g,tv)}
@@ -2897,6 +2908,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function winRewards(G,C){const r=winRewards0(G,C);if(r&&Array.isArray(r.chips)){const i=r.chips.findIndex(c=>String(c).startsWith('인연 도시락'));if(i>=0&&i<r.chips.length-1)r.chips.push(r.chips.splice(i,1)[0])}return r}
   function winRewards0(G,C){
     const ch=G.ch,chips=[];
+    bloodGain(ch,C,chips);
     if(ch.aff&&ch.aff.name==='약지'&&!ch.distForm){const gain=Math.min(5,(C.E.matc||0)+(C.P.mat||0));if(gain>0){ch.matStock=Math.min(CFG.art.stockMax,(ch.matStock||0)+gain);chips.push(`모아 둔 재료 +${gain} (지금 ${ch.matStock})`)}}
     /* 인연 도시락: 인연이 있으면 전투를 이긴 뒤 가끔 받는다 */
     if(ch.bond&&['met','married'].includes(ch.bond.st)&&!ch.distForm&&d(100)<=CFG.supply.lunchChance){const L_=CFG.supply.lunch,hp0=C.P.hp,hh=Math.min(Math.round(ch.stats.maxHp*L_.hpPct/100),ch.stats.maxHp-C.P.hp);if(hh>0)C.P.hp+=hh;const g_=gainMind(ch,L_.mind);chips.push(`인연 도시락 · ${ch.bond.name||'인연'}이(가) 도시락을 건넸다${hh>0?' · HP +'+hh:''}${g_?' · 정신력 +'+g_:''}`)}
@@ -3581,6 +3593,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.cb&&A.cb.k==='dmg'&&A.hp>=A.maxHp*CFG.colorBuff.hpMin){dmg+=A.cb.v;note+=` 특색 위력+${A.cb.v}`}
       if(A.sm){const SM=CFG.shinmang,mul=1+SM.dealShin+A.sm.rings*SM.dealRing;dmg=Math.floor(dmg*mul);note+=` 신망 ×${mul.toFixed(2)}`}
       if(A.wx&&A.wx.finish&&B.hp<=B.maxHp*A.wx.finish.at){dmg+=A.wx.finish.dmg;note+=` 마무리+${A.wx.finish.dmg}`}
+      if(A.wx&&A.wx.bleedDmg&&(B.bleed||0)>=A.wx.bleedDmg.min){dmg+=A.wx.bleedDmg.dmg;note+=` 출혈 위력+${A.wx.bleedDmg.dmg}`}
       if(A.triDmg){dmg+=A.triDmg;note+=` 건+${A.triDmg}`}
       if(A.hungerUse>0){dmg+=A.hungerUse;note+=` 굶주림+${A.hungerUse}`;A.hungerUse=0}
       if(c.bleedDmg&&B.bleed>0){const wm=(B.wspear||0)>0?Math.pow(B.wspearMul||1.2,B.wspear):1,x=Math.round(B.bleed*c.bleedDmg*wm);dmg+=x;note+=` 출혈 ${B.bleed}×${c.bleedDmg}${wm>1?`×${Math.round(wm*100)/100}(${D.keywords.wspear.n})`:''}+${x}`}
