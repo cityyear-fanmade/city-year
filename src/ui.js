@@ -760,8 +760,8 @@ export function startUI(E,app){
     return null}
   /* 가방 정보 칸의 접이식 구역: 열고 닫은 상태는 다시 그려도 유지한다 */
   const stSec=(k,title,body,openDef)=>{const o=(UI.stOpen||{})[k];const open=o===undefined?!!openDef:!!o;return `<details class="stsec panel" data-k="${k}"${open?' open':''} style="padding:8px 10px"><summary style="cursor:pointer"><span class="eyebrow">${title}</span></summary><div class="stack" style="gap:6px;margin-top:8px">${body}</div></details>`};
-  /* 성장기 각 시기에 출신별 이야기를 한 줄 덧붙인다 (열일곱의 출발로 이어진다) */
-  const kidTale=(o,i)=>{const P=o&&D.prologue&&D.prologue[o.n];return P&&P.kid&&P.kid[i]?`<p class="small dim" style="margin:0 0 6px;font-style:italic;line-height:1.6">${esc(P.kid[i])}</p>`:''};
+  /* 성장기 이야기: 출신별 4줄(5·9·13·16세)이 줄 본문이고, 굴림 결과(이름과 효과)는 그 아래 작은 줄로 붙는다. 같은 결과가 여러 번 나와도 줄거리는 겹치지 않는다 */
+  const kidStory=(o,i)=>{const P=o&&D.prologue&&D.prologue[o.n];return P&&P.kid&&P.kid[i]||''};
   function vStat(){
     const ch=G.ch,s0=ch.s0,sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(n);
     const eff=x=>x&&x.e?`<span class="mono small" style="color:var(--gold)">${esc(x.e)}</span>`:'';
@@ -769,7 +769,7 @@ export function startUI(E,app){
     const place=placeOf(ch.o,ch.r,ch.blank);
     const lk_=ch.flags&&ch.flags.lake&&ch.lake?ch.lake:null,lakeLog=lk_?(()=>{const K=lk_.killed||[],ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length,cr=(lk_.crew||[]).map(m=>m.n).join(' · ')||'없음',tl=lk_.tools||{},tn=Object.entries(tl).filter(([,v])=>v>0).map(([k,v])=>`${(D.lake&&D.lake.tools&&D.lake.tools[k]||{}).n||k} ×${v}`).join(' · ')||'없음';
       return stSec('lake','항해 기록 · 배 내구도',`<div class="invr"><span>지나온 호수</span><b class="mono">${lk_.seen||0}번</b></div><div class="invr"><span>고래에게서 도망</span><b class="mono">${lk_.fled||0}번</b></div>${lk_.captain?`<div class="invr"><span>목표 · 대재앙 토벌</span><b class="mono">보스급 ${ny}/4 · 대재앙 ${na}/6</b></div><div class="invr"><span>배 내구도</span><b class="mono">${E.hullOf(ch)}/${CFG.lake.hullMax}</b></div><p class="small dim">전투마다 -${CFG.lake.hullWear} · 항구에서 ${E.money(CFG.lake.repairCost)} 수리 · 0이 되면 침몰</p><div class="invr"><span>선원</span><b class="mono">${esc(cr)}</b></div>`:'<p class="small dim">선장이 되면 대재앙 토벌이 목표가 된다.</p>'}`,false)})():'';
-    const kid=(place?row('태어난 곳',place):'')+(ch.kid||[]).map((k,i)=>row(k.age+'세',k.x)+kidTale(ch.o,i)).join('');
+    const kid=(place?row('태어난 곳',place):'')+(ch.kid||[]).map((k,i)=>{const st=kidStory(ch.o,i);return st?`<div class="roll"><span class="mono small dim">${k.age}세</span><div class="n"><span style="font-style:italic;line-height:1.6">${esc(st)}</span><span class="mono small" style="color:var(--gold)"><b>${esc(k.x.n)}</b> · ${esc(k.x.e)}</span></div></div>`:row(k.age+'세',k.x)}).join('');
     const base=s0?[['최대 HP',s0.maxHp],['공격',sgn(s0.atk)],['회피',sgn(s0.eva)],['속도',sgn(s0.spd)],['사건 판정',sgn(s0.check)]].map(([a,b])=>`<div class="invr"><span>${a}</span><b class="mono">${b}</b></div>`).join(''):'';
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
       ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다. 빈손이라 히든 보스 전리품 장비를 더 자주 쥐고(+25%p), 정신이 꺾일 때 E.G.O 형상이 보일 확률이 25%다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${ch.egoUses!=null&&ch.o&&ch.o.egoWeapons?(()=>{const w=[ch.gear.weapon,...(ch.stash||[])].find(x=>x&&x.egoLv!=null);return row('무기',w?{n:'E.G.O · '+w.n,t:'환상체에게서 얻은 무기',e:w.e}:ch.w)})():row('무기',ch.w)}</div>`}
@@ -1499,7 +1499,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const row=(lab,r,x,pool)=>{const fx_=lab==='출신'&&b.o&&b.o.key;return `<div class="roll"><span class="mono small dim">${lab}</span>${fx_?'<span class="v">해금</span>':v(r)}<div class="n"><b${fx_?'':cyc(pool)}>${x.n}</b>${x.t?`<span>${x.t}</span>`:''}<span class="mono small" style="color:var(--gold)">${x.e}</span></div></div>`};
     const sw=D.colors.map((c,i)=>`<button class="sw ${i===b.ci?'on':''}" data-a="color" data-i="${i}" style="background:${c.hex}" aria-label="${c.adj} 색" title="${c.adj}"></button>`).join('');
     const kid=b.kid.length?`<div class="stack" style="gap:6px"><div class="eyebrow">성장기 · 1d100 × ${b.kid.length}</div>
-      <div class="panel">${(()=>{const pl=placeOf(b.o,b.r,b.blank);return pl?`<div class="roll"><span class="mono small dim">태어난 곳</span><span class="v">·</span><div class="n"><b>${pl.n}</b><span>${pl.t}</span></div></div>`:''})()}${b.kid.map((k,i)=>row(k.age+'세',k.r,k.x,D.childhood.table)+kidTale(b.o,i)).join('')}</div></div>`:'';
+      <div class="panel">${(()=>{const pl=placeOf(b.o,b.r,b.blank);return pl?`<div class="roll"><span class="mono small dim">태어난 곳</span><span class="v">·</span><div class="n"><b>${pl.n}</b><span>${pl.t}</span></div></div>`:''})()}${b.kid.map((k,i)=>{const st=kidStory(b.o,i);return st?`<div class="roll"><span class="mono small dim">${k.age}세</span>${v(k.r)}<div class="n"><span style="font-style:italic;line-height:1.6">${esc(st)}</span><span class="mono small" style="color:var(--gold)"><b${cyc(D.childhood.table)}>${k.x.n}</b> · ${k.x.e}</span></div></div>`:row(k.age+'세',k.r,k.x,D.childhood.table)}).join('')}</div></div>`:'';
     return `<div class="row" style="justify-content:flex-start"><button class="btn quiet" data-a="title" style="width:auto;padding:6px 12px"><b>← 첫 화면으로</b></button></div><div class="stack" style="gap:6px"><div class="eyebrow">무작위 출생 · 1d100</div><h2>${b.name?esc(b.name)+'은(는)':'당신은'} 이렇게 태어났다</h2></div>
       <div class="panel stack" style="gap:10px">
         <label class="field" for="nm"><span class="eyebrow">이름</span><input id="nm" maxlength="12" value="${esc(b.name||'')}" placeholder="${T.you}" autocomplete="off"></label>

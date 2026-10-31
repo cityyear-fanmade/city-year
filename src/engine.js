@@ -2519,7 +2519,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const we=warpEvent(G);if(we)return {type:'event',ev:we}}
     {const wf=webFree(G);if(wf)return wf}
     /* 출발: 첫 해에는 출신마다 이어 쓴 성장기의 끝(열일곱의 아침)을 먼저 보여 준다. 해를 넘기지 않는다 */
-    if(!mc.prologueDone&&(G.year||0)===0){mc.prologueDone=true;const PR=D.prologue&&mc.o&&D.prologue[mc.o.n];if(PR)return {type:'event',ev:{t:`${CFG.startAge}세 · 출발`,x:PR.leave,c:[{l:'집을 나선다',h:`${CFG.startAge}세의 해가 시작된다`,ok:{t:'문이 닫혔다. 길이 이어진다.',fx:{}}}]}}}
+    if(!mc.prologueDone&&(G.year||0)===0){mc.prologueDone=true;const PR=D.prologue&&mc.o&&D.prologue[mc.o.n];if(PR)return {type:'event',ev:{t:`${CFG.startAge}세 · 출발`,x:PR.leave,c:[{l:PR.go||'길을 나선다',h:`${CFG.startAge}세의 해가 시작된다`,ok:{t:'문이 닫혔다. 길이 이어진다.',fx:{}}}]}}}
     {const rf=routeFree(G);if(rf)return rf}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):G.endless&&G.ch.o&&G.ch.o.key==='claw'&&G.ch.flags.rt_done?(G.ch.flags.cl_return?'clawreturn':'clawstay'):G.endless&&G.ch.o&&G.ch.o.key==='arbiter'&&G.ch.flags.rt_done?(G.ch.flags.ab_keep?'arbkeep':'arbdown'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
