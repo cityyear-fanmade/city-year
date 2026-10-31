@@ -1670,7 +1670,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const R0=rt&&B&&B.routes[rt];
     if(!R0)return null;
     const vi=rt==='hcorp'&&R0.variants?(ch.hw&&ch.hw.beast?1:0):R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;
-    const yes={l:B.meetYes,h:rt==='crow'?'인연이 시작된다 · 이후 몇 해마다 사건이 온다':'동반자의 이름을 정한다 · 이후 몇 해마다 사건이 온다',ok:{t:B.meetYesT,fx:{bondMeet:rt,bondVariant:vi}}};
+    const yes={l:B.meetYes,h:'동반자의 이름을 정한다 · 이후 몇 해마다 사건이 온다',ok:{t:B.meetYesT,fx:{bondMeet:rt,bondVariant:vi}}};
     /* 흑수 루트: 약한 가주 후보와의 만남은 반드시 일어난다 */
     if(rt==='hcorp'&&ch.hw&&ch.hw.beast)return {t:R.meet.t,x:R.meet.x,c:[yes]};
     return {t:R.meet.t,x:R.meet.x,c:[
@@ -2803,8 +2803,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.singGrow)corpGrow(ch,chips);
     if(fx.singUp)corpUp(ch,chips);
     if(fx.corpForb)corpForb(ch,chips);
-    if(fx.bondMeet==='crow'){const y_=ch.year||0;ch.bond={st:'met',route:'crow',variant:0,name:'묘',step:0,tries:0,love:0,since:y_,next:y_+bondGap()};chips.push('인연 · 묘')}   // 원본 인물이라 이름을 짓지 않는다
-    else if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
+    if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
     if(fx.bondDecline)ch.bond={st:'declined'};
     if(fx.bondDeath&&ch.bond&&ch.bond.st==='married'){bondDeath(ch,chips);ch.bond.dieBy=fx.bondDie||'risk';ch.bond.dieYear=ch.year||0}
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0,race:kk.race||(ch.race==='hyeolgwi'?'hyeolgwi':'human')};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
