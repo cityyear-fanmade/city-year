@@ -2343,6 +2343,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const ev_=JSON.parse(JSON.stringify(M.ev).replace(/\{c\}/g,cn).replace(/\{r\}/g,rn).replace(/\{foe\}/g,fid));
         for(const [fk,tx] of Object.entries(M.xAdd||{}))if(fl_[fk])ev_.x+='\n\n'+tx;
         return ev_}}
+    /* 처분(집행) 의뢰 선택이 매년 나오는 줄기도 인연 만남은 그보다 먼저 한 번 온다 */
+    if(H&&!R.noBondMeet&&!ch.bond&&!st.hunt&&!st.kit&&!st.arc&&y>=BD.from&&bondRouteOf(ch)&&(y>=BD.by||d(100)<=BD.meetChance)){const bm=bondMeetEvent(ch);if(bm)return bm}
+    if(H&&!st.hunt&&!st.kit&&!st.arc&&st.n<H.targets.length){const bv0=bondEvent(G);if(bv0)return bv0}
     if(H&&!st.hunt&&!st.kit&&!st.arc&&st.n<H.targets.length){
       const C=H.choose;
       return {t:C.t,x:C.x,c:[{l:C.supply.l,h:C.supply.h,ok:{t:C.supply.t,fx:C.supply.fx||{}}},{l:C.hunt.l,h:C.hunt.h,ok:{t:C.hunt.t,fx:{routeHunt:'start'}}}]};
