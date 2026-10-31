@@ -225,7 +225,6 @@
     "guard"
    ],
    "hidden": true,
-   "unlock": "claw",
    "intro": "새벽, 문이 소리 없이 열린다. 하얀 옷의 집행자가 서류 한 장을 읽는다. 금기 위반, 항소 없음.",
    "endText": "머리의 집행자를 쓰러뜨렸다. 도시는 이 일을 기록하지 않았지만, 머리는 당신의 이름을 기억하게 되었다.",
    "tier": "hidden",
@@ -302,7 +301,6 @@
     "guard"
    ],
    "hidden": true,
-   "unlock": "arbiter",
    "intro": "두 번째 금기. 이번에는 집행자가 아니라 조율자가 직접 왔다. 공기가 굳고, 숨이 무거워진다.",
    "endText": "조율자가 무릎을 꿇었다. 금기를 정하는 쪽의 자리가 처음으로 흔들렸다.",
    "tier": "hidden",
@@ -4380,7 +4378,9 @@
     "hp": 1.64,
     "atk": 2,
     "eva": 1
-   }
+   },
+   "unlock": "claw",
+   "unlockNoEasy": true
   },
   "zena": {
    "n": "조율자 · 제나",
@@ -4460,7 +4460,9 @@
     "hp": 1.66,
     "atk": 2,
     "eva": 1
-   }
+   },
+   "unlock": "arbiter",
+   "unlockNoEasy": true
   },
   "pil1": {
    "n": "원한의 장부 · 첫 페이지",

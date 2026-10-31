@@ -3008,7 +3008,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
         else for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
       if(foe.quest){ch.flags[foe.quest.flag]=1;ch.bookNext=G.year+CFG.redBook.every;(ch.relics=ch.relics||[]).push(foe.quest.relic);chips.push(foe.quest.text)}
-      if(foe.unlock&&!ch.unlocks.includes(foe.unlock)){ch.unlocks.push(foe.unlock);unlock=foe.unlock;chips.push('해금 · '+(T.jobs[foe.unlock]||foe.unlock))}
+      if(foe.unlock&&!ch.unlocks.includes(foe.unlock)){if(foe.unlockNoEasy&&ch.easy)chips.push('쉬움에서는 해금되지 않는다 · 보통 이상에서 다시 이긴다');else{ch.unlocks.push(foe.unlock);unlock=foe.unlock;chips.push('해금 · '+(T.jobs[foe.unlock]||foe.unlock))}}
     }
     /* 미니보스 전리품(once): 처음 이겼을 때만 */
     if(!foe.hidden&&foe.drop&&!(ch.minis||[]).includes(C.id)){
