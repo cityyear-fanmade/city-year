@@ -1659,16 +1659,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const FINGER_ROUTE={'엄지':'thumb','검지':'pointer','중지':'middle','약지':'ring'};
   /* 호수 출생은 인연·가족 공통 문구를 D.bond.lake 로 덮어 쓴다(배에서 사는 사람의 말투) */
   const bondTx=ch=>(lakeOn(ch)&&D.bond&&D.bond.lake)?Object.assign({},D.bond,D.bond.lake):D.bond;
-  const bondRouteOf=ch=>(ch.o&&ch.o.herm)?(ch.bond?'hermes':null):(ch.o&&ch.o.key==='crow')?'crow':(ch.o&&ch.o.key==='gweapon'&&ch.flags&&ch.flags.gw_fall)?'gweapon':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
+  const bondRouteOf=ch=>(ch.o&&ch.o.herm)?(ch.bond?'hermes':null):(ch.o&&ch.o.key==='librarian')?'librarian':(ch.o&&ch.o.key==='crow')?'crow':(ch.o&&ch.o.key==='gweapon'&&ch.flags&&ch.flags.gw_fall)?'gweapon':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
   function bondMeetEvent(ch){
     const B=bondTx(ch);let rt=bondRouteOf(ch);
     /* 히든: 해결사 급수가 BD.hidden.rank급 이상(숫자 rank<=)이면 가끔 처음부터 2~1급 해결사인 상대를 만난다 */
     if(['thumb','pointer','middle','ring'].includes(rt)&&B.routes.finger&&d(100)<=BD.fingerGeneric)rt='finger';
-    if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&rt!=='hcorp'&&rt!=='crow'&&rt!=='gweapon'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
+    if(rt&&rt!=='hyeolgwi'&&rt!=='rcorp'&&rt!=='hcorp'&&rt!=='crow'&&rt!=='gweapon'&&rt!=='librarian'&&ch.licensed&&ch.rank<=BD.hidden.rank&&B.routes.highfixer&&d(100)<=BD.hidden.chance)rt='highfixer';
     const R0=rt&&B&&B.routes[rt];
     if(!R0)return null;
+    if(R0.pick&&R0.variants)return {t:R0.meet.t,x:R0.meet.x,c:[...R0.variants.map((V,i)=>({l:V.who,h:V.pickH+' · 동반자의 이름을 정한다',ok:{t:V.meet.x,fx:{bondMeet:rt,bondVariant:i}}})),{l:B.meetNo,h:'다시 만나지 않는다',ok:{t:B.meetNoT,fx:{bondDecline:true}}}]};
     const vi=rt==='hcorp'&&R0.variants?(ch.hw&&ch.hw.beast?1:0):R0.variants?d(R0.variants.length)-1:0,R=R0.variants?R0.variants[vi]:R0;
     const yes={l:B.meetYes,h:'동반자의 이름을 정한다 · 이후 몇 해마다 사건이 온다',ok:{t:B.meetYesT,fx:{bondMeet:rt,bondVariant:vi}}};
     /* 흑수 루트: 약한 가주 후보와의 만남은 반드시 일어난다 */
