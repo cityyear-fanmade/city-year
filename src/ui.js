@@ -979,7 +979,7 @@ export function startUI(E,app){
       <p class="small dim">암시장에서 도는 전리품. 전투 중 HP가 최대 HP의 ${Math.round(A.belowPct*100)}% 이하가 되면 자동으로 쓰여 최대 HP의 ${Math.round(A.healPct*100)}%를 회복한다. 한 번에 쓰러질 만한 피해를 받으면 쓰러지기 전에 먼저 쓰이고(받은 피해만큼 회복이 줄어든다), 전투 중 횟수 제한 없이 한 번에 1개씩 쓰이고, 최대 ${A.carry}개까지 지닌다. 쓰고 나면 다음 공방에서 다시 살 수 있다. ${ch.infinite?`2막 무한 모드에서는 구매 횟수 제한이 없고 값이 ${E.money(A.priceInf)}이다.`:`한 판에 모두 ${A.limit}개까지만 살 수 있다 (2막 무한 모드에 들어서면 제한이 없어지고 값이 ${E.money(A.priceInf)}이 된다).`}</p>
       <button class="btn" data-a="ample" ${aok?'':'disabled'}><b>${A.name} 구입</b><span class="mono small dim">지닌 수 ${have}/${A.carry} · 산 수 ${bought}${ch.infinite?' (제한 없음)':'/'+A.limit}${bought>=A.limit&&!ch.infinite?' · 더는 살 수 없다':have>=A.carry?' · 더는 지닐 수 없다':ch.money<ap?' · 돈이 모자란다':''}</span></button></div>`}${vEnchant()}`;
   }
-  /* 무한 모드: 월광석 효과 부여. 장착한 무기·방어구·보조 장비 각각에 효과를 새기고, 다시 새기면 이전 효과가 지워지고 다른 효과로 바뀐다 */
+  /* 무한 모드: 효과 부여. 장착한 무기·방어구·보조 장비 각각에 효과를 새기고, 다시 새기면 이전 효과가 지워지고 다른 효과로 바뀐다 */
   function vEnchant(){
     const ch=G.ch,K=CFG.enchant;if(!E.enchantable(ch)||hwHome())return '';
     const row=(sl,lb)=>{const it=ch.gear[sl];if(!it)return `<div class="row between small dim"><span>${lb}</span><span>장착한 장비가 없다</span></div>`;
@@ -987,7 +987,7 @@ export function startUI(E,app){
       return `<div class="stack" style="gap:4px"><div class="row between"><b>${lb} · ${esc(it.n)}</b><span class="mono small" style="color:var(--gold)">${E.money(pr)}</span></div>
         <p class="small ${en?'':'dim'}">${en?`<b>${esc(en.n)}</b> · ${esc(en.type)} · ${esc(en.e)}`:'새겨진 효과 없음'}</p>
         <button class="btn" data-a="enchant" data-i="${sl}" ${ok?'':'disabled'}><b>${en?'효과를 바꾼다':'효과를 새긴다'}</b><span class="mono small dim">${it.enchN?`지금까지 ${it.enchN}번`:'처음'}${ok?'':' · 돈이 모자란다'}</span></button></div>`};
-    return `<div class="panel stack" style="gap:10px;border-color:var(--rupture)"><div class="row between"><b class="serif">월광석 · 효과 부여</b><span class="mono small dim">${E.money(K.base)} ~ ${E.money(K.max)}</span></div>
+    return `<div class="panel stack" style="gap:10px;border-color:var(--rupture)"><div class="row between"><b class="serif">효과 부여</b><span class="mono small dim">${E.money(K.base)} ~ ${E.money(K.max)}</span></div>
       <p class="small dim">돈을 내고 장비에 효과를 새긴다. 다시 새기면 이전 효과가 지워지고 다른 효과로 바뀐다(쌓이지 않는다). 첫 값은 ${E.money(K.base)}이고, 새길 때마다 ${E.money(K.step)}씩 올라 ${E.money(K.max)}에서 멈춘다. 횟수 제한은 없다. 효과는 버프형 · 디버프형 · 스탯형 · 스택형 · 패시브형 중에서 나온다.</p>
       ${UI.enchMsg?`<p class="good small">${esc(UI.enchMsg)}</p>`:''}
       ${row('weapon','무기')}${row('armor','방어구')}${row('aug','보조 장비')}</div>`;
