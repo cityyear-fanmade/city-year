@@ -1631,6 +1631,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           {l:'공세를 벼린다',h:`공격 +${pct(Lm.atkPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'휘두르는 팔이 한결 무거워졌다.',fx:{limit:'atk'}}},
           {l:'맹공을 익힌다',h:`주는 피해 +${pct(Lm.dmgPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'맞는 쪽이 먼저 물러서는 것이 느껴진다.',fx:{limit:'dmg'}}},
           {l:'일격을 벼린다',h:`적중 시 상대에게 추가 피해 (내 최대 HP의 ${pct(Lm.strikePct)}%) (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'몸 전체의 무게가 한 번의 타격에 실린다.',fx:{limit:'strike'}}}]}}}
+    {const ok_=(ch.o&&(ch.o.herm||ch.o.key==='hermes'))?'hermes':ch.o&&ch.o.key,RE=!LI&&I.routeEvents&&I.routeEvents[ok_];
+      if(!n&&ch.infIntro&&RE&&RE.length){const Rv=CFG.infinite.routeEvery||15;if(!ch.infReAt)ch.infReAt=G.year+Rv;
+        if(G.year>=ch.infReAt){ch.infReAt=G.year+Rv;const i=(ch.infReN||0)%RE.length;ch.infReN=(ch.infReN||0)+1;return JSON.parse(JSON.stringify(RE[i]))}}}
     if(!n)return null;
     const T=(LI||I).century[Math.min(n-1,(LI||I).century.length-1)];
     return {t:T.t,x:T.x,c:[{l:T.a,h:`공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100)}% (영구) · 적의 공격 피해도 +${Math.round(K.enemyDmg*100)}% (영구)`,ok:{t:T.at,fx:{infCentury:n}}}]}
