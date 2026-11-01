@@ -2948,7 +2948,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(/^lake_whale_/.test(C.id)&&L.captain&&!ch.colorDone){const T_=CFG.lake.trait,s_=ch.stats;s_.maxHp+=T_.hp;ch.hp+=T_.hp;s_.atk+=T_.atk;s_.eva+=T_.eva;
           ch.colorDone=true;ch.colorYear=ch.year||0;ch.custDone=true;L.trait=true;ch.colorPick=true;ch.title=D.colors[ch.ci].adj+' '+one(D.titleWords[ch.dom||'atk']);ch.titleKind='color';(ch.titleLog=ch.titleLog||[]).push('특색');ch.titlePick=true;
           chips.push('대재앙을 잡았다. 도시는 당신에게 특색을 부여했다');chips.push('하지만 내가 있을 곳은 대호수다');chips.push(`특색 · 최대 HP +${T_.hp} · 공격 +${T_.atk} · 회피 +${T_.eva}`);chips.push('특색 패시브 · 셋 중 하나를 고른다');chips.push(T.titleLabel+' · '+ch.title)}}}
-    {const wh=CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0);ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
+    {const wh=Math.round((CFG.winHeal+(ch.hw?CFG.hw.winHealUp:0)+(ch.wtrain?Math.round(ch.stats.maxHp*CFG.warp.winHealPct):0))*(ch.infinite&&ch.pact?Math.max(0,1-pactV(ch,'slowheal')):1));ch.hp=clamp(C.P.hp+wh,1,ch.stats.maxHp);chips.push('HP +'+wh)}
     if((ch.ample||0)!==(C.P.ample||0)){chips.push(`${CFG.ample.name} 사용 · 남은 ${C.P.ample||0}개`);ch.ample=C.P.ample||0}
     if((C.id==='claw'||C.id==='arbiter')&&!(ch.flags&&ch.flags.spouseAge)){(ch.flags=ch.flags||{}).spouseAge=1;if(ch.bond)ch.bond.risk=0;chips.push('발톱과 조율자 중 하나를 쓰러뜨렸다 · 배우자의 위험이 가라앉고, 이제 나이로 눈을 감는다')}
     if(ch.infinite&&C.id===CFG.endless.final)ch.infImp=(ch.infImp||1)+1;
@@ -3106,6 +3106,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(IL.legacyNeed){const t=ch.legacyTier||0;rows.push(['연륜',`${t}/${IL.legacyMax}단계`,`최고 직위에 오른 뒤 전공이 연륜으로 쌓인다 · 단계마다 ${({atk:'공격',eva:'회피',spd:'속도'})[ch.dom]||'최대 HP(+4)'} +1 · 다음 단계까지 ${ch.legacyPts||0}/${IL.legacyNeed}`])}
     return rows
   }
+  /* 제약·버프: 한 종류당 쌓인 횟수 n(id), 값 v(id), 짝 제약을 2번 이상 쌓으면 버프 ×pairMul */
+  const pactN=(ch,id)=>(ch.pact&&ch.pact[id])||0;
+  const pactV=(ch,id)=>{const K=CFG.infinite.pact,b=K.buffs.find(x=>x.id===id),c=K.cons.find(x=>x.id===id),x=b||c;if(!x)return 0;const syn=b&&K.cons.some(q=>q.pair===id&&pactN(ch,q.id)>=2)?K.pairMul:1;return pactN(ch,id)*x.v*syn};
   const infEvaCut=ch=>Math.min(Math.floor(Math.max(0,ch.stats.eva)*(1-(CFG.infinite.evaKeep||0))),Math.floor(infYears(ch)*CFG.infinite.evaDown));
   const infYears=ch=>ch.infinite?Math.max(0,(ch.year||0)-(CFG.years+CFG.endless.span*CFG.endless.grades.length)):0;
   function mkCombat(ch,id,quiet){
@@ -3115,10 +3118,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       bleed:s.startBleed,breath:Math.min(CFG.breath.cap,s.startBreath||0),dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지')||!!(ch.o&&ch.o.herm),herm:(ch.gear.weapon&&ch.gear.weapon.wx&&ch.gear.weapon.wx.herm)?{n:0,wait:false}:null,thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)?ch.gear.aug.dsp.ammo:0):0,thumbFi:ch.fi||0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),rk:rankCardOf(ch),wx:ewxOf(ch),jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,kwPlus:ch.colorPasv==='brand'?2:0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     if(ch.flags&&ch.flags.redMist&&ch.gear&&ch.gear.weapon&&ch.gear.weapon.id==='w_mimicry_p'){P.rmGauge=0;P.rmOpen=0}
     if(ch.flags&&ch.flags.redMist&&CFG.redMist.shieldPct)P.shield=Math.max(P.shield||0,Math.round(s.maxHp*CFG.redMist.shieldPct));   // 붉은 안개 책장: 전투 시작 때 보호막
-    if(ch.infinite&&ch.pact){const K=CFG.infinite.pact,n=id=>ch.pact[id]||0,v=(L,id)=>L.find(x=>x.id===id).v;
-      P.atk=Math.max(1,Math.round(P.atk*(1+n('keen')*v(K.buffs,'keen')-n('dull')*v(K.cons,'dull'))));P.eva=Math.max(0,P.eva+n('quick')*v(K.buffs,'quick')-n('stall')*v(K.cons,'stall'));P.spd=Math.max(0,P.spd+n('wind')*v(K.buffs,'wind')-n('slow')*v(K.cons,'slow'));
-      {const m=1+n('hardy')*v(K.buffs,'hardy')-n('frail')*v(K.cons,'frail'),mh=Math.max(1,Math.round(P.maxHp*m)),r=P.hp/P.maxHp;P.maxHp=mh;P.hp=Math.max(1,Math.min(mh,Math.round(mh*r)))}
-      if(n('mend'))P.regen=(P.regen||0)+Math.round(P.maxHp*n('mend')*v(K.buffs,'mend'))}
+    if(ch.infinite&&ch.pact){P.bleed=(P.bleed||0)+pactN(ch,'bleedst');const sh=Math.round(P.maxHp*pactV(ch,'shieldst'));if(sh>0)P.shield=Math.max(P.shield||0,sh)}
     P.ample=ch.ample||0;P.hitB=(s.hit||0)-(ch.hermPen?CFG.herm.pen.hit:0);if(ch.hermPen)P.eva=Math.max(0,P.eva-CFG.herm.pen.eva);P.auxExtra=(ch.gear&&ch.gear.aug&&ch.gear.aug.extraHit)||0;P.auxShield=(ch.gear&&ch.gear.aug&&ch.gear.aug.rShield)||0;P.auxFirst=(ch.gear&&ch.gear.aug&&ch.gear.aug.rFirst)||0;P.auxFoeSink=(ch.gear&&ch.gear.aug&&ch.gear.aug.foeSink)||0;{const kc=ch.gear&&ch.gear.aug&&ch.gear.aug.kwCap;P.kwCapUp=kc?{[kc[0]]:kc[1]}:null}P.auxKw=((ch.gear&&ch.gear.aug&&ch.gear.aug.kw)||[]).concat(ch.surg&&D.surgeries&&D.surgeries[ch.surg.kind]&&ch.surg.lv>=3&&D.surgeries[ch.surg.kind].lv[2].kw||[]);if(!P.auxKw.length)P.auxKw=null;P.surgThr=(ch.surg&&ch.surg.kind==='fun'&&ch.surg.lv>=3)?(D.surgeries.fun.lv[2].thr||2):0;P.riteGuard=(ch.gear&&ch.gear.aug&&ch.gear.aug.guard)||null;P.dsp=(ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)||null;P.auxMat=(ch.gear&&ch.gear.aug&&ch.gear.aug.matHit)||0;P.auxDebuff=(ch.gear&&ch.gear.aug&&ch.gear.aug.debuff)||null;if(P.wx&&P.wx.forms)P.form='a';if(P.wx&&P.wx.dimShift)P.dimCharge=1;P.hwHeal=ch.hw?(CFG.hw.dan.heal[ch.hwDan||0]||0):0;
     const EZ=ch.easy?CFG.easy:null,S_=CFG.enemyScale,yy=Math.max(0,(ch.year||0)-S_.from),grow=e.hidden?0:yy*(EZ?EZ.grow:1);
     const IFH=CFG.infinite,yH=ch.infinite&&id===CFG.endless.final?Math.min(IFH.hpEnd,(Math.floor((CFG.startAge+(ch.year||0)-1)/IFH.hpStep)+1)*IFH.hpStep-CFG.startAge+1):(ch.year||0),growH=e.hidden?0:Math.max(0,yH-S_.from)*(EZ?EZ.grow:1);
@@ -3691,15 +3691,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const IF_=CFG.infinite,m=B.isP?Math.min(IF_.escMaxP,Math.pow(1+IF_.escPerP,A.escN)):Math.min(IF_.escMaxE,Math.pow(1+IF_.escPerE,A.escN));dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
       if(C.ch.infinite&&!A.isP&&B.isP&&dmg>0&&C.id===CFG.endless.final&&CFG.infinite.impDmgMul!=null&&CFG.infinite.impDmgMul!==1){dmg=Math.max(1,Math.round(dmg*CFG.infinite.impDmgMul))}
       if(C.ch.infinite&&!A.isP&&B.isP&&dmg>0&&C.ch.infBoost){const m=1+C.ch.infBoost*CFG.infinite.century.enemyDmg;dmg=Math.round(dmg*m);note+=` 어긋남 ×${m.toFixed(2)}`}
-      if(C.ch.infinite&&C.ch.pact&&dmg>0){const K=CFG.infinite.pact,n=id=>C.ch.pact[id]||0,v=(L,id)=>L.find(x=>x.id===id).v;
-        if(A.isP){const m=Math.max(0.4,1+n('might')*v(K.buffs,'might')-n('weak')*v(K.cons,'weak'));if(m!==1){dmg=Math.round(dmg*m);note+=` 값 ×${m.toFixed(2)}`}}
-        else if(B.isP){const m=Math.max(0.4,1+n('vuln')*v(K.cons,'vuln')-n('guard')*v(K.buffs,'guard'));if(m!==1){dmg=Math.round(dmg*m);note+=` 값 ×${m.toFixed(2)}`}}}
+      if(C.ch.infinite&&C.ch.pact&&dmg>0){const ch_=C.ch;
+        if(A.isP){let m=1;const fv=pactV(ch_,'first');if(fv&&!C.pactFirst){C.pactFirst=1;m+=fv}
+          const ev=pactV(ch_,'echo');if(ev&&c){if(A.pactLast===c.id)A.pactRun=Math.min(5,(A.pactRun||0)+1);else A.pactRun=0;A.pactLast=c.id;m+=ev*A.pactRun}
+          if(A.hp<=A.maxHp*0.3)m+=pactV(ch_,'lastb');if(m!==1){dmg=Math.round(dmg*m);note+=` 값 ×${m.toFixed(2)}`}}
+        else if(B.isP&&B.hp<=B.maxHp*0.3){const x=pactV(ch_,'lastb');if(x){const m=Math.max(0.4,1-x/2);dmg=Math.round(dmg*m);note+=` 마지막 숨 ×${m.toFixed(2)}`}}}
       if(C.ch.infinite&&A.isP&&dmg>0&&C.ch.limStrike){const x=Math.round(A.maxHp*C.ch.limStrike);dmg+=x;note+=` 일격 +${x}`}
       if(C.ch.infinite&&A.isP&&dmg>0&&(C.ch.infBoost||C.ch.infShard||C.ch.famLoss||C.ch.limDmg)){const m=1+(C.ch.limDmg||0)+(C.ch.infBoost||0)*CFG.infinite.century.dmg+(C.ch.infShard||0)*CFG.infinite.shard.dmg+(C.ch.famLoss||0)*CFG.infinite.grief.dmg;dmg=Math.round(dmg*m);note+=` 백 해 ×${m.toFixed(2)}`}
       {const SG=CFG.infinite.surge;if(C.ch.infinite&&A.isP&&dmg>0&&SG&&(C.ch.year||0)>=SG.year&&C.round>SG.round){const m=Math.min(SG.max,Math.pow(SG.per,C.round-SG.round));dmg=Math.round(dmg*m);note+=` 기세 ×${m>=1000?m.toExponential(1):m.toFixed(1)}`}}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
       if(A.passive&&A.passive.id==='lkPale'&&B.isP&&dmg>0){B.pale=(B.pale||0)+1;if(B.pale>=A.passive.at){B.pale=0;loseMind(C.ch,Math.ceil(A.passive.mind/(B.lk&&B.lk.pale?2:1)),t=>L('kw',`  ${A.name} · 창백화 · ${t}`))}else L('kw',`  ${A.name} · 창백화 ${B.pale}/${A.passive.at}`)}
-      hpLoss(C,B,dmg,L);if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
+      hpLoss(C,B,dmg,L);
+      if(C.ch.infinite&&C.ch.pact&&dmg>0){const ch_=C.ch;
+        if(A.isP){const lv=Math.round(dmg*pactV(ch_,'leech')),rc=Math.round(dmg*pactV(ch_,'recoil'));if(lv>0&&A.hp>0){A.hp=Math.min(A.maxHp,A.hp+lv);L('kw',`  ${A.name} · 흡혈 · HP +${lv}`)}if(rc>0){A.hp=Math.max(1,A.hp-rc);L('kw',`  ${A.name} · 반동 · HP −${rc}`)}}
+        else if(B.isP&&A.hp>0){const ct=Math.round(dmg*pactV(ch_,'counter'));if(ct>0){A.hp=Math.max(0,A.hp-ct);L('kw',`  ${B.name} · 반격 · ${A.name} HP −${ct}`)}}}
+if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
@@ -3823,6 +3829,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.isP&&P.wx&&P.wx.forms){C.vsTop=C.vsTop||[];pp.forEach(c=>{if(c.vsTop&&!C.vsTop.includes(c.vsTop))C.vsTop.push(c.vsTop)});if(C.vsTop.length>=2&&!C.vsGiven){C.vsGiven=true;giveNext(P,'x_vs_ego');P.burstLight=CFG.form.burstLight;P.burstTo=C.round+CFG.form.burstRounds;L('sys',`  ${P.name} · 3코스트 이상 두 자세 · 다음 손패에 환영난무 · 최대 빛 +${CFG.form.burstLight} (${CFG.form.burstRounds}라운드)`)}}
     const push=ev=>{if(C.quiet)return;if(C.rollPend){C.cur.unshift({t:'sys',s:`  판정 1d100 ${C.rollPend.r} / 개화 ${C.rollPend.th} 이하`,roll:C.rollPend});C.rollPend=null}ev.lines=C.cur;C.cur=[];ev.snap=snap(C);ev.step=C.step;C.evs.push(ev)};
     L('head',`— ${C.round}라운드 · ${C.order[0].name} 선공 —`);
+    if(C.ch.infinite&&C.ch.pact&&P.isP){const ts=pactV(C.ch,'timeslip'),hv=pactV(C.ch,'heavy');
+      if(ts>0&&rng()<ts&&pp.length){pp=[];L('kw',`  ${P.name} · 어긋난 시간 · 이번 라운드 행동 불발`)}
+      else if(hv>0&&pp.length){const n0=pp.length;pp=pp.filter(()=>rng()>=hv);if(pp.length<n0)L('kw',`  ${P.name} · 무거운 손 · 카드 ${n0-pp.length}장이 미끄러졌다`)}}
     if(C.round===1&&C.mindNote&&C.mindNote.length)C.mindNote.forEach(t=>L('kw',t));
     if(C.jobNote)L('kw',C.jobNote);
     if(C.triNote){L('kw',C.triNote);C.triNote=null}
@@ -3879,7 +3888,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.cd&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.cdUntil=C.cdUntil||{})[id_]=C.round+c.cd+1}
       A.focusOn=!!(A.focus&&A.charge>=A.focus.at);A.expOn=!!(A.chargeExp&&A.charge>=A.chargeExp.at);A.spent=0;if(c.spend&&A.charge>0){A.spent=Math.min(A.charge,c.spend+(A.wx&&A.wx.edge?A.wx.edge.spend:0));A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · 충전 ${A.spent} 소모 (남은 ${A.charge})`)}
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
-      if(c.t==='def'){A.defRound=C.round;if(c.egBrace){A.egBrace=C.round;A.egBraceN=c.egBrace+(A.mf&&c.egBraceMf||0)}cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){const sh_=c.shield+(A.prescPlus||0);A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+sh_);L('kw',`${A.name} · ${c.n} · 보호막 +${sh_} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=(c.eva||CFG.defBonus)+A.defUp+(A.prescPlus||0);A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
+      if(c.t==='def'){A.defRound=C.round;if(c.egBrace){A.egBrace=C.round;A.egBraceN=c.egBrace+(A.mf&&c.egBraceMf||0)}cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){const sh_=Math.max(0,Math.round((c.shield+(A.prescPlus||0))*(A.isP&&C.ch.infinite&&C.ch.pact?1-pactV(C.ch,'crack'):1)));A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+sh_);L('kw',`${A.name} · ${c.n} · 보호막 +${sh_} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=Math.round(((c.eva||CFG.defBonus)+A.defUp+(A.prescPlus||0))*(A.isP&&C.ch.infinite&&C.ch.pact?1-pactV(C.ch,'crack'):1));A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
       if(P.hp<=0||E.hp<=0)return;
       act(C,A,c,L,push);
       ampUse(C,L);
@@ -3921,6 +3930,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       for(const X of [P,E]){if(X.dealtR===C.round){X.dry=0;continue}X.dry=(X.dry||0)+1;if(X.dry<F.miss)continue;
         const r=!X.isP&&X.maxHp>=CFG.infinite.hpMax?F.capRate.reduce((q,[at,v])=>n>at?v:q,F.capRate[0][1]):Math.min(F.max,F.per*(X.dry-F.miss+1)),x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · ${X.dry}라운드째 피해를 주지 못했다 · 고정 피해 ${x}`)}}}
     ampUse(C,L);
+    if(P.hp<=0&&!C.ch.mindDead&&C.ch.infinite&&C.ch.pact&&pactN(C.ch,'rewind')&&!C.pactRewound){C.pactRewound=1;P.hp=Math.max(1,Math.min(P.maxHp,Math.round(P.maxHp*pactV(C.ch,'rewind'))));L('kw',`  ${P.name} · 되감기 · HP ${P.hp}로 일어난다`)}
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0&&E.passive&&E.passive.id==='lkGenesis'&&(E.reborn||0)<E.passive.times){E.reborn=(E.reborn||0)+1;E.hp=Math.round(E.maxHp*E.passive.back);E.bleed=0;E.rupture=0;E.harpoon=0;L('kw',`${E.name} · 쓰러진 줄 알았던 몸이 호수에서 다시 일어선다 · HP ${E.hp}`)}else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
   }
   /* K사 엠플: 살아 있고 HP가 최대 HP의 belowPct 이하이면 자동으로 쓴다 (한 번에 1개, 전투당 제한 없음) */
