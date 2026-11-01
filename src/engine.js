@@ -828,8 +828,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const ptsName=ch=>{const k=career(ch);return k&&CR[k]?CR[k].pts:T.promoPoints};
   const examReady=ch=>canPromote(ch)&&(ch.pp||0)>=promoNeed(ch);
   const examDc=ch=>{const k=career(ch),n=Math.max(1,steps(k,ch));return Math.round(CFG.promo.examDc+CFG.promo.examDcSpan*promoDone(ch)/n)};
+  /* 공방 해결사 + N사(동부 출신): N사 직급 승진과 별개로 해결사 승급 시험도 병행한다. 포인트(fpp)는 같은 활동으로 함께 쌓는다 */
+  const dualFx=ch=>!!ch&&!!ch.licensed&&!ch.infinite&&isWs(ch)&&isN(ch);
+  function fixerNeed(ch){
+    const n=Math.max(1,T.rankStart-T.rankTop);let sum=0,m=1;for(let i=0;i<n;i++){sum+=m;m*=multAt(i)}
+    let need=CFG.promo.total*CFG.promo.fixerMul/sum;const done=Math.max(0,T.rankStart-(ch.rank||T.rankStart));for(let i=0;i<done;i++)need*=multAt(i);return Math.round(need)}
+  const fixerReady=ch=>dualFx(ch)&&(ch.rank||T.rankStart)>T.rankTop&&(ch.fpp||0)>=fixerNeed(ch);
+  function fixerExamEvent(){
+    const E_=JSON.parse(JSON.stringify(D.promotionExam).replace(/examPass/g,'examPassF').replace(/examFail/g,'examFailF').replace(/examSkip/g,'examSkipF'));
+    E_.t='해결사 승급 심사';E_.x='N사 직급과는 별개로, 해결사 쪽의 승급 심사 일정이 내려왔다. 공방 해결사로 쌓은 실적이 기준에 닿았다. 떨어지면 쌓은 실적 일부가 없던 일이 된다.';return E_}
   function addPts(ch,n,chips){
     const k=career(ch);if(!n||!k)return;
+    if(n&&dualFx(ch))ch.fpp=(ch.fpp||0)+n;
     n=Math.round(n*((CR[k]&&CR[k].gainMul)||1)*(k==='finger'&&ch.fingerMul||1));ch.pp=(ch.pp||0)+n;
     if(canPromote(ch))chips.push(`${ptsName(ch)} +${n} (${ch.pp}/${promoNeed(ch)})`);
     /* 무한 모드: 도시가 모두 적대적이라 격식을 차린 심사는 열리지 않는다. 포인트가 차면 전공으로 바로 승급하고,
@@ -1144,6 +1154,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.custOpen)ch.custPick=true;
     if(fx.pinky&&!ch.pinky){ch.pinkyYear=ch.year||0;ch.pinky=true;addStats(s,D.pinky.fx);chips.push(D.pinky.n+' 표식 · '+D.pinky.e)}
     if(fx.examPass){const need=promoNeed(ch),p=promoteAny(ch);if(p){chips.push(...p.chips);ch.pp=Math.max(0,(ch.pp||0)-need);ch.promos=(ch.promos||0)+1;ch.strikes=0}}
+    if(fx.examPassF){const need=fixerNeed(ch),p=promote(ch);if(p){chips.push(...p.chips);ch.fpp=Math.max(0,(ch.fpp||0)-need)}}
+    if(fx.examFailF){const lost=Math.floor((ch.fpp||0)*CFG.promo.loseFrac);ch.fpp=(ch.fpp||0)-lost;chips.push(`승급 포인트 −${lost} (${ch.fpp}/${fixerNeed(ch)})`)}
+    if(fx.examSkipF)ch.fxSkipYear=ch.year;
     if(fx.examFail){
       const k=career(ch),C_=CR[k]||{},lost=Math.floor((ch.pp||0)*(C_.lose||CFG.promo.loseFrac));
       ch.pp=(ch.pp||0)-lost;chips.push(`${ptsName(ch)} −${lost} (${ch.pp}/${promoNeed(ch)})`);
@@ -2670,6 +2683,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 승급 심사·특색 심사는 조건이 되면 다른 사건보다 먼저 (심사를 미룬 해의 다음 해까지는 다시 묻지 않음) */
     const ch=G.ch;
     if(topReady(ch))return {type:'event',ev:topEvent(ch)};
+    if(fixerReady(ch)&&ch.fxSkipYear!==G.year-1)return {type:'event',ev:fixerExamEvent()};
     if(examReady(ch)&&ch.examSkipYear!==G.year-1){const k=career(ch);return {type:'event',ev:(isFinger(ch)&&D.fingers[ch.aff.name].exam)||(CR[k]&&CR[k].exam)||D.promotionExam}}
     {const rv=rbYear(G);if(rv)return {type:'event',ev:rv}}
     {const hv=hwYear(G);if(hv)return {type:'event',ev:hv}}
@@ -3119,7 +3133,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;
-    if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit;if(ch.fate){P.nailHit=0;P.atk+=CFG.nWing.fate;P.eva+=CFG.nWing.fate}}
+    if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit;if(ch.fate){P.nailHit=CFG.nWing.eastNail||CFG.nail.hit;P.atk+=CFG.nWing.fate;P.eva+=CFG.nWing.fate}}
     if(pen&&!rankMet(ch,pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
     /* 홍루: 홍루를 따르는 흑수들. 내 부하 두 사람은 빠진다 */
     /* 1000해를 넘긴 캐릭터가 이름 없는 불순물이 되어 돌아온다: 그 캐릭터가 쓰던 덱으로 싸운다 */
@@ -3693,7 +3707,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.awl&&A.synT>=3&&A.lead&&!A.awlUsed&&B.hp>0){A.awlUsed=true;B.bleed=Math.min(bleedCap(B),B.bleed+1);L('kw',`  ${A.name} · 선공 첫 적중 · ${B.name}에게 출혈 +1 (지금 ${B.bleed})`);if(A.kuro)addCloud(A,L)}
       if(A.ring&&A.work<CFG.ring.max){A.work++;L('kw',`  ${A.name} · 작품 ${A.work}/${CFG.ring.max}`)}
       if(A.herm&&B.hp>0&&(A.isP?(!A.herm.wait&&A.starId&&c===D.cards[A.starId]):true))hermHit(A,B,C,L,push);   // 지령(☆) 카드로 적중한 만큼 타수가 쌓인다
-      if(A.nailHit&&B.hp>0){const n=B.aug?CFG.nail.augHit:A.nailHit;B.nail=Math.min(CFG.nail.cap,(B.nail||0)+n);L('kw',`  ${B.name}에게 못 +${n} (지금 ${B.nail})`)}
+      if(A.nailHit&&B.hp>0){const n=B.aug?Math.max(CFG.nail.augHit,A.nailHit):A.nailHit;B.nail=Math.min(CFG.nail.cap,(B.nail||0)+n);L('kw',`  ${B.name}에게 못 +${n} (지금 ${B.nail})`)}
       if(c.nailBurst&&B.hp>0&&(B.nail||0)>0){const used=B.nail;B.nail=0;L('kw',`  ${B.name} · 못 ${used}개를 흐트러짐으로`);addStagger(C,B,Math.round(used*c.nailBurst.mul)+(c.nailBurst.add||0),L)}
       if(c.nextSwift){A.swiftNext=true;L('kw',`  ${A.name} · 다음 라운드 신속`)}
       if(c.handPlus){A.handPlusNext=Math.max(A.handPlusNext||0,c.handPlus);L('kw',`  ${A.name} · 다음 손패 +${c.handPlus}장`)}
