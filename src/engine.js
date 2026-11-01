@@ -1630,6 +1630,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return cs.reduce((a,c)=>!a||c.lv>a.lv?c:a,null);
   }
   /* 무한 모드: 처음 들어설 때 어긋난 자리 사건 한 번, 그 뒤 100살(나이)마다 능력치·주는 피해가 영구히 오르는 사건 (놓친 백 해는 순서대로 받는다) */
+  const pactOffer=(ch,kind)=>{const PK=CFG.infinite.pact,L=(kind==='c'?PK.cons:PK.buffs).filter(x=>((ch.pact||{})[x.id]||0)<PK.cap),out=[];while(out.length<3&&L.length){out.push(L.splice(Math.floor(rng()*L.length),1)[0])}return out};
+  const pactRow=ch=>(x,kind)=>({l:x.n,h:`${x.e} (영구 · 지금 ${(ch.pact||{})[x.id]||0}/${CFG.infinite.pact.cap}번)`,ok:{t:kind==='c'?'받아들이자 몸이 그만큼 무거워졌다.':'몸이 그만큼 가벼워졌다.',fx:{pactPick:x.id}}});
+  /* 제약을 고른 바로 뒤(같은 해, 해를 넘기지 않고) 버프 셋 중 하나를 고른다 */
+  function pactBuffEvent(G){const ch=G.ch;if(!ch.pactBuffDue)return null;ch.pactBuffDue=0;const o=pactOffer(ch,'b'),row=pactRow(ch);if(!o.length)return null;
+    return {t:'버프 · 얻는 것',x:'값을 치렀으니 받을 것도 있다. 셋 가운데 하나만 몸에 남는다.',c:o.map(x=>row(x,'b'))}}
   function infiniteEvent(G){
     const ch=G.ch,I=D.infinite,K=CFG.infinite.century;if(!G.infinite||!ch.infinite||!I)return null;
     const LI=lakeOn(ch)&&D.lake&&D.lake.infinite;
@@ -1643,9 +1648,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           return {t:f(T.t),x:f(T.x),c:[{l:f(T.a),h:`정신력 +${Mo.mindA}`,ok:{t:f(T.at),fx:{lakeMorph:'a'}}},{l:f(T.b),h:`공격 +${Mo.atkB}`,ok:{t:f(T.bt),fx:{lakeMorph:'b'}}}]}}}}
     /* 제약과 버프: 나이 100부터 50해마다. 제약 셋 중 하나를 받고(다음 해에 버프 셋 중 하나를 고른다), 둘 다 같은 종류가 5번까지 쌓인다 */
     if(!n&&ch.infIntro){const PK=CFG.infinite.pact;ch.pact=ch.pact||{};
-      const offer=kind=>{const L=(kind==='c'?PK.cons:PK.buffs).filter(x=>(ch.pact[x.id]||0)<PK.cap),out=[];while(out.length<3&&L.length){out.push(L.splice(Math.floor(rng()*L.length),1)[0])}return out},
-        row=(x,kind)=>({l:x.n,h:`${x.e} (영구 · 지금 ${ch.pact[x.id]||0}/${PK.cap}번)`,ok:{t:kind==='c'?'받아들이자 몸이 그만큼 무거워졌다.':'몸이 그만큼 가벼워졌다.',fx:{pactPick:x.id}}});
-      if(ch.pactBuffDue){const o=offer('b');ch.pactBuffDue=0;if(o.length)return {t:'버프 · 얻는 것',x:'오래 버틴 값을 받을 차례다. 셋 가운데 하나만 몸에 남는다.',c:o.map(x=>row(x,'b'))}}
+      const offer=kind=>pactOffer(ch,kind),row=pactRow(ch);
       if(!ch.pactAt)ch.pactAt=PK.from;
       if(age(G)>=ch.pactAt){ch.pactAt+=PK.every;const o=offer('c');ch.pactBuffDue=1;if(o.length)return {t:'제약 · 치르는 것',x:'백 해를 넘긴 몸에 도시의 값이 청구된다. 셋 가운데 하나를 받아야 한다. 이 값을 치른 뒤에 얻는 것을 고를 수 있다.',c:o.map(x=>row(x,'c'))}}}
     if(!n&&ch.infIntro){const Lm=CFG.infinite.limit;if(!ch.limAt)ch.limAt=G.year+Lm.every;
@@ -2616,6 +2619,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wf=webFree(G);if(wf)return wf}
     /* 출발: 첫 해에는 출신마다 이어 쓴 성장기의 끝(열일곱의 아침)을 먼저 보여 준다. 해를 넘기지 않는다 */
     if(!mc.prologueDone&&(G.year||0)===0){mc.prologueDone=true;const PR=D.prologue&&mc.o&&D.prologue[mc.o.n];if(PR)return {type:'event',ev:{t:`${CFG.startAge}세 · 출발`,x:PR.leave,c:[{l:PR.go||'길을 나선다',h:`${CFG.startAge}세의 해가 시작된다`,ok:{t:'문이 닫혔다. 길이 이어진다.',fx:{}}}]}}}
+    {const pb=G.ch.infinite&&pactBuffEvent(G);if(pb)return {type:'event',ev:pb}}
     {const rf=routeFree(G);if(rf)return rf}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):G.endless&&G.ch.o&&G.ch.o.key==='claw'&&G.ch.flags.rt_done?(G.ch.flags.cl_return?'clawreturn':'clawstay'):G.endless&&G.ch.o&&G.ch.o.key==='arbiter'&&G.ch.flags.rt_done?(G.ch.flags.ab_keep?'arbkeep':'arbdown'):G.endless&&G.ch.o&&G.ch.o.key==='gweapon'&&G.ch.flags.gw_done?(G.ch.flags.gw_king&&G.ch.gw&&G.ch.gw.form?'gw'+G.ch.gw.form:'gwhuman'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
