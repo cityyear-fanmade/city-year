@@ -2278,7 +2278,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     id=id||'endShot';UI.shotWhy='';const el=$(id);if(!el){UI.shotWhy='draw';return null}
     if(!(await loadShot())){UI.shotWhy='load';return null}
     try{await document.fonts.ready}catch(e){}
-    const bg=getComputedStyle(document.body).backgroundColor||'#0d0d0f',r=el.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);
+    const bgOf=()=>{const opaque=c=>c&&c!=='transparent'&&!/rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\s*\)/.test(c);let c=getComputedStyle(document.body).backgroundColor;if(opaque(c))return c;c=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();return c||'#0d0d0f'};/* 단말기·도서관 초대장처럼 body 배경이 그라디언트/이미지면 단색이 투명이라 흰 바탕으로 찍힌다: 테마의 --bg를 쓴다 */
+    const bg=bgOf(),r=el.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);
     /* 한 변 최대 8000px · 전체 1400만 화소 안에서 가장 큰 배율부터 */
     const fit=Math.min(2,8000/h,Math.sqrt(14e6/(w*h))),tries=[fit,Math.min(fit,1),Math.min(fit,0.7),Math.min(fit,0.5)].filter((s,k,a)=>s>=0.3&&a.indexOf(s)===k);
     for(const sc of tries){
