@@ -2360,6 +2360,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       <div class="row between"><span>최종 자리</span><b class="mono">${careerLine(c)}</b></div>
       ${mini.length?`<div class="row between"><span>쓰러뜨린 이름난 상대</span><b class="mono">${mini.join(' · ')}</b></div>`:''}
       <p class="small dim">${line}</p></div>
+    ${(()=>{const K=CFG.infinite.pact,pk=c.pact||{},cs=K.cons.filter(x=>pk[x.id]),bs=K.buffs.filter(x=>pk[x.id]);if(!cs.length&&!bs.length)return '';
+      const chip=(x,cl)=>`<span class="chip" style="color:${cl};border-color:${cl}">${esc(x.n)} ${pk[x.id]}/${K.cap}</span>`;
+      return `<div class="panel stack" style="gap:8px"><span class="eyebrow">제약과 버프</span>${cs.length?`<div class="stack" style="gap:4px"><span class="small dim">치른 것</span><div class="row" style="gap:6px;flex-wrap:wrap">${cs.map(x=>chip(x,'#e07a7a')).join('')}</div></div>`:''}${bs.length?`<div class="stack" style="gap:4px"><span class="small dim">얻은 것</span><div class="row" style="gap:6px;flex-wrap:wrap">${bs.map(x=>chip(x,'var(--gold)')).join('')}</div></div>`:''}</div>`})()}
     <div class="panel stack" style="gap:6px"><span class="eyebrow">전투 기록</span>${(()=>{const n_=v=>(v||0).toLocaleString('ko-KR'),R=c.rs||{},rw=(l,v)=>`<div class="row between"><span>${l}</span><b class="mono">${v}</b></div>`;return rw('입힌 피해',n_(R.dealt))+rw('받은 피해',n_(R.taken))+rw('총 회복량',n_(R.heal))+rw('건 디버프',n_(R.debuff))+rw('얻은 버프',n_(R.buff))+rw('받은 디버프',n_(R.debuffTaken))})()}</div>`;
   }
   function vSim(){
