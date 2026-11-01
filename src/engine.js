@@ -1771,6 +1771,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function eastScoutEvent(G){
     const ch=G.ch,y=G.year,Z=CFG.eastN;
     if(ch.distForm||ch.job||!isEastOuter(ch)||isN(ch)||nBlocked(ch)||!ch.licensed||ch.rank>Z.rank||ch.aff&&(ch.aff.type==='wing'||ch.aff.type==='finger'||ch.aff.type==='head')||(ch.eastScoutN||0)>=Z.tries||y<(ch.eastScoutNext||0))return null;
+    /* 공방 해결사가 의수(의체)를 끼고 있으면 N사는 의수를 쓰지 않으므로 제안이 오지 않는다. 의복·지팡이 같은 다른 보조 장비일 때 온다 */
+    if(isWs(ch)&&ch.gear&&ch.gear.aug&&(ch.gear.aug.kind||'의수')==='의수')return null;
     ch.eastScoutN=(ch.eastScoutN||0)+1;ch.eastScoutNext=y+Z.gap;
     const T_=D.eastScout,R=D.careers.wing.ranks[Z.startFi];
     return {t:T_.t,x:T_.x,c:[
