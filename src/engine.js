@@ -653,6 +653,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const earn=(ch,n)=>n>0&&hasInn(ch,'fortune')?Math.round(n*CFG.innate.money):n;
   /* 성장력: 레벨 업 성장 능력치 1.2배 (소수점은 쌓아 두었다가 1이 되면 오른다) */
   function applyGrowth(ch,fx){
+    if(fx&&fx.startBreath)ch.breathPicks=(ch.breathPicks||0)+1;   // 성장에서 '깊은 숨'을 고른 횟수
     const r=applyFx(ch,fx);
     if(hasInn(ch,'growth')){const acc=ch.growAcc=ch.growAcc||{},ex={};
       for(const [k,v] of Object.entries(fx))if(typeof v==='number'&&v>0&&k in ch.stats){acc[k]=(acc[k]||0)+v*(CFG.innate.growMul-1);const n=Math.floor(acc[k]+1e-9);if(n>0){acc[k]-=n;ex[k]=n}}
@@ -1222,7 +1223,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function rollGrowth(ch){
     const out=[],locked=!!(ch&&(ch.deckLocked||ch.cardMoney));let g=0;
     const wsm=!!(ch&&isWs(ch));
-    while(out.length<3&&g++<80){const r=d(100);let x=pick(D.growth,r);if(wsm&&x.fx&&x.fx.reward)x=WSMAT;if(locked&&x.fx&&x.fx.reward)continue;if(!out.some(o=>o.g===x))out.push({r,g:x})}
+    while(out.length<3&&g++<80){const r=d(100);let x=pick(D.growth,r);if(x.fx&&x.fx.startBreath&&ch&&((ch.breathPicks||0)>=CFG.breath.growthMax||((ch.stats&&ch.stats.startBreath)||0)>=CFG.breath.cap))continue;   // 깊은 숨은 4번까지만, 시작 호흡이 상한이면 나오지 않는다(다른 성장으로 다시 굴림)
+    if(wsm&&x.fx&&x.fx.reward)x=WSMAT;if(locked&&x.fx&&x.fx.reward)continue;if(!out.some(o=>o.g===x))out.push({r,g:x})}
     return out;
   }
 
