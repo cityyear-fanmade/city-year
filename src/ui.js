@@ -2063,7 +2063,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const fixJosa=t=>t.replace(/([가-힣])(은\(는\)|을\(를\)|이\(가\)|과\(와\))/g,(m,ch,j)=>{const code=ch.charCodeAt(0)-0xAC00,f=code%28,pair={'은':['은','는'],'을':['을','를'],'이':['이','가'],'과':['과','와']}[j[0]];return ch+(f?pair[0]:pair[1])});
     /* 성장기: 도시에 서기 전 어떻게 자랐는지, 단계마다 첫 문장만 이어서 한 문단으로 짧게 지나간다 */
     {const ks=(c.kid||[]).map((k,i)=>kidStory(c.o,i,k.x)).filter(Boolean).map(t=>{const m=String(t).match(/^.*?[.!?…](?=\s|$)/);return fixJosa((m?m[0]:t).trim())});
-      const ku=[...new Set(ks)];if(ku.length)P.push(ku.map(E_).join(' '))}
+      /* 앞 문장과 첫머리가 같은 말('공장 …', '성벽 안 막노동을 …')로 반복되면, 장소는 빼고 하는 일('…을/를')은 '그 일을'로 바꾼다 */
+      const arr=[...new Set(ks)],ku=arr.map((t,i)=>{if(!i)return t;const a=arr[i-1].split(' '),w=t.split(' ');let n=0;while(n<a.length&&n<w.length&&a[n]===w[n])n++;
+        if(n<1)return t;let k=-1;for(let q=0;q<n;q++)if(w[q].length>=3&&/[을를]$/.test(w[q])){k=q;break}
+        if(k>=0)return w.length-k-1>=2?'그 일을 '+w.slice(k+1).join(' '):t;
+        return w.length>=3&&!/[을를]$/.test(w[0])?w.slice(1).join(' '):t});
+      if(ku.length)P.push(ku.map(E_).join(' '))}
     if(c.job)P.push(`평범한 길은 일찍 닫혔다. ${E_(T.jobs[c.job])}의 자리가 ${E_(nm)}에게 주어졌고, 그 일은 사는 내내 이름을 대신했다.`);
     else if(c.aff&&c.corp&&c.corp.wing)P.push(`담장 안에서 시작해 담장을 스스로 세웠다. ${E_(c.corp.wing)}의 대표로서 이름을 걸었고, 그 이름은 다른 이들의 일자리가 되었다.`);
     else if(c.aff&&c.fr)P.push(`${E_(affName(c))}에 들어가 ${E_(frName(c))}까지 올랐다. 서열은 손이 아니라 버틴 햇수로 정해졌고, ${J.eun(E_(nm))} 그 계단을 하나씩 밟았다.`);
