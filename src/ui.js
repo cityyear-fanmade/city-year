@@ -1534,8 +1534,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const dailySeed=k=>{let h=2166136261;for(const c of 'city-year:'+k)h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;return h%1000000000};
   function vOrigins(){
     const u=loadUnlocks();if(!(D.unlockOrigins||[]).length)return '';
-    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="row between"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>`).join('')}
-      <p class="small dim">정해진 출생으로 태어나거나 정해진 물건을 들고 무한 모드 전, 제 2막의 끝까지 가면 열린다. 무한 모드(제 2막)의 마지막 상대 ${D.enemies.baral.n}과 ${D.enemies.zena.n}을 보통 이상 난이도에서 이기면 머리의 발톱과 조율자가 각각 열린다. 쉬움에서는 열리지 않는다.</p></div>`;
+    const hc=(loadRec().hardClear||0)>0,UH={crow:'숨은 출생 「부화장에서 태어난 자」로 태어나 제 2막의 끝까지 간다.',hermes:'전리품 「신의 단말기」를 들고 제 2막의 끝까지 간다.',librarian:'출생 「도서관의 손님」으로 태어나, 도서관 관장 아벨을 이긴 뒤 제 2막의 끝까지 간다.',claw:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.baral.n+'」를 이긴다.',arbiter:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.zena.n+'」를 이긴다.',gweapon:'G사 날개 소속이거나 특이점 응용 의수를 들고 제 2막의 끝까지 간다.'};
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="row between"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>${hc&&UH[o.key]&&!u.includes('origin:'+o.key)?`<p class="small dim" style="margin:-4px 0 0">조건 · ${esc(UH[o.key])}</p>`:''}`).join('')}
+      <p class="small dim">${hc?'':'하드로 한 번 완주하면 각 출생의 구체적인 조건이 여기에 보인다. '}정해진 출생으로 태어나거나 정해진 물건을 들고 무한 모드 전, 제 2막의 끝까지 가면 열린다. 무한 모드(제 2막)의 마지막 상대 「${D.enemies.baral.n}」와 「${D.enemies.zena.n}」를 보통 이상 난이도에서 이기면 머리의 발톱과 조율자가 각각 열린다. 쉬움에서는 열리지 않는다.</p></div>`;
   }
   function vJobs(){
     const u=loadUnlocks();
