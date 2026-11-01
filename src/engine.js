@@ -612,7 +612,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 공방 해결사: 공방 물건 할인, 보관함 장비 판매 */
   const WF=CFG.workshopFixer;
-  const isWs=ch=>!!ch.aff&&ch.aff.type==='workshop';
+  /* 공방 해결사가 N사의 제안을 받아들여도(동부 출신) 공방 해결사로 남는다: 소속은 N사로 바뀌지만 공방 자료(ch.ws)가 있으면 계속 공방 해결사다 */
+  const isWs=ch=>(!!ch.aff&&ch.aff.type==='workshop')||(!!ch.ws&&!!ch.aff&&ch.aff.name===CFG.nWing.name);
   const priceOf=(ch,id)=>{const p=D.items[id].price;if(!isWs(ch))return Math.round(p);const K=CFG.ws,up=1+(K.priceYearUp||0)*Math.floor((ch.year||0)/(K.priceYearEvery||20));return Math.round(p*(1-WF.discount)*up)};   /* 공방 해결사: 값은 고정이고 priceYearEvery년마다 한 번씩 오른다 */
   const sellValue=it=>it.id==='hidmat'?WF.sellBase*2:(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
   /* 공방 해결사: 장비 판매는 없다. 대신 덱의 카드를 공방에 넘긴다 (덱 고정·전용 카드팩·고정 카드는 팔 수 없고, 덱은 minDeck장 아래로 줄이지 않는다) */
@@ -1773,7 +1774,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.eastScoutN=(ch.eastScoutN||0)+1;ch.eastScoutNext=y+Z.gap;
     const T_=D.eastScout,R=D.careers.wing.ranks[Z.startFi];
     return {t:T_.t,x:T_.x,c:[
-      {l:T_.yes,h:`${CFG.nWing.name} ${R.n}으로 입사 · 해결사 ${ch.rank}${T.rankUnit} 유지 · 승진마다 함께 오른다 · 운명(모든 판정 +${CFG.nWing.fate})`,ok:{t:T_.yesT,fx:{eastScout:true}}},
+      {l:T_.yes,h:`${CFG.nWing.name} ${R.n}으로 입사 · 해결사 ${ch.rank}${T.rankUnit} 유지 · 승진마다 함께 오른다 · 운명(모든 판정 +${CFG.nWing.fate})${isWs(ch)?' · 공방 해결사도 그대로(의수만 쓰지 않는다)':''}`,ok:{t:isWs(ch)&&T_.yesTWs?T_.yesTWs:T_.yesT,fx:{eastScout:true}}},
       {l:T_.no,h:Z.tries-ch.eastScoutN>0?'나중에 한 번 더 제안이 올 수 있다':'다시 제안은 없다',ok:{t:T_.noT,fx:{}}}]};
   }
   /* 조직 루트 사건: 엄지 전향 제안(흑운회·송곳) → 숙청 소문 → 반역 / 검계 역적 낙인 */
