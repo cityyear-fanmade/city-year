@@ -2276,7 +2276,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   }
   /* 저장 이미지의 테마별 손질: 검지 단말기는 얇은 흰 테두리 + 검은 바탕 + 화면에 뜨는 얼음빛 푸른 글자 */
   function shotSkin(d,id){const sk=document.documentElement.dataset.skin,st=d.createElement('style');
-    if(sk==='ruina'){st.textContent=`#${id}{border:1px solid #e2c07a;border-radius:70px 70px 6px 6px/26px 26px 6px 6px;background:#010101!important;box-shadow:inset 0 0 0 5px #010101,inset 0 0 0 6px rgba(226,192,122,.45);--bg:#010101;--fg:#f0e6cf;--dim:#b8aa8d;--gold:#ecc97f;--line:#3a3020;--line2:#8c7448;--panel:#060504;--panel2:#0a0806}
+    if(sk==='ruina'){st.textContent=`#${id}{border:4px double #e2c07a;border-radius:44px 44px 6px 6px;background:#010101!important;--bg:#010101;--fg:#f0e6cf;--dim:#b8aa8d;--gold:#ecc97f;--line:#3a3020;--line2:#8c7448;--panel:#060504;--panel2:#0a0806}
     #${id} h1,#${id} h2,#${id} .eyebrow{text-shadow:0 0 10px rgba(236,201,127,.35)}
     #${id} .panel,#${id} details{background:#050403!important;border:1px solid #8c7448!important;border-radius:2px!important;box-shadow:inset 0 0 14px rgba(236,201,127,.05)}
     #${id} .chip,#${id} .btn{border-radius:2px!important}
