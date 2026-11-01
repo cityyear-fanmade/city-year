@@ -2175,7 +2175,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${w&&UI.crowEnd==='crowrefuse'&&!G.infinite?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 2막 · 무한 모드</span><p class="small">여기서 끝내도 된다. 계속 살아가면 외곽의 차원에 발이 묶인 채 위협 보정이 끝없이 오르고, ${CFG.infinite.every}년마다 외곽의 괴수(더 강해진 불순물)가 나타나며, 루트 전용 히든 보스를 만날 확률이 오른다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="infinite">무한 모드로 계속한다</button></div>`:''}
       ${w&&UI.trueEnd&&!G.infinite?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 2막 · 무한 모드</span><p class="small">여기서 끝내도 된다. 계속 살아가면 머리에게 외곽으로 쫓겨난 셈이 되어 위협 보정이 끝없이 오르고, ${CFG.infinite.every}년마다 외곽의 괴수(더 강해진 불순물)가 나타나며, 루트 전용 히든 보스를 만날 확률이 오른다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="infinite">무한 모드로 계속한다</button></div>`:''}
       ${(()=>{const L=shTitles(c);if(L.length<1)return '';const cur=shTitle(c);return `<div class="row between" style="gap:8px;align-items:center"><span class="small dim">공유에 쓸 칭호</span><select id="shTitle" style="flex:1;max-width:60%;font:inherit;font-size:13px">${L.map(t=>`<option value="${esc(t)}"${cur===t?' selected':''}>『${esc(t)}』</option>`).join('')}<option value=""${cur===''?' selected':''}>칭호 없음</option></select></div>`})()}
-      <div class="row" style="gap:8px"><button class="btn quiet" style="flex:1" data-a="share">기록 공유</button><button class="btn quiet" style="flex:1" data-a="saveimg">이미지로 저장</button></div>
+      <div class="row" style="gap:8px"><button class="btn quiet" style="flex:1" data-a="share">기록 공유</button></div>
+      <div class="row" style="gap:8px"><button class="btn quiet" style="flex:1" data-a="saveimg">엔딩 그대로 저장</button><button class="btn quiet" style="flex:1" data-a="saveimg2">정리해서 저장</button></div>
       ${UI.imgUrl?`<p class="small dim">저장이 막힌 환경이다. 아래 이미지를 길게 눌러 저장한다.</p><img src="${UI.imgUrl}" alt="엔딩 기록 이미지" style="width:100%;border-radius:8px">`:''}
       ${UI.shareMsg?`<p class="small dim">${UI.shareMsg}</p>`:''}${UI.shareText?`<input id="shareBox" readonly value="${esc(UI.shareText)}" onclick="this.select()" style="width:100%;font:inherit;font-size:13px">`:''}
       ${w&&((!G.endless)||UI.outEnd||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite)||(UI.crowEnd==='crowrefuse'&&!G.infinite)||(INF_KEYS.includes(UI.crowEnd)&&!G.infinite))?'<button class="btn quiet" data-a="finish">여기서 끝낸다 (이 판의 저장 삭제)</button>':''}
@@ -2300,6 +2301,52 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     #${id} h1,#${id} h2,#${id} b,#${id} .mono,#${id} .eyebrow{text-shadow:0 0 7px rgba(110,200,255,.55)}
     #${id} .panel,#${id} details{background:#0a0c0d!important;border:2px solid #e9edf0!important;border-radius:8px!important}
     #${id} .chip,#${id} .btn{border-radius:2px!important}`;d.head.appendChild(st)}
+  async function saveShot(make){
+    UI.imgUrl=null;const cv=await make(),name=`도시의한해_${G.ch.seed}.png`;
+    const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+    try{const f=new File([blob],name,{type:'image/png'});if(touchShare()&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
+    try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(e){}
+    /* 다운로드가 막히는 환경(미리보기 창 등)을 위해 이미지도 화면에 보여 준다 */
+    if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');render()}
+  }
+  /* 정리해서 저장용 카드: 엔딩 화면의 제목·이름·직업을 그대로 읽어 오고, 수치는 캐릭터에서 가져온다. 색은 모두 테마 변수 */
+  function buildSumCard(){
+    const c=G.ch,K=CFG.infinite.pact,src=document.getElementById('endShot'),q=sel=>src?src.querySelector(sel):null;
+    const eb=(q('.eyebrow')||{}).textContent||'',nm=(q('h1')||{}).textContent||'',ca=(q('h1+.mono')||{}).textContent||'',h1c=(q('h1')||{style:{}}).style.color||'var(--gold)';
+    const lead=((q('p.lead')||{}).textContent||'').trim(),m=lead.match(/^.*?[.!?…](?=\s|$)/),quote=m?m[0]:lead.slice(0,70);
+    const n_=v=>(v||0).toLocaleString('ko-KR'),R=c.rs||{},st=c.stats||{},pk=c.pact||{};
+    const kv=(l,v)=>`<div class="sk"><span>${l}</span><b>${v}</b></div>`;
+    const tags=(arr,cl)=>arr.map(x=>`<span class="stg ${cl}">${esc(x.n)} ${pk[x.id]}/${K.cap}</span>`).join('');
+    const cs=K.cons.filter(x=>pk[x.id]),bs=K.buffs.filter(x=>pk[x.id]);
+    const names=[...new Set(c.beaten||[])].map(id=>D.enemies[id]&&D.enemies[id].n).filter(Boolean),shown=names.slice(0,14);
+    const el=document.createElement('div');el.id='endSum';
+    el.style.cssText='position:fixed;left:-10000px;top:0;width:420px;display:flex;flex-direction:column;gap:12px;padding:0;color:var(--fg);background:var(--bg);font:14px/1.5 var(--sans,"Noto Sans KR",sans-serif)';
+    el.innerHTML=`<style>
+      #endSum .shero{border:1px solid var(--gold);border-radius:10px;padding:20px 18px;background:var(--panel)}
+      #endSum .seb{font:600 11px/1.3 var(--mono,monospace);letter-spacing:.12em;color:var(--gold)}
+      #endSum h1{margin:10px 0 2px;font:900 40px/1.1 var(--serif,serif)}
+      #endSum .skpi{display:grid;grid-template-columns:repeat(4,1fr);margin-top:16px;border-top:1px solid var(--line2);padding-top:12px;text-align:center}
+      #endSum .skpi b{display:block;font:600 18px/1.2 var(--mono,monospace)}#endSum .skpi span{font-size:11px;color:var(--dim)}
+      #endSum .sq{margin-top:12px;font-size:13px;line-height:1.65;color:var(--dim)}
+      #endSum .panel{padding:10px 12px;display:block}
+      #endSum .stt{display:flex;justify-content:space-between;font:600 10.5px/1 var(--mono,monospace);letter-spacing:.1em;color:var(--gold);margin-bottom:8px}#endSum .stt em{font-style:normal;color:var(--dim)}
+      #endSum .g2{display:grid;grid-template-columns:1fr 1fr;gap:2px 16px}#endSum .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:2px 12px}
+      #endSum .sk{display:flex;justify-content:space-between;gap:6px;font-size:12.5px;padding:2px 0;border-bottom:1px solid var(--line)}#endSum .sk span{color:var(--dim)}#endSum .sk b{font:500 12.5px var(--mono,monospace)}
+      #endSum .stags{display:flex;flex-wrap:wrap;gap:5px}#endSum .stg{font-size:12px;border:1px solid;border-radius:4px;padding:1px 7px}
+      #endSum .neg{color:var(--bleed);border-color:var(--bleed)}#endSum .pos{color:var(--gold);border-color:var(--gold)}
+      #endSum .schip{font-size:12px;border:1px solid var(--line2);border-radius:4px;padding:1px 7px;color:var(--dim)}
+      #endSum .sfoot{text-align:center;font-size:10.5px;color:var(--dim)}</style>
+    <div class="shero"><div class="seb">${esc(eb)}</div><h1 style="color:${h1c}">${esc(nm)}</h1>${ca?`<div style="color:${h1c};font-size:14px">${esc(ca)}</div>`:''}
+      <div class="stags" style="margin-top:12px"><span class="schip" style="color:var(--fg)">난이도 · ${diffOf(c)}</span>${c.o?`<span class="schip">${esc(c.o.n)}</span>`:''}<span class="schip">시드 ${c.seed}</span></div>
+      <div class="skpi"><div><b>${UI.endWin?G.year:Math.max(0,G.year-1)}</b><span>산 햇수</span></div><div><b>${c.lv||1}</b><span>레벨</span></div><div><b>${n_(st.atk)}</b><span>공격</span></div><div><b>${E.age(G)}세</b><span>나이</span></div></div>
+      ${quote?`<div class="sq">${esc(quote)}</div>`:''}</div>
+    <div class="panel"><div class="stt"><span>능력치</span></div><div class="g3">${kv('공격',n_(st.atk))}${kv('회피',n_(st.eva))}${kv('속도',n_(st.spd))}${kv('최대 HP',n_(st.maxHp))}${kv('정신',c.mind!=null?c.mind:'—')}${kv('레벨',c.lv||1)}</div></div>
+    <div class="panel"><div class="stt"><span>전투 기록</span></div><div class="g2">${kv('입힌 피해',n_(R.dealt))}${kv('받은 피해',n_(R.taken))}${kv('총 회복량',n_(R.heal))}${kv('얻은 버프',n_(R.buff))}${kv('받은 디버프',n_(R.debuffTaken))}${kv('건 디버프',n_(R.debuff))}</div></div>
+    ${cs.length||bs.length?`<div class="panel"><div class="stt"><span>제약과 버프</span><em>치른 ${cs.length} · 얻은 ${bs.length}</em></div><div class="stags">${tags(cs,'neg')}${tags(bs,'pos')}</div></div>`:''}
+    ${names.length?`<div class="panel"><div class="stt"><span>히든 보스 격파</span><em>${names.length}</em></div><div style="font-size:12px;line-height:1.6;color:var(--dim)">${shown.map(esc).join(' · ')}${names.length>shown.length?` <span>외 ${names.length-shown.length}</span>`:''}</div></div>`:''}
+    <div class="panel"><div class="stt"><span>덱</span><em>${(c.deck||[]).length}장</em></div><div class="stags">${(c.deck||[]).map(id=>D.cards[id]?`<span class="schip">${esc(D.cards[id].n)}</span>`:'').join('')}</div></div>
+    <div class="sfoot">도시의 한 해 · cityyear-fanmade.github.io/city-year · Project Moon 팬메이드</div>`;
+    return el}
   async function shotEnd(id){
     id=id||'endShot';UI.shotWhy='';const el=$(id);if(!el){UI.shotWhy='draw';return null}
     if(!(await loadShot())){UI.shotWhy='load';return null}
@@ -2309,7 +2356,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     /* 한 변 최대 8000px · 전체 1400만 화소 안에서 가장 큰 배율부터 */
     const fit=Math.min(2,8000/h,Math.sqrt(14e6/(w*h))),tries=[fit,Math.min(fit,1),Math.min(fit,0.7),Math.min(fit,0.5)].filter((s,k,a)=>s>=0.3&&a.indexOf(s)===k);
     for(const sc of tries){
-      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg;shotSkin(d,id)}}});
+      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg;if(id==='endSum'){e.style.position='static';e.style.left='0';e.style.width='420px'}shotSkin(d,id)}}});
         if(cv&&cv.width>0&&cv.height>0)return cv}catch(e){}
     }
     UI.shotWhy='draw';return null;
@@ -2766,14 +2813,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     outerend(){if(!G||!G.infinite)return;UI.outEnd=null;if(typeof confirm==='function'&&!confirm('외곽에서 이야기를 끝낼까? 이 판은 여기까지가 기록이 된다.'))return;UI.outerEnd=true;UI.endWin=true;UI.trueEnd=true;UI.oldEnd=false;UI.death=null;recordEnd();UI.screen='end';render()},
     oldgo(){UI.oldEnd=false;UI.outEnd=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;nextYear()},
     infinite(){G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infImp=1;UI.shareText=UI.shareMsg=UI.imgUrl=null;flow()},
-    async saveimg(){
-      UI.imgUrl=null;const cv=await shotEnd()||await endCard(),name=`도시의한해_${G.ch.seed}.png`;
-      const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
-      try{const f=new File([blob],name,{type:'image/png'});if(touchShare()&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
-      try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(e){}
-      /* 다운로드가 막히는 환경(미리보기 창 등)을 위해 이미지도 화면에 보여 준다 */
-      if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');render()}
-    },
+    async saveimg(){await saveShot(()=>shotEnd()||endCard())},
+    /* 정리해서 저장: 요약 카드 + 촘촘한 정보 칸 (엔딩 화면을 그대로 찍는 것과 따로) */
+    async saveimg2(){await saveShot(async()=>{const el=buildSumCard();document.body.appendChild(el);try{return await shotEnd('endSum')||await shotEnd()||await endCard()}finally{el.remove()}})},
     testCard:async()=>(await endCard()).toDataURL('image/png'),
     async share(){
       UI.shareText=null;UI.shareMsg=null;
