@@ -2470,7 +2470,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     app.classList.toggle('barhide',barHidden());
     if(INFNOTE&&G&&G.infinite&&G.ch&&G.ch.infinite&&D.infinite&&D.infinite.notes&&!['title','birth','end','records','chron','chronview'].includes(s)&&UI.noteYear!==Math.floor((G.year||0)/100)){UI.noteYear=Math.floor((G.year||0)/100);showInfNote(infNote())}
     if(['title','birth','end','records','chron','chronview'].includes(s)||!(G&&G.infinite)||!INFNOTE){const o=document.querySelector('.infnote');if(o)o.remove();if(['title','birth'].includes(s))UI.noteYear=null}
-    BGM.setBossTrack&&BGM.setBossTrack(C&&D.enemies[C.id]&&D.enemies[C.id].bgm==='ruen'?'ruen':'boss');
+    BGM.setBossTrack&&BGM.setBossTrack(C&&D.enemies[C.id]&&D.enemies[C.id].bgm==='ruen'&&typeof window!=='undefined'&&window.CITY_BGM&&window.CITY_BGM.ruen?'ruen':'boss');   // 전용 곡이 실려 있을 때만 쓴다
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
     /* 전투 감정: 상대 체력이 줄거나 라운드가 이어질수록 불길 전투곡이 한 층씩 쌓인다 (체력 80·60·40·20% 아래, 라운드 3·6·9·12를 넘길 때도 오른다) */
     if(s==='combat'&&C&&C.E&&C.E.maxHp){const r=C.E.hp/C.E.maxHp,hs=1+[.8,.6,.4,.2].filter(x=>r<=x).length,rs=1+[3,6,9,12].filter(x=>(C.round||1)>x).length;BGM.setStage(Math.max(hs,rs))}else BGM.setStage(1);
