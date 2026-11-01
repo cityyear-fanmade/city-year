@@ -5835,7 +5835,7 @@ function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.3.5';
+  const VERSION='v10.3.6';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -8085,15 +8085,22 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       for(const el of els){const cs=win.getComputedStyle(el);for(const pr of props){const v=cs.getPropertyValue(pr);if(v&&/color\(|color-mix\(/.test(v))el.style.setProperty(pr,v.replace(/color\((?:[^()]|\([^()]*\))*\)/g,rgb),'important')}}
     }catch(e){}
   }
+  /* 저장 이미지의 테마별 손질: 검지 단말기는 얇은 흰 테두리 + 검은 바탕 + 화면에 뜨는 얼음빛 푸른 글자 */
+  function shotSkin(d,id){if(document.documentElement.dataset.skin!=='terminal')return;const st=d.createElement('style');
+    st.textContent=`#${id}{border:2px solid #f1f4f6;border-radius:6px;background:#000!important;--bg:#000;--fg:#bfe8ff;--dim:#6fa9cf;--gold:#7fd6ff;--line:#17394f;--line2:#2a6f98;--panel:#02070b;--panel2:#04101a}
+    #${id} h1,#${id} h2,#${id} b,#${id} .mono,#${id} .eyebrow{text-shadow:0 0 7px rgba(110,200,255,.55)}
+    #${id} .panel,#${id} details{background:#0a0c0d!important;border:2px solid #e9edf0!important;border-radius:8px!important}
+    #${id} .chip,#${id} .btn{border-radius:2px!important}`;d.head.appendChild(st)}
   async function shotEnd(id){
     id=id||'endShot';UI.shotWhy='';const el=$(id);if(!el){UI.shotWhy='draw';return null}
     if(!(await loadShot())){UI.shotWhy='load';return null}
     try{await document.fonts.ready}catch(e){}
-    const bg=getComputedStyle(document.body).backgroundColor||'#0d0d0f',r=el.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);
+    const bgOf=()=>{const opaque=c=>c&&c!=='transparent'&&!/rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\s*\)/.test(c);let c=getComputedStyle(document.body).backgroundColor;if(opaque(c))return c;c=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();return c||'#0d0d0f'};/* 단말기·도서관 초대장처럼 body 배경이 그라디언트/이미지면 단색이 투명이라 흰 바탕으로 찍힌다: 테마의 --bg를 쓴다 */
+    const bg=bgOf(),r=el.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);
     /* 한 변 최대 8000px · 전체 1400만 화소 안에서 가장 큰 배율부터 */
     const fit=Math.min(2,8000/h,Math.sqrt(14e6/(w*h))),tries=[fit,Math.min(fit,1),Math.min(fit,0.7),Math.min(fit,0.5)].filter((s,k,a)=>s>=0.3&&a.indexOf(s)===k);
     for(const sc of tries){
-      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg}}});
+      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg;shotSkin(d,id)}}});
         if(cv&&cv.width>0&&cv.height>0)return cv}catch(e){}
     }
     UI.shotWhy='draw';return null;
