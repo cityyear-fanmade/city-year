@@ -8355,37 +8355,6 @@
    },
    "tier": "hidden"
   },
-  "outsider": {
-   "n": "외곽에서 온 존재",
-   "color": "#f6dc8c",
-   "hp": 720,
-   "atk": 27,
-   "eva": 14,
-   "spd": 13,
-   "deck": [
-    "x_bind",
-    "x_pillar",
-    "x_bind",
-    "x_bluewave",
-    "x_citysound",
-    "guard"
-   ],
-   "hidden": true,
-   "tier": "hidden",
-   "intro": "길이 끊긴 곳에 무언가가 서 있다. 형체는 보이는데 이름을 붙일 수 없다. 도시의 어떤 서열에도 닿지 않는 소리로 이쪽을 불러세운다.",
-   "endText": "그것은 쓰러지기 전에 한 번 이쪽을 보았다. 무엇을 보았는지는 끝내 알 수 없다.",
-   "passive": {
-    "id": "lock",
-    "n": "봉인",
-    "every": 2,
-    "d": "2라운드마다 내 손패 1장을 그 라운드 동안 잠근다"
-   },
-   "hard": {
-    "hp": 1.66,
-    "atk": 2,
-    "eva": 1
-   }
-  },
   "gw_vanguard": {
    "n": "날개 연합 전위대장",
    "color": "#8aa0b4",
