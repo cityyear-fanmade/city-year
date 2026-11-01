@@ -175,9 +175,9 @@ html[data-skin="dante"] .die,html[data-skin="dante"] .d6{border-radius:4px}
 
 html[data-skin="terminal"]{
   --bg:#050607; --panel:#04080c; --panel2:#071019; --line:#12324a; --line2:#1d5a82;
-  --fg:#c3dce8; --dim:#86a5b6; --gold:#3fa5d2; --gold-ink:#02121c;
+  --fg:#d4ebf6; --dim:#9bbdd0; --gold:#5cc3f2; --gold-ink:#02121c;
   --bleed:#ff6b7a; --rupture:#8fb4ff; --breath:#6ff0d2; --good:#7dffb0;
-  --shell:#d3d9de; --shell2:#929ba2; --shell3:#5b646c;
+  --shell:#e9edf0; --shell2:#aeb6bd; --shell3:#6d767e;
 }
 html[data-skin="terminal"] body{background:radial-gradient(ellipse at 50% 30%,#0b1117,#020304 70%);background-attachment:fixed}
 /* 흰 금속 외곽(단말기 몸체) + 안쪽 검은 화면 */
@@ -191,7 +191,7 @@ html[data-skin="terminal"] .wrap{
 /* 화면 주사선 */
 html[data-skin="terminal"] .wrap::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:repeating-linear-gradient(0deg,rgba(127,214,255,.018) 0 1px,transparent 1px 4px)}
-html[data-skin="terminal"] .skin-tab{align-self:flex-start;letter-spacing:.2em;color:var(--gold);background:#06101a;border-color:var(--shell3);padding:0 12px}
+html[data-skin="terminal"] .skin-tab{align-self:flex-start;letter-spacing:.2em;color:var(--gold-ink);background:var(--shell);border-color:var(--shell);padding:0 12px}
 /* 빛 번짐은 제목과 큰 숫자에만 약하게. 본문은 번짐 없이 또렷하게 */
 html[data-skin="terminal"] h1,html[data-skin="terminal"] h2,html[data-skin="terminal"] .roll .v,html[data-skin="terminal"] .stat b{
   text-shadow:0 0 8px rgba(92,195,242,.28)}
