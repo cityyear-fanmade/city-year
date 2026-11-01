@@ -2278,7 +2278,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function shotSkin(d,id){if(document.documentElement.dataset.skin!=='terminal')return;const st=d.createElement('style');
     st.textContent=`#${id}{border:2px solid #f1f4f6;border-radius:6px;background:#000!important;--bg:#000;--fg:#bfe8ff;--dim:#6fa9cf;--gold:#7fd6ff;--line:#17394f;--line2:#2a6f98;--panel:#02070b;--panel2:#04101a}
     #${id} h1,#${id} h2,#${id} b,#${id} .mono,#${id} .eyebrow{text-shadow:0 0 7px rgba(110,200,255,.55)}
-    #${id} .panel,#${id} details{background:#02070b!important;border:1px solid #1d5a82!important;border-radius:2px!important}
+    #${id} .panel,#${id} details{${(window.__shotv==='B')?'background:#0a0c0d!important;border:2px solid #e9edf0!important;border-radius:8px!important':(window.__shotv==='A')?'background:linear-gradient(180deg,#06203a,#030e1a)!important;border:1px solid #4cc0ff!important;border-radius:6px!important;box-shadow:0 0 12px rgba(76,192,255,.35),inset 0 0 14px rgba(76,192,255,.12)':'background:#02070b!important;border:1px solid #1d5a82!important;border-radius:2px!important'}}
     #${id} .chip,#${id} .btn{border-radius:2px!important}`;d.head.appendChild(st)}
   async function shotEnd(id){
     id=id||'endShot';UI.shotWhy='';const el=$(id);if(!el){UI.shotWhy='draw';return null}
