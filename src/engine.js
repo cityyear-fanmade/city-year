@@ -1609,7 +1609,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const lifeTo=hy=>hy?BD.kid.oldToLong:BD.kid.oldTo;
   /* 사람마다 눈을 감을 나이를 한 번 정해 둔다 (구간 안에서 가운데가 조금 더 잦은 삼각 분포): 같은 나이에 다 같이 쓰러지지 않고 구간 전체에 퍼진다 */
   const lifeAt=(o,hy)=>{if(o.dieAt==null){const a=lifeFrom(hy),z=lifeTo(hy),u=(d(1000)+d(1000))/2000;o.dieAt=a+Math.floor(u*(z-a+1))}return o.dieAt};
-  function bondRisk(b,y,ch){if(ch&&ch.flags&&ch.flags.spouseAge)return 0;return ((b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0))*(ch&&ch.flags&&ch.flags.bondGuard?0.5:1)}
+  function bondRisk(b,y,ch){if(b.eternal||(ch&&ch.flags&&ch.flags.spouseAge))return 0;return ((b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0))*(ch&&ch.flags&&ch.flags.bondGuard?0.5:1)}
   function bondTaboo(ch){const b=ch.bond;if(b&&b.st==='married'&&b.tabooAt==null)b.tabooAt=ch.year||0}
   /* 결혼한 뒤의 배우자의 죽음 (큰 대가). 아이는 남는다 */
   function bondDeath(ch,chips){
@@ -1715,6 +1715,36 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 1000해 불순물이 가져오는 카드: 기록된 덱 중 가장 센 카드 한 장 (예전 기록의 12장 덱도 이 한 장으로 줄여 쓴다) */
   const ghostCard=deck=>{let best=null,bs=-1;for(const id of deck||[]){const c=D.cards[id];if(!c)continue;const s=((c.dice||0)+(c.b||0))*(c.hits||1);if(s>bs){bs=s;best=id}}return best};
   let legacyFn=null,ghostFn=null;const ghostOf=ch=>{const g=ghostFn?ghostFn():null;return g&&g.deck&&g.deck.length>=3&&ch.infinite?g:null};
+  /* 배우자·자식의 죽음을 막아 보는 사건: 나이 100을 넘긴 뒤 죽음이 올 때, 혈귀·홍원 가주/군주·특색 해결사·머리(발톱/조율자)만 방도를 시도할 수 있다.
+     성공하면 두 해 뒤 상대가 불로장생을 받아들이거나(곁에 남음) 인간으로 죽겠다며 거부한다. 거부를 받아들이면 죽음, 억지로 잇는 쪽은 곁에 남거나 원망하며 떠난다 */
+  function pvProfile(ch,b){
+    if(age(ch.year!=null?{year:ch.year}:{year:1})<=100)return null;
+    if(ch.o&&ch.o.race==='hyeolgwi'&&!(b.route==='hyeolgwi'&&b.variant===1))return 'blood';
+    if(ch.o&&(ch.o.key==='claw'||ch.o.key==='arbiter'))return 'head';
+    if((ch.hw&&ch.hw.done)||(ch.beaten||[]).includes('hongwon'))return 'hw';
+    if(ch.licensed&&(ch.rank<=1||ch.colorDone))return 'color';
+    return null}
+  function pvOffer(G,ch,b,kid,B,ageDie){
+    const P=D.bond&&D.bond.prevent;if(!P)return null;const st=kid||b;if(st.pv||st.eternal)return null;
+    const key=pvProfile(ch,b);if(!key)return null;const X=P[key];st.pv={st:'tried',key};
+    const nm=kid?kid.n:b.name,fill=t=>bondFill(t,{name:nm}),who=kid?kid.n:'s';
+    const deathFx=kid?{kidOld:nm,famGrief:1}:{bondDeath:true,famGrief:1,bondDie:ageDie?'age':'risk'};
+    const fight=X.fight==='head'?(ch.o&&ch.o.key==='claw'?'arbiter_x':'claw_x'):X.fight,dc=X.dc-(key==='blood'&&kid&&b.eternal?20:0);
+    const giveT=kid?kf(B.kidOldOver?B.kidOldOver.at:B.kidOld.at,nm):bondFill(B.deathOld?B.deathOld.at:B.deathAT,b);
+    return {t:fill(X.t),x:fill(kid?X.xk:X.x),c:[
+      {l:fill(X.a),h:`${X.h} · 1d100 ${dc} 이상이면 성공 · 실패하면 그대로 떠난다`,check:{s:null,dc,pure:true,die:100},ok:{t:fill(X.ok),fx:Object.assign({pvPass:who},fight?{combat:fight}:{})},fail:{t:fill(X.bad),fx:deathFx}},
+      {l:P.giveL,h:'붙잡지 않고 보낸다 · 슬픔이 몸에 굳는다',ok:{t:giveT,fx:deathFx}}]}}
+  function pvAskEvent(G,ch,b,kids,B){
+    const P=D.bond&&D.bond.prevent;if(!P)return null;const y=G.year;
+    let who=null,st=null,nm=null;
+    if(b.pv&&b.pv.st==='ask'&&y>=b.pv.at&&b.st==='married'){who='s';st=b;nm=b.name}
+    else{const k=kids.find(k=>!k.dead&&k.pv&&k.pv.st==='ask'&&y>=k.pv.at);if(k){who=k.n;st=k;nm=k.n}}
+    if(!who)return null;const X=P[st.pv.key]||P.blood;st.pv.st='asked';const fill=t=>bondFill(t,{name:nm}),kid=who!=='s';
+    const deathFx=kid?{kidOld:nm,famGrief:1}:{bondDeath:true,famGrief:1,bondDie:'choice'},leaveFx=kid?{kidOld:nm,famGrief:1,kidWhy:'left'}:{bondDeath:true,famGrief:1,bondDie:'left'};
+    if(d(100)>P.refuse)return {t:P.askT,x:fill(X.askx),c:[{l:P.askL,h:'곁에 오래 남는다 · 더는 죽음이 오지 않는다',ok:{t:fill(X.askAt),fx:{pvEternal:who}}}]};
+    return {t:P.askT,x:fill(X.refx),c:[
+      {l:P.noL,h:'곁의 사람은 인간으로 눈을 감는다 · 슬픔이 몸에 굳는다',ok:{t:fill(P.noT),fx:deathFx}},
+      {l:P.forceL,h:`억지로 이어 간다 · 1d100 ${P.forceDc} 이상이면 곁에 남고, 아니면 원망하며 떠난다`,check:{s:null,dc:P.forceDc,pure:true,die:100},ok:{t:fill(P.forceStay),fx:{pvEternal:who}},fail:{t:fill(P.forceLeave),fx:leaveFx}}]}}
   function bondEvent(G){
     const ch=G.ch,b=ch.bond,y=G.year,B=bondTx(ch);
     if(!B||ch.distForm||(ch.job&&!(ch.o&&(ch.o.key==='claw'||ch.o.key==='arbiter')))||!b)return null;
@@ -1722,13 +1752,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(b.companion&&b.st==='met')return null;   // 청혼하지 않고 곁에 남은 인연(헤르메스): 더 이상 인연 사건이 없다
     if(b.st==='married'||b.st==='lost'){
       const KD=BD.kid,kids=b.kids||(b.kids=[]);
+      {const pa=pvAskEvent(G,ch,b,kids,B);if(pa)return pa}
       /* 성인이 된 아이: 사무소·해결사·협회 중 태어날 때 정해진 곳에 들어간다 */
       const grown=kids.find(k=>!k.told&&kidAge(k,y)>=KD.adult);
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       /* 아이도 늙는다: oldFrom살부터 해마다 확률로 눈을 감는다 (배우자만 죽고 아이가 몇백 살까지 사는 것은 이상하다는 의견) */
-      {const KO=B.kidOld,od=KO&&kids.find(k=>!k.dead&&!k.pend&&k.job!=='librarian'&&kidAge(k,y)>=lifeAt(k,kidHy(ch,k)));
+      {const KO=B.kidOld,od=KO&&kids.find(k=>!k.dead&&!k.pend&&!k.eternal&&k.job!=='librarian'&&kidAge(k,y)>=lifeAt(k,kidHy(ch,k)));
         if(od){const over=age(G)>100&&B.kidOldOver,GF=CFG.infinite.grief;
+          {const po=pvOffer(G,ch,b,od,B,false);if(po)return po}
           return {t:KO.t,x:kf(over?B.kidOldOver.x:KO.x,od.n),c:[{l:KO.a,h:`정신력 −${KD.oldMind}`+(over?` · 슬픔이 몸에 굳는다 (공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100)}% 영구)`:''),ok:{t:kf(over?B.kidOldOver.at:KO.at,od.n),fx:over?{kidOld:od.n,famGrief:1}:{kidOld:od.n}}}]}}}
       /* 손주: 성인이 된 아이가 30~50살 사이에 아이를 하나 낳는다. 이름은 무작위로 굴린다 */
       {const GR=BD.grand,gk=kids.find(k=>!k.dead&&!k.pend&&!k.grand&&k.job!=='librarian'&&kidAge(k,y)>=GR.from&&kidAge(k,y)<=GR.to&&d(100)<=GR.chance);
@@ -1740,8 +1772,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           return {t:B.grand.t,x:kf(B.grand.x,gk.n).replace(/\{g\}/g,gn)+lgx,c:[{l:B.grand.a,h:`${gk.n}의 아이 · 이름은 ${gn}`,ok:{t:kf(B.grand.at,gk.n).replace(/\{g\}/g,gn),fx:{bondGrand:{k:gk.n,g:gn}}}}]}}}
       if(b.st!=='married')return null;
       const spAge=age(G),spHy=spouseHy(ch,b),ageDie=ch.flags&&ch.flags.spouseAge&&spAge>=lifeAt(b,spHy);   // 배우자는 주인공과 같은 나이로 센다
-      if(!R.immortal&&(ageDie||d(1000)<=bondRisk(b,y,ch)*10))
-        {const over=age(G)>100&&B.deathOld,GF=CFG.infinite.grief;
+      if(!R.immortal&&!b.eternal&&(ageDie||d(1000)<=bondRisk(b,y,ch)*10))
+        {const po=pvOffer(G,ch,b,null,B,ageDie);if(po)return po;const over=age(G)>100&&B.deathOld,GF=CFG.infinite.grief;
         return {t:B.deathT,x:bondFill(over?B.deathOld.x:R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`+(over?` · 슬픔이 몸에 굳는다 (공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100)}% 영구)`:''),ok:{t:bondFill(over?B.deathOld.at:B.deathAT,b),fx:over?{bondDeath:true,famGrief:1,bondDie:ageDie?'age':'risk'}:{bondDeath:true,bondDie:ageDie?'age':'risk'}}}]}}
       const last=kids.length?kids[kids.length-1].born:-99;
       if(y-b.since>=KD.from&&kids.length<KD.max&&y-last>=KD.gap&&d(100)<=KD.chance){
@@ -2867,7 +2899,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.pactPick){const PK=CFG.infinite.pact,x=[...PK.cons,...PK.buffs].find(q=>q.id===fx.pactPick);if(x){ch.pact=ch.pact||{};ch.pact[x.id]=Math.min(PK.cap,(ch.pact[x.id]||0)+1);chips.push(`${PK.cons.includes(x)?'제약':'버프'} · ${x.n} ${ch.pact[x.id]}번 · ${x.e}`)}}
     if(fx.infCentury){const K=CFG.infinite.century;(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
-    if(fx.kidOld&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.kidOld&&!k.dead);if(kk){kk.dead='old';kk.dieYear=ch.year||0;chips.push(`${kk.n} · 눈을 감았다`);loseMind(ch,BD.kid.oldMind,m=>chips.push(m))}}
+    if(fx.pvPass&&ch.bond){const tg=fx.pvPass==='s'?ch.bond:(ch.bond.kids||[]).find(k=>k.n===fx.pvPass);if(tg&&tg.pv){tg.pv.st='ask';tg.pv.at=(ch.year||0)+2;chips.push(`${fx.pvPass==='s'?ch.bond.name:tg.n} · 죽음을 미뤘다 · 답은 두 해 안에 온다`)}}
+    if(fx.pvEternal&&ch.bond){const tg=fx.pvEternal==='s'?ch.bond:(ch.bond.kids||[]).find(k=>k.n===fx.pvEternal);if(tg){tg.eternal=true;if(tg.pv)tg.pv.st='done';chips.push(`${fx.pvEternal==='s'?ch.bond.name:tg.n} · 곁에 오래 남는다`)}}
+    if(fx.kidOld&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.kidOld&&!k.dead);if(kk){kk.dead=fx.kidWhy||'old';kk.dieYear=ch.year||0;chips.push(`${kk.n} · 눈을 감았다`);loseMind(ch,BD.kid.oldMind,m=>chips.push(m))}}
     if(fx.infHome){ch.infHome=1;chips.push('외곽에 작은 집을 지었다')}
     if(fx.lakeOuter){chips.push('집은 짓지 않는다 · 호수에서 호수로 항해가 이어진다')}
     if(fx.bondLove&&ch.bond){ch.bond.love=(ch.bond.love||0)+1;const g_=gainMind(ch,BD.loveMind);chips.push('인연 +1'+(g_?` · 정신력 +${g_}`:''))}
@@ -3998,5 +4032,5 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    bondEvent,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
