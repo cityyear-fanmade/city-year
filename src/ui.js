@@ -2274,6 +2274,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       for(const el of els){const cs=win.getComputedStyle(el);for(const pr of props){const v=cs.getPropertyValue(pr);if(v&&/color\(|color-mix\(/.test(v))el.style.setProperty(pr,v.replace(/color\((?:[^()]|\([^()]*\))*\)/g,rgb),'important')}}
     }catch(e){}
   }
+  /* 저장 이미지의 테마별 손질: 검지 단말기는 얇은 흰 테두리 + 검은 바탕 + 화면에 뜨는 얼음빛 푸른 글자 */
+  function shotSkin(d,id){if(document.documentElement.dataset.skin!=='terminal')return;const st=d.createElement('style');
+    st.textContent=`#${id}{border:2px solid #f1f4f6;border-radius:6px;background:#000!important;--bg:#000;--fg:#bfe8ff;--dim:#6fa9cf;--gold:#7fd6ff;--line:#17394f;--line2:#2a6f98;--panel:#02070b;--panel2:#04101a}
+    #${id} h1,#${id} h2,#${id} b,#${id} .mono,#${id} .eyebrow{text-shadow:0 0 7px rgba(110,200,255,.55)}
+    #${id} .panel,#${id} details{background:#02070b!important;border:1px solid #1d5a82!important;border-radius:2px!important}
+    #${id} .chip,#${id} .btn{border-radius:2px!important}`;d.head.appendChild(st)}
   async function shotEnd(id){
     id=id||'endShot';UI.shotWhy='';const el=$(id);if(!el){UI.shotWhy='draw';return null}
     if(!(await loadShot())){UI.shotWhy='load';return null}
@@ -2283,7 +2289,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     /* 한 변 최대 8000px · 전체 1400만 화소 안에서 가장 큰 배율부터 */
     const fit=Math.min(2,8000/h,Math.sqrt(14e6/(w*h))),tries=[fit,Math.min(fit,1),Math.min(fit,0.7),Math.min(fit,0.5)].filter((s,k,a)=>s>=0.3&&a.indexOf(s)===k);
     for(const sc of tries){
-      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg}}});
+      try{const cv=await window.html2canvas(el,{backgroundColor:bg,scale:sc,useCORS:true,logging:false,windowWidth:Math.min(900,window.innerWidth),onclone:d=>{const e=d.getElementById(id);if(e){fixShotColors(d,e);e.style.padding='28px 22px';e.style.background=bg;shotSkin(d,id)}}});
         if(cv&&cv.width>0&&cv.height>0)return cv}catch(e){}
     }
     UI.shotWhy='draw';return null;
