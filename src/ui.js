@@ -2275,7 +2275,17 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     }catch(e){}
   }
   /* 저장 이미지의 테마별 손질: 검지 단말기는 얇은 흰 테두리 + 검은 바탕 + 화면에 뜨는 얼음빛 푸른 글자 */
-  function shotSkin(d,id){if(document.documentElement.dataset.skin!=='terminal')return;const st=d.createElement('style');
+  function shotSkin(d,id){const sk=document.documentElement.dataset.skin,st=d.createElement('style');
+    if(sk==='ruina'){st.textContent=`#${id}{border:1px solid #e2c07a;border-radius:70px 70px 6px 6px/26px 26px 6px 6px;background:#010101!important;box-shadow:inset 0 0 0 5px #010101,inset 0 0 0 6px rgba(226,192,122,.45);--bg:#010101;--fg:#f0e6cf;--dim:#b8aa8d;--gold:#ecc97f;--line:#3a3020;--line2:#8c7448;--panel:#060504;--panel2:#0a0806}
+    #${id} h1,#${id} h2,#${id} .eyebrow{text-shadow:0 0 10px rgba(236,201,127,.35)}
+    #${id} .panel,#${id} details{background:#050403!important;border:1px solid #8c7448!important;border-radius:2px!important;box-shadow:inset 0 0 14px rgba(236,201,127,.05)}
+    #${id} .chip,#${id} .btn{border-radius:2px!important}
+    .wrap::before,.wrap::after,#${id}::before,#${id}::after,#${id} .panel::before,#${id} .panel::after{display:none!important}`;d.head.appendChild(st);return}
+    if(sk==='dante'){st.textContent=`#${id}{border:3px solid #5b2618;border-radius:10px;background:#0d0807!important;box-shadow:inset 0 0 0 1px #2a120b,inset 0 0 0 4px #120806,inset 0 0 0 5px #8e4325;--bg:#0d0807;--fg:#f4e8d8;--dim:#c0a893;--gold:#f0a23b;--line:#4a2418;--line2:#7a3a22;--panel:#1a100d;--panel2:#24150f}
+    #${id} h1,#${id} h2{text-shadow:0 0 8px rgba(240,162,59,.3)}
+    #${id} .panel,#${id} details{background:#1a100d!important;border:1px solid #7a3a22!important;border-left:4px solid #c8743a!important;border-radius:2px!important}
+    #${id} .chip,#${id} .btn{border-radius:2px!important}`;d.head.appendChild(st);return}
+    if(sk!=='terminal')return;
     st.textContent=`#${id}{border:2px solid #f1f4f6;border-radius:6px;background:#000!important;--bg:#000;--fg:#bfe8ff;--dim:#6fa9cf;--gold:#7fd6ff;--line:#17394f;--line2:#2a6f98;--panel:#02070b;--panel2:#04101a}
     #${id} h1,#${id} h2,#${id} b,#${id} .mono,#${id} .eyebrow{text-shadow:0 0 7px rgba(110,200,255,.55)}
     #${id} .panel,#${id} details{background:#0a0c0d!important;border:2px solid #e9edf0!important;border-radius:8px!important}
