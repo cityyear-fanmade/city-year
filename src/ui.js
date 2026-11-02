@@ -797,7 +797,7 @@ export function startUI(E,app){
         const sum=abs?Object.entries(abs).filter(([,v])=>v).map(([k,v])=>`<div class="invr"><span>${nm(k)}</span><b class="mono">+${v}</b></div>`).join(''):'<p class="small dim">이 판은 합계가 기록되기 전에 먹은 장비가 있어 합계를 알 수 없다. 앞으로 먹는 것부터 쌓인다.</p>';
         const ate=(g.ate||[]).slice().reverse().map(x=>`<div class="invr"><span>${esc(x.n)}${x.g>=5?' <span class="chip" style="color:var(--gold);border-color:var(--gold)">히든</span>':''}</span><span class="mono small dim">${Object.entries(x.fx).filter(([,v])=>v).map(([k,v])=>nm(k)+' +'+v).join(' · ')}</span></div>`).join('');
         return stSec('gwabs','흡수한 능력치 · 섭식 '+g.eaten+'번 · 히든 '+(g.hidden||0)+'/'+Z_.hiddenNeed,`<div>${sum}</div>${g.form&&Z_.forms[g.form]?`<div class="invr" style="margin-top:6px"><span>${esc(Z_.forms[g.form].n)} 성장</span><b class="mono">${g.fg||0}/${Z_.growMax}</b></div>`:''}${ate?`<div class="eyebrow" style="margin-top:8px">먹은 장비 (최근 순)</div>${ate}`:''}`,true)})()}
-      ${lakeLog}${kid?stSec('kid','성장기',kid,false):''}
+      ${officeLog(ch)}      ${lakeLog}${kid?stSec('kid','성장기',kid,false):''}
       ${base?stSec('base','태어났을 때의 능력치 (변하지 않음)',base,false):''}
       ${stSec('now','지금 · 장비 보정과 특수 상태',vStatNow(),true)}</div>`;
   }
@@ -2706,6 +2706,13 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
         ${UI.rested?'':`<button class="btn" data-a="rest"><b>쉬어 간다</b><span class="mono small dim">공방은 이용하지 않는다 · 정신력 +${CFG.shop.restMind} (지금 ${G.ch.mind}/${E.mindMax(G.ch)})</span></button>`}
         ${E.staffOwner(G.ch)&&!UI.rested?`<button class="btn" data-a="office"><b>${esc(G.ch.office.name)}</b><span class="mono small dim">직원 ${E.staffList(G.ch).length}/${CFG.office.staff.max} · 사무소를 둘러본다</span></button>`:''}
         <button class="btn" data-a="unshop">${UI.rested?'다시 길을 나선다':'지나간다'}</button></div>`;
+  }
+  /* 가방 정보 탭의 사무소 칸(보기만): 직원 목록과 해마다의 수입. 고용·해고는 공방 거리의 사무소 화면에서 한다 */
+  function officeLog(ch){
+    if(!E.staffOwner(ch))return '';
+    const O=ch.office,SF_=CFG.office.staff,list=E.staffList(ch),inc=E.staffIncome(ch),kw={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상',sink:'침잠'}[O.kw]||O.kw;
+    const rows=list.map(s=>{const T_=SF_.types[s.type],lv=E.staffLv(s,G.year);return `<div class="invr"><span>${esc(s.n)} · ${esc(T_.n)}</span><b class="mono">${lv}단계 · ${esc(T_.e)}${lv>1?' ×'+lv:''}</b></div>`}).join('');
+    return stSec('office',`${esc(O.name)} · 직원 ${list.length}/${SF_.max}`,`<div class="invr"><span>전문 분야</span><b class="mono">${esc(kw)}</b></div><div class="invr"><span>알선</span><b class="mono">${CFG.office.brokerEvery}년마다${O.brokerNext>G.year?' · 다음 '+O.brokerNext+'년차':''}</b></div>${rows||'<div class="invr"><span>직원</span><b class="mono">아직 없다</b></div>'}<div class="invr"><span>직원으로 인한 해마다의 수입</span><b class="mono" style="color:${inc>=0?'var(--gold)':'var(--bleed)'}">${inc>=0?'+':''}${E.money(inc)}</b></div><span class="small dim">직원 고용·해고는 공방 거리의 사무소 화면에서 한다.</span>`,false);
   }
   /* 사무소: 대표(내 사무소)의 전용 화면. 직원 고용·해고, 알선 주기, 해마다의 수입과 월급을 보여 준다 */
   function vOffice(){
