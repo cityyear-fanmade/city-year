@@ -1720,7 +1720,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function pvProfile(ch,b){
     if(age({year:ch.year||1})<=100)return null;
     if(ch.o&&ch.o.race==='hyeolgwi'&&!(b.route==='hyeolgwi'&&b.variant===1))return 'blood';
-    if((ch.hw&&ch.hw.done)||(ch.beaten||[]).includes('hongwon'))return 'hw';
+    if(ch.hw&&(ch.hw.done||ch.hw.maker))return 'hw';   // 홍원의 가주가 된 경우만 (홍원 군주를 쓰러뜨린 것만으로는 열리지 않는다)
     if(ch.o&&ch.o.key==='crow')return 'crow';
     if(lakeOn(ch))return 'lake';
     return null}
