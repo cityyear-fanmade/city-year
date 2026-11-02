@@ -776,3 +776,21 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .foldhd{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .foldmark{display:inline-block;width:1.3em;color:var(--gold);flex:none;font-size:1.05em}
 .panel.folded>*:not(:first-child){display:none}
+
+/* 무한 모드 제약·버프 카드 */
+.pcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:6px}
+.pcard{position:relative;font:inherit;color:var(--fg);text-align:left;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:34px 12px 12px;min-height:170px;display:flex;flex-direction:column;gap:8px;cursor:pointer}
+.pcard .pk{position:absolute;left:12px;top:10px;font:600 11px/1 var(--mono);letter-spacing:.1em}
+.pcard .pn{font-size:18px}
+.pcard .pe{flex:1;font-size:14px;line-height:1.5}
+.pcard .pm{opacity:.7}
+.pcard.pc-c{border-color:#8a3a3a;background:#241616}.pcard.pc-c .pk{color:#e07a7a}
+.pcard.pc-b{border-color:var(--gold);background:#221e12}.pcard.pc-b .pk{color:var(--gold)}
+.pcard:active{transform:translateY(1px)}
+
+/* 배경음악 목록: 버튼을 누르면 곡 이름이 펼쳐지고 바로 고른다 */
+.stylebox{position:relative;display:inline-flex}
+.stylepop{position:absolute;left:0;top:42px;z-index:40;min-width:128px;padding:6px;border:1px solid var(--line2);border-radius:14px;background:color-mix(in srgb,var(--panel) 96%,transparent);display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.stylepop button{font:600 13px/1 var(--mono);text-align:left;color:var(--dim);background:transparent;border:1px solid transparent;border-radius:10px;padding:9px 12px;cursor:pointer}
+.stylepop button:hover{background:color-mix(in srgb,var(--gold) 12%,transparent);color:var(--fg)}
+.stylepop button.on{color:var(--gold);border-color:var(--gold)}
