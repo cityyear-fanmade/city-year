@@ -19,7 +19,7 @@ if(err.length){console.error('데이터 오류:\n  '+err.join('\n  '));process.e
 /* 모듈 문법만 걷어 낸다: import 줄 삭제, export 키워드 삭제 */
 const strip=s=>s.replace(/^import .*;\s*$/gm,'').replace(/^export (const|function|async function|let)/gm,'$1');
 const routeTest=process.argv.includes('--routetest'),lab=process.argv.includes('--lab'),augdemo=process.argv.includes('--augdemo'),noBgm=lab||augdemo||process.argv.includes('--nobgm');
-const BGM_STUB=`function createBgm(){const f=()=>{};return {supported:false,isOn:()=>false,set:f,setMood:f,setScene:f,setVol:f,setStyle:f,style:()=>'calm',extOn:()=>false,ext:()=>({calm:1,fight:1}),setExt:f,vol:()=>0,level:()=>0,debug:()=>null}}`;
+const BGM_STUB=`function createBgm(){const f=()=>{};return {supported:false,isOn:()=>false,set:f,setMood:f,setScene:f,setVol:f,setStyle:f,setOnFail:f,style:()=>'calm',extOn:()=>false,ext:()=>({calm:1,fight:1}),setExt:f,vol:()=>0,level:()=>0,debug:()=>null}}`;
 /* 악기 샘플 배경음악(assets/bgm/<스타일>_<장면>.mp3)을 data 주소로 넣는다. --nosamples면 넣지 않아 합성음만 쓴다 */
 const noSamples=process.argv.includes('--nosamples');
 /* --extbgm: 배경음악 파일을 HTML에 넣지 않고 assets/bgm/ 아래 mp3를 필요할 때 읽는다 (본섭 페이지가 너무 커서 휴대폰에서 안 열리던 문제) */

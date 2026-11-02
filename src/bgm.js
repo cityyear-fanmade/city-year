@@ -66,12 +66,13 @@ export function createBgm(){
   const ONE={passion:1,wave:1},smpKey=(st,sc)=>sc==='boss'?(bossTrack==='ruen'?'ruen_boss':'boss_boss'):st==='ext'?'ext_t'+ext.idx+'_'+sc:st+'_'+sc,BOSS_LOOP=4*4*60/66;
   const smpSrc=(st,sc)=>{if(typeof window==='undefined')return null;const M=window.CITY_BGM;if(sc==='boss'){st=bossTrack==='ruen'?'ruen':'boss'}if(st==='ext'){return (M&&M.ext&&M.ext['t'+ext.idx+'_'+sc])||null}if(M===undefined)return `assets/bgm/${st}_${sc}.mp3`;return (M&&M[st]&&M[st][sc])||null};
   const smpUsable=(st,sc)=>!!smpSrc(st,sc)&&!smp.bad[smpKey(st,sc)];
+  let onFail=null,failed=false;   // 음악 파일을 받지 못했을 때 한 번 알린다(합성음으로 대신하지 않는다)
   function smpLoad(key,src){
     if(smp.loading[key])return;
     smp.loading[key]=(async()=>{try{let ab;
       if(src.startsWith('data:')){const b=atob(src.slice(src.indexOf(',')+1)),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);ab=u.buffer}
       else{const r=await fetch(src);if(!r.ok)throw new Error('no');ab=await r.arrayBuffer()}
-      smp.buf[key]=await ctx.decodeAudioData(ab)}catch(e){smp.bad[key]=1}})();
+      smp.buf[key]=await ctx.decodeAudioData(ab)}catch(e){smp.bad[key]=1;if(!String(src).startsWith('data:')&&onFail&&!failed){failed=true;try{onFail()}catch(x){}}}})();
   }
   function smpStop(fade){
     const o=smp.node;smp.cur=null;smp.node=null;if(!o||!ctx)return;
@@ -103,6 +104,7 @@ export function createBgm(){
   }
   function smpPlay(){
     if(stemsUsable()&&stemsPlay())return true;
+    {const xs=smpSrc(style,scene);if(xs&&!String(xs).startsWith('data:')&&smp.bad[smpKey(style,scene)]){smpStop(0.5);return true}}   // 외부 음악 파일을 못 받으면 합성음 대신 조용히 둔다
     if(!smpUsable(style,scene)){smpStop(0.5);return false}
     const key=smpKey(style,scene);if(smp.cur===key)return true;
     if(!smp.buf[key]){smpLoad(key,smpSrc(style,scene));return !smp.bad[key]}   // 읽는 동안은 조용히 기다린다
@@ -462,6 +464,7 @@ export function createBgm(){
     setStage(n){n=Math.max(1,Math.min(5,Math.round(+n)||1));if(n===stage)return;stage=n;stemsApply()},
     stage:()=>stage,
     style:()=>style,
+    setOnFail(fn){onFail=fn;if(failed&&fn){try{fn()}catch(x){}}},
     setStyle(k){if(k==='calm'||k==='passion'||k==='library'||k==='wave'||(k==='ext'&&extOn()))style=k},
     extOn,ext:()=>ext.idx,
     setExt(i){if(i>=1&&i<=5)ext.idx=i}
