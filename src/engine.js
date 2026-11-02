@@ -1782,7 +1782,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(b.st==='married'||b.st==='lost'){
       const KD=BD.kid,kids=b.kids||(b.kids=[]);
       /* 성인이 된 아이: 사무소·해결사·협회 중 태어날 때 정해진 곳에 들어간다 */
-      const grown=kids.find(k=>!k.told&&kidAge(k,y)>=KD.adult);
+      const grown=kids.find(k=>!k.told&&!k.dead&&kidAge(k,y)>=KD.adult);   // 이미 세상을 떠난 아이(가족을 없앤 경우 포함)의 진로 이야기는 나오지 않는다
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       /* 아이도 늙는다: oldFrom살부터 해마다 확률로 눈을 감는다 (배우자만 죽고 아이가 몇백 살까지 사는 것은 이상하다는 의견) */
