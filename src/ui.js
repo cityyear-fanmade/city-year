@@ -541,7 +541,7 @@ export function startUI(E,app){
   /* 엔딩 화면에서 이어서 살 수 있는 경우(여기서 끝낸다 버튼이 있는 경우). 이때 다시 태어나면 이어 살 판이 사라지므로 한 번 더 누르게 한다 */
   const INF_WHY={"crowsucceed": "총사령관의 자리가 외곽의 배양 시설로 옮겨 가고, 복제체의 길이 도시 안에서 끝나지 않는다", "hermobey": "수행 완료 뒤에도 단말기가 꺼지지 않고, 새 지령이 어긋난 자리를 가리킨다", "hermfree": "지령이 끊긴 뒤에도 단말기가 꺼지지 않고, 어디로 걸어도 어긋난 자리로 이어진다", "libstay": "도서관의 서가가 외곽의 어긋난 자리까지 이어지고, 손님은 계속 찾아온다", "libclose": "문을 닫은 서가가 어긋난 자리에 남고, 닫힌 문 앞을 찾아오는 손님을 돌려보내는 일이 끝나지 않는다", "clawreturn": "도서관이 있던 자리에 선 바깥으로 이어지는 문이 남아, 머리의 마지막 명령 \"닫아라\"가 끝나지 않는다", "clawstay": "선 바깥은 닫히지 않았고, 문 앞을 지키는 자리가 끝나지 않는다", "arbkeep": "균형의 한쪽을 도시에 남기면 다른 한쪽을 선 바깥에 두어야 해서, 바깥쪽 추를 맡게 된다", "arbdown": "조율의 자리에서 내려온 곳이 외곽이라, 맞추는 사람 없이 흔들리는 추로 남는다", "gwmoth": "도시가 받아들이지 않는 몸이라 군체를 이끌고 외곽으로 나선다", "gwroach": "도시가 받아들이지 않는 몸이라 군체를 이끌고 외곽으로 나선다", "gwfly": "도시가 받아들이지 않는 몸이라 군체를 이끌고 외곽으로 나선다", "gwhuman": "인간으로 남은 몸이 도시에 어울리지 않아 외곽으로 물러난다"};
   const INF_KEYS=Object.keys(INF_WHY);
-  const endCanResume=()=>!!(UI.endWin&&G&&((!G.endless)||UI.outEnd||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite)||(UI.crowEnd==='crowrefuse'&&!G.infinite)||(INF_KEYS.includes(UI.crowEnd)&&!G.infinite)));
+  const endCanResume=()=>!!(UI.endWin&&G&&((!G.endless)||(UI.outEnd&&!/^fam/.test(UI.outEnd))||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite)||(UI.crowEnd==='crowrefuse'&&!G.infinite)||(INF_KEYS.includes(UI.crowEnd)&&!G.infinite)));
   function vSettings(){
     const b=(a,k,l,cur)=>`<button class="${cur===k?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`;
     return `${FS.ok()?`<div class="stack" style="gap:6px"><span class="eyebrow">전체 화면</span><div class="seg">${b('fs','off','끔',FS.on()?'':'off')}${b('fs','on','켬',FS.on()?'on':'')}</div><span class="small dim">브라우저 주소창·탭 줄을 숨깁니다 · 방송이나 넓은 화면용 · Esc로도 끝낼 수 있습니다</span></div>`:''}<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
@@ -1247,6 +1247,8 @@ export function startUI(E,app){
     outer:'무한 모드에서 제 2막을 넘겨 외곽으로 나간 뒤, "외곽에서 이야기를 끝낸다"를 직접 고른다',
     out_seal:'무한 모드 외곽에서 균열로 흘러드는 히든 보스를 모두 쓰러뜨린다',
     out_star:'무한 모드 외곽에서 쓰러뜨린 상대가 16명 이상이 된다',
+    out_famblood:'무한 모드에서 혈귀로 100살을 넘긴 뒤 가족의 죽음 앞에서 "강물에 이름을 내놓는다"를 고른다',
+    out_fampill:'무한 모드에서 홍원의 가주나 군주로 100살을 넘긴 뒤 가족의 죽음 앞에서 "금지된 환을 짓는다"를 고른다',
     out_settle:'무한 모드 외곽에서 결혼한 채 자식이 성인이 되고, 제 2막을 넘긴 뒤 12년이 지난다',
     distwin:'뒤틀린 몸으로 '+CFG.years+'년을 넘긴다',
     old:'무한 모드에서 나이가 100살을 넘긴다',
@@ -1302,7 +1304,7 @@ export function startUI(E,app){
   const vRecords=()=>{const f=recFold(),tab=UI.recTab||'요약';const html=vRecords0().replace(/<div class="panel stack"( style="[^"]*")?><span class="eyebrow">([^<]*)<\/span>/g,(m,st,t)=>{const k=t.replace(/\s*·.*$/,'').replace(/\s*[0-9].*$/,'')||t,c=f.includes(k);return `<div class="panel stack rfold${c?' closed':''}"${(()=>{const hide=recTabOf(t)!==tab;if(!hide)return st||'';return st?st.replace(/"$/,';display:none"'):' style="display:none"'})()}><span class="eyebrow rfh" data-a="rfold" data-i="${esc(k)}" role="button" aria-expanded="${!c}">${c?'▸':'▾'} ${t}</span>`});return html};
   function vRecords0(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
-    const ends0=[['gwmoth','나방 공주의 밤'],['gwroach','바퀴 황제의 왕좌'],['gwfly','파리 대왕의 식탁'],['gwhuman','인간으로 남은 병기'],['clawreturn','돌아온 발톱'],['clawstay','길을 닫은 발톱'],['arbkeep','한쪽을 남긴 조율자'],['arbdown','내려온 조율자'],['libstay','책이 된 사서'],['libclose','문을 닫는 사서'],['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['hermobey','끝난 지령'],['hermfree','지령 없는 아침'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
+    const ends0=[['gwmoth','나방 공주의 밤'],['gwroach','바퀴 황제의 왕좌'],['gwfly','파리 대왕의 식탁'],['gwhuman','인간으로 남은 병기'],['clawreturn','돌아온 발톱'],['clawstay','길을 닫은 발톱'],['arbkeep','한쪽을 남긴 조율자'],['arbdown','내려온 조율자'],['libstay','책이 된 사서'],['libclose','문을 닫는 사서'],['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['hermobey','끝난 지령'],['hermfree','지령 없는 아침'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['out_famblood','불사의 강물'],['out_fampill','금지된 환'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
     /* 오버플로우(무한 모드 1000살)는 달성하기 전에는 칸도 개수도 보이지 않는다 */
     const ends=ends0.filter(([k])=>k!=='overflow'||r.endings.includes('overflow'));
     const groups=[['초반','early'],['중반','mid'],['후반','late'],['보스·이름난 상대','boss'],['히든','hidden']];
@@ -2132,6 +2134,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     blankwed:['아무것도 없는 존재 · 가족',`아무것도 없던 존재가 누군가의 이름을 불렀고, 누군가가 대답했다. ${CFG.years}년이 지나 첫 번째 막이 끝났을 때 곁에는 같은 지붕 아래의 사람이 있다. 아무것도 없던 곳에서 시작한 이야기가 둘이 되었다.`]};
   const OUTEND={seal:['균열이 닫혔다','균열 너머에서 흘러든 이름들이 하나둘 쓰러졌다. 마지막 하나가 눈을 감자 세계의 균열은 당신이 선 자리에서 가장 먼저 아물었다. 머리도 닫지 못한 문을, 당신이 한 겹 닫았다.'],
     star:['도시의 별이 되었다','이름을 가진 존재들 거의 전부와 맞서 이겼다. 도시의 장부에는 더 이상 당신에게 붙일 이름이 없었고, 사람들은 하늘에 새로 뜬 별 하나를 당신의 이름으로 불렀다.'],
+    famblood:['불사의 강물을 건넜다','강물은 약속대로 이름을 가져갔다. 강가에 남은 사람은 늙지 않는 몸으로 아침을 맞았다. 당신은 이름 없는 불순물이 되어 강물이 닿지 않는 곳으로 걸어 나갔다. 곁의 사람은 오래 살 것이다. 당신을 기억하는 마지막 사람으로.'],
+    fampill:['금지된 환을 지었다','환은 끝내 완성되지 않았다. 불완전한 영생은 먹은 이에게 오래 남았고, 값은 당신이 치렀다. 머리가 문 앞에 왔을 때 당신은 이미 사람이 아니었다. 이름 없는 불순물이 되어 가문을 떠났다. 곁의 사람은 불완전한 영생을 안고 남았다.'],
     settle:['외곽에 집을 지었다','괴수의 울음이 닿지 않는 언덕에 작은 집을 지었다. 식탁에는 가족의 자리가 있고, 창밖의 균열은 오늘도 멀리서 닫혀 간다.']};
   /* 오늘의 시드: 그날 도전 기록. 이번 결과를 이전 최고와 견준다 */
   function vDailyCmp(){
