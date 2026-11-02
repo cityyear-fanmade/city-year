@@ -2125,7 +2125,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
           if(lk.length)t.push(`고래 ${lk.length}마리를 쓰러뜨렸다`);
           if(fl.length&&lk.length)t.push('도망치던 재앙을 이제는 사냥하는 쪽이 되었다');
           S.push(t.filter(Boolean).join('. ')+'.')}
-        if(nb.length){const names=nb.slice(0,2).map(x=>E_(x.n));S.push(nb.length>2?`${names.join(', ')} 등 ${nb.length}명의 이름난 상대와 맞서 이겼다. 이름이 기록에 남지 않은 싸움도 있었다.`:`${names.join(', ')}${nb.length>1?'과 맞서':'과 맞서'} 이겼다.`.replace(/(.)과 맞서/,(m,ch)=>jp(ch,'과','와').slice(1)+' 맞서'))}}
+        if(nb.length){const names=nb.slice(0,2).map(x=>E_(x.n));S.push(nb.length>2?`${names.join(', ')} 등 ${nb.length}명의 이름난 상대와 맞서 이겼다. 이름이 기록에 남지 않은 싸움도 있었다.`:`${names.join(', ')}${jp(names[names.length-1],'과','와').slice(String(names[names.length-1]).length)} 맞서 이겼다.`)}}
       {const rl=jl('relic').map(x=>x.n).filter((v,i,a)=>a.indexOf(v)===i).slice(0,2),eg=jl('ego')[0],lic=jl('license')[0],ce=jl('century');
         const t=[];if(lic)t.push(`${lic.y}년차, 해결사 자격을 얻어 ${lic.r}${T.rankUnit}으로 시작했다`);
         if(rl.length)t.push(`${rl.map(x=>'「'+E_(x)+'」').join(' · ')}${jp(rl[rl.length-1],'을','를').slice(-1)} 손에 넣었다`);
