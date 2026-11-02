@@ -1601,6 +1601,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${b.fated?`<div class="panel stack" style="gap:6px"><span class="mono small" style="color:var(--gold)">재능 · 결점 · 무기 · 타고난 것 없음 · 출신과 성장기 보정만 가진다</span></div>`:b.blank?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">출생 보정 없음</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">출신 · 재능 · 결점 · 무기 · 타고난 것 없음 · 맨손 · 성장기 보정만 가진다</span><span class="mono small">빈손 · 히든 보스 전리품 장비 확률 +25%p · 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%</span></div>`:`<div class="panel brows">${row('출신',b.r.o,b.o,UI.job?null:D.origins)}${row('재능',b.r.t,b.t,D.talents)}${row('결점',b.r.f,b.f,D.flaws)}${b.o.egoWeapons&&b.gear&&b.gear.weapon&&b.gear.weapon.egoLv!=null?row('무기',b.r.w,{n:'E.G.O · '+b.gear.weapon.n,t:'환상체에게서 얻은 무기 · 전용 카드 발현을 쌓으면 무기와 책장이 함께 자란다',e:b.gear.weapon.e},null):row('무기',b.r.w,b.w,D.weapons)}</div>`}
       ${b.innate?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">타고난 것 · 1%${b.innate2?' · 둘이 함께':''}</span>${[b.innate,b.innate2].filter(Boolean).map(k=>`<b class="serif">${esc(D.innate[k].n)}</b><span class="mono small" style="color:var(--gold)">${esc(D.innate[k].e)}</span>`).join('')}</div>`:''}
       <button class="btn quiet" data-a="reroll">다시 태어난다</button>
+      <div class="birthbar"><button class="btn quiet" data-a="reroll">다시 굴린다</button><button class="btn primary" data-a="live" ${(b.relicPick&&!UI.relic)||(b.teamPick&&!UI.team)||(b.fateChoices&&!b.fated)?'disabled':''}>${(b.relicPick&&!UI.relic)||(b.teamPick&&!UI.team)||(b.fateChoices&&!b.fated)?'먼저 고른다':'이 삶을 산다'}</button></div>
       ${kid}
       ${vBirthHelp(b)}
       <div class="panel stack">
@@ -2894,9 +2895,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     relic(k){UI.relic=k;render()},
     rbteam(t){UI.team=t;render()},
     bloodw(k){UI.bloodW=k||null;render()},
-    origin(k){UI.origin=k||null;if(UI.origin){UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
+    origin(k){UI.origin=k||null;if(UI.origin){UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render();if(isMobile())window.scrollTo(0,0)},
     tpreset(k){UI.testPreset=k||null;render()},
-    job(k){if(k)UI.origin=null;UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
+    job(k){if(k)UI.origin=null;UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render();if(isMobile())window.scrollTo(0,0)},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
     live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.o&&BC.o.race==='hyeolgwi'&&UI.bloodW&&!UI.job)E.bloodWeapon(BC,UI.bloodW);if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);nextYear()},
     flow(){flow()},
