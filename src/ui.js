@@ -2114,11 +2114,24 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
             if(sd)t.push(sd.how==='left'?`${sd.y}년차, ${J.eun(E_(sd.n))} 원망 속에 곁을 떠났다`:sd.how==='choice'?`${sd.y}년차, ${J.eun(E_(sd.n))} 인간으로 눈을 감았다`:`${sd.y}년차, ${J.eul(E_(sd.n))} 떠나보냈다`)}
           S.push(t.join('. ')+'.')}}
       {const tt=jl('title').map(x=>x.n).filter((v,i,a)=>a.indexOf(v)===i).slice(0,3);if(tt.length)S.push(tt.map(x=>'「'+E_(x)+'」').join(' · ')+(tt.length>1?'라는 이름들이 붙었다.':'라는 이름이 붙었다.'))}
-      {const fl=jl('lakeFlee'),bs=jl('boss'),lk=bs.filter(x=>/^lake_/.test(x.id||'')),nb=bs.filter(x=>!/^lake_/.test(x.id||''));
-        if(fl.length||lk.length){const t=[];if(fl.length)t.push(`${fl[0].y}년차, 처음 마주친 파도에서 도망쳤다`);
+      {const fl=jl('lakeFlee'),bs=jl('boss'),lk=bs.filter(x=>/^lake_/.test(x.id||'')),nb=bs.filter(x=>!/^lake_/.test(x.id||'')),
+          wOk=jl('waveOk').length,wSac=jl('waveSac').length,wFail=jl('waveFail').length,dr=jl('drift').length,mo=jl('morph').length,pi=jl('pirate'),ind=jl('indigo');
+        if(fl.length||lk.length||wOk||wSac||dr||mo||pi.length||ind.length){const t=[];
+          if(fl.length)t.push(`${fl[0].y}년차, 처음 마주친 고래의 그림자에서 도망쳤다`);
+          if(wOk+wSac||dr||wFail){const w=[];if(wOk+wSac)w.push(`호수의 파도를 ${wOk+wSac}번 넘었다`);if(wSac)w.push(`선원 ${wSac}명을 파도에 내주었다`);if(dr)w.push(`${dr}번은 배가 반파되어 표류했다`);else if(wFail&&!(wOk+wSac))w.push('파도에 배가 크게 상했다');t.push(w.join('. '))}
+          if(mo)t.push(`선원 ${mo}명이 젖은 옷만 남기고 호수로 돌아갔다`);
+          if(pi.length)t.push('쌍갈고리 해적단과 얽혔다');
+          if(ind.length)t.push(ind.some(x=>x.how==='learn')?'쪽빛 노인에게서 재앙을 죽이는 법을 배웠다':ind.some(x=>x.how==='fight')?'쪽빛 노인과 칼을 맞댔다':'쪽빛 노인을 만났다');
           if(lk.length)t.push(`고래 ${lk.length}마리를 쓰러뜨렸다`);
-          if(fl.length&&lk.length)t.push('도망치던 파도를 이제는 사냥하는 쪽이 되었다');S.push(t.join('. ')+'.')}
+          if(fl.length&&lk.length)t.push('도망치던 재앙을 이제는 사냥하는 쪽이 되었다');
+          S.push(t.filter(Boolean).join('. ')+'.')}
         if(nb.length){const names=nb.slice(0,2).map(x=>E_(x.n));S.push(nb.length>2?`${names.join(', ')} 등 ${nb.length}명의 이름난 상대와 맞서 이겼다. 이름이 기록에 남지 않은 싸움도 있었다.`:`${names.join(', ')}${nb.length>1?'과 맞서':'과 맞서'} 이겼다.`.replace(/(.)과 맞서/,(m,ch)=>jp(ch,'과','와').slice(1)+' 맞서'))}}
+      {const rl=jl('relic').map(x=>x.n).filter((v,i,a)=>a.indexOf(v)===i).slice(0,2),eg=jl('ego')[0],lic=jl('license')[0],ce=jl('century');
+        const t=[];if(lic)t.push(`${lic.y}년차, 해결사 자격을 얻어 ${lic.r}${T.rankUnit}으로 시작했다`);
+        if(rl.length)t.push(`${rl.map(x=>'「'+E_(x)+'」').join(' · ')}${jp(rl[rl.length-1],'을','를').slice(-1)} 손에 넣었다`);
+        if(eg)t.push(`마음이 꺾인 끝에 E.G.O 「${E_(eg.n)}」${jp(eg.n,'이','가').slice(-1)} 깨어났다`);
+        if(ce.length)t.push(`외곽에서 ${ce.length*100}해를 더 넘겼다`);
+        if(t.length)S.push(t.join('. ')+'.')}
       if(S.length)S.forEach(t=>P.push(t));else if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${[...new Set(c.beaten)].map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);}
     /* 은원 장부: 도운 일·등 돌린 일·지나친 일이 쌓였으면 한 줄씩 남긴다 */
     {const L=c.ledger||{};

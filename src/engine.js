@@ -198,6 +198,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function giveRelic(ch,id,late){
     const R=D.relics[id];if(!R)return;
     (ch.relics=ch.relics||[]).push(R.n);(ch.relicIds=ch.relicIds||[]).push(id);ch.relicPick=false;ch.relicPickLate=false;
+    if(typeof jr==='function')jr(ch,'relic',{n:R.n});
     if(isWs(ch)&&CFG.wsRelic[id])return wsAbsorb(ch,id);
     if(R.odin){ch.odin=true;if(ch.o&&ch.o.n==='보냐텔리 가문')ch.yeji=true}
     /* 환도 + 궁니르: 공명 패시브와 전용 카드 2장 */
@@ -1394,7 +1395,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return null;
   }
   function setEgo(ch,type,name){
-    const e=M.ego[type];ch.ego={type,n:name.trim()};ch.egoPick=false;ch.voiceUsed=true;ch.voicePend=false;ch.distortPend=false;
+    const e=M.ego[type];ch.ego={type,n:name.trim()};if(typeof jr==='function')jr(ch,'ego',{n:name.trim()});ch.egoPick=false;ch.voiceUsed=true;ch.voicePend=false;ch.distortPend=false;
     if(e.hit)ch.stats.atk+=e.hit;if(e.hp){ch.stats.maxHp+=e.hp;ch.hp+=e.hp}
     if(e.eva)ch.stats.eva+=e.eva;
     /* 고정 전용 카드: 덱 최대 장수 +1 자리에 들어간다 (적성자는 이미 전용 카드가 있다). 덱이 고정이어도 넣는다 */
@@ -2829,7 +2830,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:`대형 파도 ${i+1}/${w.max}`,x:lines[Math.min(i,lines.length-1)]+(last?' 이번이 마지막이다.':'')+`\n배 내구도 ${hullOf(ch)}/${CFG.lake.hullMax} · 판정에 실패할 때마다 내구도를 잃는다 (최대 ${W.hullLoss}). 0이 되면 배가 가라앉는다.`,shake:true,c}}
   /* 일지: 선택과 그 결과 가운데 이야기가 될 만한 것만 연도와 함께 남긴다. 엔딩의 행적이 이것을 요약해서 엮는다 */
   function jr(ch,k,o){const J=ch.journal=ch.journal||[];J.push(Object.assign({y:ch.year||0,k},o||{}));if(J.length>160){const i=J.findIndex(x=>x.k==='exam'||x.k==='boss');J.splice(i>0?i:1,1)}}
-  const jSnap=ch=>({aff:ch.aff&&ch.aff.name||null,promos:ch.promos||0,lic:!!ch.licensed,col:!!ch.colorDone,colF:!!ch.colorFailed,bond:ch.bond?{st:ch.bond.st,tries:ch.bond.tries||0,kids:(ch.bond.kids||[]).length,name:ch.bond.name,dieBy:ch.bond.dieBy}:null});
+  const jSnap=ch=>({wv:!!(ch.lake&&ch.lake.wave),mo:(ch.lake&&ch.lake.morphed)||0,aff:ch.aff&&ch.aff.name||null,promos:ch.promos||0,lic:!!ch.licensed,col:!!ch.colorDone,colF:!!ch.colorFailed,bond:ch.bond?{st:ch.bond.st,tries:ch.bond.tries||0,kids:(ch.bond.kids||[]).length,name:ch.bond.name,dieBy:ch.bond.dieBy}:null});
   function jFrom(ch,fx,J0,roll){
     const a=ch.aff&&ch.aff.name||null;
     if(a&&a!==J0.aff)jr(ch,'join',{n:a});
@@ -2849,6 +2850,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(b0.st==='married'&&b.st==='lost')jr(ch,'spouseDie',{n:b.name,how:b.dieBy||''});
       if((b.kids||[]).length>b0.kids)jr(ch,'kid',{n:(b.kids[b.kids.length-1]||{}).n});}
     if(fx.lakeFlee)jr(ch,'lakeFlee');
+    if(fx.lakeWave&&ch.flags&&ch.flags.lake){const L=ch.lake||{};
+      if(fx.lakeWave==='fail'){if(J0.wv&&!L.wave)jr(ch,'drift');else jr(ch,'waveFail')}
+      else if(J0.wv&&!L.wave)jr(ch,fx.lakeWave==='sac'?'waveSac':'waveOk')}
+    if(ch.lake&&(ch.lake.morphed||0)>J0.mo)jr(ch,'morph');
+    if(fx.lakePirate)jr(ch,'pirate',{how:fx.lakePirate});
+    if(fx.lakeIndigo)jr(ch,'indigo',{how:fx.lakeIndigo});
     if(fx.lakeWhale)jr(ch,'lakeHunt');
     if(fx.famEnd)jr(ch,'famEnd',{n:fx.famEnd});
   }
@@ -2925,7 +2932,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(fx.limit==='dmg'){ch.limDmg=(ch.limDmg||0)+Lm.dmgPct*m;chips.push(`한계 돌파 · 주는 피해 +${Math.round(Lm.dmgPct*m*1000)/10}% (누적 ${Math.round(ch.limDmg*1000)/10}%)`)}
       else{ch.limStrike=(ch.limStrike||0)+Lm.strikePct*m;chips.push(`한계 돌파 · 적중 시 상대에게 추가 피해 (내 최대 HP의 ${Math.round(Lm.strikePct*m*1000)/10}%) (누적 ${Math.round(ch.limStrike*1000)/10}%)`)}}
     if(fx.pactPick){const PK=CFG.infinite.pact,x=[...PK.cons,...PK.buffs].find(q=>q.id===fx.pactPick);if(x){ch.pact=ch.pact||{};ch.pact[x.id]=Math.min(PK.cap,(ch.pact[x.id]||0)+1);chips.push(`${PK.cons.includes(x)?'제약':'버프'} · ${x.n} ${ch.pact[x.id]}번 · ${x.e}`)}}
-    if(fx.infCentury){const K=CFG.infinite.century;(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
+    if(fx.infCentury){const K=CFG.infinite.century;jr(ch,'century',{n:fx.infCentury});(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
     if(fx.famEnd){ch.famEnd=fx.famEnd;chips.push('이 판은 곧 끝난다')}
     if(fx.kidOld&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.kidOld&&!k.dead);if(kk){kk.dead=fx.kidWhy||'old';kk.dieYear=ch.year||0;chips.push(`${kk.n} · 눈을 감았다`);loseMind(ch,BD.kid.oldMind,m=>chips.push(m))}}
