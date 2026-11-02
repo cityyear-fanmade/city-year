@@ -286,7 +286,13 @@ export const CFG = {
     {key: 'spear', n: '혈창', lore: '피가 응고하기 전에 길게 뽑아낸 창이다. 먼저 움직인 쪽의 심장을 먼저 겨눈다.', fx: {atk: 5, spd: 2}, dice: [2, 4], wx: {hitBleed: 1, leadDmg: 8, hitB: 5}, e: '공+5 · 속+2 · 피해 2d4 · 명중+5 · 적중마다 출혈 +1 · 선공이면 그 라운드 첫 적중 피해 +8'}],
   /* G사 병기 출신(해금 출생): 13년차 몰락 뒤 보정(fall)을 받고 해결사로 등록한다. 몰락 4년 뒤(procFrom) 날개 시술(벌레팔·해충 병기)을 받으면 무기·보조 장비를 쥘 수 없지만 시술 무기(생체 변형)와 전용 보조무기를 쓰고, G사 책장(pack)을 얻는다.
      장비를 먹을 때마다(섭식) 능력치가 오르고(flat + 먹은 장비 능력치의 absorb), 4번·8번째 섭식에서 생체 변형이 강해진다(bio). 히든급(grade 5 이상) 장비를 hiddenNeed개 먹으면 왕족인자가 발현해 나방 공주·바퀴 황제·파리 대왕 중 하나로 변할 수 있다(forms: 능력치 fx · 전용 패시브 wx · 전용 책장 pack) */
-  gweapon: {fall: {maxHp: -15, atk: -2}, procFrom: 4, flat: {maxHp: 3}, absorb: 0.3, absorbKeys: ['atk', 'eva', 'spd', 'maxHp', 'check'], hiddenNeed: 3,
+  gweapon: {fall: {maxHp: -15, atk: -2}, procFrom: 4, flat: {maxHp: 3}, absorb: 0.3,
+    /* 히든급 장비를 1·2·3개째 먹을 때 받는 보너스, 왕족 변형 뒤에는 히든을 먹을 때마다 변형의 고유 능력이 한 단계씩(최대 growMax) 자란다 */
+    hiddenBonus: [{fx: {dmgB: 2}, e: '피해 +2'}, {fx: {atk: 4, spd: 1}, e: '공격 +4 · 속도 +1'}, {fx: {maxHp: 20, eva: 2}, e: '최대 HP +20 · 회피 +2'}], growMax: 3,
+    grow: {
+      moth: [{fx: {eva: 4}, wx: {hitKw: [['sink', 1]]}, e: '적중마다 침잠 +1 더 · 회피 +4'}, {fx: {spd: 2, check: 2}, wx: {thornKw: [['sink', 1]]}, e: '맞을 때마다 침잠 +1 더 · 속도 +2 · 판정 +2'}, {fx: {eva: 6, maxHp: 20}, wx: {hitKw: [['sink', 1]]}, e: '적중마다 침잠 +1 더 · 회피 +6 · 최대 HP +20'}],
+      roach: [{fx: {maxHp: 30, dr: 2}, e: '최대 HP +30 · 받는 피해 −2%'}, {fx: {atk: 4, dr: 2}, e: '공격 +4 · 받는 피해 −2%'}, {fx: {maxHp: 50, dr: 2}, wx: {survive: 1}, e: '최대 HP +50 · 받는 피해 −2% · 전투마다 치명타를 한 번 더 버틴다'}],
+      fly: [{fx: {atk: 4, dmgB: 1}, wx: {crush: 3}, e: '첫 적중 피해 +3 더 · 공격 +4 · 피해 +1'}, {fx: {spd: 2, dmgB: 1}, wx: {hitKw: [['rupture', 1]]}, e: '적중마다 파열 +1 더 · 속도 +2 · 피해 +1'}, {fx: {atk: 6, dmgB: 2}, wx: {crush: 4}, e: '첫 적중 피해 +4 더 · 공격 +6 · 피해 +2'}]}, absorbKeys: ['atk', 'eva', 'spd', 'maxHp', 'check'], hiddenNeed: 3,
     pack: ['gw_0', 'gw_1', 'gw_2', 'gw_3', 'gw_4', 'gw_5', 'gw_6', 'gw_7', 'gw_8', 'gw_9'],
     bio: [{at: 4, fx: {atk: 3, dmgB: 2}, e: '생체 변형이 한 단계 자랐다'}, {at: 8, fx: {atk: 4, dmgB: 3, spd: 1}, e: '생체 변형이 두 번째로 자랐다'}],
     proc: {

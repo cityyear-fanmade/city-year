@@ -1995,6 +1995,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.gw.eaten=(ch.gw.eaten||0)+1;const hid=(item.grade||0)>=5;if(hid)ch.gw.hidden=(ch.gw.hidden||0)+1;
     chips.push(`${item.n}${(c=>{const f=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:0;return f?'을':'를'})(String(item.n).slice(-1).charCodeAt(0))} 먹었다 · 섭식 ${ch.gw.eaten}번${hid?` · 히든 ${ch.gw.hidden}/${Z.hiddenNeed}`:''} · ${Object.entries(fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · ')}`);
     for(const L of Z.bio)if(ch.gw.eaten===L.at){addStats(ch.stats,L.fx);addAbs(L.fx);chips.push(`생체 변형 · ${L.e} · ${Object.entries(L.fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='dmgB'?'피해':k)} +${v}`).join(' · ')}`)}
+    if(hid){
+      const HB=Z.hiddenBonus[(ch.gw.hidden||1)-1];
+      if(HB){addStats(ch.stats,HB.fx);if(HB.fx.maxHp)ch.hp+=HB.fx.maxHp;addAbs(HB.fx);chips.push(`히든 ${ch.gw.hidden}번째 · ${HB.e}`)}
+      if(ch.gw.form&&Z.grow&&Z.grow[ch.gw.form]){const gl=ch.gw.fg||0;
+        if(gl<Z.growMax){const GR=Z.grow[ch.gw.form][gl];ch.gw.fg=gl+1;addStats(ch.stats,GR.fx||{});if((GR.fx||{}).maxHp)ch.hp+=GR.fx.maxHp;addAbs(GR.fx||{});
+          const w=ch.gw.wx=ch.gw.wx||{};for(const [k,v] of Object.entries(GR.wx||{})){if(Array.isArray(v))w[k]=(w[k]||[]).concat(v);else if(typeof v==='number')w[k]=(w[k]||0)+v;else w[k]=v}
+          chips.push(`${Z.forms[ch.gw.form].n} 성장 ${ch.gw.fg}/${Z.growMax} · ${GR.e}`)}}}
     if(!ch.gw.royal&&(ch.gw.hidden||0)>=Z.hiddenNeed){ch.gw.royal=true;chips.push('왕족 인자가 깨어난다 · 다음 해에 해충황족으로 변할 수 있다')}
     return true}
   function gwEatStash(ch,i){const it=(ch.stash||[])[i];if(!it)return null;const chips=[];if(!gwEat(ch,it,chips))return null;ch.stash.splice(i,1);return chips}

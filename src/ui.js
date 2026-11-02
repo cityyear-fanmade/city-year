@@ -788,7 +788,7 @@ export function startUI(E,app){
       ${(()=>{const g=ch.gw;if(!g||!g.proc||!(g.eaten>0))return '';const Z_=CFG.gweapon,nm=k=>({maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'사건 판정',dmgB:'피해',hit:'명중'}[k]||k),abs=g.abs;
         const sum=abs?Object.entries(abs).filter(([,v])=>v).map(([k,v])=>`<div class="invr"><span>${nm(k)}</span><b class="mono">+${v}</b></div>`).join(''):'<p class="small dim">이 판은 합계가 기록되기 전에 먹은 장비가 있어 합계를 알 수 없다. 앞으로 먹는 것부터 쌓인다.</p>';
         const ate=(g.ate||[]).slice().reverse().map(x=>`<div class="invr"><span>${esc(x.n)}${x.g>=5?' <span class="chip" style="color:var(--gold);border-color:var(--gold)">히든</span>':''}</span><span class="mono small dim">${Object.entries(x.fx).filter(([,v])=>v).map(([k,v])=>nm(k)+' +'+v).join(' · ')}</span></div>`).join('');
-        return stSec('gwabs','흡수한 능력치 · 섭식 '+g.eaten+'번 · 히든 '+(g.hidden||0)+'/'+Z_.hiddenNeed,`<div>${sum}</div>${ate?`<div class="eyebrow" style="margin-top:8px">먹은 장비 (최근 순)</div>${ate}`:''}`,true)})()}
+        return stSec('gwabs','흡수한 능력치 · 섭식 '+g.eaten+'번 · 히든 '+(g.hidden||0)+'/'+Z_.hiddenNeed,`<div>${sum}</div>${g.form&&Z_.forms[g.form]?`<div class="invr" style="margin-top:6px"><span>${esc(Z_.forms[g.form].n)} 성장</span><b class="mono">${g.fg||0}/${Z_.growMax}</b></div>`:''}${ate?`<div class="eyebrow" style="margin-top:8px">먹은 장비 (최근 순)</div>${ate}`:''}`,true)})()}
       ${lakeLog}${kid?stSec('kid','성장기',kid,false):''}
       ${base?stSec('base','태어났을 때의 능력치 (변하지 않음)',base,false):''}
       ${stSec('now','지금 · 장비 보정과 특수 상태',vStatNow(),true)}</div>`;
