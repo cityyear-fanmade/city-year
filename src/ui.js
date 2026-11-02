@@ -2098,7 +2098,26 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     else P.push('어디에도 속하지 않았다. 혼자 움직이는 편이 낫다는 말은 처음 한 말 그대로 끝까지 남았다.');
     if(c.licensed&&!c.job)P.push(`해결사로서는 ${c.rank}${T.rankUnit}${c.title?` · ${E_(c.title)}`:''}에 닿았다. 의뢰서에 적힌 이름 하나하나가 ${yr}년 동안 쌓은 기록이다.`);
     else if(c.title)P.push(`${jp(E_(c.title),'이라는','라는')} 이름이 붙었다. 누가 먼저 불렀는지는 아무도 기억하지 못한다.`);
-    if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${[...new Set(c.beaten)].map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
+    /* 일지(c.journal)로 엮는 행적: 시험·인연·칭호·호수·이름난 상대. 일지가 비어 있으면 예전 문장 */
+    {const JL=c.journal||[],jl=k=>JL.filter(x=>x.k===k),S=[];
+      const ex=jl('exam'),exF=ex.filter(x=>!x.ok).length,exP=ex.filter(x=>x.ok).length,co=jl('color');
+      if(ex.length||co.length){const t=[];
+        if(exF&&exP)t.push(`승급 시험에서 ${exF}번 떨어지고도 끝내 ${exP}번 통과했다`);else if(exF)t.push(`승급 시험에서 ${exF}번 떨어졌다`);else if(exP)t.push(`승급 시험을 ${exP}번 통과했다`);
+        const cf=co.filter(x=>!x.ok).length,cp=co.filter(x=>x.ok).length;if(cf&&cp)t.push('특색 시험에서 한 번 떨어진 뒤 다시 통과했다');else if(cp)t.push('특색 시험을 통과했다');else if(cf)t.push('특색 시험에서 떨어졌다');
+        if(t.length)S.push(t.join('. ')+'.')}
+      {const m=jl('bondMeet')[0],rf=jl('refused').length,mr=jl('marry')[0],lf=jl('left')[0],sd=jl('spouseDie')[0],kids=jl('kid');
+        if(m&&(rf||lf||sd)){const n=E_(m.n),t=[`${J.eul(n)} 만났다`];if(rf)t.push(`청혼은 ${rf}번 받아들여지지 않았다`);
+          if(lf)t.push(`${J.eun(E_(lf.n))} 말없이 떠났다`);
+          else if(mr){t.push('끝내 결혼했다');if(kids.length)t.push(kids.length>1?`아이 ${kids.map(k=>E_(k.n)).join(' · ')}${jp(kids.map(k=>E_(k.n)).join(' · '),'을','를').slice(-1)} 두었다`:`아이 ${J.i(E_(kids[0].n))} 태어났다`);
+            if(sd)t.push(sd.how==='left'?`${sd.y}년차, ${J.eun(E_(sd.n))} 원망 속에 곁을 떠났다`:sd.how==='choice'?`${sd.y}년차, ${J.eun(E_(sd.n))} 인간으로 눈을 감았다`:`${sd.y}년차, ${J.eul(E_(sd.n))} 떠나보냈다`)}
+          S.push(t.join('. ')+'.')}}
+      {const tt=jl('title').map(x=>x.n).filter((v,i,a)=>a.indexOf(v)===i).slice(0,3);if(tt.length)S.push(tt.map(x=>'「'+E_(x)+'」').join(' · ')+(tt.length>1?'라는 이름들이 붙었다.':'라는 이름이 붙었다.'))}
+      {const fl=jl('lakeFlee'),bs=jl('boss'),lk=bs.filter(x=>/^lake_/.test(x.id||'')),nb=bs.filter(x=>!/^lake_/.test(x.id||''));
+        if(fl.length||lk.length){const t=[];if(fl.length)t.push(`${fl[0].y}년차, 처음 마주친 파도에서 도망쳤다`);
+          if(lk.length)t.push(`고래 ${lk.length}마리를 쓰러뜨렸다`);
+          if(fl.length&&lk.length)t.push('도망치던 파도를 이제는 사냥하는 쪽이 되었다');S.push(t.join('. ')+'.')}
+        if(nb.length){const names=nb.slice(0,2).map(x=>E_(x.n));S.push(nb.length>2?`${names.join(', ')} 등 ${nb.length}명의 이름난 상대와 맞서 이겼다. 이름이 기록에 남지 않은 싸움도 있었다.`:`${names.join(', ')}${nb.length>1?'과 맞서':'과 맞서'} 이겼다.`.replace(/(.)과 맞서/,(m,ch)=>jp(ch,'과','와').slice(1)+' 맞서'))}}
+      if(S.length)S.forEach(t=>P.push(t));else if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${[...new Set(c.beaten)].map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);}
     /* 은원 장부: 도운 일·등 돌린 일·지나친 일이 쌓였으면 한 줄씩 남긴다 */
     {const L=c.ledger||{};
       if((L.help||0)>=4)P.push('은혜는 갚는 쪽이 먼저 기억한다고 했다. 도운 이들의 얼굴이 도시 곳곳에 남아, 낯선 길에서도 고개를 끄덕여 주었다.');
