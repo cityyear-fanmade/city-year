@@ -2104,11 +2104,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     {const JL=c.journal||[],jl=k=>JL.filter(x=>x.k===k),S=[];
       const ex=jl('exam'),exF=ex.filter(x=>!x.ok).length,exP=ex.filter(x=>x.ok).length,co=jl('color');
       if(ex.length||co.length){const t=[];
-        if(exF&&exP)t.push(`승급 시험에서 ${exF}번 떨어지고도 끝내 ${exP}번 통과했다`);else if(exF)t.push(`승급 시험에서 ${exF}번 떨어졌다`);else if(exP)t.push(`승급 시험을 ${exP}번 통과했다`);
+        if(exF&&exP)t.push(`승급 시험을 ${exF+exP}번 치러 ${exF}번 떨어지고 ${exP}번 통과했다`);else if(exF)t.push(`승급 시험에서 ${exF}번 떨어졌다`);else if(exP)t.push(`승급 시험을 ${exP}번 통과했다`);
         const cf=co.filter(x=>!x.ok).length,cp=co.filter(x=>x.ok).length;if(cf&&cp)t.push('특색 시험에서 한 번 떨어진 뒤 다시 통과했다');else if(cp)t.push('특색 시험을 통과했다');else if(cf)t.push('특색 시험에서 떨어졌다');
         if(t.length)S.push(t.join('. ')+'.')}
       {const m=jl('bondMeet')[0],rf=jl('refused').length,mr=jl('marry')[0],lf=jl('left')[0],sd=jl('spouseDie')[0],kids=jl('kid');
-        if(m&&(rf||lf||sd)){const n=E_(m.n),t=[`${J.eul(n)} 만났다`];if(rf)t.push(`청혼은 ${rf}번 받아들여지지 않았다`);
+        if(m&&(rf||lf||sd)){const n=E_(m.n||(c.bond&&c.bond.name)||'그 사람'),t=[`${J.eul(n)} 만났다`];if(rf)t.push(`청혼은 ${rf}번 받아들여지지 않았다`);
           if(lf)t.push(`${J.eun(E_(lf.n))} 말없이 떠났다`);
           else if(mr){t.push('끝내 결혼했다');if(kids.length)t.push(kids.length>1?`아이 ${kids.map(k=>E_(k.n)).join(' · ')}${jp(kids.map(k=>E_(k.n)).join(' · '),'을','를').slice(-1)} 두었다`:`아이 ${J.i(E_(kids[0].n))} 태어났다`);
             if(sd)t.push(sd.how==='left'?`${sd.y}년차, ${J.eun(E_(sd.n))} 원망 속에 곁을 떠났다`:sd.how==='choice'?`${sd.y}년차, ${J.eun(E_(sd.n))} 인간으로 눈을 감았다`:`${sd.y}년차, ${J.eul(E_(sd.n))} 떠나보냈다`)}
@@ -2117,8 +2117,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       {const fl=jl('lakeFlee'),bs=jl('boss'),lk=bs.filter(x=>/^lake_/.test(x.id||'')),nb=bs.filter(x=>!/^lake_/.test(x.id||'')),
           wOk=jl('waveOk').length,wSac=jl('waveSac').length,wFail=jl('waveFail').length,dr=jl('drift').length,mo=jl('morph').length,pi=jl('pirate'),ind=jl('indigo');
         if(fl.length||lk.length||wOk||wSac||dr||mo||pi.length||ind.length){const t=[];
-          if(fl.length)t.push(`${fl[0].y}년차, 처음 마주친 고래의 그림자에서 도망쳤다`);
-          if(wOk+wSac||dr||wFail){const w=[];if(wOk+wSac)w.push(`호수의 파도를 ${wOk+wSac}번 넘었다`);if(wSac)w.push(`선원 ${wSac}명을 파도에 내주었다`);if(dr)w.push(`${dr}번은 배가 반파되어 표류했다`);else if(wFail&&!(wOk+wSac))w.push('파도에 배가 크게 상했다');t.push(w.join('. '))}
+          if(fl.length)t.push(`${fl[0].y}년차, 처음 마주친 고래의 그림자에서 도망쳤다${fl.length>2?`. 그 뒤로도 ${fl.length-1}번 더 도망쳤다`:fl.length>1?'. 그 뒤로도 한 번 더 도망쳤다':''}`);
+          if(wOk+wSac||dr||wFail){const w=[];if(wOk+wSac)w.push(`호수의 파도를 ${wOk+wSac}번 넘었다`);if(wSac)w.push(`선원 ${wSac}명을 파도에 내주었다`);if(dr)w.push(`${dr}번은 배가 반파되어 표류했다`);else if(wFail)w.push(`파도에 배가 ${wFail}번 크게 상했다`);t.push(w.join('. '))}
           if(mo)t.push(`선원 ${mo}명이 젖은 옷만 남기고 호수로 돌아갔다`);
           if(pi.length)t.push('쌍갈고리 해적단과 얽혔다');
           if(ind.length)t.push(ind.some(x=>x.how==='learn')?'쪽빛 노인에게서 재앙을 죽이는 법을 배웠다':ind.some(x=>x.how==='fight')?'쪽빛 노인과 칼을 맞댔다':'쪽빛 노인을 만났다');
