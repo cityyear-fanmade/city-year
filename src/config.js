@@ -288,6 +288,8 @@ export const CFG = {
      장비를 먹을 때마다(섭식) 능력치가 오르고(flat + 먹은 장비 능력치의 absorb), 4번·8번째 섭식에서 생체 변형이 강해진다(bio). 히든급(grade 5 이상) 장비를 hiddenNeed개 먹으면 왕족인자가 발현해 나방 공주·바퀴 황제·파리 대왕 중 하나로 변할 수 있다(forms: 능력치 fx · 전용 패시브 wx · 전용 책장 pack) */
   gweapon: {fall: {maxHp: -15, atk: -2}, procFrom: 4, flat: {}, absorb: 0.3,
     /* 섭식: 장비의 등급(값)과 종류로 오르는 양이 정해진다. 등급 값 eatVal에 칸별 배율 eatSlot을 곱한 것 + 장비 능력치의 absorb 비율(칸마다 흡수하는 능력치 absorbBy). 싼 장비를 많이 먹어도 거의 오르지 않는다 */
+    /* 같은 장비(같은 종류)를 또 먹으면: every가 0이면 처음 한 번만 오르고 이후는 오르지 않는다. 5로 두면 5번째마다 오른다. 오르지 않은 섭식은 섭식·히든 횟수에도 세지 않는다 */
+    same: {every: 0},
     eatVal: [0, 1, 2, 4, 6, 9], eatSlot: {weapon: {atk: 1}, armor: {maxHp: 3}, aug: {eva: 0.5, spd: 0.5}},
     absorbBy: {weapon: ['atk', 'spd'], armor: ['maxHp', 'eva'], aug: ['atk', 'eva', 'spd', 'check']},
     /* 히든급 장비를 1·2·3개째 먹을 때 받는 보너스, 왕족 변형 뒤에는 히든을 먹을 때마다 변형의 고유 능력이 한 단계씩(최대 growMax) 자란다 */

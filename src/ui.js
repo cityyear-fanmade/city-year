@@ -1011,7 +1011,7 @@ export function startUI(E,app){
       ${row('weapon','무기')}${row('armor','방어구')}${row('aug','보조 장비')}</div>`;
   }
   /* G사 병기: 먹으면 오르는 능력치를 미리 보여 준다 */
-  const eatTxt=it=>{const nm={maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'판정',dmgB:'피해',hit:'명중'},f=E.gwEatFx(it);return Object.entries(f).map(([k,v])=>`${nm[k]||k} +${v}`).join(' · ')||'오르는 것이 거의 없다'};
+  const eatTxt=it=>{const nm={maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'판정',dmgB:'피해',hit:'명중'},d=E.gwEatDue(G.ch,it);if(!d.gives)return `같은 장비라 오르지 않는다 (${d.n}번째${d.every?' · '+d.every+'번마다 오른다':''})`;const f=E.gwEatFx(it);return Object.entries(f).map(([k,v])=>`${nm[k]||k} +${v}`).join(' · ')||'오르는 것이 거의 없다'};
   const slotLbl=sl=>D.slots[sl]||(sl==='any'?'강화 재료':'기타');
   const auxLbl=it=>it.kind?it.kind+' · '+({'공':'공격형','방':'방어형','유':'유틸형'}[it.tag]||it.tag):slotLbl(it.slot);
   function vShop(){
