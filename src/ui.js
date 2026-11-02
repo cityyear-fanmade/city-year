@@ -1188,7 +1188,7 @@ export function startUI(E,app){
     const cl=el.cloneNode(true),c=G.ch;cl.removeAttribute('id');
     cl.querySelectorAll('button,script').forEach(x=>x.remove());cl.querySelectorAll('[data-a]').forEach(x=>x.removeAttribute('data-a'));
     const res=((cl.querySelector('.eyebrow')||{}).textContent||'').trim();
-    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),v:UPDATES.v,name:c.name||'',lover:(c.bond&&c.bond.name)||'',lost:!!(c.bond&&c.bond.st==='lost'),lostAge:!!(c.bond&&c.bond.dieBy==='age'),wp:(E.isWs(c)&&c.gear.weapon&&c.gear.weapon.n)||'',kids:((c.bond&&c.bond.kids)||[]).filter(k=>!k.pend).map(k=>k.n),line:careerLine(c),res,yr:G.year,win:!!UI.endWin,dy:c.daily||'',html:cl.outerHTML};
+    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),v:UPDATES.v,name:c.name||'',lover:(c.bond&&c.bond.name)||'',lost:!!(c.bond&&c.bond.st==='lost'),lostAge:!!(c.bond&&c.bond.dieBy==='age'),wp:(E.isWs(c)&&c.gear.weapon&&c.gear.weapon.n)||'',kids:((c.bond&&c.bond.kids)||[]).filter(k=>!k.pend).map(k=>k.n),line:careerLine(c),sum:(()=>{try{return buildSumCard().innerHTML}catch(e){return ''}})(),res,yr:G.year,win:!!UI.endWin,dy:c.daily||'',html:cl.outerHTML};
   }
   function chronAuto(){
     const e=chronSnap();if(!e)return;const o=loadChron();
@@ -1219,7 +1219,7 @@ export function startUI(E,app){
   function vChronView(){
     const o=loadChron(),sel=UI.chSel||{},e=(o[sel.tab]||[]).find(x=>x.id===sel.id);
     if(!e)return `<div class="panel"><p class="small dim">기록을 찾을 수 없다.</p></div><button class="btn primary" data-a="chron">돌아가기</button>`;
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장${e.v?' · '+esc(e.v):''}</div></div><div id="chShot" class="stack" style="gap:12px">${e.html}</div>${chMsgP()}${UI.imgUrl&&UI.screen==='chronview'?`<img alt="일대기 이미지" src="${UI.imgUrl}" style="width:100%;border-radius:6px"><p class="small dim">이미지를 길게 눌러(또는 오른쪽 클릭) 저장한다.</p>`:''}<button class="btn" data-a="chimg" data-i="${sel.tab}:${e.id}"><b>이미지로 저장 · 공유</b><span class="dim small">이 결과 화면을 그림 파일로 만든다</span></button>${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장${e.v?' · '+esc(e.v):''}</div></div><div id="chShot" class="stack" style="gap:12px">${e.html}</div>${chMsgP()}${UI.imgUrl&&UI.screen==='chronview'?`<img alt="일대기 이미지" src="${UI.imgUrl}" style="width:100%;border-radius:6px"><p class="small dim">이미지를 길게 눌러(또는 오른쪽 클릭) 저장한다.</p>`:''}<button class="btn" data-a="chimg" data-i="${sel.tab}:${e.id}"><b>이미지로 저장 · 공유</b><span class="dim small">이 결과 화면을 그림 파일로 만든다</span></button>${e.sum?`<button class="btn" data-a="chimg2" data-i="${sel.tab}:${e.id}"><b>정리해서 저장 · 공유</b><span class="dim small">능력치·전투 기록·덱을 한 장으로 요약한 그림</span></button>`:''}${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
   }
   /* 기록실 */
   /* 난이도: easy(쉬움) / normal(보통) / hard(하드). 예전 하드 켜기 설정(cityYearHard)도 이어 받는다 */
@@ -2903,14 +2903,16 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='end'&&endCanResume()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     cont(){const o=loadSave();if(!o)return;G=o.G;E.ensurePacks(G.ch);C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
-    async chimg(v){
+    async chimg(v,sum){
       const [tab,id]=String(v).split(':'),e=(loadChron()[tab]||[]).find(x=>x.id===id);if(!e)return;
-      const cv=await shotEnd('chShot');if(!cv){UI.chMsg=UI.shotWhy==='load'?'이미지 도구를 불러오지 못했다. 인터넷 연결을 확인하거나 앱 속 브라우저라면 크롬·사파리로 열어 다시 시도해 주세요.':'이 기록은 화면이 너무 길어 이미지로 만들지 못했다. 기록 화면을 직접 캡처해 저장해 주세요.';render();return}
-      const name=`도시의한해_일대기_${(e.v||'')}_${e.id}.png`,blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+      let tmp=null;if(sum){if(!e.sum)return;tmp=document.createElement('div');tmp.id='endSum';tmp.style.cssText='position:fixed;left:-10000px;top:0;width:420px;display:flex;flex-direction:column;gap:12px;padding:0;color:var(--fg);background:var(--bg);font:14px/1.5 var(--sans,"Noto Sans KR",sans-serif)';tmp.innerHTML=e.sum;document.body.appendChild(tmp)}
+      let cv;try{cv=await shotEnd(sum?'endSum':'chShot')}finally{if(tmp)tmp.remove()}if(!cv){UI.chMsg=UI.shotWhy==='load'?'이미지 도구를 불러오지 못했다. 인터넷 연결을 확인하거나 앱 속 브라우저라면 크롬·사파리로 열어 다시 시도해 주세요.':'이 기록은 화면이 너무 길어 이미지로 만들지 못했다. 기록 화면을 직접 캡처해 저장해 주세요.';render();return}
+      const name=`도시의한해_${sum?'요약':'일대기'}_${(e.v||'')}_${e.id}.png`,blob=await new Promise(r=>cv.toBlob(r,'image/png'));
       try{const f=new File([blob],name,{type:'image/png'});if(touchShare()&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(er){if(er&&er.name==='AbortError')return}
       try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(er){}
       if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');UI.chMsg='';render()}
     },
+    chimg2(v){return ACT.chimg(v,true)},
     chron(){UI.delAsk=null;UI.screen='chron';render()},
     rfold(k){const f=recFold(),i=f.indexOf(k);if(i<0)f.push(k);else f.splice(i,1);try{localStorage.setItem(RFK,JSON.stringify(f))}catch(e){}render()},
     chtab(k){UI.delAsk=null;UI.chTab=k==='fame'?'fame':'life';UI.screen='chron';render()},
