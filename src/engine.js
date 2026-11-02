@@ -1985,15 +1985,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const R=gwRoute(),A=R&&R.act2;if(A&&(G.year||0)>=A[0].from){const e=A[ch.gwAct||0];if(e&&G.year>=e.from){ch.gwAct=(ch.gwAct||0)+1;return JSON.parse(JSON.stringify(e.ev))}}
     return null}
   /* 장비를 먹는다(섭식): 장비는 사라지고 능력치가 오른다(먹을 때마다 flat + 장비 능력치의 일부). 히든급(grade 5 이상)을 hiddenNeed개 먹으면 왕족 인자가 발현한다 */
+  /* 먹을 때 오르는 능력치: 등급 값 × 칸별 배율(무기는 공격, 방어구는 최대 HP, 보조 장비는 회피·속도) + 장비 능력치의 일부(칸마다 정해진 능력치만) */
+  function gwEatFx(item){
+    const Z=CFG.gweapon,sl=item.slot||'weapon',val=Z.eatVal[Math.min(Z.eatVal.length-1,item.grade||0)]||0,fx=Object.assign({},Z.flat);
+    for(const [k,m] of Object.entries(Z.eatSlot[sl]||{})){const v=Math.floor(val*m);if(v>0)fx[k]=(fx[k]||0)+v}
+    for(const k of (Z.absorbBy[sl]||Z.absorbKeys)){const v=Math.floor(((item.fx||{})[k]||0)*Z.absorb);if(v>0)fx[k]=(fx[k]||0)+v}
+    return fx}
   function gwEat(ch,item,chips){
     const Z=CFG.gweapon;if(!ch.gw||!ch.gw.proc||!item)return false;
-    const fx=Object.assign({},Z.flat);
-    for(const k of Z.absorbKeys){const v=Math.floor(((item.fx||{})[k]||0)*Z.absorb);if(v>0)fx[k]=(fx[k]||0)+v}
+    const fx=gwEatFx(item);
     addStats(ch.stats,fx);if(fx.maxHp)ch.hp+=fx.maxHp;
     const abs=ch.gw.abs=ch.gw.abs||{},addAbs=o=>{for(const [k,v] of Object.entries(o))abs[k]=(abs[k]||0)+v};addAbs(fx);
     (ch.gw.ate=ch.gw.ate||[]).push({n:item.n,g:item.grade||0,fx:Object.assign({},fx)});if(ch.gw.ate.length>20)ch.gw.ate.shift();
     ch.gw.eaten=(ch.gw.eaten||0)+1;const hid=(item.grade||0)>=5;if(hid)ch.gw.hidden=(ch.gw.hidden||0)+1;
-    chips.push(`${item.n}${(c=>{const f=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:0;return f?'을':'를'})(String(item.n).slice(-1).charCodeAt(0))} 먹었다 · 섭식 ${ch.gw.eaten}번${hid?` · 히든 ${ch.gw.hidden}/${Z.hiddenNeed}`:''} · ${Object.entries(fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · ')}`);
+    chips.push(`${item.n}${(c=>{const f=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:0;return f?'을':'를'})(String(item.n).slice(-1).charCodeAt(0))} 먹었다 · 섭식 ${ch.gw.eaten}번${hid?` · 히든 ${ch.gw.hidden}/${Z.hiddenNeed}`:''} · ${Object.entries(fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · ')||'오른 것이 거의 없다'}`);
     for(const L of Z.bio)if(ch.gw.eaten===L.at){addStats(ch.stats,L.fx);addAbs(L.fx);chips.push(`생체 변형 · ${L.e} · ${Object.entries(L.fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='dmgB'?'피해':k)} +${v}`).join(' · ')}`)}
     if(hid){
       const HB=Z.hiddenBonus[(ch.gw.hidden||1)-1];
@@ -4055,5 +4060,5 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    bondEvent,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    bondEvent,gwEatFx,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

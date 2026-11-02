@@ -733,7 +733,7 @@ export function startUI(E,app){
     const gtabs=st.length?`<div class="seg" style="margin:6px 0">${[['all','전체',st.length],...slotKeys.map(k=>[k,D.slots[k],cnt(k)])].map(([k,n,c])=>`<button class="${gt===k?'on':''}" data-a="gtab" data-i="${k}">${n} ${c}</button>`).join('')}</div>`:'';
     const sl=order.map(i=>{const g=st[i],cur=ch.gear[g.slot],df=fxDiff(g,cur);
       return `<div class="invr stash"><span>${slotLbl(g.slot)}</span><div class="stack" style="gap:2px;min-width:0"><b>${esc(g.n)}</b><span class="mono small" style="color:var(--gold)">${esc(g.e||'')}</span>${df?`<span class="mono small">지금 장비보다 · ${df}</span>`:''}</div>
-        ${g.slot==='any'?'<span class="small dim">공방 해결사가 녹여 쓰는 재료</span>':cbt?'<span class="small dim">전투 중 교체 불가</span>':E.equipWhy(ch,g)?`<span class="small bad">${esc(E.equipWhy(ch,g))}</span>`:`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}${ch.gw&&ch.gw.proc&&!cbt?`<button class="chip warn" data-a="geats" data-i="${i}">먹는다${(g.grade||0)>=5?' (히든)':''}</button>`:''}</div>`}).join('');
+        ${g.slot==='any'?'<span class="small dim">공방 해결사가 녹여 쓰는 재료</span>':cbt?'<span class="small dim">전투 중 교체 불가</span>':E.equipWhy(ch,g)?`<span class="small bad">${esc(E.equipWhy(ch,g))}</span>`:`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}${ch.gw&&ch.gw.proc&&!cbt?`<button class="chip warn" data-a="geats" data-i="${i}" title="${esc(eatTxt(g))}">먹는다 · ${eatTxt(g)}${(g.grade||0)>=5?' (히든)':''}</button>`:''}</div>`}).join('');
     const w=ch.gear.weapon,need=E.bonNeed(ch);
     const up=w&&(w.id==='bonatelli'||w.id==='star')?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b class="serif">${esc(w.n)}</b><span class="mono" style="color:var(--gold)">강화 ${w.lvl}/${w.id==='star'?CFG.star.max:CFG.bon.max}</span></div>
       ${need==null?'<p class="small dim">최대로 강화했다.</p>':`<p class="small">보관함의 장비 하나를 녹여 한 단계 강화한다. 다음 단계 재료 · ${need?need+'등급 이상':'아무 장비'}${need>=5?' (유물·히든 장비)':''}</p>
@@ -933,7 +933,7 @@ export function startUI(E,app){
           <div class="panel stack" style="gap:4px;border-color:var(--gold)"><span class="eyebrow">새 장비</span><b>${esc(it.n)}</b><span class="mono small" style="color:var(--gold)">${esc(it.e||'')}</span>${it.t?`<span class="small dim" style="line-height:1.55">${esc(it.t)}</span>`:''}</div></div>
         <div class="mono small">바꾸면 · ${df||'능력치 변화 없음'}</div>
         ${E.equipWhy(ch,it)?`<p class="small bad">장착할 수 없다 · ${esc(E.equipWhy(ch,it))}</p>`:`<button class="btn primary" data-a="gwear">장착한다${cur?` · ${esc(cur.n)}은(는) 보관함으로`:''}</button>`}
-        ${ch.gw&&ch.gw.proc?`<button class="btn" data-a="geat"><b>먹는다</b><span class="mono small dim">섭식 ${(ch.gw.eaten||0)+1}번째 · 능력치 상승${(it.grade||0)>=5?` · 히든 ${(ch.gw.hidden||0)+1}/${CFG.gweapon.hiddenNeed}`:''}</span></button>`:''}
+        ${ch.gw&&ch.gw.proc?`<button class="btn" data-a="geat"><b>먹는다</b><span class="mono small dim">섭식 ${(ch.gw.eaten||0)+1}번째 · ${eatTxt(it)}${(it.grade||0)>=5?` · 히든 ${(ch.gw.hidden||0)+1}/${CFG.gweapon.hiddenNeed}`:''}</span></button>`:''}
         <button class="btn" data-a="gkeep">보관함에 넣어 둔다</button>
         <p class="small dim">보관함의 장비는 전투 밖이면 언제든 가방 → 장비에서 바꿔 낄 수 있다.</p>`,'offer',false);
     }
@@ -1010,6 +1010,8 @@ export function startUI(E,app){
       ${UI.enchMsg?`<p class="good small">${esc(UI.enchMsg)}</p>`:''}
       ${row('weapon','무기')}${row('armor','방어구')}${row('aug','보조 장비')}</div>`;
   }
+  /* G사 병기: 먹으면 오르는 능력치를 미리 보여 준다 */
+  const eatTxt=it=>{const nm={maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'판정',dmgB:'피해',hit:'명중'},f=E.gwEatFx(it);return Object.entries(f).map(([k,v])=>`${nm[k]||k} +${v}`).join(' · ')||'오르는 것이 거의 없다'};
   const slotLbl=sl=>D.slots[sl]||(sl==='any'?'강화 재료':'기타');
   const auxLbl=it=>it.kind?it.kind+' · '+({'공':'공격형','방':'방어형','유':'유틸형'}[it.tag]||it.tag):slotLbl(it.slot);
   function vShop(){
