@@ -787,3 +787,10 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .pcard.pc-c{border-color:#8a3a3a;background:#241616}.pcard.pc-c .pk{color:#e07a7a}
 .pcard.pc-b{border-color:var(--gold);background:#221e12}.pcard.pc-b .pk{color:var(--gold)}
 .pcard:active{transform:translateY(1px)}
+
+/* 배경음악 목록: 버튼을 누르면 곡 이름이 펼쳐지고 바로 고른다 */
+.stylebox{position:relative;display:inline-flex}
+.stylepop{position:absolute;left:0;top:42px;z-index:40;min-width:128px;padding:6px;border:1px solid var(--line2);border-radius:14px;background:color-mix(in srgb,var(--panel) 96%,transparent);display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.stylepop button{font:600 13px/1 var(--mono);text-align:left;color:var(--dim);background:transparent;border:1px solid transparent;border-radius:10px;padding:9px 12px;cursor:pointer}
+.stylepop button:hover{background:color-mix(in srgb,var(--gold) 12%,transparent);color:var(--fg)}
+.stylepop button.on{color:var(--gold);border-color:var(--gold)}

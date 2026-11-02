@@ -535,7 +535,7 @@ export function startUI(E,app){
   function quickAudio(){
     if(!BGM.supported)return '';
     const on=BGM.isOn(),v=Math.round(BGM.vol()*100),ic=v===0?'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="none"/>':'<path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none"/>';
-    return `<div class="qaudio"><div class="qrow"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><button class="qb" data-a="qstyle" aria-label="배경음악 스타일 바꾸기" title="스타일">${{passion:'불길',library:'도서관',wave:'물결',ext:'시험곡'}[BGM.style()]||'고요'}</button></div>${SFX.supported?`<div class="qrow"><button class="qb${SFXS.on?' on':''}" data-a="qsfx" aria-label="효과음 ${SFXS.on?'끄기':'켜기'}" title="효과음">${SFXS.on?'효과음 켬':'효과음 끔'}</button></div>`:''}</div>
+    return `<div class="qaudio"><div class="qrow"><button class="qb${on?' on':''}" data-a="qbgm" aria-label="배경음악 ${on?'끄기':'켜기'}" title="배경음악">${on?'♪ 켬':'♪ 끔'}</button><span class="stylebox"><button class="qb${UI.styleOpen?' on':''}" data-a="qstyle" aria-label="배경음악 목록 열기" title="배경음악 고르기">${{passion:'불길',library:'도서관',wave:'물결',ext:'시험곡'}[BGM.style()]||'고요'} ▾</button>${UI.styleOpen?`<div class="stylepop">${[['calm','고요'],['passion','불길'],['library','도서관'],['wave','물결'],...(BGM.extOn()?[['ext','시험곡']]:[])].map(([k,n])=>`<button class="${(BGM.style()||'calm')===k?'on':''}" data-a="qpick" data-i="${k}">${n}</button>`).join('')}</div>`:''}</span></div>${SFX.supported?`<div class="qrow"><button class="qb${SFXS.on?' on':''}" data-a="qsfx" aria-label="효과음 ${SFXS.on?'끄기':'켜기'}" title="효과음">${SFXS.on?'효과음 켬':'효과음 끔'}</button></div>`:''}</div>
       <div class="volbox"><button class="qb${UI.volOpen?' on':''}" data-a="qvol" aria-label="음량 조절" title="음량"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ic}</svg></button>${UI.volOpen?`<div class="volpop"><input type="range" id="bgmQuick" min="0" max="100" step="1" value="${v}" aria-label="배경음악 음량"><b class="mono" id="bgmQuickPct">${v}%</b></div>`:''}</div>`;
   }
   /* 엔딩 화면에서 이어서 살 수 있는 경우(여기서 끝낸다 버튼이 있는 경우). 이때 다시 태어나면 이어 살 판이 사라지므로 한 번 더 누르게 한다 */
@@ -2792,8 +2792,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     sfxstep(i){const p=Math.round(SFXS.vol*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;SFXS.vol=clamp(n,0,100)/100;sfxSave();SFX.play('hit');render()},
     bartog(){try{localStorage.setItem('cy_barhide',barHidden()?'0':'1')}catch(e){}render()},
     qbgm(){BGM.set(!BGM.isOn());bgmSave();render()},
-    qstyle(){BGM.setStyle({calm:'passion',passion:'library',library:'wave',wave:BGM.extOn()?'ext':'calm',ext:'calm'}[BGM.style()]||'calm');bgmSave();render()},
-    qvol(){UI.volOpen=!UI.volOpen;render()},
+    qstyle(){UI.styleOpen=!UI.styleOpen;UI.volOpen=false;render()},
+    qpick(i){BGM.setStyle(i);UI.styleOpen=false;bgmSave();render()},
+    qvol(){UI.volOpen=!UI.volOpen;UI.styleOpen=false;render()},
     voicepick(k){if(!UI.ev||!UI.ev.voices||(k!=='good'&&k!=='bad'))return;G.ch.voiceBias=k;UI.voicePicked=UI.ev;resave();render()},
     mindbias(k){UI.mindBias=k||'';render()},
     mindsight(k){UI.mindSight=+k||0;render()},
@@ -3033,13 +3034,14 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   app.addEventListener('change',e=>{if(e.target.id==='sfxRange'){sfxSave();SFX.play('hit')}});
   app.addEventListener('change',e=>{if(e.target.id==='bgmRange'||e.target.id==='bgmQuick'){bgmSave();if(e.target.id==='bgmQuick')render()}});
   document.addEventListener('pointerdown',e=>{if(UI.volOpen&&!e.target.closest('.volbox')){UI.volOpen=false;const p=document.querySelector('.volpop');if(p)p.remove()}});
+  document.addEventListener('pointerdown',e=>{if(UI.styleOpen&&!e.target.closest('.stylebox')){UI.styleOpen=false;const p=document.querySelector('.stylepop');if(p)p.remove()}});
   app.addEventListener('keydown',e=>{if(e.target.id==='seedIn'&&e.key==='Enter'){e.preventDefault();e.target.blur();ACT.seed()}});
   app.addEventListener('input',e=>{if(e.target.id==='nm'&&BC)BC.name=e.target.value.trim().slice(0,12);
     if(e.target.id==='cardq'){(UI.cf=UI.cf||{}).q=e.target.value.trim();const l=$('cardlist');if(l)l.innerHTML=cardListHtml()}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.bag){UI.bag=null;render()}});
   app.addEventListener('click',e=>{
     const b=e.target.closest('[data-a]');
-    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qvol','qsfx','bartog'].includes(b.dataset.a))return;
+    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qpick','qvol','qsfx','bartog'].includes(b.dataset.a))return;
     ACT[b.dataset.a](b.dataset.i,b);
   });
   /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */
