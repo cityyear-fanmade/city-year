@@ -1610,7 +1610,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const lifeTo=hy=>hy?BD.kid.oldToLong:BD.kid.oldTo;
   /* 사람마다 눈을 감을 나이를 한 번 정해 둔다 (구간 안에서 가운데가 조금 더 잦은 삼각 분포): 같은 나이에 다 같이 쓰러지지 않고 구간 전체에 퍼진다 */
   const lifeAt=(o,hy)=>{if(o.dieAt==null){const a=lifeFrom(hy),z=lifeTo(hy),u=(d(1000)+d(1000))/2000;o.dieAt=a+Math.floor(u*(z-a+1))}return o.dieAt};
-  function bondRisk(b,y,ch){if(ch&&ch.flags&&ch.flags.spouseAge)return 0;return ((b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0))*(ch&&ch.flags&&ch.flags.bondGuard?0.5:1)}
+  function bondRisk(b,y,ch){if(b.eternal||(ch&&ch.flags&&ch.flags.spouseAge))return 0;return ((b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0))*(ch&&ch.flags&&ch.flags.bondGuard?0.5:1)}
   function bondTaboo(ch){const b=ch.bond;if(b&&b.st==='married'&&b.tabooAt==null)b.tabooAt=ch.year||0}
   /* 결혼한 뒤의 배우자의 죽음 (큰 대가). 아이는 남는다 */
   function bondDeath(ch,chips){
@@ -1652,6 +1652,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const offer=kind=>pactOffer(ch,kind),row=pactRow(ch);
       if(!ch.pactAt)ch.pactAt=PK.from;
       if(age(G)>=ch.pactAt){ch.pactAt+=PK.every;const o=offer('c');ch.pactBuffDue=1;if(o.length)return {pact:'c',t:'제약 · 치르는 것',x:'백 해를 넘긴 몸에 도시의 값이 청구된다. 셋 가운데 하나를 받아야 한다. 이 값을 치른 뒤에 얻는 것을 고를 수 있다.',c:o.map(x=>row(x,'c'))}}}
+    /* 영생을 이은 가족의 안부: famEvery해마다, 나이에 따라 변화가 깊어진다(늙지 않음 → 기억이 닳음 → 이름이 흐려짐) */
+    if(!n&&ch.infIntro&&ch.famBind&&D.bond&&D.bond.prevent){const F=ch.famBind,PP=D.bond.prevent,P=PP[F.key];
+      if(P&&P.lines&&(ch.year||0)>=F.next){F.next=(ch.year||0)+CFG.infinite.famEvery;const ag=age(G),st=ag<350?0:ag<700?1:2,arr=P.lines[st],used=(F.used[st]=F.used[st]||[]);
+        let pool=arr.map((_,i)=>i).filter(i=>!used.includes(i));if(!pool.length){used.length=0;pool=arr.map((_,i)=>i)}const i=one(pool);used.push(i);
+        const nm=one(F.names),fill=t=>bondFill(t,{name:nm});
+        return {t:PP.lt[F.key],x:fill(arr[i]),c:[{l:PP.ll,h:'',ok:{t:fill(PP.lok),fx:{}}}]}}}
     if(!n&&ch.infIntro){const Lm=CFG.infinite.limit;if(!ch.limAt)ch.limAt=G.year+Lm.every;
       if(G.year>=ch.limAt){ch.limAt=G.year+Lm.every;const m=ch.colorDone?Lm.traitMul:1,pct=x=>Math.round(x*m*1000)/10;
         return {t:'한계 돌파',x:LI?'호수에서 수십 해를 보내자 몸이 물결의 박자를 기억한다. 더 멀리, 더 세게 휘두를 수 있다고 느낀다.':'오래 버틴 몸이 한계 너머를 보기 시작한다. 어느 쪽으로 더 벼릴지 정해야 한다.',c:[
@@ -1728,11 +1734,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function pvOffer(G,ch,b,kid,B,ageDie){
     const P=D.bond&&D.bond.prevent;if(!P)return null;const st=kid||b;if(st.pv)return null;
     const key=pvProfile(ch,b);if(!key)return null;const X=P[key];st.pv={key};
-    const nm=kid?kid.n:b.name,fill=t=>bondFill(t,{name:nm});
+    const nm=kid?kid.n:b.name,who=kid?kid.n:'s',fill=t=>bondFill(t,{name:nm});
     const deathFx=kid?{kidOld:nm,famGrief:1}:{bondDeath:true,famGrief:1,bondDie:ageDie?'age':'risk'};
     const giveT=kid?kf(B.kidOldOver?B.kidOldOver.at:B.kidOld.at,nm):bondFill(B.deathOld?B.deathOld.at:B.deathAT,b);
     return {t:fill(X.t),x:fill(kid?X.xk:X.x),c:[
-      {l:fill(X.a),h:X.h,ok:{t:fill(X.ok),fx:{famEnd:X.end}}},
+      {l:fill(X.a),h:X.h,ok:{t:fill(X.ok),fx:{famBind:{who,end:X.end,key}}}},
       {l:P.giveL,h:P.giveH,ok:{t:giveT,fx:deathFx}}]}}
   function bondEvent(G){
     const ch=G.ch,b=ch.bond,y=G.year,B=bondTx(ch);
@@ -1746,7 +1752,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       /* 아이도 늙는다: oldFrom살부터 해마다 확률로 눈을 감는다 (배우자만 죽고 아이가 몇백 살까지 사는 것은 이상하다는 의견) */
-      {const KO=B.kidOld,od=KO&&kids.find(k=>!k.dead&&!k.pend&&k.job!=='librarian'&&kidAge(k,y)>=lifeAt(k,kidHy(ch,k)));
+      {const KO=B.kidOld,od=KO&&kids.find(k=>!k.dead&&!k.pend&&!k.eternal&&k.job!=='librarian'&&kidAge(k,y)>=lifeAt(k,kidHy(ch,k)));
         if(od){const over=age(G)>100&&B.kidOldOver,GF=CFG.infinite.grief;
           {const po=pvOffer(G,ch,b,od,B,false);if(po)return po}
           return {t:KO.t,x:kf(over?B.kidOldOver.x:KO.x,od.n),c:[{l:KO.a,h:`정신력 −${KD.oldMind}`+(over?` · 슬픔이 몸에 굳는다 (공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100)}% 영구)`:''),ok:{t:kf(over?B.kidOldOver.at:KO.at,od.n),fx:over?{kidOld:od.n,famGrief:1}:{kidOld:od.n}}}]}}}
@@ -1760,7 +1766,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           return {t:B.grand.t,x:kf(B.grand.x,gk.n).replace(/\{g\}/g,gn)+lgx,c:[{l:B.grand.a,h:`${gk.n}의 아이 · 이름은 ${gn}`,ok:{t:kf(B.grand.at,gk.n).replace(/\{g\}/g,gn),fx:{bondGrand:{k:gk.n,g:gn}}}}]}}}
       if(b.st!=='married')return null;
       const spAge=age(G),spHy=spouseHy(ch,b),ageDie=ch.flags&&ch.flags.spouseAge&&spAge>=lifeAt(b,spHy);   // 배우자는 주인공과 같은 나이로 센다
-      if(!R.immortal&&(ageDie||d(1000)<=bondRisk(b,y,ch)*10))
+      if(!R.immortal&&!b.eternal&&(ageDie||d(1000)<=bondRisk(b,y,ch)*10))
         {const po=pvOffer(G,ch,b,null,B,ageDie);if(po)return po;const over=age(G)>100&&B.deathOld,GF=CFG.infinite.grief;
         return {t:B.deathT,x:bondFill(over?B.deathOld.x:R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`+(over?` · 슬픔이 몸에 굳는다 (공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100)}% 영구)`:''),ok:{t:bondFill(over?B.deathOld.at:B.deathAT,b),fx:over?{bondDeath:true,famGrief:1,bondDie:ageDie?'age':'risk'}:{bondDeath:true,bondDie:ageDie?'age':'risk'}}}]}}
       const last=kids.length?kids[kids.length-1].born:-99;
@@ -2601,7 +2607,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.sunk)return {type:'end',win:false,cause:'sunk'};
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
-    if(mc.famEnd){const k=mc.famEnd;mc.famEnd=null;return {type:'end',win:true,out:k}}
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
     if(hasInn(mc,'mark')&&!mc.markOn&&G.year>=CFG.innate.markYear-1)return {type:'event',ev:D.innateEvents.mark};
     if(D.relicEvent&&!mc.relicEvt&&!mc.hw&&G.year===CFG.relicEvent.year-1){mc.relicEvt=true;return {type:'event',ev:(lakeOn(G.ch)&&D.lake&&D.lake.relicEvent)||D.relicEvent}}
@@ -2637,7 +2642,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
     if(G.infinite&&!G.ch.oldEnd&&age(G)>=CFG.oldAge){G.ch.oldEnd=true;return {type:'end',win:true,old:true}}
     /* 무한 모드에서 overflowAge살에 닿으면 끝나는 히든 엔딩 (기록실에는 올라가지 않고, 이어갈 수 없다) */
-    if(G.infinite&&!G.ch.overflowEnd&&age(G)>=CFG.overflowAge){G.ch.overflowEnd=true;return {type:'end',win:true,overflow:true}}
+    if(G.infinite&&!G.ch.overflowEnd&&age(G)>=CFG.overflowAge){G.ch.overflowEnd=true;return G.ch.famBind&&G.ch.famBind.end?{type:'end',win:true,out:G.ch.famBind.end}:{type:'end',win:true,overflow:true}}
     /* 무한 모드 추가 엔딩: 한 번씩, 끝낸 뒤에도 이어서 살아갈 수 있다 */
     if(G.infinite){const ch=G.ch,OE=CFG.outEnds;ch.outSeen=ch.outSeen||{};
       const baseEnd_=CFG.years+CFG.endless.span*CFG.endless.grades.length;
@@ -2861,7 +2866,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.lakePirate)jr(ch,'pirate',{how:fx.lakePirate});
     if(fx.lakeIndigo)jr(ch,'indigo',{how:fx.lakeIndigo});
     if(fx.lakeWhale)jr(ch,'lakeHunt');
-    if(fx.famEnd)jr(ch,'famEnd',{n:fx.famEnd});
+    if(fx.famBind)jr(ch,'famBind',{n:fx.famBind.who==='s'?(ch.bond&&ch.bond.name):fx.famBind.who});
   }
   function choose(G,ev,i){
     const ch=G.ch,c=ev.c[i];let res=c.ok,roll=null,xp=CFG.xp.plain,xpNote=null;
@@ -2938,7 +2943,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.pactPick){const PK=CFG.infinite.pact,x=[...PK.cons,...PK.buffs].find(q=>q.id===fx.pactPick);if(x){ch.pact=ch.pact||{};ch.pact[x.id]=Math.min(PK.cap,(ch.pact[x.id]||0)+1);chips.push(`${PK.cons.includes(x)?'제약':'버프'} · ${x.n} ${ch.pact[x.id]}번 · ${x.e}`)}}
     if(fx.infCentury){const K=CFG.infinite.century;jr(ch,'century',{n:fx.infCentury});(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
-    if(fx.famEnd){ch.famEnd=fx.famEnd;chips.push('이 판은 곧 끝난다')}
+    if(fx.famBind&&ch.bond){const w=fx.famBind.who,tg=w==='s'?ch.bond:(ch.bond.kids||[]).find(k=>k.n===w),nm=w==='s'?ch.bond.name:w;
+      if(tg){tg.eternal=true;const F=ch.famBind=ch.famBind||{end:fx.famBind.end,key:fx.famBind.key,names:[],next:(ch.year||0)+CFG.infinite.famEvery,used:{}};if(!F.names.includes(nm))F.names.push(nm);
+        ch.stats.mindMax=(ch.stats.mindMax||0)-CFG.infinite.famMind;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`${nm} · 영생을 이었다 · 이제 죽음이 오지 않는다`);chips.push(`최대 정신력 −${CFG.infinite.famMind} (영구) · 대가로 무언가가 함께 결여된다`)}}
     if(fx.kidOld&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.kidOld&&!k.dead);if(kk){kk.dead=fx.kidWhy||'old';kk.dieYear=ch.year||0;chips.push(`${kk.n} · 눈을 감았다`);loseMind(ch,BD.kid.oldMind,m=>chips.push(m))}}
     if(fx.infHome){ch.infHome=1;chips.push('외곽에 작은 집을 지었다')}
     if(fx.lakeOuter){chips.push('집은 짓지 않는다 · 호수에서 호수로 항해가 이어진다')}

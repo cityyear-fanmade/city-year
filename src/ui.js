@@ -2139,6 +2139,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
         if(rl.length)t.push(`${rl.map(x=>'「'+E_(x)+'」').join(' · ')}${jp(rl[rl.length-1],'을','를').slice(-1)} 손에 넣었다`);
         if(eg)t.push(`마음이 꺾인 끝에 E.G.O 「${E_(eg.n)}」${jp(eg.n,'이','가').slice(-1)} 깨어났다`);
         if(ce.length)t.push(`외곽에서 ${ce.length*100}해를 더 넘겼다`);
+        {const fb=jl('famBind');if(fb.length)t.push(`${fb[0].y}년차, ${J.eul(E_(fb[0].n||'곁의 사람'))} 영생에 묶었다. 그 값이 무엇인지는 아무도 기록하지 못했다`)}
         if(t.length)S.push(t.join('. ')+'.')}
       if(S.length)S.forEach(t=>P.push(t));else if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${[...new Set(c.beaten)].map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);}
     /* 은원 장부: 도운 일·등 돌린 일·지나친 일이 쌓였으면 한 줄씩 남긴다 */
