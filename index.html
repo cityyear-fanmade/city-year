@@ -1205,7 +1205,7 @@ const CFG = {
   giri: {fi: 1, fi2: 2, chance: 60, gap: 5, bigBro: {chance: 50, ppFrac: 0.2, dc: 50, failHp: 6, gap: 1} /* 작은형님이 서열 점수의 ppFrac 이상 모으면 해마다 chance%: 큰형님의 시험 */, kin: 50, anger: 5},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
-  office: {rank: 5, foundEvery: 5, knockEvery: 4},
+  office: {rank: 5, foundEvery: 5, knockEvery: 4, brokerEvery: 3 /* 사무소 대표의 알선(장비·카드)이 나오는 간격(해) */},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
   /* 레바테인 해방 단계: 붉은 화염을 건 횟수가 at에 닿을 때마다 한 단계씩 풀린다. f는 완료 성능에 대한 비율(공격 · 피해 주사위 · 푸른 화염 배율과 점화 · 자신 푸른 화염 명중 감소). f 0.5 이상부터 상대의 붉은 화염이 푸른 화염으로 바뀐다 */
@@ -1822,8 +1822,9 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     ch.office={name:name+' 사무소',kw,tier:0};ch.aff={type:'office',name:ch.office.name,own:true};ch.officePick=false;return true;
   }
   const officeCards=kw=>[...new Set([...D.rewards,'rustnote','tknife','supper','faint','o_ember','o_blaze','o_stance'])].filter(id=>D.cards[id]&&(D.cards[id].kw||[]).some(k=>k[0]===kw));
-  function officeBroker(ch){
+  function officeBroker(ch,year){
     const O=ch.office;if(!O||!ch.aff||!(ch.aff.own||(O.ws&&isWs(ch))))return null;
+    if(year!=null){if(year<(O.brokerNext||0))return null;O.brokerNext=year+CFG.office.brokerEvery}   // 알선은 brokerEvery해마다 한 번
     const tier=ch.title||ch.rank<=1?3:ch.rank<=3?2:1,gs=(D.officeGear||{})[O.kw]||[];
     if((O.tier||0)<tier&&gs[tier-1]){O.tier=tier;const g=gs[tier-1];offerGear(ch,Object.assign({id:`office_${O.kw}${tier}`,grade:tier+2},g));return {kind:'gear',n:g.n}}
     const all=officeCards(O.kw),fresh=all.filter(id=>!ownsCard(ch,id)),cid=one(fresh.length?fresh:all);if(!cid)return null;
@@ -2488,7 +2489,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.examSkip)ch.examSkipYear=ch.year;
     /* 해금 출생 줄기: 처분 의뢰를 받으면(routeHunt) 준비물 고르기가 시작되고, 준비물을 고르면(routeKit) 수색이 시작된다 */
     if(fx.hermKill&&ch.bond){const b=ch.bond,kids=b.kids||[],n=kids.filter(k=>!k.dead).length;
-      kids.forEach(k=>{k.dead=true});b.st='lost';b.hermKilled=true;ch.famLoss=(ch.famLoss||0)+n;ch.hermLv=Math.max(ch.hermLv||0,1);
+      kids.forEach(k=>{if(!k.dead)k.dead='herm'});b.st='lost';b.hermKilled=true;ch.famLoss=(ch.famLoss||0)+n;ch.hermLv=Math.max(ch.hermLv||0,1);
       loseMind(ch,CFG.herm.killMind,t=>chips.push(t));chips.push(`가족을 잃었다 · 인연 사별${n?` · 아이 ${n}명`:''}`);chips.push('카두세우스-헤르메스 · 1차 강화')}
     if(fx.hermCompanion&&ch.bond&&ch.bond.st==='met'){ch.bond.companion=true;chips.push(`${ch.bond.name} · 곁에 남는다 · 결혼하지 않는다`)}
     if(fx.hermRefuse&&!ch.hermPen){ch.hermPen=true;chips.push(`지령 패널티 · 명중 −${CFG.herm.pen.hit} · 회피 −${CFG.herm.pen.eva} (헤르메스의 자비가 내릴 때까지)`)}
@@ -3059,7 +3060,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     if(b.st==='married'||b.st==='lost'){
       const KD=BD.kid,kids=b.kids||(b.kids=[]);
       /* 성인이 된 아이: 사무소·해결사·협회 중 태어날 때 정해진 곳에 들어간다 */
-      const grown=kids.find(k=>!k.told&&kidAge(k,y)>=KD.adult);
+      const grown=kids.find(k=>!k.told&&!k.dead&&kidAge(k,y)>=KD.adult);   // 이미 세상을 떠난 아이(가족을 없앤 경우 포함)의 진로 이야기는 나오지 않는다
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       /* 아이도 늙는다: oldFrom살부터 해마다 확률로 눈을 감는다 (배우자만 죽고 아이가 몇백 살까지 사는 것은 이상하다는 의견) */
@@ -5994,7 +5995,7 @@ function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.4.3';
+  const VERSION='v10.4.4';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -7845,7 +7846,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       rows.push(['청혼 기회',`${BDc.tries-(b.tries||0)}/${BDc.tries}`]);
       rows.push(['결혼 판정',`1d${BDc.die} + 인연 ${Math.min(b.love||0,BDc.steps)+(b.extra||0)} · ${BDc.marryNeed} 이상이면 성공 (인연 ${Math.min(b.love||0,BDc.steps)}/${BDc.steps}${b.extra?` · 더 쌓은 인연 ${b.extra}`:''})`]);
     }else rows.push(['대가',`최대 정신력 −${st==='left'?BDc.leaveMind:BDc.lossMind} (영구)`]);
-    for(const k of b.kids||[]){const a=Math.max(0,G.year-k.born),J=(E.bondTx(G.ch).kidJobs.find(j=>j.k===k.job)||{}).l||"자기 길을 간다";rows.push([`아이 · ${k.n}`,k.dead?(k.dead==='old'?'오래 살다 눈을 감았다':k.dead==='left'?'원망 속에 곁을 떠났다':'토벌 의뢰에서 쓰러졌다'):`${a}세${a>=BDc.kid.adult?' · '+J:' · 자라는 중'}`]);if(k.grand&&!k.dead)rows.push([`손주 · ${k.grand.n}`,`${Math.max(0,G.year-k.grand.born)}세 · ${k.n}의 아이`])}
+    for(const k of b.kids||[]){const a=Math.max(0,G.year-k.born),J=(E.bondTx(G.ch).kidJobs.find(j=>j.k===k.job)||{}).l||"자기 길을 간다";rows.push([`아이 · ${k.n}`,k.dead?(k.dead==='old'?'오래 살다 눈을 감았다':k.dead==='left'?'원망 속에 곁을 떠났다':(k.dead==='herm'?'지령 끝에 잃었다':'토벌 의뢰에서 쓰러졌다')):`${a}세${a>=BDc.kid.adult?' · '+J:' · 자라는 중'}`]);if(k.grand&&!k.dead)rows.push([`손주 · ${k.grand.n}`,`${Math.max(0,G.year-k.grand.born)}세 · ${k.n}의 아이`])}
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">가족 · 인연</span><div class="row between"><b class="serif" style="font-size:20px">${esc(b.name)}</b><span class="chip" style="${st==='married'?'color:var(--gold);border-color:var(--gold)':''}">${head}</span></div>
       ${rows.map(([k,v])=>`<div class="row between small"><span class="dim">${k}</span><b class="mono" style="text-align:right">${esc(v)}</b></div>`).join('')}</div>`;
   }
@@ -8199,7 +8200,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${E.bondMarried(c)?`<div><span class="chip">가족 · ${esc(c.bond.name)}${c.distForm?' (당신을 알아보지 못한다)':''}</span></div>`:''}
       ${c.bond&&c.bond.st==='lost'&&c.bond.name?`<div><span class="chip">가족 · ${esc(c.bond.name)} (${c.bond.dieBy==='age'?'수명을 다해 세상을 떠났다':c.bond.dieBy==='left'?'원망 속에 곁을 떠났다':c.bond.dieBy==='choice'?'인간으로 눈을 감았다':'세상을 떠났다'}${c.bond.dieYear?' · '+c.bond.dieYear+'년차':''})</span></div>`:''}
       ${E.isWs(c)&&(c.gear.weapon||c.gear.armor)?`<div class="row" style="gap:6px;flex-wrap:wrap">${[c.gear.weapon,c.gear.armor].filter(Boolean).map(g=>`<span class="chip">공방 ${g.slot==='weapon'?'무기':'방어구'} · ${esc(g.n)}</span>`).join('')}</div>`:''}
-      ${(c.bond&&(c.bond.kids||[]).length)?`<div class="row" style="gap:6px;flex-wrap:wrap">${c.bond.kids.map(k=>{const a=Math.max(0,G.year-k.born);if(k.dead)return `<span class="chip" style="opacity:.75">아이 · ${esc(k.n)} (${k.dead==='old'?'수명을 다해 세상을 떠났다':k.dead==='left'?'원망 속에 곁을 떠났다':'토벌 의뢰에서 쓰러졌다'}${k.dieYear?' · '+k.dieYear+'년차':''})</span>`;return `<span class="chip">아이 · ${esc(k.n)} ${a}세${a>=CFG.bond.kid.adult?' · '+esc((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l||"자기 길을 간다"):''}</span>`}).join('')}</div>`:''}
+      ${(c.bond&&(c.bond.kids||[]).length)?`<div class="row" style="gap:6px;flex-wrap:wrap">${c.bond.kids.map(k=>{const a=Math.max(0,G.year-k.born);if(k.dead)return `<span class="chip" style="opacity:.75">아이 · ${esc(k.n)} (${k.dead==='old'?'수명을 다해 세상을 떠났다':k.dead==='left'?'원망 속에 곁을 떠났다':(k.dead==='herm'?'지령 끝에 잃었다':'토벌 의뢰에서 쓰러졌다')}${k.dieYear?' · '+k.dieYear+'년차':''})</span>`;return `<span class="chip">아이 · ${esc(k.n)} ${a}세${a>=CFG.bond.kid.adult?' · '+esc((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l||"자기 길을 간다"):''}</span>`}).join('')}</div>`:''}
       ${c.title?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${c.titleKind==='top'?'칭호':T.titleLabel} · ${esc(c.title)}</span>${c.title2?` <span class="chip" style="color:var(--gold);border-color:var(--gold)">칭호 · ${esc(c.title2)}</span>`:''}</div>`:''}
       ${!w&&dt?`<div class="mono small bad">${dt.year}년차 · ${dt.cause==='distort'?'뒤틀림':dt.cause==='sunk'?'배가 가라앉았다':dt.cause==='mind'?'정신 붕괴로 쓰러졌다':esc(dt.foe)+'에게 쓰러졌다'}${dt.hidden?' (히든 보스)':''}</div>`:''}
       <div class="row" style="gap:8px;flex-wrap:wrap"><span class="chip" style="color:${c.hard?'#c25050':c.easy?'#6aa0c4':'var(--fg)'};border-color:currentColor">난이도 · ${diffOf(c)}</span><span class="mono small dim" style="align-self:center">시드 ${c.seed}</span></div>
@@ -8248,7 +8249,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(E.bondMarried(c))o.push(`가족 · ${b.name}${c.distForm?' (당신을 알아보지 못한다)':''}`);
     else if(b.st==='lost'&&b.name)o.push(`가족 · ${b.name} (${b.dieBy==='age'?'수명을 다해 세상을 떠났다':b.dieBy==='left'?'원망 속에 곁을 떠났다':b.dieBy==='choice'?'인간으로 눈을 감았다':'세상을 떠났다'}${b.dieYear?' · '+b.dieYear+'년차':''})`);
     for(const k of b.kids||[]){if(k.pend)continue;const a=Math.max(0,G.year-k.born);
-      o.push(k.dead?`아이 · ${k.n} (${k.dead==='old'?'수명을 다해 세상을 떠났다':k.dead==='left'?'원망 속에 곁을 떠났다':'토벌 의뢰에서 쓰러졌다'}${k.dieYear?' · '+k.dieYear+'년차':''})`:`아이 · ${k.n} ${a}세${a>=CFG.bond.kid.adult?' · '+((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l||"자기 길을 간다"||''):''}`)}
+      o.push(k.dead?`아이 · ${k.n} (${k.dead==='old'?'수명을 다해 세상을 떠났다':k.dead==='left'?'원망 속에 곁을 떠났다':(k.dead==='herm'?'지령 끝에 잃었다':'토벌 의뢰에서 쓰러졌다')}${k.dieYear?' · '+k.dieYear+'년차':''})`:`아이 · ${k.n} ${a}세${a>=CFG.bond.kid.adult?' · '+((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l||"자기 길을 간다"||''):''}`)}
     return o;
   }
   const shLife=(c,w)=>{try{return epilogue(c,w,UI.trueEnd||!!UI.crowEnd).map(shPlain).filter(t=>!t.startsWith('그 사이 도시가 감춰')).join('\n')}catch(e){return ''}};
@@ -8656,7 +8657,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(shopDue&&!shopDone&&!G.free&&!(G.ch.rb&&!G.ch.rb.out)&&E.routeShop(G.ch)){G.shopOwed=false;
       G.ch.bmV=(G.ch.bmV|0)+1;UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special).filter(k=>!D.special[k].wsOnly),CFG.shop.blackStock).concat(E.wsAuxStock(G.ch)||[]):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
-      UI.broker=E.officeBroker(G.ch);
+      UI.broker=E.officeBroker(G.ch,G.year);
       UI.bought=null;UI.meltMsg=null;UI.meltN=0;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.soldN=0;UI.rested=null;UI.healed=0;UI.healMsg=null;UI.mindHealed=0;UI.mindMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
     }
     UI.stock=[];saveGame({st});UI.screen='event';render();
