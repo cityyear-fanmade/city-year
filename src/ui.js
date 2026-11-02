@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.4.0';
+  const VERSION='v10.4.1';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -1421,10 +1421,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🆕 이미지 저장',['엔딩 화면의 저장이 「엔딩 그대로 저장」과 「정리해서 저장」으로 나뉩니다. 정리해서 저장은 요약 카드와 능력치·전투 기록·제약과 버프·덱을 한 장에 모읍니다.','검지 단말기 · 도서관 초대장 · 단테의 노트 테마에 맞는 모양으로 저장됩니다. 단말기 테마에서 저장 이미지의 바탕이 흰색으로 찍히던 문제를 고쳤습니다.','엔딩 행적에 성장기 이야기가 짧게 이어집니다.']],
       ['🆕 G사 병기',['가방의 「정보」 탭에 「흡수한 능력치」 칸이 생겼습니다. 장비를 먹어 오른 능력치 합계와 먹은 장비 목록을 볼 수 있습니다.','히든급 장비를 먹을 때의 보너스와 이후의 성장이 추가됩니다.']],
       ['🧪 임시 적용 시스템 추가',['무한 모드에서 일부 출신은 나이 100을 넘긴 뒤 가족의 죽음 앞에서 새로운 선택지가 생깁니다. 임시로 적용한 시스템이라 문구와 조건이 바뀔 수 있습니다.']],
-      ['🔧 그 밖의 변경',['배경음악 버튼을 누르면 곡 목록이 펼쳐져 바로 고를 수 있습니다.','기록실의 칭호 힌트 6개에 정확한 조건이 추가되고, 하드로 완주하면 해금 출생의 구체적인 조건이 보입니다.','해금 출생 선택 화면과 기록실에 공방 거리 안내가 한 줄 추가됩니다. 공방이 없는 출생은 대신 오는 보급과 의뢰도 함께 적었습니다.','공지가 이번 버전 것만 보이도록 정리되고, 이전 공지는 접어서 볼 수 있습니다.','성장 「깊은 숨」은 한 판에 4번까지만 나옵니다.','헤르메스 전용 카드 이름을 정리했습니다.','기록실 상대 목록에서 만날 수 없던 항목을 정리했고, 용량을 줄였습니다.']]];
+      ['🔧 그 밖의 변경',['배경음악 버튼을 누르면 곡 목록이 펼쳐져 바로 고를 수 있습니다.','기록실의 칭호 힌트 6개에 정확한 조건이 추가되고, 하드로 완주하면 해금 출생의 구체적인 조건이 보입니다.','성장 「깊은 숨」은 한 판에 4번까지만 나옵니다.','헤르메스 전용 카드 이름을 정리했습니다.','기록실 상대 목록에서 만날 수 없던 항목을 정리했고, 용량을 줄였습니다.']]];
+  const V1041SEC=[['🔧 v10.4.1 조정',['엔딩 행적이 플레이 중의 선택으로 엮입니다. 승급·특색 시험의 낙방과 통과, 인연의 만남·청혼 거절·결혼·사별, 칭호, 이름난 상대와의 승리가 시기순으로 요약됩니다. 대호수는 처음 파도에서 도망친 일과 고래를 사냥하게 된 일이 이어집니다.','휴대폰 출생 화면에서 해금 출생이나 직업을 누르면 맨 위로 올라가 굴림을 바로 볼 수 있고, 다시 굴리기와 시작 버튼이 화면 아래에 고정됩니다.','가족의 죽음 앞 선택지가 홍원의 가주가 된 경우에만 열리도록 정리했습니다.','보관함에서 장착할 수 없는 장비의 설명이 세로로 짜부라지던 표시, 기록실 해금 출생 목록의 표시 위치 불일치, 아이의 직업 정보가 없을 때 글자가 잘못 나오던 문제를 고쳤습니다.']]];
   const NOTICE={id:'v10.4.0',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[...V1040SEC]};
+    sec:[...V1041SEC,...V1040SEC]};
   /* 공지는 이번 버전 것만 위에 보인다. 버전을 올릴 때: 지금 쓰던 VXXXXSEC를 PAST 맨 앞에 ['vX.Y.Z',VXXXXSEC]로 옮기고, 새 VXXXXSEC를 만들어 NOTICE.sec에 넣는다 */
   const V1029MIX=[['🔧 v10.1.7 조정',['공방 해결사 편의성 증가','연출 강도 차이가 나지 않던 것 수정','환상체 몇 명 조정','라운드마다 HP UI 조정']],['🔧 v10.1.8 조정',['세이브 불러오기 시 해금 목록이 바로 적용되지 않던 문제 수정']],['🔧 v10.1.9 조정',['공방 해결사 보조 장비 종류 선택 · 강화 개편','카드 보상을 받을 때 돈 500안을 함께 지급','R사 팀별 시작 무기 변경','손가락 승급 이벤트 추가']],['🔧 v10.2.0 조정',['호흡이 최대치를 넘어 쌓이던 버그 수정','보호막이 최대치를 넘은 상태에서 카드로 보호막을 얻으면 줄어들던 버그 수정','1000해 달성 이후 불순물 너프']],['🔧 v10.2.1 조정',['무기와 보조 장비로 부여할 수 있는 키워드량을 정리했습니다. 한 키워드당 라운드마다 무기 5, 보조 장비 5까지 부여하고, 둘을 합쳐 최대 10까지 부여할 수 있습니다.','공방 해결사 지팡이의 집중 키워드는 이 제한을 받지 않습니다. 강화 단계가 오를수록 쌓을 수 있는 최대치도 함께 늘어납니다.','위 부여량 제한이 규칙 요약에 빠져 있던 것을 추가했습니다.']],['🔧 v10.2.2 조정',['카드 보상을 받을 때 함께 주는 돈을 500안에서 200안으로 조정했습니다.']],['🔧 v10.2.3 조정',['무기로 거는 파열은 라운드 제한 대신 적중 한 번마다 5까지 부여합니다. 파열은 소모가 빨라 높게 쌓기 어려웠던 점을 고쳤습니다. 쌓이는 최대치는 그대로입니다.']],['🔧 v10.2.4 조정',['흑운회 전용 카드 흑운도를 낼 수 없던 문제를 고쳤습니다. 이제 구름이 3 이상이면 쓸 수 있고, 낼 차례에 구름이 모자라면 불발합니다(앞선 카드로 구름을 채웁니다).','흑운도를 강화했습니다. 주사위 5개 → 6개, 출혈 5 → 7.','카드가 효과를 내려면 필요한 구름이 카드에 표시됩니다.']],['🔧 v10.2.5 조정',['상대 HP 조건이 있는 카드(내부 숙청 · 처형 선고)를 낼 수 없을 때 이유를 카드에 표시합니다.']],['🔧 v10.2.6 조정',['검계·흑운회 보상 패치: 흑운도 강화, 육참·골단 조정, 폭발·반격 배율 표시 수정']],['🔧 v10.2.7 조정',['오늘의 시드가 11월 5일까지 특수 출신과 타고난 것 조합으로 바뀝니다. 타고난 것이 둘 함께 붙는 날도 있습니다.']],['🔧 v10.2.8 조정',['푸른 잔향 난이도를 조정했습니다.']],['🔧 v10.2.9 조정',['장비금지 가시성을 조금 올렸습니다.']]];
 
@@ -1556,12 +1557,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function vOrigins(){
     const u=loadUnlocks();if(!(D.unlockOrigins||[]).length)return '';
     const hc=(loadRec().hardClear||0)>0,UH={crow:'숨은 출생 「부화장에서 태어난 자」로 태어나 제 2막의 끝까지 간다.',hermes:'전리품 「신의 단말기」를 들고 제 2막의 끝까지 간다.',librarian:'출생 「도서관의 손님」으로 태어나, 도서관 관장 아벨을 이긴 뒤 제 2막의 끝까지 간다.',claw:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.baral.n+'」를 이긴다.',arbiter:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.zena.n+'」를 이긴다.',gweapon:'G사 날개 소속이거나 특이점 응용 의수를 들고 제 2막의 끝까지 간다.'};
-    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="row between"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>${o.shopNote?`<p class="small dim" style="margin:-4px 0 0">${esc(o.shopNote)}</p>`:''}${hc&&UH[o.key]&&!u.includes('origin:'+o.key)?`<p class="small dim" style="margin:-4px 0 0">조건 · ${esc(UH[o.key])}</p>`:''}`).join('')}
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="stack" style="gap:4px"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}" style="align-self:flex-start">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>${o.shopNote?`<p class="small dim" style="margin:-4px 0 0">${esc(o.shopNote)}</p>`:''}${hc&&UH[o.key]&&!u.includes('origin:'+o.key)?`<p class="small dim" style="margin:-4px 0 0">조건 · ${esc(UH[o.key])}</p>`:''}`).join('')}
       <p class="small dim">${hc?'':'하드로 한 번 완주하면 각 출생의 구체적인 조건이 여기에 보인다. '}정해진 출생으로 태어나거나 정해진 물건을 들고 무한 모드 전, 제 2막의 끝까지 가면 열린다. 무한 모드(제 2막)의 마지막 상대 「${D.enemies.baral.n}」와 「${D.enemies.zena.n}」를 보통 이상 난이도에서 이기면 머리의 발톱과 조율자가 각각 열린다. 쉬움에서는 열리지 않는다.</p></div>`;
   }
   function vJobs(){
     const u=loadUnlocks();
-    const row=k=>`<div class="row between"><span>${T.jobs[k]}</span><span class="chip${u.includes(k)?'':' dim'}">${u.includes(k)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>`;
+    const row=k=>`<div class="stack" style="gap:4px"><span>${T.jobs[k]}</span><span class="chip${u.includes(k)?'':' dim'}" style="align-self:flex-start">${u.includes(k)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>`;
     const left=Object.keys(T.jobs).filter(k=>!(D.unlockOrigins||[]).some(o=>o.job===k));if(!left.length)return '';
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">히든 직업</span>${left.map(row).join('')}</div>`;
   }
@@ -1601,6 +1602,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${b.fated?`<div class="panel stack" style="gap:6px"><span class="mono small" style="color:var(--gold)">재능 · 결점 · 무기 · 타고난 것 없음 · 출신과 성장기 보정만 가진다</span></div>`:b.blank?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">출생 보정 없음</span><b class="serif">${esc(b.o.n)}</b><span class="small">${esc(b.o.t)}</span><span class="mono small" style="color:var(--gold)">출신 · 재능 · 결점 · 무기 · 타고난 것 없음 · 맨손 · 성장기 보정만 가진다</span><span class="mono small">빈손 · 히든 보스 전리품 장비 확률 +25%p · 정신이 꺾일 때 E.G.O 형상이 보일 확률 25%</span></div>`:`<div class="panel brows">${row('출신',b.r.o,b.o,UI.job?null:D.origins)}${row('재능',b.r.t,b.t,D.talents)}${row('결점',b.r.f,b.f,D.flaws)}${b.o.egoWeapons&&b.gear&&b.gear.weapon&&b.gear.weapon.egoLv!=null?row('무기',b.r.w,{n:'E.G.O · '+b.gear.weapon.n,t:'환상체에게서 얻은 무기 · 전용 카드 발현을 쌓으면 무기와 책장이 함께 자란다',e:b.gear.weapon.e},null):row('무기',b.r.w,b.w,D.weapons)}</div>`}
       ${b.innate?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">타고난 것 · 1%${b.innate2?' · 둘이 함께':''}</span>${[b.innate,b.innate2].filter(Boolean).map(k=>`<b class="serif">${esc(D.innate[k].n)}</b><span class="mono small" style="color:var(--gold)">${esc(D.innate[k].e)}</span>`).join('')}</div>`:''}
       <button class="btn quiet" data-a="reroll">다시 태어난다</button>
+      <div class="birthbar"><button class="btn quiet" data-a="reroll">다시 굴린다</button><button class="btn primary" data-a="live" ${(b.relicPick&&!UI.relic)||(b.teamPick&&!UI.team)||(b.fateChoices&&!b.fated)?'disabled':''}>${(b.relicPick&&!UI.relic)||(b.teamPick&&!UI.team)||(b.fateChoices&&!b.fated)?'먼저 고른다':'이 삶을 산다'}</button></div>
       ${kid}
       ${vBirthHelp(b)}
       <div class="panel stack">
@@ -1856,7 +1858,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       rows.push(['청혼 기회',`${BDc.tries-(b.tries||0)}/${BDc.tries}`]);
       rows.push(['결혼 판정',`1d${BDc.die} + 인연 ${Math.min(b.love||0,BDc.steps)+(b.extra||0)} · ${BDc.marryNeed} 이상이면 성공 (인연 ${Math.min(b.love||0,BDc.steps)}/${BDc.steps}${b.extra?` · 더 쌓은 인연 ${b.extra}`:''})`]);
     }else rows.push(['대가',`최대 정신력 −${st==='left'?BDc.leaveMind:BDc.lossMind} (영구)`]);
-    for(const k of b.kids||[]){const a=Math.max(0,G.year-k.born),J=(E.bondTx(G.ch).kidJobs.find(j=>j.k===k.job)||{}).l;rows.push([`아이 · ${k.n}`,k.dead?(k.dead==='old'?'오래 살다 눈을 감았다':k.dead==='left'?'원망 속에 곁을 떠났다':'토벌 의뢰에서 쓰러졌다'):`${a}세${a>=BDc.kid.adult?' · '+J:' · 자라는 중'}`]);if(k.grand&&!k.dead)rows.push([`손주 · ${k.grand.n}`,`${Math.max(0,G.year-k.grand.born)}세 · ${k.n}의 아이`])}
+    for(const k of b.kids||[]){const a=Math.max(0,G.year-k.born),J=(E.bondTx(G.ch).kidJobs.find(j=>j.k===k.job)||{}).l||"자기 길을 간다";rows.push([`아이 · ${k.n}`,k.dead?(k.dead==='old'?'오래 살다 눈을 감았다':k.dead==='left'?'원망 속에 곁을 떠났다':'토벌 의뢰에서 쓰러졌다'):`${a}세${a>=BDc.kid.adult?' · '+J:' · 자라는 중'}`]);if(k.grand&&!k.dead)rows.push([`손주 · ${k.grand.n}`,`${Math.max(0,G.year-k.grand.born)}세 · ${k.n}의 아이`])}
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">가족 · 인연</span><div class="row between"><b class="serif" style="font-size:20px">${esc(b.name)}</b><span class="chip" style="${st==='married'?'color:var(--gold);border-color:var(--gold)':''}">${head}</span></div>
       ${rows.map(([k,v])=>`<div class="row between small"><span class="dim">${k}</span><b class="mono" style="text-align:right">${esc(v)}</b></div>`).join('')}</div>`;
   }
@@ -2097,7 +2099,26 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     else P.push('어디에도 속하지 않았다. 혼자 움직이는 편이 낫다는 말은 처음 한 말 그대로 끝까지 남았다.');
     if(c.licensed&&!c.job)P.push(`해결사로서는 ${c.rank}${T.rankUnit}${c.title?` · ${E_(c.title)}`:''}에 닿았다. 의뢰서에 적힌 이름 하나하나가 ${yr}년 동안 쌓은 기록이다.`);
     else if(c.title)P.push(`${jp(E_(c.title),'이라는','라는')} 이름이 붙었다. 누가 먼저 불렀는지는 아무도 기억하지 못한다.`);
-    if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${[...new Set(c.beaten)].map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);
+    /* 일지(c.journal)로 엮는 행적: 시험·인연·칭호·호수·이름난 상대. 일지가 비어 있으면 예전 문장 */
+    {const JL=c.journal||[],jl=k=>JL.filter(x=>x.k===k),S=[];
+      const ex=jl('exam'),exF=ex.filter(x=>!x.ok).length,exP=ex.filter(x=>x.ok).length,co=jl('color');
+      if(ex.length||co.length){const t=[];
+        if(exF&&exP)t.push(`승급 시험에서 ${exF}번 떨어지고도 끝내 ${exP}번 통과했다`);else if(exF)t.push(`승급 시험에서 ${exF}번 떨어졌다`);else if(exP)t.push(`승급 시험을 ${exP}번 통과했다`);
+        const cf=co.filter(x=>!x.ok).length,cp=co.filter(x=>x.ok).length;if(cf&&cp)t.push('특색 시험에서 한 번 떨어진 뒤 다시 통과했다');else if(cp)t.push('특색 시험을 통과했다');else if(cf)t.push('특색 시험에서 떨어졌다');
+        if(t.length)S.push(t.join('. ')+'.')}
+      {const m=jl('bondMeet')[0],rf=jl('refused').length,mr=jl('marry')[0],lf=jl('left')[0],sd=jl('spouseDie')[0],kids=jl('kid');
+        if(m&&(rf||lf||sd)){const n=E_(m.n),t=[`${J.eul(n)} 만났다`];if(rf)t.push(`청혼은 ${rf}번 받아들여지지 않았다`);
+          if(lf)t.push(`${J.eun(E_(lf.n))} 말없이 떠났다`);
+          else if(mr){t.push('끝내 결혼했다');if(kids.length)t.push(kids.length>1?`아이 ${kids.map(k=>E_(k.n)).join(' · ')}${jp(kids.map(k=>E_(k.n)).join(' · '),'을','를').slice(-1)} 두었다`:`아이 ${J.i(E_(kids[0].n))} 태어났다`);
+            if(sd)t.push(sd.how==='left'?`${sd.y}년차, ${J.eun(E_(sd.n))} 원망 속에 곁을 떠났다`:sd.how==='choice'?`${sd.y}년차, ${J.eun(E_(sd.n))} 인간으로 눈을 감았다`:`${sd.y}년차, ${J.eul(E_(sd.n))} 떠나보냈다`)}
+          S.push(t.join('. ')+'.')}}
+      {const tt=jl('title').map(x=>x.n).filter((v,i,a)=>a.indexOf(v)===i).slice(0,3);if(tt.length)S.push(tt.map(x=>'「'+E_(x)+'」').join(' · ')+(tt.length>1?'라는 이름들이 붙었다.':'라는 이름이 붙었다.'))}
+      {const fl=jl('lakeFlee'),bs=jl('boss'),lk=bs.filter(x=>/^lake_/.test(x.id||'')),nb=bs.filter(x=>!/^lake_/.test(x.id||''));
+        if(fl.length||lk.length){const t=[];if(fl.length)t.push(`${fl[0].y}년차, 처음 마주친 파도에서 도망쳤다`);
+          if(lk.length)t.push(`고래 ${lk.length}마리를 쓰러뜨렸다`);
+          if(fl.length&&lk.length)t.push('도망치던 파도를 이제는 사냥하는 쪽이 되었다');S.push(t.join('. ')+'.')}
+        if(nb.length){const names=nb.slice(0,2).map(x=>E_(x.n));S.push(nb.length>2?`${names.join(', ')} 등 ${nb.length}명의 이름난 상대와 맞서 이겼다. 이름이 기록에 남지 않은 싸움도 있었다.`:`${names.join(', ')}${nb.length>1?'과 맞서':'과 맞서'} 이겼다.`.replace(/(.)과 맞서/,(m,ch)=>jp(ch,'과','와').slice(1)+' 맞서'))}}
+      if(S.length)S.forEach(t=>P.push(t));else if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${[...new Set(c.beaten)].map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);}
     /* 은원 장부: 도운 일·등 돌린 일·지나친 일이 쌓였으면 한 줄씩 남긴다 */
     {const L=c.ledger||{};
       if((L.help||0)>=4)P.push('은혜는 갚는 쪽이 먼저 기억한다고 했다. 도운 이들의 얼굴이 도시 곳곳에 남아, 낯선 길에서도 고개를 끄덕여 주었다.');
@@ -2177,7 +2198,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${E.bondMarried(c)?`<div><span class="chip">가족 · ${esc(c.bond.name)}${c.distForm?' (당신을 알아보지 못한다)':''}</span></div>`:''}
       ${c.bond&&c.bond.st==='lost'&&c.bond.name?`<div><span class="chip">가족 · ${esc(c.bond.name)} (${c.bond.dieBy==='age'?'수명을 다해 세상을 떠났다':c.bond.dieBy==='left'?'원망 속에 곁을 떠났다':c.bond.dieBy==='choice'?'인간으로 눈을 감았다':'세상을 떠났다'}${c.bond.dieYear?' · '+c.bond.dieYear+'년차':''})</span></div>`:''}
       ${E.isWs(c)&&(c.gear.weapon||c.gear.armor)?`<div class="row" style="gap:6px;flex-wrap:wrap">${[c.gear.weapon,c.gear.armor].filter(Boolean).map(g=>`<span class="chip">공방 ${g.slot==='weapon'?'무기':'방어구'} · ${esc(g.n)}</span>`).join('')}</div>`:''}
-      ${(c.bond&&(c.bond.kids||[]).length)?`<div class="row" style="gap:6px;flex-wrap:wrap">${c.bond.kids.map(k=>{const a=Math.max(0,G.year-k.born);if(k.dead)return `<span class="chip" style="opacity:.75">아이 · ${esc(k.n)} (${k.dead==='old'?'수명을 다해 세상을 떠났다':k.dead==='left'?'원망 속에 곁을 떠났다':'토벌 의뢰에서 쓰러졌다'}${k.dieYear?' · '+k.dieYear+'년차':''})</span>`;return `<span class="chip">아이 · ${esc(k.n)} ${a}세${a>=CFG.bond.kid.adult?' · '+esc((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l):''}</span>`}).join('')}</div>`:''}
+      ${(c.bond&&(c.bond.kids||[]).length)?`<div class="row" style="gap:6px;flex-wrap:wrap">${c.bond.kids.map(k=>{const a=Math.max(0,G.year-k.born);if(k.dead)return `<span class="chip" style="opacity:.75">아이 · ${esc(k.n)} (${k.dead==='old'?'수명을 다해 세상을 떠났다':k.dead==='left'?'원망 속에 곁을 떠났다':'토벌 의뢰에서 쓰러졌다'}${k.dieYear?' · '+k.dieYear+'년차':''})</span>`;return `<span class="chip">아이 · ${esc(k.n)} ${a}세${a>=CFG.bond.kid.adult?' · '+esc((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l||"자기 길을 간다"):''}</span>`}).join('')}</div>`:''}
       ${c.title?`<div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${c.titleKind==='top'?'칭호':T.titleLabel} · ${esc(c.title)}</span>${c.title2?` <span class="chip" style="color:var(--gold);border-color:var(--gold)">칭호 · ${esc(c.title2)}</span>`:''}</div>`:''}
       ${!w&&dt?`<div class="mono small bad">${dt.year}년차 · ${dt.cause==='distort'?'뒤틀림':dt.cause==='sunk'?'배가 가라앉았다':dt.cause==='mind'?'정신 붕괴로 쓰러졌다':esc(dt.foe)+'에게 쓰러졌다'}${dt.hidden?' (히든 보스)':''}</div>`:''}
       <div class="row" style="gap:8px;flex-wrap:wrap"><span class="chip" style="color:${c.hard?'#c25050':c.easy?'#6aa0c4':'var(--fg)'};border-color:currentColor">난이도 · ${diffOf(c)}</span><span class="mono small dim" style="align-self:center">시드 ${c.seed}</span></div>
@@ -2226,7 +2247,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(E.bondMarried(c))o.push(`가족 · ${b.name}${c.distForm?' (당신을 알아보지 못한다)':''}`);
     else if(b.st==='lost'&&b.name)o.push(`가족 · ${b.name} (${b.dieBy==='age'?'수명을 다해 세상을 떠났다':b.dieBy==='left'?'원망 속에 곁을 떠났다':b.dieBy==='choice'?'인간으로 눈을 감았다':'세상을 떠났다'}${b.dieYear?' · '+b.dieYear+'년차':''})`);
     for(const k of b.kids||[]){if(k.pend)continue;const a=Math.max(0,G.year-k.born);
-      o.push(k.dead?`아이 · ${k.n} (${k.dead==='old'?'수명을 다해 세상을 떠났다':k.dead==='left'?'원망 속에 곁을 떠났다':'토벌 의뢰에서 쓰러졌다'}${k.dieYear?' · '+k.dieYear+'년차':''})`:`아이 · ${k.n} ${a}세${a>=CFG.bond.kid.adult?' · '+((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l||''):''}`)}
+      o.push(k.dead?`아이 · ${k.n} (${k.dead==='old'?'수명을 다해 세상을 떠났다':k.dead==='left'?'원망 속에 곁을 떠났다':'토벌 의뢰에서 쓰러졌다'}${k.dieYear?' · '+k.dieYear+'년차':''})`:`아이 · ${k.n} ${a}세${a>=CFG.bond.kid.adult?' · '+((D.bond.kidJobs.find(j=>j.k===k.job)||{}).l||"자기 길을 간다"||''):''}`)}
     return o;
   }
   const shLife=(c,w)=>{try{return epilogue(c,w,UI.trueEnd||!!UI.crowEnd).map(shPlain).filter(t=>!t.startsWith('그 사이 도시가 감춰')).join('\n')}catch(e){return ''}};
@@ -2894,9 +2915,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     relic(k){UI.relic=k;render()},
     rbteam(t){UI.team=t;render()},
     bloodw(k){UI.bloodW=k||null;render()},
-    origin(k){UI.origin=k||null;if(UI.origin){UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
+    origin(k){UI.origin=k||null;if(UI.origin){UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render();if(isMobile())window.scrollTo(0,0)},
     tpreset(k){UI.testPreset=k||null;render()},
-    job(k){if(k)UI.origin=null;UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render()},
+    job(k){if(k)UI.origin=null;UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render();if(isMobile())window.scrollTo(0,0)},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
     live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.o&&BC.o.race==='hyeolgwi'&&UI.bloodW&&!UI.job)E.bloodWeapon(BC,UI.bloodW);if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);nextYear()},
     flow(){flow()},

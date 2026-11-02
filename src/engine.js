@@ -1720,7 +1720,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function pvProfile(ch,b){
     if(age({year:ch.year||1})<=100)return null;
     if(ch.o&&ch.o.race==='hyeolgwi'&&!(b.route==='hyeolgwi'&&b.variant===1))return 'blood';
-    if((ch.hw&&ch.hw.done)||(ch.beaten||[]).includes('hongwon'))return 'hw';
+    if(ch.hw&&(ch.hw.done||ch.hw.maker))return 'hw';   // 홍원의 가주가 된 경우만 (홍원 군주를 쓰러뜨린 것만으로는 열리지 않는다)
     if(ch.o&&ch.o.key==='crow')return 'crow';
     if(lakeOn(ch))return 'lake';
     return null}
@@ -2822,8 +2822,34 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:'키를 잡고 파도 사이로 빠져나간다',h:`판정${nv?` · 항해사 ${nv}명 보정`:''}`,check:{s:null,dc:W.helmDc-W.helmNav*nv},ok:{t:'파도의 결을 읽고 키를 꺾었다. 배가 벽 사이로 미끄러져 나갔다.',fx:{lakeWave:'ok'}},fail:{t:'키가 손에서 튕겨 나갔다. 배가 옆으로 눕는다.',fx:{lakeWave:'fail'}}}];
     if((L.crew||[]).length)c.push({l:'선원 한 사람이 뛰어내려 밧줄을 끊는다',h:'선원 1명을 잃는다 · 자동 탈출',ok:{t:'누군가 고개를 끄덕이고 파도 속으로 뛰어들었다. 밧줄이 끊기고 배가 풀려났다.',fx:{lakeWave:'sac'}}});
     return {t:`대형 파도 ${i+1}/${w.max}`,x:lines[Math.min(i,lines.length-1)]+(last?' 이번이 마지막이다.':'')+`\n배 내구도 ${hullOf(ch)}/${CFG.lake.hullMax} · 판정에 실패할 때마다 내구도를 잃는다 (최대 ${W.hullLoss}). 0이 되면 배가 가라앉는다.`,shake:true,c}}
+  /* 일지: 선택과 그 결과 가운데 이야기가 될 만한 것만 연도와 함께 남긴다. 엔딩의 행적이 이것을 요약해서 엮는다 */
+  function jr(ch,k,o){const J=ch.journal=ch.journal||[];J.push(Object.assign({y:ch.year||0,k},o||{}));if(J.length>160){const i=J.findIndex(x=>x.k==='exam'||x.k==='boss');J.splice(i>0?i:1,1)}}
+  const jSnap=ch=>({aff:ch.aff&&ch.aff.name||null,promos:ch.promos||0,lic:!!ch.licensed,col:!!ch.colorDone,colF:!!ch.colorFailed,bond:ch.bond?{st:ch.bond.st,tries:ch.bond.tries||0,kids:(ch.bond.kids||[]).length,name:ch.bond.name,dieBy:ch.bond.dieBy}:null});
+  function jFrom(ch,fx,J0,roll){
+    const a=ch.aff&&ch.aff.name||null;
+    if(a&&a!==J0.aff)jr(ch,'join',{n:a});
+    if((fx.examPass||fx.examPassF)&&(ch.promos||0)>J0.promos)jr(ch,'exam',{ok:1});
+    else if(fx.examPass||fx.examPassF)jr(ch,'exam',{ok:1});
+    if(fx.examFail||fx.examFailF)jr(ch,'exam',{ok:0});
+    if(ch.licensed&&!J0.lic)jr(ch,'license',{r:ch.rank});
+    if(ch.colorDone&&!J0.col)jr(ch,'color',{ok:1});
+    if(ch.colorFailed&&!J0.colF)jr(ch,'color',{ok:0});
+    if(fx.title&&typeof fx.title==='string')jr(ch,'title',{n:fx.title});
+    const b=ch.bond,b0=J0.bond;
+    if(b&&!b0)jr(ch,'bondMeet',{n:b.name});
+    else if(b&&b0){
+      if(b0.st==='met'&&b.st==='married')jr(ch,'marry',{n:b.name});
+      else if(b0.st==='met'&&b.st==='met'&&(b.tries||0)>b0.tries)jr(ch,'refused',{n:b.name});
+      else if(b0.st==='met'&&b.st==='lost')jr(ch,'left',{n:b.name});
+      else if(b0.st==='married'&&b.st==='lost')jr(ch,'spouseDie',{n:b.name,how:b.dieBy||''});
+      if((b.kids||[]).length>b0.kids)jr(ch,'kid',{n:(b.kids[b.kids.length-1]||{}).n});}
+    if(fx.lakeFlee)jr(ch,'lakeFlee');
+    if(fx.lakeWhale)jr(ch,'lakeHunt');
+    if(fx.famEnd)jr(ch,'famEnd',{n:fx.famEnd});
+  }
   function choose(G,ev,i){
     const ch=G.ch,c=ev.c[i];let res=c.ok,roll=null,xp=CFG.xp.plain,xpNote=null;
+    const J0=jSnap(ch);
     if(c.check){
       const ib=hasInn(ch,'intuition')&&!c.check.pure?d(CFG.innate.intuitionDie):0;
       const dc=checkDc(ch,c.check),mod=checkMod(ch,c.check)+ib,cd=c.check.die||(c.check.pure?100:checkDie(ch)),r=d(cd),tot=r+mod,ok=tot>=dc;
@@ -2928,6 +2954,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.purge){enc={id:ch.purge};delete ch.purge;chips.push('숙청 · '+D.enemies[enc.id].n)}
     if(ch.lakeNow){const n_=ch.lakeNow;delete ch.lakeNow;enc={id:n_.id,roll:null,table:null,hidden:n_.hidden,label:n_.label}}
     if(enc&&enc.roll)chips.push(`조우 1d100 ${enc.roll} · ${D.enemies[enc.id].n}`);
+    jFrom(ch,fx,J0,roll);
     return {t:res.t,roll,chips,title:licensed?rankLabel(ch):null,tlabel:licensed?T.licenseGained:null,combat:enc?enc.id:null,enc};
   }
   /* 전투 승리 보상: 회복, 카드, 경험치, 자격 등록 또는 (고정 전투) 승급 */
@@ -3042,7 +3069,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!foe.hidden&&!foe.abno&&ch.kids<KD.max){ch.kids++;chips.push(`피에 각인된 갈망 · ${foe.n}이(가) 혈귀가 되어 자식이 된다 (${ch.kids}/${KD.max})`)}
     }
     if(foe.hidden&&!C.echo){
-      if(!ch.beaten.includes(C.id))ch.beaten.push(C.id);chips.push(T.hiddenWin+' · '+foe.n);
+      if(!ch.beaten.includes(C.id)){ch.beaten.push(C.id);jr(ch,'boss',{n:foe.n,id:C.id})}chips.push(T.hiddenWin+' · '+foe.n);
       if(C.id==='kasetti'){ch.titles=ch.titles||[];if(!ch.titles.includes('혈귀를 잠재운 자')){ch.titles.push('혈귀를 잠재운 자');(ch.titleLog=ch.titleLog||[]).push('혈귀를 잠재운 자');chips.push('칭호 · 혈귀를 잠재운 자')}}
       if(C.id==='hongru'&&ch.hw&&ch.hw.accept&&!ch.hw.maker){ch.hw.maker=1;ch.hw.done=1;chips.push('홍루를 쓰러뜨렸다 · 선황충을 품은 가주 곁의 필두로 남는다')}
       if(foe.chain){ch.flags.zenaPend=1;chips.push('연전 · 쉴 틈 없이 다음 상대가 나선다')}else if(C.id===CFG.endless.finalNext)ch.flags.zenaPend=0;
