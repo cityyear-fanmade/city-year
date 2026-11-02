@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.4.1';
+  const VERSION='v10.4.2';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -66,6 +66,7 @@ export function startUI(E,app){
   if(!SKINS.some(s=>s.k===SKIN))SKIN='base';
   /* 배경음악: 기본은 꺼짐. 켜 둔 채 다시 열면 첫 터치 때 서서히 시작한다 (브라우저는 터치 전에 소리를 낼 수 없다) */
   const BGM=createBgm(),BGMK='cityYearBgm';
+  BGM.setOnFail&&BGM.setOnFail(()=>{UI.bgmFail=true;try{render()}catch(e){}});
   /* 주사위 효과음: 배경음악과 따로 켜고 끈다 (기본 켬, 음량 70%). 연출 끔이거나 건너뛰는 중이면 내지 않는다 */
   const SFXK='cityYearSfx';
   const SFXS=(()=>{let o={};try{o=JSON.parse(store.get(SFXK)||'{}')||{}}catch(e){}return {on:o.on!==false,vol:typeof o.vol==='number'?Math.max(0,Math.min(1,o.vol)):0.7}})();
@@ -719,6 +720,13 @@ export function startUI(E,app){
       <div class="stack" style="gap:8px" id="cardlist">${cardListHtml()}</div>`;
   }
   const FXN={maxHp:'최대 HP',atk:'공격',hit:'명중',eva:'회피',spd:'속도',check:'판정',dmin:'피해 최소',dr:'피해 감소(%)',regen:'라운드마다 HP 회복',die:'피해 주사위',dmgB:'피해',burnHit:'붉은 화염',startBleed:'시작 출혈',startBreath:'시작 호흡',defUp:'방어 회피',extraD2:'추가 피해'};
+  /* 공방 물건을 사기 전에 지금 끼고 있는 장비와 능력치를 한눈에 비교한다 */
+  const cmpLine=(it,cur)=>{if(!it||it.tool||it.perm||it.hw||!it.slot||it.slot==='any')return '';if(cur&&cur.id===it.id)return '';
+    let df=fxDiff(it,cur);
+    if(it.slot==='weapon'){const dd=w=>(w&&w.wx&&w.wx.dice)||[1,6],a=dd(it),b=dd(cur),av=x=>x[0]*(x[1]+1)/2;
+      if(a[0]!==b[0]||a[1]!==b[1])df+=(df?' · ':'')+`<span class="${av(a)>=av(b)?'good':'bad'}">피해 주사위 ${b[0]}d${b[1]} → ${a[0]}d${a[1]}</span>`;
+      const lost=cur&&cur.wx?Object.keys(cur.wx).filter(k=>k!=='dice'&&!(it.wx&&it.wx[k])).length:0;if(lost)df+=(df?' · ':'')+`<span class="bad">지금 무기의 특수 효과 ${lost}개 사라짐</span>`}
+    return `<span class="mono small">${cur?'지금 '+esc(cur.n)+' 대비 · ':'지금 장비 없음 · '}${df||'능력치 차이 없음'}</span>`};
   function fxDiff(nw,old){
     const a=nw.fx||{},b=(old&&old.fx)||{};
     return [...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>FXN[k]&&(a[k]||0)!==(b[k]||0))
@@ -733,7 +741,7 @@ export function startUI(E,app){
     const gtabs=st.length?`<div class="seg" style="margin:6px 0">${[['all','전체',st.length],...slotKeys.map(k=>[k,D.slots[k],cnt(k)])].map(([k,n,c])=>`<button class="${gt===k?'on':''}" data-a="gtab" data-i="${k}">${n} ${c}</button>`).join('')}</div>`:'';
     const sl=order.map(i=>{const g=st[i],cur=ch.gear[g.slot],df=fxDiff(g,cur);
       return `<div class="invr stash"><span>${slotLbl(g.slot)}</span><div class="stack" style="gap:2px;min-width:0"><b>${esc(g.n)}</b><span class="mono small" style="color:var(--gold)">${esc(g.e||'')}</span>${df?`<span class="mono small">지금 장비보다 · ${df}</span>`:''}</div>
-        ${g.slot==='any'?'<span class="small dim">공방 해결사가 녹여 쓰는 재료</span>':cbt?'<span class="small dim">전투 중 교체 불가</span>':E.equipWhy(ch,g)?`<span class="small bad">${esc(E.equipWhy(ch,g))}</span>`:`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}${ch.gw&&ch.gw.proc&&!cbt?`<button class="chip warn" data-a="geats" data-i="${i}">먹는다${(g.grade||0)>=5?' (히든)':''}</button>`:''}</div>`}).join('');
+        ${g.slot==='any'?'<span class="small dim">공방 해결사가 녹여 쓰는 재료</span>':cbt?'<span class="small dim">전투 중 교체 불가</span>':E.equipWhy(ch,g)?`<span class="small bad">${esc(E.equipWhy(ch,g))}</span>`:`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}${ch.gw&&ch.gw.proc&&!cbt?`<button class="chip warn" data-a="geats" data-i="${i}" title="${esc(eatTxt(g))}">먹는다 · ${eatTxt(g)}${(g.grade||0)>=5?' (히든)':''}</button>`:''}</div>`}).join('');
     const w=ch.gear.weapon,need=E.bonNeed(ch);
     const up=w&&(w.id==='bonatelli'||w.id==='star')?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b class="serif">${esc(w.n)}</b><span class="mono" style="color:var(--gold)">강화 ${w.lvl}/${w.id==='star'?CFG.star.max:CFG.bon.max}</span></div>
       ${need==null?'<p class="small dim">최대로 강화했다.</p>':`<p class="small">보관함의 장비 하나를 녹여 한 단계 강화한다. 다음 단계 재료 · ${need?need+'등급 이상':'아무 장비'}${need>=5?' (유물·히든 장비)':''}</p>
@@ -933,7 +941,7 @@ export function startUI(E,app){
           <div class="panel stack" style="gap:4px;border-color:var(--gold)"><span class="eyebrow">새 장비</span><b>${esc(it.n)}</b><span class="mono small" style="color:var(--gold)">${esc(it.e||'')}</span>${it.t?`<span class="small dim" style="line-height:1.55">${esc(it.t)}</span>`:''}</div></div>
         <div class="mono small">바꾸면 · ${df||'능력치 변화 없음'}</div>
         ${E.equipWhy(ch,it)?`<p class="small bad">장착할 수 없다 · ${esc(E.equipWhy(ch,it))}</p>`:`<button class="btn primary" data-a="gwear">장착한다${cur?` · ${esc(cur.n)}은(는) 보관함으로`:''}</button>`}
-        ${ch.gw&&ch.gw.proc?`<button class="btn" data-a="geat"><b>먹는다</b><span class="mono small dim">섭식 ${(ch.gw.eaten||0)+1}번째 · 능력치 상승${(it.grade||0)>=5?` · 히든 ${(ch.gw.hidden||0)+1}/${CFG.gweapon.hiddenNeed}`:''}</span></button>`:''}
+        ${ch.gw&&ch.gw.proc?`<button class="btn" data-a="geat"><b>먹는다</b><span class="mono small dim">섭식 ${(ch.gw.eaten||0)+1}번째 · ${eatTxt(it)}${(it.grade||0)>=5?` · 히든 ${(ch.gw.hidden||0)+1}/${CFG.gweapon.hiddenNeed}`:''}</span></button>`:''}
         <button class="btn" data-a="gkeep">보관함에 넣어 둔다</button>
         <p class="small dim">보관함의 장비는 전투 밖이면 언제든 가방 → 장비에서 바꿔 낄 수 있다.</p>`,'offer',false);
     }
@@ -966,9 +974,9 @@ export function startUI(E,app){
     if(!(UI.stock||[]).length)return '';
     const ch=G.ch;
     const items=UI.stock.map(id=>{const it=D.special[id],st=E.canBuySpecial(ch,id);
-      const note=it.wsOnly?(st==='money'?'돈이 모자란다':'공방 해결사 전용 재료 · 보관함에 들어간다'):st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='herm'?'카두세우스-헤르메스 · 다른 무기는 쥘 수 없다':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${slotLbl(it.slot)} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
+      const note=it.wsOnly?(st==='money'?'돈이 모자란다':'공방 해결사 전용 재료 · 보관함에 들어간다'):st==='owned'?(it.perm?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='sold'?'이번 방문에 이미 샀다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='herm'?'카두세우스-헤르메스 · 다른 무기는 쥘 수 없다':st==='money'?'돈이 모자란다':it.perm?'영구 강화':`${slotLbl(it.slot)} 교체${ch.gear[it.slot]?' · 지금 '+esc(ch.gear[it.slot].n):''}`;
       return `<button class="btn" data-a="bspecial" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${E.money(E.specialPrice(ch,id))}</span></span>
-        <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${note}</span></button>`}).join('');
+        <span class="mono" style="color:var(--gold)">${it.e}</span>${cmpLine(it,ch.gear[it.slot])}<span class="mono small dim">${note}</span></button>`}).join('');
     const B=CFG.blackCard,box=UI.cardBox?`<div class="panel stack" style="gap:8px;border-color:${KIND.debuff[1]}"><div class="row between"><b class="serif">수상한 카드 상자</b><span class="mono" style="color:var(--gold)">${E.money(B.price)}</span></div>
       <p class="small dim">원하는 쪽을 말하면 그런 카드 한 장을 꺼내 준다. 무엇이 나올지는 모른다. 이번 방문에 한 번.</p>
       ${UI.boxDone?`<p class="good small">${UI.boxDone}</p>`:ch.deckLocked||ch.cardMoney?'<p class="small dim">덱이 고정되어 카드를 받을 수 없다.</p>':`<div class="row" style="gap:8px">${[['debuff','디버프 카드'],['buff','버프 · 회피 카드']].map(([k,n])=>`<button class="btn" style="flex:1" data-a="box" data-i="${k}" ${ch.money<B.price?'disabled':''}><b>${n}</b><span class="small dim">${k==='debuff'?'상대에게 출혈·파열·화상':'호흡·회피 등 나를 돕는 카드'}</span></button>`).join('')}</div>${ch.money<B.price?'<p class="small dim">돈이 모자란다.</p>':''}`}</div>`:'';
@@ -1010,8 +1018,10 @@ export function startUI(E,app){
       ${UI.enchMsg?`<p class="good small">${esc(UI.enchMsg)}</p>`:''}
       ${row('weapon','무기')}${row('armor','방어구')}${row('aug','보조 장비')}</div>`;
   }
+  /* G사 병기: 먹으면 오르는 능력치를 미리 보여 준다 */
+  const eatTxt=it=>{const nm={maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'판정',dmgB:'피해',hit:'명중'},d=E.gwEatDue(G.ch,it);if(!d.gives)return `같은 장비라 오르지 않는다 (${d.n}번째${d.every?' · '+d.every+'번마다 오른다':''})`;const f=E.gwEatFx(it);return Object.entries(f).map(([k,v])=>`${nm[k]||k} +${v}`).join(' · ')||'오르는 것이 거의 없다'};
   const slotLbl=sl=>D.slots[sl]||(sl==='any'?'강화 재료':'기타');
-  const auxLbl=it=>it.kind?it.kind+' · '+({'공':'공격형','방':'방어형','유':'유틸형'}[it.tag]||it.tag):slotLbl(it.slot);
+  const auxLbl=it=>it.kind?it.kind+(it.tag?' · '+({'공':'공격형','방':'방어형','유':'유틸형'}[it.tag]||it.tag):''):slotLbl(it.slot);
   function vShop(){
     const ch=G.ch,acc=E.shopAccess(ch),A=D.access;
     if(trainHome())return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">열차 승무원 칸</div><h2>잠시 숨을 돌린다</h2><p class="small dim">열차 안에는 공방이 없다. 의무실만 문을 열어 둔다.</p></div>${vClinic()}<button class="btn primary" data-a="unshop">칸을 나간다</button>`;
@@ -1028,10 +1038,10 @@ export function startUI(E,app){
       const open=w.grade<=acc||(hwHome()&&w.grade===3);
       const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade&&(lakeHome()?!!it.lake:hwHome()?(w.grade<3||it.hw):(!it.hw&&!it.lake))).filter(([id,it],_i,all)=>!hwHome()||w.grade===3||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
-        const note=it.tool&&st==='ok'?`쓰면 사라진다 · 지금 ${((ch.lake||{}).tools||{})[it.tool]||0}개`:it.tool&&st==='money'?'돈이 모자란다':it.tool&&st==='locked'?'이 호수의 소문을 아직 듣지 못했다':it.tool&&st==='owned'?'이미 두 개를 챙겨 두었다':st==='owned'?(it.hw&&(ch.hwGot||[]).includes(id)&&!(cur&&cur.id===id)?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='herm'?'카두세우스-헤르메스 · 다른 무기는 쥘 수 없다':st==='locked'?'잠김':`${slotLbl(it.slot)} 교체${cur?' · 지금 '+esc(cur.n):''}`;
-        if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span><span class="small dim">${it.tool?'소모형 도구':auxLbl(it)}${cur&&!it.tool?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · ${it.tool?'이 도구를 챙길까?':'이 장비를 맞출까?'}</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">${it.perm?'먹는다':it.hw?'받는다':it.tool?'챙긴다':'맞춘다'}</button>${E.isWs(ch)&&!it.tool&&!it.perm&&!it.hw&&ch.ws?`<button class="btn" data-a="buymelt" data-i="${id}">사서 바로 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="5">5개 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="10">10개 녹이기</button>`:''}<button class="btn quiet" data-a="buyno">취소</button></div></div>`;
+        const note=it.tool&&st==='ok'?`쓰면 사라진다 · 지금 ${((ch.lake||{}).tools||{})[it.tool]||0}개`:it.tool&&st==='money'?'돈이 모자란다':it.tool&&st==='locked'?'이 호수의 소문을 아직 듣지 못했다':it.tool&&st==='owned'?'이미 두 개를 챙겨 두었다':st==='owned'?(it.hw&&(ch.hwGot||[]).includes(id)&&!(cur&&cur.id===id)?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='eaten'?'이미 섭식한 장비 · 다시 살 수 없다':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='herm'?'카두세우스-헤르메스 · 다른 무기는 쥘 수 없다':st==='locked'?'잠김':`${slotLbl(it.slot)} 교체${cur?' · 지금 '+esc(cur.n):''}`;
+        if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span>${cmpLine(it,cur)}<span class="small dim">${it.tool?'소모형 도구':auxLbl(it)}${cur&&!it.tool?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · ${it.tool?'이 도구를 챙길까?':'이 장비를 맞출까?'}</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">${it.perm?'먹는다':it.hw?'받는다':it.tool?'챙긴다':'맞춘다'}</button>${E.isWs(ch)&&!it.tool&&!it.perm&&!it.hw&&ch.ws?`<button class="btn" data-a="buymelt" data-i="${id}">사서 바로 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="5">5개 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="10">10개 녹이기</button>`:''}<button class="btn quiet" data-a="buyno">취소</button></div></div>`;
         return `<button class="btn" data-a="buy" data-i="${id}" ${st==='ok'?'':'disabled'}><span class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':(E.isWs(ch)?`<s class="dim">${E.money(it.price)}</s> `:'')+E.money(E.priceOf(ch,id))}</span></span>
-          <span class="mono" style="color:var(--gold)">${it.e}</span><span class="mono small dim">${it.tool?'도구 · 소모형':it.perm?'영구 강화':auxLbl(it)} · ${note}</span></button>`;
+          <span class="mono" style="color:var(--gold)">${it.e}</span>${cmpLine(it,cur)}<span class="mono small dim">${it.tool?'도구 · 소모형':it.perm?'영구 강화':auxLbl(it)} · ${note}</span></button>`;
       }).join('');
       return `<div class="panel stack" style="gap:8px${open?'':';opacity:.6'}"><div class="row between"><b class="serif">${hwHome()?HWSHOP[w.grade-1][0]:lakeHome()?LKSHOP[w.grade-1][0]:w.n}</b><span class="chip${open?'':' dim'}">${w.grade}등급${open?'':' · 잠김'}</span></div>
         <p class="small dim">${hwHome()?HWSHOP[w.grade-1][1]:lakeHome()?LKSHOP[w.grade-1][1]:w.t}${open?'':' 들어가려면 '+need(w.grade)+'.'}</p>${open?`<div class="stack">${items}</div>`:''}</div>`;
@@ -1178,7 +1188,7 @@ export function startUI(E,app){
     const cl=el.cloneNode(true),c=G.ch;cl.removeAttribute('id');
     cl.querySelectorAll('button,script').forEach(x=>x.remove());cl.querySelectorAll('[data-a]').forEach(x=>x.removeAttribute('data-a'));
     const res=((cl.querySelector('.eyebrow')||{}).textContent||'').trim();
-    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),v:UPDATES.v,name:c.name||'',lover:(c.bond&&c.bond.name)||'',lost:!!(c.bond&&c.bond.st==='lost'),lostAge:!!(c.bond&&c.bond.dieBy==='age'),wp:(E.isWs(c)&&c.gear.weapon&&c.gear.weapon.n)||'',kids:((c.bond&&c.bond.kids)||[]).filter(k=>!k.pend).map(k=>k.n),line:careerLine(c),res,yr:G.year,win:!!UI.endWin,dy:c.daily||'',html:cl.outerHTML};
+    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),key:c.seed+'|'+G.year+'|'+res,t:Date.now(),v:UPDATES.v,name:c.name||'',lover:(c.bond&&c.bond.name)||'',lost:!!(c.bond&&c.bond.st==='lost'),lostAge:!!(c.bond&&c.bond.dieBy==='age'),wp:(E.isWs(c)&&c.gear.weapon&&c.gear.weapon.n)||'',kids:((c.bond&&c.bond.kids)||[]).filter(k=>!k.pend).map(k=>k.n),line:careerLine(c),sum:(()=>{try{return buildSumCard().innerHTML}catch(e){return ''}})(),res,yr:G.year,win:!!UI.endWin,dy:c.daily||'',html:cl.outerHTML};
   }
   function chronAuto(){
     const e=chronSnap();if(!e)return;const o=loadChron();
@@ -1209,7 +1219,7 @@ export function startUI(E,app){
   function vChronView(){
     const o=loadChron(),sel=UI.chSel||{},e=(o[sel.tab]||[]).find(x=>x.id===sel.id);
     if(!e)return `<div class="panel"><p class="small dim">기록을 찾을 수 없다.</p></div><button class="btn primary" data-a="chron">돌아가기</button>`;
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장${e.v?' · '+esc(e.v):''}</div></div><div id="chShot" class="stack" style="gap:12px">${e.html}</div>${chMsgP()}${UI.imgUrl&&UI.screen==='chronview'?`<img alt="일대기 이미지" src="${UI.imgUrl}" style="width:100%;border-radius:6px"><p class="small dim">이미지를 길게 눌러(또는 오른쪽 클릭) 저장한다.</p>`:''}<button class="btn" data-a="chimg" data-i="${sel.tab}:${e.id}"><b>이미지로 저장 · 공유</b><span class="dim small">이 결과 화면을 그림 파일로 만든다</span></button>${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장${e.v?' · '+esc(e.v):''}</div></div><div id="chShot" class="stack" style="gap:12px">${e.html}</div>${chMsgP()}${UI.imgUrl&&UI.screen==='chronview'?`<img alt="일대기 이미지" src="${UI.imgUrl}" style="width:100%;border-radius:6px"><p class="small dim">이미지를 길게 눌러(또는 오른쪽 클릭) 저장한다.</p>`:''}<button class="btn" data-a="chimg" data-i="${sel.tab}:${e.id}"><b>이미지로 저장 · 공유</b><span class="dim small">이 결과 화면을 그림 파일로 만든다</span></button>${e.sum?`<button class="btn" data-a="chimg2" data-i="${sel.tab}:${e.id}"><b>정리해서 저장 · 공유</b><span class="dim small">능력치·전투 기록·덱을 한 장으로 요약한 그림</span></button>`:''}${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
   }
   /* 기록실 */
   /* 난이도: easy(쉬움) / normal(보통) / hard(하드). 예전 하드 켜기 설정(cityYearHard)도 이어 받는다 */
@@ -1423,9 +1433,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ['🧪 임시 적용 시스템 추가',['무한 모드에서 일부 출신은 나이 100을 넘긴 뒤 가족의 죽음 앞에서 새로운 선택지가 생깁니다. 임시로 적용한 시스템이라 문구와 조건이 바뀔 수 있습니다.']],
       ['🔧 그 밖의 변경',['배경음악 버튼을 누르면 곡 목록이 펼쳐져 바로 고를 수 있습니다.','기록실의 칭호 힌트 6개에 정확한 조건이 추가되고, 하드로 완주하면 해금 출생의 구체적인 조건이 보입니다.','성장 「깊은 숨」은 한 판에 4번까지만 나옵니다.','헤르메스 전용 카드 이름을 정리했습니다.','기록실 상대 목록에서 만날 수 없던 항목을 정리했고, 용량을 줄였습니다.']]];
   const V1041SEC=[['🔧 v10.4.1 조정',['엔딩 행적이 플레이 중의 선택으로 엮입니다. 승급·특색 시험의 낙방과 통과, 인연의 만남·청혼 거절·결혼·사별, 칭호, 이름난 상대와의 승리가 시기순으로 요약됩니다. 대호수는 처음 파도에서 도망친 일과 고래를 사냥하게 된 일이 이어집니다.','휴대폰 출생 화면에서 해금 출생이나 직업을 누르면 맨 위로 올라가 굴림을 바로 볼 수 있고, 다시 굴리기와 시작 버튼이 화면 아래에 고정됩니다.','가족의 죽음 앞 선택지가 홍원의 가주가 된 경우에만 열리도록 정리했습니다.','보관함에서 장착할 수 없는 장비의 설명이 세로로 짜부라지던 표시, 기록실 해금 출생 목록의 표시 위치 불일치, 아이의 직업 정보가 없을 때 글자가 잘못 나오던 문제를 고쳤습니다.']]];
-  const NOTICE={id:'v10.4.0',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const V1042SEC=[['🔧 v10.4.2 조정',['접속 속도: 배경음악 mp3를 따로 불러옵니다. 음악 파일을 받지 못하면 "새로고침"해 달라는 안내가 뜹니다.','공방·암시장 비교 줄: 물건 목록과 구매 확인 창에서 지금 끼고 있는 장비와의 능력치 차이를 보여 줍니다.','R사 순록팀 카드 개편: 3코스트 버프를 받아치는 회피 카드로 바꿨습니다. 그 밖에 순록팀 카드 두 장도 조정됩니다.','영생 동행(일부): 가족 죽음 앞에서 ??? 따르면 판이 끝나지 않고 가족이 영생을 얻어 곁에 남습니다. 선택지 안내 문구는 덜 적나라하게 고쳤습니다.','G사 병기 섭식 조정: 싼 장비로 최대 HP를 복사하던 것을 막았습니다. 오르는 양은 장비 등급과 종류로 정하고, 먹기 전에 오를 양을 미리 보여 줍니다.','행적 일지 확대(일부): 엔딩에 시험, 인연, 결혼, 아이, 대호수의 고래와 파도 등이 일지로 엮이고, 문장 오류도 고쳤습니다.','일대기·명예의 전당: 펼쳐 보기에서 "정리해서 저장 · 공유"가 됩니다.','화면 오류 수정: 해금 출생 목록의 표시 정렬, 보관함 안내가 길게 늘어나던 문제, 아이 직업이 \'undefined\'로 나오던 표시, G사 병기가 가족 죽음 앞에서 \'금지된 환\' 선택지를 받던 문제를 고쳤습니다.']]];
+  const NOTICE={id:'v10.4.2',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:[...V1041SEC,...V1040SEC]};
+    sec:[...V1042SEC,...V1041SEC,...V1040SEC]};
   /* 공지는 이번 버전 것만 위에 보인다. 버전을 올릴 때: 지금 쓰던 VXXXXSEC를 PAST 맨 앞에 ['vX.Y.Z',VXXXXSEC]로 옮기고, 새 VXXXXSEC를 만들어 NOTICE.sec에 넣는다 */
   const V1029MIX=[['🔧 v10.1.7 조정',['공방 해결사 편의성 증가','연출 강도 차이가 나지 않던 것 수정','환상체 몇 명 조정','라운드마다 HP UI 조정']],['🔧 v10.1.8 조정',['세이브 불러오기 시 해금 목록이 바로 적용되지 않던 문제 수정']],['🔧 v10.1.9 조정',['공방 해결사 보조 장비 종류 선택 · 강화 개편','카드 보상을 받을 때 돈 500안을 함께 지급','R사 팀별 시작 무기 변경','손가락 승급 이벤트 추가']],['🔧 v10.2.0 조정',['호흡이 최대치를 넘어 쌓이던 버그 수정','보호막이 최대치를 넘은 상태에서 카드로 보호막을 얻으면 줄어들던 버그 수정','1000해 달성 이후 불순물 너프']],['🔧 v10.2.1 조정',['무기와 보조 장비로 부여할 수 있는 키워드량을 정리했습니다. 한 키워드당 라운드마다 무기 5, 보조 장비 5까지 부여하고, 둘을 합쳐 최대 10까지 부여할 수 있습니다.','공방 해결사 지팡이의 집중 키워드는 이 제한을 받지 않습니다. 강화 단계가 오를수록 쌓을 수 있는 최대치도 함께 늘어납니다.','위 부여량 제한이 규칙 요약에 빠져 있던 것을 추가했습니다.']],['🔧 v10.2.2 조정',['카드 보상을 받을 때 함께 주는 돈을 500안에서 200안으로 조정했습니다.']],['🔧 v10.2.3 조정',['무기로 거는 파열은 라운드 제한 대신 적중 한 번마다 5까지 부여합니다. 파열은 소모가 빨라 높게 쌓기 어려웠던 점을 고쳤습니다. 쌓이는 최대치는 그대로입니다.']],['🔧 v10.2.4 조정',['흑운회 전용 카드 흑운도를 낼 수 없던 문제를 고쳤습니다. 이제 구름이 3 이상이면 쓸 수 있고, 낼 차례에 구름이 모자라면 불발합니다(앞선 카드로 구름을 채웁니다).','흑운도를 강화했습니다. 주사위 5개 → 6개, 출혈 5 → 7.','카드가 효과를 내려면 필요한 구름이 카드에 표시됩니다.']],['🔧 v10.2.5 조정',['상대 HP 조건이 있는 카드(내부 숙청 · 처형 선고)를 낼 수 없을 때 이유를 카드에 표시합니다.']],['🔧 v10.2.6 조정',['검계·흑운회 보상 패치: 흑운도 강화, 육참·골단 조정, 폭발·반격 배율 표시 수정']],['🔧 v10.2.7 조정',['오늘의 시드가 11월 5일까지 특수 출신과 타고난 것 조합으로 바뀝니다. 타고난 것이 둘 함께 붙는 날도 있습니다.']],['🔧 v10.2.8 조정',['푸른 잔향 난이도를 조정했습니다.']],['🔧 v10.2.9 조정',['장비금지 가시성을 조금 올렸습니다.']]];
 
@@ -2103,21 +2114,35 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     {const JL=c.journal||[],jl=k=>JL.filter(x=>x.k===k),S=[];
       const ex=jl('exam'),exF=ex.filter(x=>!x.ok).length,exP=ex.filter(x=>x.ok).length,co=jl('color');
       if(ex.length||co.length){const t=[];
-        if(exF&&exP)t.push(`승급 시험에서 ${exF}번 떨어지고도 끝내 ${exP}번 통과했다`);else if(exF)t.push(`승급 시험에서 ${exF}번 떨어졌다`);else if(exP)t.push(`승급 시험을 ${exP}번 통과했다`);
+        if(exF&&exP)t.push(`승급 시험을 ${exF+exP}번 치러 ${exF}번 떨어지고 ${exP}번 통과했다`);else if(exF)t.push(`승급 시험에서 ${exF}번 떨어졌다`);else if(exP)t.push(`승급 시험을 ${exP}번 통과했다`);
         const cf=co.filter(x=>!x.ok).length,cp=co.filter(x=>x.ok).length;if(cf&&cp)t.push('특색 시험에서 한 번 떨어진 뒤 다시 통과했다');else if(cp)t.push('특색 시험을 통과했다');else if(cf)t.push('특색 시험에서 떨어졌다');
         if(t.length)S.push(t.join('. ')+'.')}
       {const m=jl('bondMeet')[0],rf=jl('refused').length,mr=jl('marry')[0],lf=jl('left')[0],sd=jl('spouseDie')[0],kids=jl('kid');
-        if(m&&(rf||lf||sd)){const n=E_(m.n),t=[`${J.eul(n)} 만났다`];if(rf)t.push(`청혼은 ${rf}번 받아들여지지 않았다`);
+        if(m&&(rf||lf||sd)){const n=E_(m.n||(c.bond&&c.bond.name)||'그 사람'),t=[`${J.eul(n)} 만났다`];if(rf)t.push(`청혼은 ${rf}번 받아들여지지 않았다`);
           if(lf)t.push(`${J.eun(E_(lf.n))} 말없이 떠났다`);
           else if(mr){t.push('끝내 결혼했다');if(kids.length)t.push(kids.length>1?`아이 ${kids.map(k=>E_(k.n)).join(' · ')}${jp(kids.map(k=>E_(k.n)).join(' · '),'을','를').slice(-1)} 두었다`:`아이 ${J.i(E_(kids[0].n))} 태어났다`);
             if(sd)t.push(sd.how==='left'?`${sd.y}년차, ${J.eun(E_(sd.n))} 원망 속에 곁을 떠났다`:sd.how==='choice'?`${sd.y}년차, ${J.eun(E_(sd.n))} 인간으로 눈을 감았다`:`${sd.y}년차, ${J.eul(E_(sd.n))} 떠나보냈다`)}
           S.push(t.join('. ')+'.')}}
       {const tt=jl('title').map(x=>x.n).filter((v,i,a)=>a.indexOf(v)===i).slice(0,3);if(tt.length)S.push(tt.map(x=>'「'+E_(x)+'」').join(' · ')+(tt.length>1?'라는 이름들이 붙었다.':'라는 이름이 붙었다.'))}
-      {const fl=jl('lakeFlee'),bs=jl('boss'),lk=bs.filter(x=>/^lake_/.test(x.id||'')),nb=bs.filter(x=>!/^lake_/.test(x.id||''));
-        if(fl.length||lk.length){const t=[];if(fl.length)t.push(`${fl[0].y}년차, 처음 마주친 파도에서 도망쳤다`);
+      {const fl=jl('lakeFlee'),bs=jl('boss'),lk=bs.filter(x=>/^lake_/.test(x.id||'')),nb=bs.filter(x=>!/^lake_/.test(x.id||'')),
+          wOk=jl('waveOk').length,wSac=jl('waveSac').length,wFail=jl('waveFail').length,dr=jl('drift').length,mo=jl('morph').length,pi=jl('pirate'),ind=jl('indigo');
+        if(fl.length||lk.length||wOk||wSac||dr||mo||pi.length||ind.length){const t=[];
+          if(fl.length)t.push(`${fl[0].y}년차, 처음 마주친 고래의 그림자에서 도망쳤다${fl.length>2?`. 그 뒤로도 ${fl.length-1}번 더 도망쳤다`:fl.length>1?'. 그 뒤로도 한 번 더 도망쳤다':''}`);
+          if(wOk+wSac||dr||wFail){const w=[];if(wOk+wSac)w.push(`호수의 파도를 ${wOk+wSac}번 넘었다`);if(wSac)w.push(`선원 ${wSac}명을 파도에 내주었다`);if(dr)w.push(`${dr}번은 배가 반파되어 표류했다`);else if(wFail)w.push(`파도에 배가 ${wFail}번 크게 상했다`);t.push(w.join('. '))}
+          if(mo)t.push(`선원 ${mo}명이 젖은 옷만 남기고 호수로 돌아갔다`);
+          if(pi.length)t.push('쌍갈고리 해적단과 얽혔다');
+          if(ind.length)t.push(ind.some(x=>x.how==='learn')?'쪽빛 노인에게서 재앙을 죽이는 법을 배웠다':ind.some(x=>x.how==='fight')?'쪽빛 노인과 칼을 맞댔다':'쪽빛 노인을 만났다');
           if(lk.length)t.push(`고래 ${lk.length}마리를 쓰러뜨렸다`);
-          if(fl.length&&lk.length)t.push('도망치던 파도를 이제는 사냥하는 쪽이 되었다');S.push(t.join('. ')+'.')}
-        if(nb.length){const names=nb.slice(0,2).map(x=>E_(x.n));S.push(nb.length>2?`${names.join(', ')} 등 ${nb.length}명의 이름난 상대와 맞서 이겼다. 이름이 기록에 남지 않은 싸움도 있었다.`:`${names.join(', ')}${nb.length>1?'과 맞서':'과 맞서'} 이겼다.`.replace(/(.)과 맞서/,(m,ch)=>jp(ch,'과','와').slice(1)+' 맞서'))}}
+          if(fl.length&&lk.length)t.push('도망치던 재앙을 이제는 사냥하는 쪽이 되었다');
+          S.push(t.filter(Boolean).join('. ')+'.')}
+        if(nb.length){const names=nb.slice(0,2).map(x=>E_(x.n));S.push(nb.length>2?`${names.join(', ')} 등 ${nb.length}명의 이름난 상대와 맞서 이겼다. 이름이 기록에 남지 않은 싸움도 있었다.`:`${names.join(', ')}${jp(names[names.length-1],'과','와').slice(String(names[names.length-1]).length)} 맞서 이겼다.`)}}
+      {const rl=jl('relic').map(x=>x.n).filter((v,i,a)=>a.indexOf(v)===i).slice(0,2),eg=jl('ego')[0],lic=jl('license')[0],ce=jl('century');
+        const t=[];if(lic)t.push(`${lic.y}년차, 해결사 자격을 얻어 ${lic.r}${T.rankUnit}으로 시작했다`);
+        if(rl.length)t.push(`${rl.map(x=>'「'+E_(x)+'」').join(' · ')}${jp(rl[rl.length-1],'을','를').slice(-1)} 손에 넣었다`);
+        if(eg)t.push(`마음이 꺾인 끝에 E.G.O 「${E_(eg.n)}」${jp(eg.n,'이','가').slice(-1)} 깨어났다`);
+        if(ce.length)t.push(`외곽에서 ${ce.length*100}해를 더 넘겼다`);
+        {const fb=jl('famBind');if(fb.length)t.push(`${fb[0].y}년차, ${J.eul(E_(fb[0].n||'곁의 사람'))} 영생에 묶었다. 그 값이 무엇인지는 아무도 기록하지 못했다`)}
+        if(t.length)S.push(t.join('. ')+'.')}
       if(S.length)S.forEach(t=>P.push(t));else if(c.beaten.length)P.push(`그 사이 도시가 감춰 둔 것들과 마주쳤다. ${[...new Set(c.beaten)].map(id=>E_(D.enemies[id].n)).join(', ')}. 이름이 기록에 남지 않은 싸움도 있었고, 이름만 남은 싸움도 있었다.`);}
     /* 은원 장부: 도운 일·등 돌린 일·지나친 일이 쌓였으면 한 줄씩 남긴다 */
     {const L=c.ledger||{};
@@ -2605,7 +2630,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
     if(s==='end'&&G&&G.ch){try{prepShare()}catch(e){}}
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
-    const ov=UI.help&&!UI.cfg?vHelp():UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif" style="white-space:nowrap">설정</b><button class="btn quiet" style="width:auto;flex:none;padding:8px 16px" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):ok&&UI.bag?vBag():pend?vOffer():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeTop()}${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
+    const ov=UI.bgmFail?sheet(`<div class="stack" style="gap:10px"><b class="serif">음악 파일을 받지 못했습니다</b><p class="small">인터넷 연결이 불안정하거나 파일을 불러오는 중 문제가 생겼습니다. 새로고침하면 다시 받습니다. 진행 중인 판은 저장되어 있습니다.</p><div class="row" style="gap:8px"><button class="btn primary" style="flex:1" data-a="bgmreload">새로고침</button><button class="btn quiet" style="flex:1" data-a="bgmfailclose">닫기</button></div></div>`):UI.help&&!UI.cfg?vHelp():UI.cfg?sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif" style="white-space:nowrap">설정</b><button class="btn quiet" style="width:auto;flex:none;padding:8px 16px" data-a="cfgclose">닫기</button></div>${G&&G.ch&&s!=='title'?`<button class="btn" data-a="home" style="margin-top:8px;flex:none;height:auto${UI.homeAsk?';border-color:var(--gold)':''}"><b>${UI.homeAsk?'정말 나간다 · 한 번 더 누른다':'첫 화면으로'}</b><span class="dim small">${UI.homeAsk?'전투 중이면 그 전투는 처음부터 다시 시작한다. 판은 저장되어 있다':'진행 중인 판은 저장되어 있어 "이어서 하기"로 다시 열 수 있다'}</span></button>`:''}${FIGHT==='auto'&&s==='combat'?'<span class="small dim">설정을 여는 동안 자동 전투가 멈춘다. 닫으면 이어서 진행한다</span>':''}<div class="stack" style="margin-top:10px">${vSettings()}</div>`,'offer',true):ok&&UI.bag?vBag():pend?vOffer():showNotice?sheet(`<span class="eyebrow">공지</span><h2>${esc(NOTICE.t)}</h2><p class="small dim">${esc(NOTICE.note)}</p>${noticeTop()}${noticeBody()}<button class="btn primary" data-a="noticeok">확인</button>`,'offer',false):'';
     const bagOver=ok&&UI.bag&&pend;
     const ovKey=UI.help&&!UI.cfg?'help':UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
     const shO=app.querySelector('.sheet'),stO=shO?shO.scrollTop:0,scrKey=ovKey+(ok&&UI.bag?':'+UI.bag:'');
@@ -2653,7 +2678,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     let shopDue=lakeHome()?lakeDue:((G.year-1)%CFG.shop.every===0||!!G.shopOwed);
     if(shopDue&&!lakeHome()&&st.type==='event'&&st.ev&&st.ev.web){G.shopOwed=true;shopDue=false}
     if(shopDue&&!shopDone&&!G.free&&!(G.ch.rb&&!G.ch.rb.out)&&E.routeShop(G.ch)){G.shopOwed=false;
-      UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special).filter(k=>!D.special[k].wsOnly),CFG.shop.blackStock).concat(E.wsAuxStock(G.ch)||[]):[]);
+      G.ch.bmV=(G.ch.bmV|0)+1;UI.stock=hwHome()||trainHome()?[]:stock||(G.year>=CFG.shop.blackFrom?E.sample(Object.keys(D.special).filter(k=>!D.special[k].wsOnly),CFG.shop.blackStock).concat(E.wsAuxStock(G.ch)||[]):[]);
       UI.cardBox=UI.stock.length>0&&E.d(100)<=CFG.blackCard.chance;UI.aid=UI.stock.length>0&&E.d(100)<=CFG.blackAid.chance;UI.boxDone=null;
       UI.broker=E.officeBroker(G.ch);
       UI.bought=null;UI.meltMsg=null;UI.meltN=0;UI.deleted=null;UI.swapped=null;UI.tuneMsg=null;UI.sold=null;UI.soldN=0;UI.rested=null;UI.healed=0;UI.healMsg=null;UI.mindHealed=0;UI.mindMsg=null;saveGame({st,stock:[],shopDone:true});UI.screen='shopask';render();return;
@@ -2715,7 +2740,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const ks=Object.keys(dd).sort();while(ks.length>40)delete dd[ks.shift()];store.set(DAILYK,JSON.stringify(dd))}else UI.dailyCmp=null;
     r.best.years=Math.max(r.best.years,lived);r.best.lv=Math.max(r.best.lv,c.lv);if(G.endless)r.best.grade=Math.max(r.best.grade,E.gradeAt(G.year));
     if(dt&&dt.id==='godmother'){r.titles=r.titles||{};r.titles['정해진 운명']=(r.titles['정해진 운명']||0)+1}
-    store.set(REC,JSON.stringify(r));if(!w||UI.overflowEnd)store.del(SAVE);
+    store.set(REC,JSON.stringify(r));if(!w||UI.overflowEnd||/^fam/.test(UI.outEnd||''))store.del(SAVE);
   }
   function startCombat(id){recAdd('seen',id);C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.paused=false;UI.screen='combat';render()}
 
@@ -2880,14 +2905,16 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     start(){if(UI.screen==='title'&&loadSave()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}if(UI.screen==='end'&&endCanResume()&&UI.confirmNew!=='start'){UI.confirmNew='start';render();return}store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=null;if(expired()){UI.screen='title';render();return}born(newSeed(),BC&&BC.name);UI.endText=null;UI.screen='birth';render()},
     cont(){const o=loadSave();if(!o)return;G=o.G;E.ensurePacks(G.ch);C=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.endText=null;UI.confirmNew=null;
       if(o.st)showYear(o.st,o.stock,o.shopDone);else if(o.after){UI.pending=o.pending||null;flow()}else nextYear()},
-    async chimg(v){
+    async chimg(v,sum){
       const [tab,id]=String(v).split(':'),e=(loadChron()[tab]||[]).find(x=>x.id===id);if(!e)return;
-      const cv=await shotEnd('chShot');if(!cv){UI.chMsg=UI.shotWhy==='load'?'이미지 도구를 불러오지 못했다. 인터넷 연결을 확인하거나 앱 속 브라우저라면 크롬·사파리로 열어 다시 시도해 주세요.':'이 기록은 화면이 너무 길어 이미지로 만들지 못했다. 기록 화면을 직접 캡처해 저장해 주세요.';render();return}
-      const name=`도시의한해_일대기_${(e.v||'')}_${e.id}.png`,blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+      let tmp=null;if(sum){if(!e.sum)return;tmp=document.createElement('div');tmp.id='endSum';tmp.style.cssText='position:fixed;left:-10000px;top:0;width:420px;display:flex;flex-direction:column;gap:12px;padding:0;color:var(--fg);background:var(--bg);font:14px/1.5 var(--sans,"Noto Sans KR",sans-serif)';tmp.innerHTML=e.sum;document.body.appendChild(tmp)}
+      let cv;try{cv=await shotEnd(sum?'endSum':'chShot')}finally{if(tmp)tmp.remove()}if(!cv){UI.chMsg=UI.shotWhy==='load'?'이미지 도구를 불러오지 못했다. 인터넷 연결을 확인하거나 앱 속 브라우저라면 크롬·사파리로 열어 다시 시도해 주세요.':'이 기록은 화면이 너무 길어 이미지로 만들지 못했다. 기록 화면을 직접 캡처해 저장해 주세요.';render();return}
+      const name=`도시의한해_${sum?'요약':'일대기'}_${(e.v||'')}_${e.id}.png`,blob=await new Promise(r=>cv.toBlob(r,'image/png'));
       try{const f=new File([blob],name,{type:'image/png'});if(touchShare()&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(er){if(er&&er.name==='AbortError')return}
       try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(er){}
       if(window.self!==window.top){UI.imgUrl=cv.toDataURL('image/png');UI.chMsg='';render()}
     },
+    chimg2(v){return ACT.chimg(v,true)},
     chron(){UI.delAsk=null;UI.screen='chron';render()},
     rfold(k){const f=recFold(),i=f.indexOf(k);if(i<0)f.push(k);else f.splice(i,1);try{localStorage.setItem(RFK,JSON.stringify(f))}catch(e){}render()},
     chtab(k){UI.delAsk=null;UI.chTab=k==='fame'?'fame':'life';UI.screen='chron';render()},
@@ -2938,6 +2965,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     gtab(i){UI.gTab=i;render()},
     eqs(i){if(UI.screen!=='combat'&&E.equipStash(G.ch,+i)){resave();render()}},
     bspecial(id){if(E.buySpecial(G.ch,id,true)){UI.bought=D.special[id].n;render()}},
+    bgmreload(){try{location.reload()}catch(e){}},
+    bgmfailclose(){UI.bgmFail=false;render()},
     noticeok(){store.set('cityYearNotice',NOTICE.id);render()},
     titleeq(i){const L=titleList(G.ch),t=L[+i];if(!t)return;G.ch.equipTitle=G.ch.equipTitle===t[0]?'':t[0];resave();render()},
     packrn(i){
@@ -3085,7 +3114,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.bag){UI.bag=null;render()}});
   app.addEventListener('click',e=>{
     const b=e.target.closest('[data-a]');
-    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qpick','qvol','qsfx','bartog'].includes(b.dataset.a))return;
+    if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qpick','qvol','qsfx','bartog','bgmreload','bgmfailclose'].includes(b.dataset.a))return;
     ACT[b.dataset.a](b.dataset.i,b);
   });
   /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */

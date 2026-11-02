@@ -198,6 +198,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function giveRelic(ch,id,late){
     const R=D.relics[id];if(!R)return;
     (ch.relics=ch.relics||[]).push(R.n);(ch.relicIds=ch.relicIds||[]).push(id);ch.relicPick=false;ch.relicPickLate=false;
+    if(typeof jr==='function')jr(ch,'relic',{n:R.n});
     if(isWs(ch)&&CFG.wsRelic[id])return wsAbsorb(ch,id);
     if(R.odin){ch.odin=true;if(ch.o&&ch.o.n==='보냐텔리 가문')ch.yeji=true}
     /* 환도 + 궁니르: 공명 패시브와 전용 카드 2장 */
@@ -606,6 +607,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(it.slot==='aug'&&isN(ch)&&(it.kind||'의수')==='의수')return 'nwing';
     if(it.slot==='weapon'&&ch.o&&ch.o.herm)return 'herm';
     if(inStash(ch,id))return 'stash';
+    if(!it.perm&&ch.gw&&(ch.gw.seen||{})[id])return 'eaten';   // G사 병기가 한 번 먹은 공방 장비는 다시 사지 않는다
     if(it.grade>shopAccess(ch)&&!it.hw)return 'locked';
     if(ch.money<priceOf(ch,id))return 'money';
     return 'ok';
@@ -634,15 +636,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(!it.perm&&ch.distForm&&!ch.distStable)return 'distort';
     if(it.slot==='aug'&&isN(ch)&&(it.kind||'의수')==='의수')return 'nwing';
     if(!it.perm&&inStash(ch,id))return 'stash';
+    if(ch.bmSold&&ch.bmSold.v===(ch.bmV|0)&&ch.bmSold.ids.includes(id))return 'sold';   // 같은 방문에서는 한 번만 살 수 있다
     if(ch.money<it.price)return 'money';
     return 'ok';
   }
   function buySpecial(ch,id,offer){
     if(canBuySpecial(ch,id)!=='ok')return false;
     const it=D.special[id];ch.money-=specialPrice(ch,id);
+    if(!it.wsOnly){if(!ch.bmSold||ch.bmSold.v!==(ch.bmV|0))ch.bmSold={v:ch.bmV|0,ids:[]};ch.bmSold.ids.push(id)}
     if(it.wsOnly){(ch.stash=ch.stash||[]).push(Object.assign({id,grade:5},structuredClone(it)));ch.ws.auxN=(ch.ws.auxN||0)+1;return true}
     if(it.perm){(ch.perms=ch.perms||[]).push(id);addStats(ch.stats,it.fx);if(it.fx.maxHp)ch.hp+=it.fx.maxHp}
-    else if(offer)offerGear(ch,Object.assign({id,grade:4},it));else equip(ch,Object.assign({id,grade:4},it));
+    else{const g=Object.assign({id,grade:4,bm:ch.bmV|0},it);if(offer)offerGear(ch,g);else equip(ch,g)}
     return true;
   }
   function buy(ch,id,offer){
@@ -1394,7 +1398,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return null;
   }
   function setEgo(ch,type,name){
-    const e=M.ego[type];ch.ego={type,n:name.trim()};ch.egoPick=false;ch.voiceUsed=true;ch.voicePend=false;ch.distortPend=false;
+    const e=M.ego[type];ch.ego={type,n:name.trim()};if(typeof jr==='function')jr(ch,'ego',{n:name.trim()});ch.egoPick=false;ch.voiceUsed=true;ch.voicePend=false;ch.distortPend=false;
     if(e.hit)ch.stats.atk+=e.hit;if(e.hp){ch.stats.maxHp+=e.hp;ch.hp+=e.hp}
     if(e.eva)ch.stats.eva+=e.eva;
     /* 고정 전용 카드: 덱 최대 장수 +1 자리에 들어간다 (적성자는 이미 전용 카드가 있다). 덱이 고정이어도 넣는다 */
@@ -1609,7 +1613,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const lifeTo=hy=>hy?BD.kid.oldToLong:BD.kid.oldTo;
   /* 사람마다 눈을 감을 나이를 한 번 정해 둔다 (구간 안에서 가운데가 조금 더 잦은 삼각 분포): 같은 나이에 다 같이 쓰러지지 않고 구간 전체에 퍼진다 */
   const lifeAt=(o,hy)=>{if(o.dieAt==null){const a=lifeFrom(hy),z=lifeTo(hy),u=(d(1000)+d(1000))/2000;o.dieAt=a+Math.floor(u*(z-a+1))}return o.dieAt};
-  function bondRisk(b,y,ch){if(ch&&ch.flags&&ch.flags.spouseAge)return 0;return ((b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0))*(ch&&ch.flags&&ch.flags.bondGuard?0.5:1)}
+  function bondRisk(b,y,ch){if(b.eternal||(ch&&ch.flags&&ch.flags.spouseAge))return 0;return ((b.tabooAt!=null&&y>b.tabooAt?BD.dieChance:0)+(b.risk||0))*(ch&&ch.flags&&ch.flags.bondGuard?0.5:1)}
   function bondTaboo(ch){const b=ch.bond;if(b&&b.st==='married'&&b.tabooAt==null)b.tabooAt=ch.year||0}
   /* 결혼한 뒤의 배우자의 죽음 (큰 대가). 아이는 남는다 */
   function bondDeath(ch,chips){
@@ -1651,6 +1655,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const offer=kind=>pactOffer(ch,kind),row=pactRow(ch);
       if(!ch.pactAt)ch.pactAt=PK.from;
       if(age(G)>=ch.pactAt){ch.pactAt+=PK.every;const o=offer('c');ch.pactBuffDue=1;if(o.length)return {pact:'c',t:'제약 · 치르는 것',x:'백 해를 넘긴 몸에 도시의 값이 청구된다. 셋 가운데 하나를 받아야 한다. 이 값을 치른 뒤에 얻는 것을 고를 수 있다.',c:o.map(x=>row(x,'c'))}}}
+    /* 영생을 이은 가족의 안부: famEvery해마다, 나이에 따라 변화가 깊어진다(늙지 않음 → 기억이 닳음 → 이름이 흐려짐) */
+    if(!n&&ch.infIntro&&ch.famBind&&D.bond&&D.bond.prevent){const F=ch.famBind,PP=D.bond.prevent,P=PP[F.key];
+      if(P&&P.lines&&(ch.year||0)>=F.next){F.next=(ch.year||0)+CFG.infinite.famEvery;const ag=age(G),st=ag<350?0:ag<700?1:2,arr=P.lines[st],used=(F.used[st]=F.used[st]||[]);
+        let pool=arr.map((_,i)=>i).filter(i=>!used.includes(i));if(!pool.length){used.length=0;pool=arr.map((_,i)=>i)}const i=one(pool);used.push(i);
+        const nm=one(F.names),fill=t=>bondFill(t,{name:nm});
+        return {t:PP.lt[F.key],x:fill(arr[i]),c:[{l:PP.ll,h:'',ok:{t:fill(PP.lok),fx:{}}}]}}}
     if(!n&&ch.infIntro){const Lm=CFG.infinite.limit;if(!ch.limAt)ch.limAt=G.year+Lm.every;
       if(G.year>=ch.limAt){ch.limAt=G.year+Lm.every;const m=ch.colorDone?Lm.traitMul:1,pct=x=>Math.round(x*m*1000)/10;
         return {t:'한계 돌파',x:LI?'호수에서 수십 해를 보내자 몸이 물결의 박자를 기억한다. 더 멀리, 더 세게 휘두를 수 있다고 느낀다.':'오래 버틴 몸이 한계 너머를 보기 시작한다. 어느 쪽으로 더 벼릴지 정해야 한다.',c:[
@@ -1727,11 +1737,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function pvOffer(G,ch,b,kid,B,ageDie){
     const P=D.bond&&D.bond.prevent;if(!P)return null;const st=kid||b;if(st.pv)return null;
     const key=pvProfile(ch,b);if(!key)return null;const X=P[key];st.pv={key};
-    const nm=kid?kid.n:b.name,fill=t=>bondFill(t,{name:nm});
+    const nm=kid?kid.n:b.name,who=kid?kid.n:'s',fill=t=>bondFill(t,{name:nm});
     const deathFx=kid?{kidOld:nm,famGrief:1}:{bondDeath:true,famGrief:1,bondDie:ageDie?'age':'risk'};
     const giveT=kid?kf(B.kidOldOver?B.kidOldOver.at:B.kidOld.at,nm):bondFill(B.deathOld?B.deathOld.at:B.deathAT,b);
     return {t:fill(X.t),x:fill(kid?X.xk:X.x),c:[
-      {l:fill(X.a),h:X.h,ok:{t:fill(X.ok),fx:{famEnd:X.end}}},
+      {l:fill(X.a),h:X.h,ok:{t:fill(X.ok),fx:{famBind:{who,end:X.end,key}}}},
       {l:P.giveL,h:P.giveH,ok:{t:giveT,fx:deathFx}}]}}
   function bondEvent(G){
     const ch=G.ch,b=ch.bond,y=G.year,B=bondTx(ch);
@@ -1745,7 +1755,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(grown){grown.told=true;const J=B.kidJobs.find(j=>j.k===grown.job)||B.kidJobs[0];
         return {t:J.t,x:kf(J.x,grown.n),c:[{l:J.a,h:'아이는 자라서 자신의 길을 간다',ok:{t:kf(B.kidAT,grown.n),fx:{}}}]}}
       /* 아이도 늙는다: oldFrom살부터 해마다 확률로 눈을 감는다 (배우자만 죽고 아이가 몇백 살까지 사는 것은 이상하다는 의견) */
-      {const KO=B.kidOld,od=KO&&kids.find(k=>!k.dead&&!k.pend&&k.job!=='librarian'&&kidAge(k,y)>=lifeAt(k,kidHy(ch,k)));
+      {const KO=B.kidOld,od=KO&&kids.find(k=>!k.dead&&!k.pend&&!k.eternal&&k.job!=='librarian'&&kidAge(k,y)>=lifeAt(k,kidHy(ch,k)));
         if(od){const over=age(G)>100&&B.kidOldOver,GF=CFG.infinite.grief;
           {const po=pvOffer(G,ch,b,od,B,false);if(po)return po}
           return {t:KO.t,x:kf(over?B.kidOldOver.x:KO.x,od.n),c:[{l:KO.a,h:`정신력 −${KD.oldMind}`+(over?` · 슬픔이 몸에 굳는다 (공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100)}% 영구)`:''),ok:{t:kf(over?B.kidOldOver.at:KO.at,od.n),fx:over?{kidOld:od.n,famGrief:1}:{kidOld:od.n}}}]}}}
@@ -1759,7 +1769,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           return {t:B.grand.t,x:kf(B.grand.x,gk.n).replace(/\{g\}/g,gn)+lgx,c:[{l:B.grand.a,h:`${gk.n}의 아이 · 이름은 ${gn}`,ok:{t:kf(B.grand.at,gk.n).replace(/\{g\}/g,gn),fx:{bondGrand:{k:gk.n,g:gn}}}}]}}}
       if(b.st!=='married')return null;
       const spAge=age(G),spHy=spouseHy(ch,b),ageDie=ch.flags&&ch.flags.spouseAge&&spAge>=lifeAt(b,spHy);   // 배우자는 주인공과 같은 나이로 센다
-      if(!R.immortal&&(ageDie||d(1000)<=bondRisk(b,y,ch)*10))
+      if(!R.immortal&&!b.eternal&&(ageDie||d(1000)<=bondRisk(b,y,ch)*10))
         {const po=pvOffer(G,ch,b,null,B,ageDie);if(po)return po;const over=age(G)>100&&B.deathOld,GF=CFG.infinite.grief;
         return {t:B.deathT,x:bondFill(over?B.deathOld.x:R.lost,b),c:[{l:B.deathA,h:`최대 정신력 −${BD.lossMind} (영구) · 해마다 정신력 회복이 끊긴다`+(over?` · 슬픔이 몸에 굳는다 (공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100)}% 영구)`:''),ok:{t:bondFill(over?B.deathOld.at:B.deathAT,b),fx:over?{bondDeath:true,famGrief:1,bondDie:ageDie?'age':'risk'}:{bondDeath:true,bondDie:ageDie?'age':'risk'}}}]}}
       const last=kids.length?kids[kids.length-1].born:-99;
@@ -1985,15 +1995,24 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const R=gwRoute(),A=R&&R.act2;if(A&&(G.year||0)>=A[0].from){const e=A[ch.gwAct||0];if(e&&G.year>=e.from){ch.gwAct=(ch.gwAct||0)+1;return JSON.parse(JSON.stringify(e.ev))}}
     return null}
   /* 장비를 먹는다(섭식): 장비는 사라지고 능력치가 오른다(먹을 때마다 flat + 장비 능력치의 일부). 히든급(grade 5 이상)을 hiddenNeed개 먹으면 왕족 인자가 발현한다 */
+  /* 먹을 때 오르는 능력치: 등급 값 × 칸별 배율(무기는 공격, 방어구는 최대 HP, 보조 장비는 회피·속도) + 장비 능력치의 일부(칸마다 정해진 능력치만) */
+  function gwEatFx(item){
+    const Z=CFG.gweapon,sl=item.slot||'weapon',val=Z.eatVal[Math.min(Z.eatVal.length-1,item.grade||0)]||0,fx=Object.assign({},Z.flat);
+    for(const [k,m] of Object.entries(Z.eatSlot[sl]||{})){const v=Math.floor(val*m);if(v>0)fx[k]=(fx[k]||0)+v}
+    for(const k of (Z.absorbBy[sl]||Z.absorbKeys)){const v=Math.floor(((item.fx||{})[k]||0)*Z.absorb);if(v>0)fx[k]=(fx[k]||0)+v}
+    return fx}
+  /* 같은 장비를 몇 번째로 먹는지, 이번에 오르는지 */
+  function gwEatDue(ch,item){const Z=CFG.gweapon,key=(item.bm!=null&&D.special[item.id])?item.id+'@'+item.bm:(item.id||item.n),seen=(ch.gw&&ch.gw.seen)||{},n=(seen[key]||0)+1,ev=(Z.same&&Z.same.every)||0;return {key,n,gives:n===1||(ev>0&&n%ev===0),every:ev}}
   function gwEat(ch,item,chips){
     const Z=CFG.gweapon;if(!ch.gw||!ch.gw.proc||!item)return false;
-    const fx=Object.assign({},Z.flat);
-    for(const k of Z.absorbKeys){const v=Math.floor(((item.fx||{})[k]||0)*Z.absorb);if(v>0)fx[k]=(fx[k]||0)+v}
+    const due=gwEatDue(ch,item);(ch.gw.seen=ch.gw.seen||{})[due.key]=due.n;
+    if(!due.gives){chips.push(`${item.n}${(c=>{const f=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:0;return f?'을':'를'})(String(item.n).slice(-1).charCodeAt(0))} 먹었다 · 같은 장비라 몸이 더는 받아들이지 않는다 (${due.n}번째${due.every?` · ${due.every}번마다 오른다`:' · 오르지 않는다'})`);return true}
+    const fx=gwEatFx(item);
     addStats(ch.stats,fx);if(fx.maxHp)ch.hp+=fx.maxHp;
     const abs=ch.gw.abs=ch.gw.abs||{},addAbs=o=>{for(const [k,v] of Object.entries(o))abs[k]=(abs[k]||0)+v};addAbs(fx);
     (ch.gw.ate=ch.gw.ate||[]).push({n:item.n,g:item.grade||0,fx:Object.assign({},fx)});if(ch.gw.ate.length>20)ch.gw.ate.shift();
     ch.gw.eaten=(ch.gw.eaten||0)+1;const hid=(item.grade||0)>=5;if(hid)ch.gw.hidden=(ch.gw.hidden||0)+1;
-    chips.push(`${item.n}${(c=>{const f=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:0;return f?'을':'를'})(String(item.n).slice(-1).charCodeAt(0))} 먹었다 · 섭식 ${ch.gw.eaten}번${hid?` · 히든 ${ch.gw.hidden}/${Z.hiddenNeed}`:''} · ${Object.entries(fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · ')}`);
+    chips.push(`${item.n}${(c=>{const f=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:0;return f?'을':'를'})(String(item.n).slice(-1).charCodeAt(0))} 먹었다 · 섭식 ${ch.gw.eaten}번${hid?` · 히든 ${ch.gw.hidden}/${Z.hiddenNeed}`:''} · ${Object.entries(fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='check'?'판정':k)} +${v}`).join(' · ')||'오른 것이 거의 없다'}`);
     for(const L of Z.bio)if(ch.gw.eaten===L.at){addStats(ch.stats,L.fx);addAbs(L.fx);chips.push(`생체 변형 · ${L.e} · ${Object.entries(L.fx).map(([k,v])=>`${STAT[k]||(k==='maxHp'?'최대 HP':k==='dmgB'?'피해':k)} +${v}`).join(' · ')}`)}
     if(hid){
       const HB=Z.hiddenBonus[(ch.gw.hidden||1)-1];
@@ -2591,7 +2610,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.sunk)return {type:'end',win:false,cause:'sunk'};
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
-    if(mc.famEnd){const k=mc.famEnd;mc.famEnd=null;return {type:'end',win:true,out:k}}
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
     if(hasInn(mc,'mark')&&!mc.markOn&&G.year>=CFG.innate.markYear-1)return {type:'event',ev:D.innateEvents.mark};
     if(D.relicEvent&&!mc.relicEvt&&!mc.hw&&G.year===CFG.relicEvent.year-1){mc.relicEvt=true;return {type:'event',ev:(lakeOn(G.ch)&&D.lake&&D.lake.relicEvent)||D.relicEvent}}
@@ -2627,7 +2645,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
     if(G.infinite&&!G.ch.oldEnd&&age(G)>=CFG.oldAge){G.ch.oldEnd=true;return {type:'end',win:true,old:true}}
     /* 무한 모드에서 overflowAge살에 닿으면 끝나는 히든 엔딩 (기록실에는 올라가지 않고, 이어갈 수 없다) */
-    if(G.infinite&&!G.ch.overflowEnd&&age(G)>=CFG.overflowAge){G.ch.overflowEnd=true;return {type:'end',win:true,overflow:true}}
+    if(G.infinite&&!G.ch.overflowEnd&&age(G)>=CFG.overflowAge){G.ch.overflowEnd=true;return G.ch.famBind&&G.ch.famBind.end?{type:'end',win:true,out:G.ch.famBind.end}:{type:'end',win:true,overflow:true}}
     /* 무한 모드 추가 엔딩: 한 번씩, 끝낸 뒤에도 이어서 살아갈 수 있다 */
     if(G.infinite){const ch=G.ch,OE=CFG.outEnds;ch.outSeen=ch.outSeen||{};
       const baseEnd_=CFG.years+CFG.endless.span*CFG.endless.grades.length;
@@ -2824,7 +2842,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:`대형 파도 ${i+1}/${w.max}`,x:lines[Math.min(i,lines.length-1)]+(last?' 이번이 마지막이다.':'')+`\n배 내구도 ${hullOf(ch)}/${CFG.lake.hullMax} · 판정에 실패할 때마다 내구도를 잃는다 (최대 ${W.hullLoss}). 0이 되면 배가 가라앉는다.`,shake:true,c}}
   /* 일지: 선택과 그 결과 가운데 이야기가 될 만한 것만 연도와 함께 남긴다. 엔딩의 행적이 이것을 요약해서 엮는다 */
   function jr(ch,k,o){const J=ch.journal=ch.journal||[];J.push(Object.assign({y:ch.year||0,k},o||{}));if(J.length>160){const i=J.findIndex(x=>x.k==='exam'||x.k==='boss');J.splice(i>0?i:1,1)}}
-  const jSnap=ch=>({aff:ch.aff&&ch.aff.name||null,promos:ch.promos||0,lic:!!ch.licensed,col:!!ch.colorDone,colF:!!ch.colorFailed,bond:ch.bond?{st:ch.bond.st,tries:ch.bond.tries||0,kids:(ch.bond.kids||[]).length,name:ch.bond.name,dieBy:ch.bond.dieBy}:null});
+  const jSnap=ch=>({wv:!!(ch.lake&&ch.lake.wave),mo:(ch.lake&&ch.lake.morphed)||0,aff:ch.aff&&ch.aff.name||null,promos:ch.promos||0,lic:!!ch.licensed,col:!!ch.colorDone,colF:!!ch.colorFailed,bond:ch.bond?{st:ch.bond.st,tries:ch.bond.tries||0,kids:(ch.bond.kids||[]).length,name:ch.bond.name,dieBy:ch.bond.dieBy}:null});
   function jFrom(ch,fx,J0,roll){
     const a=ch.aff&&ch.aff.name||null;
     if(a&&a!==J0.aff)jr(ch,'join',{n:a});
@@ -2844,8 +2862,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(b0.st==='married'&&b.st==='lost')jr(ch,'spouseDie',{n:b.name,how:b.dieBy||''});
       if((b.kids||[]).length>b0.kids)jr(ch,'kid',{n:(b.kids[b.kids.length-1]||{}).n});}
     if(fx.lakeFlee)jr(ch,'lakeFlee');
+    if(fx.lakeWave&&ch.flags&&ch.flags.lake){const L=ch.lake||{};
+      if(fx.lakeWave==='fail'){if(J0.wv&&!L.wave)jr(ch,'drift');else jr(ch,'waveFail')}
+      else if(J0.wv&&!L.wave)jr(ch,fx.lakeWave==='sac'?'waveSac':'waveOk')}
+    if(ch.lake&&(ch.lake.morphed||0)>J0.mo)jr(ch,'morph');
+    if(fx.lakePirate)jr(ch,'pirate',{how:fx.lakePirate});
+    if(fx.lakeIndigo)jr(ch,'indigo',{how:fx.lakeIndigo});
     if(fx.lakeWhale)jr(ch,'lakeHunt');
-    if(fx.famEnd)jr(ch,'famEnd',{n:fx.famEnd});
+    if(fx.famBind)jr(ch,'famBind',{n:fx.famBind.who==='s'?(ch.bond&&ch.bond.name):fx.famBind.who});
   }
   function choose(G,ev,i){
     const ch=G.ch,c=ev.c[i];let res=c.ok,roll=null,xp=CFG.xp.plain,xpNote=null;
@@ -2920,9 +2944,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(fx.limit==='dmg'){ch.limDmg=(ch.limDmg||0)+Lm.dmgPct*m;chips.push(`한계 돌파 · 주는 피해 +${Math.round(Lm.dmgPct*m*1000)/10}% (누적 ${Math.round(ch.limDmg*1000)/10}%)`)}
       else{ch.limStrike=(ch.limStrike||0)+Lm.strikePct*m;chips.push(`한계 돌파 · 적중 시 상대에게 추가 피해 (내 최대 HP의 ${Math.round(Lm.strikePct*m*1000)/10}%) (누적 ${Math.round(ch.limStrike*1000)/10}%)`)}}
     if(fx.pactPick){const PK=CFG.infinite.pact,x=[...PK.cons,...PK.buffs].find(q=>q.id===fx.pactPick);if(x){ch.pact=ch.pact||{};ch.pact[x.id]=Math.min(PK.cap,(ch.pact[x.id]||0)+1);chips.push(`${PK.cons.includes(x)?'제약':'버프'} · ${x.n} ${ch.pact[x.id]}번 · ${x.e}`)}}
-    if(fx.infCentury){const K=CFG.infinite.century;(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
+    if(fx.infCentury){const K=CFG.infinite.century;jr(ch,'century',{n:fx.infCentury});(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
-    if(fx.famEnd){ch.famEnd=fx.famEnd;chips.push('이 판은 곧 끝난다')}
+    if(fx.famBind&&ch.bond){const w=fx.famBind.who,tg=w==='s'?ch.bond:(ch.bond.kids||[]).find(k=>k.n===w),nm=w==='s'?ch.bond.name:w;
+      if(tg){tg.eternal=true;const F=ch.famBind=ch.famBind||{end:fx.famBind.end,key:fx.famBind.key,names:[],next:(ch.year||0)+CFG.infinite.famEvery,used:{}};if(!F.names.includes(nm))F.names.push(nm);
+        ch.stats.mindMax=(ch.stats.mindMax||0)-CFG.infinite.famMind;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`${nm} · 영생을 이었다 · 이제 죽음이 오지 않는다`);chips.push(`최대 정신력 −${CFG.infinite.famMind} (영구) · 대가로 무언가가 함께 결여된다`)}}
     if(fx.kidOld&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.kidOld&&!k.dead);if(kk){kk.dead=fx.kidWhy||'old';kk.dieYear=ch.year||0;chips.push(`${kk.n} · 눈을 감았다`);loseMind(ch,BD.kid.oldMind,m=>chips.push(m))}}
     if(fx.infHome){ch.infHome=1;chips.push('외곽에 작은 집을 지었다')}
     if(fx.lakeOuter){chips.push('집은 짓지 않는다 · 호수에서 호수로 항해가 이어진다')}
@@ -3610,6 +3636,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(sa<=sd){
         if(B.passive&&B.passive.id==='godfather'&&!B.gfBonus){B.gfBonus=true;L('kw',`  ${B.name} · ${B.passive.n} · 다음 적중 피해 +1d2`)}
         L('miss',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs 회피 ${sd}${B.maskOn?` (${B.passive.n} +${B.passive.eva})`:''} · 빗나감`);
+        if(B.dodgeCtr&&B.dodgeCtr.r===C.round&&B.dodgeCtr.n<B.dodgeCtr.max&&A.hp>0&&B.hp>0){B.dodgeCtr.n++;const x_=B.dodgeCtr.dmg;hpLoss(C,A,x_,L);L('kw',`  ${B.name} · 받아치기 · ${A.name}에게 고정 피해 ${x_} (${B.dodgeCtr.n}/${B.dodgeCtr.max})`)}
         if(c.onMiss&&A.hp>0){A.breath=Math.min(bcap(A),A.breath+c.onMiss.breath);A.passHitNext=(A.passHitNext||0)+c.onMiss.hitNext;L('kw',`  ${A.name} · ${c.n} · 빗나갔다 · 호흡 +${c.onMiss.breath} (지금 ${A.breath}) · 다음 라운드 명중 +${c.onMiss.hitNext}`)}
         push(Object.assign(base,{hit:false,rolls:[],dmg:0,note:''}));
         continue;
@@ -3949,7 +3976,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       if(c.cd&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.cdUntil=C.cdUntil||{})[id_]=C.round+c.cd+1}
       A.focusOn=!!(A.focus&&A.charge>=A.focus.at);A.expOn=!!(A.chargeExp&&A.charge>=A.chargeExp.at);A.spent=0;if(c.spend&&A.charge>0){A.spent=Math.min(A.charge,c.spend+(A.wx&&A.wx.edge?A.wx.edge.spend:0));A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · 충전 ${A.spent} 소모 (남은 ${A.charge})`)}
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
-      if(c.t==='def'){A.defRound=C.round;if(c.egBrace){A.egBrace=C.round;A.egBraceN=c.egBrace+(A.mf&&c.egBraceMf||0)}cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){const sh_=Math.max(0,Math.round((c.shield+(A.prescPlus||0))*(A.isP&&C.ch.infinite&&C.ch.pact?1-pactV(C.ch,'crack'):1)));A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+sh_);L('kw',`${A.name} · ${c.n} · 보호막 +${sh_} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=Math.round(((c.eva||CFG.defBonus)+A.defUp+(A.prescPlus||0))*(A.isP&&C.ch.infinite&&C.ch.pact?1-pactV(C.ch,'crack'):1));A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
+      if(c.t==='def'){A.defRound=C.round;if(c.dodgeCtr)A.dodgeCtr={r:C.round,dmg:c.dodgeCtr.dmg,max:c.dodgeCtr.max||3,n:0};if(c.egBrace){A.egBrace=C.round;A.egBraceN=c.egBrace+(A.mf&&c.egBraceMf||0)}cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){const sh_=Math.max(0,Math.round((c.shield+(A.prescPlus||0))*(A.isP&&C.ch.infinite&&C.ch.pact?1-pactV(C.ch,'crack'):1)));A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+sh_);L('kw',`${A.name} · ${c.n} · 보호막 +${sh_} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=Math.round(((c.eva||CFG.defBonus)+A.defUp+(A.prescPlus||0))*(A.isP&&C.ch.infinite&&C.ch.pact?1-pactV(C.ch,'crack'):1));A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
       if(P.hp<=0||E.hp<=0)return;
       act(C,A,c,L,push);
       ampUse(C,L);
@@ -4055,5 +4082,5 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    bondEvent,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

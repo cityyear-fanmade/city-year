@@ -19,9 +19,11 @@ if(err.length){console.error('데이터 오류:\n  '+err.join('\n  '));process.e
 /* 모듈 문법만 걷어 낸다: import 줄 삭제, export 키워드 삭제 */
 const strip=s=>s.replace(/^import .*;\s*$/gm,'').replace(/^export (const|function|async function|let)/gm,'$1');
 const routeTest=process.argv.includes('--routetest'),lab=process.argv.includes('--lab'),augdemo=process.argv.includes('--augdemo'),noBgm=lab||augdemo||process.argv.includes('--nobgm');
-const BGM_STUB=`function createBgm(){const f=()=>{};return {supported:false,isOn:()=>false,set:f,setMood:f,setScene:f,setVol:f,setStyle:f,style:()=>'calm',extOn:()=>false,ext:()=>({calm:1,fight:1}),setExt:f,vol:()=>0,level:()=>0,debug:()=>null}}`;
+const BGM_STUB=`function createBgm(){const f=()=>{};return {supported:false,isOn:()=>false,set:f,setMood:f,setScene:f,setVol:f,setStyle:f,setOnFail:f,style:()=>'calm',extOn:()=>false,ext:()=>({calm:1,fight:1}),setExt:f,vol:()=>0,level:()=>0,debug:()=>null}}`;
 /* 악기 샘플 배경음악(assets/bgm/<스타일>_<장면>.mp3)을 data 주소로 넣는다. --nosamples면 넣지 않아 합성음만 쓴다 */
 const noSamples=process.argv.includes('--nosamples');
+/* --extbgm: 배경음악 파일을 HTML에 넣지 않고 assets/bgm/ 아래 mp3를 필요할 때 읽는다 (본섭 페이지가 너무 커서 휴대폰에서 안 열리던 문제) */
+const extBgm=process.argv.includes('--extbgm');
 /* --lake: 대호수 출생 시험용. 오늘의 시드가 언제나 히든 출생 40(대호수로 나간 자)으로 태어난다 */
 const lakeTest=process.argv.includes('--lake');
 /* --mind: 정신력 10 이하 연출(목소리·뒤틀림 사건·전투 중 정신력 0)만 시험하는 판 */
@@ -30,10 +32,10 @@ const mindTest=process.argv.includes('--mind');
 const fingerTest=process.argv.includes('--finger');
 /* --unlocktest: 해금 출생 시험판 */
 const unlockTest=process.argv.includes('--unlocktest');
-const bgmData={};if(!noBgm&&!noSamples){for(const st of ['calm','passion','library','wave'])for(const sc of ['calm','fight','fight1','fight2','fight3','fight4','fight5']){try{(bgmData[st]=bgmData[st]||{})[sc]='data:audio/mpeg;base64,'+readFileSync(new URL(`../assets/bgm/${st}_${sc}.mp3`,import.meta.url)).toString('base64')}catch(e){}}}{const td=(process.argv.find(x=>x.startsWith('--bgmtest='))||'').slice(10);if(td&&!noBgm){bgmData.ext={};for(let i=1;i<=5;i++)for(const sc of ['calm','fight']){bgmData.ext['t'+i+'_'+sc]=`assets/bgm/ext/t${i}_${sc}.mp3`}if(bgmData.passion)for(const k of ['fight1','fight2','fight3','fight4','fight5'])delete bgmData.passion[k]}}
+const bgmData={};if(!noBgm&&!noSamples&&!extBgm){for(const st of ['calm','passion','library','wave'])for(const sc of ['calm','fight','fight1','fight2','fight3','fight4','fight5']){try{(bgmData[st]=bgmData[st]||{})[sc]='data:audio/mpeg;base64,'+readFileSync(new URL(`../assets/bgm/${st}_${sc}.mp3`,import.meta.url)).toString('base64')}catch(e){}}}{const td=(process.argv.find(x=>x.startsWith('--bgmtest='))||'').slice(10);if(td&&!noBgm){bgmData.ext={};for(let i=1;i<=5;i++)for(const sc of ['calm','fight']){bgmData.ext['t'+i+'_'+sc]=`assets/bgm/ext/t${i}_${sc}.mp3`}if(bgmData.passion)for(const k of ['fight1','fight2','fight3','fight4','fight5'])delete bgmData.passion[k]}}
 try{bgmData.boss={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets/bgm/boss_boss.mp3',import.meta.url)).toString('base64')}}catch(e){}
 /* 뤼엔 전용 곡은 사용자가 따로 정해 주기로 해서 기본 빌드에는 넣지 않는다(--ruenbgm으로만 넣는다) */
-try{if(!noBgm&&!noSamples&&process.argv.includes('--ruenbgm'))bgmData.ruen={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets/bgm/ruen_boss.mp3',import.meta.url)).toString('base64')}}catch(e){}
+try{if(!noBgm&&!noSamples&&!extBgm&&process.argv.includes('--ruenbgm'))bgmData.ruen={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets/bgm/ruen_boss.mp3',import.meta.url)).toString('base64')}}catch(e){}
 /* 이미지 저장용 html2canvas(MIT)를 파일에 넣어 둔다. 인터넷이 막힌 곳에서도 결과 이미지를 만들 수 있게 (없으면 CDN에서 받는다) */
 const h2c=(()=>{try{return r('vendor/html2canvas.min.js').replace(/<\/script/gi,'<\\/script')}catch(e){return ''}})();
 const js0=['src/config.js','src/engine.js','src/bgm.js','src/sfx.js','src/ui.js'].map(p=>`/* ---- ${p} ---- */\n`+(noBgm&&p==='src/bgm.js'?BGM_STUB:strip(r(p)))).join('\n');
@@ -46,7 +48,7 @@ const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
   .replace('<link rel="stylesheet" href="css/style.css">',()=>`<style>\n${r('css/style.css')}</style>`)
-  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\nwindow.CITY_BGM=${JSON.stringify(bgmData)};\n(()=>{\n${js}\nconst DATA=${JSON.stringify(D)};\nwindow.CITY=startUI(createEngine(DATA),document.getElementById('app'));\n})();\n</script>`);
+  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${js}\nconst DATA=${JSON.stringify(D)};\nwindow.CITY=startUI(createEngine(DATA),document.getElementById('app'));\n})();\n</script>`);
 if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('\nwindow.CITY_BGM=',`\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_BGM=`);
 if(augdemo)html=html.replace('<title>도시의 한 해</title>','<title>의수 의뢰 체험</title>').replace('\nwindow.CITY_BGM=','\nwindow.CITY_AUGDEMO=true;\nwindow.CITY_BGM=');
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');
