@@ -1247,6 +1247,8 @@ export function startUI(E,app){
     outer:'무한 모드에서 제 2막을 넘겨 외곽으로 나간 뒤, "외곽에서 이야기를 끝낸다"를 직접 고른다',
     out_seal:'무한 모드 외곽에서 균열로 흘러드는 히든 보스를 모두 쓰러뜨린다',
     out_star:'무한 모드 외곽에서 쓰러뜨린 상대가 16명 이상이 된다',
+    out_famcrow:'무한 모드에서 까마귀로 100살을 넘긴 뒤 가족의 죽음 앞에서 "원본으로 배양조에 든다"를 고른다',
+    out_famlake:'무한 모드에서 대호수로 100살을 넘긴 뒤 가족의 죽음 앞에서 "물결에 이름을 놓는다"를 고른다',
     out_famblood:'무한 모드에서 혈귀로 100살을 넘긴 뒤 가족의 죽음 앞에서 "강물에 이름을 내놓는다"를 고른다',
     out_fampill:'무한 모드에서 홍원의 가주나 군주로 100살을 넘긴 뒤 가족의 죽음 앞에서 "금지된 환을 짓는다"를 고른다',
     out_settle:'무한 모드 외곽에서 결혼한 채 자식이 성인이 되고, 제 2막을 넘긴 뒤 12년이 지난다',
@@ -1304,7 +1306,7 @@ export function startUI(E,app){
   const vRecords=()=>{const f=recFold(),tab=UI.recTab||'요약';const html=vRecords0().replace(/<div class="panel stack"( style="[^"]*")?><span class="eyebrow">([^<]*)<\/span>/g,(m,st,t)=>{const k=t.replace(/\s*·.*$/,'').replace(/\s*[0-9].*$/,'')||t,c=f.includes(k);return `<div class="panel stack rfold${c?' closed':''}"${(()=>{const hide=recTabOf(t)!==tab;if(!hide)return st||'';return st?st.replace(/"$/,';display:none"'):' style="display:none"'})()}><span class="eyebrow rfh" data-a="rfold" data-i="${esc(k)}" role="button" aria-expanded="${!c}">${c?'▸':'▾'} ${t}</span>`});return html};
   function vRecords0(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
-    const ends0=[['gwmoth','나방 공주의 밤'],['gwroach','바퀴 황제의 왕좌'],['gwfly','파리 대왕의 식탁'],['gwhuman','인간으로 남은 병기'],['clawreturn','돌아온 발톱'],['clawstay','길을 닫은 발톱'],['arbkeep','한쪽을 남긴 조율자'],['arbdown','내려온 조율자'],['libstay','책이 된 사서'],['libclose','문을 닫는 사서'],['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['hermobey','끝난 지령'],['hermfree','지령 없는 아침'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['out_famblood','불사의 강물'],['out_fampill','금지된 환'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
+    const ends0=[['gwmoth','나방 공주의 밤'],['gwroach','바퀴 황제의 왕좌'],['gwfly','파리 대왕의 식탁'],['gwhuman','인간으로 남은 병기'],['clawreturn','돌아온 발톱'],['clawstay','길을 닫은 발톱'],['arbkeep','한쪽을 남긴 조율자'],['arbdown','내려온 조율자'],['libstay','책이 된 사서'],['libclose','문을 닫는 사서'],['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['hermobey','끝난 지령'],['hermfree','지령 없는 아침'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['out_famblood','불사의 강물'],['out_fampill','금지된 환'],['out_famcrow','배양조의 시간'],['out_famlake','선원의 이름'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
     /* 오버플로우(무한 모드 1000살)는 달성하기 전에는 칸도 개수도 보이지 않는다 */
     const ends=ends0.filter(([k])=>k!=='overflow'||r.endings.includes('overflow'));
     const groups=[['초반','early'],['중반','mid'],['후반','late'],['보스·이름난 상대','boss'],['히든','hidden']];
@@ -2135,6 +2137,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const OUTEND={seal:['균열이 닫혔다','균열 너머에서 흘러든 이름들이 하나둘 쓰러졌다. 마지막 하나가 눈을 감자 세계의 균열은 당신이 선 자리에서 가장 먼저 아물었다. 머리도 닫지 못한 문을, 당신이 한 겹 닫았다.'],
     star:['도시의 별이 되었다','이름을 가진 존재들 거의 전부와 맞서 이겼다. 도시의 장부에는 더 이상 당신에게 붙일 이름이 없었고, 사람들은 하늘에 새로 뜬 별 하나를 당신의 이름으로 불렀다.'],
     famblood:['불사의 강물을 건넜다','강물은 약속대로 이름을 가져갔다. 강가에 남은 사람은 늙지 않는 몸으로 아침을 맞았다. 당신은 이름 없는 불순물이 되어 강물이 닿지 않는 곳으로 걸어 나갔다. 곁의 사람은 오래 살 것이다. 당신을 기억하는 마지막 사람으로.'],
+    famcrow:['배양조의 시간이 멈췄다','원본이 있는 한 복제체는 닳지 않는다. 배양조의 문이 닫힌 뒤에도 곁의 사람은 같은 얼굴로 오래 눈을 떴다. 당신은 표본 번호 하나가 되어 이름도 얼굴도 내놓았다. 이름 없는 불순물이 된 원본은 닫힌 문 앞으로 걸어 나갔다.'],
+    famlake:['선원의 이름이 호수에 남았다','호수는 가져간 이름을 돌려주지 않는다. 갑판에 선 사람은 호수에 맞춰진 몸이 되어 늙지 않았다. 당신은 물결 속으로 이름을 놓고 이름 없는 불순물이 되어 배를 떠났다. 선원들은 말없이 닻을 올렸다. 새 키잡이의 이름만 호수가 기억했다.'],
     fampill:['금지된 환을 지었다','환은 끝내 완성되지 않았다. 불완전한 영생은 먹은 이에게 오래 남았고, 값은 당신이 치렀다. 머리가 문 앞에 왔을 때 당신은 이미 사람이 아니었다. 이름 없는 불순물이 되어 가문을 떠났다. 곁의 사람은 불완전한 영생을 안고 남았다.'],
     settle:['외곽에 집을 지었다','괴수의 울음이 닿지 않는 언덕에 작은 집을 지었다. 식탁에는 가족의 자리가 있고, 창밖의 균열은 오늘도 멀리서 닫혀 간다.']};
   /* 오늘의 시드: 그날 도전 기록. 이번 결과를 이전 최고와 견준다 */

@@ -1715,12 +1715,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 1000해 불순물이 가져오는 카드: 기록된 덱 중 가장 센 카드 한 장 (예전 기록의 12장 덱도 이 한 장으로 줄여 쓴다) */
   const ghostCard=deck=>{let best=null,bs=-1;for(const id of deck||[]){const c=D.cards[id];if(!c)continue;const s=((c.dice||0)+(c.b||0))*(c.hits||1);if(s>bs){bs=s;best=id}}return best};
   let legacyFn=null,ghostFn=null;const ghostOf=ch=>{const g=ghostFn?ghostFn():null;return g&&g.deck&&g.deck.length>=3&&ch.infinite?g:null};
-  /* 배우자·자식의 죽음 앞에서 고르는 길: 나이 100을 넘긴 뒤 혈귀(불사의 강물) · 홍원 가주/군주(금지된 환)만 방도가 열린다.
+  /* 배우자·자식의 죽음 앞에서 고르는 길: 나이 100을 넘긴 뒤 혈귀(불사의 강물) · 홍원 가주/군주(금지된 환) · 까마귀(배양조의 시간) · 대호수(선원의 이름)만 방도가 열린다.
      방도를 따르면 주인공은 불순물이 되어 떠나고 영생을 얻은 곁의 사람은 남는 엔딩으로 이 판이 끝난다. 받아들이면 지금의 죽음 사건 */
   function pvProfile(ch,b){
     if(age({year:ch.year||1})<=100)return null;
     if(ch.o&&ch.o.race==='hyeolgwi'&&!(b.route==='hyeolgwi'&&b.variant===1))return 'blood';
     if((ch.hw&&ch.hw.done)||(ch.beaten||[]).includes('hongwon'))return 'hw';
+    if(ch.o&&ch.o.key==='crow')return 'crow';
+    if(lakeOn(ch))return 'lake';
     return null}
   function pvOffer(G,ch,b,kid,B,ageDie){
     const P=D.bond&&D.bond.prevent;if(!P)return null;const st=kid||b;if(st.pv)return null;
@@ -1729,7 +1731,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const deathFx=kid?{kidOld:nm,famGrief:1}:{bondDeath:true,famGrief:1,bondDie:ageDie?'age':'risk'};
     const giveT=kid?kf(B.kidOldOver?B.kidOldOver.at:B.kidOld.at,nm):bondFill(B.deathOld?B.deathOld.at:B.deathAT,b);
     return {t:fill(X.t),x:fill(kid?X.xk:X.x),c:[
-      {l:fill(X.a),h:X.h,ok:{t:key==='blood'?'강가에 서서 이름을 내놓았다. 강물은 말없이 그것을 받았다.':'환의 마지막 장을 따라 불을 올렸다. 연기가 오르는 동안 이름이 하나씩 몸에서 떨어져 나갔다.',fx:{famEnd:key==='blood'?'famblood':'fampill'}}},
+      {l:fill(X.a),h:X.h,ok:{t:fill(X.ok),fx:{famEnd:X.end}}},
       {l:P.giveL,h:P.giveH,ok:{t:giveT,fx:deathFx}}]}}
   function bondEvent(G){
     const ch=G.ch,b=ch.bond,y=G.year,B=bondTx(ch);
