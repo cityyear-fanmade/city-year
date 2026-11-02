@@ -19,7 +19,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v10.4.2';
+  const VERSION='v10.4.3';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
@@ -1027,6 +1027,7 @@ export function startUI(E,app){
     if(trainHome())return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">열차 승무원 칸</div><h2>잠시 숨을 돌린다</h2><p class="small dim">열차 안에는 공방이 없다. 의무실만 문을 열어 둔다.</p></div>${vClinic()}<button class="btn primary" data-a="unshop">칸을 나간다</button>`;
     /* 입장 조건 문구: 그 등급을 주는 소속 / (한 등급 낮은 소속 또는 무소속) + 해결사 급수 보너스 */
     const need=g=>{
+      if(g>2&&lakeHome())return '대호수에서 배를 맡아 선장이 되면';
       if(g>A.base+A.rankBonus.plus+1&&A.top)return `${T.licensed} ${A.top}${T.rankUnit} 이상(또는 진로 최고 직위)`;
       const nm=f=>Object.entries(A.aff).filter(([,v])=>f(v)).map(([k])=>T.affTypes[k]);
       const direct=nm(v=>v>=g),low=nm(v=>v<g&&v+A.rankBonus.plus>=g),rk=`${T.licensed} ${A.rankBonus.rank}${T.rankUnit} 이상`;

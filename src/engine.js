@@ -591,6 +591,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if((ch.licensed&&ch.rank<=A.rankBonus.rank)||fingerUp||topRank)g=Math.min(3,g+A.rankBonus.plus);
     /* 홍원의 자제가 가문 밖(외부 임무·가주 이후)에서 공방 거리에 들르면 1급 대접: 최고 등급(명장의 공방)까지 이용한다 */
     if(ch.hw&&(ch.hw.out||ch.hw.done))return A.max;
+    /* 대호수에서 배를 맡아 선장이 되면 1급 대접: 항구에서도 최고 등급(명장의 공방)까지 이용한다 */
+    if(ch.lake&&ch.lake.captain)return A.max;
     /* 최상위 명장의 공방: 해결사 1급 이상이거나 진로 최고 직위(1급 대접)일 때만. 항구·저잣거리(대호수·홍원)에는 없다 */
     if(!ch.hw&&!(ch.flags&&ch.flags.lake)&&rankMet(ch,A.top))g=A.max;
     return g;
