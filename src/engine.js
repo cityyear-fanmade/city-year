@@ -607,6 +607,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(it.slot==='aug'&&isN(ch)&&(it.kind||'의수')==='의수')return 'nwing';
     if(it.slot==='weapon'&&ch.o&&ch.o.herm)return 'herm';
     if(inStash(ch,id))return 'stash';
+    if(!it.perm&&ch.gw&&(ch.gw.seen||{})[id])return 'eaten';   // G사 병기가 한 번 먹은 공방 장비는 다시 사지 않는다
     if(it.grade>shopAccess(ch)&&!it.hw)return 'locked';
     if(ch.money<priceOf(ch,id))return 'money';
     return 'ok';
@@ -643,7 +644,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const it=D.special[id];ch.money-=specialPrice(ch,id);
     if(it.wsOnly){(ch.stash=ch.stash||[]).push(Object.assign({id,grade:5},structuredClone(it)));ch.ws.auxN=(ch.ws.auxN||0)+1;return true}
     if(it.perm){(ch.perms=ch.perms||[]).push(id);addStats(ch.stats,it.fx);if(it.fx.maxHp)ch.hp+=it.fx.maxHp}
-    else if(offer)offerGear(ch,Object.assign({id,grade:4},it));else equip(ch,Object.assign({id,grade:4},it));
+    else{const g=Object.assign({id,grade:4,bm:ch.bmV|0},it);if(offer)offerGear(ch,g);else equip(ch,g)}
     return true;
   }
   function buy(ch,id,offer){
@@ -1999,7 +2000,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const k of (Z.absorbBy[sl]||Z.absorbKeys)){const v=Math.floor(((item.fx||{})[k]||0)*Z.absorb);if(v>0)fx[k]=(fx[k]||0)+v}
     return fx}
   /* 같은 장비를 몇 번째로 먹는지, 이번에 오르는지 */
-  function gwEatDue(ch,item){const Z=CFG.gweapon,key=item.id||item.n,seen=(ch.gw&&ch.gw.seen)||{},n=(seen[key]||0)+1,ev=(Z.same&&Z.same.every)||0;return {key,n,gives:n===1||(ev>0&&n%ev===0),every:ev}}
+  function gwEatDue(ch,item){const Z=CFG.gweapon,key=(item.bm!=null&&D.special[item.id])?item.id+'@'+item.bm:(item.id||item.n),seen=(ch.gw&&ch.gw.seen)||{},n=(seen[key]||0)+1,ev=(Z.same&&Z.same.every)||0;return {key,n,gives:n===1||(ev>0&&n%ev===0),every:ev}}
   function gwEat(ch,item,chips){
     const Z=CFG.gweapon;if(!ch.gw||!ch.gw.proc||!item)return false;
     const due=gwEatDue(ch,item);(ch.gw.seen=ch.gw.seen||{})[due.key]=due.n;
