@@ -798,3 +798,6 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 /* 출생 화면(휴대폰): 아래 선택지를 눌러도 굴림을 놓치지 않게, 다시 굴리기와 시작 버튼을 화면 아래에 붙여 둔다 */
 .birthbar{display:none}
 @media (max-width:700px){.birthbar{display:flex;gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:40;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,var(--bg) 32%)}.birthbar .btn{flex:1;min-height:46px}#app:has(.birthbar) .wrap{padding-bottom:96px}}
+/* 보관함: 장착할 수 없다는 안내(빨간 글자)가 한 줄로 길게 늘어나 장비 설명을 세로로 짜부라뜨리던 문제: 안내는 설명 아래 전체 줄에 줄바꿈해서 보여 준다 */
+.invr.stash>span.bad{grid-column:1/-1;min-width:0;white-space:normal;line-height:1.5}
+.invr.stash>.stack{min-width:0}
