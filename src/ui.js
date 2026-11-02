@@ -2737,7 +2737,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       const ks=Object.keys(dd).sort();while(ks.length>40)delete dd[ks.shift()];store.set(DAILYK,JSON.stringify(dd))}else UI.dailyCmp=null;
     r.best.years=Math.max(r.best.years,lived);r.best.lv=Math.max(r.best.lv,c.lv);if(G.endless)r.best.grade=Math.max(r.best.grade,E.gradeAt(G.year));
     if(dt&&dt.id==='godmother'){r.titles=r.titles||{};r.titles['정해진 운명']=(r.titles['정해진 운명']||0)+1}
-    store.set(REC,JSON.stringify(r));if(!w||UI.overflowEnd)store.del(SAVE);
+    store.set(REC,JSON.stringify(r));if(!w||UI.overflowEnd||/^fam/.test(UI.outEnd||''))store.del(SAVE);
   }
   function startCombat(id){recAdd('seen',id);C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.paused=false;UI.screen='combat';render()}
 
