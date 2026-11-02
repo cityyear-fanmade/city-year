@@ -1556,7 +1556,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   function vOrigins(){
     const u=loadUnlocks();if(!(D.unlockOrigins||[]).length)return '';
     const hc=(loadRec().hardClear||0)>0,UH={crow:'숨은 출생 「부화장에서 태어난 자」로 태어나 제 2막의 끝까지 간다.',hermes:'전리품 「신의 단말기」를 들고 제 2막의 끝까지 간다.',librarian:'출생 「도서관의 손님」으로 태어나, 도서관 관장 아벨을 이긴 뒤 제 2막의 끝까지 간다.',claw:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.baral.n+'」를 이긴다.',arbiter:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.zena.n+'」를 이긴다.',gweapon:'G사 날개 소속이거나 특이점 응용 의수를 들고 제 2막의 끝까지 간다.'};
-    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="row between"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>${hc&&UH[o.key]&&!u.includes('origin:'+o.key)?`<p class="small dim" style="margin:-4px 0 0">조건 · ${esc(UH[o.key])}</p>`:''}`).join('')}
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="row between"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>${o.shopNote?`<p class="small dim" style="margin:-4px 0 0">${esc(o.shopNote)}</p>`:''}${hc&&UH[o.key]&&!u.includes('origin:'+o.key)?`<p class="small dim" style="margin:-4px 0 0">조건 · ${esc(UH[o.key])}</p>`:''}`).join('')}
       <p class="small dim">${hc?'':'하드로 한 번 완주하면 각 출생의 구체적인 조건이 여기에 보인다. '}정해진 출생으로 태어나거나 정해진 물건을 들고 무한 모드 전, 제 2막의 끝까지 가면 열린다. 무한 모드(제 2막)의 마지막 상대 「${D.enemies.baral.n}」와 「${D.enemies.zena.n}」를 보통 이상 난이도에서 이기면 머리의 발톱과 조율자가 각각 열린다. 쉬움에서는 열리지 않는다.</p></div>`;
   }
   function vJobs(){
@@ -1661,7 +1661,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">해금된 출생</span>
       <p class="small dim">고르면 출생이 고정된다. 다시 태어나면 재능·결점·무기·성장기·타고난 것만 새로 굴린다.</p>
       <button class="btn${!cur?' primary':''}" data-a="origin" data-i="">굴림에 맡긴다</button>
-      ${L.map(o=>`<button class="btn${cur===o.key?' primary':''}" data-a="origin" data-i="${o.key}"><b>${esc(o.n)}</b><span class="small">${esc(o.t)}</span></button>`).join('')}</div>`;
+      ${L.map(o=>`<button class="btn${cur===o.key?' primary':''}" data-a="origin" data-i="${o.key}"><b>${esc(o.n)}</b><span class="small">${esc(o.t)}</span>${o.shopNote?`<span class="small dim">${esc(o.shopNote)}</span>`:''}</button>`).join('')}</div>`;
   }
   /* 시험판: 고른 출생에 맞는 시작 상황 (중간 연차에서 바로 시작) */
   const TEST_PRESETS=[['','처음부터 (1년차)',''],['crow55','까마귀팀 · 55년차 (1막 끝, 2막 직전)','crow'],['lib56','도서관 지정사서 · 56년차 (2막 시작 직전, 손님 24명)','librarian'],['lib69','도서관 지정사서 · 69년차 (붉은 안개와 침묵의 오케스트라까지 마침, 종막 직전)','librarian'],['gw20','G사 병기 출신 · 21년차 (몰락 뒤 시술 직전)','gweapon'],['gw40','G사 병기 출신 · 40년차 (벌레팔 시술 · 히든 2개 섭식)','gweapon'],['gw56','G사 병기 출신 · 56년차 (2막 시작 · 왕족 인자 발현 전)','gweapon'],['lib20','도서관 지정사서 · 20년차 (손님 10명, 도시전설)','librarian'],['lib42','도서관 지정사서 · 42년차 (손님 21명, 도시질병)','librarian'],['lib55','도서관 지정사서 · 55년차 (손님 26명, 도시악몽)','librarian'],['herm37','헤르메스 · 37년차 (결혼·아이 있음, 곧 가족을 없애라)','hermes'],['herm55a','헤르메스 · 55년차 (지령을 따른 뒤)','hermes'],['herm55b','헤르메스 · 55년차 (지령을 거부하고 자비를 받은 뒤)','hermes']];
