@@ -636,12 +636,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(!it.perm&&ch.distForm&&!ch.distStable)return 'distort';
     if(it.slot==='aug'&&isN(ch)&&(it.kind||'의수')==='의수')return 'nwing';
     if(!it.perm&&inStash(ch,id))return 'stash';
+    if(ch.bmSold&&ch.bmSold.v===(ch.bmV|0)&&ch.bmSold.ids.includes(id))return 'sold';   // 같은 방문에서는 한 번만 살 수 있다
     if(ch.money<it.price)return 'money';
     return 'ok';
   }
   function buySpecial(ch,id,offer){
     if(canBuySpecial(ch,id)!=='ok')return false;
     const it=D.special[id];ch.money-=specialPrice(ch,id);
+    if(!it.wsOnly){if(!ch.bmSold||ch.bmSold.v!==(ch.bmV|0))ch.bmSold={v:ch.bmV|0,ids:[]};ch.bmSold.ids.push(id)}
     if(it.wsOnly){(ch.stash=ch.stash||[]).push(Object.assign({id,grade:5},structuredClone(it)));ch.ws.auxN=(ch.ws.auxN||0)+1;return true}
     if(it.perm){(ch.perms=ch.perms||[]).push(id);addStats(ch.stats,it.fx);if(it.fx.maxHp)ch.hp+=it.fx.maxHp}
     else{const g=Object.assign({id,grade:4,bm:ch.bmV|0},it);if(offer)offerGear(ch,g);else equip(ch,g)}
