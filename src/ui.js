@@ -2624,10 +2624,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(['title','birth','end','records','chron','chronview'].includes(s)||!(G&&G.infinite)||!INFNOTE){const o=document.querySelector('.infnote');if(o)o.remove();if(['title','birth'].includes(s))UI.noteYear=null}
     BGM.setBossTrack&&BGM.setBossTrack(C&&D.enemies[C.id]&&D.enemies[C.id].bgm==='ruen'&&typeof window!=='undefined'&&window.CITY_BGM&&window.CITY_BGM.ruen?'ruen':'boss');   // 전용 곡이 실려 있을 때만 쓴다
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
-    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
+    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,office:vOffice,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
-    const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
+    const ok=G&&G.ch&&['result','event','shop','shopask','office','level'].includes(s)&&!UI.animing;
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
     if(s==='end'&&G&&G.ch){try{prepShare()}catch(e){}}
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
@@ -2704,7 +2704,26 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${UI.rested?`<p class="good small">${UI.rested}</p>`:''}
       <div class="stack">${UI.rested?'':'<button class="btn primary" data-a="shop">들른다</button>'}
         ${UI.rested?'':`<button class="btn" data-a="rest"><b>쉬어 간다</b><span class="mono small dim">공방은 이용하지 않는다 · 정신력 +${CFG.shop.restMind} (지금 ${G.ch.mind}/${E.mindMax(G.ch)})</span></button>`}
+        ${E.staffOwner(G.ch)&&!UI.rested?`<button class="btn" data-a="office"><b>${esc(G.ch.office.name)}</b><span class="mono small dim">직원 ${E.staffList(G.ch).length}/${CFG.office.staff.max} · 사무소를 둘러본다</span></button>`:''}
         <button class="btn" data-a="unshop">${UI.rested?'다시 길을 나선다':'지나간다'}</button></div>`;
+  }
+  /* 사무소: 대표(내 사무소)의 전용 화면. 직원 고용·해고, 알선 주기, 해마다의 수입과 월급을 보여 준다 */
+  function vOffice(){
+    const ch=G.ch,O=ch.office,SF_=CFG.office.staff;
+    if(!O||!E.staffOwner(ch))return `<div class="panel"><p class="small dim">사무소가 없다.</p></div><button class="btn primary" data-a="shopback">돌아간다</button>`;
+    const kw={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상',sink:'침잠'}[O.kw]||O.kw,list=E.staffList(ch),cands=list.length<SF_.max?E.staffCands(ch,G.year):[];
+    const inc=E.staffIncome(ch),nextB=O.brokerNext>G.year?`${O.brokerNext}년차`:'이번 방문';
+    const sRow=(s,i)=>{const T_=SF_.types[s.type],lv=E.staffLv(s,G.year);return `<div class="panel stack" style="gap:4px"><div class="row between"><b class="serif">${esc(s.n)}</b><span class="chip">${esc(T_.n)} · ${lv}단계${lv>=SF_.lvMax?' (최대)':''}</span></div>
+      <span class="mono small" style="color:var(--gold)">${esc(T_.e)}${lv>1?` ×${lv}`:''}</span><span class="mono small dim">${s.y}년차에 고용 · 월급 ${E.money(SF_.wage)}/해</span>
+      ${UI.officeAsk===i?`<div class="row" style="gap:8px"><button class="btn" data-a="staffdel" data-i="${i}">정말 내보낸다</button><button class="btn quiet" data-a="staffno">그만둔다</button></div>`:`<button class="btn quiet" data-a="staffdel" data-i="${i}" style="width:auto;padding:6px 12px">내보낸다</button>`}</div>`};
+    const cRow=(c,i)=>{const T_=SF_.types[c.type],ok=ch.money>=SF_.hire;return `<button class="btn" data-a="staffhire" data-i="${i}" ${ok?'':'disabled'}><span class="row between"><b>${esc(c.n)} · ${esc(T_.n)}</b><span class="mono" style="color:var(--gold)">${E.money(SF_.hire)}</span></span><span class="mono small" style="color:var(--gold)">${esc(T_.e)}</span><span class="mono small dim">${ok?'고용한다':'돈이 모자란다'}</span></button>`};
+    return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div>
+      <div class="stack" style="gap:8px"><div class="eyebrow">내 사무소</div><h2>${esc(O.name)}</h2>
+        <div class="row" style="gap:6px;flex-wrap:wrap"><span class="chip">전문 · ${esc(kw)}</span><span class="chip">${esc(T.licensed)} ${ch.rank}${T.rankUnit}</span><span class="chip">알선 ${CFG.office.brokerEvery}년마다 · 다음 ${nextB}</span><span class="chip">직원 ${list.length}/${SF_.max}</span></div>
+        <p class="small dim">해마다 직원 월급이 나가고 의뢰 담당의 수입이 들어온다. 지금 직원으로 인한 해마다의 수입은 <b class="mono" style="color:${inc>=0?'var(--gold)':'var(--bleed)'}">${inc>=0?'+':''}${E.money(inc)}</b>이다. 직원은 ${SF_.growEvery}해마다 한 단계씩 자라 ${SF_.lvMax}단계까지 오르고, 효과도 단계만큼 커진다.</p></div>
+      <div class="stack" style="gap:8px"><div class="eyebrow">직원</div>${list.length?list.map(sRow).join(''):'<div class="panel"><p class="small dim">아직 직원이 없다.</p></div>'}</div>
+      ${list.length<SF_.max?`<div class="stack" style="gap:8px"><div class="eyebrow">지원자 · 올해 찾아온 사람들</div>${cands.length?cands.map(cRow).join(''):'<div class="panel"><p class="small dim">올해는 더 찾아온 사람이 없다.</p></div>'}</div>`:''}
+      <button class="btn primary" data-a="shopback">공방 거리로 돌아간다</button>`;
   }
   function vOmen(){
     const o=UI.omen,m=o.omen;
@@ -3028,6 +3047,11 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     usesupply(id){const m=E.useSupply(G.ch,id,null);UI.supMsg=m||'지금은 쓸 데가 없다.';if(m)resave();render()},
     csupply(id){const m=E.useSupply(G.ch,id,C);if(!m)return;C.log.push({t:'kw',s:`${C.P.name} · ${m}`});resave();render()},
     box(t){if(UI.boxDone)return;const c=E.cardBox(G.ch,t);if(c){UI.boxDone=Array.isArray(c)?`상자에서 카드 ${c.length}장이 나왔다. 하나를 고른다.`:'상자에서 카드가 나왔다.';render()}},
+    office(){UI.officeAsk=null;UI.screen='office';render()},
+    shopback(){UI.officeAsk=null;UI.screen='shopask';render()},
+    staffhire(i){if(E.hireStaff(G.ch,+i,G.year))saveGame({st:UI.curSt,stock:[],shopDone:true});render()},
+    staffdel(i){i=+i;if(UI.officeAsk!==i){UI.officeAsk=i;render();return}UI.officeAsk=null;E.dismissStaff(G.ch,i);render()},
+    staffno(){UI.officeAsk=null;render()},
     unshop(){UI.buyAsk=null;saveGame({st:UI.curSt,stock:[],shopDone:true});UI.screen='event';render()},
     omen(i){
       const st=E.answerOmen(G,UI.omen,i==='1');saveGame({st,stock:[],shopDone:true});
@@ -3192,6 +3216,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testEvT(t){if(!G)return;const ev=D.events.find(e=>e.t===t);if(!ev)return;G.ch.licensed=true;G.ch.rank=G.ch.rank||9;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testPreFight(id){if(!G||!D.enemies[id])return;UI.fight=id;UI.enc=null;UI.omen=null;UI.ev=null;UI.screen='event';render()},
     testShopAsk(){if(!G)return;UI.stock=[];UI.screen='shopask';render()},
+    testOffice(){if(!G)return;const c=G.ch;c.office=c.office||{name:'새벽빛 사무소',kw:'bleed',tier:0};c.aff={type:'office',name:c.office.name,own:true};c.licensed=true;c.rank=4;c.money=3000;E.hireStaff(c,0,G.year);UI.stock=[];UI.screen='office';render()},
     testBroker(){if(!G)return;UI.stock=[];UI.broker=E.officeBroker(G.ch);UI.screen='shopask';render()},
     testOrigin(n){if(!BC)return;const o=D.origins.find(x=>x.n===n);if(!o)return;E.reseed(BC.seed);let c;for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;render()},
     testOmen(id){if(!G)return;const h=D.hiddenBosses.find(x=>x.id===id);UI.omen={type:'omen',boss:id,omen:h.omen||{},escape:!h.noEscape,spec:'table:early'};UI.screen='event';render()}};

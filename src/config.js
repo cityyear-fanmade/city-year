@@ -383,7 +383,11 @@ export const CFG = {
   giri: {fi: 1, fi2: 2, chance: 60, gap: 5, bigBro: {chance: 50, ppFrac: 0.2, dc: 50, failHp: 6, gap: 1} /* 작은형님이 서열 점수의 ppFrac 이상 모으면 해마다 chance%: 큰형님의 시험 */, kin: 50, anger: 5},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
-  office: {rank: 5, foundEvery: 5, knockEvery: 4, brokerEvery: 3 /* 사무소 대표의 알선(장비·카드)이 나오는 간격(해) */},
+  office: {rank: 5, foundEvery: 5, knockEvery: 4, brokerEvery: 3 /* 사무소 대표의 알선(장비·카드)이 나오는 간격(해) */,
+    /* 직원: 대표가 공방 거리에서 고용한다. 최대 max명, 고용비 hire, 해마다 월급 wage(의뢰 담당은 수입이 더 크다). 직원은 growEvery해마다 한 단계씩 자라 lvMax까지 오른다. 효과는 단계만큼 곱해진다 */
+    staff: {max: 3, hire: 500, wage: 60, growEvery: 6, lvMax: 3, cands: 2,
+      types: {guard: {n: '경호원', fx: {maxHp: 12}, e: '최대 HP +12'}, scout: {n: '정보원', fx: {check: 1}, e: '사건 판정 +1'}, fighter: {n: '보조 해결사', fx: {atk: 1}, e: '공격 +1'}, clerk: {n: '의뢰 담당', fx: {}, inc: 90, e: '해마다 수입 +90안'}},
+      names: ['한결', '도윤', '서하', '마루', '이솔', '강무', '윤슬', '태오', '하람', '시안', '나래', '지호', '보람', '유진', '해든', '다온']}},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
   /* 레바테인 해방 단계: 붉은 화염을 건 횟수가 at에 닿을 때마다 한 단계씩 풀린다. f는 완료 성능에 대한 비율(공격 · 피해 주사위 · 푸른 화염 배율과 점화 · 자신 푸른 화염 명중 감소). f 0.5 이상부터 상대의 붉은 화염이 푸른 화염으로 바뀐다 */
