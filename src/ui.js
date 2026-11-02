@@ -722,7 +722,11 @@ export function startUI(E,app){
   const FXN={maxHp:'최대 HP',atk:'공격',hit:'명중',eva:'회피',spd:'속도',check:'판정',dmin:'피해 최소',dr:'피해 감소(%)',regen:'라운드마다 HP 회복',die:'피해 주사위',dmgB:'피해',burnHit:'붉은 화염',startBleed:'시작 출혈',startBreath:'시작 호흡',defUp:'방어 회피',extraD2:'추가 피해'};
   /* 공방 물건을 사기 전에 지금 끼고 있는 장비와 능력치를 한눈에 비교한다 */
   const cmpLine=(it,cur)=>{if(!it||it.tool||it.perm||it.hw||!it.slot||it.slot==='any')return '';if(cur&&cur.id===it.id)return '';
-    const df=fxDiff(it,cur);return `<span class="mono small">${cur?'지금 '+esc(cur.n)+' 대비 · ':'지금 장비 없음 · '}${df||'능력치 차이 없음'}</span>`};
+    let df=fxDiff(it,cur);
+    if(it.slot==='weapon'){const dd=w=>(w&&w.wx&&w.wx.dice)||[1,6],a=dd(it),b=dd(cur),av=x=>x[0]*(x[1]+1)/2;
+      if(a[0]!==b[0]||a[1]!==b[1])df+=(df?' · ':'')+`<span class="${av(a)>=av(b)?'good':'bad'}">피해 주사위 ${b[0]}d${b[1]} → ${a[0]}d${a[1]}</span>`;
+      const lost=cur&&cur.wx?Object.keys(cur.wx).filter(k=>k!=='dice'&&!(it.wx&&it.wx[k])).length:0;if(lost)df+=(df?' · ':'')+`<span class="bad">지금 무기의 특수 효과 ${lost}개 사라짐</span>`}
+    return `<span class="mono small">${cur?'지금 '+esc(cur.n)+' 대비 · ':'지금 장비 없음 · '}${df||'능력치 차이 없음'}</span>`};
   function fxDiff(nw,old){
     const a=nw.fx||{},b=(old&&old.fx)||{};
     return [...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>FXN[k]&&(a[k]||0)!==(b[k]||0))
@@ -1017,7 +1021,7 @@ export function startUI(E,app){
   /* G사 병기: 먹으면 오르는 능력치를 미리 보여 준다 */
   const eatTxt=it=>{const nm={maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'판정',dmgB:'피해',hit:'명중'},d=E.gwEatDue(G.ch,it);if(!d.gives)return `같은 장비라 오르지 않는다 (${d.n}번째${d.every?' · '+d.every+'번마다 오른다':''})`;const f=E.gwEatFx(it);return Object.entries(f).map(([k,v])=>`${nm[k]||k} +${v}`).join(' · ')||'오르는 것이 거의 없다'};
   const slotLbl=sl=>D.slots[sl]||(sl==='any'?'강화 재료':'기타');
-  const auxLbl=it=>it.kind?it.kind+' · '+({'공':'공격형','방':'방어형','유':'유틸형'}[it.tag]||it.tag):slotLbl(it.slot);
+  const auxLbl=it=>it.kind?it.kind+(it.tag?' · '+({'공':'공격형','방':'방어형','유':'유틸형'}[it.tag]||it.tag):''):slotLbl(it.slot);
   function vShop(){
     const ch=G.ch,acc=E.shopAccess(ch),A=D.access;
     if(trainHome())return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">열차 승무원 칸</div><h2>잠시 숨을 돌린다</h2><p class="small dim">열차 안에는 공방이 없다. 의무실만 문을 열어 둔다.</p></div>${vClinic()}<button class="btn primary" data-a="unshop">칸을 나간다</button>`;
