@@ -1211,7 +1211,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.examSkip)ch.examSkipYear=ch.year;
     /* 해금 출생 줄기: 처분 의뢰를 받으면(routeHunt) 준비물 고르기가 시작되고, 준비물을 고르면(routeKit) 수색이 시작된다 */
     if(fx.hermKill&&ch.bond){const b=ch.bond,kids=b.kids||[],n=kids.filter(k=>!k.dead).length;
-      kids.forEach(k=>{k.dead=true});b.st='lost';b.hermKilled=true;ch.famLoss=(ch.famLoss||0)+n;ch.hermLv=Math.max(ch.hermLv||0,1);
+      kids.forEach(k=>{if(!k.dead)k.dead='herm'});b.st='lost';b.hermKilled=true;ch.famLoss=(ch.famLoss||0)+n;ch.hermLv=Math.max(ch.hermLv||0,1);
       loseMind(ch,CFG.herm.killMind,t=>chips.push(t));chips.push(`가족을 잃었다 · 인연 사별${n?` · 아이 ${n}명`:''}`);chips.push('카두세우스-헤르메스 · 1차 강화')}
     if(fx.hermCompanion&&ch.bond&&ch.bond.st==='met'){ch.bond.companion=true;chips.push(`${ch.bond.name} · 곁에 남는다 · 결혼하지 않는다`)}
     if(fx.hermRefuse&&!ch.hermPen){ch.hermPen=true;chips.push(`지령 패널티 · 명중 −${CFG.herm.pen.hit} · 회피 −${CFG.herm.pen.eva} (헤르메스의 자비가 내릴 때까지)`)}
