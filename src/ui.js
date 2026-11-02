@@ -785,6 +785,10 @@ export function startUI(E,app){
     return `<div class="stack" style="gap:10px"><h2>${esc(ch.name||T.you)}는 이렇게 태어났다</h2>
       ${ch.blank?'<p class="small dim">출신 · 재능 · 결점 · 무기 없이 성장기 보정만 가지고 태어났다. 빈손이라 히든 보스 전리품 장비를 더 자주 쥐고(+25%p), 정신이 꺾일 때 E.G.O 형상이 보일 확률이 25%다.</p>':`<div class="panel">${row('출신',ch.o)}${row('재능',ch.t)}${row('결점',ch.f)}${ch.egoUses!=null&&ch.o&&ch.o.egoWeapons?(()=>{const w=[ch.gear.weapon,...(ch.stash||[])].find(x=>x&&x.egoLv!=null);return row('무기',w?{n:'E.G.O · '+w.n,t:'환상체에게서 얻은 무기',e:w.e}:ch.w)})():row('무기',ch.w)}</div>`}
       ${(()=>{const g=E.infGrowth(ch);return g.length?`<div class="eyebrow">무한 모드 성장</div><div class="panel stack" style="gap:6px">${g.map(([k,v,d_])=>`<div class="invr"><span>${esc(k)}</span><b class="mono">${esc(v)}</b></div><p class="small dim" style="margin:0 0 4px">${esc(d_)}</p>`).join('')}</div>`:''})()}
+      ${(()=>{const g=ch.gw;if(!g||!g.proc||!(g.eaten>0))return '';const Z_=CFG.gweapon,nm=k=>({maxHp:'최대 HP',atk:'공격',eva:'회피',spd:'속도',check:'사건 판정',dmgB:'피해',hit:'명중'}[k]||k),abs=g.abs;
+        const sum=abs?Object.entries(abs).filter(([,v])=>v).map(([k,v])=>`<div class="invr"><span>${nm(k)}</span><b class="mono">+${v}</b></div>`).join(''):'<p class="small dim">이 판은 합계가 기록되기 전에 먹은 장비가 있어 합계를 알 수 없다. 앞으로 먹는 것부터 쌓인다.</p>';
+        const ate=(g.ate||[]).slice().reverse().map(x=>`<div class="invr"><span>${esc(x.n)}${x.g>=5?' <span class="chip" style="color:var(--gold);border-color:var(--gold)">히든</span>':''}</span><span class="mono small dim">${Object.entries(x.fx).filter(([,v])=>v).map(([k,v])=>nm(k)+' +'+v).join(' · ')}</span></div>`).join('');
+        return stSec('gwabs','흡수한 능력치 · 섭식 '+g.eaten+'번 · 히든 '+(g.hidden||0)+'/'+Z_.hiddenNeed,`<div>${sum}</div>${ate?`<div class="eyebrow" style="margin-top:8px">먹은 장비 (최근 순)</div>${ate}`:''}`,true)})()}
       ${lakeLog}${kid?stSec('kid','성장기',kid,false):''}
       ${base?stSec('base','태어났을 때의 능력치 (변하지 않음)',base,false):''}
       ${stSec('now','지금 · 장비 보정과 특수 상태',vStatNow(),true)}</div>`;
