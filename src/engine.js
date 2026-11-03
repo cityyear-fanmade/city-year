@@ -1732,7 +1732,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      방도를 따르면 주인공은 불순물이 되어 떠나고 영생을 얻은 곁의 사람은 남는 엔딩으로 이 판이 끝난다. 받아들이면 지금의 죽음 사건 */
   function pvProfile(ch,b){
     if(age({year:ch.year||1})<=100)return null;
-    if(ch.o&&ch.o.race==='hyeolgwi'&&!(b.route==='hyeolgwi'&&b.variant===1))return 'blood';
+    if((ch.race==='hyeolgwi'||(ch.o&&ch.o.race==='hyeolgwi'))&&!(b.route==='hyeolgwi'&&b.variant===1))return 'blood';   // 태어날 때부터 혈귀이거나 '붉은 밤의 초대'로 혈귀가 된 경우 모두
     if(ch.hw&&(ch.hw.done||ch.hw.maker))return 'hw';   // 홍원의 가주가 된 경우만 (홍원 군주를 쓰러뜨린 것만으로는 열리지 않는다)
     if(ch.o&&ch.o.key==='crow')return 'crow';
     if(lakeOn(ch))return 'lake';
