@@ -3226,7 +3226,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         for(const x of bondOk?dr.extra||[]:[]){addStats(ch.stats,x.fx);if(x.fx.maxHp)ch.hp+=x.fx.maxHp;ch.relics.push(x.n);if(x.flag)ch.flags[x.flag]=1;chips.push(`전리품 · ${x.n} (${x.e}, 영구)`)}
         if(dr.gear&&!(dr.ego&&ch.distForm)){offerGear(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 · ${dr.gear.n} (${dr.gear.e}) · 장착할지 고른다`)}
         for(const g of dr.gears||[]){if(dr.ego&&ch.distForm)continue;if(dr.gear&&dr.gearChance!=null&&d(100)>dr.gearChance+(ch.stats.gearUp||0))continue;offerGear(ch,Object.assign({grade:5},g));chips.push(`전리품 ${g.slot==='armor'?'방어구':'장비'} · ${g.n} (${g.e}) · 장착할지 고른다`)}
-        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
+        chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,(D.cards[dr.card]&&D.cards[dr.card].fixed&&!ch.rb&&D.cards[dr.card+'_free'])?dr.card+'_free':dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
         else for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
       if(foe.quest){ch.flags[foe.quest.flag]=1;ch.bookNext=G.year+CFG.redBook.every;(ch.relics=ch.relics||[]).push(foe.quest.relic);chips.push(foe.quest.text)}
       if(foe.unlock&&!ch.unlocks.includes(foe.unlock)){if(foe.unlockNoEasy&&ch.easy)chips.push('쉬움에서는 해금되지 않는다 · 보통 이상에서 다시 이긴다');else{ch.unlocks.push(foe.unlock);unlock=foe.unlock;chips.push('해금 · '+(T.jobs[foe.unlock]||foe.unlock))}}
@@ -3234,7 +3234,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 미니보스 전리품(once): 처음 이겼을 때만 */
     if(!foe.hidden&&foe.drop&&!(ch.minis||[]).includes(C.id)){
       (ch.minis=ch.minis||[]).push(C.id);const dr=foe.drop;if(dr.ego)ch.egoGear=(ch.egoGear||0)+1;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
-      chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,dr.card,chips,'전용 카드');for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');
+      chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,(D.cards[dr.card]&&D.cards[dr.card].fixed&&!ch.rb&&D.cards[dr.card+'_free'])?dr.card+'_free':dr.card,chips,'전용 카드');for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');
       /* 새 시리즈를 모두 이기면 종말의 예언 */
       {const MG=CFG.mgirl;if(MG.ids.includes(C.id)&&!ch.flags[MG.flag]&&MG.ids.every(id=>ch.minis.includes(id))){ch.flags[MG.flag]=1;ch.nihilAt=(G.year||0)+MG.gap}}
       const AP=CFG.apoc;if(AP.birds.includes(C.id)&&!ch.flags[AP.flag]&&AP.birds.every(id=>ch.minis.includes(id))){ch.flags[AP.flag]=1;(ch.relics=ch.relics||[]).push('종말의 예언');chips.push('종말의 예언 · 검은 숲 깊은 곳에서 무언가 눈을 뜬다 · 아직 그 앞에 설 때가 아니다')}
