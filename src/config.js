@@ -385,6 +385,10 @@ export const CFG = {
   ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
   office: {rank: 5, foundEvery: 5, knockEvery: 4, brokerEvery: 3 /* 사무소 대표의 알선(장비·카드)이 나오는 간격(해) */,
     /* 직원: 대표가 공방 거리에서 고용한다. 최대 max명, 고용비 hire, 해마다 월급 wage(의뢰 담당은 수입이 더 크다). 직원은 growEvery해마다 한 단계씩 자라 lvMax까지 오른다. 효과는 단계만큼 곱해진다 */
+    /* 사무소 등급: 해결사 급수와 따로 센다. 직원이 해마다 의뢰를 해결해 성과를 쌓고(성공하면 직원 단계만큼), need만큼 쌓이면 한 등급 오른다. 등급마다 기본 버프(누적이 아닌 그 등급의 값)와 3해(payEvery)마다 수익금이 있다 */
+    grade: {names: ['개업', '자리잡음', '이름이 남', '손꼽힘', '명문'], need: [8, 14, 22, 34], chance: 50, chanceLv: 8, payEvery: 3,
+      buff: [{}, {maxHp: 6}, {maxHp: 10, check: 1}, {maxHp: 14, check: 1, atk: 1}, {maxHp: 20, check: 2, atk: 2}], buffTxt: ['없음', '최대 HP +6', '최대 HP +10 · 판정 +1', '최대 HP +14 · 판정 +1 · 공격 +1', '최대 HP +20 · 판정 +2 · 공격 +2'],
+      pay: [300, 500, 800, 1200, 1800]},
     staff: {max: 3, hire: 500, wage: 60, growEvery: 6, lvMax: 3, cands: 2,
       types: {guard: {n: '경호원', fx: {maxHp: 12}, e: '최대 HP +12'}, scout: {n: '정보원', fx: {check: 1}, e: '사건 판정 +1'}, fighter: {n: '보조 해결사', fx: {atk: 1}, e: '공격 +1'}, clerk: {n: '의뢰 담당', fx: {}, inc: 90, e: '해마다 수입 +90안'}},
       names: ['한결', '도윤', '서하', '마루', '이솔', '강무', '윤슬', '태오', '하람', '시안', '나래', '지호', '보람', '유진', '해든', '다온',
