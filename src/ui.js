@@ -1206,7 +1206,7 @@ export function startUI(E,app){
       <button class="btn" data-a="daily" ${expired()?'disabled':''}><b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다${(()=>{const d=loadDaily()[todayKey()];return d&&d.best?` · 오늘 ${d.n}회 도전 · 최고 ${d.best.w?'완주':d.best.y+'년'}`:''})()}</span></button>
       <button class="btn quiet" data-a="records"><b>기록실</b><span class="dim small">만난 적 · 본 엔딩 · 해금 · 최고 기록</span></button>
       <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다 (만난 적만 공개)</span></button>
-      <button class="btn quiet" data-a="cfg"><b>설정</b><span class="dim small">화면·소리·전투 연출 · 눌러서 연다</span></button>
+      <button class="btn quiet tmob" data-a="cfg"><b>설정</b><span class="dim small">화면·소리·전투 연출 · 눌러서 연다</span></button>
       <div class="stack tmob" style="gap:8px">${stSec('t_deco','꾸미기 · 전투 중 내 카드',vDeco(),false)}${fbLink()}</div>
       <div class="panel stack" style="gap:4px"><span class="eyebrow">지금 고민 중인 방향</span>
         <ul class="small dim" style="margin:0;padding-left:18px;display:grid;gap:3px">${DIRECTION.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></div>
