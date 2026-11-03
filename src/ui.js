@@ -649,7 +649,7 @@ export function startUI(E,app){
   }
   /* ===== 6시즌: 가방 =====
      HUD 오른쪽의 네모 칸(능력치·장비·카드·전리품)을 누르면 가방을 열듯 화면이 펼쳐진다 */
-  const ICON={supply:'<path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M12 12v5M9.5 14.5h5"/>',family:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/>',stat:'<path d="M4 20V11M10 20V4M16 20v-8M21 20H3"/>',gear:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  const ICON={office:'<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6M9 11h.01M15 11h.01"/>',supply:'<path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M12 12v5M9.5 14.5h5"/>',family:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/>',stat:'<path d="M4 20V11M10 20V4M16 20v-8M21 20H3"/>',gear:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
     pack:'<rect x="5" y="9" width="14" height="12" rx="2"/><path d="M7 6h10M9 3h6M9 14h6M9 17.500h4"/>',
     card:'<rect x="3" y="7" width="12" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/>',relic:'<path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l3 6 3-6"/>',title:'<path d="M12 3l2.600 5.400 5.900.8-4.300 4.100 1 5.800L12 16.300 6.800 19.100l1-5.800L3.500 9.200l5.900-.8z"/>'};
   const icon=k=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${ICON[k]}</svg>`;
@@ -662,7 +662,7 @@ export function startUI(E,app){
   const eqTitle=ch=>ch.equipTitle&&titleList(ch).some(t=>t[0]===ch.equipTitle)?ch.equipTitle:'';
   const titledName=ch=>{const t=eqTitle(ch);return (t?`<span class="ctitle">[${esc(t)}]</span><br>`:'')+esc(ch.name||T.you)};
   const entName=X=>X.tt&&X.name.startsWith(`[${X.tt}] `)?`<span class="ctitle">[${esc(X.tt)}]</span><br>${ulName(X.name.slice(X.tt.length+3),X.ul)}`:ulName(X.name,X.ul);
-  function bagTabs(ch){return [['stat','정보',''],['pack','카드팩',(ch.packs||[]).length?'보관 '+ch.packs.length:''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):''],['supply','소모품',E.supplyCount(ch)?String(E.supplyCount(ch)):'']].concat([['title','칭호',titleList(ch).length?String(titleList(ch).length):'']]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[])}
+  function bagTabs(ch){return [['stat','정보',''],['pack','카드팩',(ch.packs||[]).length?'보관 '+ch.packs.length:''],['gear','장비',(ch.stash||[]).length?'보관 '+ch.stash.length:''],['card','카드',ch.deck.length+'/'+E.deckMax(ch)],['relic','전리품',(ch.relics||[]).length?String(ch.relics.length):''],['supply','소모품',E.supplyCount(ch)?String(E.supplyCount(ch)):'']].concat([['title','칭호',titleList(ch).length?String(titleList(ch).length):'']]).concat(ch.bond&&['met','married','lost'].includes(ch.bond.st)?[['family','가족',ch.bond.st==='married'?'♥':'']]:[]).concat(E.staffOwner(ch)?[['office','사무소',E.staffList(ch).length+'/'+CFG.office.staff.max]]:[])}
   /* PC 넓은 화면(1360px 이상) 왼쪽 수치판: 기본 능력치를 숫자로 늘 보여 준다. 좁은 화면에서는 CSS로 숨긴다. 나중에 칸을 늘려 가기 쉽게 항목 목록으로 만든다 */
   /* 무한 모드의 연차 감소: 회피는 해마다 깎여 0에서 멈춘다. 표시도 깎인 뒤의 값으로 보이고, 깎인 양은 괄호로 알린다 */
   const shipTxt=ch=>ch.lake&&ch.lake.captain&&ch.flags&&ch.flags.lake?` · 배 ${E.hullOf(ch)}/${CFG.lake.hullMax}`:'';
@@ -673,7 +673,7 @@ export function startUI(E,app){
     const ch=G.ch,s=ch.stats,pad=(k,v)=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`,up=n=>n?` <i class="bufup">${n>0?'+':'−'}${Math.abs(n)}</i>`:'';
     const rows=[['HP',P?`${Math.max(0,P.hp)}/${P.maxHp}`:`${ch.hp}/${s.maxHp}`],['정신력',ch.distForm?'???':`${ch.mind}/${E.mindMax(ch)}`],['공격',sg(s.atk)+(P?up(P.atk-s.atk):'')+(CFG.atkRule.on?` (명중+${Math.trunc((P?P.atk:s.atk)*CFG.atkRule.hitPer)} · 피해+${Math.floor(Math.max(0,P?P.atk:s.atk)/CFG.atkRule.dmgPer)})`:'')],...(s.hit?[['명중',sg(s.hit)]]:[]),['회피',evaNow(ch,s.eva)+(P?up((P.evaB||0)):'')],['속도',sg(s.spd)+(P?up(P.spd-s.spd):'')],['판정',sg(s.check)],['최소 피해',s.dmin],...(ch.lake&&ch.lake.captain&&ch.flags&&ch.flags.lake?[['배 내구도',E.hullOf(ch)+'/'+CFG.lake.hullMax]]:[]),...(s.dr?[['피해 감소',s.dr+'%']]:[]),...(E.regenTotal(ch)?[['HP 회복/라운드',E.regenTotal(ch)]]:[]),...(s.startBleed?[['시작 출혈',s.startBleed]]:[]),...(s.startBreath?[['시작 호흡',s.startBreath]]:[]),['카드',`${ch.deck.length}/${E.deckMax(ch)}`],['레벨',`Lv ${ch.lv}`],['경험치',E.xpNext(ch)!=null?`${ch.xp}/${E.xpNext(ch)}`:`${ch.xp} (최고)`],...(E.canPromote(ch)?[[E.ptsName(ch),`${ch.pp||0}/${E.promoNeed(ch)}`]]:[]),['자산',E.money(ch.money)]];
     const gear=Object.entries(D.slots).map(([k,n])=>`<div class="srow"><span>${n}</span><b class="gname">${ch.gear[k]?esc(ch.gear[k].n):'없음'}</b></div>`).join('');
-    return `<aside class="side-l" aria-label="수치판"><div class="stitle">${titledName(ch)}</div>${rows.map(([k,v])=>pad(k,v)).join('')}<div class="ssep"></div>${gear}</aside>`;
+    return `<aside class="side-l" aria-label="수치판"><div class="stitle">${titledName(ch)}</div>${rows.map(([k,v])=>pad(k,v)).join('')}<div class="ssep"></div>${gear}${E.staffOwner(ch)?`<div class="ssep"></div><button class="srow officebtn" data-a="bag" data-i="office" style="width:100%;background:none;border:0;padding:4px 0;color:inherit;cursor:pointer;text-align:left"><span>사무소</span><b class="gname">${esc(ch.office.name)} · 직원 ${E.staffList(ch).length}/${CFG.office.staff.max}</b></button>`:''}</aside>`;
   }
   function vDock(cls){
     const ch=G.ch;
@@ -797,7 +797,7 @@ export function startUI(E,app){
         const sum=abs?Object.entries(abs).filter(([,v])=>v).map(([k,v])=>`<div class="invr"><span>${nm(k)}</span><b class="mono">+${v}</b></div>`).join(''):'<p class="small dim">이 판은 합계가 기록되기 전에 먹은 장비가 있어 합계를 알 수 없다. 앞으로 먹는 것부터 쌓인다.</p>';
         const ate=(g.ate||[]).slice().reverse().map(x=>`<div class="invr"><span>${esc(x.n)}${x.g>=5?' <span class="chip" style="color:var(--gold);border-color:var(--gold)">히든</span>':''}</span><span class="mono small dim">${Object.entries(x.fx).filter(([,v])=>v).map(([k,v])=>nm(k)+' +'+v).join(' · ')}</span></div>`).join('');
         return stSec('gwabs','흡수한 능력치 · 섭식 '+g.eaten+'번 · 히든 '+(g.hidden||0)+'/'+Z_.hiddenNeed,`<div>${sum}</div>${g.form&&Z_.forms[g.form]?`<div class="invr" style="margin-top:6px"><span>${esc(Z_.forms[g.form].n)} 성장</span><b class="mono">${g.fg||0}/${Z_.growMax}</b></div>`:''}${ate?`<div class="eyebrow" style="margin-top:8px">먹은 장비 (최근 순)</div>${ate}`:''}`,true)})()}
-      ${officeLog(ch)}      ${lakeLog}${kid?stSec('kid','성장기',kid,false):''}
+      ${lakeLog}${kid?stSec('kid','성장기',kid,false):''}
       ${base?stSec('base','태어났을 때의 능력치 (변하지 않음)',base,false):''}
       ${stSec('now','지금 · 장비 보정과 특수 상태',vStatNow(),true)}</div>`;
   }
@@ -919,7 +919,7 @@ export function startUI(E,app){
   }
   function vBag(){
     const ch=G.ch,t=UI.bag;
-    const body={stat:vStat,pack:vPacks,gear:vGear,card:vCards,relic:vRelic,supply:vSupply,family:vFamily,title:vTitleBag}[t]();
+    const body={stat:vStat,pack:vPacks,gear:vGear,card:vCards,relic:vRelic,supply:vSupply,family:vFamily,title:vTitleBag,office:officeBody}[t]();
     return sheet(`<div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">가방</b><span class="mono small" style="color:var(--gold);margin-left:auto">자산 ${E.money(ch.money)}</span><button class="chip" data-a="bagclose">닫기 ✕</button></div>
       <div class="bagtabs">${bagTabs(ch).map(([k,n,b])=>`<button class="tile sm${t===k?' on':''}" data-a="bag" data-i="${k}">${icon(k)}<span>${n}</span>${b?`<em>${b}</em>`:''}</button>`).join('')}</div>
       <div class="stack" style="gap:10px">${body}</div>`,'bag',true);
@@ -2624,10 +2624,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(['title','birth','end','records','chron','chronview'].includes(s)||!(G&&G.infinite)||!INFNOTE){const o=document.querySelector('.infnote');if(o)o.remove();if(['title','birth'].includes(s))UI.noteYear=null}
     BGM.setBossTrack&&BGM.setBossTrack(C&&D.enemies[C.id]&&D.enemies[C.id].bgm==='ruen'&&typeof window!=='undefined'&&window.CITY_BGM&&window.CITY_BGM.ruen?'ruen':'boss');   // 전용 곡이 실려 있을 때만 쓴다
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
-    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,office:vOffice,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
+    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
-    const ok=G&&G.ch&&['result','event','shop','shopask','office','level'].includes(s)&&!UI.animing;
+    const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
     const pend=ok&&((G.ch.gearOffers||[]).length||G.ch.packOffer||(G.ch.offers||[]).length||(G.ch.picks||[]).length);
     if(s==='end'&&G&&G.ch){try{prepShare()}catch(e){}}
     const showNotice=s==='title'&&!UI.shared&&store.get('cityYearNotice')!==NOTICE.id;
@@ -2704,33 +2704,24 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
       ${UI.rested?`<p class="good small">${UI.rested}</p>`:''}
       <div class="stack">${UI.rested?'':'<button class="btn primary" data-a="shop">들른다</button>'}
         ${UI.rested?'':`<button class="btn" data-a="rest"><b>쉬어 간다</b><span class="mono small dim">공방은 이용하지 않는다 · 정신력 +${CFG.shop.restMind} (지금 ${G.ch.mind}/${E.mindMax(G.ch)})</span></button>`}
-        ${E.staffOwner(G.ch)&&!UI.rested?`<button class="btn" data-a="office"><b>${esc(G.ch.office.name)}</b><span class="mono small dim">직원 ${E.staffList(G.ch).length}/${CFG.office.staff.max} · 사무소를 둘러본다</span></button>`:''}
+        ${E.staffOwner(G.ch)&&!UI.rested?`<button class="btn" data-a="office"><b>${esc(G.ch.office.name)}</b><span class="mono small dim">직원 ${E.staffList(G.ch).length}/${CFG.office.staff.max} · 가방 · 사무소 칸을 연다</span></button>`:''}
         <button class="btn" data-a="unshop">${UI.rested?'다시 길을 나선다':'지나간다'}</button></div>`;
   }
-  /* 가방 정보 탭의 사무소 칸(보기만): 직원 목록과 해마다의 수입. 고용·해고는 공방 거리의 사무소 화면에서 한다 */
-  function officeLog(ch){
-    if(!E.staffOwner(ch))return '';
-    const O=ch.office,SF_=CFG.office.staff,list=E.staffList(ch),inc=E.staffIncome(ch),kw={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상',sink:'침잠'}[O.kw]||O.kw;
-    const rows=list.map(s=>{const T_=SF_.types[s.type],lv=E.staffLv(s,G.year);return `<div class="invr"><span>${esc(s.n)} · ${esc(T_.n)}</span><b class="mono">${lv}단계 · ${esc(T_.e)}${lv>1?' ×'+lv:''}</b></div>`}).join('');
-    return stSec('office',`${esc(O.name)} · 직원 ${list.length}/${SF_.max}`,`<div class="invr"><span>전문 분야</span><b class="mono">${esc(kw)}</b></div><div class="invr"><span>알선</span><b class="mono">${CFG.office.brokerEvery}년마다${O.brokerNext>G.year?' · 다음 '+O.brokerNext+'년차':''}</b></div>${rows||'<div class="invr"><span>직원</span><b class="mono">아직 없다</b></div>'}<div class="invr"><span>직원으로 인한 해마다의 수입</span><b class="mono" style="color:${inc>=0?'var(--gold)':'var(--bleed)'}">${inc>=0?'+':''}${E.money(inc)}</b></div><span class="small dim">직원 고용·해고는 공방 거리의 사무소 화면에서 한다.</span>`,false);
-  }
   /* 사무소: 대표(내 사무소)의 전용 화면. 직원 고용·해고, 알선 주기, 해마다의 수입과 월급을 보여 준다 */
-  function vOffice(){
+  function officeBody(){
     const ch=G.ch,O=ch.office,SF_=CFG.office.staff;
-    if(!O||!E.staffOwner(ch))return `<div class="panel"><p class="small dim">사무소가 없다.</p></div><button class="btn primary" data-a="shopback">돌아간다</button>`;
+    if(!O||!E.staffOwner(ch))return `<div class="panel"><p class="small dim">사무소가 없다.</p></div>`;
     const kw={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상',sink:'침잠'}[O.kw]||O.kw,list=E.staffList(ch),cands=list.length<SF_.max?E.staffCands(ch,G.year):[];
-    const inc=E.staffIncome(ch),nextB=O.brokerNext>G.year?`${O.brokerNext}년차`:'이번 방문';
+    const lock=UI.screen==='combat',inc=E.staffIncome(ch),nextB=O.brokerNext>G.year?`${O.brokerNext}년차`:'이번 방문';
     const sRow=(s,i)=>{const T_=SF_.types[s.type],lv=E.staffLv(s,G.year);return `<div class="panel stack" style="gap:4px"><div class="row between"><b class="serif">${esc(s.n)}</b><span class="chip">${esc(T_.n)} · ${lv}단계${lv>=SF_.lvMax?' (최대)':''}</span></div>
       <span class="mono small" style="color:var(--gold)">${esc(T_.e)}${lv>1?` ×${lv}`:''}</span><span class="mono small dim">${s.y}년차에 고용 · 월급 ${E.money(SF_.wage)}/해</span>
       ${UI.officeAsk===i?`<div class="row" style="gap:8px"><button class="btn" data-a="staffdel" data-i="${i}">정말 내보낸다</button><button class="btn quiet" data-a="staffno">그만둔다</button></div>`:`<button class="btn quiet" data-a="staffdel" data-i="${i}" style="width:auto;padding:6px 12px">내보낸다</button>`}</div>`};
-    const cRow=(c,i)=>{const T_=SF_.types[c.type],ok=ch.money>=SF_.hire;return `<button class="btn" data-a="staffhire" data-i="${i}" ${ok?'':'disabled'}><span class="row between"><b>${esc(c.n)} · ${esc(T_.n)}</b><span class="mono" style="color:var(--gold)">${E.money(SF_.hire)}</span></span><span class="mono small" style="color:var(--gold)">${esc(T_.e)}</span><span class="mono small dim">${ok?'고용한다':'돈이 모자란다'}</span></button>`};
-    return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div>
-      <div class="stack" style="gap:8px"><div class="eyebrow">내 사무소</div><h2>${esc(O.name)}</h2>
+    const cRow=(c,i)=>{const T_=SF_.types[c.type],ok=ch.money>=SF_.hire;return `<button class="btn" data-a="staffhire" data-i="${i}" ${ok&&!lock?'':'disabled'}><span class="row between"><b>${esc(c.n)} · ${esc(T_.n)}</b><span class="mono" style="color:var(--gold)">${E.money(SF_.hire)}</span></span><span class="mono small" style="color:var(--gold)">${esc(T_.e)}</span><span class="mono small dim">${ok?'고용한다':'돈이 모자란다'}</span></button>`};
+    return `<div class="stack" style="gap:8px"><div class="eyebrow">내 사무소</div><h2>${esc(O.name)}</h2>
         <div class="row" style="gap:6px;flex-wrap:wrap"><span class="chip">전문 · ${esc(kw)}</span><span class="chip">${esc(T.licensed)} ${ch.rank}${T.rankUnit}</span><span class="chip">알선 ${CFG.office.brokerEvery}년마다 · 다음 ${nextB}</span><span class="chip">직원 ${list.length}/${SF_.max}</span></div>
         <p class="small dim">해마다 직원 월급이 나가고 의뢰 담당의 수입이 들어온다. 지금 직원으로 인한 해마다의 수입은 <b class="mono" style="color:${inc>=0?'var(--gold)':'var(--bleed)'}">${inc>=0?'+':''}${E.money(inc)}</b>이다. 직원은 ${SF_.growEvery}해마다 한 단계씩 자라 ${SF_.lvMax}단계까지 오르고, 효과도 단계만큼 커진다.</p></div>
       <div class="stack" style="gap:8px"><div class="eyebrow">직원</div>${list.length?list.map(sRow).join(''):'<div class="panel"><p class="small dim">아직 직원이 없다.</p></div>'}</div>
-      ${list.length<SF_.max?`<div class="stack" style="gap:8px"><div class="eyebrow">지원자 · 올해 찾아온 사람들</div>${cands.length?cands.map(cRow).join(''):'<div class="panel"><p class="small dim">올해는 더 찾아온 사람이 없다.</p></div>'}</div>`:''}
-      <button class="btn primary" data-a="shopback">공방 거리로 돌아간다</button>`;
+      ${list.length<SF_.max?`<div class="stack" style="gap:8px"><div class="eyebrow">지원자 · 올해 찾아온 사람들</div>${cands.length?cands.map(cRow).join(''):'<div class="panel"><p class="small dim">올해는 더 찾아온 사람이 없다.</p></div>'}</div>`:''}`;
   }
   function vOmen(){
     const o=UI.omen,m=o.omen;
@@ -3054,8 +3045,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     usesupply(id){const m=E.useSupply(G.ch,id,null);UI.supMsg=m||'지금은 쓸 데가 없다.';if(m)resave();render()},
     csupply(id){const m=E.useSupply(G.ch,id,C);if(!m)return;C.log.push({t:'kw',s:`${C.P.name} · ${m}`});resave();render()},
     box(t){if(UI.boxDone)return;const c=E.cardBox(G.ch,t);if(c){UI.boxDone=Array.isArray(c)?`상자에서 카드 ${c.length}장이 나왔다. 하나를 고른다.`:'상자에서 카드가 나왔다.';render()}},
-    office(){UI.officeAsk=null;UI.screen='office';render()},
-    shopback(){UI.officeAsk=null;UI.screen='shopask';render()},
+    office(){UI.officeAsk=null;UI.bag='office';render()},
     staffhire(i){if(E.hireStaff(G.ch,+i,G.year))saveGame({st:UI.curSt,stock:[],shopDone:true});render()},
     staffdel(i){i=+i;if(UI.officeAsk!==i){UI.officeAsk=i;render();return}UI.officeAsk=null;E.dismissStaff(G.ch,i);render()},
     staffno(){UI.officeAsk=null;render()},
@@ -3223,7 +3213,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testEvT(t){if(!G)return;const ev=D.events.find(e=>e.t===t);if(!ev)return;G.ch.licensed=true;G.ch.rank=G.ch.rank||9;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testPreFight(id){if(!G||!D.enemies[id])return;UI.fight=id;UI.enc=null;UI.omen=null;UI.ev=null;UI.screen='event';render()},
     testShopAsk(){if(!G)return;UI.stock=[];UI.screen='shopask';render()},
-    testOffice(){if(!G)return;const c=G.ch;c.office=c.office||{name:'새벽빛 사무소',kw:'bleed',tier:0};c.aff={type:'office',name:c.office.name,own:true};c.licensed=true;c.rank=4;c.money=3000;E.hireStaff(c,0,G.year);UI.stock=[];UI.screen='office';render()},
+    testOffice(){if(!G)return;const c=G.ch;c.office=c.office||{name:'새벽빛 사무소',kw:'bleed',tier:0};c.aff={type:'office',name:c.office.name,own:true};c.licensed=true;c.rank=4;c.money=3000;E.hireStaff(c,0,G.year);UI.stock=[];UI.bag='office';render()},
     testBroker(){if(!G)return;UI.stock=[];UI.broker=E.officeBroker(G.ch);UI.screen='shopask';render()},
     testOrigin(n){if(!BC)return;const o=D.origins.find(x=>x.n===n);if(!o)return;E.reseed(BC.seed);let c;for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;render()},
     testOmen(id){if(!G)return;const h=D.hiddenBosses.find(x=>x.id===id);UI.omen={type:'omen',boss:id,omen:h.omen||{},escape:!h.noEscape,spec:'table:early'};UI.screen='event';render()}};
