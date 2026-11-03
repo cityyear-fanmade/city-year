@@ -516,6 +516,27 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.office={name:name+' 사무소',kw,tier:0};ch.aff={type:'office',name:ch.office.name,own:true};ch.officePick=false;return true;
   }
   const officeCards=kw=>[...new Set([...D.rewards,'rustnote','tknife','supper','faint','o_ember','o_blaze','o_stance'])].filter(id=>D.cards[id]&&(D.cards[id].kw||[]).some(k=>k[0]===kw));
+  /* ===== 사무소 이직과 평판: 평판이 높으면 공방 거리의 장비 값이 내리고, 낮으면 오른다 ===== */
+  const RP=CFG.office.rep,repOf=ch=>ch.rep||0,repMul=ch=>Math.max(RP.priceMin,Math.min(RP.priceMax,1-RP.priceStep*repOf(ch)));
+  function officeMoveEvent(G){
+    const ch=G.ch,y=G.year;
+    if(!ch.licensed||!ch.aff||ch.aff.type!=='office'||ch.aff.own||ch.job||ch.infinite||ch.hw||noFixer(ch)||ch.officePick)return null;
+    if(ch.officeSince==null)ch.officeSince=y;
+    if(ch.moveNext==null)ch.moveNext=y+CFG.office.move.every;
+    if(y<ch.moveNext)return null;
+    ch.moveNext=y+CFG.office.move.every;
+    const orgs=D.orgs.office||[],els=(D.offices||[]).filter(o=>o.n!==ch.aff.name&&ch.rank>=o.hi&&ch.rank<=(orgs.includes(o.n)?9:o.lo)).sort((a,b)=>a.hi-b.hi).slice(0,CFG.office.move.offers);
+    if(!els.length)return null;
+    const quick=y-ch.officeSince<RP.quickYears,cost=RP.moveCost+(quick?RP.quickExtra:0),was=ch.aff.name;
+    return {t:'이직 제안',x:`${was}에서 ${y-ch.officeSince}년을 보냈다. 다른 사무소에서 사람을 보내 넌지시 의향을 물었다. 옮기면 지금 사무소에서의 평판이 깎인다${quick?' (들어온 지 얼마 안 되어 더 크게)':''}.`,
+      c:[...els.map(o=>({l:o.n+'로 옮긴다',h:`${o.h} · 평판 −${cost}`,ok:{t:`${was}에 사직서를 냈다. 이튿날부터 ${o.n}의 간판 아래로 출근한다.`,fx:Object.assign({},(ch.affLog||[]).includes(o.n)?{}:o.fx,{join:{type:'office',name:o.n},officeMove:true})}})),
+        {l:'지금 사무소에 남는다',h:'평판은 그대로 · 오래 머물수록 평판이 오른다',ok:{t:'지금 자리에서 조금 더 있어 보기로 한다.',fx:{}}}]};
+  }
+  function officeLoyal(ch,year){
+    if(!ch.aff||ch.aff.type!=='office'||ch.aff.own||ch.officeSince==null)return;
+    const base=ch.repY!=null?ch.repY:ch.officeSince;
+    if(year-base>=RP.loyalEvery&&repOf(ch)<RP.max){ch.rep=Math.min(RP.max,repOf(ch)+RP.loyalGain);ch.repY=year}
+  }
   /* ===== 사무소 직원: 대표(내 사무소)만 둔다. 고용 때와 공방 거리에 들를 때 단계에 맞춰 능력치를 반영한다 ===== */
   const SF=CFG.office.staff,staffOwner=ch=>!!(ch.office&&ch.aff&&(ch.aff.own||(ch.office.ws&&isWs(ch))));
   const staffList=ch=>(ch.office&&ch.office.staff)||[];
@@ -539,6 +560,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const officeLogAdd=(O,y,t)=>{(O.log=O.log||[]).unshift({y,t});O.log.length=Math.min(O.log.length,6)};
   /* 해마다 한 번: 직원이 의뢰를 해결해 성과를 쌓고, 등급이 오르고, 3해마다 수익금이 들어온다 */
   function officeYear(ch,year){
+    officeLoyal(ch,year);
     if(!staffOwner(ch))return;const O=ch.office;if(O.yearDone===year)return;O.yearDone=year;
     O.grade=O.grade||1;O.pts=O.pts||0;
     for(const s of staffList(ch)){const lv=staffLv(s,year);if(d(100)<=GR.chance+GR.chanceLv*(lv-1)){O.pts+=lv;s.done=(s.done||0)+1}}
@@ -666,7 +688,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const WF=CFG.workshopFixer;
   /* 공방 해결사가 N사의 제안을 받아들여도(동부 출신) 공방 해결사로 남는다: 소속은 N사로 바뀌지만 공방 자료(ch.ws)가 있으면 계속 공방 해결사다 */
   const isWs=ch=>(!!ch.aff&&ch.aff.type==='workshop')||(!!ch.ws&&!!ch.aff&&ch.aff.name===CFG.nWing.name);
-  const priceOf=(ch,id)=>{const p=D.items[id].price;if(!isWs(ch))return Math.round(p);const K=CFG.ws,up=1+(K.priceYearUp||0)*Math.floor((ch.year||0)/(K.priceYearEvery||20));return Math.round(p*(1-WF.discount)*up)};   /* 공방 해결사: 값은 고정이고 priceYearEvery년마다 한 번씩 오른다 */
+  const priceOf=(ch,id)=>{const p=D.items[id].price*repMul(ch);if(!isWs(ch))return Math.round(p);const K=CFG.ws,up=1+(K.priceYearUp||0)*Math.floor((ch.year||0)/(K.priceYearEvery||20));return Math.round(p*(1-WF.discount)*up)};   /* 공방 해결사: 값은 고정이고 priceYearEvery년마다 한 번씩 오른다 */
   const sellValue=it=>it.id==='hidmat'?WF.sellBase*2:(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
   /* 공방 해결사: 장비 판매는 없다. 대신 덱의 카드를 공방에 넘긴다 (덱 고정·전용 카드팩·고정 카드는 팔 수 없고, 덱은 minDeck장 아래로 줄이지 않는다) */
   const cardPrice=id=>WF.cardBase+WF.cardPer*((D.cards[id]&&D.cards[id].c)||0);
@@ -1100,6 +1122,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if((fx.join.from==='wing'||fx.join.from==='assoc'||fx.join.from==='office'||fx.join.from==='syn')&&!fx.join.name){ch.orgPick=fx.join.from;chips.push(`${T.affTypes[fx.join.from]} · 어느 곳에 들어갈지 고른다`)}
       else joinAff(ch,fx.join,fx.join.name||one(D.orgs[fx.join.from]),chips);
     }
+    if(fx.officeMove&&fx.join&&ch.aff&&ch.aff.name===fx.join.name){const y=ch.year||0,quick=ch.officeSince!=null&&y-ch.officeSince<RP.quickYears,c=RP.moveCost+(quick?RP.quickExtra:0);ch.rep=Math.max(RP.min,repOf(ch)-c);ch.officeSince=y;ch.repY=y;ch.moveNext=y+CFG.office.move.every;chips.push(`평판 −${c} (지금 ${ch.rep}) · 공방 거리 장비 값 ${Math.round((repMul(ch)-1)*100)>=0?'+':''}${Math.round((repMul(ch)-1)*100)}%`)}
     /* 사건으로 승급 (해결사만, 최고 급수 미만일 때) */
     if(fx.promote)addPts(ch,CFG.promo.gain.mid,chips);
     if(fx.pts)addPts(ch,fx.pts*CFG.promo.gain.check,chips);
@@ -2822,6 +2845,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const ae=artEvent(G);if(ae)return {type:'event',ev:ae}}
     {const pe=infPromoEvent(G);if(pe)return {type:'event',ev:pe}}
     {const se=surgEvent(G);if(se)return {type:'event',ev:se}}
+    {const me=officeMoveEvent(G);if(me)return {type:'event',ev:me}}
     if(D.officeFound&&canFound(ch)&&G.year>=(ch.officeNext||0)){ch.officeNext=G.year+CFG.office.foundEvery;return {type:'event',ev:isWs(ch)?Object.assign({},D.officeFound,{x:D.officeFound.x+' 공방의 작업대는 그대로 두고, 그 옆에 간판을 하나 더 건다.'}):D.officeFound}}
     if(D.officeKnock&&ch.licensed&&!ch.aff&&!ch.job&&!noFixer(ch)&&G.year>CFG.affiliationYear&&G.year>=(ch.knockNext||0)){ch.knockNext=G.year+CFG.office.knockEvery;return {type:'event',ev:D.officeKnock}}
     {const lk=lakeYear(G);if(lk)return lk.type==='fight'?lk:{type:'event',ev:lk}}
@@ -4132,5 +4156,5 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    staffList,staffLv,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    staffList,staffLv,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
