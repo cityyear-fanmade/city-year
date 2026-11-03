@@ -550,12 +550,16 @@ export function startUI(E,app){
     {id:'star',n:'별',d:'M6 .5l1.6 3.6 3.9.4-2.9 2.6.8 3.9L6 9l-3.4 2 .8-3.9L.5 4.5l3.9-.4z',unlock:{titles:1}},
     {id:'shield',n:'방패',d:'M6 .5L11 2v4c0 2.8-2 4.5-5 5.5C3 10.5 1 8.8 1 6V2z',unlock:{endings:3}},
     {id:'cross',n:'십자',d:'M4 .5h4V4h3.5v4H8v3.5H4V8H.5V4H4z',unlock:{hard:1}}];
+  /* 심볼: 하드 완주 등으로 얻는 이미지. 이미지는 assets/symbol/<id>.png(정사각 투명 PNG, 전투 이름 옆에는 16px로 줄어 쓰인다)에 넣고 여기에 {id,n}을 더한다. 얻은 목록은 기록실 기록의 symbols에 쌓인다 */
+  const SYMS=[];
+  const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||`assets/symbol/${x.id}.png`,unlock:{sym:x.id}})));
+  const grantSymbol=id=>{const r=loadRec();r.symbols=Array.isArray(r.symbols)?r.symbols:[];if(!r.symbols.includes(id)){r.symbols.push(id);store.set(REC,JSON.stringify(r))}};
   const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}}];
   const decoRec=()=>{const r=loadRec();return {titles:Object.keys(r.titles||{}).filter(k=>(r.titles[k]||0)>0).length,endings:(r.endings||[]).length,hard:!!r.hardClear}};
-  const decoOk=o=>{if(!o.unlock)return true;const r=decoRec(),u=o.unlock;return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
-  const decoWhy=o=>{const u=o.unlock||{};return u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
-  const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=MARKS.find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain'}};
-  const markHtml=(col,id)=>{const m=MARKS.find(x=>x.id===(id||decoGet().mark));
+  const decoOk=o=>{if(!o.unlock)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
+  const decoWhy=o=>{const u=o.unlock||{};return u.sym?'심볼 획득':u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
+  const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain'}};
+  const markHtml=(col,id)=>{const m=marks().find(x=>x.id===(id||decoGet().mark));
     if(!m||m.id==='square')return `<span class="swatch" style="background:${col}"></span>`;
     if(m.img)return `<img class="swimg" src="${m.img}" alt="" width="16" height="16">`;
     return `<svg class="swsvg" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="${m.d}" fill="${col}"/></svg>`};
@@ -565,6 +569,7 @@ export function startUI(E,app){
     return `<div class="stack" style="gap:6px"><span class="eyebrow">꾸미기 · 전투 중 내 카드</span>
       <div class="panel stack ent compact deco-${cur.frame}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="entname">${markHtml(col,cur.mark)}<b class="serif" style="color:${col}">${esc(nm)}</b></div><span class="mono small">HP 80/80 · 정신 45</span><div class="bar"><i style="width:100%;background:${col}"></i></div></div>
       <span class="small dim">이름 앞 모양</span><div class="seg" style="flex-wrap:wrap">${MARKS.map(o=>btn('mark',o,cur.mark)).join('')}</div>
+      <span class="small dim">심볼</span>${SYMS.length?`<div class="seg" style="flex-wrap:wrap">${marks().filter(o=>o.img).map(o=>btn('mark',o,cur.mark)).join('')}</div>`:'<span class="small dim">하드로 이야기를 끝내면 얻는 심볼이 여기에 나타난다</span>'}
       <span class="small dim">테두리</span><div class="seg" style="flex-wrap:wrap">${FRAMES.map(o=>btn('frame',o,cur.frame)).join('')}</div>
       <span class="small dim">잠긴 것은 칭호·엔딩·하드 완주 기록에 따라 열린다</span></div>
       `;
@@ -1186,8 +1191,11 @@ export function startUI(E,app){
       <button class="btn primary" data-a="mindtest" data-i="voice"><b>① 정신력 8 · 들리는 목소리</b><span class="dim small">목소리 연출 → 듣기 좋다/싫다 → 기존 개화 판정 (목소리 선택은 직접 고른다 · 성장기 개수는 위 값 적용)</span></button>
       <button class="btn" data-a="mindtest" data-i="distort"><b>② 정신력 1 · 뒤틀림 사건</b><span class="dim small">정신을 붙잡는다 → 판정 연출 (기준선 표시)</span></button>
       <button class="btn" data-a="mindtest" data-i="break"><b>③ 전투 중 정신력 0</b><span class="dim small">전투가 시작되자마자 개화/뒤틀림 판정 연출</span></button></div>`}
+  const fbLink=()=>`<a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a>`;
+  /* PC 넓은 화면: 시작 화면 왼쪽 빈 곳에 설정·꾸미기·제보를 둔다 (좁은 화면에서는 CSS로 숨기고, 가운데 열의 접는 칸을 쓴다) */
+  function vTitleSide(){return `<aside class="title-side" aria-label="설정과 꾸미기"><button class="btn quiet" data-a="cfg"><b>설정</b><span class="dim small">화면 · 소리 · 전투 연출</span></button>${vDeco()}${fbLink()}</aside>`}
   function vTitle(){
-    return `${chronBtn('chron-in')}<div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
+    return `${chronBtn('chron-in')}${vTitleSide()}<div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vMindTest()}
@@ -1198,10 +1206,11 @@ export function startUI(E,app){
       <button class="btn" data-a="daily" ${expired()?'disabled':''}><b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다${(()=>{const d=loadDaily()[todayKey()];return d&&d.best?` · 오늘 ${d.n}회 도전 · 최고 ${d.best.w?'완주':d.best.y+'년'}`:''})()}</span></button>
       <button class="btn quiet" data-a="records"><b>기록실</b><span class="dim small">만난 적 · 본 엔딩 · 해금 · 최고 기록</span></button>
       <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다 (만난 적만 공개)</span></button>
-      <a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a>
+      <button class="btn quiet" data-a="cfg"><b>설정</b><span class="dim small">화면·소리·전투 연출 · 눌러서 연다</span></button>
+      <div class="stack tmob" style="gap:8px">${stSec('t_deco','꾸미기 · 전투 중 내 카드',vDeco(),false)}${fbLink()}</div>
       <div class="panel stack" style="gap:4px"><span class="eyebrow">지금 고민 중인 방향</span>
         <ul class="small dim" style="margin:0;padding-left:18px;display:grid;gap:3px">${DIRECTION.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></div>
-      ${vSettings()}${vRules()}${vPast()}${vTransfer()}`;
+      ${vRules()}${vPast()}${vTransfer()}`;
   }
   function vContinue(){
     const o=loadSave();if(!o)return '';const c=o.G.ch,y=o.G.year;
@@ -2930,7 +2939,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
     bgmext(i){BGM.setExt(+i);BGM.setStyle('ext');bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
-    deco(i){const [k,id]=String(i).split(':'),o=(k==='mark'?MARKS:FRAMES).find(x=>x.id===id);if(!o||!decoOk(o))return;const cur=decoGet();cur[k]=id;store.set(DECOK,JSON.stringify(cur));render()},
+    deco(i){const [k,id]=String(i).split(':'),o=(k==='mark'?marks():FRAMES).find(x=>x.id===id);if(!o||!decoOk(o))return;const cur=decoGet();cur[k]=id;store.set(DECOK,JSON.stringify(cur));render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;flow()},
     outerend(){if(!G||!G.infinite)return;UI.outEnd=null;if(typeof confirm==='function'&&!confirm('외곽에서 이야기를 끝낼까? 이 판은 여기까지가 기록이 된다.'))return;UI.outerEnd=true;UI.endWin=true;UI.trueEnd=true;UI.oldEnd=false;UI.death=null;recordEnd();UI.screen='end';render()},
@@ -3249,6 +3258,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     testPreFight(id){if(!G||!D.enemies[id])return;UI.fight=id;UI.enc=null;UI.omen=null;UI.ev=null;UI.screen='event';render()},
     testShopAsk(){if(!G)return;UI.stock=[];UI.screen='shopask';render()},
     testOffice(){if(!G)return;const c=G.ch;c.office=c.office||{name:'새벽빛 사무소',kw:'bleed',tier:0};c.aff={type:'office',name:c.office.name,own:true};c.licensed=true;c.rank=4;c.money=3000;E.hireStaff(c,0,G.year);UI.stock=[];UI.bag='office';render()},
+    testSymbol(){SYMS.push({id:'t',n:'시험 심볼',img:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='});grantSymbol('t');render()},
     testBroker(){if(!G)return;UI.stock=[];UI.broker=E.officeBroker(G.ch);UI.screen='shopask';render()},
     testOrigin(n){if(!BC)return;const o=D.origins.find(x=>x.n===n);if(!o)return;E.reseed(BC.seed);let c;for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n===n)break}c.seed=BC.seed;c.name=BC.name;BC=c;render()},
     testOmen(id){if(!G)return;const h=D.hiddenBosses.find(x=>x.id===id);UI.omen={type:'omen',boss:id,omen:h.omen||{},escape:!h.noEscape,spec:'table:early'};UI.screen='event';render()}};

@@ -812,3 +812,10 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
   linear-gradient(var(--c),var(--c)) top right/10px 2px no-repeat,linear-gradient(var(--c),var(--c)) top right/2px 10px no-repeat,
   linear-gradient(var(--c),var(--c)) bottom left/10px 2px no-repeat,linear-gradient(var(--c),var(--c)) bottom left/2px 10px no-repeat,
   linear-gradient(var(--c),var(--c)) bottom right/10px 2px no-repeat,linear-gradient(var(--c),var(--c)) bottom right/2px 10px no-repeat}
+
+/* 시작 화면 왼쪽 칸(PC): 설정·꾸미기·제보. 좁은 화면에서는 숨기고 가운데 열의 접는 칸(.tmob)을 쓴다 */
+.title-side{display:none}
+@media (min-width:1180px){
+  .title-side{display:flex;flex-direction:column;gap:10px;position:fixed;top:84px;left:18px;width:230px;max-height:calc(100vh - 104px);overflow:auto;z-index:5;padding-right:4px}
+  .tmob{display:none!important}
+}
