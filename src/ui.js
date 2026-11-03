@@ -544,6 +544,31 @@ export function startUI(E,app){
   const INF_WHY={"crowsucceed": "총사령관의 자리가 외곽의 배양 시설로 옮겨 가고, 복제체의 길이 도시 안에서 끝나지 않는다", "hermobey": "수행 완료 뒤에도 단말기가 꺼지지 않고, 새 지령이 어긋난 자리를 가리킨다", "hermfree": "지령이 끊긴 뒤에도 단말기가 꺼지지 않고, 어디로 걸어도 어긋난 자리로 이어진다", "libstay": "도서관의 서가가 외곽의 어긋난 자리까지 이어지고, 손님은 계속 찾아온다", "libclose": "문을 닫은 서가가 어긋난 자리에 남고, 닫힌 문 앞을 찾아오는 손님을 돌려보내는 일이 끝나지 않는다", "clawreturn": "도서관이 있던 자리에 선 바깥으로 이어지는 문이 남아, 머리의 마지막 명령 \"닫아라\"가 끝나지 않는다", "clawstay": "선 바깥은 닫히지 않았고, 문 앞을 지키는 자리가 끝나지 않는다", "arbkeep": "균형의 한쪽을 도시에 남기면 다른 한쪽을 선 바깥에 두어야 해서, 바깥쪽 추를 맡게 된다", "arbdown": "조율의 자리에서 내려온 곳이 외곽이라, 맞추는 사람 없이 흔들리는 추로 남는다", "gwmoth": "도시가 받아들이지 않는 몸이라 군체를 이끌고 외곽으로 나선다", "gwroach": "도시가 받아들이지 않는 몸이라 군체를 이끌고 외곽으로 나선다", "gwfly": "도시가 받아들이지 않는 몸이라 군체를 이끌고 외곽으로 나선다", "gwhuman": "인간으로 남은 몸이 도시에 어울리지 않아 외곽으로 물러난다"};
   const INF_KEYS=Object.keys(INF_WHY);
   const endCanResume=()=>!!(UI.endWin&&G&&((!G.endless)||(UI.outEnd&&!/^fam/.test(UI.outEnd))||UI.oldEnd||((UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd)||(UI.trueEnd&&!G.infinite)||(UI.crowEnd==='crowrefuse'&&!G.infinite)||(INF_KEYS.includes(UI.crowEnd)&&!G.infinite)));
+  /* 꾸미기: 내 전투 카드의 이름 앞 모양(MARKS)과 테두리(FRAMES). 기록실 기록에 따라 열린다(unlock). 나중에 심볼 이미지는 MARKS에 {id,n,img}로 더한다 */
+  const DECOK='cityYearDeco';
+  const MARKS=[{id:'square',n:'네모'},{id:'circle',n:'원',d:'M6 .5a5.5 5.5 0 1 0 .001 0z'},{id:'diamond',n:'마름모',d:'M6 .5L11.5 6 6 11.5.5 6z'},
+    {id:'star',n:'별',d:'M6 .5l1.6 3.6 3.9.4-2.9 2.6.8 3.9L6 9l-3.4 2 .8-3.9L.5 4.5l3.9-.4z',unlock:{titles:1}},
+    {id:'shield',n:'방패',d:'M6 .5L11 2v4c0 2.8-2 4.5-5 5.5C3 10.5 1 8.8 1 6V2z',unlock:{endings:3}},
+    {id:'cross',n:'십자',d:'M4 .5h4V4h3.5v4H8v3.5H4V8H.5V4H4z',unlock:{hard:1}}];
+  const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}}];
+  const decoRec=()=>{const r=loadRec();return {titles:Object.keys(r.titles||{}).filter(k=>(r.titles[k]||0)>0).length,endings:(r.endings||[]).length,hard:!!r.hardClear}};
+  const decoOk=o=>{if(!o.unlock)return true;const r=decoRec(),u=o.unlock;return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
+  const decoWhy=o=>{const u=o.unlock||{};return u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
+  const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=MARKS.find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain'}};
+  const markHtml=(col,id)=>{const m=MARKS.find(x=>x.id===(id||decoGet().mark));
+    if(!m||m.id==='square')return `<span class="swatch" style="background:${col}"></span>`;
+    if(m.img)return `<img class="swimg" src="${m.img}" alt="" width="16" height="16">`;
+    return `<svg class="swsvg" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="${m.d}" fill="${col}"/></svg>`};
+  function vDeco(){
+    const cur=decoGet(),col=(G&&G.ch&&G.ch.color)||'#c9a35a',nm=(G&&G.ch&&G.ch.name)||'당신';
+    const btn=(kind,o,sel)=>{const ok=decoOk(o);return `<button class="${sel===o.id?'on':''}" data-a="deco" data-i="${kind}:${o.id}" ${ok?'':'disabled'}>${kind==='mark'?markHtml(col,o.id):''} ${o.n}${ok?'':` <span class="small dim">· ${decoWhy(o)}</span>`}</button>`};
+    return `<div class="stack" style="gap:6px"><span class="eyebrow">꾸미기 · 전투 중 내 카드</span>
+      <div class="panel stack ent compact deco-${cur.frame}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="entname">${markHtml(col,cur.mark)}<b class="serif" style="color:${col}">${esc(nm)}</b></div><span class="mono small">HP 80/80 · 정신 45</span><div class="bar"><i style="width:100%;background:${col}"></i></div></div>
+      <span class="small dim">이름 앞 모양</span><div class="seg" style="flex-wrap:wrap">${MARKS.map(o=>btn('mark',o,cur.mark)).join('')}</div>
+      <span class="small dim">테두리</span><div class="seg" style="flex-wrap:wrap">${FRAMES.map(o=>btn('frame',o,cur.frame)).join('')}</div>
+      <span class="small dim">잠긴 것은 칭호·엔딩·하드 완주 기록에 따라 열린다</span></div>
+      `;
+  }
   function vSettings(){
     const b=(a,k,l,cur)=>`<button class="${cur===k?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`;
     return `${FS.ok()?`<div class="stack" style="gap:6px"><span class="eyebrow">전체 화면</span><div class="seg">${b('fs','off','끔',FS.on()?'':'off')}${b('fs','on','켬',FS.on()?'on':'')}</div><span class="small dim">브라우저 주소창·탭 줄을 숨깁니다 · 방송이나 넓은 화면용 · Esc로도 끝낼 수 있습니다</span></div>`:''}<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
@@ -563,6 +588,7 @@ export function startUI(E,app){
         <div class="stack" style="gap:4px"><div class="row between"><span class="small">효과음 음량</span><b class="mono" id="sfxPct">${Math.round(SFXS.vol*100)}%</b></div>
           <div class="bgmrow"><button class="chip" data-a="sfxstep" data-i="-10" aria-label="효과음 10 줄이기">−10</button><input type="range" id="sfxRange" min="0" max="100" step="1" value="${Math.round(SFXS.vol*100)}" aria-label="효과음 음량"><button class="chip" data-a="sfxstep" data-i="10" aria-label="효과음 10 올리기">+10</button></div></div>
         <button class="chip" data-a="sfxtest">소리 시험 (멈춤 · 회피 · 참격)</button><span class="small mono" id="sfxState"></span><span class="small dim">주사위가 멈출 때와 타격·회피 때 나는 소리다. 배경음악과 따로 켜고 끈다. 연출을 끄면 나지 않는다. 시험 소리가 안 들리면 기기의 미디어 음량·무음 설정을 확인한다</span></div>`:''}
+      ${vDeco()}
       <div class="stack" style="gap:6px"><span class="eyebrow">타격 연출</span><div class="seg">${b('hitfx','off','끔',HFX)}${b('hitfx','low','가볍게',HFX)}${b('hitfx','mid','보통',HFX)}${b('hitfx','high','강하게',HFX)}</div><div class="seg">${b('hitfxm','each','타격마다',HFXM)}${b('hitfxm','last','타수 많으면 마지막만 크게',HFXM)}</div><span class="small dim">맞은 쪽에 베기 선과 파편이 튄다. 화상은 주황, 출혈은 붉은색, 파열은 보라 같은 식으로 새로 걸린 키워드에 따라 색이 달라진다. 연출을 끄면 나오지 않는다</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">전투 진행</span><div class="seg">${b('fightmode','pick','직접 고르기',FIGHT)}${b('fightmode','auto','자동 전투',FIGHT)}</div>
         <span class="small dim">${FIGHT==='auto'?'카드 선택과 라운드 진행을 알아서 한다. 전투가 끝나면 멈춘다':'라운드마다 손패에서 카드를 직접 고른다'}${FIGHT==='auto'&&MODE==='manual'?' · 자동 전투 중에는 수동 굴림 버튼을 기다리지 않는다':''}</span></div>`;
@@ -1936,9 +1962,9 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
   const isMobile=()=>true;
   function entHtml(side,X,v,compact){
     const col=X.color;PREV[side]={...v};
-    const head=compact?`<div class="entname"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span>`
-      :`<div class="row between"><div class="row"><span class="swatch" style="background:${col}"></span><b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span></div>`;
-    return `<div class="panel stack ent${compact?' compact':''}${isDanger(v.hp,X.maxHp)?' danger':''}" id="ent-${side}" style="background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
+    const head=compact?`<div class="entname">${side==='P'?markHtml(col):`<span class="swatch" style="background:${col}"></span>`}<b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span>`
+      :`<div class="row between"><div class="row">${side==='P'?markHtml(col):`<span class="swatch" style="background:${col}"></span>`}<b class="serif" style="color:${col}">${entName(X)}</b></div><span class="mono small" id="hp-${side}">HP ${v.hp}/${X.maxHp}${side==='P'?` · 정신 ${G.ch.mind}`:''}</span></div>`;
+    return `<div class="panel stack ent${compact?' compact':''}${isDanger(v.hp,X.maxHp)?' danger':''}${side==='P'?' deco-'+decoGet().frame:''}" id="ent-${side}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
       ${head}
       <div class="bar" id="bar-${side}"><i style="width:${clamp(v.hp/X.maxHp*100,0,100)}%;background:${col}"></i></div>
       <div class="chips" id="chips-${side}">${stacks(v)}</div>${side==='P'&&C&&C.ally?`<div class="small" style="color:var(--bleed)">${esc(C.ally.name)} · 함께 싸운다 <span class="dim">· 같은 공격을 함께 굴려 주사위 합 ¾씩 · 상대 명중 +${CFG.bond.allyHit}</span></div>`:''}${side==='E'&&X.passive?`<div class="small" style="color:var(--gold)">패시브 · ${esc(X.passive.n)}${X.passive.id==='recital'?` (악장 ${X.recital||0}/${X.passive.every})`:''}${X.passive.id==='stance'?` (${X.stance==='bear'?'곰 사냥':'범 사냥'} · 살 ${X.sal==null?5:X.sal}/${X.passive.salMax})`:''}${X.maskOn?' <b>(이번 라운드 발동)</b>':''} <span class="dim">· ${esc(X.passive.d)}</span></div>`:''}${side==='E'&&X.trait&&D.traits&&D.traits[X.trait]?`<div class="small" style="color:var(--gold)">특성 · ${esc(D.traits[X.trait].n)} <span class="dim">· ${esc(D.traits[X.trait].d)}</span></div>`:''}</div>`;
@@ -2904,6 +2930,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
     bgmext(i){BGM.setExt(+i);BGM.setStyle('ext');bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
+    deco(i){const [k,id]=String(i).split(':'),o=(k==='mark'?MARKS:FRAMES).find(x=>x.id===id);if(!o||!decoOk(o))return;const cur=decoGet();cur[k]=id;store.set(DECOK,JSON.stringify(cur));render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;flow()},
     outerend(){if(!G||!G.infinite)return;UI.outEnd=null;if(typeof confirm==='function'&&!confirm('외곽에서 이야기를 끝낼까? 이 판은 여기까지가 기록이 된다.'))return;UI.outerEnd=true;UI.endWin=true;UI.trueEnd=true;UI.oldEnd=false;UI.death=null;recordEnd();UI.screen='end';render()},
