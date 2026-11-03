@@ -6,7 +6,7 @@ import {createSfx} from './sfx.js';
 
 export function startUI(E,app){
   const D=E.D,T=D.text;
-  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',harpoon:'#6fa3b8',wspear:'#3f7fb0',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',obey:'#8a7fb8'};
+  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',tremor:'#c9a35a',harpoon:'#6fa3b8',wspear:'#3f7fb0',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',obey:'#8a7fb8'};
   const kwc=k=>KWC[k]||'var(--gold)';
 
   /* ===== 설정 저장 (연출 속도, 배경 테마) ===== */
@@ -515,6 +515,7 @@ export function startUI(E,app){
     if(c.spend)x.push(`충전 ${c.spend>=99?'전부':c.spend} 소모 · 1당 고정 +${c.fixPer}${c.hits>1?' (적중마다)':''}`);
     if(c.once)x.push('전투당 1회');
     if(c.harpoonPull)x.push(`작살을 모두 당겨 스택당 +${c.harpoonPull.per} 피해`);
+    if(c.tremorBurst)x.push(`진동을 모두 터뜨려 스택당 +${c.tremorBurst.per} 피해 (화상이 있으면 ×${CFG.tremor.burnMul})`);
     if(c.nailBurst)x.push(`못을 모두 흐트러짐으로 ×${c.nailBurst.mul}${c.nailBurst.add?' +'+c.nailBurst.add:''}`);
     if(c.spdDice)x.push(`속도 ${c.spdDice[0]} 이상이면 주사위마다 +${c.spdDice[1]}`);
     if(c.sinkDmg)x.push(`침잠 ${CFG.sink.per}당 +${c.sinkDmg}`);
@@ -838,6 +839,7 @@ export function startUI(E,app){
       [K.wspear.n,'wspear','쪽빛 노인의 작살(전용 무기)이 적중하면 상대에게 쌓인다. 최대 5스택. 스택 하나마다 상대가 입는 출혈 피해가 ×1.2로 곱해진다(5스택이면 약 ×2.5). 한 번의 싸움 동안 유지된다.'],
       [K.harpoon.n,'harpoon',`대호수: 작살 카드가 적중하면 상대에게 쌓인다. 최대 ${CFG.harpoon.cap}스택. 당기는 카드(감아올리기·당겨 뜯기·고래 사냥)가 쌓인 작살을 모두 소모해 스택당 고정 피해를 더한다. 로프 끊기는 내게 걸린 작살을 푼다.`],
       [K.nail.n,'nail',`N사 날개: 적중할 때마다 상대에게 쌓인다. 최대 ${CFG.nail.cap}스택. 망치 카드가 쌓인 못을 흐트러짐으로 바꾼다.`],
+      [K.tremor.n,'tremor',`새벽 사무소: 상대에게 쌓인다. 최대 ${CFG.tremor.cap}스택. 공명 폭발 같은 카드가 모두 터뜨려 스택당 피해를 더하고, 상대에게 화상이 있으면 ×${CFG.tremor.burnMul}.`],
       [K.stagger.n,'stagger',`쌓일수록 상대가 약해진다. 최대 ${CFG.nail.staggerCap}스택. ${N}. 주는 피해는 줄고 받는 피해는 늘며, 기준을 넘으면 기절한다.`],
       [K.obey.n,'obey',`최대 ${CFG.hw.obey.cap}스택. 내 명중 −${CFG.hw.obey.hit}(스택당) · 흑수 부하가 거들 때마다 −1.`],
       ['기절','','이번 라운드 행동 불가, 회피 0.'],

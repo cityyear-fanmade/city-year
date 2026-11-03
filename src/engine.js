@@ -3600,7 +3600,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
       if(k==='burn'&&to!=='s'&&A.wx&&A.wx.burnPlus)n+=A.wx.burnPlus;
       if(A.kwPlus&&to!=='s'&&(k==='bleed'||k==='burn'||k==='rupture'||k==='stagger'||k==='sink'||k==='nail'))n+=A.kwPlus;
-      let cap_=k==='breath'?bcap(X):k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
+      let cap_=k==='breath'?bcap(X):k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='tremor'?CFG.tremor.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
       if(to!=='s'&&A.kwCapUp&&A.kwCapUp[k])cap_+=A.kwCapUp[k];
       X[k]=Math.min(cap_,b4_+n);
       {const R_=RS_;const gn_=X[k]-b4_;if(R_&&gn_>0){if(A.isP){if(to==='s')R_.buff=(R_.buff||0)+gn_;else R_.debuff=(R_.debuff||0)+gn_}else if(X.isP&&to!=='s')R_.debuffTaken=(R_.debuffTaken||0)+gn_}}
@@ -3848,6 +3848,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv,Math.max(0,CFG.drCap-(B.redPct||0))),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
       if(B.passive&&B.passive.id==='lkLantern'&&(B.lights||0)>0){B.lights--;dmg=0;note+=` 빛 촉수가 부서졌다 (남은 ${B.lights})`}
       if(A.isP&&C.crew&&C.crew.length&&dmg>0){const rs=C.crew.map(m=>({n:m.n,r:d(m.die)})),sum=rs.reduce((a,x)=>a+x.r,0),add=Math.round(sum*CFG.lake.crewW);if(add>0){dmg+=add;note+=` 선원 [${rs.map(x=>x.n+' '+x.r).join(', ')}]×${CFG.lake.crewW} +${add}`}}
+      if(c.tremorBurst&&(B.tremor||0)>0){const used=B.tremor,m=(B.burn||0)>0?CFG.tremor.burnMul:1,add=Math.round(used*c.tremorBurst.per*m);B.tremor=0;dmg+=add;note+=` 진동 ${used}개를 터뜨려 +${add}${m>1?' (화상 ×'+m+')':''}`}
       if(c.harpoonPull&&(B.harpoon||0)>0){const used=B.harpoon,add=used*c.harpoonPull.per;B.harpoon=0;dmg+=add;note+=` 작살 ${used}개를 당겨 +${add}`}
       if(c.verdict){const x=Math.floor((B.maxHp-B.hp)/10);dmg=Math.max(dmg,rawDmg)+x;note+=` 처형 · 방어·감소 무시 · 잃은 체력 ${B.maxHp-B.hp} → 고정 +${x}`}
       if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const IF_=CFG.infinite,m=B.isP?Math.min(IF_.escMaxP,Math.pow(1+IF_.escPerP,A.escN)):Math.min(IF_.escMaxE,Math.pow(1+IF_.escPerE,A.escN));dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
