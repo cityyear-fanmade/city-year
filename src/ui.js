@@ -565,6 +565,24 @@ export function startUI(E,app){
     if(!m||m.id==='square')return `<span class="swatch" style="background:${col}"></span>`;
     if(m.img)return `<img class="swimg" src="${m.img}" alt="" width="16" height="16">`;
     return `<svg class="swsvg" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="${m.d}" fill="${col}"/></svg>`};
+  /* 심볼 시험장(--symtest 빌드 전용): 전투 느낌 · 획득 화면 · 장착 방법을 미리 보는 곳 */
+  const SYMTXT={thumb:'엄지 조직의 서열을 올려 이야기를 끝냈다',index:'검지 조직의 서열을 올려 이야기를 끝냈다',middle:'중지 조직의 서열을 올려 이야기를 끝냈다',ring:'약지 조직의 서열을 올려 이야기를 끝냈다',pinky:'정식 소지 소속으로 이야기를 끝냈다 (서브 직업 형태의 소지는 인정하지 않는다)'};
+  function vSymLab(){
+    const g=UI.symGain,cur=decoGet(),col=(G&&G.ch&&G.ch.color)||'#c9a35a';
+    const gain=g?(()=>{const x=SYMS.find(q=>q.id===g);const eq=cur.mark==='sym_'+g;return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">심볼 획득</span>
+      <div class="row" style="gap:14px;align-items:center"><img src="${symImg(g,true)}" alt="" width="120" height="120"><div class="stack" style="gap:4px"><b class="serif" style="font-size:20px">${esc(x.n)} 심볼</b><span class="small">${esc(SYMTXT[g])}</span><span class="small dim">이 심볼은 이제 다른 캐릭터로 태어나도 쓸 수 있다 · 이름 옆에 붙여 다닌다</span></div></div>
+      <div class="row" style="gap:8px"><button class="btn primary" data-a="symequip" data-i="${g}">${eq?'장착 중 · 해제':'장착한다'}</button><button class="btn quiet" data-a="symgain" data-i="">닫기</button></div></div>`})():'';
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">테섭 전용</div><h2>심볼 시험장</h2><p class="small dim">획득 조건은 아직 정해지지 않았다. 이 화면은 전투에서 어떻게 보이는지, 얻을 때 어떻게 보일지, 어디서 장착하는지를 미리 보는 곳이다.</p></div>
+      <div class="panel stack" style="gap:8px"><span class="eyebrow">1 · 전투에서 어떻게 보이나</span>
+        <p class="small dim">내 체력이 줄지 않는 전투다. 마음대로 카드를 내 보고, 아래의 "시험장으로 나가기"로 언제든 돌아온다.</p>
+        <button class="btn primary" data-a="symfight"><b>무한 체력 전투 시작</b><span class="dim small">이름 앞 모양과 테두리가 전투 카드에 그대로 나온다</span></button></div>
+      <div class="panel stack" style="gap:8px"><span class="eyebrow">2 · 얻을 때 어떻게 보이나</span>
+        <p class="small dim">엔딩 화면 위에 이런 안내가 뜨고, 그 자리에서 바로 장착할 수 있다고 가정한 모습이다.</p>
+        <div class="seg" style="flex-wrap:wrap">${SYMS.map(x=>`<button class="${g===x.id?'on':''}" data-a="symgain" data-i="${x.id}"><img src="${symImg(x.id)}" width="16" height="16" alt=""> ${esc(x.n)}</button>`).join('')}</div>${gain}</div>
+      <div class="panel stack" style="gap:8px"><span class="eyebrow">3 · 어디서 장착하나</span>
+        <p class="small dim">설정 → 꾸미기(시작 화면 왼쪽 칸, 모바일은 접는 칸)에서 "이름 앞 모양" 줄의 심볼을 고른다. 한 번 얻으면 모든 판에 적용되고, 전투 중 내 카드의 이름 앞에 16px로 붙는다.</p>${vDeco()}</div>
+      <button class="btn" data-a="symback">시작 화면으로</button>`;
+  }
   function vDeco(){
     const cur=decoGet(),col=(G&&G.ch&&G.ch.color)||'#c9a35a',nm=(G&&G.ch&&G.ch.name)||'당신';
     const btn=(kind,o,sel)=>{const ok=decoOk(o);return `<button class="${sel===o.id?'on':''}" data-a="deco" data-i="${kind}:${o.id}" ${ok?'':'disabled'}>${kind==='mark'?markHtml(col,o.id):''} ${o.n}${ok?'':` <span class="small dim">· ${decoWhy(o)}</span>`}</button>`};
@@ -1208,6 +1226,7 @@ export function startUI(E,app){
       <button class="btn" data-a="daily" ${expired()?'disabled':''}><b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다${(()=>{const d=loadDaily()[todayKey()];return d&&d.best?` · 오늘 ${d.n}회 도전 · 최고 ${d.best.w?'완주':d.best.y+'년'}`:''})()}</span></button>
       <button class="btn quiet" data-a="records"><b>기록실</b><span class="dim small">만난 적 · 본 엔딩 · 해금 · 최고 기록</span></button>
       <button class="btn quiet" data-a="sim"><b>밸런스 측정</b><span class="dim small">자동 전투를 수백 번 돌려 승률을 본다 (만난 적만 공개)</span></button>
+      ${typeof window!=='undefined'&&window.CITY_SYMTEST?'<button class="btn" data-a="symlab" style="border-color:var(--gold)"><b>🧪 심볼 시험장</b><span class="dim small">무한 체력 전투 · 획득 화면 미리보기 · 장착해 보기 (테섭 전용)</span></button>':''}
       <button class="btn quiet tmob" data-a="cfg"><b>설정</b><span class="dim small">화면·소리·전투 연출 · 눌러서 연다</span></button>
       <div class="stack tmob" style="gap:8px">${stSec('t_deco','꾸미기 · 전투 중 내 카드',vDeco(),false)}${fbLink()}</div>
       <div class="panel stack" style="gap:4px"><span class="eyebrow">지금 고민 중인 방향</span>
@@ -2664,7 +2683,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     if(['title','birth','end','records','chron','chronview'].includes(s)||!(G&&G.infinite)||!INFNOTE){const o=document.querySelector('.infnote');if(o)o.remove();if(['title','birth'].includes(s))UI.noteYear=null}
     BGM.setBossTrack&&BGM.setBossTrack(C&&D.enemies[C.id]&&D.enemies[C.id].bgm==='ruen'&&typeof window!=='undefined'&&window.CITY_BGM&&window.CITY_BGM.ruen?'ruen':'boss');   // 전용 곡이 실려 있을 때만 쓴다
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
-    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
+    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,symlab:vSymLab,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
@@ -2675,7 +2694,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     const bagOver=ok&&UI.bag&&pend;
     const ovKey=UI.help&&!UI.cfg?'help':UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
     const shO=app.querySelector('.sheet'),stO=shO?shO.scrollTop:0,scrKey=ovKey+(ok&&UI.bag?':'+UI.bag:'');
-    app.innerHTML=`${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${['records','chron','chronview'].includes(s)?`<button class="backbtn" data-a="${s==='chronview'?'chron':'title'}" aria-label="돌아가기">←</button>`:''}${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${(()=>{const cb=UI.cbar;UI.cbar='';return s==='combat'&&cb&&!ov?`<div class="cbar"><div class="cbar-in">${cb}</div></div>`:''})()}${ov}${pend&&!UI.bag&&!UI.help&&!UI.cfg?'<button class="bagpeek" data-a="bag" data-i="card" aria-label="가방 열기">가방 보기</button>':''}${!ov&&!['title','birth'].includes(s)?`<button class="bartog" data-a="bartog" aria-label="${barHidden()?'위쪽 버튼 펼치기':'위쪽 버튼 접기'}">${barHidden()?'﹀':'︿'}</button>`:''}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+(FS.ok()?`<button class="cfgbtn fsbtn" data-a="fs" aria-label="${FS.on()?'전체 화면 끝내기':'전체 화면'}" title="${FS.on()?'전체 화면 끝내기':'전체 화면'}">${FS.on()?'창화면':'전체화면'}</button>`:'')+quickAudio():''}`;
+    app.innerHTML=`${UI.symlab&&s==='combat'?'<button class="btn quiet symexit" data-a="symexit" style="position:fixed;top:56px;left:12px;z-index:90;width:auto;padding:6px 10px">시험장으로 나가기</button>':''}${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${['records','chron','chronview'].includes(s)?`<button class="backbtn" data-a="${s==='chronview'?'chron':'title'}" aria-label="돌아가기">←</button>`:''}${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${(()=>{const cb=UI.cbar;UI.cbar='';return s==='combat'&&cb&&!ov?`<div class="cbar"><div class="cbar-in">${cb}</div></div>`:''})()}${ov}${pend&&!UI.bag&&!UI.help&&!UI.cfg?'<button class="bagpeek" data-a="bag" data-i="card" aria-label="가방 열기">가방 보기</button>':''}${!ov&&!['title','birth'].includes(s)?`<button class="bartog" data-a="bartog" aria-label="${barHidden()?'위쪽 버튼 펼치기':'위쪽 버튼 접기'}">${barHidden()?'﹀':'︿'}</button>`:''}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+(FS.ok()?`<button class="cfgbtn fsbtn" data-a="fs" aria-label="${FS.on()?'전체 화면 끝내기':'전체 화면'}" title="${FS.on()?'전체 화면 끝내기':'전체 화면'}">${FS.on()?'창화면':'전체화면'}</button>`:'')+quickAudio():''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     if(ov&&scrKey===UI.lastScr){const sh=app.querySelector('.sheet');if(sh)sh.scrollTop=stO}
     UI.lastScr=scrKey;
@@ -2942,6 +2961,12 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bgmstyle(i){BGM.setStyle(i);bgmSave();render()},
     bgmext(i){BGM.setExt(+i);BGM.setStyle('ext');bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
+    symlab(){if(!G){store.del(SAVE);UI.confirmNew=null;ACT.start();ACT.live()}UI.symlab=true;UI.screen='symlab';render()},
+    symback(){UI.symlab=false;UI.screen='title';render()},
+    symgain(i){UI.symGain=i||null;render()},
+    symequip(i){const cur=decoGet();cur.mark=cur.mark==='sym_'+i?'square':'sym_'+i;store.set(DECOK,JSON.stringify(cur));render()},
+    symfight(){startCombat('lamp');C.P.hp=C.P.maxHp=1000000;C.E.hp=C.E.maxHp=100000000;render()},
+    symexit(){if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}C=null;PLAYING=false;SKIP=false;UI.paused=false;UI.screen='symlab';render()},
     deco(i){const [k,id]=String(i).split(':'),o=(k==='mark'?marks():FRAMES).find(x=>x.id===id);if(!o||!decoOk(o))return;const cur=decoGet();cur[k]=id;store.set(DECOK,JSON.stringify(cur));render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;flow()},
