@@ -563,7 +563,7 @@ export function startUI(E,app){
   const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain'}};
   const markHtml=(col,id)=>{const m=marks().find(x=>x.id===(id||decoGet().mark));
     if(!m||m.id==='square')return `<span class="swatch" style="background:${col}"></span>`;
-    if(m.img)return `<img class="swimg" src="${m.img}" alt="" width="16" height="16">`;
+    if(m.img)return `<img class="swimg" src="${m.img}" alt="" width="32" height="32">`;
     return `<svg class="swsvg" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="${m.d}" fill="${col}"/></svg>`};
   /* 심볼 시험장(--symtest 빌드 전용): 전투 느낌 · 획득 화면 · 장착 방법을 미리 보는 곳 */
   const SYMTXT={thumb:'엄지 조직의 서열을 올려 이야기를 끝냈다',index:'검지 조직의 서열을 올려 이야기를 끝냈다',middle:'중지 조직의 서열을 올려 이야기를 끝냈다',ring:'약지 조직의 서열을 올려 이야기를 끝냈다',pinky:'정식 소지 소속으로 이야기를 끝냈다 (서브 직업 형태의 소지는 인정하지 않는다)'};
@@ -578,7 +578,7 @@ export function startUI(E,app){
         <button class="btn primary" data-a="symfight"><b>무한 체력 전투 시작</b><span class="dim small">이름 앞 모양과 테두리가 전투 카드에 그대로 나온다</span></button></div>
       <div class="panel stack" style="gap:8px"><span class="eyebrow">2 · 얻을 때 어떻게 보이나</span>
         <p class="small dim">엔딩 화면 위에 이런 안내가 뜨고, 그 자리에서 바로 장착할 수 있다고 가정한 모습이다.</p>
-        <div class="seg" style="flex-wrap:wrap">${SYMS.map(x=>`<button class="${g===x.id?'on':''}" data-a="symgain" data-i="${x.id}"><img src="${symImg(x.id)}" width="16" height="16" alt=""> ${esc(x.n)}</button>`).join('')}</div>${gain}</div>
+        <div class="seg" style="flex-wrap:wrap">${SYMS.map(x=>`<button class="${g===x.id?'on':''}" data-a="symgain" data-i="${x.id}"><img class="swimg" src="${symImg(x.id)}" width="24" height="24" alt=""> ${esc(x.n)}</button>`).join('')}</div>${gain}</div>
       <div class="panel stack" style="gap:8px"><span class="eyebrow">3 · 어디서 장착하나</span>
         <p class="small dim">설정 → 꾸미기(시작 화면 왼쪽 칸, 모바일은 접는 칸)에서 "이름 앞 모양" 줄의 심볼을 고른다. 한 번 얻으면 모든 판에 적용되고, 전투 중 내 카드의 이름 앞에 16px로 붙는다.</p>${vDeco()}</div>
       <button class="btn" data-a="symback">시작 화면으로</button>`;
