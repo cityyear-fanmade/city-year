@@ -32,6 +32,8 @@ const mindTest=process.argv.includes('--mind');
 const fingerTest=process.argv.includes('--finger');
 /* --unlocktest: 해금 출생 시험판 */
 const unlockTest=process.argv.includes('--unlocktest');
+/* 심볼 이미지(assets/symbol/*.png): 단일 파일 빌드에는 data 주소로 넣고, --pages 빌드는 assets 경로를 그대로 쓴다 */
+const symData={};try{const {readdirSync}=await import('node:fs');for(const f of readdirSync(new URL('../assets/symbol/',import.meta.url)))if(f.endsWith('.png'))symData[f.replace('.png','')]='data:image/png;base64,'+readFileSync(new URL('../assets/symbol/'+f,import.meta.url)).toString('base64')}catch(e){}
 const bgmData={};if(!noBgm&&!noSamples&&!extBgm){for(const st of ['calm','passion','library','wave'])for(const sc of ['calm','fight','fight1','fight2','fight3','fight4','fight5']){try{(bgmData[st]=bgmData[st]||{})[sc]='data:audio/mpeg;base64,'+readFileSync(new URL(`../assets/bgm/${st}_${sc}.mp3`,import.meta.url)).toString('base64')}catch(e){}}}{const td=(process.argv.find(x=>x.startsWith('--bgmtest='))||'').slice(10);if(td&&!noBgm){bgmData.ext={};for(let i=1;i<=5;i++)for(const sc of ['calm','fight']){bgmData.ext['t'+i+'_'+sc]=`assets/bgm/ext/t${i}_${sc}.mp3`}if(bgmData.passion)for(const k of ['fight1','fight2','fight3','fight4','fight5'])delete bgmData.passion[k]}}
 try{bgmData.boss={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets/bgm/boss_boss.mp3',import.meta.url)).toString('base64')}}catch(e){}
 /* 뤼엔 전용 곡은 사용자가 따로 정해 주기로 해서 기본 빌드에는 넣지 않는다(--ruenbgm으로만 넣는다) */
@@ -48,7 +50,7 @@ const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
   .replace('<link rel="stylesheet" href="css/style.css">',()=>`<style>\n${r('css/style.css')}</style>`)
-  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${js}\nconst DATA=${JSON.stringify(D)};\nwindow.CITY=startUI(createEngine(DATA),document.getElementById('app'));\n})();\n</script>`);
+  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${process.argv.includes('--pages')?'':`window.CITY_SYM=${JSON.stringify(symData)};\n`}${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${js}\nconst DATA=${JSON.stringify(D)};\nwindow.CITY=startUI(createEngine(DATA),document.getElementById('app'));\n})();\n</script>`);
 if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('\nwindow.CITY_BGM=',`\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_BGM=`);
 if(augdemo)html=html.replace('<title>도시의 한 해</title>','<title>의수 의뢰 체험</title>').replace('\nwindow.CITY_BGM=','\nwindow.CITY_AUGDEMO=true;\nwindow.CITY_BGM=');
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');

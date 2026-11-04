@@ -551,12 +551,13 @@ export function startUI(E,app){
     {id:'shield',n:'방패',d:'M6 .5L11 2v4c0 2.8-2 4.5-5 5.5C3 10.5 1 8.8 1 6V2z',unlock:{endings:3}},
     {id:'cross',n:'십자',d:'M4 .5h4V4h3.5v4H8v3.5H4V8H.5V4H4z',unlock:{hard:1}}];
   /* 심볼: 하드 완주 등으로 얻는 이미지. 이미지는 assets/symbol/<id>.png(정사각 투명 PNG, 전투 이름 옆에는 16px로 줄어 쓰인다)에 넣고 여기에 {id,n}을 더한다. 얻은 목록은 기록실 기록의 symbols에 쌓인다 */
-  const SYMS=[];
-  const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||`assets/symbol/${x.id}.png`,unlock:{sym:x.id}})));
+  const symImg=(id,big)=>{const k=big?id+'_big':id;return (typeof window!=='undefined'&&window.CITY_SYM&&window.CITY_SYM[k])||`assets/symbol/${k}.png`};
+  const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'}];
+  const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||symImg(x.id),unlock:{sym:x.id}})));
   const grantSymbol=id=>{const r=loadRec();r.symbols=Array.isArray(r.symbols)?r.symbols:[];if(!r.symbols.includes(id)){r.symbols.push(id);store.set(REC,JSON.stringify(r))}};
   const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}}];
   const decoRec=()=>{const r=loadRec();return {titles:Object.keys(r.titles||{}).filter(k=>(r.titles[k]||0)>0).length,endings:(r.endings||[]).length,hard:!!r.hardClear}};
-  const decoOk=o=>{if(!o.unlock)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
+  const decoOk=o=>{if(!o.unlock)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (typeof window!=='undefined'&&!!window.CITY_SYM)||(loadRec().symbols||[]).includes(u.sym);   // 단일 파일(테섭) 빌드에서는 모든 심볼을 시험해 볼 수 있다return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
   const decoWhy=o=>{const u=o.unlock||{};return u.sym?'심볼 획득':u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
   const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain'}};
   const markHtml=(col,id)=>{const m=marks().find(x=>x.id===(id||decoGet().mark));
@@ -567,7 +568,7 @@ export function startUI(E,app){
     const cur=decoGet(),col=(G&&G.ch&&G.ch.color)||'#c9a35a',nm=(G&&G.ch&&G.ch.name)||'당신';
     const btn=(kind,o,sel)=>{const ok=decoOk(o);return `<button class="${sel===o.id?'on':''}" data-a="deco" data-i="${kind}:${o.id}" ${ok?'':'disabled'}>${kind==='mark'?markHtml(col,o.id):''} ${o.n}${ok?'':` <span class="small dim">· ${decoWhy(o)}</span>`}</button>`};
     return `<div class="stack" style="gap:6px"><span class="eyebrow">꾸미기 · 전투 중 내 카드</span>
-      <div class="panel stack ent compact deco-${cur.frame}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="entname">${markHtml(col,cur.mark)}<b class="serif" style="color:${col}">${esc(nm)}</b></div><span class="mono small">HP 80/80 · 정신 45</span><div class="bar"><i style="width:100%;background:${col}"></i></div></div>
+      <div class="panel stack ent compact deco-${cur.frame}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="entname">${markHtml(col,cur.mark)}<b class="serif" style="color:${col}">${esc(nm)}</b></div><span class="mono small">HP 80/80 · 정신 45</span><div class="bar"><i style="width:100%;background:${col}"></i></div></div>${String(cur.mark).startsWith('sym_')?`<div class="row" style="gap:10px;align-items:center"><img src="${symImg(String(cur.mark).slice(4),true)}" alt="" width="96" height="96"><span class="small dim">크게 보면 이런 모양이고, 전투 이름 옆에는 16px로 작게 보인다</span></div>`:''}
       <span class="small dim">이름 앞 모양</span><div class="seg" style="flex-wrap:wrap">${MARKS.map(o=>btn('mark',o,cur.mark)).join('')}</div>
       <span class="small dim">심볼</span>${SYMS.length?`<div class="seg" style="flex-wrap:wrap">${marks().filter(o=>o.img).map(o=>btn('mark',o,cur.mark)).join('')}</div>`:'<span class="small dim">하드로 이야기를 끝내면 얻는 심볼이 여기에 나타난다</span>'}
       <span class="small dim">테두리</span><div class="seg" style="flex-wrap:wrap">${FRAMES.map(o=>btn('frame',o,cur.frame)).join('')}</div>
