@@ -553,6 +553,15 @@ export function startUI(E,app){
   /* 심볼: 하드 완주 등으로 얻는 이미지. 이미지는 assets/symbol/<id>.png(정사각 투명 PNG, 전투 이름 옆에는 16px로 줄어 쓰인다)에 넣고 여기에 {id,n}을 더한다. 얻은 목록은 기록실 기록의 symbols에 쌓인다 */
   const symImg=(id,big)=>{const k=big?id+'_big':id;return (typeof window!=='undefined'&&window.CITY_SYM&&window.CITY_SYM[k])||`assets/symbol/${k}.png`};
   const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'}];
+  /* 기록실의 심볼 칸: 어떻게 얻는지와 얻은 심볼 이미지. 이미지가 준비된 심볼부터 목록에 오른다 */
+  const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)'};
+  function symRec(r){
+    const have=r.symbols||[],n=SYMS.filter(x=>have.includes(x.id)).length;
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">심볼 ${n}/${SYMS.length}</span>
+      <p class="small dim">소속을 올리고 이야기(2막)를 끝내면 그 소속의 심볼을 얻는다. 얻은 심볼은 꾸미기에서 이름 앞에 달 수 있다. 소속을 옮기며 모으는 것은 인정하지 않고, 이야기가 끝나는 순간의 소속만 센다.</p>
+      <div class="stack" style="gap:8px">${SYMS.map(x=>{const got=have.includes(x.id);return `<div class="row" style="gap:12px;align-items:center;flex-wrap:nowrap"><img src="${symImg(x.id,true)}" alt="" width="56" height="56" style="flex:none${got?'':';filter:brightness(0);opacity:.3'}"><div class="stack" style="gap:2px;min-width:0"><b>${esc(x.n)} 심볼 <span class="chip" style="font-weight:400">${got?'획득':'미획득'}</span></b><span class="small ${got?'':'dim'}">${esc(SYMDOC[x.id]||'')}</span></div></div>`}).join('')}</div>
+      <span class="small dim">사무소·날개·협회·특색 심볼은 이미지가 준비되는 대로 이 목록에 더해진다.</span></div>`;
+  }
   const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||symImg(x.id),unlock:{sym:x.id}})));
   const grantSymbol=id=>{const r=loadRec();r.symbols=Array.isArray(r.symbols)?r.symbols:[];if(!r.symbols.includes(id)){r.symbols.push(id);store.set(REC,JSON.stringify(r))}};
   const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}}];
@@ -579,6 +588,9 @@ export function startUI(E,app){
       <div class="panel stack" style="gap:8px"><span class="eyebrow">2 · 얻을 때 어떻게 보이나</span>
         <p class="small dim">엔딩 화면 위에 이런 안내가 뜨고, 그 자리에서 바로 장착할 수 있다고 가정한 모습이다.</p>
         <div class="seg" style="flex-wrap:wrap">${SYMS.map(x=>`<button class="${g===x.id?'on':''}" data-a="symgain" data-i="${x.id}"><img class="swimg" src="${symImg(x.id)}" width="24" height="24" alt=""> ${esc(x.n)}</button>`).join('')}</div>${gain}</div>
+      <div class="panel stack" style="gap:8px"><span class="eyebrow">기록실에서 어떻게 보이나</span>
+        <p class="small dim">시작 화면의 기록실 → "심볼" 탭에서 얻는 방법과 얻은 심볼 이미지를 본다. 아래 버튼으로 기록을 바꿔 가며 확인할 수 있다.</p>
+        <div class="row" style="gap:8px"><button class="btn" data-a="symrec" data-i="some">2개 얻은 상태</button><button class="btn" data-a="symrec" data-i="all">모두 얻은 상태</button><button class="btn quiet" data-a="symrec" data-i="none">초기화</button></div></div>
       <div class="panel stack" style="gap:8px"><span class="eyebrow">3 · 어디서 장착하나</span>
         <p class="small dim">설정 → 꾸미기(시작 화면 왼쪽 칸, 모바일은 접는 칸)에서 "이름 앞 모양" 줄의 심볼을 고른다. 한 번 얻으면 모든 판에 적용되고, 전투 중 내 카드의 이름 앞에 32px로 붙는다.</p>${vDeco('lab')}</div>
       <button class="btn" data-a="symback">시작 화면으로</button>`;
@@ -1377,8 +1389,8 @@ export function startUI(E,app){
       return [seen,seen?esc(e.n)+(won?' ✓':''):'???',tx||(seen?'':'하드 완주 후에 어디서 만나는지 알 수 있다')]});
     const got=rows.filter(x=>x[0]).length;
     return `<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 보스 도감 · 만난 ${got}/${rows.length}</span><div class="stack" style="gap:10px">${rows.map(([o,l,h])=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${o?'':' dim'}">${l}</span><span class="small dim" style="white-space:pre-line">${esc(h)}</span></div>`).join('')}</div><p class="small dim">${r.hardClear?'하드 완주 보상: 만나지 못한 상대는 어디서 만나는지, 만난 상대는 얻는 방법이 열려 있다.':'하드 완주를 하면 만나지 못한 상대가 어디서 나오는지 알 수 있다.'}</p></div>`}
-  const REC_TABS=['요약','칭호','인연','엔딩','히든 보스','출생·소속','장비','상대'];
-  const recTabOf=t=>/^(최고 기록|판 통계)/.test(t)?'요약':/^칭호/.test(t)?'칭호':/^인연/.test(t)?'인연':/^엔딩/.test(t)?'엔딩':/^히든 보스/.test(t)?'히든 보스':/^(히든 출생|소속|타고난 것|해금 출생|히든 직업)/.test(t)?'출생·소속':/^특수 장비/.test(t)?'장비':'상대';
+  const REC_TABS=['요약','칭호','인연','엔딩','히든 보스','출생·소속','심볼','장비','상대'];
+  const recTabOf=t=>/^(최고 기록|판 통계)/.test(t)?'요약':/^칭호/.test(t)?'칭호':/^인연/.test(t)?'인연':/^엔딩/.test(t)?'엔딩':/^히든 보스/.test(t)?'히든 보스':/^(히든 출생|소속|타고난 것|해금 출생|히든 직업)/.test(t)?'출생·소속':/^심볼/.test(t)?'심볼':/^특수 장비/.test(t)?'장비':'상대';
   const RFK='cy_recfold',recFold=()=>{try{return JSON.parse(localStorage.getItem(RFK)||'[]')||[]}catch(e){return []}};
   const vRecords=()=>{const f=recFold(),tab=UI.recTab||'요약';const html=vRecords0().replace(/<div class="panel stack"( style="[^"]*")?><span class="eyebrow">([^<]*)<\/span>/g,(m,st,t)=>{const k=t.replace(/\s*·.*$/,'').replace(/\s*[0-9].*$/,'')||t,c=f.includes(k);return `<div class="panel stack rfold${c?' closed':''}"${(()=>{const hide=recTabOf(t)!==tab;if(!hide)return st||'';return st?st.replace(/"$/,';display:none"'):' style="display:none"'})()}><span class="eyebrow rfh" data-a="rfold" data-i="${esc(k)}" role="button" aria-expanded="${!c}">${c?'▸':'▾'} ${t}</span>`});return html};
   function vRecords0(){
@@ -1411,7 +1423,8 @@ export function startUI(E,app){
         <span class="eyebrow">전용 카드팩 ${pk.filter(k=>pg.includes(k)).length}/${pk.length}</span><div class="chips">${pk.map(k=>`<span class="chip${pg.includes(k)?'':' dim'}">${pg.includes(k)?esc(k)+' · '+cat.p[k]+'장':'???'}</span>`).join('')}</div>
         <p class="small dim">히든 보스 전리품, 출신 전용 장비, 전용 카드팩이 쌓인다. 이름을 직접 정하는 것(성도 · 개화 · 뒤틀림)은 넣지 않았다. 아직 얻지 못한 것은 ???로 제자리에 두어, 어디쯤 있는 장비인지 짐작할 수 있다.</p></div>`})()}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">타고난 것 ${r.innate.length}/${Object.keys(D.innate).length}</span><div class="chips">${Object.entries(D.innate).map(([k,v])=>`<span class="chip${r.innate.includes(k)?'':' dim'}">${r.innate.includes(k)?esc(v.n):'???'}</span>`).join('')}</div>${Object.entries(D.innate).filter(([k,v])=>v.unlock&&!(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small dim">잠김 · ${r.innate.includes(k)?esc(v.n):'???'} — 해금: ${esc(v.unlock)}</span>`).join('')}${Object.entries(D.innate).filter(([k,v])=>v.unlock&&(r.unl||[]).includes(k)).map(([k,v])=>`<span class="small" style="color:var(--gold)">해금됨 · ${r.innate.includes(k)?esc(v.n):'???'} — 이제 태어날 때 1%로 나올 수 있다${r.innate.includes(k)?'':' (만나면 이름이 열린다)'}</span>`).join('')}</div>
-${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px"><span class="eyebrow">판 통계</span><p class="small dim">v8.2.0부터 집계한다. 이야기가 끝나면 여기에 쌓인다.</p></div>`;
+${symRec(r)}
+ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px"><span class="eyebrow">판 통계</span><p class="small dim">v8.2.0부터 집계한다. 이야기가 끝나면 여기에 쌓인다.</p></div>`;
         const top=(m,n)=>Object.entries(m||{}).sort((a,b)=>b[1]-a[1]).slice(0,n),line=(l,arr)=>arr.length?`<div class="row between" style="align-items:flex-start;gap:10px"><span>${l}</span><span class="small" style="text-align:right">${arr.map(([k,v])=>`${esc(k)} ×${v}`).join(' · ')}</span></div>`:'',en=Object.fromEntries(ends);
         return `<div class="panel stack" style="gap:6px"><span class="eyebrow">판 통계 · v8.2.0부터 집계</span>
         <div class="row between"><span>집계한 판</span><b class="mono">${S.n}</b></div>
@@ -2966,6 +2979,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     bgmext(i){BGM.setExt(+i);BGM.setStyle('ext');bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
     symlab(){if(!G){store.del(SAVE);UI.confirmNew=null;ACT.start();ACT.live()}UI.symlab=true;UI.screen='symlab';render()},
+    symrec(i){const r=loadRec();r.symbols=i==='all'?SYMS.map(x=>x.id):i==='some'?['thumb','middle']:[];store.set(REC,JSON.stringify(r));render()},
     symback(){UI.symlab=false;UI.screen='title';render()},
     symgain(i){UI.symGain=i||null;render()},
     symequip(i){const cur=decoGet();cur.mark=cur.mark==='sym_'+i?'square':'sym_'+i;store.set(DECOK,JSON.stringify(cur));render()},
