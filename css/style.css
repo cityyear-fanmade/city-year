@@ -831,3 +831,5 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .title-side .stsec .seg{grid-template-columns:repeat(2,1fr)}
 .stsec summary .swimg{width:22px;height:22px;display:inline-block;vertical-align:middle;margin:0 0 0 8px}
 .stsec summary .swsvg,.stsec summary .swatch{display:inline-block;vertical-align:middle;margin-left:8px}
+.title-side .btn,.title-side .btn.quiet{background:var(--panel)}
+html[data-skin] .title-side .btn,html[data-skin] .title-side .btn.quiet,html[data-skin] .title-side .stsec,html[data-skin] .chron-out{background:var(--panel)!important;backdrop-filter:none}
