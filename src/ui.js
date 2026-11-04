@@ -3037,6 +3037,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     choose(i){
       G.ch.rollFx=null;   /* 지난 판정(저장돼 남은 것)이 엉뚱한 사건 결과 때 다시 재생되지 않게, 이번 선택에서 새로 생긴 것만 남긴다 */
       const ev0=UI.ev,r=E.choose(G,UI.ev,+i);syncTitles();
+      /* 가족을 영생에 묶는 선택을 한 순간 그 엔딩 업적을 기록한다(실제 엔딩은 이어서 1000살에 난다) */
+      if(G&&G.ch&&G.ch.famBind&&G.ch.famBind.end&&!G.ch.famBind.rec){G.ch.famBind.rec=1;const rr=loadRec(),kk='out_'+G.ch.famBind.end;if(!rr.endings.includes(kk)){rr.endings.push(kk);store.set(REC,JSON.stringify(rr))}}
       if(ev0&&ev0.voices&&r&&r.t){const vb=G.ch.voiceBias;if(vb==='good'&&ev0.tGood)r.t=ev0.tGood;else if(vb==='bad'&&ev0.tBad)r.t=ev0.tBad}
       {const un=checkInnateUnlock();if(un.length)r.chips=[...(r.chips||[]),`타고난 것 해금 · ${un.join(', ')} (이제 태어날 때 1%로 나온다)`]}
       UI.pending=r.combat;saveGame({after:true,pending:UI.pending});
