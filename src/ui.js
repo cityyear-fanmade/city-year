@@ -557,8 +557,8 @@ export function startUI(E,app){
   const grantSymbol=id=>{const r=loadRec();r.symbols=Array.isArray(r.symbols)?r.symbols:[];if(!r.symbols.includes(id)){r.symbols.push(id);store.set(REC,JSON.stringify(r))}};
   const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}}];
   const decoRec=()=>{const r=loadRec();return {titles:Object.keys(r.titles||{}).filter(k=>(r.titles[k]||0)>0).length,endings:(r.endings||[]).length,hard:!!r.hardClear}};
-  /* 단일 파일(테섭) 빌드에서는 모든 심볼을 시험해 볼 수 있다(window.CITY_SYM이 있을 때) */
-  const decoOk=o=>{if(!o.unlock)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (typeof window!=='undefined'&&!!window.CITY_SYM)||(loadRec().symbols||[]).includes(u.sym);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
+  /* 단일 파일(테섭) 빌드(window.CITY_SYM이 있을 때)에서는 모든 심볼·테두리를 해금 조건 없이 시험해 볼 수 있다. 본섭(--pages)은 조건대로 */
+  const decoOk=o=>{if(!o.unlock)return true;if(typeof window!=='undefined'&&window.CITY_SYM)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
   const decoWhy=o=>{const u=o.unlock||{};return u.sym?'심볼 획득':u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
   const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain'}};
   const markHtml=(col,id)=>{const m=marks().find(x=>x.id===(id||decoGet().mark));
