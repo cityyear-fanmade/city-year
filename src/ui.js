@@ -3,6 +3,7 @@ import {CFG} from './config.js';
 import {clamp,sg,STAT} from './engine.js';
 import {createBgm} from './bgm.js';
 import {createSfx} from './sfx.js';
+import {LANGS,getLang,setLang,tr,trDom} from './i18n.js';
 
 export function startUI(E,app){
   const D=E.D,T=D.text;
@@ -621,7 +622,7 @@ export function startUI(E,app){
   }
   function vSettings(){
     const b=(a,k,l,cur)=>`<button class="${cur===k?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`;
-    return `${FS.ok()?`<div class="stack" style="gap:6px"><span class="eyebrow">전체 화면</span><div class="seg">${b('fs','off','끔',FS.on()?'':'off')}${b('fs','on','켬',FS.on()?'on':'')}</div><span class="small dim">브라우저 주소창·탭 줄을 숨깁니다 · 방송이나 넓은 화면용 · Esc로도 끝낼 수 있습니다</span></div>`:''}<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
+    return `<div class="stack" style="gap:6px"><span class="eyebrow">언어 · Language</span><div class="seg">${LANGS.map(l=>b('lang',l.k,l.n,getLang())).join('')}</div><span class="small dim">${getLang()==='ko'?'다른 언어는 번역이 준비된 부분부터 적용되고, 없는 문장은 한국어로 나옵니다 · 바꾸면 화면이 새로 열립니다':tr('다른 언어는 번역이 준비된 부분부터 적용되고, 없는 문장은 한국어로 나옵니다 · 바꾸면 화면이 새로 열립니다')}</span></div>${FS.ok()?`<div class="stack" style="gap:6px"><span class="eyebrow">전체 화면</span><div class="seg">${b('fs','off','끔',FS.on()?'':'off')}${b('fs','on','켬',FS.on()?'on':'')}</div><span class="small dim">브라우저 주소창·탭 줄을 숨깁니다 · 방송이나 넓은 화면용 · Esc로도 끝낼 수 있습니다</span></div>`:''}<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">주사위 · 전투 연출</span><div class="seg">${b('mode','manual','수동',MODE)}${b('mode','slow','천천히',MODE)}${b('mode','fast','빠르게',MODE)}${b('mode','off','끔',MODE)}</div>
         <span class="small dim">${{manual:'행동마다 버튼을 눌러 직접 주사위를 굴린다',slow:'자동으로 천천히 굴린다',fast:'자동으로 빠르게 굴린다',off:'연출 없이 결과만 본다'}[MODE]}</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">자동 전투 간격</span><div class="seg">${b('autogap','slow','느림',AUTOGAP)}${b('autogap','normal','보통',AUTOGAP)}${b('autogap','mid','조금 빠름',AUTOGAP)}${b('autogap','fast','빠름',AUTOGAP)}</div>
@@ -2732,6 +2733,7 @@ ${symRec(r)}
     if(s!==lastScreen){window.scrollTo(0,0);lastScreen=s}
     if(s==='shop')applyShopFold();
     if(s==='combat')termRun();
+    trDom(app);
     if(s==='birth'&&BC.fresh&&MODE!=='off'){BC.fresh=false;rollAnim()}
     if(s==='level'&&UI.lvFresh&&MODE!=='off'){UI.lvFresh=false;rollAnim()}
     if(s==='result'&&UI.res.anim&&UI.res.roll){UI.res.anim=false;UI.animing=true;resultAnim().then(()=>{UI.animing=false;if(G&&((G.ch.offers||[]).length||(G.ch.picks||[]).length||(G.ch.gearOffers||[]).length||G.ch.packOffer))render()})}
@@ -2956,6 +2958,7 @@ ${symRec(r)}
     finish(){store.del(SAVE);UI.confirmNew=null;UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.screen='title';render()},
     title(){UI.confirmNew=null;if(UI.shared){UI.shared=null;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}UI.screen='title';render()},
     infnote(i){INFNOTE=i!=='off';store.set('cityYearInfNote',i==='off'?'off':'on');render()},
+    lang(i){if(i!==getLang())setLang(i)},
     mode(i){MODE=i;store.set('cityYearMode',i);render()},
     hitfx(i){HFX=i;store.set(HFXK,i);render()},
     hitfxm(i){HFXM=i;store.set(HFXMK,i);render()},
