@@ -3702,7 +3702,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const fsb=A.fs?CFG.firstHit:0;A.fs=false;
       /* 검은 침묵의 장갑: 공격마다 1d9로 무기가 바뀐다 */
       let sub=null;
-      if(A.wx&&A.wx.arsenal){const i=d(A.wx.arsenal.length);sub=A.wx.arsenal[i-1];(C.ars=C.ars||[]);if(!C.ars.includes(i))C.ars.push(i);pnote+=` 장갑 1d9 ${i}·${sub.n}`}
+      if(A.wx&&A.wx.arsenal){const i=d(A.wx.arsenal.length);sub=A.wx.arsenal[i-1];(C.ars=C.ars||[d(A.wx.arsenal.length)]);if(!C.ars.includes(i))C.ars.push(i);pnote+=` 장갑 1d9 ${i}·${sub.n}`}
       const gr=A.isP&&A.cg&&c.t==='atk'?A.cg:null,rk=A.isP&&A.rk&&c.t==='atk'&&(!A.rk.set||A.rk.set.has(c))?A.rk:null;
       const acA=A.wx&&A.wx.accel?(A.accel||0)*A.wx.accel.hit:0,acB=B.wx&&B.wx.accel?(B.accel||0)*B.wx.accel.eva:0;
       const trH=(A.trait==='bloodscent'&&B.bleed>0?15:0)+(A.trait==='enrage'&&A.hp<=A.maxHp/2?15:0),trE=B.trait==='coward'&&B.hp<=B.maxHp/2?20:0;
@@ -3982,7 +3982,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       if(B.wx&&B.wx.thornKw&&A.hp>0){for(const [k_,n_] of B.wx.thornKw){const cap_=k_==='bleed'?bleedCap(A):CFG.stackCap;A[k_]=Math.min(cap_,(A[k_]||0)+n_);L('kw',`  ${B.name}의 효과 · ${A.name}에게 ${D.keywords[k_].n} +${n_} (지금 ${A[k_]})`)}}
       if(B.wx&&B.wx.thorns&&A.hp>0){A.hp=Math.max(0,A.hp-B.wx.thorns);L('dmg',`  ${B.name}의 무기 반격 · ${A.name} 피해 ${B.wx.thorns}`)}
       /* 검은 침묵의 장갑: 서로 다른 무기 3종을 쓰면 이번 전투에 한 번, 다음 손패에 Furioso */
-      if(A.wx&&A.wx.arsenal&&!C.furiosoGiven&&(C.ars||[]).length>=3){C.furiosoGiven=true;A.furiosoNext=true;L('sys',`  ${A.name} · 서로 다른 무기 3종 · 다음 손패에 Furioso`)}
+      if(A.wx&&A.wx.arsenal&&(C.furiosoN||0)<CFG.spec.furioso.max&&(C.ars||[]).length>=CFG.spec.furioso.need){C.furiosoN=(C.furiosoN||0)+1;C.ars=[];A.furiosoNext=true;L('sys',`  ${A.name} · 서로 다른 무기 ${CFG.spec.furioso.need}종 · 다음 손패에 Furioso (${C.furiosoN}/${CFG.spec.furioso.max}회)`)}
       /* 회피 실패: 1d5에서 1이면 정신력 1 감소 (E.G.O 장비 1개당 +1) */
       if(B.isP&&d(M.evadeDie)===1&&!(corpType(C.ch)&&corpType(C.ch).year))loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
       /* 레바테인 계열: 적중 시 화상 */
@@ -4025,8 +4025,8 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
     /* 궁니르 공명: 궁니르 카드를 낸 라운드는 받는 피해 60% 감소 */
     if(P.resonance&&pp.some(c=>c.gungnir))P.drRound=C.round;
     const L=(t,s)=>{if(C.quiet)return;C.log.push({t,s});C.cur.push({t,s})};
-    /* 보랏빛 사복검: 서로 다른 자세의 4코스트 카드를 두 가지 쓰면 다음 손패에 환영난무, 몇 라운드 동안 최대 빛 증가 (전투에 한 번) */
-    if(P.isP&&P.wx&&P.wx.forms){C.vsTop=C.vsTop||[];pp.forEach(c=>{if(c.vsTop&&!C.vsTop.includes(c.vsTop))C.vsTop.push(c.vsTop)});if(C.vsTop.length>=2&&!C.vsGiven){C.vsGiven=true;giveNext(P,'x_vs_ego');P.burstLight=CFG.form.burstLight;P.burstTo=C.round+CFG.form.burstRounds;L('sys',`  ${P.name} · 3코스트 이상 두 자세 · 다음 손패에 환영난무 · 최대 빛 +${CFG.form.burstLight} (${CFG.form.burstRounds}라운드)`)}}
+    /* 보랏빛 사복검: 서로 다른 자세의 4코스트 카드를 두 가지 쓰면 다음 손패에 환영난무, 몇 라운드 동안 최대 빛 증가 (전투당 최대 3회, 세 자세) */
+    if(P.isP&&P.wx&&P.wx.forms){C.vsTop=C.vsTop||['a','d','p','s'].slice(0,CFG.spec.vs.seed);pp.forEach(c=>{if(c.vsTop&&!C.vsTop.includes(c.vsTop))C.vsTop.push(c.vsTop)});if(C.vsTop.length>=CFG.spec.vs.need&&(C.vsN||0)<CFG.spec.vs.max){C.vsN=(C.vsN||0)+1;C.vsTop=[];giveNext(P,'x_vs_ego');P.burstLight=CFG.form.burstLight;P.burstTo=C.round+CFG.form.burstRounds;L('sys',`  ${P.name} · 3코스트 이상 ${CFG.spec.vs.need}자세 · 다음 손패에 환영난무 · 최대 빛 +${CFG.form.burstLight} (${CFG.form.burstRounds}라운드)`)}}
     const push=ev=>{if(C.quiet)return;if(C.rollPend){C.cur.unshift({t:'sys',s:`  판정 1d100 ${C.rollPend.r} / 개화 ${C.rollPend.th} 이하`,roll:C.rollPend});C.rollPend=null}ev.lines=C.cur;C.cur=[];ev.snap=snap(C);ev.step=C.step;C.evs.push(ev)};
     L('head',`— ${C.round}라운드 · ${C.order[0].name} 선공 —`);
     if(C.ch.infinite&&C.ch.pact&&P.isP){const ts=pactV(C.ch,'timeslip'),hv=pactV(C.ch,'heavy');

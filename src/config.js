@@ -79,7 +79,7 @@ export const CFG = {
   oldAge: 100, overflowAge: 1000 /* 무한 모드 오버플로우 엔딩 나이 */,
   /* 사건 판정 주사위 최대치(플레이어): 타고난 것 등으로 아무리 커져도 이 값에서 멈춘다 */
   checkMax: 220,
-  serpent: {max: 7} /* 보라눈물: 뱀의 장벽 스택 최대 */, vform: {exec: '익스큐셔너 소드', rapier: '레이피어', katana: '카타나'} /* 옛 보랏빛 사복검 */, form: {names: {a: '참격 자세', d: '방어 자세', p: '관통 자세', s: '타격 자세'}, weapon: {a: '보랏빛 사복검', d: '보랏빛 사복검', p: '보랏빛 사복검', s: '보랏빛 사복검'}, atkDmg: 1, defCut: 15, stagger: 1, bleed: 1, burstLight: 5, burstRounds: 2} /* 보랏빛 사복검: 자세 */ /* 보랏빛 사복검의 이름 */,
+  spec: {furioso: {need: 4, max: 3, seed: 1}, vs: {need: 3, max: 3, seed: 1}} /* 검은 침묵의 장갑 Furioso · 보라눈물 환영난무: 서로 다른 무기(자세) need개를 쓰면 지급, 전투당 최대 max회, 지급 뒤 처음부터 다시 쌓고 전투를 시작할 때 seed개를 이미 쌓아 둔다 */, serpent: {max: 7} /* 보라눈물: 뱀의 장벽 스택 최대 */, vform: {exec: '익스큐셔너 소드', rapier: '레이피어', katana: '카타나'} /* 옛 보랏빛 사복검 */, form: {names: {a: '참격 자세', d: '방어 자세', p: '관통 자세', s: '타격 자세'}, weapon: {a: '보랏빛 사복검', d: '보랏빛 사복검', p: '보랏빛 사복검', s: '보랏빛 사복검'}, atkDmg: 1, defCut: 15, stagger: 1, bleed: 1, burstLight: 5, burstRounds: 2} /* 보랏빛 사복검: 자세 */ /* 보랏빛 사복검의 이름 */,
   warp: {winHealPct: 0.2, chance: 40, leadPlus: 20, laterYears: 5, lead: {maxHp: 8, atk: 1}, rival: {stats: {spd: 1, check: 1}, money: 1500}, after: {bonus: {2: {atk: 2, eva: 2, maxHp: 10}, 5: {atk: 1, eva: 1, maxHp: 4}}}} /* W사 열차 직원: 해마다 이 확률로 열차 안 사건(해가 넘어가지 않음)이 하나 온다. 무한 모드(2막)에서 열차를 내릴지 정하는 서류가 한 번 놓이고, 남아 정리 요원장이 되면 확률이 leadPlus만큼 오르고 lead 보너스를 받는다 */,
   drainCap: 5 /* 무기 흡수(미미크리 등): 한 라운드(턴)에 적중 흡수는 최대 5번까지 */,
   infinite: {famEvery: 30 /* 영생을 이은 가족의 안부가 나오는 간격(해) */, famMind: 3 /* 영생을 이을 때 영구히 줄어드는 최대 정신력 */, pact: {from: 100, every: 50, cap: 5 /* 같은 종류는 5번까지 쌓인다 */, pairMul: 1.5 /* 짝인 제약을 2번 이상 쌓은 버프는 한 번당 효과 ×1.5 */,
