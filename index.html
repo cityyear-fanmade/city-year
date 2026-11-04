@@ -7262,10 +7262,10 @@ function startUI(E,app){
     outer:'무한 모드에서 제 2막을 넘겨 외곽으로 나간 뒤, "외곽에서 이야기를 끝낸다"를 직접 고른다',
     out_seal:'무한 모드 외곽에서 균열로 흘러드는 히든 보스를 모두 쓰러뜨린다',
     out_star:'무한 모드 외곽에서 쓰러뜨린 상대가 16명 이상이 된다',
-    out_famcrow:'무한 모드에서 까마귀로 100살을 넘긴 뒤 가족의 죽음 앞에서 "원본으로 배양조에 든다"를 고른다',
-    out_famlake:'무한 모드에서 대호수로 100살을 넘긴 뒤 가족의 죽음 앞에서 "물결에 이름을 놓는다"를 고른다',
-    out_famblood:'무한 모드에서 혈귀로 100살을 넘긴 뒤 가족의 죽음 앞에서 "강물에 이름을 내놓는다"를 고른다',
-    out_fampill:'무한 모드에서 홍원의 가주나 군주로 100살을 넘긴 뒤 가족의 죽음 앞에서 "금지된 환을 짓는다"를 고른다',
+    out_famcrow:'까마귀팀 출생으로 무한 모드에서 100살을 넘긴 뒤 배우자나 자식의 죽음 앞에서 "원본으로 배양조에 든다"를 고른다',
+    out_famlake:'대호수 선원으로 무한 모드에서 100살을 넘긴 뒤 배우자나 자식의 죽음 앞에서 "물결에 이름을 놓는다"를 고른다',
+    out_famblood:'혈귀(태어날 때부터 혈귀이거나 붉은 밤의 초대로 혈귀가 된 경우)로 무한 모드에서 100살을 넘긴 뒤 배우자나 자식의 죽음 앞에서 "강물에 이름을 내놓는다"를 고른다',
+    out_fampill:'홍루의 군주를 쓰러뜨려 가주의 자리에 오른(곁의 필두로 남은 경우 포함) 뒤 무한 모드에서 100살을 넘겨 배우자나 자식의 죽음 앞에서 "금지된 환을 짓는다"를 고른다',
     out_settle:'무한 모드 외곽에서 결혼한 채 자식이 성인이 되고, 제 2막을 넘긴 뒤 12년이 지난다',
     distwin:'뒤틀린 몸으로 '+CFG.years+'년을 넘긴다',
     old:'무한 모드에서 나이가 100살을 넘긴다',
@@ -8724,10 +8724,10 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     syncTitles();
     checkInnateUnlock();
     /* 해금 출생(D.unlockOrigins): 무한 모드 전 2막 끝까지 간 판이 cond의 출생(origin 이름) 또는 아이템(item id)을 만족하면 열린다. 굴림 번호 히든 출생과는 별개 */
-    {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||G.infinite),u0=loadUnlocks();
+    {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||UI.overflowEnd||G.infinite||((UI.rbEnd||UI.hwEnd)&&G.endless)),u0=loadUnlocks();
       if(cleared)for(const o of D.unlockOrigins||[]){const k='origin:'+o.key,cd=o.cond||{};if(u0.includes(k))continue;
         const has=cd.item?[...Object.values(cc.gear||{}),...(cc.stash||[])].some(x=>x&&x.id===cd.item):false;
-        if((cd.origin&&cc.o&&cc.o.n===cd.origin&&(!cd.beat||(cc.beaten||[]).includes(cd.beat)))||(cd.aff&&((cc.aff&&cc.aff.name===cd.aff)||(cc.affLog||[]).includes(cd.aff)))||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=o.n}}}
+        if((cd.origin&&cc.o&&cc.o.n===cd.origin&&(!cd.beat||(cc.beaten||[]).includes(cd.beat)))||(cd.aff&&((cc.aff&&cc.aff.name===cd.aff)||(cc.affLog||[]).includes(cd.aff)))||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=(UI.newOrigin&&UI.newOriginRun===G?UI.newOrigin+' · ':'')+o.n;UI.newOriginRun=G}}}
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:w&&UI.overflowEnd?'overflow':(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
     if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;r.ghost={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp}}
@@ -9036,6 +9036,8 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     choose(i){
       G.ch.rollFx=null;   /* 지난 판정(저장돼 남은 것)이 엉뚱한 사건 결과 때 다시 재생되지 않게, 이번 선택에서 새로 생긴 것만 남긴다 */
       const ev0=UI.ev,r=E.choose(G,UI.ev,+i);syncTitles();
+      /* 가족을 영생에 묶는 선택을 한 순간 그 엔딩 업적을 기록한다(실제 엔딩은 이어서 1000살에 난다) */
+      if(G&&G.ch&&G.ch.famBind&&G.ch.famBind.end&&!G.ch.famBind.rec){G.ch.famBind.rec=1;const rr=loadRec(),kk='out_'+G.ch.famBind.end;if(!rr.endings.includes(kk)){rr.endings.push(kk);store.set(REC,JSON.stringify(rr))}}
       if(ev0&&ev0.voices&&r&&r.t){const vb=G.ch.voiceBias;if(vb==='good'&&ev0.tGood)r.t=ev0.tGood;else if(vb==='bad'&&ev0.tBad)r.t=ev0.tBad}
       {const un=checkInnateUnlock();if(un.length)r.chips=[...(r.chips||[]),`타고난 것 해금 · ${un.join(', ')} (이제 태어날 때 1%로 나온다)`]}
       UI.pending=r.combat;saveGame({after:true,pending:UI.pending});
