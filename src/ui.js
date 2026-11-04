@@ -2832,7 +2832,7 @@ ${symRec(r)}
     syncTitles();
     checkInnateUnlock();
     /* 해금 출생(D.unlockOrigins): 무한 모드 전 2막 끝까지 간 판이 cond의 출생(origin 이름) 또는 아이템(item id)을 만족하면 열린다. 굴림 번호 히든 출생과는 별개 */
-    {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||G.infinite),u0=loadUnlocks();
+    {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||UI.overflowEnd||G.infinite||((UI.rbEnd||UI.hwEnd)&&G.endless)),u0=loadUnlocks();
       if(cleared)for(const o of D.unlockOrigins||[]){const k='origin:'+o.key,cd=o.cond||{};if(u0.includes(k))continue;
         const has=cd.item?[...Object.values(cc.gear||{}),...(cc.stash||[])].some(x=>x&&x.id===cd.item):false;
         if((cd.origin&&cc.o&&cc.o.n===cd.origin&&(!cd.beat||(cc.beaten||[]).includes(cd.beat)))||(cd.aff&&((cc.aff&&cc.aff.name===cd.aff)||(cc.affLog||[]).includes(cd.aff)))||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=(UI.newOrigin&&UI.newOriginRun===G?UI.newOrigin+' · ':'')+o.n;UI.newOriginRun=G}}}
