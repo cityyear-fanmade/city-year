@@ -3296,7 +3296,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       {const FE=(gwRoute()||{}).fallEvents||[];ch.gwFE=ch.gwFE||[];const e=FE.find(f=>!ch.gwFE.includes(f.at)&&(ch.year||0)>=(ch.gwFallYear||0)+f.at);if(e){ch.gwFE.push(e.at);return JSON.parse(JSON.stringify(e.ev))}}
       if(!ch.bond&&(ch.year||0)>=(ch.gwFallYear||0)+Z.procFrom-1){const bm=bondMeetEvent(ch);if(bm)return bm}   // 몰락 뒤 시술 전에 같은 처지의 사람을 만난다
       if((ch.year||0)<(ch.gwFallYear||0)+Z.procFrom)return null;
-      return {t:'날개 시술 제안',x:'소문으로만 돌던 마지막 연구원이 직접 찾아왔다. 불타지 않은 자료를 몸에 가지고 나왔다고 한다. 조정을 받지 못해 어긋나는 병기의 몸을 날개의 시술로 다시 쓸 만하게 만들 수 있다고 한다. 약해진 몸에 던지는 거래다. 대신 몸이 방어구 말고는 아무것도 쥐지 않게 된다. 대신 몸이 방어구 말고는 아무것도 쥐지 않게 된다. 쥘 수 없는 장비는 먹으면 된다고 연구원은 말한다. 먹을수록 몸이 자란다고 한다. 연구원은 몸 안에서 가장 깊은 곳은 아직 깨어나지 않았다고 덧붙인다.',c:Object.entries(Z.proc).map(([k,v])=>({l:v.n,h:v.e,ok:{t:`시술이 끝났다. ${v.n}이 몸에 자리를 잡았다. 몸 안 어딘가에서 아주 작은 것이 뒤척였다.`,fx:{gwProc:k}}}))}}
+      return {t:'날개 시술 제안',x:'소문으로만 돌던 마지막 연구원이 직접 찾아왔다. 불타지 않은 자료를 몸에 가지고 나왔다고 한다. 조정을 받지 못해 어긋나는 병기의 몸을 날개의 시술로 다시 쓸 만하게 만들 수 있다고 한다. 약해진 몸에 던지는 거래다. 대신 몸이 방어구 말고는 아무것도 쥐지 않게 된다. 쥘 수 없는 장비는 먹으면 된다고 연구원은 말한다. 먹을수록 몸이 자란다고 한다. 연구원은 몸 안에서 가장 깊은 곳은 아직 깨어나지 않았다고 덧붙인다.',c:Object.entries(Z.proc).map(([k,v])=>({l:v.n,h:v.e,ok:{t:`시술이 끝났다. ${v.n}이 몸에 자리를 잡았다. 몸 안 어딘가에서 아주 작은 것이 뒤척였다.`,fx:{gwProc:k}}}))}}
     /* 히든급 장비를 hiddenNeed개 먹으면 왕족 인자가 발현한다 */
     if(ch.gw.royal&&!ch.gw.form){
       return {t:'왕족 인자 발현',x:'히든급 장비를 세 개째 삼킨 밤, 몸 깊은 곳에서 오래 잠들어 있던 것이 눈을 뜬다. 왕족의 인자다. 해충의 왕족은 한 명만 이 몸을 가질 수 있다. 어느 쪽으로 변할지는 병기가 정한다.',c:Object.entries(Z.forms).map(([k,v])=>({l:v.n,h:v.e,ok:{t:`몸이 ${v.n}으로 변했다. 이음매마다 다른 것이 자리를 잡았다.`,fx:{gwForm:k}}}))}}
