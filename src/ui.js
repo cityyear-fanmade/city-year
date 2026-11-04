@@ -547,9 +547,9 @@ export function startUI(E,app){
   /* 꾸미기: 내 전투 카드의 이름 앞 모양(MARKS)과 테두리(FRAMES). 기록실 기록에 따라 열린다(unlock). 나중에 심볼 이미지는 MARKS에 {id,n,img}로 더한다 */
   const DECOK='cityYearDeco';
   const MARKS=[{id:'square',n:'네모'},{id:'circle',n:'원',d:'M6 .5a5.5 5.5 0 1 0 .001 0z'},{id:'diamond',n:'마름모',d:'M6 .5L11.5 6 6 11.5.5 6z'},
-    {id:'star',n:'별',d:'M6 .5l1.6 3.6 3.9.4-2.9 2.6.8 3.9L6 9l-3.4 2 .8-3.9L.5 4.5l3.9-.4z',unlock:{titles:1}},
-    {id:'shield',n:'방패',d:'M6 .5L11 2v4c0 2.8-2 4.5-5 5.5C3 10.5 1 8.8 1 6V2z',unlock:{endings:3}},
-    {id:'cross',n:'십자',d:'M4 .5h4V4h3.5v4H8v3.5H4V8H.5V4H4z',unlock:{hard:1}}];
+    {id:'star',n:'별',d:'M6 .5l1.6 3.6 3.9.4-2.9 2.6.8 3.9L6 9l-3.4 2 .8-3.9L.5 4.5l3.9-.4z'},
+    {id:'shield',n:'방패',d:'M6 .5L11 2v4c0 2.8-2 4.5-5 5.5C3 10.5 1 8.8 1 6V2z'},
+    {id:'cross',n:'십자',d:'M4 .5h4V4h3.5v4H8v3.5H4V8H.5V4H4z'}];
   /* 심볼: 하드 완주 등으로 얻는 이미지. 이미지는 assets/symbol/<id>.png(정사각 투명 PNG, 전투 이름 옆에는 16px로 줄어 쓰인다)에 넣고 여기에 {id,n}을 더한다. 얻은 목록은 기록실 기록의 symbols에 쌓인다 */
   const symImg=(id,big)=>{const k=big?id+'_big':id;return (typeof window!=='undefined'&&window.CITY_SYM&&window.CITY_SYM[k])||`assets/symbol/${k}.png`};
   const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'}];
@@ -580,14 +580,14 @@ export function startUI(E,app){
         <p class="small dim">엔딩 화면 위에 이런 안내가 뜨고, 그 자리에서 바로 장착할 수 있다고 가정한 모습이다.</p>
         <div class="seg" style="flex-wrap:wrap">${SYMS.map(x=>`<button class="${g===x.id?'on':''}" data-a="symgain" data-i="${x.id}"><img class="swimg" src="${symImg(x.id)}" width="24" height="24" alt=""> ${esc(x.n)}</button>`).join('')}</div>${gain}</div>
       <div class="panel stack" style="gap:8px"><span class="eyebrow">3 · 어디서 장착하나</span>
-        <p class="small dim">설정 → 꾸미기(시작 화면 왼쪽 칸, 모바일은 접는 칸)에서 "이름 앞 모양" 줄의 심볼을 고른다. 한 번 얻으면 모든 판에 적용되고, 전투 중 내 카드의 이름 앞에 16px로 붙는다.</p>${vDeco()}</div>
+        <p class="small dim">설정 → 꾸미기(시작 화면 왼쪽 칸, 모바일은 접는 칸)에서 "이름 앞 모양" 줄의 심볼을 고른다. 한 번 얻으면 모든 판에 적용되고, 전투 중 내 카드의 이름 앞에 32px로 붙는다.</p>${vDeco()}</div>
       <button class="btn" data-a="symback">시작 화면으로</button>`;
   }
   function vDeco(){
     const cur=decoGet(),col=(G&&G.ch&&G.ch.color)||'#c9a35a',nm=(G&&G.ch&&G.ch.name)||'당신';
     const btn=(kind,o,sel)=>{const ok=decoOk(o);return `<button class="${sel===o.id?'on':''}" data-a="deco" data-i="${kind}:${o.id}" ${ok?'':'disabled'}>${kind==='mark'?markHtml(col,o.id):''} ${o.n}${ok?'':` <span class="small dim">· ${decoWhy(o)}</span>`}</button>`};
     return `<div class="stack" style="gap:6px"><span class="eyebrow">꾸미기 · 전투 중 내 카드</span>
-      <div class="panel stack ent compact deco-${cur.frame}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="entname">${markHtml(col,cur.mark)}<b class="serif" style="color:${col}">${esc(nm)}</b></div><span class="mono small">HP 80/80 · 정신 45</span><div class="bar"><i style="width:100%;background:${col}"></i></div></div>${String(cur.mark).startsWith('sym_')?`<div class="row" style="gap:10px;align-items:center"><img src="${symImg(String(cur.mark).slice(4),true)}" alt="" width="96" height="96"><span class="small dim">크게 보면 이런 모양이고, 전투 이름 옆에는 16px로 작게 보인다</span></div>`:''}
+      <div class="panel stack ent compact deco-${cur.frame}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="entname">${markHtml(col,cur.mark)}<b class="serif" style="color:${col}">${esc(nm)}</b></div><span class="mono small">HP 80/80 · 정신 45</span><div class="bar"><i style="width:100%;background:${col}"></i></div></div>${String(cur.mark).startsWith('sym_')?`<div class="row" style="gap:10px;align-items:center"><img src="${symImg(String(cur.mark).slice(4),true)}" alt="" width="96" height="96"><span class="small dim">크게 보면 이런 모양이고, 전투 이름 옆에는 32px로 보인다</span></div>`:''}
       <span class="small dim">이름 앞 모양</span><div class="seg" style="flex-wrap:wrap">${MARKS.map(o=>btn('mark',o,cur.mark)).join('')}</div>
       <span class="small dim">심볼</span>${SYMS.length?`<div class="seg" style="flex-wrap:wrap">${marks().filter(o=>o.img).map(o=>btn('mark',o,cur.mark)).join('')}</div>`:'<span class="small dim">하드로 이야기를 끝내면 얻는 심볼이 여기에 나타난다</span>'}
       <span class="small dim">테두리</span><div class="seg" style="flex-wrap:wrap">${FRAMES.map(o=>btn('frame',o,cur.frame)).join('')}</div>

@@ -806,7 +806,8 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .swsvg,.swimg{flex:none;display:block}
 /* 심볼 이미지: 이름 앞에서 32px로 보이되 줄 높이는 늘리지 않는다(위아래로 겹쳐 그림). 선택 버튼 안에서는 조금 작게 */
 .swimg{width:32px;height:32px;margin:-5px 0}
-.seg .swimg{width:24px;height:24px;margin:-3px 0}
+.seg .swsvg,.seg .swimg,.seg .swatch{display:inline-block;vertical-align:middle;margin:0 5px 0 0}
+.seg .swimg{width:24px;height:24px}
 .ent.deco-thick{border-width:3px}
 .ent.deco-dotted{border-style:dashed;border-width:2px}
 .ent.deco-double::before{content:"";position:absolute;inset:3px;border:1px solid color-mix(in srgb,var(--c) 55%,transparent);border-radius:inherit;pointer-events:none}
