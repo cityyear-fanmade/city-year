@@ -561,7 +561,7 @@ export function startUI(E,app){
       for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;const [h,s,l]=hexHsl('#'+((1<<24)+(a[i]<<16)+(a[i+1]<<8)+a[i+2]).toString(16).slice(1));if(s>0.12&&l>0.12&&l<0.92){const c=hslRgb(th,Math.min(1,Math.max(s,0.35)),l);a[i]=c[0];a[i+1]=c[1];a[i+2]=c[2]}}
       x.putImageData(d,0,0);TINT[key]=cv.toDataURL('image/png');render()}catch(e){TINT[key]=null}};im.onerror=()=>{TINT[key]=null};im.src=src};
   const symImg=(id,big)=>{const b=symBase(id,big);if(!/^spec/.test(id))return b;const hex=(typeof G!=='undefined'&&G&&G.ch&&G.ch.color)||'#c9a35a',key=id+'|'+(big?1:0)+'|'+hex;if(typeof TINT[key]==='string'&&TINT[key]!=='pending')return TINT[key];symTint(b,hex,key);return b};
-  const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'},{id:'spec1',n:'특색 · 보라 별'},{id:'spec2',n:'특색 · 크림 별'},{id:'spec3',n:'특색 · 금빛 고리'}];
+  const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'},{id:'spec1',n:'특색 (가)'},{id:'spec2',n:'특색 (나)'},{id:'spec3',n:'특색 (다)'}];
   /* 기록실의 심볼 칸: 어떻게 얻는지와 얻은 심볼 이미지. 이미지가 준비된 심볼부터 목록에 오른다 */
   const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)',spec1:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec2:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec3:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다'};
   function symRec(r){
