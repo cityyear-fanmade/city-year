@@ -551,10 +551,19 @@ export function startUI(E,app){
     {id:'shield',n:'방패',d:'M6 .5L11 2v4c0 2.8-2 4.5-5 5.5C3 10.5 1 8.8 1 6V2z'},
     {id:'cross',n:'십자',d:'M4 .5h4V4h3.5v4H8v3.5H4V8H.5V4H4z'}];
   /* 심볼: 하드 완주 등으로 얻는 이미지. 이미지는 assets/symbol/<id>.png(정사각 투명 PNG, 전투 이름 옆에는 16px로 줄어 쓰인다)에 넣고 여기에 {id,n}을 더한다. 얻은 목록은 기록실 기록의 symbols에 쌓인다 */
-  const symImg=(id,big)=>{const k=big?id+'_big':id;return (typeof window!=='undefined'&&window.CITY_SYM&&window.CITY_SYM[k])||`assets/symbol/${k}.png`};
-  const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'}];
+  const symBase=(id,big)=>{const k=big?id+'_big':id;return (typeof window!=='undefined'&&window.CITY_SYM&&window.CITY_SYM[k])||`assets/symbol/${k}.png`};
+  /* 특색 심볼(spec*)은 색이 있는 부분을 내 특색 색(캐릭터 색)으로 바꿔 보여 준다: 색조만 바꾸고 밝기·채도는 그대로, 흰색·회색·검은색은 그대로 둔다 */
+  const TINT={},hexHsl=h=>{const n=parseInt(String(h).replace('#',''),16)||0,r=(n>>16&255)/255,g=(n>>8&255)/255,b=(n&255)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;let H=0;if(d){H=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;H*=60;if(H<0)H+=360}return [H,d?d/(1-Math.abs(2*l-1)):0,l]};
+  const hslRgb=(H,S,L)=>{const c=(1-Math.abs(2*L-1))*S,x=c*(1-Math.abs((H/60)%2-1)),m=L-c/2;let r=0,g=0,b=0;if(H<60)[r,g,b]=[c,x,0];else if(H<120)[r,g,b]=[x,c,0];else if(H<180)[r,g,b]=[0,c,x];else if(H<240)[r,g,b]=[0,x,c];else if(H<300)[r,g,b]=[x,0,c];else[r,g,b]=[c,0,x];return [Math.round((r+m)*255),Math.round((g+m)*255),Math.round((b+m)*255)]};
+  function symTint(src,hex,key){
+    if(TINT[key])return;TINT[key]='pending';
+    const im=new Image();im.onload=()=>{try{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const x=cv.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,cv.width,cv.height),a=d.data,th=hexHsl(hex)[0];
+      for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;const [h,s,l]=hexHsl('#'+((1<<24)+(a[i]<<16)+(a[i+1]<<8)+a[i+2]).toString(16).slice(1));if(s>0.12&&l>0.12&&l<0.92){const c=hslRgb(th,Math.min(1,Math.max(s,0.35)),l);a[i]=c[0];a[i+1]=c[1];a[i+2]=c[2]}}
+      x.putImageData(d,0,0);TINT[key]=cv.toDataURL('image/png');render()}catch(e){TINT[key]=null}};im.onerror=()=>{TINT[key]=null};im.src=src};
+  const symImg=(id,big)=>{const b=symBase(id,big);if(!/^spec/.test(id))return b;const hex=(typeof G!=='undefined'&&G&&G.ch&&G.ch.color)||'#c9a35a',key=id+'|'+(big?1:0)+'|'+hex;if(typeof TINT[key]==='string'&&TINT[key]!=='pending')return TINT[key];symTint(b,hex,key);return b};
+  const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'},{id:'spec1',n:'특색 · 보라 별'},{id:'spec2',n:'특색 · 크림 별'},{id:'spec3',n:'특색 · 금빛 고리'}];
   /* 기록실의 심볼 칸: 어떻게 얻는지와 얻은 심볼 이미지. 이미지가 준비된 심볼부터 목록에 오른다 */
-  const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)'};
+  const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)',spec1:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec2:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec3:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다'};
   function symRec(r){
     const have=r.symbols||[],n=SYMS.filter(x=>have.includes(x.id)).length;
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">심볼 ${n}/${SYMS.length}</span>
