@@ -63,6 +63,8 @@ function buildPat(){
 }
 function trVal(v){
   if(dict[v])return dict[v];
+  /* 값 전체가 틀에 맞으면(예: '다음 등급까지 성과 0/8') 먼저 통째로 번역한다 */
+  if(/[가-힣]/.test(v)){const w=trText(v.trim());if(w)return w}
   let o=v;
   if(/[가-힣]/.test(o))o=o.split(/( · |·|, |\/| → | ~ |: )/).map((x,i)=>i%2?x:(dict[x]||(/[가-힣]/.test(x)&&trText(x.trim()))||x)).join('');
   for(const [r,t] of UNITS[lang]||[])o=o.replace(r,t);
@@ -82,8 +84,8 @@ function trText(s){
   }
   /* 구분점(·)으로 이어 붙은 글자는 조각마다 따로 번역한다. 숫자 단독(5세)은 단위만 바꾼다 */
   if(!out){
-    const ps=s.split(/( · | ·|· |·|: | → )/);
-    if(ps.length>1){let any=false;const o=ps.map((x,i)=>{if(i%2||!/[가-힣]/.test(x))return x;const r=trText(x.trim())||(()=>{const u=trVal(x.trim());return u!==x.trim()?u:null})();if(r){any=true;return r}return x});if(any)out=o.join('')}
+    const ps=s.split(/(\([^()]*\)| · | ·|· |·|: | → )/);   // 괄호 묶음 (명중+1 · 피해+0) 은 한 덩어리로 맞춘다
+    if(ps.length>1){let any=false;const o=ps.map((x,i)=>{if(i%2){if(x[0]==='('&&/[가-힣]/.test(x)){const r=trText(x);if(r){any=true;return r}}return x}if(!/[가-힣]/.test(x))return x;const r=trText(x.trim())||(()=>{const u=trVal(x.trim());return u!==x.trim()?u:null})();if(r){any=true;return r}return x});if(any)out=o.join('')}
     else{const u=trVal(s);if(u!==s)out=u}
     /* 글자를 이어 붙여 만든 문장은 띄어쓰기 자리에서 앞뒤로 나눠, 양쪽이 다 번역되면 이어 붙인다 */
     if(!out){const ws=s.split(' ');if(ws.length>1&&ws.length<=14)for(let k=1;k<ws.length&&!out;k++){const a=trText(ws.slice(0,k).join(' ')),b=trText(ws.slice(k).join(' '));if(a&&b)out=a+b}}
