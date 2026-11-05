@@ -19,8 +19,12 @@ for(const f of files)for(const line of readFileSync(f,'utf8').split('\n')){
   if(!src){bad.push(['모르는 번호',line]);continue}
   if(!v){bad.push(['빈 번역',k+'\t'+src]);continue}
   if(ph(src)!==ph(v)){bad.push(['자리표시 불일치',k+'\t'+src+'\t→\t'+v]);continue}
-  if(/[가-힣]/.test(v)&&!/[가-힣]/.test(src.replace(/[가-힣]/g,''))){}
+  /* 번역이 안 된 줄 거르기: 원문과 같거나(짧은 이름은 예외), 한글이 30% 넘게 남았거나, 일본어 글자가 하나도 없으면 제외 */
+  const han=(v.match(/[가-힣]/g)||[]).length,jp=/[぀-ヿ一-鿿]/.test(v);
+  if(src.length>8&&(v===src||han/v.length>0.3||!jp)){bad.push(['번역 안 됨',k+'\t'+src]);continue}
   dict[src]=v;ok++}
 writeFileSync(dp,JSON.stringify(dict,null,0));
 writeFileSync(new URL(`../docs/i18n/${lang}-rejects.txt`,import.meta.url),bad.map(b=>b.join('\t')).join('\n'));
+/* 다시 번역할 줄(번호<탭>한국어)만 따로 모은다: 이 파일을 다시 번역 서비스에 넣으면 된다 */
+writeFileSync(new URL(`../docs/i18n/${lang}-retry.tsv`,import.meta.url),bad.filter(b=>b[0]==='번역 안 됨'||b[0]==='빈 번역'||b[0]==='자리표시 불일치').map(b=>b[1].split('\t').slice(0,2).join('\t')).join('\n')+'\n');
 console.log(`합침 ${ok}개 · 제외 ${bad.length}개 (docs/i18n/${lang}-rejects.txt) · 사전 총 ${Object.keys(dict).length}개`);
