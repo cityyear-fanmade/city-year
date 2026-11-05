@@ -6,6 +6,8 @@ import {createSfx} from './sfx.js';
 import {LANGS,getLang,setLang,tr,trDom, trAny} from './i18n.js';
 
 export function startUI(E,app){
+  /* 일본어 등 다른 언어: 전투 로그·상태줄처럼 렌더 뒤에 글자를 직접 바꾸는 곳도 번역한다(DOM이 바뀌면 한 프레임 뒤 한 번만 훑는다) */
+  if(getLang()!=='ko'&&typeof MutationObserver!=='undefined'){let q=0;const mo=new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;mo.disconnect();try{trDom(app)}finally{mo.observe(app,{childList:true,subtree:true,characterData:true})}})});mo.observe(app,{childList:true,subtree:true,characterData:true})}
   const D=E.D,T=D.text;
   const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',tremor:'#c9a35a',harpoon:'#6fa3b8',wspear:'#3f7fb0',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',obey:'#8a7fb8'};
   const kwc=k=>KWC[k]||'var(--gold)';
