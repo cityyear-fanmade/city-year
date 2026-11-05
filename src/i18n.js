@@ -46,10 +46,45 @@ export function localizeWith(D,dict){
   return D;
 }
 export function localize(D){return lang==='ko'?D:localizeWith(D,dict)}
+/* 화면 글자 하나를 번역한다. 사전과 통째로 같으면 바로 바꾸고, 아니면 숫자·이름이 낀 문장 틀({0}, {1}…)과 맞춰 본다.
+   틀에 맞으면 끼어 있던 값을 뽑아 일본어 틀에 다시 끼운다(값도 사전에 있으면 함께 번역) */
+let PAT=null;const memo=new Map();
+const UNITS={ja:[[/(\d+)세/g,'$1歳'],[/(\d+)년차/g,'$1年目']]};
+const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function buildPat(){
+  PAT=[];
+  for(const k in dict){
+    if(!/\{\d+\}/.test(k))continue;
+    const parts=k.split(/\{\d+\}/),han=(parts.join('').match(/[가-힣]/g)||[]).length;
+    if(han<3)continue;
+    PAT.push({k,v:dict[k],re:new RegExp('^'+parts.map(esc).join('([\\s\\S]+?)')+'$'),lk:parts.reduce((a,x)=>x.length>a.length?x:a,''),w:parts.join('').length});
+  }
+  PAT.sort((a,b)=>b.w-a.w);
+}
+function trVal(v){
+  if(dict[v])return dict[v];
+  let o=v;
+  if(/[가-힣]/.test(o))o=o.split(/( · |·|, |\/| → | ~ )/).map(x=>dict[x]||x).join('');
+  for(const [r,t] of UNITS[lang]||[])o=o.replace(r,t);
+  return o;
+}
+function trText(s){
+  if(dict[s])return dict[s];
+  if(!/[가-힣]/.test(s))return null;
+  if(memo.has(s))return memo.get(s);
+  if(!PAT)buildPat();
+  let out=null;
+  for(const p of PAT){
+    if(!s.includes(p.lk))continue;
+    const m=p.re.exec(s);if(!m)continue;
+    out=p.v.replace(/\{(\d+)\}/g,(_,i)=>trVal(m[+i+1]));break;
+  }
+  memo.set(s,out);return out;
+}
 /* 화면의 글자 조각 중 사전과 일치하는 것을 바꾼다 (렌더 뒤마다 부른다) */
 export function trDom(root){
   if(lang==='ko'||!root||!Object.keys(dict).length||typeof document==='undefined')return;
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
-  while((n=w.nextNode())){const t=n.nodeValue,s=t.trim();if(s&&dict[s])n.nodeValue=t.replace(s,dict[s])}
-  root.querySelectorAll('[placeholder],[title]').forEach(e=>{for(const a of ['placeholder','title']){const v=e.getAttribute(a);if(v&&dict[v])e.setAttribute(a,dict[v])}});
+  while((n=w.nextNode())){const t=n.nodeValue,s=t.trim();if(!s)continue;const r=trText(s.replace(/\s+/g,' '));if(r)n.nodeValue=t.replace(s,()=>r)}
+  root.querySelectorAll('[placeholder],[title]').forEach(e=>{for(const a of ['placeholder','title']){const v=e.getAttribute(a);if(v){const r=trText(v.replace(/\s+/g,' '));if(r)e.setAttribute(a,r)}}});
 }
