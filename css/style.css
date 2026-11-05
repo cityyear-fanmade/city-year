@@ -844,3 +844,11 @@ html[lang="ja"] .chip,html[lang="ja"] .btn b{overflow-wrap:break-word}
 /* 한국어 줄바꿈: 단어 단위로 줄을 바꾼다(글자 중간에서 끊기지 않게). 아주 긴 덩어리는 넘치지 않도록 필요하면 끊는다. 일본어는 위의 규칙을 쓴다 */
 html:not([lang="ja"]) body{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
 html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small,html:not([lang="ja"]) li{text-wrap:pretty}
+
+/* 시작 화면 오른쪽 칸(아주 넓은 PC): 심볼 시험장·고민 중인 방향·규칙 요약·이전 공지·세이브 옮기기. 좁은 화면에서는 가운데 열 아래에 그대로 이어진다 */
+.title-tail{display:flex;flex-direction:column;gap:10px}
+@media (min-width:1280px){
+  .title-tail{position:fixed;top:128px;right:18px;width:230px;max-height:calc(100vh - 148px);overflow:auto;z-index:5;padding-right:4px}
+  .title-tail>*{flex:none}
+  .title-tail .btn,.title-tail .btn.quiet,.title-tail details,.title-tail .panel{background:var(--panel)}
+}
