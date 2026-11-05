@@ -2696,6 +2696,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
          {l:'지나온 일을 해설한다',h:'성공 시 승진',check:{s:null,dc:'exam'},ok:{t:'해설이 끝나자 심사관들이 서류를 덮었다. 공간이 풀렸다. 서열이 올랐다.',fx:{examPass:true}},fail:{t:'해설은 닿지 않았다. 심사장이 연기처럼 사라졌다.',fx:{hp:-4}}},
          {l:'조용히 걸어 나간다',ok:{t:'문을 열고 나서자 외곽의 밤이 그대로 있었다.',fx:{}}}]}
   }
+  /* 무한 모드 가속: 가속 구간이면 step해마다 마지막 해에만 평소 방식(전투·일상 사건)으로 한 해를 보낸다 */
+  const accelOn=G=>{const A=CFG.accel;return !!(A&&A.on&&G.infinite&&G.ch&&G.ch.infinite&&G.year>=A.from)};
+  const accelQuiet=G=>accelOn(G)&&((G.year-CFG.accel.from)%CFG.accel.step)!==CFG.accel.step-1;
+  function accelPass(G){
+    const ch=G.ch,ev=e=>e?{type:'event',ev:e}:null;
+    for(const fn of [()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G))]){const r=fn();if(r)return r}
+    return null}
   function advanceYear(G){
     hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);staffTick(G.ch,G.year);officeYear(G.ch,G.year);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
@@ -2790,6 +2797,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wv=webStep(G);if(wv)return wv}
     {const gv=gwStep(G);if(gv)return {type:'event',ev:gv}}
     {const R_=routeOf(G.ch);if(R_&&!(G.infinite&&G.year>routeEnd())){const rf=routeFight(G,R_);if(rf)return rf;const rs=routeStep(G,R_);if(rs)return {type:'event',ev:rs}}}
+    /* 무한 모드 가속: 조용한 해는 전투·일상 사건을 고르지 않고 시간 기준 사건(가족·직원·사무소 등)만 확인한다. 선택이 필요한 사건이 나오면 거기서 멈춘다 */
+    if(accelQuiet(G)){const q=accelPass(G);return q||{type:'quiet',year:G.year}}
     let f=fixedSpec(G.year);
     /* 무한런 등급 전투: 등급 마지막 해. 도시의 별 등급은 피아니스트(이미 이겼으면 후반 조우), 마지막 등급은 최종 상대 */
     const X_=CFG.endless,k_=G.year-CFG.years;

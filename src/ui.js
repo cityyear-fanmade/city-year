@@ -2711,7 +2711,7 @@ ${symRec(r)}
     if(['title','birth','end','records','chron','chronview'].includes(s)||!(G&&G.infinite)||!INFNOTE){const o=document.querySelector('.infnote');if(o)o.remove();if(['title','birth'].includes(s))UI.noteYear=null}
     BGM.setBossTrack&&BGM.setBossTrack(C&&D.enemies[C.id]&&D.enemies[C.id].bgm==='ruen'&&typeof window!=='undefined'&&window.CITY_BGM&&window.CITY_BGM.ruen?'ruen':'boss');   // 전용 곡이 실려 있을 때만 쓴다
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
-    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,symlab:vSymLab,title:vTitle,birth:vBirth,event:vEvent,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
+    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,symlab:vSymLab,title:vTitle,birth:vBirth,event:vEvent,ledger:vLedger,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
@@ -2749,8 +2749,19 @@ ${symRec(r)}
   /* 가방에서 카드·장비를 옮긴 뒤 같은 지점으로 다시 저장한다 */
   const resave=()=>{if(G&&lastSaveX&&UI.screen!=='combat')saveGame(lastSaveX)};
   function nextYear(){
-    const st=E.advanceYear(G);
+    const y0=G.year;let st=E.advanceYear(G),q=0;
+    /* 무한 모드 가속: 조용한 해는 화면 없이 이어서 넘기고, 사건·전투가 나오면 그 앞에서 멈춘다 */
+    while(st&&st.type==='quiet'&&q<400){q++;st=E.advanceYear(G)}
+    if(q>0&&st&&st.type!=='end'){UI.ledger={a:y0,b:G.year,n:q,st};saveGame({st});UI.screen='ledger';render();return}
     showYear(st,null);
+  }
+  /* 가속 구간이 끝났을 때의 도착 화면(1단계: 조용히 지나간 해를 한 줄로 접어 보여 준다. 일어난 일의 연표는 가족·직원 기록이 붙는 2단계부터) */
+  function vLedger(){
+    const L=UI.ledger||{a:G.year,b:G.year,n:0};
+    return `${vHud()}<div class="stack" style="gap:10px"><div class="eyebrow">무한 모드 · ${L.n}해가 지났다</div><h2>${L.a}해 → ${L.b}해</h2>
+      <div class="yr small mono dim" style="display:flex;align-items:center;gap:10px"><span style="flex:1;height:1px;background:var(--line2)"></span>${L.a+1} ~ ${L.b}해<span style="flex:1;height:1px;background:var(--line2)"></span></div>
+      <p class="dim">${L.n>1?'그 사이 큰일은 없었다.':'한 해가 지나갔다.'}</p>
+      <button class="btn primary" data-a="ledgernext"><b>다음</b></button></div>`
   }
   /* 한 해의 시작 화면. stock이 있으면(불러오기) 공방 진열을 그대로 쓴다 */
   function showYear(st,stock,shopDone){
@@ -2960,6 +2971,7 @@ ${symRec(r)}
     title(){UI.confirmNew=null;if(UI.shared){UI.shared=null;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}UI.screen='title';render()},
     infnote(i){INFNOTE=i!=='off';store.set('cityYearInfNote',i==='off'?'off':'on');render()},
     lang(i){if(i!==getLang())setLang(i)},
+    ledgernext(){const L=UI.ledger;UI.ledger=null;if(L&&L.st)showYear(L.st,null);else nextYear()},
     mode(i){MODE=i;store.set('cityYearMode',i);render()},
     hitfx(i){HFX=i;store.set(HFXK,i);render()},
     hitfxm(i){HFXM=i;store.set(HFXMK,i);render()},
@@ -3269,6 +3281,7 @@ ${symRec(r)}
     async testCard(){if(!G)return null;const cv=await endCard();return cv.toDataURL('image/png')},
     testPatch(o){if(!G)return;Object.assign(G.ch,o);render()},
     testG(o){if(!G)return;Object.assign(G,o);render()},
+    testAccel(y){if(!G)return;const c=G.ch;G.infinite=true;G.endless=true;c.infinite=true;c.infImp=1;c.infIntro=1;G.year=c.year=(y||200)-1;c.hp=c.stats.maxHp;nextYear()},
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
     testInfLake(n){if(!G)return null;const c=G.ch,X=CFG.endless,be=CFG.years+X.span*X.grades.length,out={};G.infinite=true;c.infinite=true;c.infIntro=1;c.flags=c.flags||{};c.flags.lake=1;c.lake=c.lake||{};c.lake.captain=true;
       for(let i=0;i<(n||300);i++){G.year=c.year=be+1+i;c.hp=c.stats.maxHp;c.mind=E.mindMax(c);try{const st=E.advanceYear(G);const k=st.type==='omen'?'omen:'+st.boss+(st.echo?'(echo)':''):st.type==='fight'?'fight:'+st.enemy:st.type;out[k]=(out[k]||0)+1}catch(e){out['ERR '+e.message]=(out['ERR '+e.message]||0)+1}}try{E.answerOmen(G,{boss:'hongwon',rift:true,escape:true,spec:'table:late'},true);out._intro=D.enemies.hongwon.intro}catch(e){out._intro='ERR '+e.message}return out},
