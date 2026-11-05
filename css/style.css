@@ -833,3 +833,10 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 .stsec summary .swsvg,.stsec summary .swatch{display:inline-block;vertical-align:middle;margin-left:8px}
 .title-side .btn,.title-side .btn.quiet{background:var(--panel)}
 html[data-skin] .title-side .btn,html[data-skin] .title-side .btn.quiet,html[data-skin] .title-side .stsec,html[data-skin] .chron-out{background:var(--panel)!important;backdrop-filter:none}
+
+/* 언어: 일본어는 띄어쓰기가 없어서 한국어용 keep-all이면 줄이 안 접힌다. 금칙 처리(line-break:strict)로 접고, 글꼴도 일본어 글자꼴을 먼저 쓴다 */
+html[lang="ja"]{--serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif;--sans:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif}
+html[lang="ja"] *{word-break:normal !important;line-break:strict;overflow-wrap:anywhere}
+html[lang="ja"] .chip,html[lang="ja"] .btn b{overflow-wrap:break-word}
+.langseg{margin-bottom:6px}
+.langseg button{flex:1}

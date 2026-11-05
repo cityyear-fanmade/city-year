@@ -1239,9 +1239,10 @@ export function startUI(E,app){
       <button class="btn" data-a="mindtest" data-i="break"><b>③ 전투 중 정신력 0</b><span class="dim small">전투가 시작되자마자 개화/뒤틀림 판정 연출</span></button></div>`}
   const fbLink=()=>`<a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a>`;
   /* PC 넓은 화면: 시작 화면 왼쪽 빈 곳에 설정·꾸미기·제보를 둔다 (좁은 화면에서는 CSS로 숨기고, 가운데 열의 접는 칸을 쓴다) */
-  function vTitleSide(){const col=(G&&G.ch&&G.ch.color)||'#c9a35a';return `<aside class="title-side" aria-label="설정과 꾸미기"><button class="btn quiet" data-a="cfg"><b>설정</b><span class="dim small">화면 · 소리 · 전투 연출</span></button>${stSec('pc_deco',`꾸미기 ${markHtml(col)}`,vDeco('pc'),false)}${fbLink()}</aside>`}
+  const langSeg=()=>`<div class="seg langseg" aria-label="Language">${LANGS.map(l=>`<button class="${getLang()===l.k?'on':''}" data-a="lang" data-i="${l.k}">${l.n}</button>`).join('')}</div>`;
+  function vTitleSide(){const col=(G&&G.ch&&G.ch.color)||'#c9a35a';return `<aside class="title-side" aria-label="설정과 꾸미기">${langSeg()}<button class="btn quiet" data-a="cfg"><b>설정</b><span class="dim small">화면 · 소리 · 전투 연출</span></button>${stSec('pc_deco',`꾸미기 ${markHtml(col)}`,vDeco('pc'),false)}${fbLink()}</aside>`}
   function vTitle(){
-    return `${chronBtn('chron-in')}${vTitleSide()}<div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
+    return `${chronBtn('chron-in')}${vTitleSide()}<div class="tmob">${langSeg()}</div><div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
       ${vMindTest()}
