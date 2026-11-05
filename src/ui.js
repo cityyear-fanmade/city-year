@@ -598,16 +598,20 @@ export function startUI(E,app){
     const have=r.symbols||[],n=SYMS.filter(x=>have.includes(x.id)).length;
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">심볼 ${n}/${SYMS.length}</span>
       <p class="small dim">소속을 올리고 이야기(2막)를 끝내면 그 소속의 심볼을 얻는다. 얻은 심볼은 꾸미기에서 이름 앞에 달 수 있다. 소속을 옮기며 모으는 것은 인정하지 않고, 이야기가 끝나는 순간의 소속만 센다.</p>
+      <p class="small dim">수집 보상: 심볼을 25% · 50% · 100% 모으면 꾸미기에서 쓸 수 있는 모양이 하나씩 열린다 (지금 ${n}/${SYMS.length}).</p>
       <div class="stack" style="gap:8px">${SYMS.map(x=>{const got=have.includes(x.id);return `<div class="row" style="gap:12px;align-items:center;flex-wrap:nowrap">${got?`<img src="${symImg(x.id,true)}" alt="" width="56" height="56" style="flex:none">`:`<span aria-hidden="true" style="flex:none;width:56px;height:56px;background:#000;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;color:#3a3f4b;font-size:20px">?</span>`}<div class="stack" style="gap:2px;min-width:0"><b>${esc(x.n)} 심볼 <span class="chip" style="font-weight:400">${got?'획득':'미획득'}</span></b><span class="small ${got?'':'dim'}">${esc(SYMDOC[x.id]||'')}</span></div></div>`}).join('')}</div>
       <span class="small dim">사무소·날개·협회·특색 심볼은 이미지가 준비되는 대로 이 목록에 더해진다.</span></div>`;
   }
-  const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||symImg(x.id),unlock:{sym:x.id}})));
+  /* 기록실 수집 보상: 심볼을 모은 비율에 따라 열리는 꾸미기 모양 (이름 앞에 다는 이미지). 25% · 50% · 100% */
+  const RWMARKS=[{id:'rw_etc6',n:'황금 나침반',img:'etc_6',rw:0.25},{id:'rw_etc2',n:'보랏빛 별',img:'etc_2',rw:0.5},{id:'rw_etc4',n:'붉은 초승',img:'etc_4',rw:1}];
+  const symHave=()=>SYMS.filter(x=>((loadRec().symbols)||[]).includes(x.id)).length;
+  const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||symImg(x.id),unlock:{sym:x.id}})),RWMARKS.map(x=>({id:x.id,n:x.n,img:symImg(x.img),unlock:{rw:x.rw}})));
   const grantSymbol=id=>{const r=loadRec();r.symbols=Array.isArray(r.symbols)?r.symbols:[];if(!r.symbols.includes(id)){r.symbols.push(id);store.set(REC,JSON.stringify(r))}};
   const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}}];
   const decoRec=()=>{const r=loadRec();return {titles:Object.keys(r.titles||{}).filter(k=>(r.titles[k]||0)>0).length,endings:(r.endings||[]).length,hard:!!r.hardClear}};
   /* 개인 시험판(window.CITY_OPENALL, build --alltest)에서만 모든 심볼·테두리를 해금 조건 없이 연다. 공개 테섭과 본섭은 조건대로 */
-  const decoOk=o=>{if(!o.unlock)return true;if(typeof window!=='undefined'&&window.CITY_OPENALL)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
-  const decoWhy=o=>{const u=o.unlock||{};return u.sym?'심볼 획득':u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
+  const decoOk=o=>{if(!o.unlock)return true;if(typeof window!=='undefined'&&window.CITY_OPENALL)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);if(u.rw)return symHave()>=Math.ceil(SYMS.length*u.rw);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
+  const decoWhy=o=>{const u=o.unlock||{};return u.rw?`심볼 ${Math.round(u.rw*100)}% 수집`:u.sym?'심볼 획득':u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
   const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain',pv:Number.isInteger(o.pv)?o.pv:null}};
   /* 특색 색 미리보기: 판을 시작하기 전(시작 화면)에서만 꾸미기에 적용한다. 판 안에서는 태어날 때 정해진 내 색이 그대로 쓰인다 */
   const decoPv=()=>{if(G&&G.ch&&UI.screen!=='title')return null;let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const v=o.pv;return Number.isInteger(v)&&D.colors[v]?v:null};
