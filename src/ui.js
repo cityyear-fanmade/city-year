@@ -586,7 +586,7 @@ export function startUI(E,app){
     const have=r.symbols||[],n=SYMS.filter(x=>have.includes(x.id)).length;
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">심볼 ${n}/${SYMS.length}</span>
       <p class="small dim">소속을 올리고 이야기(2막)를 끝내면 그 소속의 심볼을 얻는다. 얻은 심볼은 꾸미기에서 이름 앞에 달 수 있다. 소속을 옮기며 모으는 것은 인정하지 않고, 이야기가 끝나는 순간의 소속만 센다.</p>
-      <div class="stack" style="gap:8px">${SYMS.map(x=>{const got=have.includes(x.id);return `<div class="row" style="gap:12px;align-items:center;flex-wrap:nowrap"><img src="${symImg(x.id,true)}" alt="" width="56" height="56" style="flex:none${got?'':';filter:brightness(0);opacity:.3'}"><div class="stack" style="gap:2px;min-width:0"><b>${esc(x.n)} 심볼 <span class="chip" style="font-weight:400">${got?'획득':'미획득'}</span></b><span class="small ${got?'':'dim'}">${esc(SYMDOC[x.id]||'')}</span></div></div>`}).join('')}</div>
+      <div class="stack" style="gap:8px">${SYMS.map(x=>{const got=have.includes(x.id);return `<div class="row" style="gap:12px;align-items:center;flex-wrap:nowrap">${got?`<img src="${symImg(x.id,true)}" alt="" width="56" height="56" style="flex:none">`:`<span aria-hidden="true" style="flex:none;width:56px;height:56px;background:#000;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;color:#3a3f4b;font-size:20px">?</span>`}<div class="stack" style="gap:2px;min-width:0"><b>${esc(x.n)} 심볼 <span class="chip" style="font-weight:400">${got?'획득':'미획득'}</span></b><span class="small ${got?'':'dim'}">${esc(SYMDOC[x.id]||'')}</span></div></div>`}).join('')}</div>
       <span class="small dim">사무소·날개·협회·특색 심볼은 이미지가 준비되는 대로 이 목록에 더해진다.</span></div>`;
   }
   const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||symImg(x.id),unlock:{sym:x.id}})));

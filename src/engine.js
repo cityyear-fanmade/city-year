@@ -567,7 +567,6 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function staffEventPick(G){
     const ch=G.ch,y=G.year;if(!staffOwner(ch)||ch.infinite)return null;const O=ch.office,list=staffList(ch);if(!list.length)return null;
     if(O.evNext==null)O.evNext=y+1;if(y<O.evNext)return null;
-    if(d(100)>SE.chance)return null;
     const pool=[];
     for(const s of list){const ten=y-s.y,tr=s.trust==null?SE.trustStart:s.trust;
       for(const t of (D.staffEvents||[])){
@@ -578,7 +577,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(t.noSp&&s.sp)continue;if(t.staffMin&&list.length<t.staffMin)continue;
         pool.push([s,t])}}
     if(!pool.length)return null;
-    const [s,t]=pool[Math.floor(rng()*pool.length)],other=t.staffMin?one(list.filter(x=>x!==s)):null;
+    /* 첫 면담은 새 직원이 들어온 뒤 가장 먼저 연다: 있으면 확률 판정 없이 이 이야기를 우선한다 */
+    const firsts=pool.filter(([,t])=>t.id==='first');
+    if(!firsts.length&&d(100)>SE.chance)return null;
+    const [s,t]=(firsts.length?firsts:pool)[Math.floor(rng()*(firsts.length||pool.length))],other=t.staffMin?one(list.filter(x=>x!==s)):null;
     (s.seen=s.seen||[]).push(t.id);O.evNext=y+SE.gap;
     const ev=staffFill(t,s.n,other&&other.n);ev.staffEv=true;return ev;
   }
