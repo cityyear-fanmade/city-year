@@ -2702,11 +2702,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 가속은 나이가 step(25)의 배수인 해에 맞춰 시작하고 끝난다: 균열이 봉인된 나이에서 올림한 배수부터. 25 · 50 · 75 … 1000살이 모두 정확히 걸린다(1000살 엔딩, 100살마다 영구 증가, 50해 계약과 같은 칸) */
   const accelOn=G=>{const A=CFG.accel;if(!(A&&A.on&&G.infinite&&G.ch&&G.ch.infinite))return false;
     if(A.after==='seal'&&!(G.ch.outSeen&&G.ch.outSeen.seal))return false;
+    if(G.ch.accelChoice!=='yes')return false;   // 시간이 이상한 공간에 들어가기로 한 판만 가속한다
     if(G.ch.accelAge==null)G.ch.accelAge=Math.ceil(age(G)/A.step)*A.step;
     return age(G)>=G.ch.accelAge};
   const accelQuiet=G=>accelOn(G)&&age(G)%CFG.accel.step!==0;
   /* 가속 구간에서는 25의 배수 나이마다 '불순물 무한 전투'를 한 번 치른다(10년 간격 계산은 나이와 어긋나서 쓰지 않는다) */
   const accelCheck=G=>accelOn(G)&&age(G)%CFG.accel.step===0;
+  /* 균열을 닫고 살아온 어느 날: 시간의 흐름이 이상한 공간을 만난다. 들어가면 가속, 들어가지 않으면 지금처럼 진행한다(한 번 정하면 되돌리지 않는다) */
+  function accelOffer(G){
+    const A=CFG.accel,ch=G.ch;if(!(A&&A.on&&G.infinite&&ch.infinite)||ch.accelChoice)return null;
+    if(A.after==='seal'&&!(ch.outSeen&&ch.outSeen.seal))return null;
+    if(ch.accelOfferAt==null){const g=A.offerGap||[10,30];ch.accelOfferAt=G.year+g[0]+d(g[1]-g[0]+1)-1}
+    if(G.year<ch.accelOfferAt)return null;
+    return {t:'시간이 어긋난 곳',x:'균열을 닫고 살아온 어느 날, 시간의 흐름이 이상한 공간을 발견했다. 이곳에서는 하루가 한 해 같고, 한 해가 하루 같다. 이 공간에서 내 운명이 달라지리라는 것을 어느 순간 깨달았다.',
+      c:[{l:'공간 안으로 들어간다',h:`시간이 빠르게 흐른다 · ${A.step}해에 한 번 불순물이 찾아온다 · 되돌릴 수 없다`,ok:{t:'발을 들이는 순간 해와 달이 한꺼번에 지나갔다. 몸은 그대로인데 세상이 먼저 늙어 갔다.',fx:{accel:'yes'}}},
+         {l:'들어가지 않는다',h:'지금처럼 한 해씩 이어진다 · 되돌릴 수 없다',ok:{t:'문턱 앞에서 돌아섰다. 이곳의 시간은 한 해씩, 평소대로 흘러간다.',fx:{accel:'no'}}}]}}
   function accelPass(G){
     const ch=G.ch,ev=e=>e?{type:'event',ev:e}:null;
     for(const fn of [()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G))]){const r=fn();if(r)return r}
@@ -2877,6 +2887,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(D.corp){const ce=corpEvent(G);if(ce)return {type:'event',ev:ce}}
     {const sb=distStableEvent(G);if(sb)return {type:'event',ev:sb}}
     {const iv=infiniteEvent(G);if(iv)return {type:'event',ev:iv}}
+    {const ao=accelOffer(G);if(ao)return {type:'event',ev:ao}}
     {const kh=kidHuntEvent(G);if(kh)return kh}
     {const bv=bondEvent(G);if(bv)return {type:'event',ev:bv}}
     {const es=bondEscortEvent(G);if(es)return {type:'event',ev:es}}
@@ -3066,6 +3077,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0,race:kk.race||(ch.race==='hyeolgwi'?'hyeolgwi':'human')};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondCol&&ch.bond&&!ch.bond.col){const ci=one(D.colors.map((c,i)=>i).filter(i=>i!==ch.ci)),C_=D.colors[ci];ch.bond.col={adj:C_.adj,hex:C_.hex};ch.bondColPick=true;chips.push(`${ch.bond.name} · ${C_.adj} 특색`)}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:ch.bond.route==='librarian'?'librarian':one(D.bond.kidJobs.filter(j=>j.k!=='librarian')).k,told:false,race:((ch.o&&ch.o.race==='hyeolgwi')||spouseHy(ch,ch.bond)||(ch.race==='hyeolgwi'&&d(2)===1))?'hyeolgwi':'human'};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
+    if(fx.accel){ch.accelChoice=fx.accel;if(fx.accel==='yes'){ch.accelAge=Math.ceil(age(G)/CFG.accel.step)*CFG.accel.step;chips.push('시간이 빠르게 흐른다 · 가속')}else chips.push('시간은 평소대로 흐른다')}
     if(fx.limit){const Lm=CFG.infinite.limit,m=(ch.colorDone?Lm.traitMul:1)*(fx.x||1);
       if(fx.limit==='atk'){const g=Math.max(1,Math.round(ch.stats.atk*Lm.atkPct*m));ch.stats.atk+=g;chips.push(`한계 돌파 · 공격 +${g}`)}
       else if(fx.limit==='dmg'){ch.limDmg=(ch.limDmg||0)+Lm.dmgPct*m;chips.push(`한계 돌파 · 주는 피해 +${Math.round(Lm.dmgPct*m*1000)/10}% (누적 ${Math.round(ch.limDmg*1000)/10}%)`)}
