@@ -579,9 +579,21 @@ export function startUI(E,app){
       for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;const [h,s,l]=hexHsl('#'+((1<<24)+(a[i]<<16)+(a[i+1]<<8)+a[i+2]).toString(16).slice(1));if(s>0.12&&l>0.12&&l<0.92){const c=hslRgb(th,Math.min(1,Math.max(s,0.35)),l);a[i]=c[0];a[i+1]=c[1];a[i+2]=c[2]}}
       x.putImageData(d,0,0);TINT[key]=cv.toDataURL('image/png');render()}catch(e){TINT[key]=null}};im.onerror=()=>{TINT[key]=null};im.src=src};
   const symImg=(id,big)=>{const b=symBase(id,big);if(!/^spec/.test(id))return b;const pvx=(typeof decoPv==='function')?decoPv():null,hex=pvx!=null?D.colors[pvx].hex:(typeof G!=='undefined'&&G&&G.ch&&G.ch.color)||'#c9a35a',key=id+'|'+(big?1:0)+'|'+hex;if(typeof TINT[key]==='string'&&TINT[key]!=='pending')return TINT[key];symTint(b,hex,key);return b};
-  const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'},{id:'spec1',n:'특색 (가)'},{id:'spec2',n:'특색 (나)'},{id:'spec3',n:'특색 (다)'}];
+  const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'},{id:'spec1',n:'특색 (가)'},{id:'spec2',n:'특색 (나)'},{id:'spec3',n:'특색 (다)'},
+    /* 협회 8 · 날개 6 · 사무소 2: 이야기(2막)를 끝낼 때의 소속으로 얻는다. 이미지는 assets/symbol/<id>.png */
+    ...['하나','츠바이','트레스','시','생크','리우','세븐','디에치'].map((n,i)=>({id:'as_'+(i+1),n:n+' 협회'})),
+    ...[['wg_k','K사 날개'],['wg_r','R사 날개'],['wg_w','W사 날개'],['wg_n','N사 날개'],['wg_j','J사 날개'],['wg_g','G사 날개']].map(([id,n])=>({id,n})),
+    {id:'of_yun',n:'윤 사무소'},{id:'of_lamp',n:'가로등 사무소'}];
   /* 기록실의 심볼 칸: 어떻게 얻는지와 얻은 심볼 이미지. 이미지가 준비된 심볼부터 목록에 오른다 */
   const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)',spec1:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec2:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec3:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다'};
+  Object.assign(SYMDOC,Object.fromEntries(SYMS.filter(x=>/^as_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^wg_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),{of_yun:'윤 사무소 소속으로 이야기(2막)를 끝낸다',of_lamp:'가로등 사무소 소속으로 이야기(2막)를 끝낸다'});
+  /* 이야기(2막)가 끝나는 순간의 소속으로 얻는 심볼 id. 소속을 옮기며 모으는 것은 인정하지 않는다 */
+  const symOfChar=c=>{const a=c&&c.aff;if(!a)return null;
+    const FING={'엄지':'thumb','검지':'index','중지':'middle','약지':'ring','소지':'pinky'};
+    if(a.type==='finger'&&FING[a.name])return (a.name==='소지'?c.pinky:(c.fi||0)>=1)?FING[a.name]:null;
+    if(a.type==='office'&&!a.own){const o=SYMS.find(x=>/^of_/.test(x.id)&&x.n===a.name);return o?o.id:null}
+    const nm=affName(c),m=SYMS.find(x=>/^(as_|wg_)/.test(x.id)&&x.n===nm);
+    return m&&(c.promos||0)>=1?m.id:null};
   function symRec(r){
     const have=r.symbols||[],n=SYMS.filter(x=>have.includes(x.id)).length;
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">심볼 ${n}/${SYMS.length}</span>
@@ -2347,6 +2359,7 @@ ${symRec(r)}
       <div class="mono small dim">${(pl=>pl?pl.n+' · ':'')(placeOf(c.o,c.r,c.blank))}${c.o.n} · ${c.t.n} · ${c.f.n} · ${c.w.n}${c.aff?' · '+esc(affName(c)):c.licensed?' · '+T.licensed:''}</div></div>
       <div class="mono small dim" style="text-align:center">도시의 한 해 · cityyear-fanmade.github.io/city-year · Project Moon 팬메이드</div></div>
       ${vDailyCmp()}
+      ${UI.symNew?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow">심볼 획득</span><p class="small">${esc(UI.symNew)} 심볼을 얻었다. 꾸미기에서 이름 앞에 달 수 있다.</p></div>`:''}
       ${UI.newOrigin?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow">출생 해금</span><p class="small">${esc(UI.newOrigin)} 출생을 이제 골라서 시작할 수 있다. 출생 화면의 '해금된 출생'에서 고른다.</p></div>`:''}
       ${w&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 1막 종료</span><p class="small">여기서 끝내도 된다. 제 2막이 시작되면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 제 2막의 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">제 2막 시작</button></div>`:''}
       ${w&&UI.outEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">무한 모드 엔딩</span><p class="small">여기서 끝내도 된다. 계속 살아가면 무한 모드가 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
@@ -2872,6 +2885,11 @@ ${symRec(r)}
       if(cleared)for(const o of D.unlockOrigins||[]){const k='origin:'+o.key,cd=o.cond||{};if(u0.includes(k))continue;
         const has=cd.item?[...Object.values(cc.gear||{}),...(cc.stash||[])].some(x=>x&&x.id===cd.item):false;
         if((cd.origin&&cc.o&&cc.o.n===cd.origin&&(!cd.beat||(cc.beaten||[]).includes(cd.beat)))||(cd.aff&&((cc.aff&&cc.aff.name===cd.aff)||(cc.affLog||[]).includes(cd.aff)))||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=(UI.newOrigin&&UI.newOriginRun===G?UI.newOrigin+' · ':'')+o.n;UI.newOriginRun=G}}}
+    /* 심볼: 보통 이상으로 이야기(2막)를 끝낸 판의 마지막 소속 심볼을 얻는다(쉬움은 인정하지 않는다) */
+    UI.symNew=null;
+    {const cc=G.ch,cl=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||UI.overflowEnd||G.infinite||((UI.rbEnd||UI.hwEnd)&&G.endless));
+      if(cl&&!cc.easy){const id=symOfChar(cc),x=id&&SYMS.find(q=>q.id===id);
+        if(x&&!((loadRec().symbols)||[]).includes(id)){grantSymbol(id);UI.symNew=x.n}}}
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:w&&UI.overflowEnd?'overflow':(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
     if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;r.ghost={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp}}
@@ -3294,6 +3312,7 @@ ${symRec(r)}
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testCrowEnd(k){if(!G)return;G.endless=true;G.ch.year=G.year=73;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=false;UI.hwEnd=null;UI.crowEnd=k;UI.death=null;UI.screen='end';render()},
     testRec(){if(!G)return;recordEnd();render()},
+    testSymEnd(type,name,promos,easy){if(!G)return;const c=G.ch;c.aff={type,name};c.promos=promos==null?1:promos;c.fi=promos==null?1:promos;c.easy=!!easy;UI.endWin=true;UI.oldEnd=true;recordEnd();render();return loadRec().symbols},
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
     testTitles(a){if(G)G.ch.titles=a},
