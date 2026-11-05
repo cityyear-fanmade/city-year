@@ -561,7 +561,7 @@ export function startUI(E,app){
     const im=new Image();im.onload=()=>{try{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const x=cv.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,cv.width,cv.height),a=d.data,th=hexHsl(hex)[0];
       for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;const [h,s,l]=hexHsl('#'+((1<<24)+(a[i]<<16)+(a[i+1]<<8)+a[i+2]).toString(16).slice(1));if(s>0.12&&l>0.12&&l<0.92){const c=hslRgb(th,Math.min(1,Math.max(s,0.35)),l);a[i]=c[0];a[i+1]=c[1];a[i+2]=c[2]}}
       x.putImageData(d,0,0);TINT[key]=cv.toDataURL('image/png');render()}catch(e){TINT[key]=null}};im.onerror=()=>{TINT[key]=null};im.src=src};
-  const symImg=(id,big)=>{const b=symBase(id,big);if(!/^spec/.test(id))return b;const hex=(typeof G!=='undefined'&&G&&G.ch&&G.ch.color)||'#c9a35a',key=id+'|'+(big?1:0)+'|'+hex;if(typeof TINT[key]==='string'&&TINT[key]!=='pending')return TINT[key];symTint(b,hex,key);return b};
+  const symImg=(id,big)=>{const b=symBase(id,big);if(!/^spec/.test(id))return b;const pvx=(typeof decoPv==='function')?decoPv():null,hex=pvx!=null?D.colors[pvx].hex:(typeof G!=='undefined'&&G&&G.ch&&G.ch.color)||'#c9a35a',key=id+'|'+(big?1:0)+'|'+hex;if(typeof TINT[key]==='string'&&TINT[key]!=='pending')return TINT[key];symTint(b,hex,key);return b};
   const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'},{id:'spec1',n:'특색 (가)'},{id:'spec2',n:'특색 (나)'},{id:'spec3',n:'특색 (다)'}];
   /* 기록실의 심볼 칸: 어떻게 얻는지와 얻은 심볼 이미지. 이미지가 준비된 심볼부터 목록에 오른다 */
   const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)',spec1:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec2:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec3:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다'};
@@ -579,7 +579,9 @@ export function startUI(E,app){
   /* 단일 파일(테섭) 빌드(window.CITY_SYM이 있을 때)에서는 모든 심볼·테두리를 해금 조건 없이 시험해 볼 수 있다. 본섭(--pages)은 조건대로 */
   const decoOk=o=>{if(!o.unlock)return true;if(typeof window!=='undefined'&&window.CITY_SYM)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
   const decoWhy=o=>{const u=o.unlock||{};return u.sym?'심볼 획득':u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
-  const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain'}};
+  const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain',pv:Number.isInteger(o.pv)?o.pv:null}};
+  /* 특색 색 미리보기: 판을 시작하기 전(시작 화면)에서만 꾸미기에 적용한다. 판 안에서는 태어날 때 정해진 내 색이 그대로 쓰인다 */
+  const decoPv=()=>{if(G&&G.ch&&UI.screen!=='title')return null;let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const v=o.pv;return Number.isInteger(v)&&D.colors[v]?v:null};
   const markHtml=(col,id)=>{const m=marks().find(x=>x.id===(id||decoGet().mark));
     if(!m||m.id==='square')return `<span class="swatch" style="background:${col}"></span>`;
     if(m.img)return `<img class="swimg" src="${m.img}" alt="" width="32" height="32">`;
@@ -608,7 +610,7 @@ export function startUI(E,app){
   /* 꾸미기: 미리보기는 늘 위에 보이고, 모양·심볼·테두리 고르는 칸은 각각 접었다 펼 수 있다. pre는 칸마다 겹치지 않게 붙이는 접힘 상태 이름 */
   function vDeco(pre){
     pre=pre||'cfg';
-    const cur=decoGet(),col=(G&&G.ch&&G.ch.color)||'#c9a35a',nm=(G&&G.ch&&G.ch.name)||'당신';
+    const cur=decoGet(),pv=decoPv(),col=pv!=null?D.colors[pv].hex:(G&&G.ch&&G.ch.color)||'#c9a35a',nm=(G&&G.ch&&G.ch.name)||'당신';
     const btn=(kind,o,sel)=>{const ok=decoOk(o);return `<button class="${sel===o.id?'on':''}" data-a="deco" data-i="${kind}:${o.id}" ${ok?'':'disabled'}>${kind==='mark'?markHtml(col,o.id):''} ${o.n}${ok?'':` <span class="small dim">· ${decoWhy(o)}</span>`}</button>`};
     const prev=`<div class="panel stack ent compact deco-${cur.frame}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))"><div class="entname">${markHtml(col,cur.mark)}<b class="serif" style="color:${col}">${esc(nm)}</b></div><span class="mono small">HP 80/80 · 정신 45</span><div class="bar"><i style="width:100%;background:${col}"></i></div></div>`;
     const big=String(cur.mark).startsWith('sym_')?`<div class="row" style="gap:10px;align-items:center"><img src="${symImg(String(cur.mark).slice(4),true)}" alt="" width="72" height="72"><span class="small dim">크게 보면 이런 모양이고, 전투 이름 옆에는 32px로 보인다</span></div>`:'';
@@ -617,6 +619,7 @@ export function startUI(E,app){
     return `<div class="stack" style="gap:8px">${prev}${big}
       ${sec('mark','이름 앞 모양',`<div class="seg" style="flex-wrap:wrap">${MARKS.map(o=>btn('mark',o,cur.mark)).join('')}</div>`)}
       ${sec('sym','심볼',syms.length?`<div class="seg" style="flex-wrap:wrap">${syms.map(o=>btn('mark',o,cur.mark)).join('')}</div>`:'<span class="small dim">하드로 이야기를 끝내면 얻는 심볼이 여기에 나타난다</span>')}
+      ${sec('color','색 미리보기',(G&&G.ch&&UI.screen!=='title')?'<span class="small dim">판 안에서는 태어날 때 정해진 내 색이 그대로 쓰입니다. 색마다 심볼이 어떻게 보이는지는 시작 화면의 꾸미기에서 미리 볼 수 있습니다.</span>':`<span class="small dim">특색 심볼(가·나·다)이 색마다 어떻게 보이는지 미리 봅니다. 실제 판에서는 태어날 때 정해진 내 색이 자동으로 쓰입니다.</span><div class="seg" style="flex-wrap:wrap">${D.colors.map((c,i)=>`<button class="${pv===i?'on':''}" data-a="deco" data-i="pv:${i}"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${c.hex};vertical-align:-1px"></span> ${c.adj}</button>`).join('')}<button class="${pv==null?'on':''}" data-a="deco" data-i="pv:none">기본</button></div>`)}
       ${sec('frame','테두리',`<div class="seg" style="flex-wrap:wrap">${FRAMES.map(o=>btn('frame',o,cur.frame)).join('')}</div>`)}
       <span class="small dim">잠긴 것은 칭호·엔딩·하드 완주 기록에 따라 열린다</span></div>`;
   }
@@ -3010,7 +3013,7 @@ ${symRec(r)}
     symequip(i){const cur=decoGet();cur.mark=cur.mark==='sym_'+i?'square':'sym_'+i;store.set(DECOK,JSON.stringify(cur));render()},
     symfight(){startCombat('lamp');C.P.hp=C.P.maxHp=1000000;C.E.hp=C.E.maxHp=100000000;render()},
     symexit(){if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}C=null;PLAYING=false;SKIP=false;UI.paused=false;UI.screen='symlab';render()},
-    deco(i){const [k,id]=String(i).split(':'),o=(k==='mark'?marks():FRAMES).find(x=>x.id===id);if(!o||!decoOk(o))return;const cur=decoGet();cur[k]=id;store.set(DECOK,JSON.stringify(cur));render()},
+    deco(i){const [k,id]=String(i).split(':');if(k==='pv'){const c=decoGet();c.pv=id==='none'?null:+id;store.set(DECOK,JSON.stringify(c));render();return}const o=(k==='mark'?marks():FRAMES).find(x=>x.id===id);if(!o||!decoOk(o))return;const cur=decoGet();cur[k]=id;store.set(DECOK,JSON.stringify(cur));render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;flow()},
     outerend(){if(!G||!G.infinite)return;UI.outEnd=null;if(typeof confirm==='function'&&!confirm('외곽에서 이야기를 끝낼까? 이 판은 여기까지가 기록이 된다.'))return;UI.outerEnd=true;UI.endWin=true;UI.trueEnd=true;UI.oldEnd=false;UI.death=null;recordEnd();UI.screen='end';render()},
