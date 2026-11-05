@@ -39,7 +39,11 @@ export function localizeWith(D,dict){
     if(Array.isArray(x)){for(let i=0;i<x.length;i++){const v=x[i];if(typeof v==='string')x[i]=rep(v);else if(v&&typeof v==='object')walk(v)}}
     else if(x&&typeof x==='object'){for(const k in x){const v=x[k];if(typeof v==='string')x[k]=rep(v);else if(v&&typeof v==='object')walk(v)}}
   };
-  walk(D);return D;
+  walk(D);
+  /* 홍원 12지 쌍의 표시 이름은 데이터에 함께 든 한자(예: 寅卯)로 바꾼다. 한글 한 글자 이름(묘 등)은 다른 줄기의 인물 이름과 겹치므로 사전으로 옮기지 않는다 */
+  const zp=D.hwRoute&&D.hwRoute.pick&&D.hwRoute.pick.pairs;
+  if(Array.isArray(zp))for(const q of zp)if(Array.isArray(q)&&typeof q[2]==='string'&&q[2].length>=2){q[0]=q[2][0];q[1]=q[2][1]}
+  return D;
 }
 export function localize(D){return lang==='ko'?D:localizeWith(D,dict)}
 /* 화면의 글자 조각 중 사전과 일치하는 것을 바꾼다 (렌더 뒤마다 부른다) */
