@@ -2,6 +2,7 @@
    - 데이터(data/*.json): localize(D)가 문자열을 통째로 일치하는 것만 바꾼다 (사전에 없으면 한국어 그대로)
    - 화면 고정 문구: trDom(app)이 그려진 글자를 바꾼다. 숫자가 섞이는 문장은 tr('…')로 따로 감싼다
    - 사전 파일: data/i18n/<언어>.json  (없거나 비어 있어도 게임은 한국어로 정상 동작한다) */
+import {CFG} from './config.js';
 export const LANGS=[{k:'ko',n:'한국어'},{k:'ja',n:'日本語'}];
 const KEY='cityYearLang';
 let lang='ko',dict={};
@@ -19,15 +20,28 @@ export async function initI18n(){
   if(typeof document!=='undefined')document.documentElement.lang=lang;
 }
 export const tr=s=>(lang!=='ko'&&dict[s])||s;
-/* 데이터 전체에서 사전과 통째로 일치하는 문자열을 바꾼다(제자리). 키·숫자·아이디는 건드리지 않는다 */
-export function localize(D){
-  if(lang==='ko'||!Object.keys(dict).length)return D;
+/* 데이터 전체에서 사전과 통째로 일치하는 문자열을 바꾼다(제자리). 키·숫자·아이디는 건드리지 않는다.
+   다른 데이터가 "이 한국어 글자"로 가리키는 이름표(객체 키, n/name 값, 조직 목록, aff·origin 같은 참조 값)는 바꾸지 않는다:
+   바꾸면 서로 이름이 안 맞아 규칙이 깨진다. 이런 이름은 화면에 그려진 뒤 trDom이 글자 단위로 바꾼다 */
+const IDVAL=/^(n|name|aff|origin|org|type|beat|key|id|card|enemy|boss|job|path|tag|req|flag|who|kind|src|from|to|sub|race|team|fam|k|virt)$/;
+export function protectSet(D){
+  const P=new Set();
+  const keys=x=>{if(Array.isArray(x))x.forEach(keys);else if(x&&typeof x==='object')for(const k in x){P.add(k);keys(x[k])}};
+  const refs=(x,k)=>{if(typeof x==='string'){if(k&&IDVAL.test(k))P.add(x)}else if(Array.isArray(x))x.forEach(v=>refs(v,k));else if(x&&typeof x==='object')for(const kk in x)refs(x[kk],kk)};
+  keys(D);keys(CFG);refs(D,'');
+  if(D.orgs)for(const g of Object.values(D.orgs))if(Array.isArray(g))g.forEach(n=>P.add(n));
+  return P;
+}
+export function localizeWith(D,dict){
+  if(!Object.keys(dict).length)return D;
+  const P=protectSet(D),rep=v=>(dict[v]&&!P.has(v))?dict[v]:v;
   const walk=x=>{
-    if(Array.isArray(x)){for(let i=0;i<x.length;i++){const v=x[i];if(typeof v==='string'){if(dict[v])x[i]=dict[v]}else if(v&&typeof v==='object')walk(v)}}
-    else if(x&&typeof x==='object'){for(const k in x){const v=x[k];if(typeof v==='string'){if(dict[v])x[k]=dict[v]}else if(v&&typeof v==='object')walk(v)}}
+    if(Array.isArray(x)){for(let i=0;i<x.length;i++){const v=x[i];if(typeof v==='string')x[i]=rep(v);else if(v&&typeof v==='object')walk(v)}}
+    else if(x&&typeof x==='object'){for(const k in x){const v=x[k];if(typeof v==='string')x[k]=rep(v);else if(v&&typeof v==='object')walk(v)}}
   };
   walk(D);return D;
 }
+export function localize(D){return lang==='ko'?D:localizeWith(D,dict)}
 /* 화면의 글자 조각 중 사전과 일치하는 것을 바꾼다 (렌더 뒤마다 부른다) */
 export function trDom(root){
   if(lang==='ko'||!root||!Object.keys(dict).length||typeof document==='undefined')return;
