@@ -6,13 +6,14 @@ import {readFileSync,writeFileSync,existsSync,mkdirSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {loadData} from '../src/data-node.js';
-const lang=process.argv[2]||'ja',dry=process.argv.includes('--dry'),li=process.argv.indexOf('--limit'),limit=li>0?+process.argv[li+1]:Infinity;
+const lang=process.argv[2]||'ja',dry=process.argv.includes('--dry'),li=process.argv.indexOf('--limit'),limit=li>0?+process.argv[li+1]:Infinity,mi=process.argv.indexOf('--max-calls'),maxCalls=mi>0?+process.argv[mi+1]:Infinity,withUi=process.argv.includes('--ui');
 const BATCH=100,MODEL='gemini-3.5-flash-lite',TMP=new URL('../docs/i18n/.tmp/',import.meta.url);
 mkdirSync(TMP,{recursive:true});
 const id=s=>createHash('md5').update(s).digest('hex').slice(0,8);
 const dp=new URL(`../data/i18n/${lang}.json`,import.meta.url),dict=existsSync(dp)?JSON.parse(readFileSync(dp,'utf8')):{};
 const seen=new Map(),walk=x=>{if(typeof x==='string'){if(/[가-힣]/.test(x)&&!dict[x]&&!/[\t\n]/.test(x))seen.set(id(x),x)}else if(Array.isArray(x))x.forEach(walk);else if(x&&typeof x==='object')for(const k in x)walk(x[k])};
 walk(loadData());
+if(withUi){try{for(const t of JSON.parse(readFileSync(new URL('../data/i18n/ui-strings.json',import.meta.url),'utf8')))if(!dict[t]&&!seen.has(id(t)))seen.set(id(t),t)}catch(e){}}
 const todo=[...seen].slice(0,Number.isFinite(limit)?limit:undefined);
 const GLOSS='화상=火傷 · 출혈=出血 · 진동=振動 · 파열=破裂 · 침잠=沈潜 · 호흡=呼吸 · 충전=充電 · 해결사=フィクサー · 사무소=事務所';
 const PROMPT=`당신은 한국어 텍스트 RPG(프로젝트 문 세계관 팬메이드)를 일본어로 번역하는 전문 번역가입니다. 아래 줄들을 번역하세요.
@@ -29,13 +30,24 @@ const PROMPT=`당신은 한국어 텍스트 RPG(프로젝트 문 세계관 팬�
 console.log(`번역 대기 ${seen.size}문장 · 이번 ${todo.length}문장 · 호출 ${Math.ceil(todo.length/BATCH)}회`);
 if(dry||!todo.length)process.exit(0);
 const ph=s=>(s.match(/\{[^}]+\}/g)||[]).sort().join('|');
-let ok=0,bad=0;
+let ok=0,bad=0,calls=0;
 for(let i=0;i<todo.length;i+=BATCH){
   const part=todo.slice(i,i+BATCH),body={contents:[{parts:[{text:PROMPT+'\n\n[번역할 줄]\n'+part.map(([k,s])=>k+'\t'+s).join('\n')}]}],generationConfig:{temperature:0.3}};
   writeFileSync(new URL('req.json',TMP),JSON.stringify(body));
-  let out;try{out=execFileSync('curl',['-sS','-m','120','-X','POST',`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,'-H','Content-Type: application/json','-d','@'+new URL('req.json',TMP).pathname],{encoding:'utf8',maxBuffer:50e6})}catch(e){console.error('호출 실패 — 멈춤(자동 재시도 안 함):',e.message.slice(0,200));break}
-  let r;try{r=JSON.parse(out)}catch(e){console.error('응답 해석 실패 — 멈춤:',out.slice(0,200));break}
-  if(!r.candidates){console.error('오류 응답 — 멈춤:',JSON.stringify(r).slice(0,300));break}
+  /* 실패하면 틈을 두고 최대 4번 다시 시도한다(20 · 40 · 80 · 160초). 그래도 안 되면 멈춘다. 호출 횟수는 --max-calls까지만 */
+  let r=null,tries=0;
+  for(;;){
+    if(calls>=maxCalls){console.error('호출 상한에 도달 — 멈춤');break}
+    calls++;let out='';
+    try{out=execFileSync('curl',['-sS','-m','120','-X','POST',`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,'-H','Content-Type: application/json','-d','@'+new URL('req.json',TMP).pathname],{encoding:'utf8',maxBuffer:50e6})}catch(e){out=''}
+    try{r=JSON.parse(out)}catch(e){r=null}
+    if(r&&r.candidates)break;
+    const why=r&&r.error?`${r.error.code} ${String(r.error.status||'')}`:'응답 없음';
+    if(r&&r.error&&r.error.code===429&&/quota|limit/i.test(JSON.stringify(r.error))){console.error('한도 초과 — 멈춤:',why);r=null;break}
+    if(tries>=4){console.error(`재시도 4번 실패(${why}) — 멈춤`);r=null;break}
+    const wait=20*Math.pow(2,tries);tries++;console.error(`실패(${why}) — ${wait}초 뒤 다시 시도 ${tries}/4`);execFileSync('sleep',[String(wait)]);r=null
+  }
+  if(!r||!r.candidates)break;
   const text=r.candidates[0].content.parts[0].text;
   const map=new Map(part);
   for(const line of text.split('\n')){const t=line.indexOf('\t');if(t<0)continue;const k=line.slice(0,t).trim(),v=line.slice(t+1).trim(),src=map.get(k);if(!src||!v){bad++;continue}
