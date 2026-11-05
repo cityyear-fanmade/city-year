@@ -21,7 +21,7 @@ for(const f of files)for(const line of readFileSync(f,'utf8').split('\n')){
   if(ph(src)!==ph(v)){bad.push(['자리표시 불일치',k+'\t'+src+'\t→\t'+v]);continue}
   /* 번역이 안 된 줄 거르기: 원문과 같거나(짧은 이름은 예외), 한글이 30% 넘게 남았거나, 일본어 글자가 하나도 없으면 제외 */
   const vv=v.replace(/\{[^}]+\}/g,''),han=(vv.match(/[가-힣]/g)||[]).length,jp=/[぀-ヿ一-鿿]/.test(v);
-  if(src.length>8&&(v===src||han/Math.max(1,vv.length)>0.3||!jp)){bad.push(['번역 안 됨',k+'\t'+src]);continue}
+  if(src.length>8&&(v===src||han/Math.max(1,vv.length)>0.3||(han>0&&src.length>12)||!jp)){bad.push(['번역 안 됨',k+'\t'+src]);continue}
   dict[src]=v.replace(/\s*(\{[^}]+\})\s*/g,'$1');ok++}
 writeFileSync(dp,JSON.stringify(dict,null,0));
 writeFileSync(new URL(`../docs/i18n/${lang}-rejects.txt`,import.meta.url),bad.map(b=>b.join('\t')).join('\n'));

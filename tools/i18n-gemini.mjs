@@ -40,7 +40,7 @@ for(let i=0;i<todo.length;i+=BATCH){
   const map=new Map(part);
   for(const line of text.split('\n')){const t=line.indexOf('\t');if(t<0)continue;const k=line.slice(0,t).trim(),v=line.slice(t+1).trim(),src=map.get(k);if(!src||!v){bad++;continue}
     const vv=v.replace(/\{[^}]+\}/g,''),han=(vv.match(/[가-힣]/g)||[]).length,jp=/[぀-ヿ一-鿿]/.test(v);
-    if(ph(src)!==ph(v)||(src.length>8&&(v===src||han/Math.max(1,vv.length)>0.3||!jp))){bad++;continue}
+    if(ph(src)!==ph(v)||(src.length>8&&(v===src||han/Math.max(1,vv.length)>0.3||(han>0&&src.length>12)||!jp))){bad++;continue}
     dict[src]=v.replace(/\s*(\{[^}]+\})\s*/g,'$1');ok++}
   writeFileSync(dp,JSON.stringify(dict));
   console.log(`${Math.min(i+BATCH,todo.length)}/${todo.length} · 통과 ${ok} · 제외 ${bad}`);
