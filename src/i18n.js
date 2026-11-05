@@ -79,6 +79,12 @@ function trText(s){
     const m=p.re.exec(s);if(!m)continue;
     out=p.v.replace(/\{(\d+)\}/g,(_,i)=>trVal(m[+i+1]));break;
   }
+  /* 구분점(·)으로 이어 붙은 글자는 조각마다 따로 번역한다. 숫자 단독(5세)은 단위만 바꾼다 */
+  if(!out){
+    const ps=s.split(/( · | ·|· |·)/);
+    if(ps.length>1){let any=false;const o=ps.map((x,i)=>{if(i%2||!/[가-힣]/.test(x))return x;const r=trText(x.trim());if(r){any=true;return r}return x});if(any)out=o.join('')}
+    else{const u=trVal(s);if(u!==s)out=u}
+  }
   memo.set(s,out);return out;
 }
 /* 화면의 글자 조각 중 사전과 일치하는 것을 바꾼다 (렌더 뒤마다 부른다) */

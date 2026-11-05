@@ -7,7 +7,7 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {loadData} from '../src/data-node.js';
 const lang=process.argv[2]||'ja',dry=process.argv.includes('--dry'),li=process.argv.indexOf('--limit'),limit=li>0?+process.argv[li+1]:Infinity,mi=process.argv.indexOf('--max-calls'),maxCalls=mi>0?+process.argv[mi+1]:Infinity,withUi=process.argv.includes('--ui');
-const BATCH=100,MODEL='gemini-3.5-flash-lite',TMP=new URL('../docs/i18n/.tmp/',import.meta.url);
+const bi=process.argv.indexOf('--model'),BATCH=100,MODEL=bi>0?process.argv[bi+1]:'gemini-3.5-flash-lite',TMP=new URL('../docs/i18n/.tmp/',import.meta.url);
 mkdirSync(TMP,{recursive:true});
 const id=s=>createHash('md5').update(s).digest('hex').slice(0,8);
 const dp=new URL(`../data/i18n/${lang}.json`,import.meta.url),dict=existsSync(dp)?JSON.parse(readFileSync(dp,'utf8')):{};

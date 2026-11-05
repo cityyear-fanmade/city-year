@@ -43,7 +43,7 @@ export function segments(statics){
   for(let seg of t.split(/<[^>]*>/)){
     seg=seg.replace(/\s+/g,' ').trim();
     let k=0;seg=seg.replace(/\u0001/g,()=>`{${k++}}`);
-    if(HAN.test(seg)&&seg.length>=2)out.push(seg)
+    if(HAN.test(seg))out.push(seg)
   }
   return out;
 }
