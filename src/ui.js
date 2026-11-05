@@ -3337,6 +3337,7 @@ ${symRec(r)}
     testRecordEnd(){recordEnd()},
     testPact(kind){if(!G)return;const c=G.ch;G.infinite=true;G.endless=true;c.infinite=true;c.infIntro=1;c.limAt=1e9;c.infCent=[1];c.pact=c.pact||{};c.pact.reck=0;if(kind==='b'){c.pact.crack=2;c.pactBuffDue=1;UI.ev=E.pactBuffEvent(G)}else{c.pactAt=1;G.year=c.year=84;UI.ev=E.infiniteEvent(G)}UI.fight=null;UI.omen=null;UI.screen='event';render()},
         testCent(n){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.ch.infIntro=1;G.ch.infCent=Array.from({length:n-1},(_,i)=>i+1);G.year=G.ch.year=n*100-16;const ev=E.infiniteEvent(G);if(!ev)return;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
+    testEv(ev){if(!G||!ev)return;UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testEvent(k,lic){if(!G)return;G.ch.licensed=lic!==false;G.ch.rank=G.ch.rank||9;UI.ev=D[k];UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testShip(mode){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.flags.lake=1;c.lake={captain:true,hull:63,crew:[{role:'cook',n:'요리사'},{role:'navigator',n:'항해사'}],seen:7,killed:[],wave:mode==='wave'?{i:1,max:4}:null};c.money=2000;if(mode==='anchor')c.flags.lkL_anchor=1;if(mode==='nocap')c.lake.captain=false;
       if(mode==='wave'){UI.ev=E.waveEv(c,c.lake);UI.fight=null;UI.omen=null;UI.screen='event'}
