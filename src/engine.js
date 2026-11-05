@@ -2697,12 +2697,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
          {l:'조용히 걸어 나간다',ok:{t:'문을 열고 나서자 외곽의 밤이 그대로 있었다.',fx:{}}}]}
   }
   /* 무한 모드 가속: 가속 구간이면 step해마다 마지막 해에만 평소 방식(전투·일상 사건)으로 한 해를 보낸다 */
+  /* 가속은 나이가 step(25)의 배수인 해에 맞춰 시작하고 끝난다: 균열이 봉인된 나이에서 올림한 배수부터. 25 · 50 · 75 … 1000살이 모두 정확히 걸린다(1000살 엔딩, 100살마다 영구 증가, 50해 계약과 같은 칸) */
   const accelOn=G=>{const A=CFG.accel;if(!(A&&A.on&&G.infinite&&G.ch&&G.ch.infinite))return false;
     if(A.after==='seal'&&!(G.ch.outSeen&&G.ch.outSeen.seal))return false;
-    if(G.year<(A.from||0))return false;
-    if(G.ch.accelFrom==null)G.ch.accelFrom=G.year;   // 가속이 처음 켜진 해: 스텝은 이 해부터 센다
-    return true};
-  const accelQuiet=G=>accelOn(G)&&((G.year-G.ch.accelFrom)%CFG.accel.step)!==CFG.accel.step-1;
+    if(G.ch.accelAge==null)G.ch.accelAge=Math.ceil(age(G)/A.step)*A.step;
+    return age(G)>=G.ch.accelAge};
+  const accelQuiet=G=>accelOn(G)&&age(G)%CFG.accel.step!==0;
+  /* 가속 구간에서는 25의 배수 나이마다 '불순물 무한 전투'를 한 번 치른다(10년 간격 계산은 나이와 어긋나서 쓰지 않는다) */
+  const accelCheck=G=>accelOn(G)&&age(G)%CFG.accel.step===0;
   function accelPass(G){
     const ch=G.ch,ev=e=>e?{type:'event',ev:e}:null;
     for(const fn of [()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G))]){const r=fn();if(r)return r}
@@ -2809,7 +2811,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const baseEnd=CFG.years+X_.span*X_.grades.length,INF=CFG.infinite;
     if(G.infinite&&G.year>baseEnd){
       /* 제 2막 무한 모드: 위협 등급 전투는 후반 조우, every년마다 강화 불순물 */
-      if((G.year-baseEnd)%INF.every===0){
+      if((G.year-baseEnd)%INF.every===0||accelCheck(G)){
         /* 무한 모드에 들어설 때 외곽에 지은 집(혼자여도), 또는 인연 이야기의 외곽의 작은 집이 있다면 불순물은 그 집으로 찾아온다 */
         const LH_=lakeOn(G.ch)&&D.lake&&D.lake.infinite&&D.lake.infinite.impurity,H_=LH_||(D.infinite&&D.infinite.home),E_=D.enemies[X_.final],home=H_&&(LH_||G.ch.infHome||(G.ch.outSeen&&G.ch.outSeen.settle));
         if(E_){if(E_.intro0===undefined)E_.intro0=E_.intro;E_.intro=home?H_.intro[((G.ch.infImp||1)-1)%H_.intro.length]:E_.intro0}
