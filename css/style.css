@@ -840,3 +840,7 @@ html[lang="ja"] *{word-break:normal !important;line-break:strict;overflow-wrap:a
 html[lang="ja"] .chip,html[lang="ja"] .btn b{overflow-wrap:break-word}
 .langseg{margin-bottom:6px}
 .langseg button{flex:1}
+
+/* 한국어 줄바꿈: 단어 단위로 줄을 바꾼다(글자 중간에서 끊기지 않게). 아주 긴 덩어리는 넘치지 않도록 필요하면 끊는다. 일본어는 위의 규칙을 쓴다 */
+html:not([lang="ja"]) body{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small,html:not([lang="ja"]) li{text-wrap:pretty}
