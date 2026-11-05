@@ -603,7 +603,7 @@ export function startUI(E,app){
       <span class="small dim">사무소·날개·협회·특색 심볼은 이미지가 준비되는 대로 이 목록에 더해진다.</span></div>`;
   }
   /* 기록실 수집 보상: 심볼을 모은 비율에 따라 열리는 꾸미기 모양 (이름 앞에 다는 이미지). 25% · 50% · 100% */
-  const RWMARKS=[{id:'rw_etc6',n:'황금 나침반',img:'etc_6',rw:0.25},{id:'rw_etc2',n:'보랏빛 별',img:'etc_2',rw:0.5},{id:'rw_etc4',n:'붉은 초승',img:'etc_4',rw:1}];
+  const RWMARKS=[{id:'rw_etc6',n:'저울',img:'etc_6',rw:0.25},{id:'rw_etc2',n:'눈 삼각',img:'etc_2',rw:0.5},{id:'rw_etc4',n:'네잎 문장',img:'etc_4',rw:1}];
   const symHave=()=>SYMS.filter(x=>((loadRec().symbols)||[]).includes(x.id)).length;
   const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||symImg(x.id),unlock:{sym:x.id}})),RWMARKS.map(x=>({id:x.id,n:x.n,img:symImg(x.img),unlock:{rw:x.rw}})));
   const grantSymbol=id=>{const r=loadRec();r.symbols=Array.isArray(r.symbols)?r.symbols:[];if(!r.symbols.includes(id)){r.symbols.push(id);store.set(REC,JSON.stringify(r))}};
