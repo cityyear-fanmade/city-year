@@ -851,4 +851,5 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
   .title-tail{position:fixed;top:128px;right:18px;width:230px;max-height:calc(100vh - 148px);overflow:auto;z-index:5;padding-right:4px}
   .title-tail>*{flex:none}
   .title-tail .btn,.title-tail .btn.quiet,.title-tail details,.title-tail .panel{background:var(--panel)}
+  html[data-skin] .title-tail .btn,html[data-skin] .title-tail .btn.quiet,html[data-skin] .title-tail .panel,html[data-skin] .title-tail details{background:var(--panel)!important;backdrop-filter:none}
 }
