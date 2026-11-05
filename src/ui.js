@@ -3,7 +3,7 @@ import {CFG} from './config.js';
 import {clamp,sg,STAT} from './engine.js';
 import {createBgm} from './bgm.js';
 import {createSfx} from './sfx.js';
-import {LANGS,getLang,setLang,tr,trDom} from './i18n.js';
+import {LANGS,getLang,setLang,tr,trDom, trAny} from './i18n.js';
 
 export function startUI(E,app){
   const D=E.D,T=D.text;
@@ -483,7 +483,7 @@ export function startUI(E,app){
     document.querySelectorAll('[data-roll]').forEach((el,i)=>{
       el.textContent='–';
       const box=el.closest('.roll,.grow'),cy=box&&box.querySelector('[data-cyc]');let stop=null;
-      if(cy&&!SKIP){const list=cy.dataset.cyc.split('|'),fin=cy.innerHTML;box.classList.add('cycling');
+      if(cy&&!SKIP){const list=cy.dataset.cyc.split('|').map(trAny),fin=cy.innerHTML;box.classList.add('cycling');
         const t=setInterval(()=>{cy.textContent=list[Math.floor(Math.random()*list.length)]},70);
         stop=()=>{clearInterval(t);cy.innerHTML=fin;box.classList.remove('cycling');anim(box,'settle',320)}}
       setTimeout(()=>rollNum(el,+el.dataset.roll,650,100).then(()=>stop&&stop()),i*220);

@@ -41,7 +41,7 @@ export function segments(statics){
   const t=statics.map(unesc).reduce((a,x,k)=>a+(k?'\u0001':'')+x,'');
   const out=[];
   for(let seg of t.split(/<[^>]*>/)){
-    seg=seg.replace(/\s+/g,' ').trim();
+    seg=seg.replace(/\s+/g,' ').replace(/^[\s·,→]+|[\s·,→]+$/g,'');   // 앞뒤의 구분점은 틀에 넣지 않는다(화면에서 구분점 기준으로 나눠 맞춘다)
     let k=0;seg=seg.replace(/\u0001/g,()=>`{${k++}}`);
     if(HAN.test(seg))out.push(seg)
   }

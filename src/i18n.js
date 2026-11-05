@@ -49,22 +49,22 @@ export function localize(D){return lang==='ko'?D:localizeWith(D,dict)}
 /* 화면 글자 하나를 번역한다. 사전과 통째로 같으면 바로 바꾸고, 아니면 숫자·이름이 낀 문장 틀({0}, {1}…)과 맞춰 본다.
    틀에 맞으면 끼어 있던 값을 뽑아 일본어 틀에 다시 끼운다(값도 사전에 있으면 함께 번역) */
 let PAT=null;const memo=new Map();
-const UNITS={ja:[[/(\d+)세/g,'$1歳'],[/(\d+)년차/g,'$1年目']]};
+const UNITS={ja:[[/(\d+)세/g,'$1歳'],[/(\d+)년차/g,'$1年目'],[/(\d+)번/g,'$1回'],[/(\d+)등급/g,'$1等級']]};
 const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function buildPat(){
   PAT=[];
   for(const k in dict){
     if(!/\{\d+\}/.test(k))continue;
     const parts=k.split(/\{\d+\}/),han=(parts.join('').match(/[가-힣]/g)||[]).length;
-    if(han<3)continue;
-    PAT.push({k,v:dict[k],re:new RegExp('^'+parts.map(esc).join('([\\s\\S]+?)')+'$'),lk:parts.reduce((a,x)=>x.length>a.length?x:a,''),w:parts.join('').length});
+    if(han<3&&!(han>=2&&parts[0]&&/^[가-힣A-Za-z]/.test(parts[0]))&&parts.join('').replace(/\s/g,'').length<7)continue;
+    PAT.push({k,v:dict[k],re:new RegExp('^'+parts.map(esc).join('([\\s\\S]*?)').replace(/^\(\[\\s\\S\]\*\?\) /,'([\\s\\S]*?) ?').replace(/ \(\[\\s\\S\]\*\?\)$/,' ?([\\s\\S]*?)')+'$'),lk:parts.reduce((a,x)=>x.length>a.length?x:a,''),w:parts.join('').length});
   }
   PAT.sort((a,b)=>b.w-a.w);
 }
 function trVal(v){
   if(dict[v])return dict[v];
   let o=v;
-  if(/[가-힣]/.test(o))o=o.split(/( · |·|, |\/| → | ~ )/).map(x=>dict[x]||x).join('');
+  if(/[가-힣]/.test(o))o=o.split(/( · |·|, |\/| → | ~ |: )/).map((x,i)=>i%2?x:(dict[x]||(/[가-힣]/.test(x)&&trText(x.trim()))||x)).join('');
   for(const [r,t] of UNITS[lang]||[])o=o.replace(r,t);
   return o;
 }
@@ -73,6 +73,7 @@ function trText(s){
   if(!/[가-힣]/.test(s))return null;
   if(memo.has(s))return memo.get(s);
   if(!PAT)buildPat();
+  memo.set(s,null);   /* 같은 글자가 값 안에서 다시 불려도 끝없이 돌지 않게 먼저 비워 둔다 */
   let out=null;
   for(const p of PAT){
     if(!s.includes(p.lk))continue;
@@ -81,12 +82,17 @@ function trText(s){
   }
   /* 구분점(·)으로 이어 붙은 글자는 조각마다 따로 번역한다. 숫자 단독(5세)은 단위만 바꾼다 */
   if(!out){
-    const ps=s.split(/( · | ·|· |·)/);
-    if(ps.length>1){let any=false;const o=ps.map((x,i)=>{if(i%2||!/[가-힣]/.test(x))return x;const r=trText(x.trim());if(r){any=true;return r}return x});if(any)out=o.join('')}
+    const ps=s.split(/( · | ·|· |·|: | → )/);
+    if(ps.length>1){let any=false;const o=ps.map((x,i)=>{if(i%2||!/[가-힣]/.test(x))return x;const r=trText(x.trim())||(()=>{const u=trVal(x.trim());return u!==x.trim()?u:null})();if(r){any=true;return r}return x});if(any)out=o.join('')}
     else{const u=trVal(s);if(u!==s)out=u}
+    /* 글자를 이어 붙여 만든 문장은 띄어쓰기 자리에서 앞뒤로 나눠, 양쪽이 다 번역되면 이어 붙인다 */
+    if(!out){const ws=s.split(' ');if(ws.length>1&&ws.length<=14)for(let k=1;k<ws.length&&!out;k++){const a=trText(ws.slice(0,k).join(' ')),b=trText(ws.slice(k).join(' '));if(a&&b)out=a+b}}
   }
+  /* 마지막 수단: 띄어쓰기 단위로 사전에 있는 가장 긴 구절을 찾아 바꾼다(못 찾은 말은 한국어 그대로) */
+  if(!out){const ws=s.split(' ');if(ws.length<=40){let o='',ch=false;for(let i=0;i<ws.length;){let hit=null;for(let j=Math.min(ws.length,i+6);j>i;j--){const k=ws.slice(i,j).join(' ');const r=dict[k]||dict[k.replace(/[·,]+$/,'')];if(r&&/[가-힣]/.test(k)){hit=[j,r];break}}if(hit){o+=(o&&!/[ぁ-ヿ一-鿿]$/.test(o)?' ':'')+hit[1];i=hit[0];ch=true}else{o+=(o?' ':'')+ws[i];i++}}if(ch)out=o}}
   memo.set(s,out);return out;
 }
+export const trAny=s=>lang==='ko'?s:(trText(String(s).replace(/\s+/g,' '))||s);
 /* 화면의 글자 조각 중 사전과 일치하는 것을 바꾼다 (렌더 뒤마다 부른다) */
 export function trDom(root){
   if(lang==='ko'||!root||!Object.keys(dict).length||typeof document==='undefined')return;
