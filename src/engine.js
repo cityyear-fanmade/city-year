@@ -2697,8 +2697,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
          {l:'조용히 걸어 나간다',ok:{t:'문을 열고 나서자 외곽의 밤이 그대로 있었다.',fx:{}}}]}
   }
   /* 무한 모드 가속: 가속 구간이면 step해마다 마지막 해에만 평소 방식(전투·일상 사건)으로 한 해를 보낸다 */
-  const accelOn=G=>{const A=CFG.accel;return !!(A&&A.on&&G.infinite&&G.ch&&G.ch.infinite&&G.year>=A.from)};
-  const accelQuiet=G=>accelOn(G)&&((G.year-CFG.accel.from)%CFG.accel.step)!==CFG.accel.step-1;
+  const accelOn=G=>{const A=CFG.accel;if(!(A&&A.on&&G.infinite&&G.ch&&G.ch.infinite))return false;
+    if(A.after==='seal'&&!(G.ch.outSeen&&G.ch.outSeen.seal))return false;
+    if(G.year<(A.from||0))return false;
+    if(G.ch.accelFrom==null)G.ch.accelFrom=G.year;   // 가속이 처음 켜진 해: 스텝은 이 해부터 센다
+    return true};
+  const accelQuiet=G=>accelOn(G)&&((G.year-G.ch.accelFrom)%CFG.accel.step)!==CFG.accel.step-1;
   function accelPass(G){
     const ch=G.ch,ev=e=>e?{type:'event',ev:e}:null;
     for(const fn of [()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G))]){const r=fn();if(r)return r}
