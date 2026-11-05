@@ -391,7 +391,7 @@ export const CFG = {
     /* 직원: 대표가 공방 거리에서 고용한다. 최대 max명, 고용비 hire, 해마다 월급 wage(의뢰 담당은 수입이 더 크다). 직원은 growEvery해마다 한 단계씩 자라 lvMax까지 오른다. 효과는 단계만큼 곱해진다 */
     /* 사무소 등급: 해결사 급수와 따로 센다. 직원이 해마다 의뢰를 해결해 성과를 쌓고(성공하면 직원 단계만큼), need만큼 쌓이면 한 등급 오른다. 등급마다 기본 버프(누적이 아닌 그 등급의 값)와 3해(payEvery)마다 수익금이 있다 */
     /* 이직(사무소 직원끼리): move.every해마다 급수가 맞는 다른 사무소의 제안이 온다(높은 곳부터 최대 offers곳). 옮기면 평판이 깎이고, 한 곳에 오래 머물면 평판이 오른다. 평판 1점마다 공방 거리 장비 값이 priceStep씩 내리거나(오르거나) 한다 */
-    move: {every: 5, offers: 3}, rep: {min: -5, max: 3, moveCost: 1, quickYears: 5, quickExtra: 1, loyalEvery: 5, loyalGain: 1, priceStep: 0.04, priceMin: 0.8, priceMax: 1.25},
+    move: {every: 5, offers: 3}, rep: {min: -5, max: 3, moveCost: 2, quickYears: 5, quickExtra: 2, loyalEvery: 5, loyalGain: 1, priceStep: 0.04, priceMin: 0.8, priceMax: 1.25},
     grade: {names: ['개업', '자리잡음', '이름이 남', '손꼽힘', '명문'], need: [8, 14, 22, 34], chance: 50, chanceLv: 8, payEvery: 3,
       buff: [{}, {maxHp: 6}, {maxHp: 10, check: 1}, {maxHp: 14, check: 1, atk: 1}, {maxHp: 20, check: 2, atk: 2}], buffTxt: ['없음', '최대 HP +6', '최대 HP +10 · 판정 +1', '최대 HP +14 · 판정 +1 · 공격 +1', '최대 HP +20 · 판정 +2 · 공격 +2'],
       pay: [300, 500, 800, 1200, 1800]},
