@@ -29,11 +29,13 @@ const lakeTest=process.argv.includes('--lake');
 /* --mind: 정신력 10 이하 연출(목소리·뒤틀림 사건·전투 중 정신력 0)만 시험하는 판 */
 const mindTest=process.argv.includes('--mind');
 /* --symtest: 심볼 시험판. 시작 화면에 '심볼 시험장'이 생긴다(무한 체력 전투 · 획득 화면 미리보기 · 장착) */
-const symTest=process.argv.includes('--symtest');
+/* --alltest: 개인 시험판(모든 심볼·테두리·기록·해금 출생이 열려 있고 심볼 시험장이 있다). --pubtest: 공개 테스트 서버(잠금 규칙은 본섭과 같고 시험 메뉴 없음, 제목에 '테스트 서버' 표시) */
+const allTest=process.argv.includes('--alltest'),pubTest=process.argv.includes('--pubtest');
+const symTest=process.argv.includes('--symtest')||allTest;
 /* --finger: 손가락 루트 전용 시험판. 출생 화면에 조직 출신·보냐텔리·별에 선택받은 자로 바로 태어나는 버튼이 생긴다 */
 const fingerTest=process.argv.includes('--finger');
 /* --unlocktest: 해금 출생 시험판 */
-const unlockTest=process.argv.includes('--unlocktest');
+const unlockTest=process.argv.includes('--unlocktest')||allTest;
 /* 번역 사전(data/i18n/*.json): 단일 파일 빌드에는 넣고, --pages 빌드는 data/i18n/ 경로에서 읽는다 */
 const i18nData={};try{const {readdirSync}=await import('node:fs');for(const f of readdirSync(new URL('../data/i18n/',import.meta.url)))if(f.endsWith('.json'))i18nData[f.replace('.json','')]=JSON.parse(readFileSync(new URL('../data/i18n/'+f,import.meta.url),'utf8'))}catch(e){}
 /* 심볼 이미지(assets/symbol/*.png): 단일 파일 빌드에는 data 주소로 넣고, --pages 빌드는 assets 경로를 그대로 쓴다 */
@@ -50,11 +52,13 @@ const js2=lakeTest?js1.replace(/dailyOrigin: \d+,/,'dailyOrigin: 40,').replace(/
 const js3=mindTest?js2.replace('const MINDTEST=false;','const MINDTEST=true;').replace("store.get('cityYearNotice')!==NOTICE.id",'false'):js2;
 const js4=fingerTest?js3.replace('const FINGERTEST=false;','const FINGERTEST=true;'):js3;
 const js=unlockTest?js4.replace('const UNLOCKTEST=false;','const UNLOCKTEST=true;').replace("store.get('cityYearNotice')!==NOTICE.id",'false'):js4;
+/* 공개 테스트 서버·개인 시험판은 첫 화면 위쪽 글줄에 구분 표시를 붙인다 */
+const jsL=(pubTest||allTest)?js.replace('비영리 · ${VERSION}</div>',()=>'비영리 · ${VERSION} · '+(allTest?'개인 시험판':'테스트 서버')+'</div>'):js;
 const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[ai+1]):null;
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
   .replace('<link rel="stylesheet" href="css/style.css">',()=>`<style>\n${r('css/style.css')}</style>`)
-  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${process.argv.includes('--pages')?'':`window.CITY_SYM=${JSON.stringify(symData)};\n`}${process.argv.includes('--pages')?'':`window.CITY_I18N=${JSON.stringify(i18nData)};\n`}${symTest?'window.CITY_SYMTEST=true;\n':''}${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${js}\nconst DATA=${JSON.stringify(D)};\ninitI18n().then(()=>{localize(DATA);window.CITY=startUI(createEngine(DATA),document.getElementById('app'))});\n})();\n</script>`);
+  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${process.argv.includes('--pages')?'':`window.CITY_SYM=${JSON.stringify(symData)};\n`}${process.argv.includes('--pages')?'':`window.CITY_I18N=${JSON.stringify(i18nData)};\n`}${symTest?'window.CITY_SYMTEST=true;\n':''}${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${jsL}\nconst DATA=${JSON.stringify(D)};\ninitI18n().then(()=>{localize(DATA);window.CITY=startUI(createEngine(DATA),document.getElementById('app'))});\n})();\n</script>`);
 if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('\nwindow.CITY_BGM=',`\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_BGM=`);
 if(augdemo)html=html.replace('<title>도시의 한 해</title>','<title>의수 의뢰 체험</title>').replace('\nwindow.CITY_BGM=','\nwindow.CITY_AUGDEMO=true;\nwindow.CITY_BGM=');
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');
@@ -64,8 +68,10 @@ if(fingerTest)html=html.replace('<title>도시의 한 해</title>','<title>도�
 if(unlockTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 해금 출생 테스트</title>');
 if(expires)html=html.replace(routeTest?'<title>도시의 한 해 · R사·H사 테스트</title>':'<title>도시의 한 해</title>',routeTest?'<title>도시의 한 해 R사 H사 테스트</title>':'<title>도시의 한 해 플레이테스트</title>')
   .replace('\nwindow.CITY_BGM=',`\nwindow.CITY_EXPIRES=${expires};\nwindow.CITY_BGM=`);
+if(allTest)html=html.replace('\nwindow.CITY_BGM=','\nwindow.CITY_OPENALL=true;\nwindow.CITY_ALLREC=true;\nwindow.CITY_BGM=').replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 개인 시험판</title>');
+if(pubTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 테스트 서버</title>');
 const pages=process.argv.includes('--pages')&&!expires;
-const out=symTest?'city-year-symbol-test.html':augdemo?'aug-demo.html':lab?'motion-lab.html':unlockTest?'city-year-unlock-test.html':fingerTest?'city-year-finger-test.html':lakeTest?'city-year-lake-test.html':mindTest?'city-year-mind-test.html':pages?'index.html':routeTest&&expires?'city-year-route-playtest.html':routeTest?'city-year-route-test.html':expires?'city-year-playtest.html':'city-year.html';
+const out=allTest?'city-year-all-test.html':pubTest?'city-year-public-test.html':symTest?'city-year-symbol-test.html':augdemo?'aug-demo.html':lab?'motion-lab.html':unlockTest?'city-year-unlock-test.html':fingerTest?'city-year-finger-test.html':lakeTest?'city-year-lake-test.html':mindTest?'city-year-mind-test.html':pages?'index.html':routeTest&&expires?'city-year-route-playtest.html':routeTest?'city-year-route-test.html':expires?'city-year-playtest.html':'city-year.html';
 mkdirSync(new URL('../dist/',import.meta.url),{recursive:true});
 writeFileSync(new URL((pages?'../':'../dist/')+out,import.meta.url),html);
 console.log(`${pages?'':'dist/'}${out} · ${(html.length/1024).toFixed(0)}KB${expires?' · 종료 '+new Date(expires).toISOString():''}`);

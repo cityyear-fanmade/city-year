@@ -11,6 +11,8 @@
     "build": "node tools/build.mjs",
     "build:lake": "node tools/build.mjs --lake",
     "build:mind": "node tools/build.mjs --mind",
+    "build:pub": "node tools/build.mjs --nobgm --pubtest",
+    "build:all": "node tools/build.mjs --nobgm --alltest",
     "pages": "node tools/build.mjs --pages --extbgm",
     "guide": "node tools/guide.mjs"
   },

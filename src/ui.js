@@ -22,7 +22,22 @@ export function startUI(E,app){
   const REC='cityYearRecords',DAILYK='cityYearDaily';
   const VERSION='v10.4.4';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
-  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}return Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{})};
+  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}const o=Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{});return (typeof window!=='undefined'&&window.CITY_ALLREC)?fillAllRec(o):o};
+  /* 개인 시험판(build --alltest): 기록실의 모든 칸(엔딩·칭호·히든 보스·출신·소속·인연·장비·심볼·타고난 것)을 채워 연다. 아직 정의되지 않은 목록은 건너뛴다 */
+  function fillAllRec(r){
+    const T=f=>{try{f()}catch(e){}};
+    T(()=>{r.seen=Object.keys(D.enemies);r.beaten=Object.keys(D.enemies)});
+    T(()=>{r.endings=ENDS0.map(e=>e[0])});
+    T(()=>{r.innate=Object.keys(D.innate);r.unl=Object.keys(D.innate)});
+    T(()=>{r.titles=Object.fromEntries(TITLE_REC.map(n=>[n,Math.max(1,(r.titles&&r.titles[n])||0)]))});
+    T(()=>{r.affs=[...new Set(Object.values(D.orgs).flat().filter(x=>typeof x==='string'))]});
+    T(()=>{r.births=(D.hiddenOrigins||[]).map(x=>x.n)});
+    T(()=>{const c=specCat();r.gears=Object.keys(c.g);r.packs=Object.keys(c.p)});
+    T(()=>{r.lovers={};for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++)r.lovers[rk+':'+vi]=2});
+    T(()=>{r.symbols=SYMS.map(x=>x.id)});
+    r.hardClear=Math.max(1,r.hardClear||0);r.easyClear=Math.max(1,r.easyClear||0);r.runs=Math.max(99,r.runs||0);
+    T(()=>{r.best={years:Math.max(1000,r.best.years||0),lv:Math.max(60,r.best.lv||0),grade:CFG.endless.grades.length-1}});
+    return r}
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
   /* 연인·히든 출생 기록: 연인은 만나본 적(1)·결혼까지 간 적(2), 히든 출생은 그 출생으로 시작한 적이 있는지를 남긴다 */
   /* 기록실 도감: 히든 보스 전리품·출신 전용 장비와 전용 카드팩. 이름을 직접 정하는 것(성도·개화/뒤틀림 이름)은 넣지 않는다 */
@@ -576,8 +591,8 @@ export function startUI(E,app){
   const grantSymbol=id=>{const r=loadRec();r.symbols=Array.isArray(r.symbols)?r.symbols:[];if(!r.symbols.includes(id)){r.symbols.push(id);store.set(REC,JSON.stringify(r))}};
   const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}}];
   const decoRec=()=>{const r=loadRec();return {titles:Object.keys(r.titles||{}).filter(k=>(r.titles[k]||0)>0).length,endings:(r.endings||[]).length,hard:!!r.hardClear}};
-  /* 단일 파일(테섭) 빌드(window.CITY_SYM이 있을 때)에서는 모든 심볼·테두리를 해금 조건 없이 시험해 볼 수 있다. 본섭(--pages)은 조건대로 */
-  const decoOk=o=>{if(!o.unlock)return true;if(typeof window!=='undefined'&&window.CITY_SYM)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
+  /* 개인 시험판(window.CITY_OPENALL, build --alltest)에서만 모든 심볼·테두리를 해금 조건 없이 연다. 공개 테섭과 본섭은 조건대로 */
+  const decoOk=o=>{if(!o.unlock)return true;if(typeof window!=='undefined'&&window.CITY_OPENALL)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
   const decoWhy=o=>{const u=o.unlock||{};return u.sym?'심볼 획득':u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
   const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain',pv:Number.isInteger(o.pv)?o.pv:null}};
   /* 특색 색 미리보기: 판을 시작하기 전(시작 화면)에서만 꾸미기에 적용한다. 판 안에서는 태어날 때 정해진 내 색이 그대로 쓰인다 */
@@ -1403,13 +1418,14 @@ export function startUI(E,app){
       return [seen,seen?esc(e.n)+(won?' ✓':''):'???',tx||(seen?'':'하드 완주 후에 어디서 만나는지 알 수 있다')]});
     const got=rows.filter(x=>x[0]).length;
     return `<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 보스 도감 · 만난 ${got}/${rows.length}</span><div class="stack" style="gap:10px">${rows.map(([o,l,h])=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${o?'':' dim'}">${l}</span><span class="small dim" style="white-space:pre-line">${esc(h)}</span></div>`).join('')}</div><p class="small dim">${r.hardClear?'하드 완주 보상: 만나지 못한 상대는 어디서 만나는지, 만난 상대는 얻는 방법이 열려 있다.':'하드 완주를 하면 만나지 못한 상대가 어디서 나오는지 알 수 있다.'}</p></div>`}
+  const ENDS0=[['gwmoth','나방 공주의 밤'],['gwroach','바퀴 황제의 왕좌'],['gwfly','파리 대왕의 식탁'],['gwhuman','인간으로 남은 병기'],['clawreturn','돌아온 발톱'],['clawstay','길을 닫은 발톱'],['arbkeep','한쪽을 남긴 조율자'],['arbdown','내려온 조율자'],['libstay','책이 된 사서'],['libclose','문을 닫는 사서'],['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['hermobey','끝난 지령'],['hermfree','지령 없는 아침'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['out_famblood','불사의 강물'],['out_fampill','금지된 환'],['out_famcrow','배양조의 시간'],['out_famlake','선원의 이름'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
   const REC_TABS=['요약','칭호','인연','엔딩','히든 보스','출생·소속','심볼','장비','상대'];
   const recTabOf=t=>/^(최고 기록|판 통계)/.test(t)?'요약':/^칭호/.test(t)?'칭호':/^인연/.test(t)?'인연':/^엔딩/.test(t)?'엔딩':/^히든 보스/.test(t)?'히든 보스':/^(히든 출생|소속|타고난 것|해금 출생|히든 직업)/.test(t)?'출생·소속':/^심볼/.test(t)?'심볼':/^특수 장비/.test(t)?'장비':'상대';
   const RFK='cy_recfold',recFold=()=>{try{return JSON.parse(localStorage.getItem(RFK)||'[]')||[]}catch(e){return []}};
   const vRecords=()=>{const f=recFold(),tab=UI.recTab||'요약';const html=vRecords0().replace(/<div class="panel stack"( style="[^"]*")?><span class="eyebrow">([^<]*)<\/span>/g,(m,st,t)=>{const k=t.replace(/\s*·.*$/,'').replace(/\s*[0-9].*$/,'')||t,c=f.includes(k);return `<div class="panel stack rfold${c?' closed':''}"${(()=>{const hide=recTabOf(t)!==tab;if(!hide)return st||'';return st?st.replace(/"$/,';display:none"'):' style="display:none"'})()}><span class="eyebrow rfh" data-a="rfold" data-i="${esc(k)}" role="button" aria-expanded="${!c}">${c?'▸':'▾'} ${t}</span>`});return html};
   function vRecords0(){
     const r=loadRec(),X=CFG.endless,u=loadUnlocks();
-    const ends0=[['gwmoth','나방 공주의 밤'],['gwroach','바퀴 황제의 왕좌'],['gwfly','파리 대왕의 식탁'],['gwhuman','인간으로 남은 병기'],['clawreturn','돌아온 발톱'],['clawstay','길을 닫은 발톱'],['arbkeep','한쪽을 남긴 조율자'],['arbdown','내려온 조율자'],['libstay','책이 된 사서'],['libclose','문을 닫는 사서'],['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['hermobey','끝난 지령'],['hermfree','지령 없는 아침'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['out_famblood','불사의 강물'],['out_fampill','금지된 환'],['out_famcrow','배양조의 시간'],['out_famlake','선원의 이름'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
+    const ends0=ENDS0;
     /* 오버플로우(무한 모드 1000살)는 달성하기 전에는 칸도 개수도 보이지 않는다 */
     const ends=ends0.filter(([k])=>k!=='overflow'||r.endings.includes('overflow'));
     const groups=[['초반','early'],['중반','mid'],['후반','late'],['보스·이름난 상대','boss'],['히든','hidden']];
@@ -3285,7 +3301,7 @@ ${symRec(r)}
     testPatch(o){if(!G)return;Object.assign(G.ch,o);render()},
     testG(o){if(!G)return;Object.assign(G,o);render()},
     testLedger(){if(!G)return;UI.ledger={a:G.year,b:G.year+24,n:24,st:null};UI.screen='ledger';render()},
-    testAccel(y){if(!G)return;const c=G.ch;G.infinite=true;G.endless=true;c.infinite=true;c.infImp=1;c.infIntro=1;c.outSeen=c.outSeen||{};c.outSeen.seal=1;c.accelChoice='yes';c.accelAge=null;c.oldEnd=true;c.infCent=[1,2];c.limAt=1e9;G.year=c.year=(y||200)-1;c.hp=c.stats.maxHp;nextYear()},
+    testAccel(y,mode){if(!G)return;const c=G.ch;G.infinite=true;G.endless=true;c.infinite=true;c.infImp=1;c.infIntro=1;c.outSeen=c.outSeen||{};c.outSeen.seal=1;if(mode==='offer'){delete c.accelChoice;c.accelOfferAt=0}else c.accelChoice='yes';c.accelAge=null;c.oldEnd=true;c.infCent=[1,2];c.limAt=1e9;c.pactAt=1e9;G.year=c.year=(y||200)-1;c.hp=c.stats.maxHp;nextYear()},
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
     testInfLake(n){if(!G)return null;const c=G.ch,X=CFG.endless,be=CFG.years+X.span*X.grades.length,out={};G.infinite=true;c.infinite=true;c.infIntro=1;c.flags=c.flags||{};c.flags.lake=1;c.lake=c.lake||{};c.lake.captain=true;
       for(let i=0;i<(n||300);i++){G.year=c.year=be+1+i;c.hp=c.stats.maxHp;c.mind=E.mindMax(c);try{const st=E.advanceYear(G);const k=st.type==='omen'?'omen:'+st.boss+(st.echo?'(echo)':''):st.type==='fight'?'fight:'+st.enemy:st.type;out[k]=(out[k]||0)+1}catch(e){out['ERR '+e.message]=(out['ERR '+e.message]||0)+1}}try{E.answerOmen(G,{boss:'hongwon',rift:true,escape:true,spec:'table:late'},true);out._intro=D.enemies.hongwon.intro}catch(e){out._intro='ERR '+e.message}return out},
