@@ -1769,12 +1769,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         let pool=arr.map((_,i)=>i).filter(i=>!used.includes(i));if(!pool.length){used.length=0;pool=arr.map((_,i)=>i)}const i=one(pool);used.push(i);
         const nm=one(F.names),fill=t=>bondFill(t,{name:nm});
         return {t:PP.lt[F.key],x:fill(arr[i]),c:[{l:PP.ll,h:'',ok:{t:fill(PP.lok),fx:{}}}]}}}
-    if(!n&&ch.infIntro){const Lm=CFG.infinite.limit;if(!ch.limAt)ch.limAt=G.year+Lm.every;
-      if(G.year>=ch.limAt){ch.limAt=G.year+Lm.every;const m=ch.colorDone?Lm.traitMul:1,pct=x=>Math.round(x*m*1000)/10;
+    if(!n&&ch.infIntro){const Lm=CFG.infinite.limit,AC=accelOn(G)?CFG.accel.limit:null;if(!ch.limAt)ch.limAt=G.year+Lm.every;
+      /* 가속 중에는 나이가 50의 배수인 해마다, 10해치의 5배 효과로 한 번에 준다(팝업을 줄이되 총 성장량은 같다) */
+      if(AC&&!ch.limAccel){ch.limAccel=1;ch.limAt=G.year+((AC.every-age(G)%AC.every)%AC.every)}
+      if(G.year>=ch.limAt){const X=AC?AC.mul:1;ch.limAt=G.year+(AC?(AC.every-age(G)%AC.every):Lm.every);const m=(ch.colorDone?Lm.traitMul:1)*X,pct=x=>Math.round(x*m*1000)/10;
         return {t:'한계 돌파',x:LI?'호수에서 수십 해를 보내자 몸이 물결의 박자를 기억한다. 더 멀리, 더 세게 휘두를 수 있다고 느낀다.':'오래 버틴 몸이 한계 너머를 보기 시작한다. 어느 쪽으로 더 벼릴지 정해야 한다.',c:[
-          {l:'공세를 벼린다',h:`공격 +${pct(Lm.atkPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'휘두르는 팔이 한결 무거워졌다.',fx:{limit:'atk'}}},
-          {l:'맹공을 익힌다',h:`주는 피해 +${pct(Lm.dmgPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'맞는 쪽이 먼저 물러서는 것이 느껴진다.',fx:{limit:'dmg'}}},
-          {l:'일격을 벼린다',h:`적중 시 상대에게 추가 피해 (내 최대 HP의 ${pct(Lm.strikePct)}%) (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'몸 전체의 무게가 한 번의 타격에 실린다.',fx:{limit:'strike'}}}]}}}
+          {l:'공세를 벼린다',h:`공격 +${pct(Lm.atkPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'휘두르는 팔이 한결 무거워졌다.',fx:{limit:'atk',x:X}}},
+          {l:'맹공을 익힌다',h:`주는 피해 +${pct(Lm.dmgPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'맞는 쪽이 먼저 물러서는 것이 느껴진다.',fx:{limit:'dmg',x:X}}},
+          {l:'일격을 벼린다',h:`적중 시 상대에게 추가 피해 (내 최대 HP의 ${pct(Lm.strikePct)}%) (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'몸 전체의 무게가 한 번의 타격에 실린다.',fx:{limit:'strike',x:X}}}]}}}
     {const ok_=(ch.o&&(ch.o.herm||ch.o.key==='hermes'))?'hermes':ch.o&&ch.o.key,RE=!LI&&I.routeEvents&&I.routeEvents[ok_];
       if(!n&&ch.infIntro&&RE&&RE.length){const Rv=CFG.infinite.routeEvery||15;if(!ch.infReAt)ch.infReAt=G.year+Rv;
         if(G.year>=ch.infReAt){ch.infReAt=G.year+Rv;const i=(ch.infReN||0)%RE.length;ch.infReN=(ch.infReN||0)+1;return JSON.parse(JSON.stringify(RE[i]))}}}
@@ -3064,7 +3066,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0,race:kk.race||(ch.race==='hyeolgwi'?'hyeolgwi':'human')};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondCol&&ch.bond&&!ch.bond.col){const ci=one(D.colors.map((c,i)=>i).filter(i=>i!==ch.ci)),C_=D.colors[ci];ch.bond.col={adj:C_.adj,hex:C_.hex};ch.bondColPick=true;chips.push(`${ch.bond.name} · ${C_.adj} 특색`)}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:ch.bond.route==='librarian'?'librarian':one(D.bond.kidJobs.filter(j=>j.k!=='librarian')).k,told:false,race:((ch.o&&ch.o.race==='hyeolgwi')||spouseHy(ch,ch.bond)||(ch.race==='hyeolgwi'&&d(2)===1))?'hyeolgwi':'human'};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
-    if(fx.limit){const Lm=CFG.infinite.limit,m=ch.colorDone?Lm.traitMul:1;
+    if(fx.limit){const Lm=CFG.infinite.limit,m=(ch.colorDone?Lm.traitMul:1)*(fx.x||1);
       if(fx.limit==='atk'){const g=Math.max(1,Math.round(ch.stats.atk*Lm.atkPct*m));ch.stats.atk+=g;chips.push(`한계 돌파 · 공격 +${g}`)}
       else if(fx.limit==='dmg'){ch.limDmg=(ch.limDmg||0)+Lm.dmgPct*m;chips.push(`한계 돌파 · 주는 피해 +${Math.round(Lm.dmgPct*m*1000)/10}% (누적 ${Math.round(ch.limDmg*1000)/10}%)`)}
       else{ch.limStrike=(ch.limStrike||0)+Lm.strikePct*m;chips.push(`한계 돌파 · 적중 시 상대에게 추가 피해 (내 최대 HP의 ${Math.round(Lm.strikePct*m*1000)/10}%) (누적 ${Math.round(ch.limStrike*1000)/10}%)`)}}
