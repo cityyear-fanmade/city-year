@@ -3570,7 +3570,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 자동 전투: 다치면 수비, 상대에게 상태 이상이 있으면 찌르기, 흐트러졌으면 타격, 아니면 공격 */
   function autoForm(C){
     if(!formOk(C)||C.formRound===C.round)return;const P=C.P,B=C.E,st=(B.bleed||0)+(B.rupture||0)+(B.burn||0);
-    const f=P.hp<=P.maxHp*0.4?'d':st>=3?'p':(B.stagger||0)>=2?'s':'a';setForm(C,f)}
+    /* 방어 자세 카드는 전부 방어형이라 체력이 낮은 채로 계속 방어만 고르면 영영 공격하지 않는다(체력이 회복되지 않으면 전투가 끝나지 않음).
+       그래서 방어 자세는 연속 2라운드까지만 쓰고, 그다음 한 라운드는 공격 쪽 자세를 고른다 */
+    const wantD=P.hp<=P.maxHp*0.4&&(C.defStreak||0)<2;
+    const f=wantD?'d':st>=3?'p':(B.stagger||0)>=2?'s':'a';
+    C.defStreak=f==='d'?(C.defStreak||0)+1:0;setForm(C,f)}
   /* 하나 협회 패시브: 라운드마다 한 번 고른다 (카드를 고르기 전에) */
   const triOk=C=>!!(C&&C.ch&&assocOf(C.ch)===CFG.tri.org&&!C.over&&!C.P.distorted);
   function setTri(C,k){
