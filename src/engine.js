@@ -2157,7 +2157,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const pool=(EN.pool[slot]||[]).filter(x=>!(it.ench&&it.ench.key===x.key));if(!pool.length)return null;
     const nw=one(pool);ch.money-=pr;
     if(!it.fx0)it.fx0=Object.assign({},it.fx||{});if(it.baseN==null)it.baseN=it.n;if(it.e0==null)it.e0=it.e||'';
-    const nfx=Object.assign({},it.fx0);for(const [k,v] of Object.entries(nw.fx||{}))nfx[k]=(nfx[k]||0)+v;
+    const nfx=Object.assign({},it.fx0);for(const [k,v] of Object.entries(nw.fx||{}))nfx[k]=(nfx[k]||0)+v;for(const [k,v] of Object.entries(it.chgFx||{}))nfx[k]=(nfx[k]||0)+v;   /* 변화로 오른 깡스탯은 인챈트를 바꿔도 남는다 */
     const delta={};for(const k of new Set([...Object.keys(it.fx||{}),...Object.keys(nfx)])){const dv=(nfx[k]||0)-((it.fx||{})[k]||0);if(dv&&k!=='dmin')delta[k]=dv}
     addStats(ch.stats,delta);if(delta.maxHp)ch.hp=Math.max(1,Math.min(ch.stats.maxHp,ch.hp+delta.maxHp));
     it.fx=nfx;it.ench={key:nw.key,n:nw.n,type:nw.type,e:nw.e};it.ewx=nw.wx?JSON.parse(JSON.stringify(nw.wx)):undefined;it.enchN=(it.enchN||0)+1;
@@ -2737,8 +2737,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(job==='office')h.push(`사무소 등급에 따라 최대 HP 증가`);
       return {t:`${A.step}해가 흘렀다`,x:`${ag}살. ${accelJobTx[job]} 빠르게 지나간 해들이 한꺼번에 몸에 돌아왔다.`,c:[{l:'지나온 해를 받아들인다',h:h.join(' · '),ok:{t:'걸어온 길이 몸에 정리된다.',fx:{accelStep:job}}}]}}
     if(ch.chgOfferAge!==ag&&(ch.chgShard||0)>=chgCost(ch)){ch.chgOfferAge=ag;const C=A.change,cost=chgCost(ch),lv=(ch.chgLv||0)+1;
-      return {t:'변화',x:`변화의 파편 ${ch.chgShard}개를 가지고 있다. 파편을 쓰면 몸과 무기가 한 걸음 더 어긋난 모양으로 굳는다. (지금 ${ch.chgLv||0}단계)`,c:[
-        {l:`변화시킨다 (${lv}단계)`,h:`파편 ${cost}개 · 주는 피해 +${Math.round(C.dmg*100)}% (영구, 누적)`,ok:{t:'굳은 것이 한 번 더 어긋나며 새 모양을 잡는다.',fx:{chgUp:1}}},
+      return {t:'변화',x:`변화의 파편 ${ch.chgShard}개를 가지고 있다. 파편을 쓰면 낀 무기가 한 걸음 더 어긋난 모양으로 굳는다. (지금 ${ch.chgLv||0}단계)`,c:[
+        {l:`변화시킨다 (${lv}단계)`,h:`파편 ${cost}개 · 낀 무기의 공격 깡스탯 +${C.gains[0]}~${C.gains[C.gains.length-1]} (확률 · 낮은 등급일수록 크게 오른다)`,ok:{t:'굳은 것이 한 번 더 어긋나며 새 모양을 잡는다.',fx:{chgUp:1}}},
         {l:'아직 아낀다',h:'파편은 그대로 남는다 · 다음 스텝에 다시 묻는다',ok:{t:'아직은 이 모양 그대로 둔다.',fx:{}}}]}}
     ch.accelStepDue=null;return null}
   /* 가속 중 백 해마다: 지나간 세월의 풍경(모두에게 같은 도시의 변화)과, 출신·길에 맞는 한 줄(그 길의 어휘로 쓴 문장)을 보여 준다. 변화의 파편 1개를 준다 */
@@ -2750,7 +2750,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(let i=1;i<=9;i++){if(i*100>ag)break;if(i*100<(ch.accelAge||0))continue;if(!have.includes(i)){m=i;break}}
     if(!m)return null;
     const w=S.world[m-1]||S.world[S.world.length-1],era=m<=3?'early':m<=6?'mid':'late',tk=accelTrack(ch),tl=(S.by[tk]||S.by.general)[era];
-    return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${one(w)} ${tl}`,c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +1 (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
+    return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${one(w)} ${tl}`,c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +${CFG.accel.change.story} (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
   function advanceYear(G){
     hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);staffTick(G.ch,G.year);officeYear(G.ch,G.year);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
@@ -3124,8 +3124,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(fx.accelStep==='gw'){addStats(ch.stats,{atk:J.gw.atk,maxHp:J.gw.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+J.gw.maxHp);chips.push(`섭식 보너스 · 공격 +${J.gw.atk} · 최대 HP +${J.gw.maxHp}`)}
       if(fx.accelStep==='ws'){const nm=acc('wsMat',J.ws.mat);if(nm){for(let i=0;i<nm;i++)(ch.stash=ch.stash||[]).push({id:'hidmat',n:'히든 강화재료',slot:'any',grade:5,e:'어떤 전용 장비든 녹이면 히든 한 단계'});chips.push(`히든 강화재료 +${nm}`)}}
       if(fx.accelStep==='office'){const g=Math.min(J.office.maxHpMax,J.office.hpPerGrade*((ch.office&&ch.office.grade)||1));addStats(ch.stats,{maxHp:g});ch.hp=Math.min(ch.stats.maxHp,ch.hp+g);chips.push(`사무소 등급의 힘 · 최대 HP +${g}`)}}
-    if(fx.accelStory){(ch.accelSt=ch.accelSt||[]).push(fx.accelStory);ch.chgShard=(ch.chgShard||0)+1;chips.push(`변화의 파편 +1 (지금 ${ch.chgShard}개)`)}
-    if(fx.chgUp){const C=CFG.accel.change,cost=chgCost(ch);if((ch.chgShard||0)>=cost){ch.chgShard-=cost;ch.chgLv=(ch.chgLv||0)+1;ch.limDmg=(ch.limDmg||0)+C.dmg;chips.push(`변화 ${ch.chgLv}단계 · 파편 ${cost}개 사용 · 주는 피해 +${Math.round(C.dmg*100)}% (변화로 누적 ${Math.round(ch.chgLv*C.dmg*100)}%)`)}}
+    if(fx.accelStory){(ch.accelSt=ch.accelSt||[]).push(fx.accelStory);ch.chgShard=(ch.chgShard||0)+CFG.accel.change.story;chips.push(`변화의 파편 +${CFG.accel.change.story} (지금 ${ch.chgShard}개)`)}
+    if(fx.chgUp){const C=CFG.accel.change,cost=chgCost(ch);if((ch.chgShard||0)>=cost){ch.chgShard-=cost;ch.chgLv=(ch.chgLv||0)+1;
+      const w=ch.gear&&ch.gear.weapon;
+      if(w&&w.fx){const g=w.grade||(w.id&&D.special&&D.special[w.id]?5:3),bp=C.bigP[g]!=null?C.bigP[g]:C.bigP[3],r=rng();
+        const gain=r<bp?C.gains[2]:r<bp+C.midP?C.gains[1]:C.gains[0];
+        w.fx.atk=(w.fx.atk||0)+gain;(w.chgFx=w.chgFx||{}).atk=((w.chgFx||{}).atk||0)+gain;w.chg=(w.chg||0)+1;ch.stats.atk+=gain;
+        if(typeof w.e==='string'){w.e=/공\+\d+/.test(w.e)?w.e.replace(/공\+\d+/,'공+'+w.fx.atk):'공+'+w.fx.atk+' · '+w.e}
+        chips.push(`변화 ${ch.chgLv}단계 · 파편 ${cost}개 사용 · ${w.n} 공격 +${gain} (지금 공+${w.fx.atk}) · ${gain===C.gains[2]?'크게 올랐다':gain===C.gains[1]?'보통으로 올랐다':'조금 올랐다'}`)}
+      else{ch.limDmg=(ch.limDmg||0)+0.02;chips.push(`변화 ${ch.chgLv}단계 · 파편 ${cost}개 사용 · 무기가 없어 주는 피해 +2%`)}}}
     if(fx.infCentury){const K=CFG.infinite.century;jr(ch,'century',{n:fx.infCentury});(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
     if(fx.famBind&&ch.bond){const w=fx.famBind.who,tg=w==='s'?ch.bond:(ch.bond.kids||[]).find(k=>k.n===w),nm=w==='s'?ch.bond.name:w;
