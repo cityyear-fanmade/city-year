@@ -1141,7 +1141,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.card)addCard(ch,fx.card,chips,null,true);else if(fx.reward)offerPick(ch,D.rewards,chips,null);
     if(fx.escort)ch.flags.escortNext=1;
     if(fx.staff)staffFx(ch,fx.staff,chips);if(fx.staff2)staffFx(ch,fx.staff2,chips);
-    if(fx.rep){ch.rep=Math.max(RP.min,Math.min(RP.max,repOf(ch)+fx.rep));chips.push(`평판 ${fx.rep>0?'+':''}${fx.rep} (지금 ${ch.rep})`)}
+    if(fx.rep){ch.rep=Math.max(RP.min,Math.min(RP.max,repOf(ch)+fx.rep));chips.push(`평판 ${fx.rep>0?'+':'−'}${Math.abs(fx.rep)} (지금 ${ch.rep<0?'−'+(-ch.rep):ch.rep})`)}
     if(fx.officePts&&ch.office){ch.office.pts=(ch.office.pts||0)+fx.officePts;chips.push(`사무소 성과 +${fx.officePts}`)}
     if(fx.officeFound){ch.officePick=true;chips.push('사무소 개설 · 이름과 전문 분야를 정한다')}
     if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){forceAdd(ch,'o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
@@ -1159,7 +1159,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if((fx.join.from==='wing'||fx.join.from==='assoc'||fx.join.from==='office'||fx.join.from==='syn')&&!fx.join.name){ch.orgPick=fx.join.from;chips.push(`${T.affTypes[fx.join.from]} · 어느 곳에 들어갈지 고른다`)}
       else joinAff(ch,fx.join,fx.join.name||one(D.orgs[fx.join.from]),chips);
     }
-    if(fx.officeMove&&fx.join&&ch.aff&&ch.aff.name===fx.join.name){const y=ch.year||0,quick=ch.officeSince!=null&&y-ch.officeSince<RP.quickYears,c=RP.moveCost+(quick?RP.quickExtra:0);ch.rep=Math.max(RP.min,repOf(ch)-c);ch.officeSince=y;ch.repY=y;ch.moveNext=y+CFG.office.move.every;chips.push(`평판 −${c} (지금 ${ch.rep}) · 공방 거리 장비 값 ${Math.round((repMul(ch)-1)*100)>=0?'+':''}${Math.round((repMul(ch)-1)*100)}%`)}
+    if(fx.officeMove&&fx.join&&ch.aff&&ch.aff.name===fx.join.name){const y=ch.year||0,quick=ch.officeSince!=null&&y-ch.officeSince<RP.quickYears,c=RP.moveCost+(quick?RP.quickExtra:0);ch.rep=Math.max(RP.min,repOf(ch)-c);ch.officeSince=y;ch.repY=y;ch.moveNext=y+CFG.office.move.every;chips.push(`평판 −${c} (지금 ${ch.rep<0?'−'+(-ch.rep):ch.rep}) · 공방 거리 장비 값 ${Math.round((repMul(ch)-1)*100)>=0?'+':'−'}${Math.abs(Math.round((repMul(ch)-1)*100))}%`)}
     /* 사건으로 승급 (해결사만, 최고 급수 미만일 때) */
     if(fx.promote)addPts(ch,CFG.promo.gain.mid,chips);
     if(fx.pts)addPts(ch,fx.pts*CFG.promo.gain.check,chips);
