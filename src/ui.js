@@ -624,7 +624,7 @@ export function startUI(E,app){
   const symHave=()=>SYMS.filter(x=>((loadRec().symbols)||[]).includes(x.id)).length;
   const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||symImg(x.id),unlock:{sym:x.id}})),RWMARKS.map(x=>({id:x.id,n:x.n,img:symImg(x.img),unlock:{rw:x.rw}})));
   const grantSymbol=id=>{const r=loadRec();r.symbols=Array.isArray(r.symbols)?r.symbols:[];if(!r.symbols.includes(id)){r.symbols.push(id);store.set(REC,JSON.stringify(r))}};
-  const FRIMG={fr_wing:['날개 틀','75 90',{endings:5}],fr_book:['책 틀','75 90',{titles:5}],fr_root:['덩굴 틀','75 90',{endings:10}],fr_contract:['계약 틀','75 90',{titles:8}],fr_shatter:['파편 틀','75 90',{rw:0.3}],fr_time:['시간 틀','75 90',{rw:0.5}],fr_chain:['사슬 틀','90',{rw:0.7}],fr_flame:['불꽃 틀','90',{rw:0.9}]};   /* 이미지 테두리: [이름, 9조각 자르기 값, 해금 조건] */
+  const FRIMG={fr_wing:['날개 틀','75 90',{endings:5}],fr_book:['책 틀','75 90',{titles:5}],fr_root:['덩굴 틀','75 90',{endings:10}],fr_contract:['계약 틀','75 90',{titles:8}],fr_shatter:['파편 틀','75 90',{rw:0.3}],fr_time:['시간 틀','75 90',{rw:0.5}]};   /* 이미지 테두리: [이름, 9조각 자르기 값, 해금 조건] */
   const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}},...Object.entries(FRIMG).map(([id,[n,,unlock]])=>({id,n,unlock}))];
   const frameSrc=id=>(typeof window!=='undefined'&&window.CITY_FRM&&window.CITY_FRM[id])||`assets/frame/${id}.png`;
   (function(){if(typeof document==='undefined')return;const st=document.createElement('style');st.textContent=Object.entries(FRIMG).map(([id,[,sl]])=>`.ent.deco-${id}{border:3px solid transparent;border-image:url("${frameSrc(id)}") ${sl} / 20px / 14px stretch}`).join('\n');document.head.appendChild(st)})();
@@ -688,7 +688,7 @@ export function startUI(E,app){
       ${sec('mark','이름 앞 모양',`<div class="seg" style="flex-wrap:wrap">${MARKS.map(o=>btn('mark',o,cur.mark)).join('')}</div>`)}
       ${sec('sym','심볼',syms.length?`<div class="seg" style="flex-wrap:wrap">${syms.map(o=>btn('mark',o,cur.mark)).join('')}</div>`:'<span class="small dim">하드로 이야기를 끝내면 얻는 심볼이 여기에 나타난다</span>')}
       ${sec('color','색 미리보기',(G&&G.ch&&UI.screen!=='title')?'<span class="small dim">판 안에서는 태어날 때 정해진 내 색이 그대로 쓰입니다. 색마다 심볼이 어떻게 보이는지는 시작 화면의 꾸미기에서 미리 볼 수 있습니다.</span>':`<span class="small dim">특색 심볼(가·나·다)이 색마다 어떻게 보이는지 미리 봅니다. 실제 판에서는 태어날 때 정해진 내 색이 자동으로 쓰입니다.</span><div class="seg" style="flex-wrap:wrap">${D.colors.map((c,i)=>`<button class="${pv===i?'on':''}" data-a="deco" data-i="pv:${i}"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${c.hex};vertical-align:-1px"></span> ${c.adj}</button>`).join('')}<button class="${pv==null?'on':''}" data-a="deco" data-i="pv:none">기본</button></div>`)}
-      ${sec('frame','테두리',`<div class="seg" style="flex-wrap:wrap">${FRAMES.map(o=>btn('frame',o,cur.frame)).join('')}</div>`)}
+      ${sec('frame','테두리',`<div class="frgrid">${FRAMES.map(o=>{const ok=decoOk(o);return `<button class="frbtn${cur.frame===o.id?' on':''}" data-a="deco" data-i="frame:${o.id}" ${ok?'':'disabled'}><div class="ent frprev deco-${o.id}" style="--c:${col}"></div><b class="small">${o.n}</b>${ok?'':`<span class="small dim">${decoWhy(o)}</span>`}</button>`}).join('')}</div><span class="small dim">고르면 전투 중 내 카드(이름 줄)에 두른다. 잠긴 것은 조건을 채우면 열린다</span>`)}
       <span class="small dim">잠긴 것은 칭호·엔딩·하드 완주 기록에 따라 열린다</span></div>`;
   }
   function vSettings(){
