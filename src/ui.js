@@ -583,7 +583,8 @@ export function startUI(E,app){
     /* 협회 8 · 날개 6 · 사무소 2: 이야기(2막)를 끝낼 때의 소속으로 얻는다. 이미지는 assets/symbol/<id>.png */
     ...['하나','츠바이','트레스','시','생크','리우','세븐','디에치'].map((n,i)=>({id:'as_'+(i+1),n:n+' 협회'})).filter(x=>!['as_4','as_5','as_6'].includes(x.id)),   // 시·생크·리우는 새 이미지가 올 때까지 뺀다
     ...[['wg_k','K사 날개'],['wg_r','R사 날개'],['wg_w','W사 날개'],['wg_n','N사 날개'],['wg_j','J사 날개'],['wg_g','G사 날개']].map(([id,n])=>({id,n})),
-    {id:'of_yun',n:'윤 사무소'},{id:'of_lamp',n:'가로등 사무소'},{id:'of_tg',n:'투귀 사무소'},{id:'of_rusk',n:'러스크 사무소'},{id:'of_ch',n:'찰스 사무소'},
+    /* 윤·가로등 사무소는 새 그림(단색 금속 엠블럼)이 올 때까지 뺀다. 옛 그림은 assets/symbol/reserve/old_style */
+    {id:'of_tg',n:'투귀 사무소'},{id:'of_rusk',n:'러스크 사무소'},{id:'of_ch',n:'찰스 사무소'},
     /* 출생·칭호로 얻는 심볼 */
     {id:'jb_taboo',n:'금기사냥꾼'},{id:'jb_ws',n:'공방 해결사'},   /* 보냐텔리 가문(bi_bona)은 새 이미지가 올 때까지 뺀다 */
     {id:'bi_lake',n:'대호수로 나간 자'},{id:'bi_blood',n:'혈귀'},{id:'bi_star',n:'별에 선택받은 자'}];
