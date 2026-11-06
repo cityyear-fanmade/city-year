@@ -11,7 +11,7 @@
 
 ■ 올릴 참고 이미지
 - 사무소: of_ch_big.png, of_rusk_big.png, of_tg_big.png
-- 협회: as_1_big.png, as_5 대신 as_3_big.png 등 기존 협회 그림
+- 협회: as_1_big.png, as_3_big.png, as_7_big.png (기존 협회 그림. 화풍 기준이고 형태는 따라 하지 않는다)
 - 산하: thumb_big.png(엄지)
 - 출생·직업: 이미 연결된 그림 아무거나 1~2장(화풍 참고)
 
