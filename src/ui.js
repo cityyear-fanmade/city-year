@@ -583,14 +583,14 @@ export function startUI(E,app){
     /* 협회 8 · 날개 6 · 사무소 2: 이야기(2막)를 끝낼 때의 소속으로 얻는다. 이미지는 assets/symbol/<id>.png */
     ...['하나','츠바이','트레스','시','생크','리우','세븐','디에치'].map((n,i)=>({id:'as_'+(i+1),n:n+' 협회'})).filter(x=>!['as_4','as_5','as_6'].includes(x.id)),   // 시·생크·리우는 새 이미지가 올 때까지 뺀다
     ...[['wg_k','K사 날개'],['wg_r','R사 날개'],['wg_w','W사 날개'],['wg_n','N사 날개'],['wg_j','J사 날개'],['wg_g','G사 날개']].map(([id,n])=>({id,n})),
-    /* 윤·가로등 사무소는 새 그림(단색 금속 엠블럼)이 올 때까지 뺀다. 옛 그림은 assets/symbol/reserve/old_style */
+    {id:'of_yun',n:'윤 사무소'},{id:'of_lamp',n:'가로등 사무소'},{id:'of_molar',n:'어금니 사무소'},{id:'of_hook',n:'갈고리 사무소'},{id:'of_stop',n:'마침표 사무소'},{id:'of_dawn',n:'새벽 사무소'},{id:'of_gaze',n:'시선 사무소'},{id:'of_fist',n:'불주먹 사무소'},{id:'of_wedge',n:'쐐기 사무소'},
     {id:'of_tg',n:'투귀 사무소'},{id:'of_rusk',n:'러스크 사무소'},{id:'of_ch',n:'찰스 사무소'},
     /* 출생·칭호로 얻는 심볼 */
     {id:'jb_taboo',n:'금기사냥꾼'},{id:'jb_ws',n:'공방 해결사'},   /* 보냐텔리 가문(bi_bona)은 새 이미지가 올 때까지 뺀다 */
     {id:'bi_lake',n:'대호수로 나간 자'},{id:'bi_blood',n:'혈귀'},{id:'bi_star',n:'별에 선택받은 자'}];
   /* 기록실의 심볼 칸: 어떻게 얻는지와 얻은 심볼 이미지. 이미지가 준비된 심볼부터 목록에 오른다 */
   const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)',spec1:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec2:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec3:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다'};
-  Object.assign(SYMDOC,Object.fromEntries(SYMS.filter(x=>/^as_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^wg_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),{of_yun:'윤 사무소 소속으로 이야기(2막)를 끝낸다',of_lamp:'가로등 사무소 소속으로 이야기(2막)를 끝낸다',of_tg:'투귀 사무소 소속으로 이야기(2막)를 끝낸다',of_rusk:'러스크 사무소 소속으로 이야기(2막)를 끝낸다',of_ch:'찰스 사무소 소속으로 이야기(2막)를 끝낸다',jb_taboo:'N사 날개의 동부 출신으로 직위를 끝까지 올려 금기사냥꾼이 된 채 이야기(2막)를 끝낸다',jb_ws:'공방 해결사로 이야기(2막)를 끝낸다',bi_bona:'보냐텔리 가문으로 태어나 이야기(2막)를 끝낸다',bi_lake:'대호수로 나간 자로 태어나 이야기(2막)를 끝낸다',bi_blood:'혈귀가 된 채로 이야기(2막)를 끝낸다',bi_star:'별에 선택받은 자로 태어나 이야기(2막)를 끝낸다'});
+  Object.assign(SYMDOC,Object.fromEntries(SYMS.filter(x=>/^as_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^wg_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^of_/.test(x.id)).map(x=>[x.id,x.n+' 소속으로 이야기(2막)를 끝낸다'])),{jb_taboo:'N사 날개의 동부 출신으로 직위를 끝까지 올려 금기사냥꾼이 된 채 이야기(2막)를 끝낸다',jb_ws:'공방 해결사로 이야기(2막)를 끝낸다',bi_bona:'보냐텔리 가문으로 태어나 이야기(2막)를 끝낸다',bi_lake:'대호수로 나간 자로 태어나 이야기(2막)를 끝낸다',bi_blood:'혈귀가 된 채로 이야기(2막)를 끝낸다',bi_star:'별에 선택받은 자로 태어나 이야기(2막)를 끝낸다'});
   /* 이야기(2막)가 끝나는 순간의 소속으로 얻는 심볼 id. 소속을 옮기며 모으는 것은 인정하지 않는다 */
   const symOfChar=c=>{const out=[],a=c&&c.aff;if(!c)return out;
     const FING={'엄지':'thumb','검지':'index','중지':'middle','약지':'ring','소지':'pinky'};
