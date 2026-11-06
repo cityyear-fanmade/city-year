@@ -52,7 +52,7 @@ const js1=routeTest?js0.replace(/blankFate: \{chance: \d+,/,'blankFate: {chance:
 const js2=lakeTest?js1.replace(/dailyOrigin: \d+,/,'dailyOrigin: 40,').replace(/dailyPlan: \{[^\n]*\},\n/,'dailyPlan: {},\n').replace('<b>오늘의 시드</b><span class="dim small">${todayKey()} · 오늘은 모두가 같은 출생으로 시작한다','<b>바다로 나가기</b><span class="dim small">${todayKey()} · 대호수의 선원으로 시작한다 (시험용)').replace("${UI.confirmNew==='daily'?'오늘의 시드':'새로 시작하기'}","${UI.confirmNew==='daily'?'바다로 나가기':'새로 시작하기'}").replace("store.get('cityYearNotice')!==NOTICE.id","false"):js1;
 const js3=mindTest?js2.replace('const MINDTEST=false;','const MINDTEST=true;').replace("store.get('cityYearNotice')!==NOTICE.id",'false'):js2;
 const js4=fingerTest?js3.replace('const FINGERTEST=false;','const FINGERTEST=true;'):js3;
-const js=unlockTest?js4.replace('const UNLOCKTEST=false;','const UNLOCKTEST=true;').replace("store.get('cityYearNotice')!==NOTICE.id",'false'):js4;
+const js=unlockTest?js4.replace('const UNLOCKTEST=false;','const UNLOCKTEST=true;').replace("store.get('cityYearNotice')!==NOTICE.id",pubTest?"store.get('cityYearNotice')!==NOTICE.id":'false'):js4;   /* 공개 테섭은 공지를 보여 준다(선공개) */
 /* 공개 테스트 서버·개인 시험판은 첫 화면 위쪽 글줄에 구분 표시를 붙인다 */
 const jsL=(pubTest||allTest)?js.replace('비영리 · ${VERSION}</div>',()=>'비영리 · ${VERSION} · '+(allTest?'개인 시험판':'테스트 서버')+'</div>'):js;
 const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[ai+1]):null;
