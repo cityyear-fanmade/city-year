@@ -581,7 +581,7 @@ export function startUI(E,app){
   const symImg=(id,big)=>{const b=symBase(id,big);if(!/^spec/.test(id))return b;const pvx=(typeof decoPv==='function')?decoPv():null,hex=pvx!=null?D.colors[pvx].hex:(typeof G!=='undefined'&&G&&G.ch&&G.ch.color)||'#c9a35a',key=id+'|'+(big?1:0)+'|'+hex;if(typeof TINT[key]==='string'&&TINT[key]!=='pending')return TINT[key];symTint(b,hex,key);return b};
   const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'},{id:'spec1',n:'특색 (가)'},{id:'spec2',n:'특색 (나)'},{id:'spec3',n:'특색 (다)'},
     /* 협회 8 · 날개 6 · 사무소 2: 이야기(2막)를 끝낼 때의 소속으로 얻는다. 이미지는 assets/symbol/<id>.png */
-    ...['하나','츠바이','트레스','시','생크','리우','세븐','디에치'].map((n,i)=>({id:'as_'+(i+1),n:n+' 협회'}))),   // 협회 8종 모두 연결
+    ...['하나','츠바이','트레스','시','생크','리우','세븐','디에치'].map((n,i)=>({id:'as_'+(i+1),n:n+' 협회'})),   // 협회 8종 모두 연결
     ...[['wg_k','K사 날개'],['wg_r','R사 날개'],['wg_w','W사 날개'],['wg_n','N사 날개'],['wg_j','J사 날개'],['wg_g','G사 날개']].map(([id,n])=>({id,n})),
     {id:'of_yun',n:'윤 사무소'},{id:'of_lamp',n:'가로등 사무소'},{id:'of_molar',n:'어금니 사무소'},{id:'of_hook',n:'갈고리 사무소'},{id:'of_stop',n:'마침표 사무소'},{id:'of_dawn',n:'새벽 사무소'},{id:'of_gaze',n:'시선 사무소'},{id:'of_fist',n:'불주먹 사무소'},{id:'of_wedge',n:'쐐기 사무소'},
     {id:'of_tg',n:'투귀 사무소'},{id:'of_rusk',n:'러스크 사무소'},{id:'of_ch',n:'찰스 사무소'},
