@@ -2913,7 +2913,7 @@ ${symRec(r)}
           <span class="mono small">${top?'가장 높은 등급이다':`다음 등급까지 성과 ${O.pts||0}/${GR_.need[gr-1]}`} · 직원이 의뢰를 해결할수록 쌓인다</span>
           <span class="mono small">${GR_.payEvery}해마다 수익금 ${E.money(GR_.pay[gr-1]||0)}${O.payNext&&list.length?' · 다음 '+O.payNext+'년차':''}${list.length?'':' (직원이 있어야 들어온다)'}</span>
           ${(O.log||[]).length?`<div class="stack" style="gap:2px;margin-top:4px">${O.log.slice(0,4).map(l=>`<span class="small dim">${l.y}년차 · ${esc(l.t)}</span>`).join('')}</div>`:''}</div>
-        <p class="small dim">의뢰는 대표가 아닌 직원이 해결한다. 해마다 직원 월급이 나가고 의뢰 담당의 수입이 들어온다. 지금 직원으로 인한 해마다의 수입은 <b class="mono" style="color:${inc>=0?'var(--gold)':'var(--bleed)'}">${inc>=0?'+':''}${E.money(inc)}</b>이다. 직원은 ${SF_.growEvery}해마다 한 단계씩 자라 ${SF_.lvMax}단계까지 오르고, 효과도 단계만큼 커진다.</p></div>
+        <p class="small dim">의뢰는 대표가 아닌 직원이 해결한다. 해마다 직원 월급이 나가고 의뢰전문해결사의 수입이 들어온다. 지금 직원으로 인한 해마다의 수입은 <b class="mono" style="color:${inc>=0?'var(--gold)':'var(--bleed)'}">${inc>=0?'+':''}${E.money(inc)}</b>이다. 직원은 ${SF_.growEvery}해마다 한 단계씩 자라 ${SF_.lvMax}단계까지 오르고, 효과도 단계만큼 커진다.</p></div>
       <div class="stack" style="gap:8px"><div class="eyebrow">직원</div>${list.length?list.map(sRow).join(''):'<div class="panel"><p class="small dim">아직 직원이 없다.</p></div>'}</div>
       ${list.length<SF_.max?`<div class="stack" style="gap:8px"><div class="eyebrow">지원자 · 올해 찾아온 사람들</div>${cands.length?cands.map(cRow).join(''):'<div class="panel"><p class="small dim">올해는 더 찾아온 사람이 없다.</p></div>'}</div>`:''}`;
   }

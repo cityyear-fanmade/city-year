@@ -388,7 +388,7 @@ export const CFG = {
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
   office: {rank: 5, foundEvery: 5, knockEvery: 4, brokerEvery: 3 /* 사무소 대표의 알선(장비·카드)이 나오는 간격(해) */,
-    /* 직원: 대표가 공방 거리에서 고용한다. 최대 max명, 고용비 hire, 해마다 월급 wage(의뢰 담당은 수입이 더 크다). 직원은 growEvery해마다 한 단계씩 자라 lvMax까지 오른다. 효과는 단계만큼 곱해진다 */
+    /* 직원: 대표가 공방 거리에서 고용한다. 최대 max명, 고용비 hire, 해마다 월급 wage(의뢰전문해결사는 수입이 더 크다). 직원은 growEvery해마다 한 단계씩 자라 lvMax까지 오른다. 효과는 단계만큼 곱해진다 */
     /* 사무소 등급: 해결사 급수와 따로 센다. 직원이 해마다 의뢰를 해결해 성과를 쌓고(성공하면 직원 단계만큼), need만큼 쌓이면 한 등급 오른다. 등급마다 기본 버프(누적이 아닌 그 등급의 값)와 3해(payEvery)마다 수익금이 있다 */
     /* 이직(사무소 직원끼리): move.every해마다 급수가 맞는 다른 사무소의 제안이 온다(높은 곳부터 최대 offers곳). 옮기면 평판이 깎이고, 한 곳에 오래 머물면 평판이 오른다. 평판 1점마다 공방 거리 장비 값이 priceStep씩 내리거나(오르거나) 한다 */
     move: {every: 5, offers: 3}, rep: {min: -5, max: 3, moveCost: 2, quickYears: 5, quickExtra: 2, loyalEvery: 5, loyalGain: 1, priceStep: 0.04, priceMin: 0.8, priceMax: 1.25},
@@ -409,7 +409,7 @@ export const CFG = {
       spAb: [{id: 'edge', n: '날 선 손', fx: {dmgB: 1, atk: 3}, e: '공격 +3 · 피해 +1'}, {id: 'eye', n: '매의 눈', fx: {atk: 10}, e: '공격 +10'}, {id: 'hide', n: '두꺼운 가죽', fx: {dr: 5}, e: '받는 피해 −5%'}, {id: 'foot', n: '가벼운 발', fx: {spd: 3, eva: 4}, e: '속도 +3 · 회피 +4'},
         {id: 'mend', n: '응급 손질', fx: {regen: 3}, e: '라운드마다 HP +3'}, {id: 'first', n: '선수', fx: {startBleed: 2}, e: '전투 시작 상대 출혈 +2'}, {id: 'breath', n: '긴 호흡', fx: {startBreath: 2}, e: '전투 시작 호흡 +2'}, {id: 'sense', n: '밝은 귀', fx: {check: 4, maxHp: 10}, e: '사건 판정 +4 · 최대 HP +10'}]},
     staff: {max: 3, hire: 500, wage: 60, growEvery: 6, lvMax: 3, cands: 2,
-      types: {guard: {n: '경호원', fx: {maxHp: 12}, e: '최대 HP +12'}, scout: {n: '정보원', fx: {check: 1}, e: '사건 판정 +1'}, fighter: {n: '보조 해결사', fx: {atk: 3, dmgB: 0.5}, e: '공격 +3 · 피해 +0.5 (단계마다, 소수는 버림)'}, clerk: {n: '의뢰 담당', fx: {}, inc: 90, e: '해마다 수입 +90안'}},
+      types: {guard: {n: '호위전문해결사', fx: {maxHp: 12}, e: '최대 HP +12'}, scout: {n: '정보전문해결사', fx: {check: 1}, e: '사건 판정 +1'}, fighter: {n: '전투전문해결사', fx: {atk: 3, dmgB: 0.5}, e: '공격 +3 · 피해 +0.5 (단계마다, 소수는 버림)'}, clerk: {n: '의뢰전문해결사', fx: {}, inc: 90, e: '해마다 수입 +90안'}},
       names: ['한결', '도윤', '서하', '마루', '이솔', '강무', '윤슬', '태오', '하람', '시안', '나래', '지호', '보람', '유진', '해든', '다온',
         '사샤', '아야', '홉킨스', '유리', '안젤리카', '아스톨포', '올리비에', '이오리', '카오루', '러스크', '바야르', '르노', '모제스', '에즈라', '바다', '마르티나', '경미', '재헌', '태인', '오스카', '파멜라', '파멜리', '올가', '미카', '레인', '스테판', '타마키', '리웨이', '에리', '살바도르', '유나', '필립']}},
   relicEvent: {year: 15, chance: 1},
