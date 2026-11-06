@@ -1782,6 +1782,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const ok_=(ch.o&&(ch.o.herm||ch.o.key==='hermes'))?'hermes':ch.o&&ch.o.key,RE=!LI&&I.routeEvents&&I.routeEvents[ok_];
       if(!n&&ch.infIntro&&RE&&RE.length){const Rv=CFG.infinite.routeEvery||15;if(!ch.infReAt)ch.infReAt=G.year+Rv;
         if(G.year>=ch.infReAt){ch.infReAt=G.year+Rv;const i=(ch.infReN||0)%RE.length;ch.infReN=(ch.infReN||0)+1;return JSON.parse(JSON.stringify(RE[i]))}}}
+    if(!n&&ch.infIntro){const sv=accelStoryEvent(G);if(sv)return sv}
     if(!n)return null;
     const T=(LI||I).century[Math.min(n-1,(LI||I).century.length-1)];
     return {t:T.t,x:T.x,c:[{l:T.a,h:`공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100)}% (영구) · 적의 공격 피해도 +${Math.round(K.enemyDmg*100)}% (영구)`,ok:{t:T.at,fx:{infCentury:n}}}]}
@@ -2723,6 +2724,33 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch,ev=e=>e?{type:'event',ev:e}:null;
     for(const fn of [()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G))]){const r=fn();if(r)return r}
     return null}
+  /* ===== 가속 스텝 보상과 변화(제3의 강화) ===== */
+  const chgCost=ch=>CFG.accel.change.base+(ch.chgLv||0)*CFG.accel.change.step;
+  const accelJob=ch=>staffOwner(ch)?'office':isWs(ch)?'ws':(ch.o&&ch.o.key==='gweapon')?'gw':'general';
+  const accelJobTx={general:'지나온 해가 몸에 쌓였다.',office:'비워 둔 사이에도 간판은 서 있었고, 직원들은 일을 해 왔다.',ws:'작업대의 불은 꺼지지 않았고, 건네지 못한 의뢰가 쌓였다.',gw:'몸의 부품이 낡고 갈리며 서로 맞춰졌다.'};
+  function accelStepEvent(G){
+    const ch=G.ch,A=CFG.accel;if(!ch.accelStepDue)return null;const ag=ch.accelStepDue;   /* 스텝 해의 전투를 치른 뒤, 다음 해로 넘어가기 전에 보여 준다 */
+    if(ch.accelStepAge!==ag){ch.accelStepAge=ag;const R=A.reward,job=accelJob(ch);
+      const h=[`불순물의 조각 +${R.shard}(소수는 쌓인다)`,`레벨 선택 +${R.lv}(소수는 쌓인다)`,`변화의 파편 +${R.chg}`];
+      if(job==='gw')h.push(`섭식 보너스 · 공격 +${R.jobs.gw.atk} · 최대 HP +${R.jobs.gw.maxHp}`);
+      if(job==='ws')h.push('공방 재료(소수는 쌓인다)');
+      if(job==='office')h.push(`사무소 등급에 따라 최대 HP 증가`);
+      return {t:`${A.step}해가 흘렀다`,x:`${ag}살. ${accelJobTx[job]} 빠르게 지나간 해들이 한꺼번에 몸에 돌아왔다.`,c:[{l:'지나온 해를 받아들인다',h:h.join(' · '),ok:{t:'걸어온 길이 몸에 정리된다.',fx:{accelStep:job}}}]}}
+    if(ch.chgOfferAge!==ag&&(ch.chgShard||0)>=chgCost(ch)){ch.chgOfferAge=ag;const C=A.change,cost=chgCost(ch),lv=(ch.chgLv||0)+1;
+      return {t:'변화',x:`변화의 파편 ${ch.chgShard}개를 가지고 있다. 파편을 쓰면 몸과 무기가 한 걸음 더 어긋난 모양으로 굳는다. (지금 ${ch.chgLv||0}단계)`,c:[
+        {l:`변화시킨다 (${lv}단계)`,h:`파편 ${cost}개 · 주는 피해 +${Math.round(C.dmg*100)}% (영구, 누적)`,ok:{t:'굳은 것이 한 번 더 어긋나며 새 모양을 잡는다.',fx:{chgUp:1}}},
+        {l:'아직 아낀다',h:'파편은 그대로 남는다 · 다음 스텝에 다시 묻는다',ok:{t:'아직은 이 모양 그대로 둔다.',fx:{}}}]}}
+    ch.accelStepDue=null;return null}
+  /* 가속 중 백 해마다: 지나간 세월의 풍경(모두에게 같은 도시의 변화)과, 출신·길에 맞는 한 줄(그 길의 어휘로 쓴 문장)을 보여 준다. 변화의 파편 1개를 준다 */
+  const accelTrack=ch=>{const k=ch.o&&ch.o.key,f=ch.aff&&ch.aff.type;
+    return lakeOn(ch)?'lake':k==='crow'?'crow':(k==='hermes'||(ch.o&&ch.o.herm))?'hermes':k==='librarian'?'librarian':k==='claw'?'claw':k==='arbiter'?'arbiter':k==='gweapon'?'gweapon':ch.race==='hyeolgwi'?'hyeolgwi':staffOwner(ch)?'office':isWs(ch)?'ws':f==='finger'?'finger':f==='wing'?'wing':f==='assoc'?'assoc':'general'};
+  function accelStoryEvent(G){
+    const ch=G.ch,S=D.infinite&&D.infinite.accelStory;if(!S||!accelOn(G))return null;
+    const ag=age(G),have=ch.accelSt||[];let m=0;
+    for(let i=1;i<=9;i++){if(i*100>ag)break;if(i*100<(ch.accelAge||0))continue;if(!have.includes(i)){m=i;break}}
+    if(!m)return null;
+    const w=S.world[m-1]||S.world[S.world.length-1],era=m<=3?'early':m<=6?'mid':'late',tk=accelTrack(ch),tl=(S.by[tk]||S.by.general)[era];
+    return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${one(w)} ${tl}`,c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +1 (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
   function advanceYear(G){
     hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);staffTick(G.ch,G.year);officeYear(G.ch,G.year);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
@@ -2803,9 +2831,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!mc.prologueDone&&(G.year||0)===0){mc.prologueDone=true;const PR=D.prologue&&mc.o&&D.prologue[mc.o.n];if(PR)return {type:'event',ev:{t:`${CFG.startAge}세 · 출발`,x:PR.leave,c:[{l:PR.go||'길을 나선다',h:`${CFG.startAge}세의 해가 시작된다`,ok:{t:'문이 닫혔다. 길이 이어진다.',fx:{}}}]}}}
     {const pb=G.ch.infinite&&pactBuffEvent(G);if(pb)return {type:'event',ev:pb}}
     {const rf=routeFree(G);if(rf)return rf}
+    {const sv=accelStepEvent(G);if(sv)return {type:'event',ev:sv}}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):G.endless&&G.ch.o&&G.ch.o.key==='claw'&&G.ch.flags.rt_done?(G.ch.flags.cl_return?'clawreturn':'clawstay'):G.endless&&G.ch.o&&G.ch.o.key==='arbiter'&&G.ch.flags.rt_done?(G.ch.flags.ab_keep?'arbkeep':'arbdown'):G.endless&&G.ch.o&&G.ch.o.key==='gweapon'&&G.ch.flags.gw_done?(G.ch.flags.gw_king&&G.ch.gw&&G.ch.gw.form?'gw'+G.ch.gw.form:'gwhuman'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
     G.ch.year=G.year;
+    if(accelCheck(G))G.ch.accelStepDue=age(G);
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
       /* 대호수: 호수에 오래 떠 있을수록 정신이 닳는다. 해마다 mindYear씩 깎이지만 mindKeep 밑으로는 이 깎임만으로 내려가지 않는다(뒤틀림·사망으로 곧장 가지 않게) */
       if(G.infinite&&G.ch.infinite&&G.ch.colorDone){const Lm=CFG.infinite.limit;if(G.year%Lm.traitYearEvery===0)G.ch.stats.atk+=1}
@@ -3085,6 +3115,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(fx.limit==='dmg'){ch.limDmg=(ch.limDmg||0)+Lm.dmgPct*m;chips.push(`한계 돌파 · 주는 피해 +${Math.round(Lm.dmgPct*m*1000)/10}% (누적 ${Math.round(ch.limDmg*1000)/10}%)`)}
       else{ch.limStrike=(ch.limStrike||0)+Lm.strikePct*m;chips.push(`한계 돌파 · 적중 시 상대에게 추가 피해 (내 최대 HP의 ${Math.round(Lm.strikePct*m*1000)/10}%) (누적 ${Math.round(ch.limStrike*1000)/10}%)`)}}
     if(fx.pactPick){const PK=CFG.infinite.pact,x=[...PK.cons,...PK.buffs].find(q=>q.id===fx.pactPick);if(x){ch.pact=ch.pact||{};ch.pact[x.id]=Math.min(PK.cap,(ch.pact[x.id]||0)+1);chips.push(`${PK.cons.includes(x)?'제약':'버프'} · ${x.n} ${ch.pact[x.id]}번 · ${x.e}`)}}
+    if(fx.accelStep){const R=CFG.accel.reward,SH=CFG.infinite.shard;ch.accelAcc=ch.accelAcc||{};
+      const acc=(k,v)=>{ch.accelAcc[k]=(ch.accelAcc[k]||0)+v;const n=Math.floor(ch.accelAcc[k]+1e-9);ch.accelAcc[k]-=n;return n};
+      const ns=acc('shard',R.shard);if(ns){ch.infShard=(ch.infShard||0)+ns;addStats(ch.stats,{atk:SH.atk*ns,maxHp:SH.maxHp*ns});ch.hp=Math.min(ch.stats.maxHp,ch.hp+SH.maxHp*ns);chips.push(`불순물의 조각 +${ns} · 공격 +${SH.atk*ns} · 최대 HP +${SH.maxHp*ns} (누적 ${ch.infShard}개)`)}
+      const nl=acc('lv',R.lv);if(nl){ch.lvBonus=(ch.lvBonus||0)+nl;ch.lv+=nl;ch.lvPend=(ch.lvPend||0)+nl;chips.push(`레벨 +${nl} · 성장 선택 +${nl}`)}
+      ch.chgShard=(ch.chgShard||0)+R.chg;chips.push(`변화의 파편 +${R.chg} (지금 ${ch.chgShard}개)`);
+      const J=R.jobs;
+      if(fx.accelStep==='gw'){addStats(ch.stats,{atk:J.gw.atk,maxHp:J.gw.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+J.gw.maxHp);chips.push(`섭식 보너스 · 공격 +${J.gw.atk} · 최대 HP +${J.gw.maxHp}`)}
+      if(fx.accelStep==='ws'){const nm=acc('wsMat',J.ws.mat);if(nm){for(let i=0;i<nm;i++)(ch.stash=ch.stash||[]).push({id:'hidmat',n:'히든 강화재료',slot:'any',grade:5,e:'어떤 전용 장비든 녹이면 히든 한 단계'});chips.push(`히든 강화재료 +${nm}`)}}
+      if(fx.accelStep==='office'){const g=Math.min(J.office.maxHpMax,J.office.hpPerGrade*((ch.office&&ch.office.grade)||1));addStats(ch.stats,{maxHp:g});ch.hp=Math.min(ch.stats.maxHp,ch.hp+g);chips.push(`사무소 등급의 힘 · 최대 HP +${g}`)}}
+    if(fx.accelStory){(ch.accelSt=ch.accelSt||[]).push(fx.accelStory);ch.chgShard=(ch.chgShard||0)+1;chips.push(`변화의 파편 +1 (지금 ${ch.chgShard}개)`)}
+    if(fx.chgUp){const C=CFG.accel.change,cost=chgCost(ch);if((ch.chgShard||0)>=cost){ch.chgShard-=cost;ch.chgLv=(ch.chgLv||0)+1;ch.limDmg=(ch.limDmg||0)+C.dmg;chips.push(`변화 ${ch.chgLv}단계 · 파편 ${cost}개 사용 · 주는 피해 +${Math.round(C.dmg*100)}% (변화로 누적 ${Math.round(ch.chgLv*C.dmg*100)}%)`)}}
     if(fx.infCentury){const K=CFG.infinite.century;jr(ch,'century',{n:fx.infCentury});(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
     if(fx.famBind&&ch.bond){const w=fx.famBind.who,tg=w==='s'?ch.bond:(ch.bond.kids||[]).find(k=>k.n===w),nm=w==='s'?ch.bond.name:w;
