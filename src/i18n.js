@@ -8,7 +8,18 @@ const KEY='cityYearLang';
 let lang='ko',dict={};
 const rd=()=>{try{return localStorage.getItem(KEY)}catch(e){return null}};
 export const getLang=()=>lang;
-export function setLang(k){try{localStorage.setItem(KEY,k)}catch(e){}if(typeof location!=='undefined')location.reload()}
+export function setLang(k){
+  try{localStorage.setItem(KEY,k)}catch(e){}
+  if(typeof location==='undefined')return;
+  /* 다시 여는 동안 멈춘 것처럼 보이지 않게, 먼저 안내 화면을 한 프레임 그린 뒤에 새로고침한다 */
+  try{
+    const msg={ja:'言語を切り替えています…',ko:'언어를 바꾸는 중…',en:'Switching language…'}[k]||'…';
+    const d=document.createElement('div');d.setAttribute('role','status');
+    d.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(12,14,19,.92);color:#e8e6df;font:600 18px/1.4 sans-serif;letter-spacing:.04em';
+    d.textContent=msg;document.body.appendChild(d);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>location.reload(),30)));
+  }catch(e){location.reload()}
+}
 /* 사전을 불러온다. 단일 파일 빌드는 window.CITY_I18N에 들어 있고, 그 밖에는 i18n/<언어>.json을 읽는다 */
 export async function initI18n(){
   const k=rd();lang=LANGS.some(l=>l.k===k)?k:'ko';dict={};
@@ -48,7 +59,7 @@ export function localizeWith(D,dict){
 export function localize(D){return lang==='ko'?D:localizeWith(D,dict)}
 /* 화면 글자 하나를 번역한다. 사전과 통째로 같으면 바로 바꾸고, 아니면 숫자·이름이 낀 문장 틀({0}, {1}…)과 맞춰 본다.
    틀에 맞으면 끼어 있던 값을 뽑아 일본어 틀에 다시 끼운다(값도 사전에 있으면 함께 번역) */
-let PAT=null;const memo=new Map();
+let PAT=null,PATIDX=null,PATSHORT=[];const memo=new Map();
 const UNITS={ja:[[/(\d+)세/g,'$1歳'],[/(\d+)년차/g,'$1年目'],[/(\d+)번/g,'$1回'],[/(\d+)등급/g,'$1等級']]};
 const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function buildPat(){
@@ -60,6 +71,14 @@ function buildPat(){
     PAT.push({k,v:dict[k],re:new RegExp('^'+parts.map(esc).join('([\\s\\S]*?)').replace(/^\(\[\\s\\S\]\*\?\) /,'([\\s\\S]*?) ?').replace(/ \(\[\\s\\S\]\*\?\)$/,' ?([\\s\\S]*?)')+'$'),lk:parts.reduce((a,x)=>x.length>a.length?x:a,''),w:parts.join('').length});
   }
   PAT.sort((a,b)=>b.w-a.w);
+  /* 색인: 틀의 가장 긴 고정 글자 앞 두 글자로 묶어 둔다. 글자 하나를 번역할 때 수천 개를 다 훑지 않고 그 글자에 나오는 두 글자 묶음의 틀만 맞춘다 */
+  PAT.forEach((p,i)=>{p.o=i});PATIDX=new Map();PATSHORT=[];
+  for(const p of PAT){if(p.lk.length<2){PATSHORT.push(p);continue}const k=p.lk.slice(0,2);let a=PATIDX.get(k);if(!a)PATIDX.set(k,a=[]);a.push(p)}
+}
+function patCands(s){
+  const seen=new Set(),out=PATSHORT.slice();
+  for(let i=0;i<s.length-1;i++){const k=s.slice(i,i+2);if(seen.has(k))continue;seen.add(k);const a=PATIDX.get(k);if(a)for(const p of a)out.push(p)}
+  out.sort((a,b)=>a.o-b.o);return out;
 }
 function trVal(v){
   if(dict[v])return dict[v];
@@ -77,7 +96,7 @@ function trText(s){
   if(!PAT)buildPat();
   memo.set(s,null);   /* 같은 글자가 값 안에서 다시 불려도 끝없이 돌지 않게 먼저 비워 둔다 */
   let out=null;
-  for(const p of PAT){
+  for(const p of patCands(s)){
     if(!s.includes(p.lk))continue;
     const m=p.re.exec(s);if(!m)continue;
     out=p.v.replace(/\{(\d+)\}/g,(_,i)=>trVal(m[+i+1]));break;
@@ -101,4 +120,14 @@ export function trDom(root){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
   while((n=w.nextNode())){const t=n.nodeValue,s=t.trim();if(!s)continue;const r=trText(s.replace(/\s+/g,' '));if(r)n.nodeValue=t.replace(s,()=>r)}
   root.querySelectorAll('[placeholder],[title]').forEach(e=>{for(const a of ['placeholder','title']){const v=e.getAttribute(a);if(v){const r=trText(v.replace(/\s+/g,' '));if(r)e.setAttribute(a,r)}}});
+}
+
+/* 바뀐 조각(새로 붙은 노드·글자가 바뀐 노드)만 번역한다. 화면 전체를 다시 훑지 않는다 */
+export function trNodes(list){
+  if(lang==='ko'||!Object.keys(dict).length||typeof document==='undefined')return;
+  for(const n of list){
+    if(!n||!n.isConnected)continue;
+    if(n.nodeType===3){const t=n.nodeValue,s=t.trim();if(!s)continue;const r=trText(s.replace(/\s+/g,' '));if(r)n.nodeValue=t.replace(s,()=>r)}
+    else if(n.nodeType===1)trDom(n);
+  }
 }
