@@ -869,3 +869,14 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 .invcell.on{border-color:var(--gold,#c9a35a);box-shadow:0 0 0 1px var(--gold,#c9a35a) inset}
 .invcell.lock{opacity:.4;filter:grayscale(.8)}
 .invdetail{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+
+/* PC 양옆: 고정 검정 대신 테마색으로 잇는다(기본 테마). 단말기·단테·루이나 테마는 각자 배경이 따로 있다 */
+@media (min-width:900px){
+  html:not([data-skin]) body{
+    background:
+      radial-gradient(ellipse at 50% 28%,color-mix(in srgb,var(--gold) 7%,#121724) 0,transparent 62%),
+      radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--gold) 4%,transparent) 0,transparent 55%),
+      linear-gradient(90deg,#06080c 0,var(--bg) 24%,var(--bg) 76%,#06080c 100%);
+    background-attachment:fixed;
+  }
+}
