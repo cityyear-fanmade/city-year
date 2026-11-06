@@ -604,7 +604,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.trust){s.trust=Math.max(0,Math.min(SE.trustMax,(s.trust==null?SE.trustStart:s.trust)+o.trust));chips.push(`${s.n} · 신뢰 ${o.trust>0?'+':''}${o.trust} (지금 ${s.trust}/${SE.trustMax})`)}
     if(o.train){s.y-=o.train;chips.push(`${s.n} · 훈련으로 성장이 앞당겨졌다`)}
     if(o.sp&&!s.sp){s.sp=true;chips.push(`${s.n} · 특색을 인정받았다 · 효과 ×${SE.spMul}`)}
-    if(o.exam==='ok'&&!s.sp){s.sp=true;s.ab=s.ab||[];const tr=s.trust==null?SE.trustStart:s.trust,n=tr>=SE.exam.bonusTrust?2:1;chips.push(`${s.n} · 특색 시험 합격 · 효과 ×${SE.spMul}`);for(let i=0;i<n;i++){const A=one(SE.spAb);s.ab.push(A.id);chips.push(`특수능력 · ${A.n} · ${A.e}`)}}
+    if(o.exam==='ok'&&!s.sp){s.sp=true;s.ab=s.ab||[];const tr=s.trust==null?SE.trustStart:s.trust,n=tr>=SE.exam.bonusTrust?2:1;
+      const others=staffList(ch).filter(x=>x!==s),usedC=new Set([ch.ci,...others.map(x=>x.ci)].filter(x=>x!=null)),usedN=new Set(others.map(x=>x.spName&&x.spName.split(' ')[1]).filter(Boolean));
+      const cs=D.colors.map((c,i)=>i).filter(i=>!usedC.has(i)),ns=SE.spNames.filter(x=>!usedN.has(x));
+      if(cs.length&&ns.length){s.ci=cs[Math.floor(rng()*cs.length)];s.spName=`${D.colors[s.ci].adj} ${ns[Math.floor(rng()*ns.length)]}`}
+      chips.push(`${s.n} · 특색 시험 합격${s.spName?` · 「${s.spName}」`:''} · 효과 ×${SE.spMul}`);for(let i=0;i<n;i++){const A=one(SE.spAb);s.ab.push(A.id);chips.push(`특수능력 · ${A.n} · ${A.e}`)}}
     if(o.exam==='later')s.seen=(s.seen||[]).filter(x=>x!=='exam');
     if(o.exam==='fail'){s.tries=(s.tries||0)+1;s.examY=ch.year||ch.yearNow||0;s.seen=(s.seen||[]).filter(x=>x!=='exam');s.trust=Math.max(0,(s.trust==null?SE.trustStart:s.trust)-1);chips.push(`${s.n} · 특색 시험 불합격 · 신뢰 −1`+((s.tries||0)>=SE.exam.maxTry?' · 더는 응시할 수 없다':` · ${SE.exam.gap}년 뒤 다시`))}
     if(o.leave){const i=staffList(ch).indexOf(s);officeLogAdd(ch.office,ch.year||0,`${s.n}이(가) 사무소를 떠났다`);dismissStaff(ch,i);chips.push(`${s.n} · 사무소를 떠났다`)}
