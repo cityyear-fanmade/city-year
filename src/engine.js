@@ -320,16 +320,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function equipUp(ch,nw){const old=ch.gear[nw.slot];
     if(old&&(old.tries||old.tune)&&old.id!==nw.id){const tn=Object.assign({},old.tune||{});carryTune(old,nw);equip(ch,nw);for(const [k,v] of Object.entries(tn))if(old.fx&&k in old.fx)old.fx[k]-=v;delete old.tune;old.tries=0}else equip(ch,nw);
     if(old&&old.id!==nw.id&&warpWid().has(old.id))ch.stash=(ch.stash||[]).filter(x=>x!==old)}
-  /* 같은 장비를 새로 만들 때(공방 강화·의수 종류 변경·이름 짓기 등) 인챈트를 그대로 옮긴다.
+  /* 같은 장비를 새로 만들 때(공방 강화·의수 종류 변경·이름 짓기 등) 인챈트와 변화로 오른 깡스탯을 그대로 옮긴다.
      새 장비는 기본값으로 다시 만들어지므로, 옮기지 않으면 인챈트가 사라진다 */
   function carryEnch(old,nw){
-    if(!old||!nw||old.id!==nw.id||!old.ench)return nw;
-    const slot=nw.slot,row=(CFG.enchant.pool[slot]||[]).find(x=>x.key===old.ench.key);
-    if(!row)return nw;
+    if(!old||!nw||old.id!==nw.id||!(old.ench||old.chgFx))return nw;
+    const slot=nw.slot,row=old.ench&&((CFG.enchant.pool[slot]||[]).find(x=>x.key===old.ench.key));
     nw.fx0=Object.assign({},nw.fx||{});nw.baseN=nw.n;nw.e0=nw.e||'';
-    for(const [k,v] of Object.entries(row.fx||{}))nw.fx[k]=(nw.fx[k]||0)+v;
-    nw.ench=old.ench;nw.ewx=old.ewx?JSON.parse(JSON.stringify(old.ewx)):undefined;nw.enchN=old.enchN||1;
-    nw.n=`${old.ench.n} ${nw.baseN}`;nw.e=`${nw.e0} · [${old.ench.n}] ${old.ench.e}`;
+    if(row){for(const [k,v] of Object.entries(row.fx||{}))nw.fx[k]=(nw.fx[k]||0)+v;
+      nw.ench=old.ench;nw.ewx=old.ewx?JSON.parse(JSON.stringify(old.ewx)):undefined;nw.enchN=old.enchN||1;
+      nw.n=`${old.ench.n} ${nw.baseN}`;nw.e=`${nw.e0} · [${old.ench.n}] ${old.ench.e}`}
+    if(old.chgFx){for(const [k,v] of Object.entries(old.chgFx))nw.fx[k]=(nw.fx[k]||0)+v;nw.chgFx=Object.assign({},old.chgFx);nw.chg=old.chg;nw.e=`${nw.e} · 변화 ${old.chg||0}단계`}
+    if(old.enchN&&!nw.enchN)nw.enchN=old.enchN;
     return nw}
   function carryTune(old,nw){carryEnch(old,nw);if(!old||!(old.tries||old.tune))return nw;nw.tries=old.tries||0;if(old.tune){nw.tune=Object.assign({},old.tune);for(const [k,v] of Object.entries(old.tune))nw.fx[k]=(nw.fx[k]||0)+v}return nw}
   function egoGrow(ch){
@@ -515,7 +516,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return bad?`${min}~${max}글자로 적어 주세요 (한글·영문·숫자·일본어${o.space?'':', 띄어쓰기 없이'})`:null;
   }
   const OKW={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상',sink:'침잠'};
-  const canFound=ch=>ch.licensed&&ch.rank<=CFG.office.rank&&!ch.job&&!noFixer(ch)&&!ch.officePick&&(!ch.aff||(ch.aff.type==='office'&&!ch.aff.own)||(isWs(ch)&&!ch.office));
+  /* 2급·1급을 받는 사무소(투귀·러스크·찰스) 소속이었던 사람은 개인 사무소를 차릴 수 없다(높은 사무소 심볼을 거쳐 가는 우회 방지) */
+  const eliteOffice=n=>{const o=(D.offices||[]).find(x=>x.n===n);return !!o&&o.hi<=2};
+  const wasElite=ch=>(ch.affLog||[]).some(eliteOffice)||!!(ch.aff&&eliteOffice(ch.aff.name));
+  const canFound=ch=>ch.licensed&&ch.rank<=CFG.office.rank&&!wasElite(ch)&&!ch.job&&!noFixer(ch)&&!ch.officePick&&(!ch.aff||(ch.aff.type==='office'&&!ch.aff.own)||(isWs(ch)&&!ch.office));
   function officeNameErr(n){
     {const e=nameErr(n);if(e)return e}
     if((D.offices||[]).some(o=>o.n===n+' 사무소'))return '이미 있는 사무소 이름이다';
@@ -527,10 +531,116 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.office={name:name+' 사무소',kw,tier:0};ch.aff={type:'office',name:ch.office.name,own:true};ch.officePick=false;return true;
   }
   const officeCards=kw=>[...new Set([...D.rewards,'rustnote','tknife','supper','faint','o_ember','o_blaze','o_stance'])].filter(id=>D.cards[id]&&(D.cards[id].kw||[]).some(k=>k[0]===kw));
+  /* ===== 사무소 이직과 평판: 평판이 높으면 공방 거리의 장비 값이 내리고, 낮으면 오른다 ===== */
+  const RP=CFG.office.rep,repOf=ch=>ch.rep||0,repMul=ch=>Math.max(RP.priceMin,Math.min(RP.priceMax,1-RP.priceStep*repOf(ch)));
+  function officeMoveEvent(G){
+    const ch=G.ch,y=G.year;
+    if(!ch.licensed||!ch.aff||ch.aff.type!=='office'||ch.aff.own||ch.job||ch.infinite||ch.hw||noFixer(ch)||ch.officePick)return null;
+    if(ch.officeSince==null)ch.officeSince=y;
+    if(ch.moveNext==null)ch.moveNext=y+CFG.office.move.every;
+    if(y<ch.moveNext)return null;
+    ch.moveNext=y+CFG.office.move.every;
+    const orgs=D.orgs.office||[],els=(D.offices||[]).filter(o=>o.n!==ch.aff.name&&ch.rank>=o.hi&&ch.rank<=(orgs.includes(o.n)?9:o.lo)).sort((a,b)=>a.hi-b.hi).slice(0,CFG.office.move.offers);
+    if(!els.length)return null;
+    const quick=y-ch.officeSince<RP.quickYears,cost=RP.moveCost+(quick?RP.quickExtra:0),was=ch.aff.name;
+    return {t:'이직 제안',x:`${was}에서 ${y-ch.officeSince}년을 보냈다. 다른 사무소에서 사람을 보내 넌지시 의향을 물었다. 옮기면 지금 사무소에서의 평판이 깎인다${quick?' (들어온 지 얼마 안 되어 더 크게)':''}.`,
+      c:[...els.map(o=>({l:o.n+'로 옮긴다',h:`${o.h} · 평판 −${cost}`,ok:{t:`${was}에 사직서를 냈다. 이튿날부터 ${o.n}의 간판 아래로 출근한다.`,fx:Object.assign({},(ch.affLog||[]).includes(o.n)?{}:o.fx,{join:{type:'office',name:o.n},officeMove:true})}})),
+        {l:'지금 사무소에 남는다',h:'평판은 그대로 · 오래 머물수록 평판이 오른다',ok:{t:'지금 자리에서 조금 더 있어 보기로 한다.',fx:{}}}]};
+  }
+  function officeLoyal(ch,year){
+    if(!ch.aff||ch.aff.type!=='office'||ch.aff.own||ch.officeSince==null)return;
+    const base=ch.repY!=null?ch.repY:ch.officeSince;
+    if(year-base>=RP.loyalEvery&&repOf(ch)<RP.max){ch.rep=Math.min(RP.max,repOf(ch)+RP.loyalGain);ch.repY=year}
+  }
+  /* ===== 사무소 직원: 대표(내 사무소)만 둔다. 고용 때와 공방 거리에 들를 때 단계에 맞춰 능력치를 반영한다 ===== */
+  const SF=CFG.office.staff,staffOwner=ch=>!!(ch.office&&ch.aff&&(ch.aff.own||(ch.office.ws&&isWs(ch))));
+  const staffList=ch=>(ch.office&&ch.office.staff)||[];
+  const staffLv=(s,year)=>Math.max(1,Math.min(SF.lvMax,1+Math.floor(((year==null?s.y:year)-s.y)/SF.growEvery)));
+  const staffFxAt=(s,lv)=>{const T_=SF.types[s.type],o={},m=s.sp?CFG.office.staffEv.spMul:1;for(const [k,v] of Object.entries(T_.fx||{}))o[k]=Math.floor(v*lv*m+1e-9);for(const id of (s.ab||[])){const A=CFG.office.staffEv.spAb.find(x=>x.id===id);if(A)for(const [k,v] of Object.entries(A.fx))o[k]=(o[k]||0)+v}return o};
+  function staffIncome(ch){let t=0;for(const s of staffList(ch)){const T_=SF.types[s.type];t+=((T_&&T_.inc)||0)*staffLv(s,ch.yearNow)-SF.wage}return t}
+  /* 지금 단계에 맞는 능력치로 맞춘다 (이미 받은 만큼과의 차이만 더하고 뺀다) */
+  function staffTick(ch,year){
+    if(!staffOwner(ch))return;ch.yearNow=year;
+    for(const s of staffList(ch)){const lv=staffLv(s,year),want=staffFxAt(s,lv),ap=s.ap||{},df={};
+      for(const k of new Set([...Object.keys(want),...Object.keys(ap)])){const v=(want[k]||0)-(ap[k]||0);if(v)df[k]=v}
+      if(Object.keys(df).length){addStats(ch.stats,df);if(df.maxHp)ch.hp=Math.max(1,ch.hp+df.maxHp)}s.ap=want;s.lv=lv}
+  }
+  /* ===== 사무소 등급: 직원이 의뢰를 해결해 오른다 (대표가 직접 풀지 않는다) ===== */
+  const GR=CFG.office.grade,officeGrade=ch=>(ch.office&&ch.office.grade)||1;
+  function gradeBuffTick(ch){   // 등급의 기본 버프를 맞춘다 (받은 만큼과의 차이만 더하고 뺀다)
+    const O=ch.office;if(!O)return;const want=GR.buff[officeGrade(ch)-1]||{},ap=O.bap||{},df={};
+    for(const k of new Set([...Object.keys(want),...Object.keys(ap)])){const v=(want[k]||0)-(ap[k]||0);if(v)df[k]=v}
+    if(Object.keys(df).length){addStats(ch.stats,df);if(df.maxHp)ch.hp=Math.max(1,ch.hp+df.maxHp)}O.bap=Object.assign({},want);
+  }
+  const officeLogAdd=(O,y,t)=>{(O.log=O.log||[]).unshift({y,t});O.log.length=Math.min(O.log.length,6)};
+  /* ===== 직원 이벤트: D.staffEvents 템플릿에서 조건에 맞는 직원·이야기를 골라 해마다 한 번 연다 ===== */
+  const SE=CFG.office.staffEv,josaF=(n,j)=>{const c=n.charCodeAt(n.length-1),f=c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28!==0;return j==='은'?(f?'은':'는'):j==='이'?(f?'이':'가'):j==='과'?(f?'과':'와'):j==='을'?(f?'을':'를'):''};
+  const staffFill=(o,n,m)=>JSON.parse(JSON.stringify(o).replace(/\{(n|m)\}(은|이|과|을)?/g,(x,w,j)=>{const nm=w==='n'?n:(m||'동료');return nm+(j?josaF(nm,j):'')}));
+  function staffEventPick(G){
+    const ch=G.ch,y=G.year;if(!staffOwner(ch)||ch.infinite)return null;const O=ch.office,list=staffList(ch);if(!list.length)return null;
+    if(O.evNext==null)O.evNext=y+1;if(y<O.evNext)return null;
+    const pool=[];
+    for(const s of list){const ten=y-s.y,tr=s.trust==null?SE.trustStart:s.trust;
+      for(const t of (D.staffEvents||[])){
+        if((s.seen||[]).includes(t.id))continue;
+        if(t.type&&!t.type.includes(s.type))continue;if(t.trait&&!t.trait.some(x=>(s.traits||[]).includes(x)))continue;
+        if(t.tenureMin!=null&&ten<t.tenureMin)continue;if(t.tenureMax!=null&&ten>t.tenureMax)continue;
+        if(t.trustMin!=null&&tr<t.trustMin)continue;if(t.trustMax!=null&&tr>t.trustMax)continue;
+        if(t.noSp&&s.sp)continue;if(t.staffMin&&list.length<t.staffMin)continue;
+        if(t.exam&&!(staffLv(s,y)>=SF.lvMax&&(s.done||0)>=SE.exam.doneMin&&(s.tries||0)<SE.exam.maxTry&&(s.examY==null||y>=s.examY+SE.exam.gap)))continue;
+        pool.push([s,t])}}
+    if(!pool.length)return null;
+    /* 첫 면담은 새 직원이 들어온 뒤 가장 먼저 연다: 있으면 확률 판정 없이 이 이야기를 우선한다 */
+    const firsts=pool.filter(([,t])=>t.id==='first'||t.exam);
+    if(!firsts.length&&d(100)>SE.chance)return null;
+    const [s,t]=(firsts.length?firsts:pool)[Math.floor(rng()*(firsts.length||pool.length))],other=t.staffMin?one(list.filter(x=>x!==s)):null;
+    (s.seen=s.seen||[]).push(t.id);O.evNext=y+SE.gap;
+    const ev=staffFill(t,s.n,other&&other.n);ev.staffEv=true;
+    if(t.exam){const tr=s.trust==null?SE.trustStart:s.trust,dc=Math.max(1,SE.exam.dc-SE.exam.trustMul*tr),c0=ev.c[0];c0.check.dc=dc;c0.h=`1d100 · ${dc} 이상이면 합격 (신뢰 ${tr}점 반영) · 실적 ${s.done||0}건 · 합격하면 효과 ×${SE.spMul}와 특수능력 ${tr>=SE.exam.bonusTrust?2:1}개`}
+    return ev;
+  }
+  function staffFx(ch,o,chips){
+    const s=staffList(ch).find(x=>x.n===o.n);if(!s)return;
+    if(o.trust){s.trust=Math.max(0,Math.min(SE.trustMax,(s.trust==null?SE.trustStart:s.trust)+o.trust));chips.push(`${s.n} · 신뢰 ${o.trust>0?'+':''}${o.trust} (지금 ${s.trust}/${SE.trustMax})`)}
+    if(o.train){s.y-=o.train;chips.push(`${s.n} · 훈련으로 성장이 앞당겨졌다`)}
+    if(o.sp&&!s.sp){s.sp=true;chips.push(`${s.n} · 특색을 인정받았다 · 효과 ×${SE.spMul}`)}
+    if(o.exam==='ok'&&!s.sp){s.sp=true;s.ab=s.ab||[];const tr=s.trust==null?SE.trustStart:s.trust,n=tr>=SE.exam.bonusTrust?2:1;chips.push(`${s.n} · 특색 시험 합격 · 효과 ×${SE.spMul}`);for(let i=0;i<n;i++){const A=one(SE.spAb);s.ab.push(A.id);chips.push(`특수능력 · ${A.n} · ${A.e}`)}}
+    if(o.exam==='later')s.seen=(s.seen||[]).filter(x=>x!=='exam');
+    if(o.exam==='fail'){s.tries=(s.tries||0)+1;s.examY=ch.year||ch.yearNow||0;s.seen=(s.seen||[]).filter(x=>x!=='exam');s.trust=Math.max(0,(s.trust==null?SE.trustStart:s.trust)-1);chips.push(`${s.n} · 특색 시험 불합격 · 신뢰 −1`+((s.tries||0)>=SE.exam.maxTry?' · 더는 응시할 수 없다':` · ${SE.exam.gap}년 뒤 다시`))}
+    if(o.leave){const i=staffList(ch).indexOf(s);officeLogAdd(ch.office,ch.year||0,`${s.n}이(가) 사무소를 떠났다`);dismissStaff(ch,i);chips.push(`${s.n} · 사무소를 떠났다`)}
+    staffTick(ch,ch.year||ch.yearNow||0);
+  }
+  /* 해마다 한 번: 직원이 의뢰를 해결해 성과를 쌓고, 등급이 오르고, 3해마다 수익금이 들어온다 */
+  function officeYear(ch,year){
+    officeLoyal(ch,year);
+    if(!staffOwner(ch))return;const O=ch.office;if(O.yearDone===year)return;O.yearDone=year;
+    O.grade=O.grade||1;O.pts=O.pts||0;
+    for(const s of staffList(ch)){const lv=staffLv(s,year);if(d(100)<=GR.chance+GR.chanceLv*(lv-1)+CFG.office.staffEv.trustChance*((s.trust==null?CFG.office.staffEv.trustStart:s.trust)-CFG.office.staffEv.trustStart)){O.pts+=lv;s.done=(s.done||0)+1}}
+    while(O.grade<GR.names.length&&O.pts>=GR.need[O.grade-1]){O.pts-=GR.need[O.grade-1];O.grade++;officeLogAdd(O,year,`직원들이 의뢰를 해결해 ${O.name}이(가) '${GR.names[O.grade-1]}' 등급이 되었다 · ${GR.buffTxt[O.grade-1]}`)}
+    if(O.grade>=GR.names.length)O.pts=0;
+    gradeBuffTick(ch);
+    if(O.payNext==null)O.payNext=year+GR.payEvery;
+    if(year>=O.payNext){O.payNext=year+GR.payEvery;const v=GR.pay[O.grade-1]||0;if(v&&staffList(ch).length){ch.money+=v;officeLogAdd(O,year,`수익금 ${v.toLocaleString('ko-KR')}안이 들어왔다`)}}
+  }
+  function staffCands(ch,year){
+    const O=ch.office;if(!staffOwner(ch))return [];
+    if(O.candY!==year){const have=new Set(staffList(ch).map(s=>s.n)),pool=SF.names.filter(n=>!have.has(n)),types=Object.keys(SF.types);
+      O.cand=sample(pool,SF.cands).map(n=>({n,type:types[Math.floor(rng()*types.length)]}));O.candY=year}
+    return O.cand;
+  }
+  function hireStaff(ch,i,year){
+    const O=ch.office;if(!staffOwner(ch)||staffList(ch).length>=SF.max||ch.money<SF.hire)return false;
+    const c=(staffCands(ch,year)||[])[i];if(!c)return false;
+    ch.money-=SF.hire;(O.staff=O.staff||[]).push({n:c.n,type:c.type,y:year,lv:1,ap:{},trust:CFG.office.staffEv.trustStart,traits:sample(CFG.office.staffEv.traits,2),seen:[]});O.cand.splice(i,1);staffTick(ch,year);return true;
+  }
+  function dismissStaff(ch,i){
+    const s=staffList(ch)[i];if(!s)return false;
+    const df={};for(const [k,v] of Object.entries(s.ap||{}))df[k]=-v;addStats(ch.stats,df);if(df.maxHp)ch.hp=Math.max(1,ch.hp+df.maxHp);ch.office.staff.splice(i,1);return true;
+  }
   function officeBroker(ch,year){
     const O=ch.office;if(!O||!ch.aff||!(ch.aff.own||(O.ws&&isWs(ch))))return null;
     if(year!=null){if(year<(O.brokerNext||0))return null;O.brokerNext=year+CFG.office.brokerEvery}   // 알선은 brokerEvery해마다 한 번
-    const tier=ch.title||ch.rank<=1?3:ch.rank<=3?2:1,gs=(D.officeGear||{})[O.kw]||[];
+    const tier=Math.max(ch.title||ch.rank<=1?3:ch.rank<=3?2:1,officeGrade(ch)>=4?3:officeGrade(ch)>=2?2:1),gs=(D.officeGear||{})[O.kw]||[];
     if((O.tier||0)<tier&&gs[tier-1]){O.tier=tier;const g=gs[tier-1];offerGear(ch,Object.assign({id:`office_${O.kw}${tier}`,grade:tier+2},g));return {kind:'gear',n:g.n}}
     const all=officeCards(O.kw),fresh=all.filter(id=>!ownsCard(ch,id)),cid=one(fresh.length?fresh:all);if(!cid)return null;
     addCard(ch,cid,null,null,true);return {kind:'card',n:D.cards[cid].n,locked:!!ch.deckLocked};
@@ -630,7 +740,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const WF=CFG.workshopFixer;
   /* 공방 해결사가 N사의 제안을 받아들여도(동부 출신) 공방 해결사로 남는다: 소속은 N사로 바뀌지만 공방 자료(ch.ws)가 있으면 계속 공방 해결사다 */
   const isWs=ch=>(!!ch.aff&&ch.aff.type==='workshop')||(!!ch.ws&&!!ch.aff&&ch.aff.name===CFG.nWing.name);
-  const priceOf=(ch,id)=>{const p=D.items[id].price;if(!isWs(ch))return Math.round(p);const K=CFG.ws,up=1+(K.priceYearUp||0)*Math.floor((ch.year||0)/(K.priceYearEvery||20));return Math.round(p*(1-WF.discount)*up)};   /* 공방 해결사: 값은 고정이고 priceYearEvery년마다 한 번씩 오른다 */
+  const priceOf=(ch,id)=>{const p=D.items[id].price*repMul(ch);if(!isWs(ch))return Math.round(p);const K=CFG.ws,up=1+(K.priceYearUp||0)*Math.floor((ch.year||0)/(K.priceYearEvery||20));return Math.round(p*(1-WF.discount)*up)};   /* 공방 해결사: 값은 고정이고 priceYearEvery년마다 한 번씩 오른다 */
   const sellValue=it=>it.id==='hidmat'?WF.sellBase*2:(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
   /* 공방 해결사: 장비 판매는 없다. 대신 덱의 카드를 공방에 넘긴다 (덱 고정·전용 카드팩·고정 카드는 팔 수 없고, 덱은 minDeck장 아래로 줄이지 않는다) */
   const cardPrice=id=>WF.cardBase+WF.cardPer*((D.cards[id]&&D.cards[id].c)||0);
@@ -680,7 +790,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* 해마다 들어오는 돈: 소속 봉급 + 해결사 급수 수당 */
   const income=ch=>(D.money.salary[ch.aff?ch.aff.type:'none']||0)+(ch.licensed?(T.rankStart-ch.rank)*D.money.rankSalary:0)
-    +(isFinger(ch)&&ch.fr?(ch.fr.tier-1)*D.fingerRules.salaryPerTier:0)+(ch.pinky?D.pinky.money:0)+(ch.art&&ch.art.gallery?CFG.art.income:0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.inc)||0);
+    +(isFinger(ch)&&ch.fr?(ch.fr.tier-1)*D.fingerRules.salaryPerTier:0)+(ch.pinky?D.pinky.money:0)+(ch.art&&ch.art.gallery?CFG.art.income:0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.inc)||0)+staffIncome(ch);
   const money=n=>n.toLocaleString('ko-KR')+D.money.unit;
   function setColor(ch,ci){ch.ci=ci;ch.color=D.colors[ci].hex}
   /* 자격 등록: 가장 낮은 급수에서 시작한다. 특색은 여기서 주지 않는다 */
@@ -1048,6 +1158,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.wsMat){(ch.stash=ch.stash||[]).push({id:'hidmat',n:'히든 강화재료',slot:'any',grade:5,e:'어떤 전용 장비든 녹이면 히든 한 단계'});chips.push('히든 강화재료 · 보관함에 들어왔다')}
     if(fx.card)addCard(ch,fx.card,chips,null,true);else if(fx.reward)offerPick(ch,D.rewards,chips,null);
     if(fx.escort)ch.flags.escortNext=1;
+    if(fx.staff)staffFx(ch,fx.staff,chips);if(fx.staff2)staffFx(ch,fx.staff2,chips);
+    if(fx.rep){ch.rep=Math.max(RP.min,Math.min(RP.max,repOf(ch)+fx.rep));chips.push(`평판 ${fx.rep>0?'+':'−'}${Math.abs(fx.rep)} (지금 ${ch.rep<0?'−'+(-ch.rep):ch.rep})`)}
+    if(fx.officePts&&ch.office){ch.office.pts=(ch.office.pts||0)+fx.officePts;chips.push(`사무소 성과 +${fx.officePts}`)}
     if(fx.officeFound){ch.officePick=true;chips.push('사무소 개설 · 이름과 전문 분야를 정한다')}
     if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){forceAdd(ch,'o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
@@ -1064,6 +1177,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if((fx.join.from==='wing'||fx.join.from==='assoc'||fx.join.from==='office'||fx.join.from==='syn')&&!fx.join.name){ch.orgPick=fx.join.from;chips.push(`${T.affTypes[fx.join.from]} · 어느 곳에 들어갈지 고른다`)}
       else joinAff(ch,fx.join,fx.join.name||one(D.orgs[fx.join.from]),chips);
     }
+    if(fx.officeMove&&fx.join&&ch.aff&&ch.aff.name===fx.join.name){const y=ch.year||0,quick=ch.officeSince!=null&&y-ch.officeSince<RP.quickYears,c=RP.moveCost+(quick?RP.quickExtra:0);ch.rep=Math.max(RP.min,repOf(ch)-c);ch.officeSince=y;ch.repY=y;ch.moveNext=y+CFG.office.move.every;chips.push(`평판 −${c} (지금 ${ch.rep<0?'−'+(-ch.rep):ch.rep}) · 공방 거리 장비 값 ${Math.round((repMul(ch)-1)*100)>=0?'+':'−'}${Math.abs(Math.round((repMul(ch)-1)*100))}%`)}
     /* 사건으로 승급 (해결사만, 최고 급수 미만일 때) */
     if(fx.promote)addPts(ch,CFG.promo.gain.mid,chips);
     if(fx.pts)addPts(ch,fx.pts*CFG.promo.gain.check,chips);
@@ -1675,15 +1789,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         let pool=arr.map((_,i)=>i).filter(i=>!used.includes(i));if(!pool.length){used.length=0;pool=arr.map((_,i)=>i)}const i=one(pool);used.push(i);
         const nm=one(F.names),fill=t=>bondFill(t,{name:nm});
         return {t:PP.lt[F.key],x:fill(arr[i]),c:[{l:PP.ll,h:'',ok:{t:fill(PP.lok),fx:{}}}]}}}
-    if(!n&&ch.infIntro){const Lm=CFG.infinite.limit;if(!ch.limAt)ch.limAt=G.year+Lm.every;
-      if(G.year>=ch.limAt){ch.limAt=G.year+Lm.every;const m=ch.colorDone?Lm.traitMul:1,pct=x=>Math.round(x*m*1000)/10;
+    if(!n&&ch.infIntro){const Lm=CFG.infinite.limit,AC=accelOn(G)?CFG.accel.limit:null;if(!ch.limAt)ch.limAt=G.year+Lm.every;
+      /* 가속 중에는 나이가 50의 배수인 해마다, 10해치의 5배 효과로 한 번에 준다(팝업을 줄이되 총 성장량은 같다) */
+      if(AC&&!ch.limAccel){ch.limAccel=1;ch.limAt=G.year+((AC.every-age(G)%AC.every)%AC.every)}
+      if(G.year>=ch.limAt){const X=AC?AC.mul:1;ch.limAt=G.year+(AC?(AC.every-age(G)%AC.every):Lm.every);const m=(ch.colorDone?Lm.traitMul:1)*X,pct=x=>Math.round(x*m*1000)/10;
         return {t:'한계 돌파',x:LI?'호수에서 수십 해를 보내자 몸이 물결의 박자를 기억한다. 더 멀리, 더 세게 휘두를 수 있다고 느낀다.':'오래 버틴 몸이 한계 너머를 보기 시작한다. 어느 쪽으로 더 벼릴지 정해야 한다.',c:[
-          {l:'공세를 벼린다',h:`공격 +${pct(Lm.atkPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'휘두르는 팔이 한결 무거워졌다.',fx:{limit:'atk'}}},
-          {l:'맹공을 익힌다',h:`주는 피해 +${pct(Lm.dmgPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'맞는 쪽이 먼저 물러서는 것이 느껴진다.',fx:{limit:'dmg'}}},
-          {l:'일격을 벼린다',h:`적중 시 상대에게 추가 피해 (내 최대 HP의 ${pct(Lm.strikePct)}%) (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'몸 전체의 무게가 한 번의 타격에 실린다.',fx:{limit:'strike'}}}]}}}
+          {l:'공세를 벼린다',h:`공격 +${pct(Lm.atkPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'휘두르는 팔이 한결 무거워졌다.',fx:{limit:'atk',x:X}}},
+          {l:'맹공을 익힌다',h:`주는 피해 +${pct(Lm.dmgPct)}% (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'맞는 쪽이 먼저 물러서는 것이 느껴진다.',fx:{limit:'dmg',x:X}}},
+          {l:'일격을 벼린다',h:`적중 시 상대에게 추가 피해 (내 최대 HP의 ${pct(Lm.strikePct)}%) (영구)${ch.colorDone?' · 특색 보너스':''}`,ok:{t:'몸 전체의 무게가 한 번의 타격에 실린다.',fx:{limit:'strike',x:X}}}]}}}
     {const ok_=(ch.o&&(ch.o.herm||ch.o.key==='hermes'))?'hermes':ch.o&&ch.o.key,RE=!LI&&I.routeEvents&&I.routeEvents[ok_];
       if(!n&&ch.infIntro&&RE&&RE.length){const Rv=CFG.infinite.routeEvery||15;if(!ch.infReAt)ch.infReAt=G.year+Rv;
         if(G.year>=ch.infReAt){ch.infReAt=G.year+Rv;const i=(ch.infReN||0)%RE.length;ch.infReN=(ch.infReN||0)+1;return JSON.parse(JSON.stringify(RE[i]))}}}
+    if(!n&&ch.infIntro){const sv=accelStoryEvent(G);if(sv)return sv}
     if(!n)return null;
     const T=(LI||I).century[Math.min(n-1,(LI||I).century.length-1)];
     return {t:T.t,x:T.x,c:[{l:T.a,h:`공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100)}% (영구) · 적의 공격 피해도 +${Math.round(K.enemyDmg*100)}% (영구)`,ok:{t:T.at,fx:{infCentury:n}}}]}
@@ -2058,7 +2175,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const pool=(EN.pool[slot]||[]).filter(x=>!(it.ench&&it.ench.key===x.key));if(!pool.length)return null;
     const nw=one(pool);ch.money-=pr;
     if(!it.fx0)it.fx0=Object.assign({},it.fx||{});if(it.baseN==null)it.baseN=it.n;if(it.e0==null)it.e0=it.e||'';
-    const nfx=Object.assign({},it.fx0);for(const [k,v] of Object.entries(nw.fx||{}))nfx[k]=(nfx[k]||0)+v;
+    const nfx=Object.assign({},it.fx0);for(const [k,v] of Object.entries(nw.fx||{}))nfx[k]=(nfx[k]||0)+v;for(const [k,v] of Object.entries(it.chgFx||{}))nfx[k]=(nfx[k]||0)+v;   /* 변화로 오른 깡스탯은 인챈트를 바꿔도 남는다 */
     const delta={};for(const k of new Set([...Object.keys(it.fx||{}),...Object.keys(nfx)])){const dv=(nfx[k]||0)-((it.fx||{})[k]||0);if(dv&&k!=='dmin')delta[k]=dv}
     addStats(ch.stats,delta);if(delta.maxHp)ch.hp=Math.max(1,Math.min(ch.stats.maxHp,ch.hp+delta.maxHp));
     it.fx=nfx;it.ench={key:nw.key,n:nw.n,type:nw.type,e:nw.e};it.ewx=nw.wx?JSON.parse(JSON.stringify(nw.wx)):undefined;it.enchN=(it.enchN||0)+1;
@@ -2602,8 +2719,76 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
          {l:'지나온 일을 해설한다',h:'성공 시 승진',check:{s:null,dc:'exam'},ok:{t:'해설이 끝나자 심사관들이 서류를 덮었다. 공간이 풀렸다. 서열이 올랐다.',fx:{examPass:true}},fail:{t:'해설은 닿지 않았다. 심사장이 연기처럼 사라졌다.',fx:{hp:-4}}},
          {l:'조용히 걸어 나간다',ok:{t:'문을 열고 나서자 외곽의 밤이 그대로 있었다.',fx:{}}}]}
   }
+  /* 무한 모드 가속: 가속 구간이면 step해마다 마지막 해에만 평소 방식(전투·일상 사건)으로 한 해를 보낸다 */
+  /* 가속은 나이가 step(25)의 배수인 해에 맞춰 시작하고 끝난다: 균열이 봉인된 나이에서 올림한 배수부터. 25 · 50 · 75 … 1000살이 모두 정확히 걸린다(1000살 엔딩, 100살마다 영구 증가, 50해 계약과 같은 칸) */
+  const accelOn=G=>{const A=CFG.accel;if(!(A&&A.on&&G.infinite&&G.ch&&G.ch.infinite))return false;
+    if(A.after==='seal'&&!(G.ch.outSeen&&G.ch.outSeen.seal))return false;
+    if(G.ch.accelChoice!=='yes')return false;   // 시간이 이상한 공간에 들어가기로 한 판만 가속한다
+    if(G.ch.accelAge==null)G.ch.accelAge=Math.ceil(age(G)/A.step)*A.step;
+    return age(G)>=G.ch.accelAge};
+  const accelQuiet=G=>accelOn(G)&&age(G)%CFG.accel.step!==0;
+  /* 가속 구간에서는 25의 배수 나이마다 '불순물 무한 전투'를 한 번 치른다(10년 간격 계산은 나이와 어긋나서 쓰지 않는다) */
+  const accelCheck=G=>accelOn(G)&&age(G)%CFG.accel.step===0;
+  /* 균열을 닫고 살아온 어느 날: 시간의 흐름이 이상한 공간을 만난다. 들어가면 가속, 들어가지 않으면 지금처럼 진행한다(한 번 정하면 되돌리지 않는다) */
+  function accelOffer(G){
+    const A=CFG.accel,ch=G.ch;if(!(A&&A.on&&G.infinite&&ch.infinite)||ch.accelChoice)return null;
+    if(A.after==='seal'&&!(ch.outSeen&&ch.outSeen.seal))return null;
+    if(ch.accelOfferAt==null){const g=A.offerGap||[10,30];ch.accelOfferAt=G.year+g[0]+d(g[1]-g[0]+1)-1}
+    if(G.year<ch.accelOfferAt)return null;
+    return {t:'시간이 어긋난 곳',x:'균열을 닫고 살아온 어느 날, 시간의 흐름이 이상한 공간을 발견했다. 이곳에서는 하루가 한 해 같고, 한 해가 하루 같다. 이 공간에서 내 운명이 달라지리라는 것을 어느 순간 깨달았다.',
+      c:[{l:'공간 안으로 들어간다',h:`시간이 빠르게 흐른다 · ${A.step}해에 한 번 불순물이 찾아온다 · 되돌릴 수 없다`,ok:{t:'발을 들이는 순간 해와 달이 한꺼번에 지나갔다. 몸은 그대로인데 세상이 먼저 늙어 갔다.',fx:{accel:'yes'}}},
+         {l:'들어가지 않는다',h:'지금처럼 한 해씩 이어진다 · 되돌릴 수 없다',ok:{t:'문턱 앞에서 돌아섰다. 이곳의 시간은 한 해씩, 평소대로 흘러간다.',fx:{accel:'no'}}}]}}
+  function accelPass(G){
+    const ch=G.ch,ev=e=>e?{type:'event',ev:e}:null;
+    for(const fn of [()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G))]){const r=fn();if(r)return r}
+    return null}
+  /* ===== 가속 스텝 보상과 변화(제3의 강화) ===== */
+  const CHGST={atk:'공격',maxHp:'최대 HP',spd:'속도',eva:'회피'};
+  /* 변화를 쓸 수 있는 장비: 무기(공격)·방어구(최대 HP)·의수(공격→속도→회피 순으로 있는 것). 비용은 장비마다 따로 세고, 다른 장비에 쓰면 다시 1부터 시작한다 */
+  function chgSlots(ch){const C=CFG.accel.change,out=[];
+    for(const sl of ['weapon','armor','aug']){const it=ch.gear&&ch.gear[sl];if(!it||!it.fx)continue;
+      const key=sl==='weapon'?'atk':sl==='armor'?'maxHp':['atk','spd','eva'].find(k=>it.fx[k])||'spd';
+      out.push({sl,it,key,cost:C.base+(it.chg||0)*C.step})}
+    return out}
+  const chgTbl=(C,key)=>C.gains[key==='atk'?'atk':key==='maxHp'?'maxHp':'other'];
+  const accelJob=ch=>staffOwner(ch)?'office':isWs(ch)?'ws':(ch.o&&ch.o.key==='gweapon')?'gw':'general';
+  const accelJobTx={general:'지나온 해가 몸에 쌓였다.',office:'비워 둔 사이에도 간판은 서 있었고, 직원들은 일을 해 왔다.',ws:'작업대의 불은 꺼지지 않았고, 건네지 못한 의뢰가 쌓였다.',gw:'몸의 부품이 낡고 갈리며 서로 맞춰졌다.'};
+  function accelStepEvent(G){
+    const ch=G.ch,A=CFG.accel;if(!ch.accelStepDue)return null;const ag=ch.accelStepDue;   /* 스텝 해의 전투를 치른 뒤, 다음 해로 넘어가기 전에 보여 준다 */
+    if(ch.accelStepAge!==ag){ch.accelStepAge=ag;const R=A.reward,job=accelJob(ch);
+      const h=[`불순물의 조각 +${R.shard}(소수는 쌓인다)`,`레벨 선택 +${R.lv}(소수는 쌓인다)`,`변화의 파편 +${R.chg}`];
+      if(job==='gw')h.push(`섭식 보너스 · 공격 +${R.jobs.gw.atk} · 최대 HP +${R.jobs.gw.maxHp}`);
+      if(job==='ws')h.push('공방 재료(소수는 쌓인다)');
+      if(job==='office')h.push(`사무소 등급에 따라 최대 HP 증가`);
+      /* 조용히 지나간 해 요약: 지난 스텝 이후 자산·재료·보관함·사무소가 얼마나 달라졌는지 한 줄로 모아 보여 준다 */
+      const sn=ch.accelSnap,O=ch.office,mats=(ch.stash||[]).filter(x=>x&&x.id==='hidmat').length,sm=[];
+      if(sn){const dm=(ch.money||0)-sn.money;if(dm)sm.push(`자산 ${dm>0?'+':'−'}${Math.abs(dm).toLocaleString('ko-KR')}안`);
+        if(isWs(ch)&&mats!==sn.mats)sm.push(`히든 강화재료 ${mats>sn.mats?'+':'−'}${Math.abs(mats-sn.mats)}`);
+        const ds=(ch.stash||[]).length-sn.stash;if(ds)sm.push(`보관함 ${ds>0?'+':'−'}${Math.abs(ds)}`);
+        if(staffOwner(ch)&&O){const gd=(O.grade||1)-sn.grade;if(gd)sm.push(`사무소 등급 ${gd>0?'+':'−'}${Math.abs(gd)}`);const dn=staffList(ch).length-sn.staff;if(dn)sm.push(`직원 ${dn>0?'+':'−'}${Math.abs(dn)}명`)}}
+      ch.accelSnap={money:ch.money||0,mats,stash:(ch.stash||[]).length,grade:(O&&O.grade)||1,staff:staffOwner(ch)?staffList(ch).length:0};
+      const sumTx=sm.length?` 지난 ${A.step}해 동안 · ${sm.join(' · ')}.`:'';
+      return {t:`${A.step}해가 흘렀다`,x:`${ag}살. ${accelJobTx[job]} 빠르게 지나간 해들이 한꺼번에 몸에 돌아왔다.${sumTx}`,xs:[`${ag}살.`,accelJobTx[job],'빠르게 지나간 해들이 한꺼번에 몸에 돌아왔다.'].concat(sumTx?[sumTx.trim()]:[]),c:[{l:'지나온 해를 받아들인다',h:h.join(' · '),ok:{t:'걸어온 길이 몸에 정리된다.',fx:{accelStep:job}}}]}}
+    {const rows=chgSlots(ch).filter(x=>(ch.chgShard||0)>=x.cost);if(ch.chgOfferAge!==ag&&rows.length){ch.chgOfferAge=ag;const C=A.change;
+      return {t:'변화',x:`변화의 파편 ${ch.chgShard}개를 가지고 있다. 낀 장비 하나를 골라 파편을 쓰면 그 장비가 한 걸음 더 어긋난 모양으로 굳는다. 장비마다 비용을 따로 센다(처음엔 1개, 올릴수록 1개씩 늘고, 다른 장비에 쓰면 다시 1개부터).`,c:rows.map(r=>{const tb=chgTbl(C,r.key),lv=(r.it.chg||0)+1;
+        return {l:`${r.it.n} 변화 (${lv}단계)`,h:`파편 ${r.cost}개 · ${CHGST[r.key]} +${tb[0]}~${tb[2]} (확률 · 낮은 등급일수록 크게)`,ok:{t:'굳은 것이 한 번 더 어긋나며 새 모양을 잡는다.',fx:{chgUp:r.sl}}}}).concat([{l:'아직 아낀다',h:'파편은 그대로 남는다 · 다음 스텝에 다시 묻는다',ok:{t:'아직은 이 모양 그대로 둔다.',fx:{}}}])}}}
+    ch.accelStepDue=null;return null}
+  /* 가속 중 백 해마다: 지나간 세월의 풍경(모두에게 같은 도시의 변화)과, 출신·길에 맞는 한 줄(그 길의 어휘로 쓴 문장)을 보여 준다. 변화의 파편 1개를 준다 */
+  const accelTrack=ch=>{const k=ch.o&&ch.o.key,f=ch.aff&&ch.aff.type;
+    return lakeOn(ch)?'lake':k==='crow'?'crow':(k==='hermes'||(ch.o&&ch.o.herm))?'hermes':k==='librarian'?'librarian':k==='claw'?'claw':k==='arbiter'?'arbiter':k==='gweapon'?'gweapon':ch.race==='hyeolgwi'?'hyeolgwi':staffOwner(ch)?'office':isWs(ch)?'ws':f==='finger'?'finger':f==='wing'?'wing':f==='assoc'?'assoc':'general'};
+  function accelStoryEvent(G){
+    const ch=G.ch,S=D.infinite&&D.infinite.accelStory;if(!S||!accelOn(G))return null;
+    const ag=age(G),have=ch.accelSt||[];let m=0;
+    for(let i=1;i<=9;i++){if(i*100>ag)break;if(i*100<(ch.accelAge||0))continue;if(!have.includes(i)){m=i;break}}
+    if(!m)return null;
+    const w=S.world[m-1]||S.world[S.world.length-1],era=m<=3?'early':m<=6?'mid':'late',tk=accelTrack(ch),tl=(S.by[tk]||S.by.general)[era];
+    /* 곁에 있던 사람(배우자·아이)이 있었다면 그 이름 한 줄을 붙인다. 이름은 조사 자동 선택을 거친다 */
+    const bd=ch.bond;let fam='';
+    if(bd&&bd.name&&!ch.famBind){const kid=((bd.kids||[]).find(k=>k&&k.n)||{}).n,FM={early:`곁에 있던 ${bd.name}이(가) 불러 주던 이름은 해가 지나도 입에 남아 있다.`,mid:`${bd.name}의 얼굴은 흐려졌지만 그 목소리가 부르던 이름은 아직 남아 있다.${kid?` ${kid}의 이름도 같은 자리에 놓여 있다.`:''}`,late:`${bd.name}${kid?`과(와) ${kid}`:''}의 이름을 마지막으로 불러 본 것이 언제인지 이제 헤아려지지 않는다.`};fam=' '+FM[era]}
+    const wp=one(w);
+    return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${wp} ${tl}${fam}`,xs:[wp,tl].concat(fam?[fam.trim()]:[]),c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +${CFG.accel.change.story} (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
   function advanceYear(G){
-    hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);
+    hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);staffTick(G.ch,G.year);officeYear(G.ch,G.year);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
     G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);starPinky(mc);if(isWs(mc))for(const id of (mc.relicIds||[]))if(!(mc.wsRelic&&mc.wsRelic[id]))wsAbsorb(mc,id);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
     if(mc.distPick)setDistort(mc,'');
@@ -2682,9 +2867,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!mc.prologueDone&&(G.year||0)===0){mc.prologueDone=true;const PR=D.prologue&&mc.o&&D.prologue[mc.o.n];if(PR)return {type:'event',ev:{t:`${CFG.startAge}세 · 출발`,x:PR.leave,c:[{l:PR.go||'길을 나선다',h:`${CFG.startAge}세의 해가 시작된다`,ok:{t:'문이 닫혔다. 길이 이어진다.',fx:{}}}]}}}
     {const pb=G.ch.infinite&&pactBuffEvent(G);if(pb)return {type:'event',ev:pb}}
     {const rf=routeFree(G);if(rf)return rf}
+    {const sv=accelStepEvent(G);if(sv)return {type:'event',ev:sv}}
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):G.endless&&G.ch.o&&G.ch.o.key==='claw'&&G.ch.flags.rt_done?(G.ch.flags.cl_return?'clawreturn':'clawstay'):G.endless&&G.ch.o&&G.ch.o.key==='arbiter'&&G.ch.flags.rt_done?(G.ch.flags.ab_keep?'arbkeep':'arbdown'):G.endless&&G.ch.o&&G.ch.o.key==='gweapon'&&G.ch.flags.gw_done?(G.ch.flags.gw_king&&G.ch.gw&&G.ch.gw.form?'gw'+G.ch.gw.form:'gwhuman'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
     G.ch.year=G.year;
+    if(accelCheck(G))G.ch.accelStepDue=age(G);
     if(G.year>1){G.ch.hp=Math.min(G.ch.stats.maxHp,G.ch.hp+CFG.yearHeal);if(G.year%(M.healEvery||1)===0)gainMind(G.ch,M.yearHeal);
       /* 대호수: 호수에 오래 떠 있을수록 정신이 닳는다. 해마다 mindYear씩 깎이지만 mindKeep 밑으로는 이 깎임만으로 내려가지 않는다(뒤틀림·사망으로 곧장 가지 않게) */
       if(G.infinite&&G.ch.infinite&&G.ch.colorDone){const Lm=CFG.infinite.limit;if(G.year%Lm.traitYearEvery===0)G.ch.stats.atk+=1}
@@ -2696,13 +2883,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wv=webStep(G);if(wv)return wv}
     {const gv=gwStep(G);if(gv)return {type:'event',ev:gv}}
     {const R_=routeOf(G.ch);if(R_&&!(G.infinite&&G.year>routeEnd())){const rf=routeFight(G,R_);if(rf)return rf;const rs=routeStep(G,R_);if(rs)return {type:'event',ev:rs}}}
+    /* 무한 모드 가속: 조용한 해는 전투·일상 사건을 고르지 않고 시간 기준 사건(가족·직원·사무소 등)만 확인한다. 선택이 필요한 사건이 나오면 거기서 멈춘다 */
+    if(accelQuiet(G)){const q=accelPass(G);return q||{type:'quiet',year:G.year}}
     let f=fixedSpec(G.year);
     /* 무한런 등급 전투: 등급 마지막 해. 도시의 별 등급은 피아니스트(이미 이겼으면 후반 조우), 마지막 등급은 최종 상대 */
     const X_=CFG.endless,k_=G.year-CFG.years;
     const baseEnd=CFG.years+X_.span*X_.grades.length,INF=CFG.infinite;
     if(G.infinite&&G.year>baseEnd){
       /* 제 2막 무한 모드: 위협 등급 전투는 후반 조우, every년마다 강화 불순물 */
-      if((G.year-baseEnd)%INF.every===0){
+      if((G.year-baseEnd)%INF.every===0||accelCheck(G)){
         /* 무한 모드에 들어설 때 외곽에 지은 집(혼자여도), 또는 인연 이야기의 외곽의 작은 집이 있다면 불순물은 그 집으로 찾아온다 */
         const LH_=lakeOn(G.ch)&&D.lake&&D.lake.infinite&&D.lake.infinite.impurity,H_=LH_||(D.infinite&&D.infinite.home),E_=D.enemies[X_.final],home=H_&&(LH_||G.ch.infHome||(G.ch.outSeen&&G.ch.outSeen.settle));
         if(E_){if(E_.intro0===undefined)E_.intro0=E_.intro;E_.intro=home?H_.intro[((G.ch.infImp||1)-1)%H_.intro.length]:E_.intro0}
@@ -2766,6 +2955,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(D.corp){const ce=corpEvent(G);if(ce)return {type:'event',ev:ce}}
     {const sb=distStableEvent(G);if(sb)return {type:'event',ev:sb}}
     {const iv=infiniteEvent(G);if(iv)return {type:'event',ev:iv}}
+    {const ao=accelOffer(G);if(ao)return {type:'event',ev:ao}}
     {const kh=kidHuntEvent(G);if(kh)return kh}
     {const bv=bondEvent(G);if(bv)return {type:'event',ev:bv}}
     {const es=bondEscortEvent(G);if(es)return {type:'event',ev:es}}
@@ -2786,6 +2976,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const ae=artEvent(G);if(ae)return {type:'event',ev:ae}}
     {const pe=infPromoEvent(G);if(pe)return {type:'event',ev:pe}}
     {const se=surgEvent(G);if(se)return {type:'event',ev:se}}
+    {const me=officeMoveEvent(G);if(me)return {type:'event',ev:me}}
+    {const se=staffEventPick(G);if(se)return {type:'event',ev:se}}
     if(D.officeFound&&canFound(ch)&&G.year>=(ch.officeNext||0)){ch.officeNext=G.year+CFG.office.foundEvery;return {type:'event',ev:isWs(ch)?Object.assign({},D.officeFound,{x:D.officeFound.x+' 공방의 작업대는 그대로 두고, 그 옆에 간판을 하나 더 건다.'}):D.officeFound}}
     if(D.officeKnock&&ch.licensed&&!ch.aff&&!ch.job&&!noFixer(ch)&&G.year>CFG.affiliationYear&&G.year>=(ch.knockNext||0)){ch.knockNext=G.year+CFG.office.knockEvery;return {type:'event',ev:D.officeKnock}}
     {const lk=lakeYear(G);if(lk)return lk.type==='fight'?lk:{type:'event',ev:lk}}
@@ -2953,11 +3145,29 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0,race:kk.race||(ch.race==='hyeolgwi'?'hyeolgwi':'human')};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondCol&&ch.bond&&!ch.bond.col){const ci=one(D.colors.map((c,i)=>i).filter(i=>i!==ch.ci)),C_=D.colors[ci];ch.bond.col={adj:C_.adj,hex:C_.hex};ch.bondColPick=true;chips.push(`${ch.bond.name} · ${C_.adj} 특색`)}
     if(fx.bondKid&&ch.bond){const k_={n:fx.bondKid,born:ch.year||0,job:ch.bond.route==='librarian'?'librarian':one(D.bond.kidJobs.filter(j=>j.k!=='librarian')).k,told:false,race:((ch.o&&ch.o.race==='hyeolgwi')||spouseHy(ch,ch.bond)||(ch.race==='hyeolgwi'&&d(2)===1))?'hyeolgwi':'human'};(ch.bond.kids=ch.bond.kids||[]).push(k_);ch.stats.mindMax=(ch.stats.mindMax||0)+BD.kid.mind;gainMind(ch,BD.kid.mind);k_.pend=true;ch.kidPick=true;chips.push('아이가 태어났다 · 이름을 정한다');chips.push(`최대 정신력 +${BD.kid.mind}`)}
-    if(fx.limit){const Lm=CFG.infinite.limit,m=ch.colorDone?Lm.traitMul:1;
+    if(fx.accel){ch.accelChoice=fx.accel;if(fx.accel==='yes'){ch.accelAge=Math.ceil(age(G)/CFG.accel.step)*CFG.accel.step;chips.push('시간이 빠르게 흐른다 · 가속')}else chips.push('시간은 평소대로 흐른다')}
+    if(fx.limit){const Lm=CFG.infinite.limit,m=(ch.colorDone?Lm.traitMul:1)*(fx.x||1);
       if(fx.limit==='atk'){const g=Math.max(1,Math.round(ch.stats.atk*Lm.atkPct*m));ch.stats.atk+=g;chips.push(`한계 돌파 · 공격 +${g}`)}
       else if(fx.limit==='dmg'){ch.limDmg=(ch.limDmg||0)+Lm.dmgPct*m;chips.push(`한계 돌파 · 주는 피해 +${Math.round(Lm.dmgPct*m*1000)/10}% (누적 ${Math.round(ch.limDmg*1000)/10}%)`)}
       else{ch.limStrike=(ch.limStrike||0)+Lm.strikePct*m;chips.push(`한계 돌파 · 적중 시 상대에게 추가 피해 (내 최대 HP의 ${Math.round(Lm.strikePct*m*1000)/10}%) (누적 ${Math.round(ch.limStrike*1000)/10}%)`)}}
     if(fx.pactPick){const PK=CFG.infinite.pact,x=[...PK.cons,...PK.buffs].find(q=>q.id===fx.pactPick);if(x){ch.pact=ch.pact||{};ch.pact[x.id]=Math.min(PK.cap,(ch.pact[x.id]||0)+1);chips.push(`${PK.cons.includes(x)?'제약':'버프'} · ${x.n} ${ch.pact[x.id]}번 · ${x.e}`)}}
+    if(fx.accelStep){const R=CFG.accel.reward,SH=CFG.infinite.shard;ch.accelAcc=ch.accelAcc||{};
+      const acc=(k,v)=>{ch.accelAcc[k]=(ch.accelAcc[k]||0)+v;const n=Math.floor(ch.accelAcc[k]+1e-9);ch.accelAcc[k]-=n;return n};
+      const ns=acc('shard',R.shard);if(ns){ch.infShard=(ch.infShard||0)+ns;addStats(ch.stats,{atk:SH.atk*ns,maxHp:SH.maxHp*ns});ch.hp=Math.min(ch.stats.maxHp,ch.hp+SH.maxHp*ns);chips.push(`불순물의 조각 +${ns} · 공격 +${SH.atk*ns} · 최대 HP +${SH.maxHp*ns} (누적 ${ch.infShard}개)`)}
+      const nl=acc('lv',R.lv);if(nl){ch.lvBonus=(ch.lvBonus||0)+nl;ch.lv+=nl;ch.lvPend=(ch.lvPend||0)+nl;chips.push(`레벨 +${nl} · 성장 선택 +${nl}`)}
+      ch.chgShard=(ch.chgShard||0)+R.chg;chips.push(`변화의 파편 +${R.chg} (지금 ${ch.chgShard}개)`);
+      const J=R.jobs;
+      if(fx.accelStep==='gw'){addStats(ch.stats,{atk:J.gw.atk,maxHp:J.gw.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+J.gw.maxHp);chips.push(`섭식 보너스 · 공격 +${J.gw.atk} · 최대 HP +${J.gw.maxHp}`)}
+      if(fx.accelStep==='ws'){const nm=acc('wsMat',J.ws.mat);if(nm){for(let i=0;i<nm;i++)(ch.stash=ch.stash||[]).push({id:'hidmat',n:'히든 강화재료',slot:'any',grade:5,e:'어떤 전용 장비든 녹이면 히든 한 단계'});chips.push(`히든 강화재료 +${nm}`)}}
+      if(fx.accelStep==='office'){const g=Math.min(J.office.maxHpMax,J.office.hpPerGrade*((ch.office&&ch.office.grade)||1));addStats(ch.stats,{maxHp:g});ch.hp=Math.min(ch.stats.maxHp,ch.hp+g);chips.push(`사무소 등급의 힘 · 최대 HP +${g}`)}}
+    if(fx.accelStory){(ch.accelSt=ch.accelSt||[]).push(fx.accelStory);ch.chgShard=(ch.chgShard||0)+CFG.accel.change.story;chips.push(`변화의 파편 +${CFG.accel.change.story} (지금 ${ch.chgShard}개)`)}
+    if(fx.chgUp){const C=CFG.accel.change,row=chgSlots(ch).find(x=>x.sl===(typeof fx.chgUp==='string'?fx.chgUp:'weapon'));
+      if(row&&(ch.chgShard||0)>=row.cost){ch.chgShard-=row.cost;ch.chgLv=(ch.chgLv||0)+1;
+        const w=row.it,tb=chgTbl(C,row.key),g=w.grade||(w.id&&D.special&&D.special[w.id]?5:3),bp=C.bigP[g]!=null?C.bigP[g]:C.bigP[3],r=rng();
+        const gain=r<bp?tb[2]:r<bp+C.midP?tb[1]:tb[0];
+        w.fx[row.key]=(w.fx[row.key]||0)+gain;(w.chgFx=w.chgFx||{})[row.key]=(w.chgFx[row.key]||0)+gain;w.chg=(w.chg||0)+1;ch.stats[row.key]=(ch.stats[row.key]||0)+gain;if(row.key==='maxHp')ch.hp=Math.min(ch.stats.maxHp,ch.hp+gain);
+        if(typeof w.e==='string'){w.e=w.e.replace(/ · 변화 \d+단계$/,'');if(row.key==='atk'&&/공\+\d+/.test(w.e))w.e=w.e.replace(/공\+\d+/,'공+'+w.fx.atk);w.e+=` · 변화 ${w.chg}단계`}
+        chips.push(`변화 · ${w.n} ${w.chg}단계 · 파편 ${row.cost}개 사용 · ${CHGST[row.key]} +${gain} (${gain===tb[2]?'크게':gain===tb[1]?'보통':'조금'} 올랐다)`)}}
     if(fx.infCentury){const K=CFG.infinite.century;jr(ch,'century',{n:fx.infCentury});(ch.infCent=ch.infCent||[]).push(fx.infCentury);addStats(ch.stats,{atk:K.atk,eva:K.eva,spd:K.spd,maxHp:K.maxHp});ch.hp+=K.maxHp;ch.infBoost=(ch.infBoost||0)+1;chips.push(`${fx.infCentury*K.every}살 · 공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100*ch.infBoost)}% · 적의 공격 피해 +${Math.round(K.enemyDmg*100*ch.infBoost)}% (누적)`)}
     if(fx.famGrief){const GF=CFG.infinite.grief;ch.famLoss=(ch.famLoss||0)+1;addStats(ch.stats,{atk:GF.atk,maxHp:GF.maxHp});ch.hp=Math.min(ch.stats.maxHp,ch.hp+GF.maxHp);chips.push(`슬픔이 몸에 굳었다 · 공격 +${GF.atk} · 최대 HP +${GF.maxHp} · 주는 피해 +${Math.round(GF.dmg*100*ch.famLoss)}% (누적)`)}
     if(fx.famBind&&ch.bond){const w=fx.famBind.who,tg=w==='s'?ch.bond:(ch.bond.kids||[]).find(k=>k.n===w),nm=w==='s'?ch.bond.name:w;
@@ -3216,7 +3426,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     hermSync(ch);
     const s=ch.stats,e=D.enemies[id];
     const P=mkEnt({uid:'P',hunger:ch.flags&&ch.flags.hunger?0:null,name:(eqT(ch)?`[${eqT(ch)}] `:'')+(ch.name||T.you),tt:eqT(ch)||'',color:ch.color,hp:ch.hp,maxHp:s.maxHp,atk:s.atk,eva:Math.max(0,s.eva-infEvaCut(ch)),spd:s.spd,
-      bleed:s.startBleed,breath:Math.min(CFG.breath.cap,s.startBreath||0),dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지')||!!(ch.o&&ch.o.herm),herm:(ch.gear.weapon&&ch.gear.weapon.wx&&ch.gear.weapon.wx.herm)?{n:0,wait:false}:null,thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)?ch.gear.aug.dsp.ammo:0):0,thumbFi:ch.fi||0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),rk:rankCardOf(ch),wx:ewxOf(ch),jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,kwPlus:ch.colorPasv==='brand'?2:0,singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
+      bleed:s.startBleed,breath:Math.min(CFG.breath.cap,s.startBreath||0),dmin:s.dmin,defUp:s.defUp,adv:s.adv,advDie:s.advDie||0,hwando:!!ch.hwando,resonance:!!ch.resonance,oracle:!!ch.oracle,middle:!!(ch.aff&&ch.aff.name==='중지'),bladeBoost:!!(ch.flags&&ch.flags.bladeBoost),kuro:synOf(ch)==='kuro'&&synTier(ch.deck.length)>=2,blade:synOf(ch)==='blade'&&synTier(ch.deck.length)>=2,awl:synOf(ch)==='awl'&&synTier(ch.deck.length)>=2,synT:synOf(ch)?Math.max(0,synTier(ch.deck.length)):0,midDr:ch.aff&&ch.aff.name==='중지'?(CFG.middle.dr[ch.fi||0]||0):0,midEff:ch.aff&&ch.aff.name==='중지'?(CFG.middle.evaEff[ch.fi||0]??1):1,ring:!!(ch.aff&&ch.aff.name==='약지'),work:0,index:!!(ch.aff&&ch.aff.name==='검지')||!!(ch.o&&ch.o.herm),herm:(ch.gear.weapon&&ch.gear.weapon.wx&&ch.gear.weapon.wx.herm)?{n:0,wait:false}:null,thumb:!!(ch.aff&&ch.aff.name==='엄지'),ammo:ch.aff&&ch.aff.name==='엄지'?CFG.thumbAmmo.base+CFG.thumbAmmo.per*(ch.fi||0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.dsp)?ch.gear.aug.dsp.ammo:0):0,thumbFi:ch.fi||0,deck:ch.deck,extraD2:(s.extraD2||0),dmgB:s.dmgB||0,burnHit:s.burnHit||0,pdie:s.pdie||6,hyeolchan:ch.race==='hyeolgwi',psycho:hasInn(ch,'psycho'),swift:hasInn(ch,'swift'),cg:cardGrade(ch.year,ch),rk:rankCardOf(ch),wx:ewxOf(ch),jobPassive:ch.job&&D.hiddenJobs[ch.job]?D.hiddenJobs[ch.job].passive||null:null,mark:!!ch.markOn,odin:!!ch.odin,odinMid:!!(ch.odin&&ch.aff&&ch.aff.name==='중지'),revenge:(ch.odin&&ch.aff&&ch.aff.name==='중지')?CFG.odin.midStart:0,bonB:bonCardB(ch),yeji:!!(ch.yeji||(ch.odin&&ch.o&&ch.o.n==='보냐텔리 가문')),dr:s.dr||0,regen:s.regen||0,kwPlus:(ch.colorPasv==='brand'?2:0)+(ch.aff&&ch.aff.name==='찰스 사무소'?1:0),singHeal:corpType(ch)&&corpType(ch).heal?Math.min((ch.corp.up2?corpType(ch).heal2Max:0)||corpType(ch).healMax||999,corpType(ch).heal+corpLv(ch)*corpType(ch).per):0,warpLead:corpType(ch)&&corpType(ch).lead?corpType(ch).lead+corpLv(ch)*(corpType(ch).leadPer||0):0,egoLight:ch.ego?M.light:0,egoRounds:M.lightRounds,augHunt:isN(ch)?CFG.nWing.augDmg:0,distorted:!!(ch.distForm&&(ch.packName===CFG.distort.packN||ch.packName===CFG.distort.packN2)),laev:laevState(ch.gear.weapon),laevF:laevFrac(ch.gear.weapon),isP:true});
     if(ch.flags&&ch.flags.redMist&&ch.gear&&ch.gear.weapon&&ch.gear.weapon.id==='w_mimicry_p'){P.rmGauge=0;P.rmOpen=0}
     if(ch.flags&&ch.flags.redMist&&CFG.redMist.shieldPct)P.shield=Math.max(P.shield||0,Math.round(s.maxHp*CFG.redMist.shieldPct));   // 붉은 안개 책장: 전투 시작 때 보호막
     if(ch.infinite&&ch.pact){P.bleed=(P.bleed||0)+pactN(ch,'bleedst');const sh=Math.round(P.maxHp*pactV(ch,'shieldst'));if(sh>0)P.shield=Math.max(P.shield||0,sh)}
@@ -3544,8 +3754,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(X.formImmune&&X!==A)continue;
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
       if(k==='burn'&&to!=='s'&&A.wx&&A.wx.burnPlus)n+=A.wx.burnPlus;
-      if(A.kwPlus&&to!=='s'&&(k==='bleed'||k==='burn'||k==='rupture'||k==='stagger'||k==='sink'||k==='nail'))n+=A.kwPlus;
-      let cap_=k==='breath'?bcap(X):k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
+      if(A.kwPlus&&to!=='s'&&(k==='bleed'||k==='burn'||k==='rupture'||k==='stagger'||k==='sink'||k==='nail'||k==='tremor'))n+=A.kwPlus;
+      let cap_=k==='breath'?bcap(X):k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='tremor'?CFG.tremor.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
       if(to!=='s'&&A.kwCapUp&&A.kwCapUp[k])cap_+=A.kwCapUp[k];
       X[k]=Math.min(cap_,b4_+n);
       {const R_=RS_;const gn_=X[k]-b4_;if(R_&&gn_>0){if(A.isP){if(to==='s')R_.buff=(R_.buff||0)+gn_;else R_.debuff=(R_.debuff||0)+gn_}else if(X.isP&&to!=='s')R_.debuffTaken=(R_.debuffTaken||0)+gn_}}
@@ -3793,6 +4003,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv,Math.max(0,CFG.drCap-(B.redPct||0))),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
       if(B.passive&&B.passive.id==='lkLantern'&&(B.lights||0)>0){B.lights--;dmg=0;note+=` 빛 촉수가 부서졌다 (남은 ${B.lights})`}
       if(A.isP&&C.crew&&C.crew.length&&dmg>0){const rs=C.crew.map(m=>({n:m.n,r:d(m.die)})),sum=rs.reduce((a,x)=>a+x.r,0),add=Math.round(sum*CFG.lake.crewW);if(add>0){dmg+=add;note+=` 선원 [${rs.map(x=>x.n+' '+x.r).join(', ')}]×${CFG.lake.crewW} +${add}`}}
+      if(c.tremorBurst&&(B.tremor||0)>0){const used=B.tremor,m=(B.burn||0)>0?CFG.tremor.burnMul:1,add=Math.round(used*c.tremorBurst.per*m);B.tremor=0;dmg+=add;note+=` 진동 ${used}개를 터뜨려 +${add}${m>1?' (화상 ×'+m+')':''}`}
       if(c.harpoonPull&&(B.harpoon||0)>0){const used=B.harpoon,add=used*c.harpoonPull.per;B.harpoon=0;dmg+=add;note+=` 작살 ${used}개를 당겨 +${add}`}
       if(c.verdict){const x=Math.floor((B.maxHp-B.hp)/10);dmg=Math.max(dmg,rawDmg)+x;note+=` 처형 · 방어·감소 무시 · 잃은 체력 ${B.maxHp-B.hp} → 고정 +${x}`}
       if(C.ch.infinite&&dmg>0&&(A.escN||0)>0&&!(B.middle&&B.isP)){const IF_=CFG.infinite,m=B.isP?Math.min(IF_.escMaxP,Math.pow(1+IF_.escPerP,A.escN)):Math.min(IF_.escMaxE,Math.pow(1+IF_.escPerE,A.escN));dmg=Math.round(dmg*m);note+=` 몰아침 ×${m.toFixed(1)}`}
@@ -4101,5 +4312,5 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    canFound,pvProfile,staffList,staffLv,staffEventPick,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

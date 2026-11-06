@@ -801,3 +801,94 @@ html[data-scr="combat"] .wrap{padding-bottom:92px}
 /* 보관함: 장착할 수 없다는 안내(빨간 글자)가 한 줄로 길게 늘어나 장비 설명을 세로로 짜부라뜨리던 문제: 안내는 설명 아래 전체 줄에 줄바꿈해서 보여 준다 */
 .invr.stash>span.bad{grid-column:1/-1;min-width:0;white-space:normal;line-height:1.5}
 .invr.stash>.stack{min-width:0}
+
+/* 꾸미기: 내 전투 카드 테두리 (--c는 캐릭터 색) */
+.swsvg,.swimg{flex:none;display:block}
+/* 심볼 이미지: 이름 앞에서 32px로 보이되 줄 높이는 늘리지 않는다(위아래로 겹쳐 그림). 선택 버튼 안에서는 조금 작게 */
+.swimg{width:32px;height:32px;margin:-5px 0}
+.seg .swsvg,.seg .swimg,.seg .swatch{display:inline-block;vertical-align:middle;margin:0 5px 0 0}
+.seg .swimg{width:24px;height:24px}
+.ent.deco-thick{border-width:3px}
+.ent.deco-dotted{border-style:dashed;border-width:2px}
+.ent.deco-double::before{content:"";position:absolute;inset:3px;border:1px solid color-mix(in srgb,var(--c) 55%,transparent);border-radius:inherit;pointer-events:none}
+.ent.deco-corner::before{content:"";position:absolute;inset:3px;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(var(--c),var(--c)) top left/10px 2px no-repeat,linear-gradient(var(--c),var(--c)) top left/2px 10px no-repeat,
+  linear-gradient(var(--c),var(--c)) top right/10px 2px no-repeat,linear-gradient(var(--c),var(--c)) top right/2px 10px no-repeat,
+  linear-gradient(var(--c),var(--c)) bottom left/10px 2px no-repeat,linear-gradient(var(--c),var(--c)) bottom left/2px 10px no-repeat,
+  linear-gradient(var(--c),var(--c)) bottom right/10px 2px no-repeat,linear-gradient(var(--c),var(--c)) bottom right/2px 10px no-repeat}
+
+/* 시작 화면 왼쪽 칸(PC): 설정·꾸미기·제보. 좁은 화면에서는 숨기고 가운데 열의 접는 칸(.tmob)을 쓴다 */
+.title-side{display:none}
+@media (min-width:1180px){
+  .title-side{display:flex;flex-direction:column;gap:10px;position:fixed;top:128px;left:18px;width:230px;max-height:calc(100vh - 148px);overflow:auto;z-index:5;padding-right:4px}
+  .title-side .seg{display:grid;grid-template-columns:repeat(2,1fr)}
+  .title-side .seg button{padding:8px 6px;line-height:1.3;font-size:13px;white-space:normal}
+  .tmob{display:none!important}
+}
+
+.title-side>*{flex:none}
+.title-side .stsec{background:var(--panel)}
+.title-side .stsec .seg{grid-template-columns:repeat(2,1fr)}
+.stsec summary .swimg{width:22px;height:22px;display:inline-block;vertical-align:middle;margin:0 0 0 8px}
+.stsec summary .swsvg,.stsec summary .swatch{display:inline-block;vertical-align:middle;margin-left:8px}
+.title-side .btn,.title-side .btn.quiet{background:var(--panel)}
+html[data-skin] .title-side .btn,html[data-skin] .title-side .btn.quiet,html[data-skin] .title-side .stsec,html[data-skin] .chron-out{background:var(--panel)!important;backdrop-filter:none}
+
+/* 언어: 일본어는 띄어쓰기가 없어서 한국어용 keep-all이면 줄이 안 접힌다. 금칙 처리(line-break:strict)로 접고, 글꼴도 일본어 글자꼴을 먼저 쓴다 */
+html[lang="ja"]{--serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif;--sans:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif}
+html[lang="ja"] *{word-break:normal !important;line-break:strict;overflow-wrap:anywhere}
+html[lang="ja"] .chip,html[lang="ja"] .btn b{overflow-wrap:break-word}
+.langseg{margin-bottom:6px}
+.langseg button{flex:1}
+
+/* 한국어 줄바꿈: 단어 단위로 줄을 바꾼다(글자 중간에서 끊기지 않게). 아주 긴 덩어리는 넘치지 않도록 필요하면 끊는다. 일본어는 위의 규칙을 쓴다 */
+html:not([lang="ja"]) body{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small,html:not([lang="ja"]) li{text-wrap:pretty}
+
+/* 시작 화면 오른쪽 칸(아주 넓은 PC): 심볼 시험장·고민 중인 방향·규칙 요약·이전 공지·세이브 옮기기. 좁은 화면에서는 가운데 열 아래에 그대로 이어진다 */
+.title-tail{display:flex;flex-direction:column;gap:10px}
+@media (min-width:1280px){
+  .title-tail{position:fixed;top:128px;right:18px;width:230px;max-height:calc(100vh - 148px);overflow:auto;z-index:5;padding-right:4px}
+  .title-tail>*{flex:none}
+  .title-tail .btn,.title-tail .btn.quiet,.title-tail details,.title-tail .panel{background:var(--panel)}
+  html[data-skin] .title-tail .btn,html[data-skin] .title-tail .btn.quiet,html[data-skin] .title-tail .panel,html[data-skin] .title-tail details{background:var(--panel)!important;backdrop-filter:none}
+}
+
+/* 꾸미기 테두리 고르는 칸: 틀 미리보기 타일 */
+.frgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.frbtn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:inherit;font:inherit;cursor:pointer;text-align:center}
+.frbtn.on{border-color:var(--gold,#c9a35a);box-shadow:0 0 0 1px var(--gold,#c9a35a) inset}
+.frbtn:disabled{opacity:.45;cursor:not-allowed}
+.frprev{width:calc(100% - 28px);height:26px;margin:16px 14px 14px;border-radius:8px;background:color-mix(in srgb,var(--c) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line))}
+
+/* 인벤토리 칸: 고정 높이의 창 안에 격자(많으면 밀어 보고, 아래 모서리를 끌어 높이를 바꾼다) */
+.invwrap{height:220px;min-height:110px;max-height:70vh;overflow-y:auto;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--panel2)}
+.invgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.invcell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:4px;border:1px solid var(--line);border-radius:8px;background:#0b0d13;cursor:pointer}
+.invcell img{width:100%;height:100%;object-fit:contain}
+.invcell.on{border-color:var(--gold,#c9a35a);box-shadow:0 0 0 1px var(--gold,#c9a35a) inset}
+.invcell.lock{opacity:.4;filter:grayscale(.8)}
+.invdetail{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+
+/* PC 양옆(기본 테마): 가운데와 양옆 칸이 한 판으로 이어지게, 가장자리를 따로 어둡게 깔지 않는다. 가운데만 아주 약한 테마색 빛 */
+@media (min-width:900px){
+  html:not([data-skin]) body{
+    background:radial-gradient(ellipse at 50% 22%,color-mix(in srgb,var(--gold) 5%,var(--bg)) 0,var(--bg) 70%);
+    background-attachment:fixed;
+  }
+}
+
+.invq{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font:700 20px/1 var(--mono);color:#4a5163;background:#05060a;border-radius:6px}
+.invq.big{width:44px;height:44px;flex:none}
+.invgrid{grid-template-columns:repeat(auto-fill,minmax(46px,1fr))}
+.invcell.lock{opacity:1;filter:none;border-color:var(--line)}
+
+/* 시작 화면의 양옆 점선 띠: 왼쪽·오른쪽 칸이 띠 선을 넘어 삐져나온 것처럼 보이고 가운데 양옆이 비어 보여서 끈다 */
+@media (min-width:1360px){html[data-scr="title"] body::before,html[data-scr="title"] body::after{display:none}}
+
+/* 꾸미기 상세 칸: 좁은 PC 왼쪽 칸에서도 글자가 한 글자씩 떨어지지 않게 줄을 나누고, 버튼은 아래 줄에 둔다 */
+.invdetail{flex-wrap:wrap}
+.invdetail>.stack{flex:1 1 110px;min-width:110px;word-break:keep-all;overflow-wrap:break-word}
+.invdetail>.btn{flex:1 1 100%;width:100%;justify-content:center;align-items:center;text-align:center}
+/* PC 왼쪽 칸(.title-side)의 버튼은 배경이 칸 색으로 덮여 "장착" 같은 주 버튼 글씨가 안 보이던 것을 바로잡는다 */
+.title-side .invdetail .btn.primary,html[data-skin] .title-side .invdetail .btn.primary{background:var(--gold)!important;color:var(--gold-ink)!important;border-color:var(--gold)!important}

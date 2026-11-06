@@ -82,6 +82,8 @@ export const CFG = {
   spec: {furioso: {need: 3, max: 5, seed: 1}, vs: {need: 2, max: 5, seed: 1}} /* 검은 침묵의 장갑 Furioso · 보라눈물 환영난무: 서로 다른 무기(자세) need개를 쓰면 지급, 전투당 최대 max회, 지급 뒤 처음부터 다시 쌓고 전투를 시작할 때 seed개를 이미 쌓아 둔다 */, serpent: {max: 7} /* 보라눈물: 뱀의 장벽 스택 최대 */, vform: {exec: '익스큐셔너 소드', rapier: '레이피어', katana: '카타나'} /* 옛 보랏빛 사복검 */, form: {names: {a: '참격 자세', d: '방어 자세', p: '관통 자세', s: '타격 자세'}, weapon: {a: '보랏빛 사복검', d: '보랏빛 사복검', p: '보랏빛 사복검', s: '보랏빛 사복검'}, atkDmg: 1, defCut: 15, stagger: 1, bleed: 1, burstLight: 5, burstRounds: 2} /* 보랏빛 사복검: 자세 */ /* 보랏빛 사복검의 이름 */,
   warp: {winHealPct: 0.2, chance: 40, leadPlus: 20, laterYears: 5, lead: {maxHp: 8, atk: 1}, rival: {stats: {spd: 1, check: 1}, money: 1500}, after: {bonus: {2: {atk: 2, eva: 2, maxHp: 10}, 5: {atk: 1, eva: 1, maxHp: 4}}}} /* W사 열차 직원: 해마다 이 확률로 열차 안 사건(해가 넘어가지 않음)이 하나 온다. 무한 모드(2막)에서 열차를 내릴지 정하는 서류가 한 번 놓이고, 남아 정리 요원장이 되면 확률이 leadPlus만큼 오르고 lead 보너스를 받는다 */,
   drainCap: 5 /* 무기 흡수(미미크리 등): 한 라운드(턴)에 적중 흡수는 최대 5번까지 */,
+  /* 무한 모드 가속(2026-11, 테섭): 균열 봉인 뒤(또는 from해부터)는 step해 가운데 마지막 해에만 그 시기의 전투·일상 사건을 고르고, 나머지 해는 '조용한 해'로 넘어간다. 소득·회복 같은 해마다의 계산과 가족·직원 같은 시간 기준 사건 확인은 매 해 그대로 돈다. 설계: docs/accel.md */
+  accel: {on: true, after: 'seal', from: 0, step: 25, offerGap: [10, 30] /* 균열을 닫고 이 해 뒤쯤 '시간이 이상한 공간'을 만난다: 들어가면 가속, 들어가지 않으면 지금처럼 */, limit: {every: 50, mul: 5 /* 가속 중 한계 돌파: 50해마다(나이 50의 배수), 10해치 효과의 5배 */}, reward: {shard: 0.6, lv: 0.35, chg: 5, jobs: {gw: {atk: 1, maxHp: 15}, ws: {mat: 0.6}, office: {hpPerGrade: 4, maxHpMax: 24}}} /* 스텝 보상: 가속 없이 25해를 돌면 얻을 몫의 40~70%를 한 번에 준다(실측으로 맞춤). 조각·레벨은 소수로 쌓였다가 정수가 되면 준다. 일반 소속은 조각·레벨·변화의 파편만, 직업은 아래 묶음을 더한다 */, change: {base: 1, step: 1, story: 2, dmg: 0, gains: {atk: [2, 3, 5], maxHp: [24, 36, 60], other: [1, 2, 3]}, bigP: {1: 0.60, 2: 0.45, 3: 0.30, 4: 0.18, 5: 0.08}, midP: 0.30} /* 변화: 변화의 파편으로 올리는 제3의 강화. 낀 장비(무기·방어구·의수)의 깡스탯을 확률로 올린다(작음/보통/큼 가운데 하나, 등급이 낮을수록 '큼'이 나올 확률이 높다). 스텝마다 파편 5개, 백 해 풍경마다 story개. 비용은 장비마다 base에서 시작해 한 번 올릴 때마다 step씩 늘어난다(다른 장비에 쓰면 다시 base부터). dmg는 무기가 없을 때 대신 주는 피해 증가분 */ /* after 'seal': 균열(모든 히든 보스를 만나는 차원 시스템)이 봉인된 뒤부터 가속한다. 그 뒤에 이어지는 불순물 무한 전투 구간이 대상. 'seal'이 아니면 from해부터 */},
   infinite: {famEvery: 30 /* 영생을 이은 가족의 안부가 나오는 간격(해) */, famMind: 3 /* 영생을 이을 때 영구히 줄어드는 최대 정신력 */, pact: {from: 100, every: 50, cap: 5 /* 같은 종류는 5번까지 쌓인다 */, pairMul: 1.5 /* 짝인 제약을 2번 이상 쌓은 버프는 한 번당 효과 ×1.5 */,
     cons: [{id: 'bleedst', n: '피의 대가', e: '전투를 출혈 +1단계로 시작', v: 1, pair: 'leech'}, {id: 'slowheal', n: '상처가 늦게 아문다', e: '승리 뒤 회복 −12%', v: 0.12, pair: 'rewind'}, {id: 'timeslip', n: '어긋난 시간', e: '매 라운드 6% 확률로 행동 불발', v: 0.06, pair: 'first'}, {id: 'heavy', n: '무거운 손', e: '카드를 낼 때 5% 확률로 미끄러짐', v: 0.05, pair: 'echo'}, {id: 'recoil', n: '반동', e: '내가 준 피해의 1.5%를 나도 받음', v: 0.015, pair: 'counter'}, {id: 'crack', n: '금이 간 방패', e: '방어 카드의 회피·보호막 −6%', v: 0.06, pair: 'shieldst'}],
     buffs: [{id: 'rewind', n: '되감기', e: '전투당 한 번, 쓰러질 때 최대 HP의 15%로 일어난다', v: 0.15}, {id: 'first', n: '선공의 권리', e: '전투 첫 공격 피해 +100%', v: 1}, {id: 'echo', n: '잔향', e: '같은 카드를 이어 내면 피해 +5%씩 누적 (최대 5번 연속)', v: 0.05}, {id: 'leech', n: '흡혈', e: '준 피해의 2.5% 회복', v: 0.025}, {id: 'counter', n: '반격', e: '맞은 피해의 10%를 되돌려줌', v: 0.1}, {id: 'shieldst', n: '보호막', e: '전투 시작 때 최대 HP의 7.5% 보호막', v: 0.075}, {id: 'lastb', n: '마지막 숨', e: 'HP 30% 이하일 때 주는 피해 +12%, 받는 피해 −6%', v: 0.12}]},
@@ -258,6 +260,8 @@ export const CFG = {
   rupture: {max: 20},
   /* 전용 책장이 없는 날개: 카드팩 대신 입사 때 보정치를 더 받는다 */
   freeWing: {names: ['K사 날개', 'J사 날개', 'G사 날개'], fx: {maxHp: 6, atk: 2, eva: 2, spd: 2, check: 2}},
+  /* 진동(새벽 사무소): 상대에게 쌓이는 키워드(최대 cap). 공명 폭발 같은 카드가 모두 터뜨려 스택당 피해를 더하고, 상대에게 화상이 있으면 burnMul배 */
+  tremor: {cap: 10, burnMul: 1.5},
   burn: {dmg: 3, dmgMe: 2, max: 20, keep: 0.5, foe: 0.5, tickCap: 22 /* 달궈진 십자가: 라운드 끝 추가 고정 피해의 상한 (화상 상한 15×1.5와 같다) */},
   /* 패시브 근성(형님)·초근성(큰형님) 받는 피해 감소 %: 맞아야 강해지는 중지가 후반에 버티도록 */
   /* 중지 회피 환산: evaEff = 서열별(막내·동생·작은형님·큰형님) 회피의 '피하는 힘' 비율, 줄어든 회피 1당 받는 피해 감소 evaDr%p (근성과 합쳐 drCap까지). cap = 플레이어 되갚음 스택 최대(적은 5), counter = 방어 카드를 낸 라운드에 맞으면 되갚음 스택 × counter의 고정 피해 반격, sinkHit = 중지를 노린 침잠의 명중 감소 배율 */
@@ -383,7 +387,25 @@ export const CFG = {
   giri: {fi: 1, fi2: 2, chance: 60, gap: 5, bigBro: {chance: 50, ppFrac: 0.2, dc: 50, failHp: 6, gap: 1} /* 작은형님이 서열 점수의 ppFrac 이상 모으면 해마다 chance%: 큰형님의 시험 */, kin: 50, anger: 5},
   /* 약지 작품: 적중할 때마다 +1(최대 max, 전투 한정). 스택당 명중 +hit · 피해 +dmg, max에 닿으면 다음 적중 피해 ×finish 후 스택이 after로 줄어든다 */
   ring: {max: 6, hit: 2, dmg: 0, finish: 1.5, after: 3},
-  office: {rank: 5, foundEvery: 5, knockEvery: 4, brokerEvery: 3 /* 사무소 대표의 알선(장비·카드)이 나오는 간격(해) */},
+  office: {rank: 5, foundEvery: 5, knockEvery: 4, brokerEvery: 3 /* 사무소 대표의 알선(장비·카드)이 나오는 간격(해) */,
+    /* 직원: 대표가 공방 거리에서 고용한다. 최대 max명, 고용비 hire, 해마다 월급 wage(의뢰 담당은 수입이 더 크다). 직원은 growEvery해마다 한 단계씩 자라 lvMax까지 오른다. 효과는 단계만큼 곱해진다 */
+    /* 사무소 등급: 해결사 급수와 따로 센다. 직원이 해마다 의뢰를 해결해 성과를 쌓고(성공하면 직원 단계만큼), need만큼 쌓이면 한 등급 오른다. 등급마다 기본 버프(누적이 아닌 그 등급의 값)와 3해(payEvery)마다 수익금이 있다 */
+    /* 이직(사무소 직원끼리): move.every해마다 급수가 맞는 다른 사무소의 제안이 온다(높은 곳부터 최대 offers곳). 옮기면 평판이 깎이고, 한 곳에 오래 머물면 평판이 오른다. 평판 1점마다 공방 거리 장비 값이 priceStep씩 내리거나(오르거나) 한다 */
+    move: {every: 5, offers: 3}, rep: {min: -5, max: 3, moveCost: 2, quickYears: 5, quickExtra: 2, loyalEvery: 5, loyalGain: 1, priceStep: 0.04, priceMin: 0.8, priceMax: 1.25},
+    grade: {names: ['개업', '자리잡음', '이름이 남', '손꼽힘', '명문'], need: [8, 14, 22, 34], chance: 50, chanceLv: 8, payEvery: 3,
+      buff: [{}, {maxHp: 6}, {maxHp: 10, check: 1}, {maxHp: 14, check: 1, atk: 1}, {maxHp: 20, check: 2, atk: 2}], buffTxt: ['없음', '최대 HP +6', '최대 HP +10 · 판정 +1', '최대 HP +14 · 판정 +1 · 공격 +1', '최대 HP +20 · 판정 +2 · 공격 +2'],
+      pay: [300, 500, 800, 1200, 1800]},
+    /* 직원 이벤트: 직원마다 신뢰(0~trustMax, 시작 trustStart)와 성격 2개가 있다. 해마다 chance% 확률로 직원 이벤트가 열리고 다음은 gap해 뒤. 신뢰는 성과를 올릴 확률(신뢰 1당 trustChance%)과 이탈·배신 이벤트의 조건이 된다. 특색(sp)을 인정받은 직원은 효과가 spMul배 */
+    staffEv: {chance: 40, gap: 2, trustStart: 2, trustMax: 5, trustChance: 4, spMul: 1.5, traits: ['성실', '욕심', '겁많음', '불같음'],
+      /* 특색 시험: 직원이 최대 단계(1급)이고 의뢰 해결(실적)이 doneMin건 이상이면 시험 사건이 열린다. 1d100 + 신뢰×trustMul ≥ dc면 합격(특색 인정 + 특수능력), 불합격이면 신뢰 −1, gap해 뒤에 다시(최대 maxTry번).
+         합격하면 특수능력(spAb)을 하나 랜덤으로 얻는다. 신뢰가 가득 찬 직원은 둘. 같은 능력이 또 나오면 중첩된다 (이름은 임시) */
+      exam: {doneMin: 8, dc: 60, trustMul: 5, gap: 3, maxTry: 2, bonusTrust: 5},
+      spAb: [{id: 'edge', n: '날 선 손', fx: {dmgB: 1}, e: '피해 +1'}, {id: 'eye', n: '매의 눈', fx: {atk: 6}, e: '공격 +6'}, {id: 'hide', n: '두꺼운 가죽', fx: {dr: 3}, e: '받는 피해 −3%'}, {id: 'foot', n: '가벼운 발', fx: {spd: 2, eva: 2}, e: '속도 +2 · 회피 +2'},
+        {id: 'mend', n: '응급 손질', fx: {regen: 2}, e: '라운드마다 HP +2'}, {id: 'first', n: '선수', fx: {startBleed: 1}, e: '전투 시작 상대 출혈 +1'}, {id: 'breath', n: '긴 호흡', fx: {startBreath: 1}, e: '전투 시작 호흡 +1'}, {id: 'sense', n: '밝은 귀', fx: {check: 3}, e: '사건 판정 +3'}]},
+    staff: {max: 3, hire: 500, wage: 60, growEvery: 6, lvMax: 3, cands: 2,
+      types: {guard: {n: '경호원', fx: {maxHp: 12}, e: '최대 HP +12'}, scout: {n: '정보원', fx: {check: 1}, e: '사건 판정 +1'}, fighter: {n: '보조 해결사', fx: {atk: 3, dmgB: 0.5}, e: '공격 +3 · 피해 +0.5 (단계마다, 소수는 버림)'}, clerk: {n: '의뢰 담당', fx: {}, inc: 90, e: '해마다 수입 +90안'}},
+      names: ['한결', '도윤', '서하', '마루', '이솔', '강무', '윤슬', '태오', '하람', '시안', '나래', '지호', '보람', '유진', '해든', '다온',
+        '사샤', '아야', '홉킨스', '유리', '안젤리카', '아스톨포', '올리비에', '이오리', '카오루', '러스크', '바야르', '르노', '모제스', '에즈라', '바다', '마르티나', '경미', '재헌', '태인', '오스카', '파멜라', '파멜리', '올가', '미카', '레인', '스테판', '타마키', '리웨이', '에리', '살바도르', '유나', '필립']}},
   relicEvent: {year: 15, chance: 1},
   /* 레바테인: 봉인 상태에서 화상을 unlock번 걸면 해방. 해방 후 자신은 전투 시작 화상 1, selfEvery라운드마다 +1, blueAt 이상이면 자신도 푸른 화염(명중 −selfBlueHit) */
   /* 레바테인 해방 단계: 붉은 화염을 건 횟수가 at에 닿을 때마다 한 단계씩 풀린다. f는 완료 성능에 대한 비율(공격 · 피해 주사위 · 푸른 화염 배율과 점화 · 자신 푸른 화염 명중 감소). f 0.5 이상부터 상대의 붉은 화염이 푸른 화염으로 바뀐다 */

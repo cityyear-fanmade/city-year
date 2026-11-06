@@ -2,8 +2,9 @@
    단일 파일 빌드(npm run build)에서는 이 fetch 대신 데이터가 파일 안에 들어간다. */
 import {createEngine,validateData} from './engine.js';
 import {startUI} from './ui.js';
+import {initI18n,localize} from './i18n.js';
 
-const FILES=['cards','enemies','encounters','events','birth','workshops','fingers','text'];
+const FILES=['cards','enemies','encounters','events','birth','workshops','fingers','web','text'];
 async function loadData(){
   const D={};
   for(const f of FILES){
@@ -14,7 +15,8 @@ async function loadData(){
   }
   return D;
 }
-loadData().then(D=>{
+loadData().then(async D=>{
+  await initI18n();localize(D);
   const err=validateData(D);
   if(err.length)console.warn('데이터 오류:\n'+err.join('\n'));
   window.CITY=startUI(createEngine(D),document.getElementById('app'));
