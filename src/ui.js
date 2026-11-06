@@ -589,7 +589,7 @@ export function startUI(E,app){
     {id:'jb_taboo',n:'금기사냥꾼'},{id:'jb_ws',n:'공방 해결사'},   /* 보냐텔리 가문(bi_bona)은 새 이미지가 올 때까지 뺀다 */
     {id:'bi_lake',n:'대호수로 나간 자'},{id:'bi_blood',n:'혈귀'},{id:'bi_star',n:'별에 선택받은 자'}];
   /* 기록실의 심볼 칸: 어떻게 얻는지와 얻은 심볼 이미지. 이미지가 준비된 심볼부터 목록에 오른다 */
-  const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)',spec1:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec2:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다',spec3:'특색을 얻을 때 세 모양 중 하나를 골라 두고, 이야기(2막)를 끝낸다'};
+  const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)',spec1:'특색을 인정받고 패시브 「일격」을 골라, 이야기(2막)를 끝낸다',spec2:'특색을 인정받고 패시브 「낙인」을 골라, 이야기(2막)를 끝낸다',spec3:'특색을 인정받고 패시브 「재생」을 골라, 이야기(2막)를 끝낸다'};
   Object.assign(SYMDOC,Object.fromEntries(SYMS.filter(x=>/^as_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^wg_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^of_/.test(x.id)).map(x=>[x.id,x.n+' 소속으로 이야기(2막)를 끝낸다'])),{jb_taboo:'N사 날개의 동부 출신으로 직위를 끝까지 올려 금기사냥꾼이 된 채 이야기(2막)를 끝낸다',jb_ws:'공방 해결사로 이야기(2막)를 끝낸다',bi_bona:'보냐텔리 가문으로 태어나 이야기(2막)를 끝낸다',bi_lake:'대호수로 나간 자로 태어나 이야기(2막)를 끝낸다',bi_blood:'혈귀가 된 채로 이야기(2막)를 끝낸다',bi_star:'별에 선택받은 자로 태어나 이야기(2막)를 끝낸다'});
   /* 이야기(2막)가 끝나는 순간의 소속으로 얻는 심볼 id. 소속을 옮기며 모으는 것은 인정하지 않는다 */
   const symOfChar=c=>{const out=[],a=c&&c.aff;if(!c)return out;
@@ -599,6 +599,7 @@ export function startUI(E,app){
       else if(a.type==='office'&&!a.own){const o=SYMS.find(x=>/^of_/.test(x.id)&&x.n===a.name);if(o)out.push(o.id)}
       else{const nm=affName(c),m=SYMS.find(x=>/^(as_|wg_)/.test(x.id)&&x.n===nm);if(m&&(c.promos||0)>=1)out.push(m.id)}}
     {const ORIG={'보냐텔리 가문':'bi_bona','대호수로 나간 자':'bi_lake','별에 선택받은 자':'bi_star'};if(c.o&&ORIG[c.o.n])out.push(ORIG[c.o.n])}   // 출생
+    {const SPP={strike:'spec1',brand:'spec2',regen:'spec3'};if(c.colorDone&&SPP[c.colorPasv])out.push(SPP[c.colorPasv])}   // 특색 심사를 마치고 고른 패시브
     if(E.isWs&&E.isWs(c))out.push('jb_ws');                                                                           // 공방 해결사
     if(c.race==='hyeolgwi')out.push('bi_blood');                                                                       // 혈귀가 된 채로
     if(c.title==='금기사냥꾼'||(c.titleLog||[]).includes('금기사냥꾼'))out.push('jb_taboo');   // N사 날개 동부 출신의 최고 직위
@@ -3325,7 +3326,7 @@ ${symRec(r)}
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testCrowEnd(k){if(!G)return;G.endless=true;G.ch.year=G.year=73;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=false;UI.hwEnd=null;UI.crowEnd=k;UI.death=null;UI.screen='end';render()},
     testRec(){if(!G)return;recordEnd();render()},
-    testSymEnd(type,name,promos,easy,extra){if(!G)return;const c=G.ch;c.aff=type?{type,name}:c.aff;c.promos=promos==null?1:promos;c.fi=promos==null?1:promos;c.easy=!!easy;if(extra){if(extra.origin)c.o=Object.assign({},c.o,{n:extra.origin});if(extra.title){c.title=extra.title}if(extra.race){c.race=extra.race}}UI.endWin=true;UI.oldEnd=true;recordEnd();render();return loadRec().symbols},
+    testSymEnd(type,name,promos,easy,extra){if(!G)return;const c=G.ch;c.aff=type?{type,name}:c.aff;c.promos=promos==null?1:promos;c.fi=promos==null?1:promos;c.easy=!!easy;if(extra){if(extra.origin)c.o=Object.assign({},c.o,{n:extra.origin});if(extra.title){c.title=extra.title}if(extra.race){c.race=extra.race}if(extra.colorPasv){c.colorDone=true;c.colorPasv=extra.colorPasv}}UI.endWin=true;UI.oldEnd=true;recordEnd();render();return loadRec().symbols},
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
     testTitles(a){if(G)G.ch.titles=a},
