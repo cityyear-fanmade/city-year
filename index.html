@@ -7029,7 +7029,7 @@ function startUI(E,app){
     };
     const shops=D.workshops.filter(w=>lakeHome()?w.grade<3:hwHome()?w.grade<=3:true).map(w=>{
       const open=w.grade<=acc||(hwHome()&&w.grade===3);
-      const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade&&(lakeHome()?!!it.lake:hwHome()?(w.grade<3||it.hw):(!it.hw&&!it.lake))).filter(([id,it],_i,all)=>!hwHome()||w.grade===3||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
+      const items=Object.entries(D.items).filter(([,it])=>it.grade===w.grade&&(lakeHome()?!!it.lake:hwHome()?(w.grade<3&&!it.lake||it.hw):(!it.hw&&!it.lake))).filter(([id,it],_i,all)=>!hwHome()||w.grade===3||all.filter(([,x])=>x.slot===it.slot).sort((a,b)=>a[1].price-b[1].price)[0][0]===id).map(([id,it])=>{
         const st=E.canBuy(ch,id),cur=ch.gear[it.slot];
         const note=it.tool&&st==='ok'?`쓰면 사라진다 · 지금 ${((ch.lake||{}).tools||{})[it.tool]||0}개`:it.tool&&st==='money'?'돈이 모자란다':it.tool&&st==='locked'?'이 호수의 소문을 아직 듣지 못했다':it.tool&&st==='owned'?'이미 두 개를 챙겨 두었다':st==='owned'?(it.hw&&(ch.hwGot||[]).includes(id)&&!(cur&&cur.id===id)?'이미 받음':'장착 중'):st==='stash'?'보관 중':st==='eaten'?'이미 섭식한 장비 · 다시 살 수 없다':st==='money'?'돈이 모자란다':st==='distort'?'뒤틀린 몸 · 장비를 쥘 수 없다':st==='nwing'?'N사 날개 · 의체를 쓰지 않는다':st==='herm'?'카두세우스-헤르메스 · 다른 무기는 쥘 수 없다':st==='locked'?'잠김':`${slotLbl(it.slot)} 교체${cur?' · 지금 '+esc(cur.n):''}`;
         if(UI.buyAsk===id&&st==='ok')return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><div class="row between"><b>${it.n}</b><span class="mono" style="color:var(--gold)">${it.hw?'하사':E.money(E.priceOf(ch,id))}</span></div><span class="mono" style="color:var(--gold)">${it.e}</span>${cmpLine(it,cur)}<span class="small dim">${it.tool?'소모형 도구':auxLbl(it)}${cur&&!it.tool?' · 지금 '+esc(cur.n)+'은(는) 보관함으로 간다':''} · ${it.tool?'이 도구를 챙길까?':'이 장비를 맞출까?'}</span><div class="row" style="gap:8px"><button class="btn primary" data-a="buyok" data-i="${id}">${it.perm?'먹는다':it.hw?'받는다':it.tool?'챙긴다':'맞춘다'}</button>${E.isWs(ch)&&!it.tool&&!it.perm&&!it.hw&&ch.ws?`<button class="btn" data-a="buymelt" data-i="${id}">사서 바로 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="5">5개 녹이기</button><button class="btn" data-a="buymelt" data-i="${id}" data-n="10">10개 녹이기</button>`:''}<button class="btn quiet" data-a="buyno">취소</button></div></div>`;
@@ -8943,7 +8943,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.o&&BC.o.race==='hyeolgwi'&&UI.bloodW&&!UI.job)E.bloodWeapon(BC,UI.bloodW);if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
-    shop(){UI.wsMsg=null;E.wsEnsure(G.ch);UI.showIncome=false;UI.screen='shop';render()},
+    shop(){UI.wsMsg=null;UI.enchMsg=null;E.wsEnsure(G.ch);UI.showIncome=false;UI.screen='shop';render()},
     /* 6시즌: 공방 거리에서 쉬어 가기 (공방 거래 없이 정신력 회복) */
     rest(){if(UI.rested)return;if(G.ch.restYear===G.year){UI.rested='이번 해에는 이미 쉬었다 · 정신력은 해마다 한 번만 회복한다';render();return}G.ch.restYear=G.year;const g=E.gainMind(G.ch,CFG.shop.restMind);UI.rested=g?`잠시 쉬었다 · 정신력 +${g} (${G.ch.mind}/${E.mindMax(G.ch)})`:'잠시 쉬었다 · 정신력이 이미 가득하다';UI.showIncome=false;resave();render()},
     buy(id){const ch=G.ch,it=D.items[id];if(AUTOMELT&&it&&E.isWs(ch)&&ch.ws&&!it.tool&&!it.perm&&!it.hw&&E.canBuy(ch,id)==='ok'){ACT.buymelt(id);return}UI.buyAsk=id;render()},
@@ -9021,7 +9021,7 @@ ${(()=>{const S=r.st;if(!S||!S.n)return `<div class="panel stack" style="gap:6px
     usesupply(id){const m=E.useSupply(G.ch,id,null);UI.supMsg=m||'지금은 쓸 데가 없다.';if(m)resave();render()},
     csupply(id){const m=E.useSupply(G.ch,id,C);if(!m)return;C.log.push({t:'kw',s:`${C.P.name} · ${m}`});resave();render()},
     box(t){if(UI.boxDone)return;const c=E.cardBox(G.ch,t);if(c){UI.boxDone=Array.isArray(c)?`상자에서 카드 ${c.length}장이 나왔다. 하나를 고른다.`:'상자에서 카드가 나왔다.';render()}},
-    unshop(){UI.buyAsk=null;saveGame({st:UI.curSt,stock:[],shopDone:true});UI.screen='event';render()},
+    unshop(){UI.buyAsk=null;UI.enchMsg=null;saveGame({st:UI.curSt,stock:[],shopDone:true});UI.screen='event';render()},
     omen(i){
       const st=E.answerOmen(G,UI.omen,i==='1');saveGame({st,stock:[],shopDone:true});
       const m=UI.omen.omen;UI.omen=null;UI.fight=st.enemy;UI.enc=st.enc;UI.avoidText=st.avoided?m.awayT:null;render();
