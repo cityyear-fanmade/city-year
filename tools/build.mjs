@@ -35,7 +35,7 @@ const symTest=process.argv.includes('--symtest')||allTest;
 /* --finger: 손가락 루트 전용 시험판. 출생 화면에 조직 출신·보냐텔리·별에 선택받은 자로 바로 태어나는 버튼이 생긴다 */
 const fingerTest=process.argv.includes('--finger');
 /* --unlocktest: 해금 출생 시험판 */
-const unlockTest=process.argv.includes('--unlocktest')||allTest;
+const unlockTest=process.argv.includes('--unlocktest')||allTest||pubTest;   /* 공개 테섭도 해금 출생·직업은 모두 열어 둔다(기록실·꾸미기 보상은 잠긴 채) */
 /* 번역 사전(data/i18n/*.json): 단일 파일 빌드에는 넣고, --pages 빌드는 data/i18n/ 경로에서 읽는다 */
 const i18nData={};try{const {readdirSync}=await import('node:fs');for(const f of readdirSync(new URL('../data/i18n/',import.meta.url)))if(f.endsWith('.json'))i18nData[f.replace('.json','')]=JSON.parse(readFileSync(new URL('../data/i18n/'+f,import.meta.url),'utf8'))}catch(e){}
 /* 심볼 이미지(assets/symbol/*.png): 단일 파일 빌드에는 data 주소로 넣고, --pages 빌드는 assets 경로를 그대로 쓴다 */

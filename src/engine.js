@@ -2754,7 +2754,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(job==='gw')h.push(`섭식 보너스 · 공격 +${R.jobs.gw.atk} · 최대 HP +${R.jobs.gw.maxHp}`);
       if(job==='ws')h.push('공방 재료(소수는 쌓인다)');
       if(job==='office')h.push(`사무소 등급에 따라 최대 HP 증가`);
-      return {t:`${A.step}해가 흘렀다`,x:`${ag}살. ${accelJobTx[job]} 빠르게 지나간 해들이 한꺼번에 몸에 돌아왔다.`,c:[{l:'지나온 해를 받아들인다',h:h.join(' · '),ok:{t:'걸어온 길이 몸에 정리된다.',fx:{accelStep:job}}}]}}
+      /* 조용히 지나간 해 요약: 지난 스텝 이후 자산·재료·보관함·사무소가 얼마나 달라졌는지 한 줄로 모아 보여 준다 */
+      const sn=ch.accelSnap,O=ch.office,mats=(ch.stash||[]).filter(x=>x&&x.id==='hidmat').length,sm=[];
+      if(sn){const dm=(ch.money||0)-sn.money;if(dm)sm.push(`자산 ${dm>0?'+':'−'}${Math.abs(dm).toLocaleString('ko-KR')}안`);
+        if(isWs(ch)&&mats!==sn.mats)sm.push(`히든 강화재료 ${mats>sn.mats?'+':'−'}${Math.abs(mats-sn.mats)}`);
+        const ds=(ch.stash||[]).length-sn.stash;if(ds)sm.push(`보관함 ${ds>0?'+':'−'}${Math.abs(ds)}`);
+        if(staffOwner(ch)&&O){const gd=(O.grade||1)-sn.grade;if(gd)sm.push(`사무소 등급 ${gd>0?'+':'−'}${Math.abs(gd)}`);const dn=staffList(ch).length-sn.staff;if(dn)sm.push(`직원 ${dn>0?'+':'−'}${Math.abs(dn)}명`)}}
+      ch.accelSnap={money:ch.money||0,mats,stash:(ch.stash||[]).length,grade:(O&&O.grade)||1,staff:staffOwner(ch)?staffList(ch).length:0};
+      const sumTx=sm.length?` 지난 ${A.step}해 동안 · ${sm.join(' · ')}.`:'';
+      return {t:`${A.step}해가 흘렀다`,x:`${ag}살. ${accelJobTx[job]} 빠르게 지나간 해들이 한꺼번에 몸에 돌아왔다.${sumTx}`,xs:[`${ag}살.`,accelJobTx[job],'빠르게 지나간 해들이 한꺼번에 몸에 돌아왔다.'].concat(sumTx?[sumTx.trim()]:[]),c:[{l:'지나온 해를 받아들인다',h:h.join(' · '),ok:{t:'걸어온 길이 몸에 정리된다.',fx:{accelStep:job}}}]}}
     {const rows=chgSlots(ch).filter(x=>(ch.chgShard||0)>=x.cost);if(ch.chgOfferAge!==ag&&rows.length){ch.chgOfferAge=ag;const C=A.change;
       return {t:'변화',x:`변화의 파편 ${ch.chgShard}개를 가지고 있다. 낀 장비 하나를 골라 파편을 쓰면 그 장비가 한 걸음 더 어긋난 모양으로 굳는다. 장비마다 비용을 따로 센다(처음엔 1개, 올릴수록 1개씩 늘고, 다른 장비에 쓰면 다시 1개부터).`,c:rows.map(r=>{const tb=chgTbl(C,r.key),lv=(r.it.chg||0)+1;
         return {l:`${r.it.n} 변화 (${lv}단계)`,h:`파편 ${r.cost}개 · ${CHGST[r.key]} +${tb[0]}~${tb[2]} (확률 · 낮은 등급일수록 크게)`,ok:{t:'굳은 것이 한 번 더 어긋나며 새 모양을 잡는다.',fx:{chgUp:r.sl}}}}).concat([{l:'아직 아낀다',h:'파편은 그대로 남는다 · 다음 스텝에 다시 묻는다',ok:{t:'아직은 이 모양 그대로 둔다.',fx:{}}}])}}}
@@ -2768,7 +2776,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(let i=1;i<=9;i++){if(i*100>ag)break;if(i*100<(ch.accelAge||0))continue;if(!have.includes(i)){m=i;break}}
     if(!m)return null;
     const w=S.world[m-1]||S.world[S.world.length-1],era=m<=3?'early':m<=6?'mid':'late',tk=accelTrack(ch),tl=(S.by[tk]||S.by.general)[era];
-    return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${one(w)} ${tl}`,c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +${CFG.accel.change.story} (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
+    /* 곁에 있던 사람(배우자·아이)이 있었다면 그 이름 한 줄을 붙인다. 이름은 조사 자동 선택을 거친다 */
+    const bd=ch.bond;let fam='';
+    if(bd&&bd.name&&!ch.famBind){const kid=((bd.kids||[]).find(k=>k&&k.n)||{}).n,FM={early:`곁에 있던 ${bd.name}이(가) 불러 주던 이름은 해가 지나도 입에 남아 있다.`,mid:`${bd.name}의 얼굴은 흐려졌지만 그 목소리가 부르던 이름은 아직 남아 있다.${kid?` ${kid}의 이름도 같은 자리에 놓여 있다.`:''}`,late:`${bd.name}${kid?`과(와) ${kid}`:''}의 이름을 마지막으로 불러 본 것이 언제인지 이제 헤아려지지 않는다.`};fam=' '+FM[era]}
+    const wp=one(w);
+    return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${wp} ${tl}${fam}`,xs:[wp,tl].concat(fam?[fam.trim()]:[]),c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +${CFG.accel.change.story} (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
   function advanceYear(G){
     hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);staffTick(G.ch,G.year);officeYear(G.ch,G.year);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */

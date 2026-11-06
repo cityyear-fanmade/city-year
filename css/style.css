@@ -885,3 +885,10 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 
 /* 시작 화면의 양옆 점선 띠: 왼쪽·오른쪽 칸이 띠 선을 넘어 삐져나온 것처럼 보이고 가운데 양옆이 비어 보여서 끈다 */
 @media (min-width:1360px){html[data-scr="title"] body::before,html[data-scr="title"] body::after{display:none}}
+
+/* 꾸미기 상세 칸: 좁은 PC 왼쪽 칸에서도 글자가 한 글자씩 떨어지지 않게 줄을 나누고, 버튼은 아래 줄에 둔다 */
+.invdetail{flex-wrap:wrap}
+.invdetail>.stack{flex:1 1 110px;min-width:110px;word-break:keep-all;overflow-wrap:break-word}
+.invdetail>.btn{flex:1 1 100%;width:100%;justify-content:center;align-items:center;text-align:center}
+/* PC 왼쪽 칸(.title-side)의 버튼은 배경이 칸 색으로 덮여 "장착" 같은 주 버튼 글씨가 안 보이던 것을 바로잡는다 */
+.title-side .invdetail .btn.primary,html[data-skin] .title-side .invdetail .btn.primary{background:var(--gold)!important;color:var(--gold-ink)!important;border-color:var(--gold)!important}

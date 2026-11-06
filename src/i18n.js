@@ -60,7 +60,7 @@ export function localize(D){return lang==='ko'?D:localizeWith(D,dict)}
 /* 화면 글자 하나를 번역한다. 사전과 통째로 같으면 바로 바꾸고, 아니면 숫자·이름이 낀 문장 틀({0}, {1}…)과 맞춰 본다.
    틀에 맞으면 끼어 있던 값을 뽑아 일본어 틀에 다시 끼운다(값도 사전에 있으면 함께 번역) */
 let PAT=null,PATIDX=null,PATSHORT=[];const memo=new Map();
-const UNITS={ja:[[/(\d+)세/g,'$1歳'],[/(\d+)년차/g,'$1年目'],[/(\d+)번/g,'$1回'],[/(\d+)등급/g,'$1等級']]};
+const UNITS={ja:[[/(\d+)세/g,'$1歳'],[/(\d+)년차/g,'$1年目'],[/(\d+)살/g,'$1歳'],[/(\d+)번/g,'$1回'],[/(\d+)등급/g,'$1等級']]};
 const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function buildPat(){
   PAT=[];
