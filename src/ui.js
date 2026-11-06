@@ -586,21 +586,27 @@ export function startUI(E,app){
     {id:'of_yun',n:'윤 사무소'},{id:'of_lamp',n:'가로등 사무소'},{id:'of_molar',n:'어금니 사무소'},{id:'of_hook',n:'갈고리 사무소'},{id:'of_stop',n:'마침표 사무소'},{id:'of_dawn',n:'새벽 사무소'},{id:'of_gaze',n:'시선 사무소'},{id:'of_fist',n:'불주먹 사무소'},{id:'of_wedge',n:'쐐기 사무소'},
     {id:'of_tg',n:'투귀 사무소'},{id:'of_rusk',n:'러스크 사무소'},{id:'of_ch',n:'찰스 사무소'},
     /* 출생·칭호로 얻는 심볼 */
-    {id:'jb_taboo',n:'금기사냥꾼'},{id:'jb_ws',n:'공방 해결사'},   /* 보냐텔리 가문(bi_bona)은 새 이미지가 올 때까지 뺀다 */
-    {id:'bi_lake',n:'대호수로 나간 자'},{id:'bi_blood',n:'혈귀'},{id:'bi_star',n:'별에 선택받은 자'}];
+    {id:'jb_taboo',n:'금기사냥꾼'},{id:'jb_ws',n:'공방 해결사'},{id:'jb_warp',n:'워프열차'},
+    {id:'bi_lake',n:'대호수로 나간 자'},{id:'bi_blood',n:'혈귀'},{id:'bi_star',n:'별에 선택받은 자'},
+    {id:'sy_cloud',n:'흑운회'},{id:'sy_sword',n:'검계'},{id:'sy_awl',n:'밤의 송곳'},
+    {id:'bi_bona',n:'보냐텔리 가문'},{id:'bi_east',n:'동부 출신 외곽 생존자'},{id:'bi_ego',n:'E.G.O 적성자'},{id:'bi_hatch',n:'부화장에서 태어난 자'},{id:'bi_hong',n:'홍원의 자제'},
+    {id:'un_crow',n:'까마귀팀 복제체'},{id:'un_herm',n:'신탁대행자 · 헤르메스'},{id:'un_lib',n:'도서관의 지정사서'},{id:'un_claw',n:'머리의 발톱'},{id:'un_arb',n:'조율자'},{id:'un_gw',n:'G사 병기 출신'}];
   /* 기록실의 심볼 칸: 어떻게 얻는지와 얻은 심볼 이미지. 이미지가 준비된 심볼부터 목록에 오른다 */
   const SYMDOC={thumb:'엄지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',index:'검지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',middle:'중지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',ring:'약지 조직에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',pinky:'정식 소지 소속으로 이야기(2막)를 끝낸다 (서브 직업 형태의 소지는 인정하지 않는다)',spec1:'특색을 인정받고 패시브 「일격」을 골라, 이야기(2막)를 끝낸다',spec2:'특색을 인정받고 패시브 「낙인」을 골라, 이야기(2막)를 끝낸다',spec3:'특색을 인정받고 패시브 「재생」을 골라, 이야기(2막)를 끝낸다'};
-  Object.assign(SYMDOC,Object.fromEntries(SYMS.filter(x=>/^as_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^wg_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^of_/.test(x.id)).map(x=>[x.id,x.n+' 소속으로 이야기(2막)를 끝낸다'])),{jb_taboo:'N사 날개의 동부 출신으로 직위를 끝까지 올려 금기사냥꾼이 된 채 이야기(2막)를 끝낸다',jb_ws:'공방 해결사로 이야기(2막)를 끝낸다',bi_bona:'보냐텔리 가문으로 태어나 이야기(2막)를 끝낸다',bi_lake:'대호수로 나간 자로 태어나 이야기(2막)를 끝낸다',bi_blood:'혈귀가 된 채로 이야기(2막)를 끝낸다',bi_star:'별에 선택받은 자로 태어나 이야기(2막)를 끝낸다'});
+  Object.assign(SYMDOC,Object.fromEntries(SYMS.filter(x=>/^as_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^wg_/.test(x.id)).map(x=>[x.id,x.n+'에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다'])),Object.fromEntries(SYMS.filter(x=>/^of_/.test(x.id)).map(x=>[x.id,x.n+' 소속으로 이야기(2막)를 끝낸다'])),{jb_taboo:'N사 날개의 동부 출신으로 직위를 끝까지 올려 금기사냥꾼이 된 채 이야기(2막)를 끝낸다',jb_ws:'공방 해결사로 이야기(2막)를 끝낸다',bi_bona:'보냐텔리 가문으로 태어나 이야기(2막)를 끝낸다',jb_warp:'W사 날개에서 워프열차 직원인 채로 이야기(2막)를 끝낸다',sy_cloud:'흑운회에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',sy_sword:'검계에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',sy_awl:'밤의 송곳에서 직위를 올려, 그 소속인 채로 이야기(2막)를 끝낸다',bi_east:'동부 출신 외곽 생존자로 태어나 이야기(2막)를 끝낸다',bi_ego:'E.G.O 적성자로 태어나 이야기(2막)를 끝낸다',bi_hatch:'부화장에서 태어난 자로 이야기(2막)를 끝낸다',bi_hong:'홍원의 자제로 태어나 이야기(2막)를 끝낸다',un_crow:'까마귀팀 복제체로 태어나 이야기(2막)를 끝낸다',un_herm:'신탁대행자 · 헤르메스로 태어나 이야기(2막)를 끝낸다',un_lib:'도서관의 지정사서로 태어나 이야기(2막)를 끝낸다',un_claw:'머리의 발톱으로 태어나 이야기(2막)를 끝낸다',un_arb:'조율자로 태어나 이야기(2막)를 끝낸다',un_gw:'G사 병기 출신으로 태어나 이야기(2막)를 끝낸다',bi_lake:'대호수로 나간 자로 태어나 이야기(2막)를 끝낸다',bi_blood:'혈귀가 된 채로 이야기(2막)를 끝낸다',bi_star:'별에 선택받은 자로 태어나 이야기(2막)를 끝낸다'});
   /* 이야기(2막)가 끝나는 순간의 소속으로 얻는 심볼 id. 소속을 옮기며 모으는 것은 인정하지 않는다 */
   const symOfChar=c=>{const out=[],a=c&&c.aff;if(!c)return out;
+    const SYN={'흑운회':'sy_cloud','검계':'sy_sword','밤의 송곳':'sy_awl'};
     const FING={'엄지':'thumb','검지':'index','중지':'middle','약지':'ring','소지':'pinky'};
     if(a){
-      if(a.type==='finger'&&FING[a.name]){if(a.name==='소지'?c.pinky:(c.fi||0)>=1)out.push(FING[a.name])}
+      if(a.type==='finger'&&SYN[a.name]){if((c.fi||0)>=1)out.push(SYN[a.name])}
+      else if(a.type==='finger'&&FING[a.name]){if(a.name==='소지'?c.pinky:(c.fi||0)>=1)out.push(FING[a.name])}
       else if(a.type==='office'&&!a.own){const o=SYMS.find(x=>/^of_/.test(x.id)&&x.n===a.name);if(o)out.push(o.id)}
       else{const nm=affName(c),m=SYMS.find(x=>/^(as_|wg_)/.test(x.id)&&x.n===nm);if(m&&(c.promos||0)>=1)out.push(m.id)}}
-    {const ORIG={'보냐텔리 가문':'bi_bona','대호수로 나간 자':'bi_lake','별에 선택받은 자':'bi_star'};if(c.o&&ORIG[c.o.n])out.push(ORIG[c.o.n])}   // 출생
+    {const ORIG={'보냐텔리 가문':'bi_bona','대호수로 나간 자':'bi_lake','별에 선택받은 자':'bi_star','동부 출신 외곽 생존자':'bi_east','E.G.O 적성자':'bi_ego','부화장에서 태어난 자':'bi_hatch','홍원의 자제':'bi_hong','까마귀팀 복제체':'un_crow','신탁대행자 · 헤르메스':'un_herm','도서관의 지정사서':'un_lib','머리의 발톱':'un_claw','조율자':'un_arb','G사 병기 출신':'un_gw'};if(c.o&&ORIG[c.o.n])out.push(ORIG[c.o.n])}   // 출생
     {const SPP={strike:'spec1',brand:'spec2',regen:'spec3'};if(c.colorDone&&SPP[c.colorPasv])out.push(SPP[c.colorPasv])}   // 특색 심사를 마치고 고른 패시브
     if(E.isWs&&E.isWs(c))out.push('jb_ws');                                                                           // 공방 해결사
+    if(c.wtrain&&a&&a.name==='W사 날개')out.push('jb_warp');                                                              // 워프열차 직원
     if(c.race==='hyeolgwi')out.push('bi_blood');                                                                       // 혈귀가 된 채로
     if(c.title==='금기사냥꾼'||(c.titleLog||[]).includes('금기사냥꾼'))out.push('jb_taboo');   // N사 날개 동부 출신의 최고 직위
     return out};
@@ -3326,7 +3332,7 @@ ${symRec(r)}
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testCrowEnd(k){if(!G)return;G.endless=true;G.ch.year=G.year=73;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=false;UI.hwEnd=null;UI.crowEnd=k;UI.death=null;UI.screen='end';render()},
     testRec(){if(!G)return;recordEnd();render()},
-    testSymEnd(type,name,promos,easy,extra){if(!G)return;const c=G.ch;c.aff=type?{type,name}:c.aff;c.promos=promos==null?1:promos;c.fi=promos==null?1:promos;c.easy=!!easy;if(extra){if(extra.origin)c.o=Object.assign({},c.o,{n:extra.origin});if(extra.title){c.title=extra.title}if(extra.race){c.race=extra.race}if(extra.colorPasv){c.colorDone=true;c.colorPasv=extra.colorPasv}}UI.endWin=true;UI.oldEnd=true;recordEnd();render();return loadRec().symbols},
+    testSymEnd(type,name,promos,easy,extra){if(!G)return;const c=G.ch;c.aff=type?{type,name}:c.aff;c.promos=promos==null?1:promos;c.fi=promos==null?1:promos;c.easy=!!easy;if(extra){if(extra.origin)c.o=Object.assign({},c.o,{n:extra.origin});if(extra.title){c.title=extra.title}if(extra.race){c.race=extra.race}if(extra.colorPasv){c.colorDone=true;c.colorPasv=extra.colorPasv}if(extra.wtrain)c.wtrain=true}UI.endWin=true;UI.oldEnd=true;recordEnd();render();return loadRec().symbols},
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
     testTitles(a){if(G)G.ch.titles=a},
