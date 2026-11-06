@@ -581,7 +581,7 @@ export function startUI(E,app){
   const symImg=(id,big)=>{const b=symBase(id,big);if(!/^spec/.test(id))return b;const pvx=(typeof decoPv==='function')?decoPv():null,hex=pvx!=null?D.colors[pvx].hex:(typeof G!=='undefined'&&G&&G.ch&&G.ch.color)||'#c9a35a',key=id+'|'+(big?1:0)+'|'+hex;if(typeof TINT[key]==='string'&&TINT[key]!=='pending')return TINT[key];symTint(b,hex,key);return b};
   const SYMS=[{id:'thumb',n:'엄지'},{id:'index',n:'검지'},{id:'middle',n:'중지'},{id:'ring',n:'약지'},{id:'pinky',n:'소지'},{id:'spec1',n:'특색 (가)'},{id:'spec2',n:'특색 (나)'},{id:'spec3',n:'특색 (다)'},
     /* 협회 8 · 날개 6 · 사무소 2: 이야기(2막)를 끝낼 때의 소속으로 얻는다. 이미지는 assets/symbol/<id>.png */
-    ...['하나','츠바이','트레스','시','생크','리우','세븐','디에치'].map((n,i)=>({id:'as_'+(i+1),n:n+' 협회'})).filter(x=>!['as_4','as_5','as_6'].includes(x.id)),   // 시·생크·리우는 새 이미지가 올 때까지 뺀다
+    ...['하나','츠바이','트레스','시','생크','리우','세븐','디에치'].map((n,i)=>({id:'as_'+(i+1),n:n+' 협회'})).filter(x=>!['as_5','as_6'].includes(x.id)),   // 생크·리우는 새 이미지가 올 때까지 뺀다
     ...[['wg_k','K사 날개'],['wg_r','R사 날개'],['wg_w','W사 날개'],['wg_n','N사 날개'],['wg_j','J사 날개'],['wg_g','G사 날개']].map(([id,n])=>({id,n})),
     {id:'of_yun',n:'윤 사무소'},{id:'of_lamp',n:'가로등 사무소'},{id:'of_molar',n:'어금니 사무소'},{id:'of_hook',n:'갈고리 사무소'},{id:'of_stop',n:'마침표 사무소'},{id:'of_dawn',n:'새벽 사무소'},{id:'of_gaze',n:'시선 사무소'},{id:'of_fist',n:'불주먹 사무소'},{id:'of_wedge',n:'쐐기 사무소'},
     {id:'of_tg',n:'투귀 사무소'},{id:'of_rusk',n:'러스크 사무소'},{id:'of_ch',n:'찰스 사무소'},
@@ -637,6 +637,15 @@ export function startUI(E,app){
     return `<svg class="swsvg" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="${m.d}" fill="${col}"/></svg>`};
   /* 심볼 시험장(--symtest 빌드 전용): 전투 느낌 · 획득 화면 · 장착 방법을 미리 보는 곳 */
   const SYMTXT={thumb:'엄지 조직의 서열을 올려 이야기를 끝냈다',index:'검지 조직의 서열을 올려 이야기를 끝냈다',middle:'중지 조직의 서열을 올려 이야기를 끝냈다',ring:'약지 조직의 서열을 올려 이야기를 끝냈다',pinky:'정식 소지 소속으로 이야기를 끝냈다 (서브 직업 형태의 소지는 인정하지 않는다)'};
+  /* 오마케룸(--alltest 전용): 새로 만든 것을 처음부터 하지 않고 해당 장면으로 바로 가 본다 */
+  const LABSYM={
+    '산하':[['흑운회',['finger','흑운회',1]],['검계',['finger','검계',1]],['밤의 송곳',['finger','밤의 송곳',1]]],
+    '히든 출생':['보냐텔리 가문','동부 출신 외곽 생존자','E.G.O 적성자','부화장에서 태어난 자','홍원의 자제'].map(n=>[n,[null,null,1,{origin:n}]]),
+    '해금 출생':['까마귀팀 복제체','신탁대행자 · 헤르메스','도서관의 지정사서','머리의 발톱','조율자','G사 병기 출신'].map(n=>[n,[null,null,1,{origin:n}]]),
+    '직업·협회':[['워프열차',['wing','W사 날개',1,{wtrain:true}]],['시 협회',['assoc','시 협회',1]]],
+    '특색 패시브':[['일격 → 특색 (가)',['office','윤 사무소',1,{colorPasv:'strike'}]],['낙인 → 특색 (나)',['office','윤 사무소',1,{colorPasv:'brand'}]],['재생 → 특색 (다)',['office','윤 사무소',1,{colorPasv:'regen'}]]]};
+  const LABMOVE={t:'이직 제안',x:'쐐기 사무소에서 6년을 보냈다. 다른 사무소에서 사람을 보내 넌지시 의향을 물었다. 옮기면 지금 사무소에서의 평판이 깎인다.',c:[{l:'불주먹 사무소로 옮긴다',h:'공격 +2 · 최대 HP +8 · 카드 불씨 던지기 · 평판 −2',ok:{t:'쐐기 사무소에 사직서를 냈다. 이튿날부터 불주먹 사무소의 간판 아래로 출근한다.',fx:{atk:2,maxHp:8,join:{type:'office',name:'불주먹 사무소'},officeMove:true}}},{l:'지금 사무소에 남는다',h:'평판은 그대로 · 오래 머물수록 평판이 오른다',ok:{t:'지금 자리에서 조금 더 있어 보기로 한다.',fx:{}}}]};
+  function symEndSim(type,name,promos,easy,extra){if(!G)return;const c=G.ch;c.aff=type?{type,name}:c.aff;c.promos=promos==null?1:promos;c.fi=promos==null?1:promos;c.easy=!!easy;if(extra){if(extra.origin)c.o=Object.assign({},c.o,{n:extra.origin});if(extra.title){c.title=extra.title}if(extra.race){c.race=extra.race}if(extra.colorPasv){c.colorDone=true;c.colorPasv=extra.colorPasv}if(extra.wtrain)c.wtrain=true}UI.endWin=true;UI.oldEnd=true;recordEnd();render();return loadRec().symbols}
   function vSymLab(){
     const g=UI.symGain,cur=decoGet(),col=(G&&G.ch&&G.ch.color)||'#c9a35a';
     const gain=g?(()=>{const x=SYMS.find(q=>q.id===g);const eq=cur.mark==='sym_'+g;return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">심볼 획득</span>
@@ -654,6 +663,12 @@ export function startUI(E,app){
         <div class="row" style="gap:8px"><button class="btn" data-a="symrec" data-i="some">2개 얻은 상태</button><button class="btn" data-a="symrec" data-i="all">모두 얻은 상태</button><button class="btn quiet" data-a="symrec" data-i="none">초기화</button></div></div>
       <div class="panel stack" style="gap:8px"><span class="eyebrow">3 · 어디서 장착하나</span>
         <p class="small dim">설정 → 꾸미기(시작 화면 왼쪽 칸, 모바일은 접는 칸)에서 "이름 앞 모양" 줄의 심볼을 고른다. 한 번 얻으면 모든 판에 적용되고, 전투 중 내 카드의 이름 앞에 32px로 붙는다.</p>${vDeco('lab')}</div>
+      <div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">4 · 오마케룸 — 새로 만든 것 바로 확인</span>
+        <p class="small dim">처음부터 하지 않고 그 장면으로 바로 간다. 장면을 본 뒤 화면 아래 "시험장으로"를 누르면 돌아온다. 아래 심볼 버튼은 "이 조건으로 이야기를 끝냈다"고 가정한 진짜 엔딩 화면이 뜨고, 기록실에 실제로 기록된다.</p>
+        <span class="eyebrow">사무소 · 직원</span>
+        <div class="seg" style="flex-wrap:wrap"><button data-a="lab" data-i="found">사무소 개업 화면</button><button data-a="lab" data-i="office">내 사무소 · 직원 화면</button><button data-a="lab" data-i="staffev">직원 이벤트 (첫 면담 우선)</button><button data-a="lab" data-i="move">이직 제안 · 평판</button></div>
+        ${Object.entries(LABSYM).map(([g,a])=>`<span class="eyebrow">심볼 얻기 · ${g}</span><div class="seg" style="flex-wrap:wrap">${a.map(([n],i)=>`<button data-a="lab" data-i="sym:${g}:${i}">${esc(n)}</button>`).join('')}</div>`).join('')}
+        <button class="btn quiet" data-a="symrec" data-i="none">기록실 심볼 초기화</button></div>
       <button class="btn" data-a="symback">시작 화면으로</button>`;
   }
   /* 꾸미기: 미리보기는 늘 위에 보이고, 모양·심볼·테두리 고르는 칸은 각각 접었다 펼 수 있다. pre는 칸마다 겹치지 않게 붙이는 접힘 상태 이름 */
@@ -2777,7 +2792,7 @@ ${symRec(r)}
     const bagOver=ok&&UI.bag&&pend;
     const ovKey=UI.help&&!UI.cfg?'help':UI.cfg?'cfg':showNotice&&!pend&&!(ok&&UI.bag)?'notice':pend?'offer:'+(G.ch.packOffer?'p':(G.ch.gearOffers||[]).length?'g':((G.ch.picks||[]).length&&!(G.ch.offers||[]).length)?'k':'c')+(UI.swap?'s':''):ov?'bag':'';
     const shO=app.querySelector('.sheet'),stO=shO?shO.scrollTop:0,scrKey=ovKey+(ok&&UI.bag?':'+UI.bag:'');
-    app.innerHTML=`${UI.symlab&&s==='combat'?'<button class="btn quiet symexit" data-a="symexit" style="position:fixed;bottom:118px;left:50%;transform:translateX(-50%);z-index:90;width:auto;padding:8px 14px;background:var(--panel)">시험장으로 나가기</button>':''}${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${['records','chron','chronview'].includes(s)?`<button class="backbtn" data-a="${s==='chronview'?'chron':'title'}" aria-label="돌아가기">←</button>`:''}${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${(()=>{const cb=UI.cbar;UI.cbar='';return s==='combat'&&cb&&!ov?`<div class="cbar"><div class="cbar-in">${cb}</div></div>`:''})()}${ov}${pend&&!UI.bag&&!UI.help&&!UI.cfg?'<button class="bagpeek" data-a="bag" data-i="card" aria-label="가방 열기">가방 보기</button>':''}${!ov&&!['title','birth'].includes(s)?`<button class="bartog" data-a="bartog" aria-label="${barHidden()?'위쪽 버튼 펼치기':'위쪽 버튼 접기'}">${barHidden()?'﹀':'︿'}</button>`:''}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+(FS.ok()?`<button class="cfgbtn fsbtn" data-a="fs" aria-label="${FS.on()?'전체 화면 끝내기':'전체 화면'}" title="${FS.on()?'전체 화면 끝내기':'전체 화면'}">${FS.on()?'창화면':'전체화면'}</button>`:'')+quickAudio():''}`;
+    app.innerHTML=`${UI.symlab&&s!=='symlab'&&s!=='title'?'<button class="btn quiet symexit" data-a="symexit" style="position:fixed;bottom:118px;left:50%;transform:translateX(-50%);z-index:90;width:auto;padding:8px 14px;background:var(--panel)">시험장으로 나가기</button>':''}${s==='title'?chronBtn('chron-out'):''}<div class="wrap">${['records','chron','chronview'].includes(s)?`<button class="backbtn" data-a="${s==='chronview'?'chron':'title'}" aria-label="돌아가기">←</button>`:''}${tab}${h}</div>${h.includes('dock-in')?vDock('dock-out')+vSideL():s==='combat'&&C&&C.P?vSideL(C.P):''}${(()=>{const cb=UI.cbar;UI.cbar='';return s==='combat'&&cb&&!ov?`<div class="cbar"><div class="cbar-in">${cb}</div></div>`:''})()}${ov}${pend&&!UI.bag&&!UI.help&&!UI.cfg?'<button class="bagpeek" data-a="bag" data-i="card" aria-label="가방 열기">가방 보기</button>':''}${!ov&&!['title','birth'].includes(s)?`<button class="bartog" data-a="bartog" aria-label="${barHidden()?'위쪽 버튼 펼치기':'위쪽 버튼 접기'}">${barHidden()?'﹀':'︿'}</button>`:''}${!ov&&!['title','birth'].includes(s)?'<button class="cfgbtn" data-a="cfg" aria-label="설정" title="설정">⚙</button><button class="cfgbtn helpbtn" data-a="help" aria-label="카드·키워드 설명" title="카드·키워드 설명">?</button>'+(FS.ok()?`<button class="cfgbtn fsbtn" data-a="fs" aria-label="${FS.on()?'전체 화면 끝내기':'전체 화면'}" title="${FS.on()?'전체 화면 끝내기':'전체 화면'}">${FS.on()?'창화면':'전체화면'}</button>`:'')+quickAudio():''}`;
     if(ov&&ovKey!==UI.lastOv){const sh=app.querySelector('.sheet');if(sh)anim(sh,'bagopen',420)}
     if(ov&&scrKey===UI.lastScr){const sh=app.querySelector('.sheet');if(sh)sh.scrollTop=stO}
     UI.lastScr=scrKey;
@@ -3064,12 +3079,19 @@ ${symRec(r)}
     bgmext(i){BGM.setExt(+i);BGM.setStyle('ext');bgmSave();render()},
     bgmstep(i){const p=Math.round(BGM.vol()*100),n=+i>0?Math.floor(p/10)*10+10:Math.ceil(p/10)*10-10;BGM.setVol(clamp(n,0,100)/100);bgmSave();render()},
     symlab(){if(!G){store.del(SAVE);UI.confirmNew=null;ACT.start();ACT.live()}UI.symlab=true;UI.screen='symlab';render()},
+    lab(k){if(!G)return;const c=G.ch;
+      if(k.startsWith('sym:')){const [,g,i]=k.split(':'),it=LABSYM[g]&&LABSYM[g][+i];if(it)symEndSim(...it[1]);return}
+      if(k==='found'){c.licensed=true;c.rank=5;c.officePick=true;UI.res={t:'사무소 개설',chips:[]};UI.screen='result';render();return}
+      if(k==='office'||k==='staffev'){c.office=c.office||{name:'새벽빛 사무소',kw:'bleed',tier:0};c.aff={type:'office',name:c.office.name,own:true};c.licensed=true;c.rank=4;c.money=3000;if(!(E.staffList(c)||[]).length)E.hireStaff(c,0,G.year);
+        if(k==='office'){UI.stock=[];UI.bag='office';render();return}
+        const ev=E.staffEventPick(G);if(ev){UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()}else{UI.res={t:'직원 이벤트 없음',x:'지금은 일어날 직원 이벤트가 없습니다. 한 번 더 눌러 보세요.',chips:[]};UI.screen='result';render()}return}
+      if(k==='move'){c.licensed=true;c.rank=5;c.aff={type:'office',name:'쐐기 사무소'};c.affLog=['쐐기 사무소'];UI.ev=LABMOVE;UI.fight=null;UI.omen=null;UI.screen='event';render()}},
     symrec(i){const r=loadRec();r.symbols=i==='all'?SYMS.map(x=>x.id):i==='some'?['thumb','middle']:[];store.set(REC,JSON.stringify(r));render()},
     symback(){UI.symlab=false;UI.screen='title';render()},
     symgain(i){UI.symGain=i||null;render()},
     symequip(i){const cur=decoGet();cur.mark=cur.mark==='sym_'+i?'square':'sym_'+i;store.set(DECOK,JSON.stringify(cur));render()},
     symfight(){startCombat('lamp');C.P.hp=C.P.maxHp=1000000;C.E.hp=C.E.maxHp=100000000;render()},
-    symexit(){if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}C=null;PLAYING=false;SKIP=false;UI.paused=false;UI.screen='symlab';render()},
+    symexit(){if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}C=null;PLAYING=false;SKIP=false;UI.paused=false;UI.endWin=false;UI.oldEnd=false;UI.ev=null;UI.res=null;UI.bag=null;UI.screen='symlab';render()},
     deco(i){const [k,id]=String(i).split(':');if(k==='pv'){const c=decoGet();c.pv=id==='none'?null:+id;store.set(DECOK,JSON.stringify(c));render();return}const o=(k==='mark'?marks():FRAMES).find(x=>x.id===id);if(!o||!decoOk(o))return;const cur=decoGet();cur[k]=id;store.set(DECOK,JSON.stringify(cur));render()},
     skin(i){SKIN=i;BGM.setMood(i);store.set('cityYearSkin',i);document.documentElement.dataset.skin=i;render()},
     endless(){G.endless=true;UI.shareText=UI.shareMsg=UI.imgUrl=null;flow()},
@@ -3332,7 +3354,7 @@ ${symRec(r)}
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testCrowEnd(k){if(!G)return;G.endless=true;G.ch.year=G.year=73;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=false;UI.hwEnd=null;UI.crowEnd=k;UI.death=null;UI.screen='end';render()},
     testRec(){if(!G)return;recordEnd();render()},
-    testSymEnd(type,name,promos,easy,extra){if(!G)return;const c=G.ch;c.aff=type?{type,name}:c.aff;c.promos=promos==null?1:promos;c.fi=promos==null?1:promos;c.easy=!!easy;if(extra){if(extra.origin)c.o=Object.assign({},c.o,{n:extra.origin});if(extra.title){c.title=extra.title}if(extra.race){c.race=extra.race}if(extra.colorPasv){c.colorDone=true;c.colorPasv=extra.colorPasv}if(extra.wtrain)c.wtrain=true}UI.endWin=true;UI.oldEnd=true;recordEnd();render();return loadRec().symbols},
+    testSymEnd(type,name,promos,easy,extra){return symEndSim(type,name,promos,easy,extra)},
     testDeath(y,foe,hunt){if(!G)return;G.year=G.ch.year=y;UI.endWin=false;UI.trueEnd=false;UI.death={year:y,foe,hidden:false,hunt:hunt||null};UI.screen='end';render()},
     testOut(k){if(!G)return;G.infinite=true;G.year=G.ch.year=80;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outerEnd=false;UI.outEnd=k;UI.death=null;UI.screen='end';render()},
     testTitles(a){if(G)G.ch.titles=a},
