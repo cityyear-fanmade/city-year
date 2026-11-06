@@ -24,7 +24,9 @@ export function startUI(E,app){
   const REC='cityYearRecords',DAILYK='cityYearDaily';
   const VERSION='v10.4.4';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
-  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}const o=Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{});return (typeof window!=='undefined'&&window.CITY_ALLREC)?fillAllRec(o):o};
+  /* 시험판에서 "해금 규칙대로 보기"를 켜면 기록실·꾸미기가 실제 플레이어처럼 잠겨 보인다(시험장 4번 칸에서 바꾼다) */
+  const realUnlock=()=>{try{return localStorage.getItem('cityYearRealUnlock')==='1'}catch(e){return false}};
+  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}const o=Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{});return (typeof window!=='undefined'&&window.CITY_ALLREC&&!realUnlock())?fillAllRec(o):o};
   /* 개인 시험판(build --alltest): 기록실의 모든 칸(엔딩·칭호·히든 보스·출신·소속·인연·장비·심볼·타고난 것)을 채워 연다. 아직 정의되지 않은 목록은 건너뛴다 */
   function fillAllRec(r){
     const T=f=>{try{f()}catch(e){}};
@@ -630,13 +632,13 @@ export function startUI(E,app){
   (function(){if(typeof document==='undefined')return;const st=document.createElement('style');st.textContent=Object.entries(FRIMG).map(([id,[,sl]])=>`.ent.deco-${id}{border:3px solid transparent;border-image:url("${frameSrc(id)}") ${sl} / 20px / 14px stretch}`).join('\n');document.head.appendChild(st)})();
   const decoRec=()=>{const r=loadRec();return {titles:Object.keys(r.titles||{}).filter(k=>(r.titles[k]||0)>0).length,endings:(r.endings||[]).length,hard:!!r.hardClear}};
   /* 개인 시험판(window.CITY_OPENALL, build --alltest)에서만 모든 심볼·테두리를 해금 조건 없이 연다. 공개 테섭과 본섭은 조건대로 */
-  const decoOk=o=>{if(!o.unlock)return true;if(typeof window!=='undefined'&&window.CITY_OPENALL)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);if(u.rw)return symHave()>=Math.ceil(SYMS.length*u.rw);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
+  const decoOk=o=>{if(!o.unlock)return true;if(typeof window!=='undefined'&&window.CITY_OPENALL&&!realUnlock())return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);if(u.rw)return symHave()>=Math.ceil(SYMS.length*u.rw);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
   const decoWhy=o=>{const u=o.unlock||{};return u.rw?`심볼 ${Math.round(u.rw*100)}% 수집`:u.sym?'심볼 획득':u.hard?'하드 완주':u.titles?`칭호 ${u.titles}개`:u.endings?`엔딩 ${u.endings}개`:''};
   const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain',pv:Number.isInteger(o.pv)?o.pv:null}};
   /* 특색 색 미리보기: 판을 시작하기 전(시작 화면)에서만 꾸미기에 적용한다. 판 안에서는 태어날 때 정해진 내 색이 그대로 쓰인다 */
   const decoPv=()=>{if(G&&G.ch&&UI.screen!=='title')return null;let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const v=o.pv;return Number.isInteger(v)&&D.colors[v]?v:null};
   /* 인벤토리 칸: 크기가 고정된 창 안에 작은 칸을 격자로 놓고, 많으면 위아래로 밀어 본다(아래 모서리를 끌어 창 높이를 바꿀 수도 있다) */
-  const invGrid=(items,sel,act)=>`<div class="invwrap" aria-label="목록"><div class="invgrid">${items.map(x=>`<button class="invcell${sel===x.id?' on':''}${x.ok===false?' lock':''}" data-a="${act}" data-i="${x.id}" title="${esc(x.n)}${x.ok===false&&x.why?' · '+esc(x.why):''}" aria-label="${esc(x.n)}"><img src="${x.img}" alt="" width="40" height="40" loading="lazy"></button>`).join('')}</div></div>`;
+  const invGrid=(items,sel,act)=>`<div class="invwrap" aria-label="목록"><div class="invgrid">${items.map(x=>`<button class="invcell${sel===x.id?' on':''}${x.ok===false?' lock':''}" data-a="${act}" data-i="${x.id}" title="${x.ok===false?'아직 얻지 못했다':esc(x.n)}" aria-label="${x.ok===false?'잠김':esc(x.n)}">${x.ok===false&&x.hide?'<span class="invq">?</span>':`<img src="${x.img}" alt="" width="40" height="40" loading="lazy">`}</button>`).join('')}</div></div>`;
   const markHtml=(col,id)=>{const m=marks().find(x=>x.id===(id||decoGet().mark));
     if(!m||m.id==='square')return `<span class="swatch" style="background:${col}"></span>`;
     if(m.img)return `<img class="swimg" src="${m.img}" alt="" width="32" height="32">`;
@@ -674,6 +676,7 @@ export function startUI(E,app){
         <span class="eyebrow">사무소 · 직원</span>
         <div class="seg" style="flex-wrap:wrap"><button data-a="lab" data-i="found">사무소 개업 화면</button><button data-a="lab" data-i="office">내 사무소 · 직원 화면</button><button data-a="lab" data-i="staffev">직원 이벤트 (첫 면담 우선)</button><button data-a="lab" data-i="move">이직 제안 · 평판</button></div>
         ${Object.entries(LABSYM).map(([g,a])=>`<span class="eyebrow">심볼 얻기 · ${g}</span><div class="seg" style="flex-wrap:wrap">${a.map(([n],i)=>`<button data-a="lab" data-i="sym:${g}:${i}">${esc(n)}</button>`).join('')}</div>`).join('')}
+        <span class="eyebrow">기록실·꾸미기 해금 보기</span><div class="seg"><button class="${realUnlock()?'':'on'}" data-a="realunlock" data-i="0">전부 열림(지금까지)</button><button class="${realUnlock()?'on':''}" data-a="realunlock" data-i="1">해금 규칙대로</button></div><span class="small dim">"해금 규칙대로"를 켜면 기록실과 꾸미기가 실제 플레이어처럼 잠겨 보입니다. 아래 심볼 버튼으로 하나씩 얻으며 확인하세요.</span>
         <button class="btn quiet" data-a="symrec" data-i="none">기록실 심볼 초기화</button></div>
       <button class="btn" data-a="symback">시작 화면으로</button>`;
   }
@@ -688,7 +691,7 @@ export function startUI(E,app){
     const syms=marks().filter(o=>o.img);
     return `<div class="stack" style="gap:8px">${prev}${big}
       ${sec('mark','이름 앞 모양',`<div class="seg" style="flex-wrap:wrap">${MARKS.map(o=>btn('mark',o,cur.mark)).join('')}</div>`)}
-      ${sec('sym','심볼',syms.length?(()=>{const selId=(UI.inv&&UI.inv.deco)||(String(cur.mark).startsWith('sym_')||String(cur.mark).startsWith('rw_')?cur.mark:syms[0].id),so=syms.find(o=>o.id===selId)||syms[0],ok=decoOk(so),eq=cur.mark===so.id;return invGrid(syms.map(o=>({id:o.id,n:o.n,img:o.img,ok:decoOk(o),why:decoWhy(o)})),so.id,'invpick')+`<div class="invdetail"><img src="${so.img}" alt="" width="44" height="44"><div class="stack" style="gap:2px;flex:1"><b>${esc(so.n)}</b><span class="small dim">${ok?(eq?'장착 중':'장착할 수 있다'):esc(decoWhy(so))}</span></div>${ok?`<button class="btn ${eq?'quiet':'primary'}" style="width:auto" data-a="deco" data-i="mark:${so.id}">${eq?'해제':'장착'}</button>`:''}</div>`})():'<span class="small dim">하드로 이야기를 끝내면 얻는 심볼이 여기에 나타난다</span>')}
+      ${sec('sym','심볼',syms.length?(()=>{const selId=(UI.inv&&UI.inv.deco)||(String(cur.mark).startsWith('sym_')||String(cur.mark).startsWith('rw_')?cur.mark:syms[0].id),so=syms.find(o=>o.id===selId)||syms[0],ok=decoOk(so),eq=cur.mark===so.id;return invGrid(syms.map(o=>({id:o.id,n:o.n,img:o.img,ok:decoOk(o),why:decoWhy(o),hide:true})),so.id,'invpick')+`<div class="invdetail">${ok?`<img src="${so.img}" alt="" width="44" height="44">`:'<span class="invq big">?</span>'}<div class="stack" style="gap:2px;flex:1"><b>${ok?esc(so.n):'???'}</b><span class="small dim">${ok?(eq?'장착 중':'장착할 수 있다'):'아직 얻지 못한 심볼 · 얻는 방법은 기록실에서 볼 수 있다'}</span></div>${ok?`<button class="btn ${eq?'quiet':'primary'}" style="width:auto" data-a="deco" data-i="mark:${so.id}">${eq?'해제':'장착'}</button>`:''}</div>`})():'<span class="small dim">하드로 이야기를 끝내면 얻는 심볼이 여기에 나타난다</span>')}
       ${sec('color','색 미리보기',(G&&G.ch&&UI.screen!=='title')?'<span class="small dim">판 안에서는 태어날 때 정해진 내 색이 그대로 쓰입니다. 색마다 심볼이 어떻게 보이는지는 시작 화면의 꾸미기에서 미리 볼 수 있습니다.</span>':`<span class="small dim">특색 심볼(가·나·다)이 색마다 어떻게 보이는지 미리 봅니다. 실제 판에서는 태어날 때 정해진 내 색이 자동으로 쓰입니다.</span><div class="seg" style="flex-wrap:wrap">${D.colors.map((c,i)=>`<button class="${pv===i?'on':''}" data-a="deco" data-i="pv:${i}"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${c.hex};vertical-align:-1px"></span> ${c.adj}</button>`).join('')}<button class="${pv==null?'on':''}" data-a="deco" data-i="pv:none">기본</button></div>`)}
       ${sec('frame','테두리',`<div class="frgrid">${FRAMES.map(o=>{const ok=decoOk(o);return `<button class="frbtn${cur.frame===o.id?' on':''}" data-a="deco" data-i="frame:${o.id}" ${ok?'':'disabled'}><div class="ent frprev deco-${o.id}" style="--c:${col}"></div><b class="small">${o.n}</b>${ok?'':`<span class="small dim">${decoWhy(o)}</span>`}</button>`}).join('')}</div><span class="small dim">고르면 전투 중 내 카드(이름 줄)에 두른다. 잠긴 것은 조건을 채우면 열린다</span>`)}
       <span class="small dim">잠긴 것은 칭호·엔딩·하드 완주 기록에 따라 열린다</span></div>`;
@@ -3100,6 +3103,7 @@ ${symRec(r)}
       if(k==='move'){c.licensed=true;c.rank=5;c.aff={type:'office',name:'쐐기 사무소'};c.affLog=['쐐기 사무소'];UI.ev=LABMOVE;UI.fight=null;UI.omen=null;UI.screen='event';render()}},
     symrec(i){const r=loadRec();r.symbols=i==='all'?SYMS.map(x=>x.id):i==='some'?['thumb','middle']:[];store.set(REC,JSON.stringify(r));render()},
     symback(){UI.symlab=false;UI.screen='title';render()},
+    realunlock(i){try{localStorage.setItem('cityYearRealUnlock',i==='1'?'1':'0')}catch(e){}render()},
     invpick(i){UI.inv=UI.inv||{};UI.inv.deco=i;render()},
     symgain(i){UI.symGain=i||null;render()},
     symequip(i){const cur=decoGet();cur.mark=cur.mark==='sym_'+i?'square':'sym_'+i;store.set(DECOK,JSON.stringify(cur));render()},
