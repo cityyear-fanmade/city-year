@@ -398,12 +398,16 @@ export const CFG = {
     /* 직원 이벤트: 직원마다 신뢰(0~trustMax, 시작 trustStart)와 성격 2개가 있다. 해마다 chance% 확률로 직원 이벤트가 열리고 다음은 gap해 뒤. 신뢰는 성과를 올릴 확률(신뢰 1당 trustChance%)과 이탈·배신 이벤트의 조건이 된다. 특색(sp)을 인정받은 직원은 효과가 spMul배 */
     staffEv: {chance: 40, gap: 2, trustStart: 2, trustMax: 5, trustChance: 4, spMul: 1.5, traits: ['성실', '욕심', '겁많음', '불같음'],
       /* 특색 시험: 직원이 최대 단계(1급)이고 의뢰 해결(실적)이 doneMin건 이상이면 시험 사건이 열린다. 1d100 + 신뢰×trustMul ≥ dc면 합격(특색 인정 + 특수능력), 불합격이면 신뢰 −1, gap해 뒤에 다시(최대 maxTry번).
-         합격하면 특수능력(spAb)을 하나 랜덤으로 얻는다. 신뢰가 가득 찬 직원은 둘. 같은 능력이 또 나오면 중첩된다 (이름은 임시) */
+         합격하면 뽑힌 두 글자 이름의 특수능력(spAb)을 얻는다. 신뢰가 가득 찬 직원은 효과가 두 배(능력 2번). 직원끼리 같은 능력이면 중첩된다 */
       /* 직원 특색 이름: 플레이어 특색처럼 '색 + 두 글자'. 색은 플레이어·다른 직원과 겹치지 않게 뽑고, 두 글자는 아래 목록에서 겹치지 않게 뽑는다 */
-      spNames: ['나비', '여우', '사슴', '고래', '파도', '안개', '서리', '노을', '등불', '바람', '불꽃', '거울', '가시', '깃털', '이슬', '구름', '늑대', '까치', '참새', '제비', '수달', '담비', '노루', '산양', '거북', '나방', '매미', '벌새', '달빛', '별빛', '모래', '이끼'],
+      /* 두 글자 이름이 곧 특수능력의 뿌리다: 이름을 뽑으면 그 이름의 능력(ab)이 붙는다. 특색을 찍는 것이라 일반 장비보다 조금 세게 준다 */
+      spNames: [{n: '가시', ab: 'edge'}, {n: '늑대', ab: 'edge'}, {n: '불꽃', ab: 'edge'}, {n: '산양', ab: 'edge'}, {n: '까치', ab: 'eye'}, {n: '거울', ab: 'eye'}, {n: '별빛', ab: 'eye'}, {n: '달빛', ab: 'eye'},
+        {n: '거북', ab: 'hide'}, {n: '이끼', ab: 'hide'}, {n: '모래', ab: 'hide'}, {n: '서리', ab: 'hide'}, {n: '사슴', ab: 'foot'}, {n: '노루', ab: 'foot'}, {n: '제비', ab: 'foot'}, {n: '바람', ab: 'foot'},
+        {n: '이슬', ab: 'mend'}, {n: '노을', ab: 'mend'}, {n: '등불', ab: 'mend'}, {n: '깃털', ab: 'mend'}, {n: '여우', ab: 'first'}, {n: '담비', ab: 'first'}, {n: '벌새', ab: 'first'}, {n: '수달', ab: 'first'},
+        {n: '고래', ab: 'breath'}, {n: '파도', ab: 'breath'}, {n: '구름', ab: 'breath'}, {n: '안개', ab: 'breath'}, {n: '나비', ab: 'sense'}, {n: '참새', ab: 'sense'}, {n: '나방', ab: 'sense'}, {n: '매미', ab: 'sense'}],
       exam: {doneMin: 8, dc: 60, trustMul: 5, gap: 3, maxTry: 2, bonusTrust: 5},
-      spAb: [{id: 'edge', n: '날 선 손', fx: {dmgB: 1}, e: '피해 +1'}, {id: 'eye', n: '매의 눈', fx: {atk: 6}, e: '공격 +6'}, {id: 'hide', n: '두꺼운 가죽', fx: {dr: 3}, e: '받는 피해 −3%'}, {id: 'foot', n: '가벼운 발', fx: {spd: 2, eva: 2}, e: '속도 +2 · 회피 +2'},
-        {id: 'mend', n: '응급 손질', fx: {regen: 2}, e: '라운드마다 HP +2'}, {id: 'first', n: '선수', fx: {startBleed: 1}, e: '전투 시작 상대 출혈 +1'}, {id: 'breath', n: '긴 호흡', fx: {startBreath: 1}, e: '전투 시작 호흡 +1'}, {id: 'sense', n: '밝은 귀', fx: {check: 3}, e: '사건 판정 +3'}]},
+      spAb: [{id: 'edge', n: '날 선 손', fx: {dmgB: 1, atk: 3}, e: '공격 +3 · 피해 +1'}, {id: 'eye', n: '매의 눈', fx: {atk: 10}, e: '공격 +10'}, {id: 'hide', n: '두꺼운 가죽', fx: {dr: 5}, e: '받는 피해 −5%'}, {id: 'foot', n: '가벼운 발', fx: {spd: 3, eva: 4}, e: '속도 +3 · 회피 +4'},
+        {id: 'mend', n: '응급 손질', fx: {regen: 3}, e: '라운드마다 HP +3'}, {id: 'first', n: '선수', fx: {startBleed: 2}, e: '전투 시작 상대 출혈 +2'}, {id: 'breath', n: '긴 호흡', fx: {startBreath: 2}, e: '전투 시작 호흡 +2'}, {id: 'sense', n: '밝은 귀', fx: {check: 4, maxHp: 10}, e: '사건 판정 +4 · 최대 HP +10'}]},
     staff: {max: 3, hire: 500, wage: 60, growEvery: 6, lvMax: 3, cands: 2,
       types: {guard: {n: '경호원', fx: {maxHp: 12}, e: '최대 HP +12'}, scout: {n: '정보원', fx: {check: 1}, e: '사건 판정 +1'}, fighter: {n: '보조 해결사', fx: {atk: 3, dmgB: 0.5}, e: '공격 +3 · 피해 +0.5 (단계마다, 소수는 버림)'}, clerk: {n: '의뢰 담당', fx: {}, inc: 90, e: '해마다 수입 +90안'}},
       names: ['한결', '도윤', '서하', '마루', '이솔', '강무', '윤슬', '태오', '하람', '시안', '나래', '지호', '보람', '유진', '해든', '다온',
