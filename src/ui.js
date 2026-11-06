@@ -3434,19 +3434,19 @@ ${symRec(r)}
 if(typeof document!=='undefined'&&typeof MutationObserver!=='undefined'){
   const JO={'이(가)':['이','가'],'은(는)':['은','는'],'을(를)':['을','를'],'과(와)':['과','와'],'와(과)':['과','와']},MARK=/(?:이\(가\)|은\(는\)|을\(를\)|[과와]\([와과]\))/;
   const hasBat=c=>{if(!c)return false;const k=c.charCodeAt(0);if(k>=0xAC00&&k<=0xD7A3)return (k-0xAC00)%28>0;if(/[0136-8]/.test(c))return true;return /[lmnrLMNR]/.test(c)};
-  const tail=s=>s.replace(/\([^)]*\)\s*$/,'').replace(/[^가-힣A-Za-z0-9]+$/,'').slice(-1);
+  const tail=s=>s.slice(-60).replace(/\([^)]*\)\s*$/,'').replace(/[^가-힣A-Za-z0-9]+$/,'').slice(-1);   /* 끝 60자만 본다(긴 글자에 정규식을 걸면 매우 느려진다) */
   const fixJosa=root=>{
-    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const t=n.parentNode&&n.parentNode.nodeName;return t==='SCRIPT'||t==='STYLE'?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}}),nodes=[];
     for(let n=w.nextNode();n;n=w.nextNode())nodes.push(n);
     nodes.forEach((n,i)=>{
       const v=n.nodeValue;if(!MARK.test(v))return;
       n.nodeValue=v.replace(new RegExp(MARK.source,'g'),(m,off)=>{
-        let pre=v.slice(0,off),j=i;while(!tail(pre)&&j>0)pre=nodes[--j].nodeValue+pre;
+        let pre=v.slice(Math.max(0,off-60),off),j=i;while(!tail(pre)&&j>0)pre=nodes[--j].nodeValue.slice(-60)+pre;
         return JO[m][hasBat(tail(pre))?0:1]})});
   };
   let busy=false;
   new MutationObserver(ms=>{
     if(busy)return;busy=true;
-    try{for(const m of ms){const t=m.type==='characterData'?m.target.parentNode:m.target;if(t&&t.nodeType===1&&MARK.test(t.textContent||''))fixJosa(t)}}finally{busy=false}
-  }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+    try{for(const m of ms){const t=m.type==='characterData'?m.target.parentNode:m.target;if(!t||t.nodeType!==1||t===document.documentElement||t===document.head||t.nodeName==='SCRIPT'||t.nodeName==='STYLE')continue;if(MARK.test(t.textContent||''))fixJosa(t)}}finally{busy=false}
+  }).observe(document.getElementById('app')||document.body||document.documentElement,{childList:true,subtree:true,characterData:true});
 }
