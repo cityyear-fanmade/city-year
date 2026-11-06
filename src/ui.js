@@ -635,6 +635,8 @@ export function startUI(E,app){
   const decoGet=()=>{let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const m=marks().find(x=>x.id===o.mark),f=FRAMES.find(x=>x.id===o.frame);return {mark:m&&decoOk(m)?m.id:'square',frame:f&&decoOk(f)?f.id:'plain',pv:Number.isInteger(o.pv)?o.pv:null}};
   /* 특색 색 미리보기: 판을 시작하기 전(시작 화면)에서만 꾸미기에 적용한다. 판 안에서는 태어날 때 정해진 내 색이 그대로 쓰인다 */
   const decoPv=()=>{if(G&&G.ch&&UI.screen!=='title')return null;let o={};try{o=JSON.parse(store.get(DECOK)||'{}')}catch(e){}const v=o.pv;return Number.isInteger(v)&&D.colors[v]?v:null};
+  /* 인벤토리 칸: 크기가 고정된 창 안에 작은 칸을 격자로 놓고, 많으면 위아래로 밀어 본다(아래 모서리를 끌어 창 높이를 바꿀 수도 있다) */
+  const invGrid=(items,sel,act)=>`<div class="invwrap" aria-label="목록"><div class="invgrid">${items.map(x=>`<button class="invcell${sel===x.id?' on':''}${x.ok===false?' lock':''}" data-a="${act}" data-i="${x.id}" title="${esc(x.n)}${x.ok===false&&x.why?' · '+esc(x.why):''}" aria-label="${esc(x.n)}"><img src="${x.img}" alt="" width="40" height="40" loading="lazy"></button>`).join('')}</div></div>`;
   const markHtml=(col,id)=>{const m=marks().find(x=>x.id===(id||decoGet().mark));
     if(!m||m.id==='square')return `<span class="swatch" style="background:${col}"></span>`;
     if(m.img)return `<img class="swimg" src="${m.img}" alt="" width="32" height="32">`;
@@ -653,7 +655,7 @@ export function startUI(E,app){
   function vSymLab(){
     const g=UI.symGain,cur=decoGet(),col=(G&&G.ch&&G.ch.color)||'#c9a35a';
     const gain=g?(()=>{const x=SYMS.find(q=>q.id===g);const eq=cur.mark==='sym_'+g;return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">심볼 획득</span>
-      <div class="row" style="gap:14px;align-items:center"><img src="${symImg(g,true)}" alt="" width="120" height="120"><div class="stack" style="gap:4px"><b class="serif" style="font-size:20px">${esc(x.n)} 심볼</b><span class="small">${esc(SYMTXT[g])}</span><span class="small dim">이 심볼은 이제 다른 캐릭터로 태어나도 쓸 수 있다 · 이름 옆에 붙여 다닌다</span></div></div>
+      <div class="row" style="gap:14px;align-items:center"><img src="${symImg(g,true)}" alt="" width="120" height="120"><div class="stack" style="gap:4px"><b class="serif" style="font-size:20px">${esc(x.n)} 심볼</b><span class="small">${esc(SYMTXT[g]||SYMDOC[g]||'')}</span><span class="small dim">이 심볼은 이제 다른 캐릭터로 태어나도 쓸 수 있다 · 이름 옆에 붙여 다닌다</span></div></div>
       <div class="row" style="gap:8px"><button class="btn primary" data-a="symequip" data-i="${g}">${eq?'장착 중 · 해제':'장착한다'}</button><button class="btn quiet" data-a="symgain" data-i="">닫기</button></div></div>`})():'';
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">테섭 전용</div><h2>심볼 시험장</h2><p class="small dim">획득 조건은 아직 정해지지 않았다. 이 화면은 전투에서 어떻게 보이는지, 얻을 때 어떻게 보일지, 어디서 장착하는지를 미리 보는 곳이다.</p></div>
       <div class="panel stack" style="gap:8px"><span class="eyebrow">1 · 전투에서 어떻게 보이나</span>
@@ -661,7 +663,7 @@ export function startUI(E,app){
         <button class="btn primary" data-a="symfight"><b>무한 체력 전투 시작</b><span class="dim small">이름 앞 모양과 테두리가 전투 카드에 그대로 나온다</span></button></div>
       <div class="panel stack" style="gap:8px"><span class="eyebrow">2 · 얻을 때 어떻게 보이나</span>
         <p class="small dim">엔딩 화면 위에 이런 안내가 뜨고, 그 자리에서 바로 장착할 수 있다고 가정한 모습이다.</p>
-        <div class="seg" style="flex-wrap:wrap">${SYMS.map(x=>`<button class="${g===x.id?'on':''}" data-a="symgain" data-i="${x.id}"><img class="swimg" src="${symImg(x.id)}" width="24" height="24" alt=""> ${esc(x.n)}</button>`).join('')}</div>${gain}</div>
+        ${invGrid(SYMS.map(x=>({id:x.id,n:x.n,img:symImg(x.id)})),g,'symgain')}<span class="small dim">${g?esc((SYMS.find(q=>q.id===g)||{}).n||''):'칸을 눌러 고른다'}</span>${gain}</div>
       <div class="panel stack" style="gap:8px"><span class="eyebrow">기록실에서 어떻게 보이나</span>
         <p class="small dim">시작 화면의 기록실 → "심볼" 탭에서 얻는 방법과 얻은 심볼 이미지를 본다. 아래 버튼으로 기록을 바꿔 가며 확인할 수 있다.</p>
         <div class="row" style="gap:8px"><button class="btn" data-a="symrec" data-i="some">2개 얻은 상태</button><button class="btn" data-a="symrec" data-i="all">모두 얻은 상태</button><button class="btn quiet" data-a="symrec" data-i="none">초기화</button></div></div>
@@ -686,7 +688,7 @@ export function startUI(E,app){
     const syms=marks().filter(o=>o.img);
     return `<div class="stack" style="gap:8px">${prev}${big}
       ${sec('mark','이름 앞 모양',`<div class="seg" style="flex-wrap:wrap">${MARKS.map(o=>btn('mark',o,cur.mark)).join('')}</div>`)}
-      ${sec('sym','심볼',syms.length?`<div class="seg" style="flex-wrap:wrap">${syms.map(o=>btn('mark',o,cur.mark)).join('')}</div>`:'<span class="small dim">하드로 이야기를 끝내면 얻는 심볼이 여기에 나타난다</span>')}
+      ${sec('sym','심볼',syms.length?(()=>{const selId=(UI.inv&&UI.inv.deco)||(String(cur.mark).startsWith('sym_')||String(cur.mark).startsWith('rw_')?cur.mark:syms[0].id),so=syms.find(o=>o.id===selId)||syms[0],ok=decoOk(so),eq=cur.mark===so.id;return invGrid(syms.map(o=>({id:o.id,n:o.n,img:o.img,ok:decoOk(o),why:decoWhy(o)})),so.id,'invpick')+`<div class="invdetail"><img src="${so.img}" alt="" width="44" height="44"><div class="stack" style="gap:2px;flex:1"><b>${esc(so.n)}</b><span class="small dim">${ok?(eq?'장착 중':'장착할 수 있다'):esc(decoWhy(so))}</span></div>${ok?`<button class="btn ${eq?'quiet':'primary'}" style="width:auto" data-a="deco" data-i="mark:${so.id}">${eq?'해제':'장착'}</button>`:''}</div>`})():'<span class="small dim">하드로 이야기를 끝내면 얻는 심볼이 여기에 나타난다</span>')}
       ${sec('color','색 미리보기',(G&&G.ch&&UI.screen!=='title')?'<span class="small dim">판 안에서는 태어날 때 정해진 내 색이 그대로 쓰입니다. 색마다 심볼이 어떻게 보이는지는 시작 화면의 꾸미기에서 미리 볼 수 있습니다.</span>':`<span class="small dim">특색 심볼(가·나·다)이 색마다 어떻게 보이는지 미리 봅니다. 실제 판에서는 태어날 때 정해진 내 색이 자동으로 쓰입니다.</span><div class="seg" style="flex-wrap:wrap">${D.colors.map((c,i)=>`<button class="${pv===i?'on':''}" data-a="deco" data-i="pv:${i}"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${c.hex};vertical-align:-1px"></span> ${c.adj}</button>`).join('')}<button class="${pv==null?'on':''}" data-a="deco" data-i="pv:none">기본</button></div>`)}
       ${sec('frame','테두리',`<div class="frgrid">${FRAMES.map(o=>{const ok=decoOk(o);return `<button class="frbtn${cur.frame===o.id?' on':''}" data-a="deco" data-i="frame:${o.id}" ${ok?'':'disabled'}><div class="ent frprev deco-${o.id}" style="--c:${col}"></div><b class="small">${o.n}</b>${ok?'':`<span class="small dim">${decoWhy(o)}</span>`}</button>`}).join('')}</div><span class="small dim">고르면 전투 중 내 카드(이름 줄)에 두른다. 잠긴 것은 조건을 채우면 열린다</span>`)}
       <span class="small dim">잠긴 것은 칭호·엔딩·하드 완주 기록에 따라 열린다</span></div>`;
@@ -1863,6 +1865,8 @@ ${symRec(r)}
     const vs=seen?'':ev.voices.map((t,i)=>{const a=0.35+slots[i%7]*2*Math.PI/7+Math.sin(i*7.1)*.12;return `<div class="vv" style="left:${(cx+Math.cos(a)*rx).toFixed(0)}px;top:${(cy+Math.sin(a)*ry).toFixed(0)}px;--w:${bw}px;--fs:${fs}px;animation-delay:${(i*1.0+0.8).toFixed(1)}s"><i>빛 속의 목소리</i>${esc(t)}</div>`}).join('');
     return `<div id="vo" class="${seen?'seen':''}" data-a="voiceskip"><div class="vt">정신력 ${G.ch.mind} · 마음이 한계에 닿았다</div>${vs}<div class="vc"><button class="btn vbtn" data-a="voicepick" data-i="good"><b>듣기 좋다</b><span class="mono small dim">목소리에 마음이 기운다</span></button><button class="btn vbtn" data-a="voicepick" data-i="bad"><b>듣기 싫다</b><span class="mono small dim">목소리를 밀어낸다</span></button></div></div>`;
   }
+  /* 사무소 사건 도움말: 신뢰·평판·돈 표시가 무슨 뜻인지 한 줄로 알려 준다 */
+  const officeLegend=ev=>ev&&ev.staffEv?'<p class="small dim">신뢰: 이 직원이 나를 믿는 정도(0~5). 높을수록 직원이 의뢰를 더 잘 해결한다 · 안: 돈. 빨간 −는 사무소 돈이 나가고 초록 +는 들어온다.</p>':ev&&ev.t==='이직 제안'?'<p class="small dim">평판: 지금 사무소에서 쌓은 신용(−5~+3). 옮기면 깎이고 오래 머물면 오른다. 평판이 낮으면 장비 값이 오르고 높으면 내린다.</p>':'';
   function vEvent(){
     if(UI.omen)return vOmen();
     if(UI.fight){
@@ -1880,11 +1884,12 @@ ${symRec(r)}
       if(c.ok&&c.ok.fx&&c.ok.fx.relicRoll)hint=`1d100 · ${E.relicChance(ch)} 이하가 나오면 유물을 고른다${ch.relicBase?' (출신 보정 '+ch.relicBase+'%)':''}${(ch.stats.relicApt||0)>0?' (유물 적성 +'+ch.stats.relicApt+')':''}`;
       if(c.ok&&c.ok.fx&&c.ok.fx.voice){const M_=CFG.mind,dc=ch.voiceBias==='good'?M_.voiceGoodDc:ch.voiceBias==='bad'?M_.voiceBadDc:M_.voiceDc;hint=`1d${M_.voiceDie} × ${M_.voiceRolls} · 모두 ${dc} 이상이면 E.G.O 개화 · 셋 다 실패하면 바로 뒤틀린다${ch.voiceBias==='bad'&&(ch.stats.egoSight||0)>=M_.sureSight?' (장비의 형상이 또렷해 실패해도 개화한다)':''} · 실패하면 정신력 감소`}
       if(c.check){const pm=E.pathMod(ch,c.check);hint=`${c.check.s?STAT[c.check.s]+' 판정':'운 판정'} · 1d${c.check.die||(c.check.pure?100:E.checkDie(ch))} ${sg(E.checkMod(ch,c.check))} ≥ ${E.checkDc(ch,c.check)}${pm?` (출신 ${T.paths[c.check.path]} 보정 +${pm})`:''}${c.h?' · '+c.h:''}`}
+      {const mv=c.ok&&c.ok.fx&&c.ok.fx.money;if(typeof mv==='number'&&mv!==0){const tag=`<span class="${mv<0?'bad':'good'}">${mv<0?'−':'+'}${Math.abs(mv).toLocaleString('ko-KR')}안</span>`,re=/(^|· )[+−-]?\d[\d,]*안/;hint=re.test(hint)?hint.replace(re,(m,p)=>p+tag):`${tag} · ${hint}`}}
       return {i,html:`<button class="btn" data-a="choose" data-i="${i}"><b>${c.l}</b><span class="mono small dim">${hint}</span></button>`};
     }).concat(lockBtns).sort((a,b)=>a.i-b.i).map(x=>x.html).join('');
     if(ev.pact){const K=CFG.infinite.pact,cs=E.options(G,ev).map(({c,i})=>{const q=c.pc||{};return `<button class="pcard ${ev.pact==='c'?'pc-c':'pc-b'}" data-a="choose" data-i="${i}"><span class="pk">${ev.pact==='c'?'제약':'버프'}</span><b class="pn">${esc(c.l)}</b><span class="pe">${esc(q.e||'')}</span><span class="pm mono small">${q.n||0}/${q.cap||K.cap}번 → ${(q.n||0)+1}번째${q.syn?' · 짝 제약 효과 ×'+K.pairMul:''}</span></button>`}).join('');
       return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead" style="white-space:pre-line">${ev.x}</p></div><div class="pcards">${cs}</div>`}
-    const page=`${vHud()}<div class="stack${ev.shake?' wave-shake':''}" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead" style="white-space:pre-line">${ev.x}</p></div><div class="stack">${btns}</div>`;
+    const page=`${vHud()}<div class="stack${ev.shake?' wave-shake':''}" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead" style="white-space:pre-line">${ev.x}</p></div><div class="stack">${btns}</div>${officeLegend(ev)}`;
     return ev.voices&&G.ch.mind<=CFG.mind.voiceAt&&UI.voicePicked!==ev?page+voiceOverlay(ev):page;
   }
   function nextLabel(){
@@ -3095,6 +3100,7 @@ ${symRec(r)}
       if(k==='move'){c.licensed=true;c.rank=5;c.aff={type:'office',name:'쐐기 사무소'};c.affLog=['쐐기 사무소'];UI.ev=LABMOVE;UI.fight=null;UI.omen=null;UI.screen='event';render()}},
     symrec(i){const r=loadRec();r.symbols=i==='all'?SYMS.map(x=>x.id):i==='some'?['thumb','middle']:[];store.set(REC,JSON.stringify(r));render()},
     symback(){UI.symlab=false;UI.screen='title';render()},
+    invpick(i){UI.inv=UI.inv||{};UI.inv.deco=i;render()},
     symgain(i){UI.symGain=i||null;render()},
     symequip(i){const cur=decoGet();cur.mark=cur.mark==='sym_'+i?'square':'sym_'+i;store.set(DECOK,JSON.stringify(cur));render()},
     symfight(){startCombat('lamp');C.P.hp=C.P.maxHp=1000000;C.E.hp=C.E.maxHp=100000000;render()},

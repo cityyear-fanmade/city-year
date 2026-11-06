@@ -860,3 +860,12 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 .frbtn.on{border-color:var(--gold,#c9a35a);box-shadow:0 0 0 1px var(--gold,#c9a35a) inset}
 .frbtn:disabled{opacity:.45;cursor:not-allowed}
 .frprev{width:calc(100% - 28px);height:26px;margin:16px 14px 14px;border-radius:8px;background:color-mix(in srgb,var(--c) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line))}
+
+/* 인벤토리 칸: 고정 높이의 창 안에 격자(많으면 밀어 보고, 아래 모서리를 끌어 높이를 바꾼다) */
+.invwrap{height:220px;min-height:110px;max-height:70vh;overflow-y:auto;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--panel2)}
+.invgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.invcell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:4px;border:1px solid var(--line);border-radius:8px;background:#0b0d13;cursor:pointer}
+.invcell img{width:100%;height:100%;object-fit:contain}
+.invcell.on{border-color:var(--gold,#c9a35a);box-shadow:0 0 0 1px var(--gold,#c9a35a) inset}
+.invcell.lock{opacity:.4;filter:grayscale(.8)}
+.invdetail{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
