@@ -556,7 +556,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const SF=CFG.office.staff,staffOwner=ch=>!!(ch.office&&ch.aff&&(ch.aff.own||(ch.office.ws&&isWs(ch))));
   const staffList=ch=>(ch.office&&ch.office.staff)||[];
   const staffLv=(s,year)=>Math.max(1,Math.min(SF.lvMax,1+Math.floor(((year==null?s.y:year)-s.y)/SF.growEvery)));
-  const staffFxAt=(s,lv)=>{const T_=SF.types[s.type],o={},m=s.sp?CFG.office.staffEv.spMul:1;for(const [k,v] of Object.entries(T_.fx||{}))o[k]=Math.floor(v*lv*m+1e-9);return o};
+  const staffFxAt=(s,lv)=>{const T_=SF.types[s.type],o={},m=s.sp?CFG.office.staffEv.spMul:1;for(const [k,v] of Object.entries(T_.fx||{}))o[k]=Math.floor(v*lv*m+1e-9);for(const id of (s.ab||[])){const A=CFG.office.staffEv.spAb.find(x=>x.id===id);if(A)for(const [k,v] of Object.entries(A.fx))o[k]=(o[k]||0)+v}return o};
   function staffIncome(ch){let t=0;for(const s of staffList(ch)){const T_=SF.types[s.type];t+=((T_&&T_.inc)||0)*staffLv(s,ch.yearNow)-SF.wage}return t}
   /* 지금 단계에 맞는 능력치로 맞춘다 (이미 받은 만큼과의 차이만 더하고 뺀다) */
   function staffTick(ch,year){
@@ -587,20 +587,26 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(t.tenureMin!=null&&ten<t.tenureMin)continue;if(t.tenureMax!=null&&ten>t.tenureMax)continue;
         if(t.trustMin!=null&&tr<t.trustMin)continue;if(t.trustMax!=null&&tr>t.trustMax)continue;
         if(t.noSp&&s.sp)continue;if(t.staffMin&&list.length<t.staffMin)continue;
+        if(t.exam&&!(staffLv(s,y)>=SF.lvMax&&(s.done||0)>=SE.exam.doneMin&&(s.tries||0)<SE.exam.maxTry&&(s.examY==null||y>=s.examY+SE.exam.gap)))continue;
         pool.push([s,t])}}
     if(!pool.length)return null;
     /* 첫 면담은 새 직원이 들어온 뒤 가장 먼저 연다: 있으면 확률 판정 없이 이 이야기를 우선한다 */
-    const firsts=pool.filter(([,t])=>t.id==='first');
+    const firsts=pool.filter(([,t])=>t.id==='first'||t.exam);
     if(!firsts.length&&d(100)>SE.chance)return null;
     const [s,t]=(firsts.length?firsts:pool)[Math.floor(rng()*(firsts.length||pool.length))],other=t.staffMin?one(list.filter(x=>x!==s)):null;
     (s.seen=s.seen||[]).push(t.id);O.evNext=y+SE.gap;
-    const ev=staffFill(t,s.n,other&&other.n);ev.staffEv=true;return ev;
+    const ev=staffFill(t,s.n,other&&other.n);ev.staffEv=true;
+    if(t.exam){const tr=s.trust==null?SE.trustStart:s.trust,dc=Math.max(1,SE.exam.dc-SE.exam.trustMul*tr),c0=ev.c[0];c0.check.dc=dc;c0.h=`1d100 · ${dc} 이상이면 합격 (신뢰 ${tr}점 반영) · 실적 ${s.done||0}건 · 합격하면 효과 ×${SE.spMul}와 특수능력 ${tr>=SE.exam.bonusTrust?2:1}개`}
+    return ev;
   }
   function staffFx(ch,o,chips){
     const s=staffList(ch).find(x=>x.n===o.n);if(!s)return;
     if(o.trust){s.trust=Math.max(0,Math.min(SE.trustMax,(s.trust==null?SE.trustStart:s.trust)+o.trust));chips.push(`${s.n} · 신뢰 ${o.trust>0?'+':''}${o.trust} (지금 ${s.trust}/${SE.trustMax})`)}
     if(o.train){s.y-=o.train;chips.push(`${s.n} · 훈련으로 성장이 앞당겨졌다`)}
     if(o.sp&&!s.sp){s.sp=true;chips.push(`${s.n} · 특색을 인정받았다 · 효과 ×${SE.spMul}`)}
+    if(o.exam==='ok'&&!s.sp){s.sp=true;s.ab=s.ab||[];const tr=s.trust==null?SE.trustStart:s.trust,n=tr>=SE.exam.bonusTrust?2:1;chips.push(`${s.n} · 특색 시험 합격 · 효과 ×${SE.spMul}`);for(let i=0;i<n;i++){const A=one(SE.spAb);s.ab.push(A.id);chips.push(`특수능력 · ${A.n} · ${A.e}`)}}
+    if(o.exam==='later')s.seen=(s.seen||[]).filter(x=>x!=='exam');
+    if(o.exam==='fail'){s.tries=(s.tries||0)+1;s.examY=ch.year||ch.yearNow||0;s.seen=(s.seen||[]).filter(x=>x!=='exam');s.trust=Math.max(0,(s.trust==null?SE.trustStart:s.trust)-1);chips.push(`${s.n} · 특색 시험 불합격 · 신뢰 −1`+((s.tries||0)>=SE.exam.maxTry?' · 더는 응시할 수 없다':` · ${SE.exam.gap}년 뒤 다시`))}
     if(o.leave){const i=staffList(ch).indexOf(s);officeLogAdd(ch.office,ch.year||0,`${s.n}이(가) 사무소를 떠났다`);dismissStaff(ch,i);chips.push(`${s.n} · 사무소를 떠났다`)}
     staffTick(ch,ch.year||ch.yearNow||0);
   }

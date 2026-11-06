@@ -396,9 +396,14 @@ export const CFG = {
       buff: [{}, {maxHp: 6}, {maxHp: 10, check: 1}, {maxHp: 14, check: 1, atk: 1}, {maxHp: 20, check: 2, atk: 2}], buffTxt: ['없음', '최대 HP +6', '최대 HP +10 · 판정 +1', '최대 HP +14 · 판정 +1 · 공격 +1', '최대 HP +20 · 판정 +2 · 공격 +2'],
       pay: [300, 500, 800, 1200, 1800]},
     /* 직원 이벤트: 직원마다 신뢰(0~trustMax, 시작 trustStart)와 성격 2개가 있다. 해마다 chance% 확률로 직원 이벤트가 열리고 다음은 gap해 뒤. 신뢰는 성과를 올릴 확률(신뢰 1당 trustChance%)과 이탈·배신 이벤트의 조건이 된다. 특색(sp)을 인정받은 직원은 효과가 spMul배 */
-    staffEv: {chance: 40, gap: 2, trustStart: 2, trustMax: 5, trustChance: 4, spMul: 1.5, traits: ['성실', '욕심', '겁많음', '불같음']},
+    staffEv: {chance: 40, gap: 2, trustStart: 2, trustMax: 5, trustChance: 4, spMul: 1.5, traits: ['성실', '욕심', '겁많음', '불같음'],
+      /* 특색 시험: 직원이 최대 단계(1급)이고 의뢰 해결(실적)이 doneMin건 이상이면 시험 사건이 열린다. 1d100 + 신뢰×trustMul ≥ dc면 합격(특색 인정 + 특수능력), 불합격이면 신뢰 −1, gap해 뒤에 다시(최대 maxTry번).
+         합격하면 특수능력(spAb)을 하나 랜덤으로 얻는다. 신뢰가 가득 찬 직원은 둘. 같은 능력이 또 나오면 중첩된다 (이름은 임시) */
+      exam: {doneMin: 8, dc: 60, trustMul: 5, gap: 3, maxTry: 2, bonusTrust: 5},
+      spAb: [{id: 'edge', n: '날 선 손', fx: {dmgB: 1}, e: '피해 +1'}, {id: 'eye', n: '매의 눈', fx: {atk: 6}, e: '공격 +6'}, {id: 'hide', n: '두꺼운 가죽', fx: {dr: 3}, e: '받는 피해 −3%'}, {id: 'foot', n: '가벼운 발', fx: {spd: 2, eva: 2}, e: '속도 +2 · 회피 +2'},
+        {id: 'mend', n: '응급 손질', fx: {regen: 2}, e: '라운드마다 HP +2'}, {id: 'first', n: '선수', fx: {startBleed: 1}, e: '전투 시작 상대 출혈 +1'}, {id: 'breath', n: '긴 호흡', fx: {startBreath: 1}, e: '전투 시작 호흡 +1'}, {id: 'sense', n: '밝은 귀', fx: {check: 3}, e: '사건 판정 +3'}]},
     staff: {max: 3, hire: 500, wage: 60, growEvery: 6, lvMax: 3, cands: 2,
-      types: {guard: {n: '경호원', fx: {maxHp: 12}, e: '최대 HP +12'}, scout: {n: '정보원', fx: {check: 1}, e: '사건 판정 +1'}, fighter: {n: '보조 해결사', fx: {atk: 1}, e: '공격 +1'}, clerk: {n: '의뢰 담당', fx: {}, inc: 90, e: '해마다 수입 +90안'}},
+      types: {guard: {n: '경호원', fx: {maxHp: 12}, e: '최대 HP +12'}, scout: {n: '정보원', fx: {check: 1}, e: '사건 판정 +1'}, fighter: {n: '보조 해결사', fx: {atk: 3, dmgB: 0.5}, e: '공격 +3 · 피해 +0.5 (단계마다, 소수는 버림)'}, clerk: {n: '의뢰 담당', fx: {}, inc: 90, e: '해마다 수입 +90안'}},
       names: ['한결', '도윤', '서하', '마루', '이솔', '강무', '윤슬', '태오', '하람', '시안', '나래', '지호', '보람', '유진', '해든', '다온',
         '사샤', '아야', '홉킨스', '유리', '안젤리카', '아스톨포', '올리비에', '이오리', '카오루', '러스크', '바야르', '르노', '모제스', '에즈라', '바다', '마르티나', '경미', '재헌', '태인', '오스카', '파멜라', '파멜리', '올가', '미카', '레인', '스테판', '타마키', '리웨이', '에리', '살바도르', '유나', '필립']}},
   relicEvent: {year: 15, chance: 1},
