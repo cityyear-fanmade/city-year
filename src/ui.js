@@ -624,7 +624,10 @@ export function startUI(E,app){
   const symHave=()=>SYMS.filter(x=>((loadRec().symbols)||[]).includes(x.id)).length;
   const marks=()=>MARKS.concat(SYMS.map(x=>({id:'sym_'+x.id,n:x.n,img:x.img||symImg(x.id),unlock:{sym:x.id}})),RWMARKS.map(x=>({id:x.id,n:x.n,img:symImg(x.img),unlock:{rw:x.rw}})));
   const grantSymbol=id=>{const r=loadRec();r.symbols=Array.isArray(r.symbols)?r.symbols:[];if(!r.symbols.includes(id)){r.symbols.push(id);store.set(REC,JSON.stringify(r))}};
-  const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}}];
+  const FRIMG={fr_wing:['날개 틀','75 90',{endings:5}],fr_book:['책 틀','75 90',{titles:5}],fr_root:['덩굴 틀','75 90',{endings:10}],fr_contract:['계약 틀','75 90',{titles:8}],fr_shatter:['파편 틀','75 90',{rw:0.3}],fr_time:['시간 틀','75 90',{rw:0.5}],fr_chain:['사슬 틀','90',{rw:0.7}],fr_flame:['불꽃 틀','90',{rw:0.9}]};   /* 이미지 테두리: [이름, 9조각 자르기 값, 해금 조건] */
+  const FRAMES=[{id:'plain',n:'기본'},{id:'double',n:'이중선'},{id:'thick',n:'굵은 선',unlock:{titles:3}},{id:'corner',n:'모서리 장식',unlock:{endings:3}},{id:'dotted',n:'점선',unlock:{hard:1}},...Object.entries(FRIMG).map(([id,[n,,unlock]])=>({id,n,unlock}))];
+  const frameSrc=id=>(typeof window!=='undefined'&&window.CITY_FRM&&window.CITY_FRM[id])||`assets/frame/${id}.png`;
+  (function(){if(typeof document==='undefined')return;const st=document.createElement('style');st.textContent=Object.entries(FRIMG).map(([id,[,sl]])=>`.ent.deco-${id}{border:3px solid transparent;border-image:url("${frameSrc(id)}") ${sl} / 20px / 14px stretch}`).join('\n');document.head.appendChild(st)})();
   const decoRec=()=>{const r=loadRec();return {titles:Object.keys(r.titles||{}).filter(k=>(r.titles[k]||0)>0).length,endings:(r.endings||[]).length,hard:!!r.hardClear}};
   /* 개인 시험판(window.CITY_OPENALL, build --alltest)에서만 모든 심볼·테두리를 해금 조건 없이 연다. 공개 테섭과 본섭은 조건대로 */
   const decoOk=o=>{if(!o.unlock)return true;if(typeof window!=='undefined'&&window.CITY_OPENALL)return true;const r=decoRec(),u=o.unlock;if(u.sym)return (loadRec().symbols||[]).includes(u.sym);if(u.rw)return symHave()>=Math.ceil(SYMS.length*u.rw);return (!u.titles||r.titles>=u.titles)&&(!u.endings||r.endings>=u.endings)&&(!u.hard||r.hard)};
@@ -690,7 +693,7 @@ export function startUI(E,app){
   }
   function vSettings(){
     const b=(a,k,l,cur)=>`<button class="${cur===k?'on':''}" data-a="${a}" data-i="${k}">${l}</button>`;
-    return `<div class="stack" style="gap:6px"><span class="eyebrow">언어 · Language</span><div class="seg">${LANGS.map(l=>b('lang',l.k,l.n,getLang())).join('')}</div><span class="small dim">${getLang()==='ko'?'다른 언어는 번역이 준비된 부분부터 적용되고, 없는 문장은 한국어로 나옵니다 · 바꾸면 화면이 새로 열립니다':tr('다른 언어는 번역이 준비된 부분부터 적용되고, 없는 문장은 한국어로 나옵니다 · 바꾸면 화면이 새로 열립니다')}</span></div>${FS.ok()?`<div class="stack" style="gap:6px"><span class="eyebrow">전체 화면</span><div class="seg">${b('fs','off','끔',FS.on()?'':'off')}${b('fs','on','켬',FS.on()?'on':'')}</div><span class="small dim">브라우저 주소창·탭 줄을 숨깁니다 · 방송이나 넓은 화면용 · Esc로도 끝낼 수 있습니다</span></div>`:''}<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
+    return `<div class="stack" style="gap:6px"><span class="eyebrow">언어 · Language</span><div class="seg">${LANGS.map(l=>b('lang',l.k,l.n,getLang())).join('')}</div>${langNote()}<span class="small dim">${getLang()==='ko'?'다른 언어는 번역이 준비된 부분부터 적용되고, 없는 문장은 한국어로 나옵니다 · 바꾸면 화면이 새로 열립니다':tr('다른 언어는 번역이 준비된 부분부터 적용되고, 없는 문장은 한국어로 나옵니다 · 바꾸면 화면이 새로 열립니다')}</span></div>${FS.ok()?`<div class="stack" style="gap:6px"><span class="eyebrow">전체 화면</span><div class="seg">${b('fs','off','끔',FS.on()?'':'off')}${b('fs','on','켬',FS.on()?'on':'')}</div><span class="small dim">브라우저 주소창·탭 줄을 숨깁니다 · 방송이나 넓은 화면용 · Esc로도 끝낼 수 있습니다</span></div>`:''}<div class="stack" style="gap:6px"><span class="eyebrow">배경 테마</span><div class="seg">${SKINS.map(s=>b('skin',s.k,s.n,SKIN)).join('')}</div></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">주사위 · 전투 연출</span><div class="seg">${b('mode','manual','수동',MODE)}${b('mode','slow','천천히',MODE)}${b('mode','fast','빠르게',MODE)}${b('mode','off','끔',MODE)}</div>
         <span class="small dim">${{manual:'행동마다 버튼을 눌러 직접 주사위를 굴린다',slow:'자동으로 천천히 굴린다',fast:'자동으로 빠르게 굴린다',off:'연출 없이 결과만 본다'}[MODE]}</span></div>
       <div class="stack" style="gap:6px"><span class="eyebrow">자동 전투 간격</span><div class="seg">${b('autogap','slow','느림',AUTOGAP)}${b('autogap','normal','보통',AUTOGAP)}${b('autogap','mid','조금 빠름',AUTOGAP)}${b('autogap','fast','빠름',AUTOGAP)}</div>
@@ -1307,7 +1310,10 @@ export function startUI(E,app){
       <button class="btn" data-a="mindtest" data-i="break"><b>③ 전투 중 정신력 0</b><span class="dim small">전투가 시작되자마자 개화/뒤틀림 판정 연출</span></button></div>`}
   const fbLink=()=>`<a class="btn quiet" href="${CFG.feedbackUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit"><b>의견·버그 제보</b><span class="dim small">구글 폼이 새 탭에서 열린다 · 게임 버전(${UPDATES.v})을 함께 적어 주세요</span></a>`;
   /* PC 넓은 화면: 시작 화면 왼쪽 빈 곳에 설정·꾸미기·제보를 둔다 (좁은 화면에서는 CSS로 숨기고, 가운데 열의 접는 칸을 쓴다) */
-  const langSeg=()=>`<div class="seg langseg" aria-label="Language">${LANGS.map(l=>`<button class="${getLang()===l.k?'on':''}" data-a="lang" data-i="${l.k}">${l.n}</button>`).join('')}</div>`;
+  /* 일본어 번역 주의 문구(일본어로 보인다): 완벽하지 않고 Gemini → Claude 순으로 2차 수정을 거쳤다는 안내 */
+  const JANOTE='【日本語訳についてのご注意】この日本語訳は完全ではありません。Gemini、Claude の順で二次修正を行いましたが、一部の単語が反映されていなかったり、不自然な表現が残っていたりする場合があります。あらかじめご了承ください。';
+  const langNote=()=>getLang()==='ja'?`<p class="small dim langnote" style="margin:6px 0 0;line-height:1.5">${JANOTE}</p>`:'';
+  const langSeg=()=>`<div class="seg langseg" aria-label="Language">${LANGS.map(l=>`<button class="${getLang()===l.k?'on':''}" data-a="lang" data-i="${l.k}">${l.n}</button>`).join('')}</div>${langNote()}`;
   function vTitleSide(){const col=(G&&G.ch&&G.ch.color)||'#c9a35a';return `<aside class="title-side" aria-label="설정과 꾸미기">${langSeg()}<button class="btn quiet" data-a="cfg"><b>설정</b><span class="dim small">화면 · 소리 · 전투 연출</span></button>${stSec('pc_deco',`꾸미기 ${markHtml(col)}`,vDeco('pc'),false)}${fbLink()}</aside>`}
   function vTitle(){
     return `${chronBtn('chron-in')}${vTitleSide()}<div class="tmob">${langSeg()}</div><div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
