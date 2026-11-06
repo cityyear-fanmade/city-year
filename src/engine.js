@@ -677,7 +677,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function buySupply(ch,id){const K=CFG.supply,it=K.items[id],p=supplyPrice(ch,id);if(!it||ch.money<p||((ch.supply||{})[id]||0)>=K.max)return false;ch.money-=p;(ch.supply=ch.supply||{})[id]=((ch.supply||{})[id]||0)+1;return true}
   /* 쓸 수 있으면 결과 문장, 아니면 null. 전투 중이면 C를 넘기고(HP는 전투 중 값에 더한다) 라운드마다 한 번만 쓴다 */
   function useSupply(ch,id,C){
-    const it=CFG.supply.items[id];if(!it||!((ch.supply||{})[id]>0)||distOn(ch)&&it.mind)return null;
+    const it=CFG.supply.items[id];if(!it||!((ch.supply||{})[id]>0)||ch.distForm&&it.mind)return null;
     const P=C&&!C.over?C.P:null;if(C&&C.over)return null;if(P&&C.supplyRound===C.round)return null;
     const hp=P?P.hp:ch.hp,mx=P?P.maxHp:ch.stats.maxHp,bleed=P?(P.bleed||0)>0:false;
     const needHp=it.hp&&hp<mx,needMind=it.mind&&ch.mind<mindMax(ch);
@@ -692,7 +692,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 공방 치유소 · 마음 치료: 돈을 내고 정신력을 회복한다 (뒤틀린 몸은 마음을 쓰지 못해 받을 수 없다) */
   const mindClinicPrice=ch=>CFG.clinic.mindPrice+CFG.clinic.mindStep*(ch.mindBought||0);
   function buyMind(ch){
-    const K=CFG.clinic,p=mindClinicPrice(ch);if(distOn(ch)||ch.money<p||ch.mind>=mindMax(ch))return 0;
+    const K=CFG.clinic,p=mindClinicPrice(ch);if(ch.distForm||ch.money<p||ch.mind>=mindMax(ch))return 0;
     const g=gainMind(ch,K.mind);if(g<=0)return 0;ch.money-=p;ch.mindBought=(ch.mindBought||0)+1;return g;
   }
   /* 암시장 K사 엠플: 전투 중 HP가 below 이하가 되면 자동으로 쓰여 HP를 heal 회복한다 (전투마다 1개). 최대 carry개, 무한 모드 뒤엔 값이 오른다 */
@@ -1459,8 +1459,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* ===== 정신력 ===== */
   const M=CFG.mind;
-  const distOn=ch=>!!(ch.distForm&&!ch.distStable);   // 뒤틀려 있는 동안만 (안정화로 돌아온 뒤에는 정신력이 다시 쓰인다)
-  const mindFloor=ch=>ch.ego?M.ego[ch.ego.type].floor:(ch.distForm&&ch.distStable?1:0);   // 돌아온 뒤에는 다시 무너지지 않게 1에서 멈춘다
+  const mindFloor=ch=>ch.ego?M.ego[ch.ego.type].floor:0;
   /* 성장기 '목소리가 들림': 정신력 최대치 +5 */
   const mindMax=ch=>Math.min(M.cap||Infinity,M.max+((ch.stats&&ch.stats.mindMax)||0));
   /* ===== 전투 중 정신력이 0이 되면: 50% E.G.O 개화, 아니면 육신 뒤틀림 (둘 다 그 자리에서 전투에 반영) =====
@@ -1502,7 +1501,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.namePend=null;return null;
   }
   function loseMind(ch,n,out){
-    if(n<=0||distOn(ch))return;if(hasInn(ch,'will'))n=Math.ceil(n*CFG.innate.willCut);const m0=ch.mind;ch.mind=Math.max(mindFloor(ch),ch.mind-n);
+    if(n<=0||ch.distForm)return;if(hasInn(ch,'will'))n=Math.ceil(n*CFG.innate.willCut);const m0=ch.mind;ch.mind=Math.max(mindFloor(ch),ch.mind-n);
     if(ch.mind<m0&&out)out(`정신력 −${m0-ch.mind} (${ch.mind}/${mindMax(ch)})`);
     if(ch.ego)return;
     /* 뒤틀림은 전투가 끝난 뒤 사건에서 고른다: 아직 그 사건을 겪지 않았으면 정신력 1에서 버틴다 */
@@ -1511,10 +1510,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     else if(ch.mind===1&&!ch.distortDone){if(bondMarried(ch)&&!ch.bond.saved){ch.bond.saved=true;ch.mind=CFG.bond.saveMind;out&&out(`가족의 목소리 · ${ch.bond.name}의 목소리가 당신을 붙잡았다 · 정신력 ${ch.mind}`)}else ch.distortPend=true}
     else if(ch.mind<=M.voiceAt&&!ch.voiceUsed)ch.voicePend=true;
   }
-  const gainMind=(ch,n)=>{if(distOn(ch))return 0;const m0=ch.mind;ch.mind=Math.min(mindMax(ch),ch.mind+n);return ch.mind-m0};
-  const mindTier=ch=>distOn(ch)?null:M.tiers.find(t=>ch.mind>=t.at)||null;
+  const gainMind=(ch,n)=>{if(ch.distForm)return 0;const m0=ch.mind;ch.mind=Math.min(mindMax(ch),ch.mind+n);return ch.mind-m0};
+  const mindTier=ch=>ch.distForm?null:M.tiers.find(t=>ch.mind>=t.at)||null;
   /* 정신력이 stat.at 각 값 이상일 때마다 모든 능력치 +1 (최대 6) */
-  const mindStat=ch=>distOn(ch)?0:M.stat.at.filter(x=>ch.mind>=x).length;
+  const mindStat=ch=>ch.distForm?0:M.stat.at.filter(x=>ch.mind>=x).length;
   /* E.G.O 이름: 1~12글자, 게임에 있는 물건·전리품·유물·카드 이름과 같으면 안 된다 (띄어쓰기 무시) */
   function egoTaken(){
     const n=new Set(),add=x=>{if(x)n.add(String(x).replace(/\s/g,''))};
@@ -2365,7 +2364,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function setStable(ch){
     const X=CFG.distort;if(!ch.distForm||ch.distStable)return false;
-    ch.distStable=true;ch.mind=mindMax(ch);const fx=ch.deck.filter(id=>D.cards[id].fixed);
+    ch.distStable=true;const fx=ch.deck.filter(id=>D.cards[id].fixed);
     if(ch.packName===X.packN){ch.packName=X.packN2;ch.deck=X.deck2.concat(fx)}
     else{ensurePacks(ch);stashPack(ch,X.packN2);ch.deck=X.deck2.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false}
     (ch.relics=ch.relics||[]).push('뒤틀림 안정화');
@@ -4317,5 +4316,5 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    canFound,distOn,pvProfile,staffList,staffLv,staffEventPick,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    canFound,pvProfile,staffList,staffLv,staffEventPick,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
