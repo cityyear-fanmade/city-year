@@ -320,7 +320,19 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function equipUp(ch,nw){const old=ch.gear[nw.slot];
     if(old&&(old.tries||old.tune)&&old.id!==nw.id){const tn=Object.assign({},old.tune||{});carryTune(old,nw);equip(ch,nw);for(const [k,v] of Object.entries(tn))if(old.fx&&k in old.fx)old.fx[k]-=v;delete old.tune;old.tries=0}else equip(ch,nw);
     if(old&&old.id!==nw.id&&warpWid().has(old.id))ch.stash=(ch.stash||[]).filter(x=>x!==old)}
-  function carryTune(old,nw){if(!old||!(old.tries||old.tune))return nw;nw.tries=old.tries||0;if(old.tune){nw.tune=Object.assign({},old.tune);for(const [k,v] of Object.entries(old.tune))nw.fx[k]=(nw.fx[k]||0)+v}return nw}
+  /* 같은 장비를 새로 만들 때(공방 강화·의수 종류 변경·이름 짓기 등) 인챈트와 변화로 오른 깡스탯을 그대로 옮긴다.
+     새 장비는 기본값으로 다시 만들어지므로, 옮기지 않으면 인챈트가 사라진다 */
+  function carryEnch(old,nw){
+    if(!old||!nw||old.id!==nw.id||!(old.ench||old.chgFx))return nw;
+    const slot=nw.slot,row=old.ench&&((CFG.enchant.pool[slot]||[]).find(x=>x.key===old.ench.key));
+    nw.fx0=Object.assign({},nw.fx||{});nw.baseN=nw.n;nw.e0=nw.e||'';
+    if(row){for(const [k,v] of Object.entries(row.fx||{}))nw.fx[k]=(nw.fx[k]||0)+v;
+      nw.ench=old.ench;nw.ewx=old.ewx?JSON.parse(JSON.stringify(old.ewx)):undefined;nw.enchN=old.enchN||1;
+      nw.n=`${old.ench.n} ${nw.baseN}`;nw.e=`${nw.e0} · [${old.ench.n}] ${old.ench.e}`}
+    if(old.chgFx){for(const [k,v] of Object.entries(old.chgFx))nw.fx[k]=(nw.fx[k]||0)+v;nw.chgFx=Object.assign({},old.chgFx);nw.chg=old.chg;nw.e=`${nw.e} · 변화 ${old.chg||0}단계`}
+    if(old.enchN&&!nw.enchN)nw.enchN=old.enchN;
+    return nw}
+  function carryTune(old,nw){carryEnch(old,nw);if(!old||!(old.tries||old.tune))return nw;nw.tries=old.tries||0;if(old.tune){nw.tune=Object.assign({},old.tune);for(const [k,v] of Object.entries(old.tune))nw.fx[k]=(nw.fx[k]||0)+v}return nw}
   function egoGrow(ch){
     if(ch.egoUses==null)return null;
     const st=ch.stash||[],w=ch.gear.weapon,L=egoLvFor(ch.egoUses),own=w&&egoBase(w.id)?w:st.find(x=>egoBase(x.id));
