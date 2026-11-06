@@ -645,7 +645,7 @@ export function startUI(E,app){
     '직업·협회':[['워프열차',['wing','W사 날개',1,{wtrain:true}]],['시 협회',['assoc','시 협회',1]]],
     '특색 패시브':[['일격 → 특색 (가)',['office','윤 사무소',1,{colorPasv:'strike'}]],['낙인 → 특색 (나)',['office','윤 사무소',1,{colorPasv:'brand'}]],['재생 → 특색 (다)',['office','윤 사무소',1,{colorPasv:'regen'}]]]};
   const LABMOVE={t:'이직 제안',x:'쐐기 사무소에서 6년을 보냈다. 다른 사무소에서 사람을 보내 넌지시 의향을 물었다. 옮기면 지금 사무소에서의 평판이 깎인다.',c:[{l:'불주먹 사무소로 옮긴다',h:'공격 +2 · 최대 HP +8 · 카드 불씨 던지기 · 평판 −2',ok:{t:'쐐기 사무소에 사직서를 냈다. 이튿날부터 불주먹 사무소의 간판 아래로 출근한다.',fx:{atk:2,maxHp:8,join:{type:'office',name:'불주먹 사무소'},officeMove:true}}},{l:'지금 사무소에 남는다',h:'평판은 그대로 · 오래 머물수록 평판이 오른다',ok:{t:'지금 자리에서 조금 더 있어 보기로 한다.',fx:{}}}]};
-  function symEndSim(type,name,promos,easy,extra){if(!G)return;const c=G.ch;c.aff=type?{type,name}:c.aff;c.promos=promos==null?1:promos;c.fi=promos==null?1:promos;c.easy=!!easy;if(extra){if(extra.origin)c.o=Object.assign({},c.o,{n:extra.origin});if(extra.title){c.title=extra.title}if(extra.race){c.race=extra.race}if(extra.colorPasv){c.colorDone=true;c.colorPasv=extra.colorPasv}if(extra.wtrain)c.wtrain=true}UI.endWin=true;UI.oldEnd=true;recordEnd();render();return loadRec().symbols}
+  function symEndSim(type,name,promos,easy,extra){if(!G)return;const c=G.ch;c.aff=type?{type,name}:c.aff;c.promos=promos==null?1:promos;c.fi=promos==null?1:promos;c.easy=!!easy;if(extra){if(extra.origin)c.o=Object.assign({},c.o,{n:extra.origin});if(extra.title){c.title=extra.title}if(extra.race){c.race=extra.race}if(extra.colorPasv){c.colorDone=true;c.colorPasv=extra.colorPasv}if(extra.wtrain)c.wtrain=true}UI.endWin=true;UI.oldEnd=true;UI.death=null;UI.outEnd=null;recordEnd();UI.screen='end';render();return loadRec().symbols}
   function vSymLab(){
     const g=UI.symGain,cur=decoGet(),col=(G&&G.ch&&G.ch.color)||'#c9a35a';
     const gain=g?(()=>{const x=SYMS.find(q=>q.id===g);const eq=cur.mark==='sym_'+g;return `<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow">심볼 획득</span>
@@ -3083,8 +3083,8 @@ ${symRec(r)}
       if(k.startsWith('sym:')){const [,g,i]=k.split(':'),it=LABSYM[g]&&LABSYM[g][+i];if(it)symEndSim(...it[1]);return}
       if(k==='found'){c.licensed=true;c.rank=5;c.officePick=true;UI.res={t:'사무소 개설',chips:[]};UI.screen='result';render();return}
       if(k==='office'||k==='staffev'){c.office=c.office||{name:'새벽빛 사무소',kw:'bleed',tier:0};c.aff={type:'office',name:c.office.name,own:true};c.licensed=true;c.rank=4;c.money=3000;if(!(E.staffList(c)||[]).length)E.hireStaff(c,0,G.year);
-        if(k==='office'){UI.stock=[];UI.bag='office';render();return}
-        const ev=E.staffEventPick(G);if(ev){UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()}else{UI.res={t:'직원 이벤트 없음',x:'지금은 일어날 직원 이벤트가 없습니다. 한 번 더 눌러 보세요.',chips:[]};UI.screen='result';render()}return}
+        if(k==='office'){UI.stock=[];UI.res={t:'내 사무소',chips:[]};UI.screen='result';UI.bag='office';render();return}
+        c.office.evNext=G.year;for(const x of E.staffList(c))x.seen=[];const ev=E.staffEventPick(G);if(ev){UI.ev=ev;UI.fight=null;UI.omen=null;UI.screen='event';render()}else{UI.res={t:'직원 이벤트 없음',x:'지금은 일어날 직원 이벤트가 없습니다. 한 번 더 눌러 보세요.',chips:[]};UI.screen='result';render()}return}
       if(k==='move'){c.licensed=true;c.rank=5;c.aff={type:'office',name:'쐐기 사무소'};c.affLog=['쐐기 사무소'];UI.ev=LABMOVE;UI.fight=null;UI.omen=null;UI.screen='event';render()}},
     symrec(i){const r=loadRec();r.symbols=i==='all'?SYMS.map(x=>x.id):i==='some'?['thumb','middle']:[];store.set(REC,JSON.stringify(r));render()},
     symback(){UI.symlab=false;UI.screen='title';render()},
