@@ -870,13 +870,10 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 .invcell.lock{opacity:.4;filter:grayscale(.8)}
 .invdetail{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 
-/* PC 양옆: 고정 검정 대신 테마색으로 잇는다(기본 테마). 단말기·단테·루이나 테마는 각자 배경이 따로 있다 */
+/* PC 양옆(기본 테마): 가운데와 양옆 칸이 한 판으로 이어지게, 가장자리를 따로 어둡게 깔지 않는다. 가운데만 아주 약한 테마색 빛 */
 @media (min-width:900px){
   html:not([data-skin]) body{
-    background:
-      radial-gradient(ellipse at 50% 28%,color-mix(in srgb,var(--gold) 7%,#121724) 0,transparent 62%),
-      radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--gold) 4%,transparent) 0,transparent 55%),
-      linear-gradient(90deg,#06080c 0,var(--bg) 24%,var(--bg) 76%,#06080c 100%);
+    background:radial-gradient(ellipse at 50% 22%,color-mix(in srgb,var(--gold) 5%,var(--bg)) 0,var(--bg) 70%);
     background-attachment:fixed;
   }
 }
@@ -885,3 +882,6 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 .invq.big{width:44px;height:44px;flex:none}
 .invgrid{grid-template-columns:repeat(auto-fill,minmax(46px,1fr))}
 .invcell.lock{opacity:1;filter:none;border-color:var(--line)}
+
+/* 시작 화면의 양옆 점선 띠: 왼쪽·오른쪽 칸이 띠 선을 넘어 삐져나온 것처럼 보이고 가운데 양옆이 비어 보여서 끈다 */
+@media (min-width:1360px){html[data-scr="title"] body::before,html[data-scr="title"] body::after{display:none}}
