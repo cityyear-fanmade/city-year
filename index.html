@@ -4841,7 +4841,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(ch.kidFoeSpouse){if(ch.bond.st==='married'){ch.bond.st='lost';chips.push(kf(bondTx(ch).hunt.winSpouse,ch.bond.name))}}
       else{const kk=(ch.bond.kids||[]).find(k=>k.n===ch.kidFoe&&!k.dead);if(kk){kk.dead=true;kk.dieYear=ch.year||0;chips.push(kf(bondTx(ch).hunt.win,kk.n))}}
       /* 가족을 직접 쓰러뜨린 충격: 최대 정신력이 영구히 크게 줄고 정신력도 같이 떨어진다 (뒤틀린 동안은 정신력이 쓰이지 않지만, 기록과 안정 뒤를 위해 남긴다) */
-      {const hm=BD.hunt.mind;ch.stats.mindMax=(ch.stats.mindMax||0)-hm;ch.mind=Math.max(1,Math.min(ch.mind-hm,mindMax(ch)));chips.push(`가족을 쓰러뜨렸다 · 최대 정신력 −${hm} (영구) · 정신력 ${ch.mind}`)}}
+      {const hm=BD.hunt.mind;ch.stats.mindMax=(ch.stats.mindMax||0)-hm;ch.mind=Math.max(1,Math.min(ch.mind-hm,mindMax(ch)));chips.push(`가족을 쓰러뜨렸다 · 최대 정신력 −${hm} (영구) · 정신력 ${ch.mind}`);chips.push('뒤틀린 몸에는 정신력이 쓰이지 않는다 (안정화된 뒤에도 돌아오지 않고, 숫자만 기록으로 남는다)')}}
     if(ch.flags&&ch.flags.redMist){const h=Math.min(CFG.redMist.heal+Math.round(ch.stats.maxHp*(CFG.redMist.healPct||0)),ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('붉은 안개 · 적을 쓰러뜨려 HP +'+h)}}
     {const f0=D.enemies[C.id];
       if(f0.rb&&ch.rb&&!f0.hidden&&!f0.rbLast){
@@ -7223,7 +7223,7 @@ function startUI(E,app){
     return `<div class="panel stack" style="gap:5px;padding:8px 10px;border-color:${col}"><div class="row between"><b style="color:${col};font-size:15px">⚓ 배 내구도 ${h}/${mx}</b><span class="mono small dim">${low?'곧 가라앉는다':'전투마다 -'+CFG.lake.hullWear}</span></div><div class="bar" style="height:10px"><i style="width:${Math.round(h/mx*100)}%;background:${col}"></i></div><span class="mono small dim">${low?'항구에서 700안으로 수리하지 않으면 침몰한다':'항구에서 '+CFG.lake.repairCost+'안으로 수리'}</span></div>`;
   }
   function vMind(ch){
-    if(ch.distForm)return `<div class="row between small"><span class="mono" style="color:#c25050">정신력 ???</span><span class="mono dim">이점도 불이익도 없다</span></div>`;
+    if(ch.distForm)return `<div class="row between small"><span class="mono" style="color:#c25050">정신력 ???</span><span class="mono dim">${ch.distStable?'뒤틀린 몸에는 정신력이 없다 · 안정화 뒤에도 돌아오지 않는다':'뒤틀린 몸에는 정신력이 없다 · 이점도 불이익도 없다'}</span></div>`;
     const m=ch.mind,mx=E.mindMax(ch),t=E.mindTier(ch),low=m<=CFG.mind.voiceAt;
     return `<div class="row between small"><span class="mono" style="color:${low?'var(--bad,#c46a5a)':'var(--gold)'}">정신력 ${m}/${mx}</span><span class="mono dim">${ch.ego?`E.G.O ${esc(ch.ego.n)} · 하한 ${CFG.mind.ego[ch.ego.type].floor} · 빛 +${CFG.mind.light}(처음 ${CFG.mind.lightRounds}라운드)`:t?`호흡 +${t.breath}${t.eva?` · 회피 +${t.eva}`:''}${E.mindStat(ch)?` · 모든 능력치 +${E.mindStat(ch)}`:''}`:low?'목소리가 가깝다':'보정 없음'}${ch.egoGear?` · E.G.O 장비 ${ch.egoGear}`:''}${egoGrowTag(ch)}${ch.innate?` · <span style="color:var(--gold)">${esc(innateName(ch))}</span>`:''}${E.cardGrade(ch.year,ch).n?` · 카드 등급 <b style="color:var(--gold)">${E.cardGrade(ch.year,ch).n}</b>`:''}</span></div>
       <div class="bar" style="height:4px"><i style="width:${Math.round(m/mx*100)}%;background:${low?'#c46a5a':'#8a7fb8'}"></i></div>`;
