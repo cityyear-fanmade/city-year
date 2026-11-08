@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """몸 시트(머리 자리에 마젠타 원, 같은 줄에 복장 여러 벌) + 머리 시트(회색 머리카락·청록 눈, 표정 4종 × 머리 모양 행)를
 합성해 머리 모양·머리색·눈색을 바꾼 전신 그림과 전투 초상(표정 4종)을 만든다.
-시험 단계의 도구: 얼굴 비율(0.42)·턱 위치(-0.04)는 시험 결과(엄지 카포·언더보스·대부 + 단발·숏컷)에 맞춘 값이다.
+시험 단계의 도구: 얼굴 비율(0.42)·턱 위치(+0.09, 2026-11-08 머리가 뒤로 빠져 보여 목선 아래로 내림)는 시험 결과(엄지 카포·언더보스·대부 + 단발·숏컷)에 맞춘 값이다.
 사용 예 (파이썬에서):
     import importlib.util; spec=importlib.util.spec_from_file_location('cc','tools/char-compose.py'); C=...
     rgba,circles,masks=C.load_bodies('body.webp'); heads=C.load_heads('heads.webp',[(0,512),(512,1024)])
@@ -64,7 +64,7 @@ def load_bodies(path):
     return rgba,circles,masks
 def load_heads(path,rows):
     a=np.array(Image.open(path).convert('RGB'));return [[c for c,_ in comps(a,y0,y1)] for y0,y1 in rows]
-def build(body,circle,mask,rgba_all,head,hair,eye,rot=0,face_ratio=0.42,chin_off=-0.04,pad=300,top=300):
+def build(body,circle,mask,rgba_all,head,hair,eye,rot=0,face_ratio=0.42,chin_off=0.09,pad=300,top=300):
     cx,cy,d=circle;H=head
     hc=tint(H,hair,eye);sb=skin_box(hc)
     s=(d*face_ratio)/(sb[1]-sb[0]+1)
