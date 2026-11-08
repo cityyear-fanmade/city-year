@@ -64,7 +64,7 @@ def load_bodies(path):
     return rgba,circles,masks
 def load_heads(path,rows):
     a=np.array(Image.open(path).convert('RGB'));return [[c for c,_ in comps(a,y0,y1)] for y0,y1 in rows]
-def build(body,circle,mask,rgba_all,head,hair,eye,rot=0,face_ratio=0.42,chin_off=-0.04,pad=300,top=300,dx=0.12):
+def build(body,circle,mask,rgba_all,head,hair,eye,rot=0,face_ratio=0.42,chin_off=-0.04,pad=300,top=300,dx=0.08):
     cx,cy,d=circle;H=head
     hc=tint(H,hair,eye);sb=skin_box(hc)
     s=(d*face_ratio)/(sb[1]-sb[0]+1)
