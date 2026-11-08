@@ -58,6 +58,9 @@ export const CFG = {
   /* 연차가 쌓일수록 일반 적이 강해진다: from년차 뒤 해마다 HP +hpPerYear 배, atkEvery년마다 공격·회피 +1 */
   enemyScale: {hpMul: 0.78, from: 8, hpPerYear: 0.035, atkEvery: 2},
   /* 히든 보스(발톱·조율자·도서관 등): 데이터 수치에 체력 배수와 공격·회피 가산 */
+  /* 도서관 지정사서의 무한 모드 손님: every해마다(가속 구간은 25년 스텝마다) 일반 무한 적(tiers) 수준의 손님이 온다. 이기면 grade등급 책 속의 물건, 다 모았으면 책의 이름(영구 성장) */
+  libInf: {every: 10, tiers: ['late'], grade: 4, talkDc: 60,
+    name: {atk: {l: '이름을 읽는다 · 날을 세운다', h: '공격 +2 (영구)', t: '이름을 소리 내어 읽자 손끝이 가벼워졌다.', fx: {atk: 2}}, hp: {l: '이름을 읽는다 · 몸을 단단히 한다', h: '최대 HP +30 (영구)', t: '이름을 소리 내어 읽자 숨이 깊어졌다.', fx: {maxHp: 30}}}},
   hidden: {hpMul: 2.7, atk: 2, minHp: 30, winHeal: 15},
   /* minHp: 히든 보스 전투를 시작할 때 체력이 이보다 낮으면 여기까지 채운다. winHeal: 히든 보스를 이기면 평소 승리 회복에 더해 회복 */
   /* 히든 보스 후반 보정: from년차부터 해마다 체력 +hpPerYear, atkEvery년마다 공격 +1 (40년차 +30 · +5) */
