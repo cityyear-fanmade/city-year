@@ -1,0 +1,176 @@
+{
+ "lang": "en",
+ "note": "프로젝트 문 공식 영어판 기준 용어. status가 불확실인 항목은 영어판에서 직접 확인 후 확정",
+ "terms": [
+  {
+   "ko": "해결사",
+   "en": "Fixer",
+   "note": "공식(영어판)"
+  },
+  {
+   "ko": "날개",
+   "en": "Wing",
+   "note": "공식"
+  },
+  {
+   "ko": "협회",
+   "en": "Association",
+   "note": "공식"
+  },
+  {
+   "ko": "사무소",
+   "en": "Office",
+   "note": "공식"
+  },
+  {
+   "ko": "도시",
+   "en": "City",
+   "note": "공식 (The City)"
+  },
+  {
+   "ko": "뒤틀림",
+   "en": "Distortion",
+   "note": "공식"
+  },
+  {
+   "ko": "특색",
+   "en": "Color",
+   "note": "공식 (Color Fixer 등) · Singularity(특이점)와 구분"
+  },
+  {
+   "ko": "환상체",
+   "en": "Abnormality",
+   "note": "공식"
+  },
+  {
+   "ko": "E.G.O",
+   "en": "E.G.O",
+   "note": "공식"
+  },
+  {
+   "ko": "손가락",
+   "en": "Fingers",
+   "note": "공식"
+  },
+  {
+   "ko": "머리",
+   "en": "Head",
+   "note": "공식"
+  },
+  {
+   "ko": "발톱",
+   "en": "Claw",
+   "note": "공식"
+  },
+  {
+   "ko": "색인",
+   "en": "Index",
+   "note": "공식(손가락 조직 Index) · 확인 필요"
+  },
+  {
+   "ko": "조율자",
+   "en": "Arbiter",
+   "note": "불확실 · 확인 필요"
+  },
+  {
+   "ko": "흑운회",
+   "en": "Kurokumo Clan",
+   "note": "공식"
+  },
+  {
+   "ko": "검계",
+   "en": "Blade Lineage",
+   "note": "공식"
+  },
+  {
+   "ko": "안",
+   "en": "Ahn",
+   "note": "화폐 단위 · 영어판 표기 확인 필요"
+  },
+  {
+   "ko": "정신력",
+   "en": "Sanity",
+   "note": "Limbus 공식 키워드 기준"
+  },
+  {
+   "ko": "호흡",
+   "en": "Poise",
+   "note": "Limbus 공식 키워드 기준"
+  },
+  {
+   "ko": "출혈",
+   "en": "Bleed",
+   "note": "Limbus 공식 키워드 기준"
+  },
+  {
+   "ko": "화상",
+   "en": "Burn",
+   "note": "Limbus 공식 키워드 기준"
+  },
+  {
+   "ko": "파열",
+   "en": "Rupture",
+   "note": "Limbus 공식 키워드 기준"
+  },
+  {
+   "ko": "진동",
+   "en": "Tremor",
+   "note": "Limbus 공식 키워드 기준"
+  },
+  {
+   "ko": "침잠",
+   "en": "Sinking",
+   "note": "Limbus 공식 키워드 기준"
+  },
+  {
+   "ko": "충전",
+   "en": "Charge",
+   "note": "Limbus 공식 키워드 기준"
+  },
+  {
+   "ko": "흑수",
+   "en": "Black Hand? (불확실)",
+   "note": "확인 필요 · 흑운회와 다르다"
+  },
+  {
+   "ko": "심볼",
+   "en": "Symbol",
+   "note": "이 게임 용어"
+  },
+  {
+   "ko": "꾸미기",
+   "en": "Customize",
+   "note": "이 게임 용어"
+  },
+  {
+   "ko": "기록실",
+   "en": "Records",
+   "note": "이 게임 용어"
+  },
+  {
+   "ko": "무한 모드",
+   "en": "Endless Mode",
+   "note": "이 게임 용어"
+  },
+  {
+   "ko": "가속",
+   "en": "Acceleration",
+   "note": "이 게임 용어"
+  },
+  {
+   "ko": "변화",
+   "en": "Change",
+   "note": "이 게임 용어"
+  },
+  {
+   "ko": "직원",
+   "en": "Staff",
+   "note": "이 게임 용어"
+  },
+  {
+   "ko": "특색 시험",
+   "en": "Color Trial",
+   "note": "이 게임 용어"
+  }
+ ]
+}

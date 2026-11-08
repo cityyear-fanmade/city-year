@@ -15,18 +15,33 @@ const seen=new Map(),walk=x=>{if(typeof x==='string'){if(/[가-힣]/.test(x)&&!d
 walk(loadData());
 if(withUi){try{for(const t of JSON.parse(readFileSync(new URL('../data/i18n/ui-strings.json',import.meta.url),'utf8')))if(!dict[t]&&!seen.has(id(t)))seen.set(id(t),t)}catch(e){}}
 const todo=[...seen].slice(0,Number.isFinite(limit)?limit:undefined);
-const GLOSS='화상=火傷 · 출혈=出血 · 진동=振動 · 파열=破裂 · 침잠=沈潜 · 호흡=呼吸 · 충전=充電 · 해결사=フィクサー · 사무소=事務所';
-const PROMPT=`당신은 한국어 텍스트 RPG(프로젝트 문 세계관 팬메이드)를 일본어로 번역하는 전문 번역가입니다. 아래 줄들을 번역하세요.
+const GLOSS_JA='화상=火傷 · 출혈=出血 · 진동=振動 · 파열=破裂 · 침잠=沈潜 · 호흡=呼吸 · 충전=充電 · 해결사=フィクサー · 사무소=事務所';
+/* 영어: data/i18n/glossary-en.json의 용어집을 프롬프트에 넣는다 (불확실·확인 필요 항목은 제외) */
+let GLOSS_EN='';try{GLOSS_EN=JSON.parse(readFileSync(new URL('../data/i18n/glossary-en.json',import.meta.url),'utf8')).terms.filter(t=>!/불확실/.test(t.en+t.note)).map(t=>t.ko+'='+t.en).join(' · ')}catch(e){}
+const PROMPT_JA=`당신은 한국어 텍스트 RPG(프로젝트 문 세계관 팬메이드)를 일본어로 번역하는 전문 번역가입니다. 아래 줄들을 번역하세요.
 규칙:
 1. 입력은 \`번호<TAB>한국어 문장\`입니다. 출력은 \`번호<TAB>일본어 번역\` 줄만, 입력과 같은 번호·순서·줄 수로 내십시오. 설명·머리말·코드블록은 쓰지 마십시오.
 2. 한 줄은 한 줄로 번역합니다. 합치거나 나누거나 빼먹지 마십시오.
 3. 문장 전체를 자연스러운 일본어 어순과 어미로 새로 쓰십시오. 고유명사(사람·장소·장비·적 이름)를 제외하고 출력에 한글이 남으면 안 됩니다.
 4. \`{n}\` 같은 중괄호 자리표시는 글자 하나도 바꾸지 말고 앞뒤에 공백을 넣지 마십시오. 중괄호 뒤의 한국어 조사는 일본어 조사로 바꿉니다.
 5. 문체는 담담하고 건조한 서술체(だ・である調), 쓸쓸하고 차분한 분위기를 유지합니다.
-6. 용어: ${GLOSS}. 이 외의 고유명사는 번역하지 말고 한국어 그대로 두십시오.
+6. 용어: ${GLOSS_JA}. 이 외의 고유명사는 번역하지 말고 한국어 그대로 두십시오.
 예시:
 0001\t세 번 긁어 출혈 +2씩
 0001\t3回引っかいて出血 +2ずつ`;
+
+const PROMPT_EN=`You are a professional translator localizing a Korean text RPG (a fan-made game set in Project Moon's universe) into natural English. Translate the lines below.
+Rules:
+1. Input is \`number<TAB>Korean sentence\`. Output ONLY \`number<TAB>English translation\` lines, with the same numbers, order and line count. No explanations, headers or code blocks.
+2. One line in, one line out. Never merge, split or skip lines.
+3. Rewrite each sentence as natural English. Except proper nouns (people, places, gear, enemy names), no Korean characters may remain. Romanize unknown proper nouns naturally (e.g. 한결 -> Hangyeol).
+4. Placeholders in braces like \`{n}\` must stay exactly as written, with no spaces added around them. Use English grammar around them (no Korean particles).
+5. Tone: plain, dry, melancholic narration in past or present tense matching the source. Keep UI labels short and title-cased where natural.
+6. Use these official terms: ${GLOSS_EN}. Do not translate other proper nouns literally; romanize them.
+Example:
+0001\t세 번 긁어 출혈 +2씩
+0001\tScratch three times, Bleed +2 each`;
+const PROMPT=lang==='en'?PROMPT_EN:PROMPT_JA;
 console.log(`번역 대기 ${seen.size}문장 · 이번 ${todo.length}문장 · 호출 ${Math.ceil(todo.length/BATCH)}회`);
 if(dry||!todo.length)process.exit(0);
 const ph=s=>(s.match(/\{[^}]+\}/g)||[]).sort().join('|');
@@ -51,7 +66,7 @@ for(let i=0;i<todo.length;i+=BATCH){
   const text=r.candidates[0].content.parts[0].text;
   const map=new Map(part);
   for(const line of text.split('\n')){const t=line.indexOf('\t');if(t<0)continue;const k=line.slice(0,t).trim(),v=line.slice(t+1).trim(),src=map.get(k);if(!src||!v){bad++;continue}
-    const vv=v.replace(/\{[^}]+\}/g,''),han=(vv.match(/[가-힣]/g)||[]).length,jp=/[぀-ヿ一-鿿]/.test(v);
+    const vv=v.replace(/\{[^}]+\}/g,''),han=(vv.match(/[가-힣]/g)||[]).length,jp=lang==='en'?/[A-Za-z]/.test(v):/[぀-ヿ一-鿿]/.test(v);
     if(ph(src)!==ph(v)||(src.length>8&&(v===src||han/Math.max(1,vv.length)>0.3||(han>0&&src.length>12)||!jp))){bad++;continue}
     dict[src]=v.replace(/\s*(\{[^}]+\})\s*/g,'$1');ok++}
   writeFileSync(dp,JSON.stringify(dict));
