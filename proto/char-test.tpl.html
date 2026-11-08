@@ -88,7 +88,8 @@ input[type=color]{width:36px;height:30px;border:1px solid var(--line);background
  background:conic-gradient(from 200deg,transparent 0 40%,rgba(255,90,70,.0) 40%,rgba(255,120,100,.95) 52%,rgba(255,255,255,.95) 55%,transparent 56% 100%);-webkit-mask:radial-gradient(circle,transparent 46%,#000 47% 66%,transparent 67%);mask:radial-gradient(circle,transparent 46%,#000 47% 66%,transparent 67%)}
 .burst{position:absolute;right:20%;bottom:120px;width:90px;height:90px;border-radius:50%;opacity:0;pointer-events:none;background:radial-gradient(circle,rgba(255,240,200,.95) 0 18%,rgba(255,110,80,.7) 30%,transparent 62%)}
 .stamp{position:absolute;left:50%;bottom:150px;transform:translate(-50%,0);font:900 26px var(--serif);color:#fff;text-shadow:0 2px 10px #000;opacity:0;pointer-events:none;letter-spacing:.06em}
-.phone.m .stagebox{height:200px}.phone.m .spr{bottom:20px}.phone.m .stagebox .floor{height:54px}.phone.m .stagebox .city{bottom:50px;height:70px}
+.phone.m .stagebox{height:200px}.phone.m .spr{bottom:20px}
+.phone.m .se{left:-2%}.phone.m .sp{right:-2%}.phone.m .stagebox .floor{height:54px}.phone.m .stagebox .city{bottom:50px;height:70px}
 </style>
 
 <div class="wrap">
@@ -274,7 +275,10 @@ async function drawFrame(cv,idx,st,flip){
 }
 const sp=()=>$('#spP'),se=()=>$('#spE');
 let tick=0,seqOn=false,hp=82,ehp=26,busy2=false;const SC={p:'idle',e:'idle'};
-function sizeSprites(){const m=$('#phone').classList.contains('m'),target=m?150:200,k=target/FR[0].h;for(const c of [sp(),se()]){c.style.height=(CH*k)+'px';c.style.width=(CW*k)+'px'}}
+function sizeSprites(){const W=$('#arena').clientWidth||600,target=Math.max(104,Math.min(200,W*.36)),k=target/FR[0].h,narrow=W<520;
+  for(const c of [sp(),se()]){c.style.height=(CH*k)+'px';c.style.width=(CW*k)+'px'}
+  se().style.left=narrow?'-3%':'12%';sp().style.right=narrow?'-3%':'12%';$('#arena').classList.toggle('narrow',narrow)}
+new ResizeObserver(()=>{if(FR.length)sizeSprites()}).observe(document.querySelector('#arena'));
 async function paint(side,idx){const st=side==='p'?S:ENEMY;return drawFrame(side==='p'?sp():se(),idx,st,side==='p')}
 async function paintSprites(){sizeSprites();await Promise.all([paint('p',POSE.idle[0]),paint('e',POSE.idle[0])])}
 setInterval(()=>{if(seqOn||document.hidden||$('#p3').hidden)return;tick++;const n=POSE.idle.length;paint('p',POSE.idle[tick%n]);paint('e',POSE.idle[(tick+2)%n])},260);
