@@ -903,6 +903,16 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 .invdetail>.btn{flex:1 1 100%;width:100%;justify-content:center;align-items:center;text-align:center}
 /* PC 왼쪽 칸(.title-side)의 버튼은 배경이 칸 색으로 덮여 "장착" 같은 주 버튼 글씨가 안 보이던 것을 바로잡는다 */
 .title-side .invdetail .btn.primary,html[data-skin] .title-side .invdetail .btn.primary{background:var(--gold)!important;color:var(--gold-ink)!important;border-color:var(--gold)!important}
+
+/* PC 가방 칸(오른쪽 도크): 창 높이가 낮으면 가운데 정렬 때문에 위로 올라가 오른쪽 위 버튼(음량·도움말·설정)과 겹친다.
+   그럴 때는 아래쪽에 붙이고, 위쪽 버튼 자리를 비워 둔 만큼만 높이를 쓴다(넘치면 칸 안에서 스크롤) */
+@media (min-width:1020px) and (max-height:780px){
+  .dock{top:auto;bottom:14px;transform:none;max-height:calc(100vh - 230px);overflow-y:auto}
+}
+/* PC 왼쪽 상태 칸: 창 높이가 낮으면 가운데 정렬 때문에 위로 올라가 왼쪽 위 음악 버튼과 겹친다 → 버튼 아래에 붙이고 넘치면 칸 안에서 스크롤 */
+@media (min-width:1360px) and (max-height:720px){
+  .side-l{top:104px;transform:none;max-height:calc(100vh - 118px);overflow-y:auto}
+}
 </style>
 </head>
 <body>
