@@ -3159,8 +3159,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else{const x=d(M.failLoss);chips.push('개화 실패 · 아직 마음이 버티고 있다');loseMind(ch,x,t=>chips.push(t+` · 1d${M.failLoss}`))}
     }
     if(fx.distort){
-      const th_=50+biasOf(ch),r=d(100),sg_=r>th_&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight;chips.push(`뒤틀림 판정 1d100 · ${r} (${th_} 이하면 E.G.O 개화)`);if(sg_)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);ch.rollFx={k:'distort',r,th:th_,ok:r<=th_||sg_,sight:sg_,seq:(ch.rollSeq=(ch.rollSeq||0)+1),at:1};
-      if(r<=th_||sg_){ch.egoPick=true;ch.mind=mindMax(ch);chips.push('뒤틀리기 직전, E.G.O 개화 · 정신력 회복')}else{ch.distPick=true;chips.push('육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
+      const th_=50+biasOf(ch),r=d(100),sg_=r>th_&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight;chips.push(`뒤틀림 판정 1d100 · ${r} (${th_} 이하면 E.G.O 개화)`);let r2_=0;if(sg_)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);ch.rollFx={k:'distort',r,th:th_,ok:r<=th_||sg_,sight:sg_,seq:(ch.rollSeq=(ch.rollSeq||0)+1),at:1};
+      if(r<=th_||sg_){ch.egoPick=true;ch.mind=mindMax(ch);chips.push('뒤틀리기 직전, E.G.O 개화 · 정신력 회복')}else if((r2_=d(100))<=M.twist){ch.distPick=true;chips.push(`뒤틀림 판정 1d100 · ${r2_} (${M.twist} 이하면 육신 뒤틀림)`);chips.push('육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}else{ch.mind=1;chips.push(`뒤틀림 판정 1d100 · ${r2_} (${M.twist} 이하면 육신 뒤틀림)`);chips.push('개화도 뒤틀림도 오지 않았다 · 정신력 1로 남는다 · 다시 한계에 닿으면 정신 붕괴')}
     }
     if(fx.distStable&&setStable(ch))chips.push('뒤틀림이 안정되었다 · 장비와 카드팩을 다시 쓸 수 있다 · 더 강해진 뒤틀린 카드팩을 얻었다');
     if(fx.distortAccept){ch.distPick=true;chips.push('목소리를 받아들였다 · 뒤틀림의 이름을 정한다')
