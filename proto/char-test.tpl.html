@@ -130,7 +130,7 @@ input[type=color]{width:36px;height:30px;border:1px solid var(--line);background
       <div class="row">
         <span class="lab" style="margin:0">보기</span>
         <button class="chip on" data-v="pc">PC 화면</button><button class="chip" data-v="m">모바일 화면(390px)</button>
-        <span class="lab" style="margin:0 0 0 10px">도트</span><button class="chip on" data-s="b">치비 도트(머리·색 교체)</button><button class="chip" data-s="dnf">던파식 도트(현실 비율·한 몸)</button>
+        <span class="lab" style="margin:0 0 0 10px">도트</span><button class="chip" data-s="b">치비 도트(2.5등신)</button><button class="chip on" data-s="b2">중간 도트(4.5등신)</button><button class="chip" data-s="dnf">던파식(7.5등신·머리 고정)</button>
       </div>
     </div>
     <div class="phone" id="phone" style="margin-top:14px">
@@ -248,32 +248,39 @@ $('#open').onclick=()=>$('#modal').classList.add('on');$('#close').onclick=()=>$
 $('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('on')};
 /* 전투: 위쪽은 주사위 판정, 아래쪽 무대에서 도트 몸 시트(18칸) + 도트 머리 시트가 움직인다 */
 const SETS={b:{FR:DATA.frames||[],POSE:{idle:[0,1,2,3],atk:[4,5,6,7],dodge:[8,9,10],hit:[11,12,13],down:[14,15,16,17]},head:true},
-  dnf:{FR:DATA.dnf||[],POSE:{idle:[0,1,2],atk:[3,4,5,6,7],dodge:[8,9,10],hit:[11,12,13],down:[14,15,16,17]},head:false}};
-let SM='b',FR=SETS.b.FR,POSE=SETS.b.POSE,CW=1,CH=1;const PH=DATA.pheads||[];
+  dnf:{FR:DATA.dnf||[],POSE:{idle:[0,1,2],atk:[3,4,5,6,7],dodge:[8,9,10],hit:[11,12,13],down:[14,15,16,17]},head:false},
+  b2:{FR:DATA.frames2||[],POSE:{idle:[0,1,2,3],atk:[4,5,6,7,8,9],dodge:[10,11,12],hit:[13,14,15],down:[16,17,18,19]},head:'b2'}};
+let SM='b2',FR=SETS.b2.FR,POSE=SETS.b2.POSE,CW=1,CH=1;const PH2=DATA.pheads2||[];const PH=DATA.pheads||[];
 function useSet(k){SM=k;FR=SETS[k].FR;POSE=SETS[k].POSE;CW=Math.max(...FR.map(f=>f.w));CH=Math.max(...FR.map(f=>f.h))}
-useSet('b');
+useSet('b2');
 const ENEMY={shape:'short',hair:'#3a3f55',eye:'#b04040'};
 const pcache={};
-async function ptinted(shape,pose,hair,eye){
-  const k=shape+pose+hair+eye;if(pcache[k])return pcache[k];
-  const H=PH.find(x=>x.shape===shape&&x.pose===pose),im=await load(H.img),c=document.createElement('canvas');c.width=im.width;c.height=im.height;
+async function tintH(H,hair,eye){
+  const k=H.img.slice(-40)+H.w+H.h+hair+eye;if(pcache[k])return pcache[k];
+  const im=await load(H.img),c=document.createElement('canvas');c.width=im.width;c.height=im.height;
   const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const id=x.getImageData(0,0,c.width,c.height),d=id.data;
   const hc=hex(hair),[th,ts,tv]=rgb2hsv(...hex(eye));
   for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2],al=d[i+3];if(al<1)continue;
-    const L=.299*r+.587*g+.114*b,sat=Math.max(r,g,b)-Math.min(r,g,b),cy=b>150&&g>150&&r<150&&b-r>60&&al>128;
-    if(cy){const[h_,s_,v_]=rgb2hsv(r,g,b);const o=hsv2rgb(th,ts>.05?Math.min(1,s_*(.55+.45*ts)):0,Math.min(1,v_*(.7+.3*tv)));d[i]=o[0];d[i+1]=o[1];d[i+2]=o[2];continue}
-    if(sat<22&&L<222){const f=Math.min(1,Math.max(0,L/150)),hi=L>150?Math.min(1,Math.max(0,(L-150)/105))*.55:0;for(let j=0;j<3;j++){const base=hc[j]*f;d[i+j]=Math.min(255,base+(255-base)*hi)}}}
+    const L=.299*r+.587*g+.114*b,sat=Math.max(r,g,b)-Math.min(r,g,b),cy=b>150&&g>150&&r<150&&b-r>60&&al>128,am=r>170&&g>90&&g<200&&b<95&&r-b>110&&al>128;   /* 청록 눈(치비) 또는 호박색 눈(B2) */
+    if(cy||am){const[h_,s_,v_]=rgb2hsv(r,g,b);const o=hsv2rgb(th,ts>.05?Math.min(1,s_*(.55+.45*ts)):0,Math.min(1,v_*(.7+.3*tv)));d[i]=o[0];d[i+1]=o[1];d[i+2]=o[2];continue}
+    if(sat<34&&L<226){const f=Math.min(1,Math.max(0,L/150)),hi=L>150?Math.min(1,Math.max(0,(L-150)/105))*.55:0;for(let j=0;j<3;j++){const base=hc[j]*f;d[i+j]=Math.min(255,base+(255-base)*hi)}}}
   x.putImageData(id,0,0);return pcache[k]={c,H};
+}
+async function ptinted(shape,pose,hair,eye){return tintH(PH.find(x=>x.shape===shape&&x.pose===pose),hair,eye)}
+function headFor2(idx,shape){   /* 몸 칸이 그 동작에서 몇 번째인지 → 같은 동작 머리 시트에서 대응하는 칸 */
+  const f=FR[idx],same=FR.map((x,i)=>x.pose===f.pose?i:-1).filter(i=>i>=0),n=same.length,pos=same.indexOf(idx),hs=PH2.filter(x=>x.shape===shape&&x.pose===f.pose),m=hs.length;
+  return hs[n>1?Math.round(pos*(m-1)/(n-1)):0];
 }
 /* 한 칸을 그린다: 몸 칸의 마젠타 원 자리에 머리를 얹고, 칸 아래 가운데에 맞춘다. flip이면 좌우를 뒤집는다 */
 async function drawFrame(cv,idx,st,flip){
-  const f=FR[idx],bi=await load(f.img),hd=SETS[SM].head,hc=hd?(await ptinted(st.shape,f.pose,st.hair,st.eye)).c:null;
-  cv.width=CW;cv.height=CH;const x=cv.getContext('2d');x.imageSmoothingEnabled=false;x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,CW,CH);
+  const f=FR[idx],bi=await load(f.img),hd=SETS[SM].head;
+  let hc=null;if(hd===true)hc=(await ptinted(st.shape,f.pose,st.hair,st.eye)).c;else if(hd==='b2')hc=(await tintH(headFor2(idx,st.shape),st.hair,st.eye)).c;
+  cv.width=CW;cv.height=CH;const x=cv.getContext('2d');x.imageSmoothingEnabled=hd==='b2';x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,CW,CH);
   if(flip){x.translate(CW,0);x.scale(-1,1)}
   const ox=Math.round((CW-f.w)/2),oy=CH-f.h;
   x.drawImage(bi,ox,oy);if(!hd)return;
-  const hh=f.d*1.1,hs=hh/hc.height,hw=hc.width*hs;      /* 머리 높이 = 원 지름 × 1.1 */
-  x.drawImage(hc,ox+f.cx-hw/2+f.d*.03,oy+f.cy-hh/2+f.d*.04,hw,hh);
+  const k=hd==='b2'?1.2:1.1,hh=f.d*k,hs=hh/hc.height,hw=hc.width*hs;
+  x.drawImage(hc,ox+f.cx-hw/2+f.d*.03,Math.min(CH-hh,oy+f.cy-hh/2+f.d*(hd==='b2'?.06:.04)),hw,hh);
 }
 const sp=()=>$('#spP'),se=()=>$('#spE');
 let tick=0,seqOn=false,hp=82,ehp=26,busy2=false;const SC={p:'idle',e:'idle'};
@@ -307,7 +314,7 @@ async function act(a){
     fx($('#burst'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1)',offset:.3},{opacity:0,transform:'scale(1.5)'}],{duration:420});
     ehp=Math.max(0,ehp-6);setHp();stamp('6','#ffd6a0');
     fx(E,[{transform:'none'},{transform:'translateX(-16px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:330});
-    await wait(200);await paint('p',POSE.atk[3]);if(POSE.atk[4]!==undefined){await wait(140);await paint('p',POSE.atk[4])}await A(P,[{transform:`translateX(${-dx}px)`},{transform:'none'}],{duration:RM?1:300});await paint('p',POSE.idle[0]);
+    await wait(150);for(const i of POSE.atk.slice(3)){await paint('p',i);await wait(110)}await A(P,[{transform:`translateX(${-dx}px)`},{transform:'none'}],{duration:RM?1:300});await paint('p',POSE.idle[0]);
   }else if(a==='dodge'){
     $('#alab').textContent='협회 순찰자 → 당신 · 회피';$('#dA').textContent=y;$('#dB').textContent=x;$('#log').textContent=`명중 ${y} vs 회피 ${x} · 회피 성공`;
     seqOn=true;await A(E,[{transform:'none'},{transform:`translateX(${dx*.75}px)`}],{duration:240});

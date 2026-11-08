@@ -88,6 +88,47 @@ try:
 except Exception as e:
     print('던파식 시트 건너뜀',e)
 
+
+# --- B2(4.5등신) 몸 시트(대기4·공격6·회피3·피격3·쓰러짐4) + 머리 시트(단발·숏컷 × 대기4·공격5·회피3·피격3·쓰러짐4) ---
+def clean_fg(a,xmin):
+    r,g,b=[a[:,:,i].astype(int) for i in range(3)];key=(g-np.maximum(r,b))>60
+    dark=(a.astype(int).sum(2)<160)&~key;rows=np.where(dark[:,xmin:].mean(1)>0.45)[0];sep=np.zeros(key.shape,bool)
+    for y in rows:sep[max(0,y-2):y+3,:]=True
+    fg=~(key|sep);fg[:,:xmin]=False;return fg,key|sep
+def split_comps(a,xmin,minh=40,minw=30,minar=600):
+    fg,bad=clean_fg(a,xmin);lb,n=ndi.label(ndi.binary_dilation(fg,iterations=3));out=[]
+    for i,o in enumerate(ndi.find_objects(lb)):
+        h=o[0].stop-o[0].start;w=o[1].stop-o[1].start
+        if h>minh and w>minw and ((lb[o]==i+1)&fg[o]).sum()>minar:out.append(((o[0].start+o[0].stop)/2,(o[1].start+o[1].stop)/2,lb,i+1,o))
+    return out,fg
+frames2=[];pheads2=[]
+try:
+    ab=np.array(Image.open('assets/character/_src_b2_body.png').convert('RGB'));rgb=C.keyed_rgba(ab)
+    r_,g_,b_=[ab[:,:,i].astype(int) for i in range(3)];mag=(r_>200)&(b_>200)&(g_<90)
+    items,fg=split_comps(ab,150,60,30,1500)
+    bandsb=[100,290,470,640,820];items.sort(key=lambda t:(min(range(5),key=lambda j:abs(bandsb[j]-t[0])),t[1]))
+    names=['idle']*4+['atk']*6+['dodge']*3+['hit']*3+['down']*4
+    for (cy,cx,lb,l,o),nm in zip(items,names):
+        m=ndi.binary_dilation(lb[o]==l,iterations=2);crop=rgb[o].copy();crop[~m]=0
+        mm=mag[o]&m;ys,xs=np.where(mm);ccx,ccy=xs.mean(),ys.mean();d=(xs.max()-xs.min()+ys.max()-ys.min()+2)/2
+        crop[ndi.binary_dilation(mm,iterations=1)]=(0,0,0,0)
+        ys2,xs2=np.where(crop[:,:,3]>10);y0,y1,x0,x1=min(ys2.min(),int(ccy-d/2)),ys2.max()+1,min(xs2.min(),int(ccx-d/2)),max(xs2.max()+1,int(ccx+d/2))
+        crop=crop[y0:y1,x0:x1]
+        frames2.append(dict(pose=nm,img=b64(Image.fromarray(crop,'RGBA'),94),w=crop.shape[1],h=crop.shape[0],cx=ccx-x0,cy=ccy-y0,d=d))
+    ah=np.array(Image.open('assets/character/_src_b2_head.png').convert('RGB'));rgh=C.keyed_rgba(ah)
+    items,fg=split_comps(ah,420,40,30,600);bandsh=[45,135,225,315,405,500,590,680,770,860]
+    items.sort(key=lambda t:(min(range(10),key=lambda j:abs(bandsh[j]-t[0])),t[1]))
+    cnt=[4,5,3,3,4];poses=['idle','atk','dodge','hit','down'];k=0
+    for si,shape in enumerate(['bob','short']):
+        for pi,pn in enumerate(poses):
+            for j in range(cnt[pi]):
+                cy,cx,lb,l,o=items[k];k+=1
+                m=ndi.binary_dilation(lb[o]==l,iterations=2);crop=rgh[o].copy();crop[~m]=0
+                ys2,xs2=np.where(crop[:,:,3]>10);crop=crop[ys2.min():ys2.max()+1,xs2.min():xs2.max()+1]
+                pheads2.append(dict(shape=shape,pose=pn,j=j,img=b64(Image.fromarray(crop,'RGBA'),94),w=crop.shape[1],h=crop.shape[0]))
+except Exception as e:
+    import traceback;traceback.print_exc();print('B2 시트 건너뜀',e)
+
 tpl=open('proto/char-test.tpl.html',encoding='utf8').read()
-open('proto/char-test.html','w',encoding='utf8').write(tpl.replace('/*__DATA__*/null',json.dumps(dict(bodies=bodies,heads=heads,frames=frames,pheads=pheads,dnf=dnf))))
-print('bodies',len(bodies),'heads',len(heads),'size',len(tpl)+len(json.dumps(dict(bodies=bodies,heads=heads,frames=frames,pheads=pheads,dnf=dnf))))
+open('proto/char-test.html','w',encoding='utf8').write(tpl.replace('/*__DATA__*/null',json.dumps(dict(bodies=bodies,heads=heads,frames=frames,pheads=pheads,dnf=dnf,frames2=frames2,pheads2=pheads2))))
+print('bodies',len(bodies),'heads',len(heads),'size',len(tpl)+len(json.dumps(dict(bodies=bodies,heads=heads,frames=frames,pheads=pheads,dnf=dnf,frames2=frames2,pheads2=pheads2))))
