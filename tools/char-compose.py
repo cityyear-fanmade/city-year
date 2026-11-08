@@ -64,14 +64,14 @@ def load_bodies(path):
     return rgba,circles,masks
 def load_heads(path,rows):
     a=np.array(Image.open(path).convert('RGB'));return [[c for c,_ in comps(a,y0,y1)] for y0,y1 in rows]
-def build(body,circle,mask,rgba_all,head,hair,eye,rot=0,face_ratio=0.42,chin_off=-0.04,pad=300,top=300):
+def build(body,circle,mask,rgba_all,head,hair,eye,rot=0,face_ratio=0.42,chin_off=-0.04,pad=300,top=300,dx=0.12):
     cx,cy,d=circle;H=head
     hc=tint(H,hair,eye);sb=skin_box(hc)
     s=(d*face_ratio)/(sb[1]-sb[0]+1)
     hc=np.pad(hc,((pad,pad),(pad,pad),(0,0)));sbp=(sb[0]+pad,sb[1]+pad,sb[2]+pad,sb[3]+pad)
     pivot=((sbp[0]+sbp[1])/2.0,sbp[3]);Hh=Image.fromarray(hc,'RGBA').rotate(rot,resample=Image.BICUBIC,center=pivot)
     Hh=Hh.resize((max(1,round(Hh.width*s)),max(1,round(Hh.height*s))),Image.LANCZOS)
-    px,py=pivot[0]*s,pivot[1]*s;tx=cx;ty=cy+d/2+chin_off*d
+    px,py=pivot[0]*s,pivot[1]*s;tx=cx+dx*d;ty=cy+d/2+chin_off*d
     bm=rgba_all.copy();bm[~mask]=0
     sheet=Image.new('RGBA',(bm.shape[1],bm.shape[0]+top),(0,0,0,0));sheet.paste(Image.fromarray(bm,'RGBA'),(0,top))
     layer=Image.new('RGBA',sheet.size,(0,0,0,0));layer.paste(Hh,(round(tx-px),round(ty+top-py)),Hh)
