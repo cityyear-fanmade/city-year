@@ -59,15 +59,8 @@ input[type=color]{width:36px;height:30px;border:1px solid var(--line);background
 .me .row2{display:flex;gap:10px;align-items:center}
 .rbox{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:12px;text-align:center;display:flex;gap:14px;align-items:stretch;position:relative}
 .rmain{flex:1;min-width:0}
-.pbox{flex:0 0 132px;width:132px;border-radius:6px;background:linear-gradient(#1c1618,#150f11);border:1px solid #4a3030;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;min-height:132px}
-.pbox canvas{width:112%;max-width:none;height:auto;margin-bottom:-8px;flex:none}
 .pcap{position:absolute;left:6px;top:4px;font:11px var(--mono);color:var(--dim)}
-.pbox .fx{position:absolute;inset:0;pointer-events:none}
-.phone.m .pbox{flex-basis:84px;width:84px;min-height:84px}
 .phone.m .rbox{gap:10px;padding:10px}
-.rbox.top{flex-direction:column;align-items:center}
-.rbox.top .pbox{flex-basis:auto;width:150px;height:150px}
-.phone.m .rbox.top .pbox{width:120px;height:120px}
 .dice{display:flex;justify-content:center;gap:26px;margin:10px 0 4px;align-items:center}
 .die{width:64px;height:64px;border:2px solid var(--en);border-radius:10px;display:flex;align-items:center;justify-content:center;font:500 28px var(--mono);background:var(--panel2)}
 .die.me{border-color:var(--hp)}
@@ -78,10 +71,23 @@ input[type=color]{width:36px;height:30px;border:1px solid var(--line);background
 @keyframes flash2{0%{background:rgba(212,105,74,.5)}100%{background:transparent}}
 @keyframes flash{0%{background:rgba(212,105,74,.55)}100%{background:transparent}}
 @keyframes sink{0%{transform:none}100%{transform:translateY(10px) rotate(-6deg)}}
-.hurt .pbox canvas{animation:hurt .38s}.hurt .pbox{animation:flash2 .45s}
-.lunge .pbox canvas{animation:lunge .32s}
-.log{font:12px var(--mono);color:var(--dim);text-align:left;margin-top:8px;line-height:1.6;min-height:3.2em}
+.hurt .pbox canvas{animation:hurt .38s}.hurt .lunge .log{font:12px var(--mono);color:var(--dim);text-align:left;margin-top:8px;line-height:1.6;min-height:3.2em}
 @media(prefers-reduced-motion:reduce){.hurt .pbox canvas,.lunge .pbox canvas,.hurt .pbox{animation:none}}
+
+.stagebox{position:relative;height:250px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#0d0f16}
+.stagebox .sky{position:absolute;inset:0;background:linear-gradient(#0f1220,#1a1620 70%,#201a22)}
+.stagebox .city{position:absolute;left:0;right:0;bottom:62px;height:92px;background:
+ linear-gradient(90deg,transparent 0 4%,#161a26 4% 9%,transparent 9% 12%,#141824 12% 21%,transparent 21% 24%,#171b28 24% 30%,transparent 30% 36%,#131723 36% 46%,transparent 46% 50%,#171b28 50% 58%,transparent 58% 62%,#141824 62% 72%,transparent 72% 76%,#171b28 76% 84%,transparent 84% 88%,#131723 88% 96%,transparent 96%);opacity:.9}
+.stagebox .floor{position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(#2a2430,#1a161d);border-top:2px solid #3a3342}
+.spr{position:absolute;bottom:26px;height:200px;width:auto;transform-origin:50% 100%;will-change:transform}
+.sp{left:12%}.se{right:12%;transform:scaleX(-1);filter:grayscale(.85) brightness(.55) contrast(1.1) sepia(.25)}
+.hp{position:absolute;top:10px;width:30%;height:7px;background:#1b2029;border-radius:4px;overflow:hidden}.hp b{display:block;height:100%;transition:width .35s}
+.hpl{left:6%}.hpl b{background:#d4694a}.hpr{right:6%}.hpr b{background:#8aa4b8}
+.slash{position:absolute;right:22%;bottom:60px;width:130px;height:130px;border-radius:50%;border:0;opacity:0;pointer-events:none;
+ background:conic-gradient(from 200deg,transparent 0 40%,rgba(255,90,70,.0) 40%,rgba(255,120,100,.95) 52%,rgba(255,255,255,.95) 55%,transparent 56% 100%);-webkit-mask:radial-gradient(circle,transparent 46%,#000 47% 66%,transparent 67%);mask:radial-gradient(circle,transparent 46%,#000 47% 66%,transparent 67%)}
+.burst{position:absolute;right:20%;bottom:120px;width:90px;height:90px;border-radius:50%;opacity:0;pointer-events:none;background:radial-gradient(circle,rgba(255,240,200,.95) 0 18%,rgba(255,110,80,.7) 30%,transparent 62%)}
+.stamp{position:absolute;left:50%;bottom:150px;transform:translate(-50%,0);font:900 26px var(--serif);color:#fff;text-shadow:0 2px 10px #000;opacity:0;pointer-events:none;letter-spacing:.06em}
+.phone.m .stagebox{height:200px}.phone.m .spr{height:150px;bottom:20px}.phone.m .stagebox .floor{height:54px}.phone.m .stagebox .city{bottom:50px;height:70px}
 </style>
 
 <div class="wrap">
@@ -122,8 +128,7 @@ input[type=color]{width:36px;height:30px;border:1px solid var(--line);background
       <div class="row">
         <span class="lab" style="margin:0">보기</span>
         <button class="chip on" data-v="pc">PC 화면</button><button class="chip" data-v="m">모바일 화면(390px)</button>
-        <span class="lab" style="margin:0 0 0 10px">초상 자리</span>
-        <button class="chip on" data-p="in">판정 상자 왼쪽</button><button class="chip" data-p="big">판정 상자 위 가운데</button>
+        <span class="dim small" style="margin-left:10px">위: 주사위 판정 · 아래: 전투 무대(옆모습)</span>
       </div>
     </div>
     <div class="phone" id="phone" style="margin-top:14px">
@@ -132,13 +137,15 @@ input[type=color]{width:36px;height:30px;border:1px solid var(--line);background
           <div class="fcard en" id="enc"><div class="fname"><i style="background:#8aa4b8"></i>협회 순찰자</div>HP 26/26<div class="bar"><b style="width:100%;background:#8aa4b8"></b></div><span class="tag">상태 없음</span></div>
           <div class="fcard me" id="mec"><div class="fname"><i style="background:#d4694a"></i><span id="bn">당신</span></div><span id="bhp">HP 82/82 · 정신력 45</span><div class="bar"><b id="hpb" style="width:100%;background:#d4694a"></b></div><span class="tag">자세 6</span><span class="tag">치명 48%</span></div>
         </div>
-        <div class="rbox" id="rbox"><div class="pbox" id="pbox"><canvas id="porc"></canvas><span class="pcap">당신</span></div>
-          <div class="rmain"><div id="alab" class="dim">행동을 골라 보세요</div>
+        <div class="rbox" id="rbox"><div class="rmain"><div id="alab" class="dim">행동을 골라 보세요</div>
           <div class="dice"><div class="die" id="dA">–</div><span class="dim">vs</span><div class="die me" id="dB">–</div></div>
-          <div class="acts"><button class="btn" data-a="atk">내가 공격</button><button class="btn q" data-a="hit">내가 피격</button><button class="btn q" data-a="down">쓰러짐</button><button class="btn q" data-a="idle">대기로</button></div>
+          <div class="acts"><button class="btn" data-a="atk">내가 공격</button><button class="btn q" data-a="dodge">내가 회피</button><button class="btn q" data-a="hit">내가 피격</button><button class="btn q" data-a="down">쓰러짐</button><button class="btn q" data-a="idle">대기로</button></div>
           <div class="log" id="log"></div></div>
         </div>
-        <p class="dim small" style="margin:0">주사위 굴림 화면은 그대로 두고, 플레이어 바(이름·HP)는 그대로 두고, 판정 상자 안의 초상 칸만 상황에 맞게 표정이 바뀝니다(대기·공격·피격·쓰러짐). 모바일에서는 같은 구성이 한 줄로 줄어듭니다.</p>
+        <div class="stagebox" id="arena"><div class="sky"></div><div class="city"></div><div class="floor"></div>
+          <div class="hp hpl"><b id="hpL" style="width:100%"></b></div><div class="hp hpr"><b id="hpR" style="width:100%"></b></div>
+          <canvas id="spP" class="spr sp"></canvas><canvas id="spE" class="spr se"></canvas><div class="slash" id="slash"></div><div class="burst" id="burst"></div><div class="stamp" id="stamp"></div></div>
+        <p class="dim small" style="margin:0">위쪽 판정 상자에서 주사위를 굴리고, 아래 무대에서 내 캐릭터(왼쪽)와 적(오른쪽)이 판정대로 움직입니다. 지금은 한 장짜리 전신 그림을 움직여 보는 시험이고, 포즈 그림이 오면 포즈마다 그림이 바뀝니다. 표정은 머리 시트 그대로 바뀝니다.</p>
       </div>
     </div>
   </section>
@@ -187,7 +194,17 @@ async function drawFull(cv,st){
   const tx=B.cx+.08*B.d,ty=B.cy+B.d/2-.04*B.d+top;
   x.drawImage(hc,tx-px,ty-py,hc.width*s,hc.height*s);
 }
+/* 전투 초상: 전신 합성에서 가슴 위만 잘라 쓴다 (임시. 전용 상반신 그림이 오면 그 그림으로 바꾼다) */
+async function drawBust(cv,st,ex){
+  const off=document.createElement('canvas');await drawFull(off,{...st,exp:ex});
+  const B=bodyOf(st.aff,st.rank),top=170,{H}=await tinted(st.shape,ex,st.hair,st.eye);
+  const s=(B.d*.42)/(H.sk[1]-H.sk[0]+1),py=H.sk[3]*s,ty=B.cy+B.d/2-.04*B.d+top;
+  const y0=Math.max(0,ty-py-4),y1=Math.min(off.height,ty+B.d*.85),w=B.d*2.0,x0=Math.max(0,B.cx+.08*B.d-w/2);
+  cv.width=Math.round(w);cv.height=Math.round(y1-y0);const x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);
+  x.drawImage(off,x0,y0,w,y1-y0,0,0,cv.width,cv.height);
+}
 async function drawPortrait(cv,st,ex){
+  if(cv.id==='porc')return drawBust(cv,st,ex);
   const {c}=await tinted(st.shape,ex,st.hair,st.eye);cv.width=c.width;cv.height=c.height;const x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);x.drawImage(c,0,0);
 }
 /* 설정 패널(탭1과 상태창의 창이 같은 내용을 쓴다) */
@@ -216,7 +233,7 @@ let busy=false,again=false;
 async function refresh(keepFocus){
   if(busy){again=true;return}busy=true;
   for(const id of ['#ctl1','#ctl3']){const r=$(id);if(!keepFocus||!r.firstChild){r.innerHTML=ctlHTML(id);bind(r)}else{/* 색 고르는 중에는 입력칸을 다시 만들지 않는다 */}}
-  await Promise.all([drawFull($('#full1'),S),drawFull($('#full2'),S),drawFull($('#full3'),S),drawPortrait($('#porc'),S,curExp)]);
+  await Promise.all([drawFull($('#full1'),S),drawFull($('#full2'),S),drawFull($('#full3'),S),paintSprites()]);
   for(const id of ['#ctl1','#ctl3'])await paintCtl($(id));
   $('#sline').textContent=`${AFF[S.aff]} · ${DATA.bodies.filter(b=>b.aff===S.aff)[S.rank].rank}`;
   busy=false;if(again){again=false;refresh(keepFocus)}
@@ -227,20 +244,59 @@ document.querySelector('.tabs').onclick=e=>{const t=e.target.closest('button');i
   for(const n of [1,2,3])$('#p'+n).hidden=(String(n)!==t.dataset.t)};
 $('#open').onclick=()=>$('#modal').classList.add('on');$('#close').onclick=()=>$('#modal').classList.remove('on');
 $('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('on')};
-/* 전투 */
-let curExp='idle',tm;
-function setExp(ex,ms){curExp=ex;drawPortrait($('#porc'),S,ex);clearTimeout(tm);if(ms)tm=setTimeout(()=>{curExp='idle';drawPortrait($('#porc'),S,'idle')},ms)}
-let hp=82;
+/* 전투: 위쪽은 주사위 판정, 아래쪽 무대에서 옆모습 전신이 움직인다 (지금은 한 장짜리 그림을 움직이는 시험) */
+const ENEMY={aff:'thumb',rank:1,shape:'short',hair:'#3a3f55',eye:'#b04040',exp:'idle'};
+let curExp='idle',tm,hp=82,ehp=26,busy2=false;
 const rnd=n=>1+Math.floor(Math.random()*n);
-function act(a){const mc=$('#rbox');mc.classList.remove('hurt','lunge');void mc.offsetWidth;
-  if(a==='atk'){const x=rnd(100),y=rnd(100);$('#dB').textContent=x;$('#dA').textContent=y;$('#alab').textContent='당신의 칼날 → 협회 순찰자';$('#log').textContent='명중 '+x+' vs 회피 '+y+' · 피해 6';mc.classList.add('lunge');setExp('atk',700)}
-  else if(a==='hit'){const d=rnd(9)+3;hp=Math.max(1,hp-d);$('#hpb').style.width=hp/82*100+'%';$('#bhp').textContent=`HP ${hp}/82 · 정신력 45`;$('#alab').textContent='협회 순찰자 → 당신';$('#dA').textContent=rnd(100);$('#dB').textContent=rnd(100);$('#log').textContent='피해 '+d;mc.classList.add('hurt');setExp('hit',700)}
-  else if(a==='down'){hp=0;$('#hpb').style.width='0%';$('#bhp').textContent='HP 0/82 · 정신력 45';$('#log').textContent='쓰러졌다';setExp('down',0);$('#porc').style.animation='sink .5s forwards'}
-  else{hp=82;$('#hpb').style.width='100%';$('#bhp').textContent='HP 82/82 · 정신력 45';$('#porc').style.animation='';$('#log').textContent='';setExp('idle',0)}
+const sp=()=>$('#spP'),se=()=>$('#spE');
+async function paintSprites(){await Promise.all([drawFull(sp(),{...S,exp:curExp}),drawFull(se(),ENEMY)])}
+function setExp(ex,ms){curExp=ex;drawFull(sp(),{...S,exp:ex});clearTimeout(tm);if(ms)tm=setTimeout(()=>{curExp='idle';drawFull(sp(),{...S,exp:'idle'})},ms)}
+const A=(el,kf,o)=>el.animate(kf,{fill:'forwards',easing:'ease-out',...o}).finished.catch(()=>{});
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function fx(el,kf,o){return el.animate(kf,{fill:'none',...o})}
+async function stamp(txt,col){const s=$('#stamp');s.textContent=txt;s.style.color=col||'#fff';fx(s,[{opacity:0,transform:'translate(-50%,20px) scale(.7)'},{opacity:1,transform:'translate(-50%,0) scale(1.1)',offset:.2},{opacity:1,offset:.7},{opacity:0,transform:'translate(-50%,-14px)'}],{duration:800})}
+function place(side){const el=side==='p'?sp():se(),cx=el.offsetLeft+el.offsetWidth/2,by=parseFloat(getComputedStyle(el).bottom);
+  const bu=$('#burst'),st=$('#stamp');bu.style.right='auto';bu.style.left=(cx-45)+'px';bu.style.bottom=(by+el.offsetHeight*.45)+'px';st.style.left=cx+'px';st.style.top='auto';st.style.bottom=(by+el.offsetHeight*.85)+'px';st.style.transform='translate(-50%,0)'}
+function setHp(){$('#hpb').style.width=hp/82*100+'%';$('#bhp').textContent=`HP ${hp}/82 · 정신력 45`;$('#hpL').style.width=hp/82*100+'%';$('#hpR').style.width=Math.max(0,ehp)/26*100+'%'}
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+async function act(a){
+  if(busy2)return;busy2=true;const P=sp(),E=se(),W=$('#arena').clientWidth,dx=W*.5;
+  P.getAnimations().forEach(x=>x.cancel());E.getAnimations().forEach(x=>x.cancel());P.style.opacity=1;
+  const x=rnd(100),y=rnd(100);
+  if(a==='atk'){
+    $('#alab').textContent='당신의 칼날 → 협회 순찰자';$('#dB').textContent=x;$('#dA').textContent=y;$('#log').textContent=`명중 ${x} vs 회피 ${y} · 피해 6`;
+    setExp('atk',900);
+    await A(P,[{transform:'none'},{transform:`translateX(${dx}px) scale(1.04)`}],{duration:RM?1:260});
+    place('e');fx($('#slash'),[{opacity:0,transform:'rotate(-30deg) scale(.6)'},{opacity:1,transform:'rotate(10deg) scale(1)',offset:.4},{opacity:0,transform:'rotate(40deg) scale(1.1)'}],{duration:380});
+    fx($('#burst'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1)',offset:.3},{opacity:0,transform:'scale(1.5)'}],{duration:420});
+    ehp=Math.max(0,ehp-6);setHp();stamp('6','#ffd6a0');
+    A(E,[{transform:'scaleX(-1)',filter:E.style.filter||'none'},{transform:'scaleX(-1) translateX(-18px)'},{transform:'scaleX(-1) translateX(8px)'},{transform:'scaleX(-1)'}],{duration:330,fill:'none'});
+    await wait(260);await A(P,[{transform:`translateX(${dx}px) scale(1.04)`},{transform:'none'}],{duration:RM?1:300});
+  }else if(a==='dodge'){
+    $('#alab').textContent='협회 순찰자 → 당신 · 회피';$('#dA').textContent=y;$('#dB').textContent=x;$('#log').textContent=`명중 ${y} vs 회피 ${x} · 회피 성공`;
+    await A(E,[{transform:'scaleX(-1)'},{transform:`scaleX(-1) translateX(${dx*.75}px)`}],{duration:240});
+    place('p');stamp('회피','#9fd8ff');
+    A(P,[{transform:'none',opacity:1},{transform:'translateX(-26px) skewX(-8deg)',opacity:.55,offset:.35},{transform:'none',opacity:1}],{duration:420,fill:'none'});
+    await wait(300);await A(E,[{transform:`scaleX(-1) translateX(${dx*.75}px)`},{transform:'scaleX(-1)'}],{duration:280});
+  }else if(a==='hit'){
+    const d=rnd(9)+3;hp=Math.max(1,hp-d);
+    $('#alab').textContent='협회 순찰자 → 당신';$('#dA').textContent=rnd(100);$('#dB').textContent=rnd(100);$('#log').textContent=`피해 ${d}`;
+    await A(E,[{transform:'scaleX(-1)'},{transform:`scaleX(-1) translateX(${dx*.75}px)`}],{duration:240});
+    setExp('hit',800);setHp();place('p');stamp('-'+d,'#ff9a8a');
+    fx($('#burst'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1)',offset:.3},{opacity:0,transform:'scale(1.5)'}],{duration:420,});
+    A(P,[{transform:'none'},{transform:'translateX(-14px)'},{transform:'translateX(9px)'},{transform:'translateX(-6px)'},{transform:'none'}],{duration:420,fill:'none'});
+    P.animate([{filter:'none'},{filter:'brightness(2) saturate(2) hue-rotate(-20deg)'},{filter:'none'}],{duration:300});
+    await wait(320);await A(E,[{transform:`scaleX(-1) translateX(${dx*.75}px)`},{transform:'scaleX(-1)'}],{duration:280});
+  }else if(a==='down'){
+    hp=0;setHp();setExp('down',0);const sh=Math.max(0,P.offsetHeight*.92-P.offsetLeft);place('p');stamp('전투 불능','#ff6a6a');$('#log').textContent='쓰러졌다';
+    await A(P,[{transform:'none',opacity:1},{transform:`translateX(${sh*.4}px) rotate(-14deg)`,offset:.4},{transform:`translate(${sh}px,${P.offsetHeight*.08}px) rotate(-84deg)`,opacity:.85}],{duration:700});
+  }else{
+    hp=82;ehp=26;setHp();setExp('idle',0);$('#log').textContent='';$('#alab').textContent='행동을 골라 보세요';$('#dA').textContent='–';$('#dB').textContent='–';
+    P.style.transform='none';
+  }
+  busy2=false;
 }
-$('#bat').onclick=e=>{const b=e.target.closest('[data-a]');if(b){if(b.dataset.a!=='down')$('#porc').style.animation='';act(b.dataset.a)}};
-$('#p3').addEventListener('click',e=>{const t=e.target.closest('[data-v],[data-p]');if(!t)return;
-  if(t.dataset.v){$('#phone').classList.toggle('m',t.dataset.v==='m');document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',b===t))}
-  if(t.dataset.p){$('#rbox').classList.toggle('top',t.dataset.p==='big');document.querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('on',b===t))}});
+$('#bat').onclick=e=>{const b=e.target.closest('[data-a]');if(b)act(b.dataset.a)};
+$('#p3').addEventListener('click',e=>{const t=e.target.closest('[data-v]');if(!t)return;$('#phone').classList.toggle('m',t.dataset.v==='m');document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',b===t));setTimeout(()=>{},0)});
 refresh();
 </script>
