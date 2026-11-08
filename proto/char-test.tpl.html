@@ -1,0 +1,246 @@
+<title>도시의 한 해 · 외형 시험판</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;900&display=swap">
+<style>
+/* 레이아웃: 위쪽 탭 3개(캐릭터 설정 · 상태창 · 전투 화면). 게임 본 화면의 어두운 판 + 금색 포인트를 그대로 쓴다 */
+:root{--bg:#0c0e13;--panel:#12151c;--panel2:#171b24;--line:#262b38;--fg:#e8e6df;--dim:#8c90a0;--gold:#c8a45c;--hp:#d4694a;--en:#8aa4b8;--ok:#6cc08b;
+--sans:'Noto Sans KR',system-ui,sans-serif;--serif:'Noto Serif KR',serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+:root{color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--sans);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+*{box-sizing:border-box}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font:900 22px/1.3 var(--serif);margin:0}
+.eyebrow{font:500 11px/1.4 var(--mono);letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+.dim{color:var(--dim)}.small{font-size:12px}
+.tabs{display:flex;gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex-wrap:wrap}
+.tabs button{flex:1;min-width:110px;background:var(--panel);color:var(--dim);border:0;border-right:1px solid var(--line);padding:11px 8px;font:500 14px var(--sans);cursor:pointer}
+.tabs button:last-child{border-right:0}.tabs button.on{background:var(--gold);color:#17130a;font-weight:700}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.grid2{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:14px;align-items:start}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.stage{background:radial-gradient(ellipse at 50% 85%,#1d2230 0%,#12151c 62%);border:1px solid var(--line);border-radius:6px;display:flex;justify-content:center;align-items:flex-end;padding:10px 6px 0;min-height:420px;overflow:hidden}
+.stage canvas{max-width:100%;height:auto;display:block}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lab{font:500 11px var(--mono);letter-spacing:.12em;color:var(--gold);margin:10px 0 6px;text-transform:uppercase}
+.chip{background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:7px 12px;font:500 13px var(--sans);cursor:pointer}
+.chip.on{border-color:var(--gold);color:var(--gold);background:#1c1a14}
+.chip:focus-visible,.sw:focus-visible,.tabs button:focus-visible,.btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.sw.on{border-color:var(--fg);box-shadow:0 0 0 2px var(--gold)}
+input[type=color]{width:36px;height:30px;border:1px solid var(--line);background:var(--panel2);border-radius:5px;padding:2px;cursor:pointer}
+.shapes{display:flex;gap:8px;flex-wrap:wrap}
+.shape{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px;cursor:pointer;text-align:center;color:var(--fg);font:500 12px var(--sans)}
+.shape.on{border-color:var(--gold);color:var(--gold)}
+.shape canvas{width:86px;height:auto;display:block;margin:0 auto 4px}
+.exps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.exps div{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px;text-align:center;font-size:12px;color:var(--dim)}
+.exps canvas{width:100%;height:auto;display:block}
+.btn{background:var(--gold);color:#17130a;border:0;border-radius:6px;padding:11px 16px;font:700 14px var(--sans);cursor:pointer}
+.btn.q{background:var(--panel2);color:var(--fg);border:1px solid var(--line)}
+/* 상태창 */
+.status{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:14px}
+@media(max-width:700px){.status{grid-template-columns:1fr}}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font:13px var(--mono)}
+.stats b{color:var(--gold);font-weight:500}
+.modal{position:fixed;inset:0;background:rgba(5,6,9,.82);z-index:50;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:16px}
+.modal.on{display:flex}
+.modal .box{background:var(--bg);border:1px solid var(--gold);border-radius:8px;max-width:900px;width:100%;padding:14px;display:flex;flex-direction:column;gap:12px}
+/* 전투 화면 */
+.phone{margin:0 auto;width:100%;max-width:1040px;transition:max-width .2s}
+.phone.m{max-width:390px}
+.bat{display:flex;flex-direction:column;gap:10px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fcard{border:1px solid var(--line);border-radius:6px;padding:10px 12px;background:var(--panel2);position:relative;min-width:0}
+.fcard.en{background:#161e29;border-color:#34465a}.fcard.me{background:#251d1d;border-color:#5a3a34}
+.fname{font:900 16px var(--serif);display:flex;gap:6px;align-items:center}
+.fname i{width:12px;height:12px;display:inline-block}
+.bar{height:8px;border-radius:4px;background:#1b2029;margin:6px 0;overflow:hidden}.bar>b{display:block;height:100%;transition:width .35s}
+.tag{display:inline-block;font:11px var(--mono);border:1px solid var(--line);border-radius:3px;padding:1px 6px;margin-right:4px;color:var(--dim)}
+.me .row2{display:flex;gap:10px;align-items:center}
+.rbox{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:12px;text-align:center;display:flex;gap:14px;align-items:stretch;position:relative}
+.rmain{flex:1;min-width:0}
+.pbox{flex:0 0 132px;width:132px;border-radius:6px;background:linear-gradient(#1c1618,#150f11);border:1px solid #4a3030;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;min-height:132px}
+.pbox canvas{width:112%;max-width:none;height:auto;margin-bottom:-8px;flex:none}
+.pcap{position:absolute;left:6px;top:4px;font:11px var(--mono);color:var(--dim)}
+.pbox .fx{position:absolute;inset:0;pointer-events:none}
+.phone.m .pbox{flex-basis:84px;width:84px;min-height:84px}
+.phone.m .rbox{gap:10px;padding:10px}
+.rbox.top{flex-direction:column;align-items:center}
+.rbox.top .pbox{flex-basis:auto;width:150px;height:150px}
+.phone.m .rbox.top .pbox{width:120px;height:120px}
+.dice{display:flex;justify-content:center;gap:26px;margin:10px 0 4px;align-items:center}
+.die{width:64px;height:64px;border:2px solid var(--en);border-radius:10px;display:flex;align-items:center;justify-content:center;font:500 28px var(--mono);background:var(--panel2)}
+.die.me{border-color:var(--hp)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.fx{position:absolute;inset:0;pointer-events:none;border-radius:6px}
+@keyframes hurt{0%{transform:translateX(0)}15%{transform:translateX(-9px)}35%{transform:translateX(7px)}55%{transform:translateX(-5px)}100%{transform:none}}
+@keyframes lunge{0%{transform:none}35%{transform:translateX(16px) scale(1.06)}100%{transform:none}}
+@keyframes flash2{0%{background:rgba(212,105,74,.5)}100%{background:transparent}}
+@keyframes flash{0%{background:rgba(212,105,74,.55)}100%{background:transparent}}
+@keyframes sink{0%{transform:none}100%{transform:translateY(10px) rotate(-6deg)}}
+.hurt .pbox canvas{animation:hurt .38s}.hurt .pbox{animation:flash2 .45s}
+.lunge .pbox canvas{animation:lunge .32s}
+.log{font:12px var(--mono);color:var(--dim);text-align:left;margin-top:8px;line-height:1.6;min-height:3.2em}
+@media(prefers-reduced-motion:reduce){.hurt .pbox canvas,.lunge .pbox canvas,.hurt .pbox{animation:none}}
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Project Moon 팬메이드 · 비공식 · 외형 시험판</div>
+    <h1>도시의 한 해 · 외형 시험판</h1>
+    <p class="dim small" style="margin:4px 0 0">게임 본편과 별개의 시험 화면입니다. 지금 들어 있는 그림: 엄지(카포·언더보스·대부) 몸 3벌, 머리 2종(단발·숏컷) × 표정 4종. 검지(흰 망토)는 시트 파일을 받는 대로 넣습니다. 나머지는 그림이 오는 대로 추가됩니다.</p>
+  </div>
+  <div class="tabs" role="tablist">
+    <button id="t1" class="on" data-t="1">① 캐릭터 설정</button>
+    <button id="t2" data-t="2">② 상태창(전신)</button>
+    <button id="t3" data-t="3">③ 전투 화면</button>
+  </div>
+
+  <section id="p1">
+    <div class="grid2">
+      <div class="stage"><canvas id="full1"></canvas></div>
+      <div class="panel" id="ctl1"></div>
+    </div>
+  </section>
+
+  <section id="p2" hidden>
+    <div class="panel status">
+      <div class="stage" style="min-height:340px"><canvas id="full2"></canvas></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="eyebrow">상태창</div>
+        <div style="font:900 20px var(--serif)" id="sname">이름 없는 해결사</div>
+        <div class="dim" id="sline"></div>
+        <div class="stats"><span>HP <b>82</b></span><span>정신력 <b>45</b></span><span>공격 <b>12</b></span><span>방어 <b>8</b></span><span>속도 <b>10</b></span><span>회피 <b>6</b></span></div>
+        <div class="row" style="margin-top:6px"><button class="btn" id="open">외형 바꾸기</button></div>
+        <p class="dim small" style="margin:0">가방의 "정보" 칸을 열면 이렇게 전신이 보입니다. "외형 바꾸기"를 누르면 소속·머리·색을 고르는 창이 열립니다. 소속과 직급을 바꾸면 옷이 바뀝니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="p3" hidden>
+    <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+      <div class="row">
+        <span class="lab" style="margin:0">보기</span>
+        <button class="chip on" data-v="pc">PC 화면</button><button class="chip" data-v="m">모바일 화면(390px)</button>
+        <span class="lab" style="margin:0 0 0 10px">초상 자리</span>
+        <button class="chip on" data-p="in">판정 상자 왼쪽</button><button class="chip" data-p="big">판정 상자 위 가운데</button>
+      </div>
+    </div>
+    <div class="phone" id="phone" style="margin-top:14px">
+      <div class="bat" id="bat">
+        <div class="cards">
+          <div class="fcard en" id="enc"><div class="fname"><i style="background:#8aa4b8"></i>협회 순찰자</div>HP 26/26<div class="bar"><b style="width:100%;background:#8aa4b8"></b></div><span class="tag">상태 없음</span></div>
+          <div class="fcard me" id="mec"><div class="fname"><i style="background:#d4694a"></i><span id="bn">당신</span></div><span id="bhp">HP 82/82 · 정신력 45</span><div class="bar"><b id="hpb" style="width:100%;background:#d4694a"></b></div><span class="tag">자세 6</span><span class="tag">치명 48%</span></div>
+        </div>
+        <div class="rbox" id="rbox"><div class="pbox" id="pbox"><canvas id="porc"></canvas><span class="pcap">당신</span></div>
+          <div class="rmain"><div id="alab" class="dim">행동을 골라 보세요</div>
+          <div class="dice"><div class="die" id="dA">–</div><span class="dim">vs</span><div class="die me" id="dB">–</div></div>
+          <div class="acts"><button class="btn" data-a="atk">내가 공격</button><button class="btn q" data-a="hit">내가 피격</button><button class="btn q" data-a="down">쓰러짐</button><button class="btn q" data-a="idle">대기로</button></div>
+          <div class="log" id="log"></div></div>
+        </div>
+        <p class="dim small" style="margin:0">주사위 굴림 화면은 그대로 두고, 플레이어 바(이름·HP)는 그대로 두고, 판정 상자 안의 초상 칸만 상황에 맞게 표정이 바뀝니다(대기·공격·피격·쓰러짐). 모바일에서는 같은 구성이 한 줄로 줄어듭니다.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="modal" id="modal"><div class="box"><div class="row" style="justify-content:space-between"><div class="eyebrow">외형 바꾸기</div><button class="btn q" id="close">닫기</button></div>
+  <div class="grid2"><div class="stage" style="min-height:360px"><canvas id="full3"></canvas></div><div class="panel" id="ctl3"></div></div></div></div>
+
+<script>
+const DATA=/*__DATA__*/null;
+const AFF={thumb:'엄지',index:'검지'};
+const AFFDESC={thumb:'엄지 · 검은 줄무늬 정장에 붉은 외투',index:'검지 · 흰 망토와 나침반 휘장'};
+const S={aff:'thumb',rank:0,shape:'bob',hair:'#c43d3d',eye:'#e8b023',exp:'idle'};
+const HAIRS=['#c43d3d','#e8e8ee','#1b1d26','#2ec4b6','#e0b030','#7a4a2a','#d96aa0','#4a6fd6'];
+const EYES=['#e8b023','#d04070','#3a7bd5','#c23a3a','#8a4ad6','#2fae6a','#9aa4b0','#f08a30'];
+const $=s=>document.querySelector(s);
+const imgs={};
+const load=src=>imgs[src]||(imgs[src]=new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src}));
+const bodyOf=(a,r)=>DATA.bodies.find(b=>b.aff===a&&b.rank===DATA.bodies.filter(x=>x.aff===a)[r].rank);
+const headOf=(sh,ex)=>DATA.heads.find(h=>h.shape===sh&&h.exp===ex);
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+function rgb2hsv(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h/=6;if(h<0)h+=1}return[h,mx?d/mx:0,mx]}
+function hsv2rgb(h,s,v){const i=Math.floor(h*6),f=h*6-i,p=v*(1-s),q=v*(1-f*s),t=v*(1-(1-f)*s);return[[v,t,p],[q,v,p],[p,v,t],[p,q,v],[t,p,v],[v,p,q]][i%6].map(x=>x*255)}
+const tcache={};
+async function tinted(sh,ex,hair,eye){
+  const k=sh+ex+hair+eye;if(tcache[k])return tcache[k];
+  const H=headOf(sh,ex),im=await load(H.img),c=document.createElement('canvas');c.width=im.width;c.height=im.height;
+  const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const id=x.getImageData(0,0,c.width,c.height),d=id.data;
+  const hc=hex(hair),[th,ts,tv]=rgb2hsv(...hex(eye));
+  for(let i=0;i<d.length;i+=4){
+    const r=d[i],g=d[i+1],b=d[i+2],al=d[i+3];if(al<1)continue;
+    const L=.299*r+.587*g+.114*b,sat=Math.max(r,g,b)-Math.min(r,g,b);
+    const cy=b>150&&g>150&&r<150&&b-r>60&&al>128;
+    if(cy){const[h_,s_,v_]=rgb2hsv(r,g,b);const o=hsv2rgb(th,ts>.05?Math.min(1,s_*(.55+.45*ts)):0,Math.min(1,v_*(.7+.3*tv)));d[i]=o[0];d[i+1]=o[1];d[i+2]=o[2];continue}
+    if(sat<22&&L<222){const f=Math.min(1,Math.max(0,L/150));const hi=L>150?Math.min(1,Math.max(0,(L-150)/105))*.55:0;
+      for(let j=0;j<3;j++){const base=hc[j]*f;d[i+j]=Math.min(255,base+(255-base)*hi)}}
+  }
+  x.putImageData(id,0,0);return tcache[k]={c,H};
+}
+/* 전신: 몸 위 마젠타 원 자리에 머리를 얹는다 (턱 위치 −0.04, 가로 +0.08, 얼굴 폭 0.42) */
+async function drawFull(cv,st){
+  const B=bodyOf(st.aff,st.rank),bi=await load(B.img),{c:hc,H}=await tinted(st.shape,st.exp,st.hair,st.eye);
+  const top=170,s=(B.d*.42)/(H.sk[1]-H.sk[0]+1),px=(H.sk[0]+H.sk[1])/2*s,py=H.sk[3]*s;
+  cv.width=B.w;cv.height=B.h+top;const x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);
+  x.drawImage(bi,0,top);
+  const tx=B.cx+.08*B.d,ty=B.cy+B.d/2-.04*B.d+top;
+  x.drawImage(hc,tx-px,ty-py,hc.width*s,hc.height*s);
+}
+async function drawPortrait(cv,st,ex){
+  const {c}=await tinted(st.shape,ex,st.hair,st.eye);cv.width=c.width;cv.height=c.height;const x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);x.drawImage(c,0,0);
+}
+/* 설정 패널(탭1과 상태창의 창이 같은 내용을 쓴다) */
+function ctlHTML(id){
+  const ranks=DATA.bodies.filter(b=>b.aff===S.aff).map((b,i)=>`<button class="chip ${i===S.rank?'on':''}" data-rank="${i}">${b.rank}</button>`).join('');
+  return `<div class="lab">소속 (옷이 바뀝니다)</div><div class="row">${Object.keys(AFF).map(a=>{const ok=DATA.bodies.some(b=>b.aff===a);return `<button class="chip ${a===S.aff?'on':''}" data-aff="${a}" ${ok?'':'disabled style="opacity:.45;cursor:not-allowed"'}>${AFF[a]}${ok?'':' · 그림 대기'}</button>`}).join('')}</div>
+  <div class="dim small" style="margin-top:4px">${AFFDESC[S.aff]}</div>
+  <div class="lab">직급</div><div class="row">${ranks}</div>
+  <div class="lab">머리 모양</div><div class="shapes">${['bob','short'].map(s=>`<button class="shape ${s===S.shape?'on':''}" data-shape="${s}"><canvas data-sh="${s}"></canvas>${s==='bob'?'단발':'숏컷'}</button>`).join('')}</div>
+  <div class="lab">머리색</div><div class="row">${HAIRS.map(h=>`<button class="sw ${h===S.hair?'on':''}" style="background:${h}" data-hair="${h}" aria-label="머리색 ${h}"></button>`).join('')}<input type="color" value="${S.hair}" data-hairc aria-label="머리색 직접 고르기"></div>
+  <div class="lab">눈색</div><div class="row">${EYES.map(h=>`<button class="sw ${h===S.eye?'on':''}" style="background:${h}" data-eye="${h}" aria-label="눈색 ${h}"></button>`).join('')}<input type="color" value="${S.eye}" data-eyec aria-label="눈색 직접 고르기"></div>
+  <div class="lab">전투 초상 표정 4종</div><div class="exps">${['idle','atk','hit','down'].map((e,i)=>`<div><canvas data-ex="${e}"></canvas>${['대기','공격','피격','쓰러짐'][i]}</div>`).join('')}</div>`;
+}
+async function paintCtl(root){
+  for(const c of root.querySelectorAll('canvas[data-sh]'))await drawPortrait(c,S,S.exp==='idle'?'idle':'idle').then(()=>{});
+  for(const c of root.querySelectorAll('canvas[data-sh]')){const {c:t}=await tinted(c.dataset.sh,'idle',S.hair,S.eye);c.width=t.width;c.height=t.height;c.getContext('2d').drawImage(t,0,0)}
+  for(const c of root.querySelectorAll('canvas[data-ex]'))await drawPortrait(c,S,c.dataset.ex);
+}
+function bind(root){
+  root.onclick=e=>{const t=e.target.closest('button');if(!t)return;
+    if(t.dataset.aff){S.aff=t.dataset.aff;S.rank=0}else if(t.dataset.rank)S.rank=+t.dataset.rank;
+    else if(t.dataset.shape)S.shape=t.dataset.shape;else if(t.dataset.hair)S.hair=t.dataset.hair;else if(t.dataset.eye)S.eye=t.dataset.eye;else return;refresh()};
+  root.oninput=e=>{if(e.target.dataset.hairc!==undefined){S.hair=e.target.value;refresh(true)}else if(e.target.dataset.eyec!==undefined){S.eye=e.target.value;refresh(true)}};
+}
+let busy=false,again=false;
+async function refresh(keepFocus){
+  if(busy){again=true;return}busy=true;
+  for(const id of ['#ctl1','#ctl3']){const r=$(id);if(!keepFocus||!r.firstChild){r.innerHTML=ctlHTML(id);bind(r)}else{/* 색 고르는 중에는 입력칸을 다시 만들지 않는다 */}}
+  await Promise.all([drawFull($('#full1'),S),drawFull($('#full2'),S),drawFull($('#full3'),S),drawPortrait($('#porc'),S,curExp)]);
+  for(const id of ['#ctl1','#ctl3'])await paintCtl($(id));
+  $('#sline').textContent=`${AFF[S.aff]} · ${DATA.bodies.filter(b=>b.aff===S.aff)[S.rank].rank}`;
+  busy=false;if(again){again=false;refresh(keepFocus)}
+}
+/* 탭 */
+document.querySelector('.tabs').onclick=e=>{const t=e.target.closest('button');if(!t)return;
+  for(const b of document.querySelectorAll('.tabs button'))b.classList.toggle('on',b===t);
+  for(const n of [1,2,3])$('#p'+n).hidden=(String(n)!==t.dataset.t)};
+$('#open').onclick=()=>$('#modal').classList.add('on');$('#close').onclick=()=>$('#modal').classList.remove('on');
+$('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('on')};
+/* 전투 */
+let curExp='idle',tm;
+function setExp(ex,ms){curExp=ex;drawPortrait($('#porc'),S,ex);clearTimeout(tm);if(ms)tm=setTimeout(()=>{curExp='idle';drawPortrait($('#porc'),S,'idle')},ms)}
+let hp=82;
+const rnd=n=>1+Math.floor(Math.random()*n);
+function act(a){const mc=$('#rbox');mc.classList.remove('hurt','lunge');void mc.offsetWidth;
+  if(a==='atk'){const x=rnd(100),y=rnd(100);$('#dB').textContent=x;$('#dA').textContent=y;$('#alab').textContent='당신의 칼날 → 협회 순찰자';$('#log').textContent='명중 '+x+' vs 회피 '+y+' · 피해 6';mc.classList.add('lunge');setExp('atk',700)}
+  else if(a==='hit'){const d=rnd(9)+3;hp=Math.max(1,hp-d);$('#hpb').style.width=hp/82*100+'%';$('#bhp').textContent=`HP ${hp}/82 · 정신력 45`;$('#alab').textContent='협회 순찰자 → 당신';$('#dA').textContent=rnd(100);$('#dB').textContent=rnd(100);$('#log').textContent='피해 '+d;mc.classList.add('hurt');setExp('hit',700)}
+  else if(a==='down'){hp=0;$('#hpb').style.width='0%';$('#bhp').textContent='HP 0/82 · 정신력 45';$('#log').textContent='쓰러졌다';setExp('down',0);$('#porc').style.animation='sink .5s forwards'}
+  else{hp=82;$('#hpb').style.width='100%';$('#bhp').textContent='HP 82/82 · 정신력 45';$('#porc').style.animation='';$('#log').textContent='';setExp('idle',0)}
+}
+$('#bat').onclick=e=>{const b=e.target.closest('[data-a]');if(b){if(b.dataset.a!=='down')$('#porc').style.animation='';act(b.dataset.a)}};
+$('#p3').addEventListener('click',e=>{const t=e.target.closest('[data-v],[data-p]');if(!t)return;
+  if(t.dataset.v){$('#phone').classList.toggle('m',t.dataset.v==='m');document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',b===t))}
+  if(t.dataset.p){$('#rbox').classList.toggle('top',t.dataset.p==='big');document.querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('on',b===t))}});
+refresh();
+</script>
