@@ -26,7 +26,9 @@ export function startUI(E,app){
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   /* 시험판에서 "해금 규칙대로 보기"를 켜면 기록실·꾸미기가 실제 플레이어처럼 잠겨 보인다(시험장 4번 칸에서 바꾼다) */
   const realUnlock=()=>{try{return localStorage.getItem('cityYearRealUnlock')==='1'}catch(e){return false}};
-  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}const o=Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{});return (typeof window!=='undefined'&&window.CITY_ALLREC&&!realUnlock())?fillAllRec(o):o};
+  /* 기록으로 남기는 햇수의 상한: 무한 모드 1000살(오버플로우 엔딩)이 984년차다. 버그로 이보다 길게 산 옛 기록도 불러올 때 이 값으로 줄인다 */
+  const REC_MAXYR=984;
+  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}const o=Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{});if(o.best&&o.best.years>REC_MAXYR)o.best.years=REC_MAXYR;if(o.st){if(o.st.max>REC_MAXYR)o.st.max=REC_MAXYR;if(o.st.min>REC_MAXYR)o.st.min=REC_MAXYR}return (typeof window!=='undefined'&&window.CITY_ALLREC&&!realUnlock())?fillAllRec(o):o};
   /* 개인 시험판(build --alltest): 기록실의 모든 칸(엔딩·칭호·히든 보스·출신·소속·인연·장비·심볼·타고난 것)을 채워 연다. 아직 정의되지 않은 목록은 건너뛴다 */
   function fillAllRec(r){
     const T=f=>{try{f()}catch(e){}};
@@ -40,7 +42,7 @@ export function startUI(E,app){
     T(()=>{r.lovers={};for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++)r.lovers[rk+':'+vi]=2});
     T(()=>{r.symbols=SYMS.map(x=>x.id)});
     r.hardClear=Math.max(1,r.hardClear||0);r.easyClear=Math.max(1,r.easyClear||0);r.runs=Math.max(99,r.runs||0);
-    T(()=>{r.best={years:Math.max(1000,r.best.years||0),lv:Math.max(60,r.best.lv||0),grade:CFG.endless.grades.length-1}});
+    T(()=>{r.best={years:Math.max(REC_MAXYR,r.best.years||0),lv:Math.max(60,r.best.lv||0),grade:CFG.endless.grades.length-1}});
     return r}
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
   /* 연인·히든 출생 기록: 연인은 만나본 적(1)·결혼까지 간 적(2), 히든 출생은 그 출생으로 시작한 적이 있는지를 남긴다 */
@@ -1607,7 +1609,7 @@ ${symRec(r)}
   const V1100SEC=[['🆕 사무소',['해결사가 사무소에 들어가거나 자기 사무소를 열 수 있습니다. 사무소는 12곳이고, 직원을 들여 키우면 사무소 등급이 오릅니다.','직원마다 신뢰가 있고, 직원 이벤트에서 고른 선택에 따라 신뢰와 자산이 바뀝니다. 돈은 −(빨강)가 나가는 돈, +(초록)가 들어오는 돈입니다.','다른 사무소로 옮기는 "이직"과 사무소에서 쌓는 "평판"이 생겼습니다. 옮기면 평판이 깎이고, 평판이 낮으면 장비 값이 오릅니다.','직원은 호위·정보·전투·의뢰 전문해결사 네 종류입니다. 직원이 최대 단계에서 의뢰를 꾸준히 해결하면 "특색 시험"을 볼 수 있습니다. 합격하면 "붉은 나비" 같은 특색 이름과 그 이름에 맞는 특수능력을 얻습니다.','가방에 "사무소" 칸이 생겼습니다.']],
       ['🆕 무한 모드 가속과 변화',['균열을 닫은 뒤 "시간이 어긋난 곳"에서 들어갈지 고를 수 있습니다. 들어가면 25해 단위로 시간이 흐릅니다.','25해마다 가속 없이 지냈을 때의 40~70% 정도의 성장을 한꺼번에 받고, 그 사이 쌓인 자산·재료·사무소 변화를 요약해 보여 줍니다.','"변화": 변화의 파편(스텝마다 5개)으로 낀 장비의 깡스탯을 확률로 올립니다. 비용은 장비마다 1개부터 시작해 올릴수록 늘고, 다른 장비에 쓰면 다시 1개부터입니다. 등급이 낮은 장비일수록 크게 오를 확률이 높습니다.','가속 중 100해마다 "세월의 풍경"이 나옵니다. 도시가 변해 가는 모습과 내 출신·길에 맞는 한 줄이 보입니다.']],
       ['🆕 심볼과 꾸미기',['소속·출생·직업·사무소 등에 맞는 심볼 55종이 생겼습니다. 이야기(2막)를 끝낸 판의 소속·출생에 따라 얻고, 기록실의 "심볼" 칸에서 모은 것을 봅니다. 아직 얻지 못한 심볼은 검은 칸으로 가려집니다.','꾸미기에서 이름 앞 모양으로 심볼을 달 수 있습니다. 목록은 크기가 고정된 창 안의 칸으로 바뀌었고, 많으면 밀어서 보고 창 높이를 조절할 수 있습니다.','심볼을 25%·50%·100% 모으면 꾸미기 모양이 열립니다. 이미지로 된 전투 카드 테두리 6종이 추가되었고, 칭호·엔딩·심볼 수집으로 열립니다.']],
-      ['🔧 조정과 수정',['공방 해결사: 재료로 강화하거나 의수 종류를 바꿀 때 전용 장비의 인챈트가 사라지던 문제를 고쳤습니다.','효과 부여 완료 문구가 새 캐릭터의 가게 화면에 남아 있던 문제를 고쳤습니다.','홍원 저잣거리에 대호수 물건이 섞여 나오던 문제를 고쳤습니다.','정식 소지로 이야기(2막)를 끝내도 소지 심볼이 나오지 않던 문제를 고쳤습니다.','까마귀팀 복제체가 무한 모드에서 가게를 이용하지 못하던 문제를 고쳤습니다.','1000살 오버플로우 엔딩 뒤에도 이어 살 수 있던 문제를 막았습니다.','뒤틀린 몸의 정신력 표시에 설명을 붙였습니다.','PC 시작 화면의 양옆 배경을 정리했습니다.','일본어 번역: 새 내용을 번역해 넣었습니다. 아직 완벽하지 않고 Gemini → Claude 순으로 두 번 다듬었지만 일부 단어가 반영되지 않았거나 어색할 수 있습니다.','테섭 안내: 사무소·가속·변화의 수치는 측정 중입니다. 쓰면서 느낀 점을 "의견·버그 제보"로 알려 주세요.']]];
+      ['🔧 조정과 수정',['공방 해결사: 재료로 강화하거나 의수 종류를 바꿀 때 전용 장비의 인챈트가 사라지던 문제를 고쳤습니다.','효과 부여 완료 문구가 새 캐릭터의 가게 화면에 남아 있던 문제를 고쳤습니다.','홍원 저잣거리에 대호수 물건이 섞여 나오던 문제를 고쳤습니다.','정식 소지로 이야기(2막)를 끝내도 소지 심볼이 나오지 않던 문제를 고쳤습니다.','까마귀팀 복제체가 무한 모드에서 가게를 이용하지 못하던 문제를 고쳤습니다.','1000살 오버플로우 엔딩 뒤에도 이어 살 수 있던 문제를 막았습니다.','뒤틀린 몸의 정신력 표시에 설명을 붙였습니다.','기록실의 "가장 오래 산 햇수"와 판 통계의 "가장 길게"가 984년을 넘지 않게 고쳤습니다.','PC 시작 화면의 양옆 배경을 정리했습니다.','일본어 번역: 새 내용을 번역해 넣었습니다. 아직 완벽하지 않고 Gemini → Claude 순으로 두 번 다듬었지만 일부 단어가 반영되지 않았거나 어색할 수 있습니다.','테섭 안내: 사무소·가속·변화의 수치는 측정 중입니다. 쓰면서 느낀 점을 "의견·버그 제보"로 알려 주세요.']]];
   const NOTICE={id:'v11.0.0',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
     sec:V1100SEC};
@@ -2945,7 +2947,7 @@ ${symRec(r)}
     {const cc=G.ch,cl=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||UI.overflowEnd||G.infinite||((UI.rbEnd||UI.hwEnd)&&G.endless));
       if(cl&&!cc.easy){const got=[];for(const id of symOfChar(cc)){const x=SYMS.find(q=>q.id===id);if(x&&!((loadRec().symbols)||[]).includes(id)){grantSymbol(id);got.push(x.n)}}
         if(got.length)UI.symNew=got.join(' · ')}}
-    const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
+    const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=Math.min(REC_MAXYR,w?G.year:Math.max(0,G.year-1));
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:w&&UI.overflowEnd?'overflow':(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
     if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;r.ghost={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp}}
     if(!r.endings.includes(k))r.endings.push(k);if(fe==='wed'&&!r.endings.includes('wed'))r.endings.push('wed');r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;if(w&&c.easy)r.easyClear=(r.easyClear||0)+1;
