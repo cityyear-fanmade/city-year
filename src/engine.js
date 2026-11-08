@@ -3271,7 +3271,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const chips=[];ch.custPick=false;ch.custDone=true;ch.cust={name:nm,kind,atk,eva,hp,pas};
     if(kind==='aug'){const KK=CFG.custKinds[o.ak]||CFG.custKinds.aug;for(const [k,v] of Object.entries(KK.fx))fx[k]=(fx[k]||0)+v;const txt2=(txt?txt+' · ':'')+KK.e;
       offerGear(ch,{id:'cust_aug',slot:'aug',kind:KK.n,tag:'특색',n:nm,grade:4,e:txt2,fx,cust:{pas}});ch.cust.ak=KK.n;chips.push(`전용 ${KK.n} · ${nm} · ${txt2} (받을지 고른다)`)}
-    else{addStats(ch.stats,fx);if(fx.maxHp)ch.hp+=fx.maxHp;ch.custPas=pas;ch.custNote=txt;(ch.relics=ch.relics||[]).push(`${noun} · ${nm}`);chips.push(`${kind==='eye'?'전용 의안':'전용 신체 개조'} · ${nm} · ${txt}`)}
+    else{addStats(ch.stats,fx);if(fx.maxHp)ch.hp+=fx.maxHp;ch.custPas=pas;ch.custNote=txt;(ch.relics=ch.relics||[]).push(`${noun} · ${nm}`);chips.push(`${kind==='eye'?'전용 의안':'전용 신체 개조'} · ${nm} · ${txt}`)
+      /* 공방 해결사: 의안은 몸에 붙지만, 히든 보스 장비처럼 재료로 쓸 수 있는 전용 보조 장비도 보관함으로 받는다 (보조 장비 칸에 녹이면 한 단계) */
+      if(kind==='eye'){(ch.stash=ch.stash||[]).push({id:'cust_mat',slot:'aug',kind:'재료',tag:'특색',n:`${nm} (특색 재료)`,grade:5,hid:true,price:0,e:'작업대에서 보조 장비 칸에 녹이면 한 단계 (히든 재료)',fx:{}});chips.push(`전용 보조 장비 · ${nm} (특색 재료) · 보관함에 들어왔다 · 작업대에서 재료로 쓴다`)}}
     return {chips,kind,nm,txt}
   }
   /* 인연 도시락은 일이 다 끝난 뒤 챙겨 주는 것이라 결과 줄의 맨 끝에 둔다 */
