@@ -3,7 +3,7 @@
    - 화면 고정 문구: trDom(app)이 그려진 글자를 바꾼다. 숫자가 섞이는 문장은 tr('…')로 따로 감싼다
    - 사전 파일: data/i18n/<언어>.json  (없거나 비어 있어도 게임은 한국어로 정상 동작한다) */
 import {CFG} from './config.js';
-export const LANGS=[{k:'ko',n:'한국어'},{k:'ja',n:'日本語'}];
+export const LANGS=[{k:'ko',n:'한국어'},{k:'ja',n:'日本語'},{k:'en',n:'English'}];
 const KEY='cityYearLang';
 let lang='ko',dict={};
 const rd=()=>{try{return localStorage.getItem(KEY)}catch(e){return null}};
@@ -60,7 +60,7 @@ export function localize(D){return lang==='ko'?D:localizeWith(D,dict)}
 /* 화면 글자 하나를 번역한다. 사전과 통째로 같으면 바로 바꾸고, 아니면 숫자·이름이 낀 문장 틀({0}, {1}…)과 맞춰 본다.
    틀에 맞으면 끼어 있던 값을 뽑아 일본어 틀에 다시 끼운다(값도 사전에 있으면 함께 번역) */
 let PAT=null,PATIDX=null,PATSHORT=[];const memo=new Map();
-const UNITS={ja:[[/(\d+)세/g,'$1歳'],[/(\d+)년차/g,'$1年目'],[/(\d+)살/g,'$1歳'],[/(\d+)번/g,'$1回'],[/(\d+)등급/g,'$1等級']]};
+const UNITS={ja:[[/(\d+)세/g,'$1歳'],[/(\d+)년차/g,'$1年目'],[/(\d+)살/g,'$1歳'],[/(\d+)번/g,'$1回'],[/(\d+)등급/g,'$1等級']],en:[[/(\d+)세/g,'age $1'],[/(\d+)년차/g,'Year $1'],[/(\d+)살/g,'age $1'],[/(\d+)번/g,'$1×'],[/(\d+)등급/g,'Rank $1']]};
 const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function buildPat(){
   PAT=[];
