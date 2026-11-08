@@ -26,7 +26,9 @@ export function startUI(E,app){
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   /* 시험판에서 "해금 규칙대로 보기"를 켜면 기록실·꾸미기가 실제 플레이어처럼 잠겨 보인다(시험장 4번 칸에서 바꾼다) */
   const realUnlock=()=>{try{return localStorage.getItem('cityYearRealUnlock')==='1'}catch(e){return false}};
-  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}const o=Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{});return (typeof window!=='undefined'&&window.CITY_ALLREC&&!realUnlock())?fillAllRec(o):o};
+  /* 기록으로 남기는 햇수의 상한: 무한 모드 1000살(오버플로우 엔딩)이 984년차다. 버그로 이보다 길게 산 옛 기록도 불러올 때 이 값으로 줄인다 */
+  const REC_MAXYR=984;
+  const loadRec=()=>{let r=null;try{r=JSON.parse(store.get(REC)||'null')}catch(e){}const o=Object.assign({seen:[],beaten:[],endings:[],innate:[],unl:[],titles:{},affs:[],runs:0,best:{years:0,lv:0,grade:-1}},r||{});if(o.best&&o.best.years>REC_MAXYR)o.best.years=REC_MAXYR;if(o.st){if(o.st.max>REC_MAXYR)o.st.max=REC_MAXYR;if(o.st.min>REC_MAXYR)o.st.min=REC_MAXYR}return (typeof window!=='undefined'&&window.CITY_ALLREC&&!realUnlock())?fillAllRec(o):o};
   /* 개인 시험판(build --alltest): 기록실의 모든 칸(엔딩·칭호·히든 보스·출신·소속·인연·장비·심볼·타고난 것)을 채워 연다. 아직 정의되지 않은 목록은 건너뛴다 */
   function fillAllRec(r){
     const T=f=>{try{f()}catch(e){}};
@@ -40,7 +42,7 @@ export function startUI(E,app){
     T(()=>{r.lovers={};for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++)r.lovers[rk+':'+vi]=2});
     T(()=>{r.symbols=SYMS.map(x=>x.id)});
     r.hardClear=Math.max(1,r.hardClear||0);r.easyClear=Math.max(1,r.easyClear||0);r.runs=Math.max(99,r.runs||0);
-    T(()=>{r.best={years:Math.max(1000,r.best.years||0),lv:Math.max(60,r.best.lv||0),grade:CFG.endless.grades.length-1}});
+    T(()=>{r.best={years:Math.max(REC_MAXYR,r.best.years||0),lv:Math.max(60,r.best.lv||0),grade:CFG.endless.grades.length-1}});
     return r}
   /* 칭호 기록: 최고 등급에 오를 때마다 그 칭호의 횟수를 +1 (판이 바뀌어도 쌓인다) */
   /* 연인·히든 출생 기록: 연인은 만나본 적(1)·결혼까지 간 적(2), 히든 출생은 그 출생으로 시작한 적이 있는지를 남긴다 */
@@ -2945,7 +2947,7 @@ ${symRec(r)}
     {const cc=G.ch,cl=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||UI.overflowEnd||G.infinite||((UI.rbEnd||UI.hwEnd)&&G.endless));
       if(cl&&!cc.easy){const got=[];for(const id of symOfChar(cc)){const x=SYMS.find(q=>q.id===id);if(x&&!((loadRec().symbols)||[]).includes(id)){grantSymbol(id);got.push(x.n)}}
         if(got.length)UI.symNew=got.join(' · ')}}
-    const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=w?G.year:Math.max(0,G.year-1);
+    const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=Math.min(REC_MAXYR,w?G.year:Math.max(0,G.year-1));
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:w&&UI.overflowEnd?'overflow':(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
     if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;r.ghost={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp}}
     if(!r.endings.includes(k))r.endings.push(k);if(fe==='wed'&&!r.endings.includes('wed'))r.endings.push('wed');r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;if(w&&c.easy)r.easyClear=(r.easyClear||0)+1;
