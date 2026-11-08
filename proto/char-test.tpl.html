@@ -130,7 +130,7 @@ input[type=color]{width:36px;height:30px;border:1px solid var(--line);background
       <div class="row">
         <span class="lab" style="margin:0">보기</span>
         <button class="chip on" data-v="pc">PC 화면</button><button class="chip" data-v="m">모바일 화면(390px)</button>
-        <span class="dim small" style="margin-left:10px">위: 주사위 판정 · 아래: 전투 무대(옆모습)</span>
+        <span class="lab" style="margin:0 0 0 10px">도트</span><button class="chip on" data-s="b">치비 도트(머리·색 교체)</button><button class="chip" data-s="dnf">던파식 도트(현실 비율·한 몸)</button>
       </div>
     </div>
     <div class="phone" id="phone" style="margin-top:14px">
@@ -247,10 +247,12 @@ document.querySelector('.tabs').onclick=e=>{const t=e.target.closest('button');i
 $('#open').onclick=()=>$('#modal').classList.add('on');$('#close').onclick=()=>$('#modal').classList.remove('on');
 $('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('on')};
 /* 전투: 위쪽은 주사위 판정, 아래쪽 무대에서 도트 몸 시트(18칸) + 도트 머리 시트가 움직인다 */
-const FR=DATA.frames||[],PH=DATA.pheads||[];
-const POSE={idle:[0,1,2,3],atk:[4,5,6,7],dodge:[8,9,10],hit:[11,12,13],down:[14,15,16,17]};
+const SETS={b:{FR:DATA.frames||[],POSE:{idle:[0,1,2,3],atk:[4,5,6,7],dodge:[8,9,10],hit:[11,12,13],down:[14,15,16,17]},head:true},
+  dnf:{FR:DATA.dnf||[],POSE:{idle:[0,1,2],atk:[3,4,5,6,7],dodge:[8,9,10],hit:[11,12,13],down:[14,15,16,17]},head:false}};
+let SM='b',FR=SETS.b.FR,POSE=SETS.b.POSE,CW=1,CH=1;const PH=DATA.pheads||[];
+function useSet(k){SM=k;FR=SETS[k].FR;POSE=SETS[k].POSE;CW=Math.max(...FR.map(f=>f.w));CH=Math.max(...FR.map(f=>f.h))}
+useSet('b');
 const ENEMY={shape:'short',hair:'#3a3f55',eye:'#b04040'};
-const CW=Math.max(...FR.map(f=>f.w)),CH=Math.max(...FR.map(f=>f.h));
 const pcache={};
 async function ptinted(shape,pose,hair,eye){
   const k=shape+pose+hair+eye;if(pcache[k])return pcache[k];
@@ -265,11 +267,11 @@ async function ptinted(shape,pose,hair,eye){
 }
 /* 한 칸을 그린다: 몸 칸의 마젠타 원 자리에 머리를 얹고, 칸 아래 가운데에 맞춘다. flip이면 좌우를 뒤집는다 */
 async function drawFrame(cv,idx,st,flip){
-  const f=FR[idx],bi=await load(f.img),{c:hc}=await ptinted(st.shape,f.pose,st.hair,st.eye);
+  const f=FR[idx],bi=await load(f.img),hd=SETS[SM].head,hc=hd?(await ptinted(st.shape,f.pose,st.hair,st.eye)).c:null;
   cv.width=CW;cv.height=CH;const x=cv.getContext('2d');x.imageSmoothingEnabled=false;x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,CW,CH);
   if(flip){x.translate(CW,0);x.scale(-1,1)}
   const ox=Math.round((CW-f.w)/2),oy=CH-f.h;
-  x.drawImage(bi,ox,oy);
+  x.drawImage(bi,ox,oy);if(!hd)return;
   const hh=f.d*1.1,hs=hh/hc.height,hw=hc.width*hs;      /* 머리 높이 = 원 지름 × 1.1 */
   x.drawImage(hc,ox+f.cx-hw/2+f.d*.03,oy+f.cy-hh/2+f.d*.04,hw,hh);
 }
@@ -305,7 +307,7 @@ async function act(a){
     fx($('#burst'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1)',offset:.3},{opacity:0,transform:'scale(1.5)'}],{duration:420});
     ehp=Math.max(0,ehp-6);setHp();stamp('6','#ffd6a0');
     fx(E,[{transform:'none'},{transform:'translateX(-16px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:330});
-    await wait(260);await paint('p',POSE.atk[3]);await A(P,[{transform:`translateX(${-dx}px)`},{transform:'none'}],{duration:RM?1:300});await paint('p',POSE.idle[0]);
+    await wait(200);await paint('p',POSE.atk[3]);if(POSE.atk[4]!==undefined){await wait(140);await paint('p',POSE.atk[4])}await A(P,[{transform:`translateX(${-dx}px)`},{transform:'none'}],{duration:RM?1:300});await paint('p',POSE.idle[0]);
   }else if(a==='dodge'){
     $('#alab').textContent='협회 순찰자 → 당신 · 회피';$('#dA').textContent=y;$('#dB').textContent=x;$('#log').textContent=`명중 ${y} vs 회피 ${x} · 회피 성공`;
     seqOn=true;await A(E,[{transform:'none'},{transform:`translateX(${dx*.75}px)`}],{duration:240});
@@ -331,6 +333,6 @@ async function act(a){
   seqOn=false;busy2=false;
 }
 $('#bat').onclick=e=>{const b=e.target.closest('[data-a]');if(b){if(b.dataset.a==='idle')seqOn=false;act(b.dataset.a)}};
-$('#p3').addEventListener('click',e=>{const t=e.target.closest('[data-v]');if(!t)return;$('#phone').classList.toggle('m',t.dataset.v==='m');document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',b===t));sizeSprites()});
+$('#p3').addEventListener('click',e=>{const sb=e.target.closest('[data-s]');if(sb){document.querySelectorAll('[data-s]').forEach(b=>b.classList.toggle('on',b===sb));useSet(sb.dataset.s);seqOn=false;paintSprites();return}const t=e.target.closest('[data-v]');if(!t)return;$('#phone').classList.toggle('m',t.dataset.v==='m');document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',b===t));sizeSprites()});
 refresh();
 </script>

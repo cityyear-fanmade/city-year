@@ -70,6 +70,24 @@ try:
 except Exception as e:
     print('도트 머리 건너뜀',e)
 
+
+# --- 던파식 도트 시트(머리까지 한 몸): 대기3·공격5·회피3·피격3·쓰러짐4 ---
+dnf=[]
+try:
+    a=np.array(Image.open('assets/character/_src_dnf_sprite_capo.png').convert('RGB'));rg=C.keyed_rgba(a);fgm=~C.key(a)
+    lb,k=ndi.label(ndi.binary_dilation(fgm,iterations=6));objs=ndi.find_objects(lb);items=[]
+    for i,o in enumerate(objs):
+        if ((lb[o]==i+1)&fgm[o]).sum()>3000:items.append(((o[0].start+o[0].stop)/2,(o[1].start+o[1].stop)/2,i+1,o))
+    bands=[140,430,700,985,1290]
+    items.sort(key=lambda t:(min(range(5),key=lambda j:abs(bands[j]-t[0])),t[1]))
+    names=['idle']*3+['atk']*5+['dodge']*3+['hit']*3+['down']*4
+    for (cy,cx,l,o),nm in zip(items,names):
+        crop=rg[o].copy();crop[~(ndi.binary_dilation(lb[o]==l,iterations=2))]=0
+        ys,xs=np.where(crop[:,:,3]>10);crop=crop[ys.min():ys.max()+1,xs.min():xs.max()+1]
+        dnf.append(dict(pose=nm,img=b64(Image.fromarray(crop,'RGBA'),93),w=crop.shape[1],h=crop.shape[0]))
+except Exception as e:
+    print('던파식 시트 건너뜀',e)
+
 tpl=open('proto/char-test.tpl.html',encoding='utf8').read()
-open('proto/char-test.html','w',encoding='utf8').write(tpl.replace('/*__DATA__*/null',json.dumps(dict(bodies=bodies,heads=heads,frames=frames,pheads=pheads))))
-print('bodies',len(bodies),'heads',len(heads),'size',len(tpl)+len(json.dumps(dict(bodies=bodies,heads=heads,frames=frames,pheads=pheads))))
+open('proto/char-test.html','w',encoding='utf8').write(tpl.replace('/*__DATA__*/null',json.dumps(dict(bodies=bodies,heads=heads,frames=frames,pheads=pheads,dnf=dnf))))
+print('bodies',len(bodies),'heads',len(heads),'size',len(tpl)+len(json.dumps(dict(bodies=bodies,heads=heads,frames=frames,pheads=pheads,dnf=dnf))))
