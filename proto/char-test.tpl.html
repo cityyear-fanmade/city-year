@@ -79,15 +79,16 @@ input[type=color]{width:36px;height:30px;border:1px solid var(--line);background
 .stagebox .city{position:absolute;left:0;right:0;bottom:62px;height:92px;background:
  linear-gradient(90deg,transparent 0 4%,#161a26 4% 9%,transparent 9% 12%,#141824 12% 21%,transparent 21% 24%,#171b28 24% 30%,transparent 30% 36%,#131723 36% 46%,transparent 46% 50%,#171b28 50% 58%,transparent 58% 62%,#141824 62% 72%,transparent 72% 76%,#171b28 76% 84%,transparent 84% 88%,#131723 88% 96%,transparent 96%);opacity:.9}
 .stagebox .floor{position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(#2a2430,#1a161d);border-top:2px solid #3a3342}
-.spr{position:absolute;bottom:26px;height:200px;width:auto;transform-origin:50% 100%;will-change:transform}
+.spr{position:absolute;bottom:26px;transform-origin:50% 100%;will-change:transform}
 .sp{right:12%}.se{left:12%;filter:grayscale(.85) brightness(.55) contrast(1.1) sepia(.25)}
+.spr{image-rendering:pixelated}
 .hp{position:absolute;top:10px;width:30%;height:7px;background:#1b2029;border-radius:4px;overflow:hidden}.hp b{display:block;height:100%;transition:width .35s}
 .hpl{left:6%}.hpl b{background:#8aa4b8}.hpr{right:6%}.hpr b{background:#d4694a}
 .slash{position:absolute;right:22%;bottom:60px;width:130px;height:130px;border-radius:50%;border:0;opacity:0;pointer-events:none;
  background:conic-gradient(from 200deg,transparent 0 40%,rgba(255,90,70,.0) 40%,rgba(255,120,100,.95) 52%,rgba(255,255,255,.95) 55%,transparent 56% 100%);-webkit-mask:radial-gradient(circle,transparent 46%,#000 47% 66%,transparent 67%);mask:radial-gradient(circle,transparent 46%,#000 47% 66%,transparent 67%)}
 .burst{position:absolute;right:20%;bottom:120px;width:90px;height:90px;border-radius:50%;opacity:0;pointer-events:none;background:radial-gradient(circle,rgba(255,240,200,.95) 0 18%,rgba(255,110,80,.7) 30%,transparent 62%)}
 .stamp{position:absolute;left:50%;bottom:150px;transform:translate(-50%,0);font:900 26px var(--serif);color:#fff;text-shadow:0 2px 10px #000;opacity:0;pointer-events:none;letter-spacing:.06em}
-.phone.m .stagebox{height:200px}.phone.m .spr{height:150px;bottom:20px}.phone.m .stagebox .floor{height:54px}.phone.m .stagebox .city{bottom:50px;height:70px}
+.phone.m .stagebox{height:200px}.phone.m .spr{bottom:20px}.phone.m .stagebox .floor{height:54px}.phone.m .stagebox .city{bottom:50px;height:70px}
 </style>
 
 <div class="wrap">
@@ -145,7 +146,7 @@ input[type=color]{width:36px;height:30px;border:1px solid var(--line);background
         <div class="stagebox" id="arena"><div class="sky"></div><div class="city"></div><div class="floor"></div>
           <div class="hp hpl"><b id="hpL" style="width:100%"></b></div><div class="hp hpr"><b id="hpR" style="width:100%"></b></div>
           <canvas id="spP" class="spr sp"></canvas><canvas id="spE" class="spr se"></canvas><div class="slash" id="slash"></div><div class="burst" id="burst"></div><div class="stamp" id="stamp"></div></div>
-        <p class="dim small" style="margin:0">위쪽 판정 상자에서 주사위를 굴리고, 아래 무대에서 내 캐릭터(왼쪽)와 적(오른쪽)이 판정대로 움직입니다. 지금은 한 장짜리 전신 그림을 움직여 보는 시험이고, 포즈 그림이 오면 포즈마다 그림이 바뀝니다. 표정은 머리 시트 그대로 바뀝니다.</p>
+        <p class="dim small" style="margin:0">위쪽 판정 상자에서 주사위를 굴리고, 아래 무대에서 내 캐릭터(왼쪽)와 적(오른쪽)이 판정대로 움직입니다. 전투 무대는 도트 몸 시트 18칸(대기·공격·회피·피격·쓰러짐)에 도트 머리 시트를 얹어 움직입니다. 적은 같은 도트를 어둡게 처리한 임시 그림입니다. 쓰러짐 뒤에는 "대기로"를 눌러 일어납니다.</p>
       </div>
     </div>
   </section>
@@ -244,60 +245,88 @@ document.querySelector('.tabs').onclick=e=>{const t=e.target.closest('button');i
   for(const n of [1,2,3])$('#p'+n).hidden=(String(n)!==t.dataset.t)};
 $('#open').onclick=()=>$('#modal').classList.add('on');$('#close').onclick=()=>$('#modal').classList.remove('on');
 $('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('on')};
-/* 전투: 위쪽은 주사위 판정, 아래쪽 무대에서 옆모습 전신이 움직인다 (지금은 한 장짜리 그림을 움직이는 시험) */
-const ENEMY={aff:'thumb',rank:1,shape:'short',hair:'#3a3f55',eye:'#b04040',exp:'idle'};
-let curExp='idle',tm,hp=82,ehp=26,busy2=false;
-const rnd=n=>1+Math.floor(Math.random()*n);
+/* 전투: 위쪽은 주사위 판정, 아래쪽 무대에서 도트 몸 시트(18칸) + 도트 머리 시트가 움직인다 */
+const FR=DATA.frames||[],PH=DATA.pheads||[];
+const POSE={idle:[0,1,2,3],atk:[4,5,6,7],dodge:[8,9,10],hit:[11,12,13],down:[14,15,16,17]};
+const ENEMY={shape:'short',hair:'#3a3f55',eye:'#b04040'};
+const CW=Math.max(...FR.map(f=>f.w)),CH=Math.max(...FR.map(f=>f.h));
+const pcache={};
+async function ptinted(shape,pose,hair,eye){
+  const k=shape+pose+hair+eye;if(pcache[k])return pcache[k];
+  const H=PH.find(x=>x.shape===shape&&x.pose===pose),im=await load(H.img),c=document.createElement('canvas');c.width=im.width;c.height=im.height;
+  const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const id=x.getImageData(0,0,c.width,c.height),d=id.data;
+  const hc=hex(hair),[th,ts,tv]=rgb2hsv(...hex(eye));
+  for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2],al=d[i+3];if(al<1)continue;
+    const L=.299*r+.587*g+.114*b,sat=Math.max(r,g,b)-Math.min(r,g,b),cy=b>150&&g>150&&r<150&&b-r>60&&al>128;
+    if(cy){const[h_,s_,v_]=rgb2hsv(r,g,b);const o=hsv2rgb(th,ts>.05?Math.min(1,s_*(.55+.45*ts)):0,Math.min(1,v_*(.7+.3*tv)));d[i]=o[0];d[i+1]=o[1];d[i+2]=o[2];continue}
+    if(sat<22&&L<222){const f=Math.min(1,Math.max(0,L/150)),hi=L>150?Math.min(1,Math.max(0,(L-150)/105))*.55:0;for(let j=0;j<3;j++){const base=hc[j]*f;d[i+j]=Math.min(255,base+(255-base)*hi)}}}
+  x.putImageData(id,0,0);return pcache[k]={c,H};
+}
+/* 한 칸을 그린다: 몸 칸의 마젠타 원 자리에 머리를 얹고, 칸 아래 가운데에 맞춘다. flip이면 좌우를 뒤집는다 */
+async function drawFrame(cv,idx,st,flip){
+  const f=FR[idx],bi=await load(f.img),{c:hc}=await ptinted(st.shape,f.pose,st.hair,st.eye);
+  cv.width=CW;cv.height=CH;const x=cv.getContext('2d');x.imageSmoothingEnabled=false;x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,CW,CH);
+  if(flip){x.translate(CW,0);x.scale(-1,1)}
+  const ox=Math.round((CW-f.w)/2),oy=CH-f.h;
+  x.drawImage(bi,ox,oy);
+  const hh=f.d*1.1,hs=hh/hc.height,hw=hc.width*hs;      /* 머리 높이 = 원 지름 × 1.1 */
+  x.drawImage(hc,ox+f.cx-hw/2+f.d*.03,oy+f.cy-hh/2+f.d*.04,hw,hh);
+}
 const sp=()=>$('#spP'),se=()=>$('#spE');
-async function drawFlip(cv,st){const o=document.createElement('canvas');await drawFull(o,st);cv.width=o.width;cv.height=o.height;const x=cv.getContext('2d');x.setTransform(-1,0,0,1,o.width,0);x.clearRect(0,0,o.width,o.height);x.drawImage(o,0,0)}   /* 주인공은 오른쪽에서 왼쪽을 본다 */
-async function paintSprites(){await Promise.all([drawFlip(sp(),{...S,exp:curExp}),drawFull(se(),ENEMY)])}
-function setExp(ex,ms){curExp=ex;drawFlip(sp(),{...S,exp:ex});clearTimeout(tm);if(ms)tm=setTimeout(()=>{curExp='idle';drawFlip(sp(),{...S,exp:'idle'})},ms)}
+let tick=0,seqOn=false,hp=82,ehp=26,busy2=false;const SC={p:'idle',e:'idle'};
+function sizeSprites(){const m=$('#phone').classList.contains('m'),target=m?150:200,k=target/FR[0].h;for(const c of [sp(),se()]){c.style.height=(CH*k)+'px';c.style.width=(CW*k)+'px'}}
+async function paint(side,idx){const st=side==='p'?S:ENEMY;return drawFrame(side==='p'?sp():se(),idx,st,side==='p')}
+async function paintSprites(){sizeSprites();await Promise.all([paint('p',POSE.idle[0]),paint('e',POSE.idle[0])])}
+setInterval(()=>{if(seqOn||document.hidden||$('#p3').hidden)return;tick++;const n=POSE.idle.length;paint('p',POSE.idle[tick%n]);paint('e',POSE.idle[(tick+2)%n])},260);
+const rnd=n=>1+Math.floor(Math.random()*n);
 const A=(el,kf,o)=>el.animate(kf,{fill:'forwards',easing:'ease-out',...o}).finished.catch(()=>{});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-function fx(el,kf,o){return el.animate(kf,{fill:'none',...o})}
+const fx=(el,kf,o)=>el.animate(kf,{fill:'none',...o});
+async function play(side,pose,ms,hold){seqOn=true;for(const i of POSE[pose]){await paint(side,i);await wait(ms)}if(!hold)await paint(side,POSE.idle[0])}
 async function stamp(txt,col){const s=$('#stamp');s.textContent=txt;s.style.color=col||'#fff';fx(s,[{opacity:0,transform:'translate(-50%,20px) scale(.7)'},{opacity:1,transform:'translate(-50%,0) scale(1.1)',offset:.2},{opacity:1,offset:.7},{opacity:0,transform:'translate(-50%,-14px)'}],{duration:800})}
 function place(side){const el=side==='p'?sp():se(),cx=el.offsetLeft+el.offsetWidth/2,by=parseFloat(getComputedStyle(el).bottom);
-  const bu=$('#burst'),st=$('#stamp'),sl=$('#slash');sl.style.right='auto';sl.style.left=(cx-65)+'px';sl.style.bottom=(by+el.offsetHeight*.25)+'px';bu.style.right='auto';bu.style.left=(cx-45)+'px';bu.style.bottom=(by+el.offsetHeight*.45)+'px';st.style.left=cx+'px';st.style.top='auto';st.style.bottom=(by+el.offsetHeight*.85)+'px';st.style.transform='translate(-50%,0)'}
+  const bu=$('#burst'),st=$('#stamp'),sl=$('#slash');sl.style.right='auto';sl.style.left=(cx-65)+'px';sl.style.bottom=(by+el.offsetHeight*.25)+'px';
+  bu.style.right='auto';bu.style.left=(cx-45)+'px';bu.style.bottom=(by+el.offsetHeight*.45)+'px';st.style.left=cx+'px';st.style.top='auto';st.style.bottom=(by+el.offsetHeight*.85)+'px';st.style.transform='translate(-50%,0)'}
 function setHp(){$('#hpb').style.width=hp/82*100+'%';$('#bhp').textContent=`HP ${hp}/82 · 정신력 45`;$('#hpR').style.width=hp/82*100+'%';$('#hpL').style.width=Math.max(0,ehp)/26*100+'%'}
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 async function act(a){
-  if(busy2)return;busy2=true;const P=sp(),E=se(),W=$('#arena').clientWidth,gap=P.offsetLeft-(E.offsetLeft+E.offsetWidth),dx=Math.max(40,gap-12);
-  P.getAnimations().forEach(x=>x.cancel());E.getAnimations().forEach(x=>x.cancel());P.style.opacity=1;
+  if(busy2)return;busy2=true;const P=sp(),E=se(),W=$('#arena').clientWidth,gap=P.offsetLeft-(E.offsetLeft+E.offsetWidth),dx=Math.max(40,gap+CW*.12),k=P.offsetWidth/CW;
+  P.getAnimations().forEach(x=>x.cancel());E.getAnimations().forEach(x=>x.cancel());
   const x=rnd(100),y=rnd(100);
   if(a==='atk'){
-    $('#alab').textContent='당신의 칼날 → 협회 순찰자';$('#dB').textContent=x;$('#dA').textContent=y;$('#log').textContent=`명중 ${x} vs 회피 ${y} · 피해 6`;
-    setExp('atk',900);
-    await A(P,[{transform:'none'},{transform:`translateX(${-dx}px) scale(1.04)`}],{duration:RM?1:260});
+    $('#alab').textContent='당신의 주먹 → 협회 순찰자';$('#dB').textContent=x;$('#dA').textContent=y;$('#log').textContent=`명중 ${x} vs 회피 ${y} · 피해 6`;
+    seqOn=true;await paint('p',POSE.atk[0]);await wait(120);await paint('p',POSE.atk[1]);await wait(140);
+    const dash=A(P,[{transform:'none'},{transform:`translateX(${-dx}px)`}],{duration:RM?1:200});await paint('p',POSE.atk[2]);await dash;
     place('e');fx($('#slash'),[{opacity:0,transform:'rotate(-30deg) scale(.6)'},{opacity:1,transform:'rotate(10deg) scale(1)',offset:.4},{opacity:0,transform:'rotate(40deg) scale(1.1)'}],{duration:380});
     fx($('#burst'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1)',offset:.3},{opacity:0,transform:'scale(1.5)'}],{duration:420});
     ehp=Math.max(0,ehp-6);setHp();stamp('6','#ffd6a0');
-    A(E,[{transform:'none'},{transform:'translateX(-18px)'},{transform:'translateX(8px)'},{transform:'none'}],{duration:330,fill:'none'});
-    await wait(260);await A(P,[{transform:`translateX(${-dx}px) scale(1.04)`},{transform:'none'}],{duration:RM?1:300});
+    fx(E,[{transform:'none'},{transform:'translateX(-16px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:330});
+    await wait(260);await paint('p',POSE.atk[3]);await A(P,[{transform:`translateX(${-dx}px)`},{transform:'none'}],{duration:RM?1:300});await paint('p',POSE.idle[0]);
   }else if(a==='dodge'){
     $('#alab').textContent='협회 순찰자 → 당신 · 회피';$('#dA').textContent=y;$('#dB').textContent=x;$('#log').textContent=`명중 ${y} vs 회피 ${x} · 회피 성공`;
-    await A(E,[{transform:'none'},{transform:`translateX(${dx*.75}px)`}],{duration:240});
-    place('p');stamp('회피','#9fd8ff');
-    A(P,[{transform:'none',opacity:1},{transform:'translateX(26px) skewX(8deg)',opacity:.55,offset:.35},{transform:'none',opacity:1}],{duration:420,fill:'none'});
-    await wait(300);await A(E,[{transform:`translateX(${dx*.75}px)`},{transform:'none'}],{duration:280});
+    seqOn=true;await A(E,[{transform:'none'},{transform:`translateX(${dx*.75}px)`}],{duration:240});
+    place('p');stamp('회피','#9fd8ff');paint('p',POSE.dodge[0]);await wait(80);paint('p',POSE.dodge[1]);
+    A(P,[{transform:'none',opacity:1},{transform:'translateX(30px)',opacity:.6,offset:.4},{transform:'translateX(8px)',opacity:1}],{duration:480,fill:'none'});
+    await wait(420);await paint('p',POSE.dodge[2]);await A(E,[{transform:`translateX(${dx*.75}px)`},{transform:'none'}],{duration:280});await wait(100);await paint('p',POSE.idle[0]);
   }else if(a==='hit'){
     const d=rnd(9)+3;hp=Math.max(1,hp-d);
     $('#alab').textContent='협회 순찰자 → 당신';$('#dA').textContent=rnd(100);$('#dB').textContent=rnd(100);$('#log').textContent=`피해 ${d}`;
-    await A(E,[{transform:'none'},{transform:`translateX(${dx*.75}px)`}],{duration:240});
-    setExp('hit',800);setHp();place('p');stamp('-'+d,'#ff9a8a');
-    fx($('#burst'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1)',offset:.3},{opacity:0,transform:'scale(1.5)'}],{duration:420,});
-    A(P,[{transform:'none'},{transform:'translateX(14px)'},{transform:'translateX(-9px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:420,fill:'none'});
-    P.animate([{filter:'none'},{filter:'brightness(2) saturate(2) hue-rotate(-20deg)'},{filter:'none'}],{duration:300});
-    await wait(320);await A(E,[{transform:`translateX(${dx*.75}px)`},{transform:'none'}],{duration:280});
+    seqOn=true;await A(E,[{transform:'none'},{transform:`translateX(${dx*.75}px)`}],{duration:240});
+    setHp();place('p');stamp('-'+d,'#ff9a8a');fx($('#burst'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1)',offset:.3},{opacity:0,transform:'scale(1.5)'}],{duration:420});
+    paint('p',POSE.hit[0]);await wait(110);paint('p',POSE.hit[1]);
+    fx(P,[{transform:'none'},{transform:'translateX(14px)'},{transform:'translateX(-6px)'},{transform:'none'}],{duration:420});
+    P.animate([{filter:'none'},{filter:'brightness(2) saturate(2)'},{filter:'none'}],{duration:300});
+    await wait(380);await paint('p',POSE.hit[2]);await A(E,[{transform:`translateX(${dx*.75}px)`},{transform:'none'}],{duration:280});await wait(100);await paint('p',POSE.idle[0]);
   }else if(a==='down'){
-    hp=0;setHp();setExp('down',0);const sh=Math.max(0,P.offsetHeight*1.0-((W-P.offsetLeft-P.offsetWidth)+P.offsetWidth/2))+12;place('p');stamp('전투 불능','#ff6a6a');$('#log').textContent='쓰러졌다';
-    await A(P,[{transform:'none',opacity:1},{transform:`translateX(${-sh*.4}px) rotate(14deg)`,offset:.4},{transform:`translate(${-sh}px,${P.offsetHeight*.08}px) rotate(84deg)`,opacity:.85}],{duration:700});
+    hp=0;setHp();place('p');stamp('전투 불능','#ff6a6a');$('#log').textContent='쓰러졌다';seqOn=true;
+    for(const i of POSE.down){await paint('p',i);await wait(190)}
+    return void(busy2=false);   /* 쓰러진 채로 둔다. "대기로"를 누르면 일어난다 */
   }else{
-    hp=82;ehp=26;setHp();setExp('idle',0);$('#log').textContent='';$('#alab').textContent='행동을 골라 보세요';$('#dA').textContent='–';$('#dB').textContent='–';
-    P.style.transform='none';
+    hp=82;ehp=26;setHp();$('#log').textContent='';$('#alab').textContent='행동을 골라 보세요';$('#dA').textContent='–';$('#dB').textContent='–';await paint('p',POSE.idle[0]);
   }
-  busy2=false;
+  seqOn=false;busy2=false;
 }
-$('#bat').onclick=e=>{const b=e.target.closest('[data-a]');if(b)act(b.dataset.a)};
-$('#p3').addEventListener('click',e=>{const t=e.target.closest('[data-v]');if(!t)return;$('#phone').classList.toggle('m',t.dataset.v==='m');document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',b===t));setTimeout(()=>{},0)});
+$('#bat').onclick=e=>{const b=e.target.closest('[data-a]');if(b){if(b.dataset.a==='idle')seqOn=false;act(b.dataset.a)}};
+$('#p3').addEventListener('click',e=>{const t=e.target.closest('[data-v]');if(!t)return;$('#phone').classList.toggle('m',t.dataset.v==='m');document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',b===t));sizeSprites()});
 refresh();
 </script>
