@@ -2939,7 +2939,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(f&&lakeOn(G.ch)&&typeof f==='string'&&(f.startsWith('table:')||f===X_.star)){
       const L_=G.ch.lake=G.ch.lake||{},K_=L_.killed||[];
       if(G.year<=CFG.years)f=null;
-      else if(G.year<=baseEnd){const order=['lake_whale_silence','lake_whale_lamp','lake_whale_anchor','lake_whale_tide','lake_whale_genesis','lake_whale_pale'],gi_=gradeAt(G.year),id=[0,1,2,3,4,5].map(i=>order[(gi_+i)%order.length]).find(x=>!K_.includes(x))||order[gi_%order.length];return {type:'fight',enemy:id,enc:{hidden:true,label:'대재앙 토벌 · '+X_.grades[gi_]}}}
+      else if(G.year<=baseEnd){const order=['lake_whale_silence','lake_whale_lamp','lake_whale_anchor','lake_whale_tide','lake_whale_genesis','lake_whale_pale'],gi_=gradeAt(G.year),id=[0,1,2,3,4,5].map(i=>order[(gi_+i)%order.length]).find(x=>!K_.includes(x));if(id)return {type:'fight',enemy:id,enc:{hidden:true,label:'대재앙 토벌 · '+X_.grades[gi_]}};f=null}   /* 여섯 대재앙을 다 잡았으면 같은 고래를 또 내세우지 않는다(평소 조우로) */
       else if(d(100)>CFG.lake.infFight)f=null;   // 무한 모드의 대호수: 전투보다 호수를 건너는 항해가 중심
       /* 그 밖에는 일반 무한 모드처럼 아직 이기지 못한 히든 보스가 호수의 틈으로 올라온다 (잡았던 고래는 다시 나오지 않는다). 아무도 없으면 호수의 적 */
     }
