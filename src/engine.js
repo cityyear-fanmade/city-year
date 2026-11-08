@@ -717,6 +717,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if((ch.licensed&&ch.rank<=A.rankBonus.rank)||fingerUp||topRank)g=Math.min(3,g+A.rankBonus.plus);
     /* 홍원의 자제가 가문 밖(외부 임무·가주 이후)에서 공방 거리에 들르면 1급 대접: 최고 등급(명장의 공방)까지 이용한다 */
     if(ch.hw&&(ch.hw.out||ch.hw.done))return A.max;
+    /* 까마귀팀 복제체: 덱이 고정이라 카드 대신 장비로 키운다. 무한 모드의 가게에서는 최고 등급(명장의 공방)까지 이용한다 */
+    if(ch.o&&ch.o.key==='crow'&&ch.infinite)return A.max;
     /* 대호수에서 배를 맡아 선장이 되면 1급 대접: 항구에서도 최고 등급(명장의 공방)까지 이용한다 */
     if(ch.lake&&ch.lake.captain)return A.max;
     /* 최상위 명장의 공방: 해결사 1급 이상이거나 진로 최고 직위(1급 대접)일 때만. 항구·저잣거리(대호수·홍원)에는 없다 */
@@ -1319,7 +1321,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.hermLv){ch.hermLv=Math.max(ch.hermLv||0,fx.hermLv);chips.push(`카두세우스-헤르메스 · ${fx.hermLv}차 강화`)}
     if(fx.hermMercy){ch.hermPen=false;ch.hermLv=Math.max(ch.hermLv||0,1);chips.push('헤르메스의 자비 · 지령 패널티가 사라진다','카두세우스-헤르메스 · 1차 강화')}
     if(fx.routeWpn!=null&&ch.o&&ch.o.route)routeWeaponUp(ch,ch.o.route,fx.routeWpn,chips);
-    if(fx.routeGuest){const s_=routeSt(ch);s_.guestFoe=fx.routeGuest;s_.guestTalk=null}
+    if(fx.routeGuest){const s_=routeSt(ch);s_.guestFoe=fx.routeGuest;s_.guestTalk=null;s_.guestName=fx.libName||null}
     if(fx.libItem&&D.items[fx.libItem]){offerGear(ch,Object.assign({id:fx.libItem},D.items[fx.libItem]));chips.push(`책 속의 물건 · ${D.items[fx.libItem].n} (${D.items[fx.libItem].e}) · 장착할지 고른다`)}
     if(fx.gwFall&&ch.o&&ch.o.key==='gweapon'&&!ch.flags.gw_fall){const Z_=CFG.gweapon.fall;ch.flags.gw_fall=1;ch.flags.route_off=1;ch.gwFallYear=ch.year||0;addStats(ch.stats,Z_);ch.hp=Math.max(1,Math.min(ch.stats.maxHp,ch.hp+(Z_.maxHp||0)));ch.aff=null;chips.push(`G사의 몰락 · 최대 HP ${Z_.maxHp} · 공격 ${Z_.atk} · 소속 없음`)}
     if(fx.gwProc&&CFG.gweapon.proc[fx.gwProc]&&!ch.gw){const Pr=CFG.gweapon.proc[fx.gwProc];ch.gw={proc:fx.gwProc,eaten:0,hidden:0,form:null,royal:false,wx:JSON.parse(JSON.stringify(Pr.wx||{}))};
@@ -2521,7 +2523,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     for(const sl of ['weapon','armor','aug']){const p=all.filter(id=>D.items[id].slot===sl&&!out.includes(id));if(p.length)out.push(one(p))}
     return out}
   function bookItemEvent(G,st){
-    const ch=G.ch,g=st.itemDue,ids=bookItems(ch,g);st.itemDue=0;if(!ids.length)return null;
+    const ch=G.ch,g=st.itemDue,ids=bookItems(ch,g);st.itemDue=0;
+    if(!ids.length){
+      if(!(ch.infinite&&g>=CFG.libInf.grade))return null;
+      /* 상위 장비를 다 모았다면 손님은 책의 이름을 남긴다: 영구 성장 */
+      const N=CFG.libInf.name;
+      return {t:'책에 남은 이름',x:'손님이 책이 되고 난 자리에는 물건이 없다. 서가에 꽂을 것은 이름뿐이다. 그 이름을 읽으면 몸이 조금 달라진다.',c:Object.entries(N).map(([k,v])=>({l:v.l,h:v.h,ok:{t:v.t,fx:v.fx}}))}}
     return {t:'책 속의 물건',x:'손님이 책이 되고 난 자리에 그가 쓰던 물건이 남아 있다. 서가에 꽂아 둘 수 있는 것은 하나뿐이다.',c:[
       ...ids.map(id=>({l:D.items[id].n,h:D.items[id].e,ok:{t:`${D.items[id].n}을(를) 서가에서 꺼냈다.`,fx:{libItem:id}}})),
       {l:'책 속에 그대로 둔다',h:'정신력 +1',ok:{t:'물건은 책 안에 남았다.',fx:{mindUp:1}}}]}}
@@ -2554,8 +2561,27 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function guestDone(ch,id,chips,talk){
     const R=routeOf(ch),Z=R&&R.guest;if(!Z)return false;const pool=guestBooks(id);
     if(pool.length){if(talk)addCard(ch,one(pool.filter(c=>!ownsCard(ch,c)))||one(pool),chips,'손님의 책',true);else offerPick(ch,pool,chips,'손님의 책')}
-    guestAdvance(ch,chips);chips.push(`손님 ${routeSt(ch).guests}명 · ${D.enemies[id].n}이(가) 책이 되었다`);
+    const gnm=routeSt(ch).guestName;routeSt(ch).guestName=null;
+    guestAdvance(ch,chips);if(ch.infinite&&(ch.year||0)>routeEnd())routeSt(ch).itemDue=CFG.libInf.grade;   // 무한 모드: 손님마다 상위 장비
+    chips.push(`손님 ${routeSt(ch).guests}명 · ${gnm?gnm+' · ':''}${D.enemies[id].n}이(가) 책이 되었다`);
     return true}
+  /* ── 도서관 지정사서의 무한 모드: 줄기가 끝난 뒤에도 손님이 찾아온다. 일반 무한 적 수준의 손님을 이기면 책 속의 물건(상위 장비) ──
+     일반 진행은 libInf.every해마다, 가속 구간은 25년 스텝마다 한 명 (조용한 해에는 끼어들지 않는다) */
+  function libInfEvent(G){
+    const ch=G.ch,R=routeOf(ch),Z=R&&R.guest,LI=CFG.libInf;
+    if(!Z||!G.infinite||!ch.infinite||(ch.distForm&&!ch.distStable)||G.year<=routeEnd())return null;   // 뒤틀려 있는 동안은 오지 않는다(안정화 뒤에는 장비를 다시 쓸 수 있어 온다)
+    const st=routeSt(ch);
+    if(st.itemDue){const bi=bookItemEvent(G,st);if(bi)return bi}
+    const a=age(G);let due=false;
+    if(accelOn(G)){if(a%CFG.accel.step===0&&st.libStep!==a){st.libStep=a;due=true}}
+    else{if(st.libNext==null)st.libNext=G.year;if(G.year>=st.libNext){st.libNext=G.year+LI.every;due=true}}
+    if(!due)return null;
+    const ids=guestPool(Z,{tiers:LI.tiers},ch);if(!ids.length)return null;
+    const id=one(ids),E_=D.enemies[id],dc=LI.talkDc,nm=one(D.namePool&&D.namePool.length?D.namePool:['이름 모를 손님']);   // 이전 손님과 같은 상대지만 이름은 그때마다 새로 붙는다 (같은 부류를 이름만 바꿔 계속 만난다)
+    return {t:`${Z.t} · ${nm}`,x:`${E_.intro||'초대장을 든 손님이 서가 입구에 서 있다.'}\n\n도서관은 줄기가 끝난 뒤에도 문을 닫지 않았다. 이 손님은 상위의 물건을 쥐고 왔다.`,c:[
+      {l:'접대한다',h:'이기면 손님이 책이 되고, 쥐고 온 상위 장비를 얻는다 · 지면 사서도 책이 된다',ok:{t:'손님을 서가 안쪽으로 안내했다.',fx:{combat:id,routeGuest:id,libName:nm}}},
+      {l:'먼저 이야기를 나눈다',h:'판정 · 성공하면 손님이 약해진다 · 실패하면 격앙해 더 강해진다 · 어느 쪽이든 접대로 이어진다',check:{s:null,dc},ok:{t:'이야기 끝에 손님이 스스로 약점을 흘렸다. 접대는 피할 수 없다.',fx:{combat:id,routeGuest:id,routeGuestTalk:'good',libName:nm}},fail:{t:'대화가 어긋났다. 손님이 칼을 쥐었다. 접대는 피할 수 없다.',fx:{combat:id,routeGuest:id,routeGuestTalk:'bad',libName:nm}}},
+      {l:'돌려보낸다',h:'장비를 얻지 못한다 · 정신력 +1',ok:{t:'초대장을 돌려주고 문을 닫았다.',fx:{mindUp:1}}}]}}
   function routeStep(G,R){
     const ch=G.ch,st=routeSt(ch),y=G.year,A=y>CFG.years?'act2':'act1',H=R.hunt;
     if(ch.distForm)return null;
@@ -2888,6 +2914,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wv=webStep(G);if(wv)return wv}
     {const gv=gwStep(G);if(gv)return {type:'event',ev:gv}}
     {const R_=routeOf(G.ch);if(R_&&!(G.infinite&&G.year>routeEnd())){const rf=routeFight(G,R_);if(rf)return rf;const rs=routeStep(G,R_);if(rs)return {type:'event',ev:rs}}}
+    {const le=libInfEvent(G);if(le)return {type:'event',ev:le}}   // 도서관 지정사서의 무한 모드 손님
     /* 무한 모드 가속: 조용한 해는 전투·일상 사건을 고르지 않고 시간 기준 사건(가족·직원·사무소 등)만 확인한다. 선택이 필요한 사건이 나오면 거기서 멈춘다 */
     if(accelQuiet(G)){const q=accelPass(G);return q||{type:'quiet',year:G.year}}
     let f=fixedSpec(G.year);
@@ -3132,8 +3159,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else{const x=d(M.failLoss);chips.push('개화 실패 · 아직 마음이 버티고 있다');loseMind(ch,x,t=>chips.push(t+` · 1d${M.failLoss}`))}
     }
     if(fx.distort){
-      const th_=50+biasOf(ch),r=d(100),sg_=r>th_&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight;chips.push(`뒤틀림 판정 1d100 · ${r} (${th_} 이하면 E.G.O 개화)`);if(sg_)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);ch.rollFx={k:'distort',r,th:th_,ok:r<=th_||sg_,sight:sg_,seq:(ch.rollSeq=(ch.rollSeq||0)+1),at:1};
-      if(r<=th_||sg_){ch.egoPick=true;ch.mind=mindMax(ch);chips.push('뒤틀리기 직전, E.G.O 개화 · 정신력 회복')}else{ch.distPick=true;chips.push('육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
+      const th_=50+biasOf(ch),r=d(100),sg_=r>th_&&(ch.stats.egoSight||0)>0&&d(100)<=ch.stats.egoSight;chips.push(`뒤틀림 판정 1d100 · ${r} (${th_} 이하면 E.G.O 개화)`);let r2_=0;if(sg_)chips.push(`장비의 형상이 보였다 · ${ch.stats.egoSight}%`);ch.rollFx={k:'distort',r,th:th_,ok:r<=th_||sg_,sight:sg_,seq:(ch.rollSeq=(ch.rollSeq||0)+1),at:1};
+      if(r<=th_||sg_){ch.egoPick=true;ch.mind=mindMax(ch);chips.push('뒤틀리기 직전, E.G.O 개화 · 정신력 회복')}else if((r2_=d(100))<=M.twist){ch.distPick=true;chips.push(`뒤틀림 판정 1d100 · ${r2_} (${M.twist} 이하면 육신 뒤틀림)`);chips.push('육신이 뒤틀린다 · 뒤틀림의 이름을 정한다')}else{ch.mind=1;chips.push(`뒤틀림 판정 1d100 · ${r2_} (${M.twist} 이하면 육신 뒤틀림)`);chips.push('개화도 뒤틀림도 오지 않았다 · 정신력 1로 남는다 · 다시 한계에 닿으면 정신 붕괴')}
     }
     if(fx.distStable&&setStable(ch))chips.push('뒤틀림이 안정되었다 · 장비와 카드팩을 다시 쓸 수 있다 · 더 강해진 뒤틀린 카드팩을 얻었다');
     if(fx.distortAccept){ch.distPick=true;chips.push('목소리를 받아들였다 · 뒤틀림의 이름을 정한다')
@@ -3447,7 +3474,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 보스별 난이도 보정(hard): 체력 배수, 공격·회피 가산 */
     const IM_=ch.infinite&&id===X_.final?(ch.infImp||0):0;
     const SI_=ch.infinite?Math.max(0,gradeRaw(yH)-X_.grades.length+1):0;
-    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||(()=>{const R_=routeOf(ch)||(ch.o&&ch.o.key==='gweapon'&&ch.flags&&ch.flags.gw_fall?gwRoute():null);return R_&&((R_.guest&&ch.rt&&ch.rt.guestFoe===id&&guestMul(ch,R_))||(R_.trial&&R_.trial[id]))||null})(),ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
+    const hd=e.hard||null,nm=e.names&&e.names.length?CFG.named:null,tr=ch.corp&&ch.corp.trial===id?CFG.corp.trial[id]:ch.rb&&ch.rb.headSeen&&CFG.rb.trial[id]||(()=>{const R_=routeOf(ch)||(ch.o&&ch.o.key==='gweapon'&&ch.flags&&ch.flags.gw_fall?gwRoute():null);return R_&&((R_.guest&&ch.rt&&ch.rt.guestFoe===id&&!(ch.infinite&&(ch.year||0)>routeEnd())&&guestMul(ch,R_))||(R_.trial&&R_.trial[id]))||null})(),ehh0_=Math.round((hd?eh*(EZ?1+((hd.hp||1)-1)*EZ.bossHard:(hd.hp||1)):eh)*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)*(1+CFG.infinite.impPer*IM_)*Math.pow(1+CFG.infinite.hpGrow,Math.min(SI_,CFG.infinite.hpGrowCap)));
     /* 무한 모드 불순물: 100살(나이)마다 정해 둔 체력표를 쓴다 (첫 100살은 잡을 만하게, 200살부터 조금 많이, 300살부터 확 오른다) */
     /* 100살 구간의 첫 불순물은 표의 딱 맞는 숫자, 그 구간에서 불순물을 쓰러뜨릴 때마다 뒷자리가 조금씩 늘어난다 (구간 안에서 최대 hpBandMax) */
     const infTab=ch.infinite&&id===X_.final?(()=>{const A_=CFG.startAge+(ch.year||0)-1,T_=CFG.infinite.hpTable,IF2=CFG.infinite;let v=T_[0][1],bi=0;T_.forEach(([at,hp],i)=>{if(A_>=at){v=hp;bi=i}});
@@ -3459,7 +3486,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const lastImp=ch.infinite&&id===X_.final&&(ch.year||0)+CFG.infinite.every>CFG.overflowAge-CFG.startAge+1;   // 1000살 오버플로우 전의 마지막 불순물 전투
     const ehh0=lastImp?CFG.infinite.hpMax:ehhCap,ehh1=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0,ehh=id==='redmist'&&(ch.redPost||0)>0?Math.round(ehh1*Math.pow(CFG.redBook.hpMul,ch.redPost)):ehh1;
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
-    const E=mkEnt({uid:'E',name:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),maxHp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),atk:Math.max(1,((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.atk:0)+e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,herm:(e.passive&&e.passive.id==='hermes')?{n:0,wait:false}:null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,kali:e.kali||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
+    const E=mkEnt({uid:'E',name:(ch.rt&&ch.rt.guestFoe===id&&ch.rt.guestName)?`${ch.rt.guestName} · ${e.n}`:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),maxHp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),atk:Math.max(1,((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.atk:0)+e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,herm:(e.passive&&e.passive.id==='hermes')?{n:0,wait:false}:null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,kali:e.kali||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 무한 모드에서도 적의 회피는 enemyMax에서 멈춘다. 공격(명중)도 enemyMax에서 멈추지만, 균열을 닫은(균열 엔딩을 본) 뒤에는 균열 피해가 없어지므로 atkMax까지 올라 플레이어 회피가 아무리 높아도 결국 맞게 한다 */
     if(P.auxFoeSink)E.sink=(E.sink||0)+P.auxFoeSink;
     E.atk+=Math.floor(infYears(ch)/CFG.infinite.atkEvery);E.atk=Math.min(E.atk,CFG.infinite.atkCap||(ch.outSeen&&ch.outSeen.seal?(CFG.infinite.atkMax||CFG.infinite.enemyMax):CFG.infinite.enemyMax));E.eva=Math.max(0,Math.min(E.eva,CFG.infinite.enemyMax)-Math.floor(infYears(ch)*CFG.infinite.evaDown));
