@@ -2489,7 +2489,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const routeOf=ch=>(ch&&ch.o&&ch.o.route&&!(ch.flags&&ch.flags.route_off)&&D.routes&&D.routes[ch.o.route])||null;
   const routeSt=ch=>ch.rt=ch.rt||{used:{},n:0};
   const routeEnd=()=>CFG.years+CFG.endless.span*CFG.endless.grades.length;
-  const routeShop=ch=>{const R=routeOf(ch);return !R||R.shop!==false};
+  const routeShop=ch=>{const R=routeOf(ch);return !R||R.shop!==false||!!(R.shopInf&&ch.infinite)};   // shopInf: 공방 거리가 없는 줄기도 무한 모드(외곽)에서는 가게를 쓴다
   function routeKitEvent(ch,R,st){
     const H=R.hunt,max=H.kitMax||CFG.route.kitMax,pk=st.kit.picks,nm=id=>(H.kit.find(k=>k.id===id)||{}).n;
     return {t:H.kitT,x:`${H.kitX}\n\n고른 것 ${pk.length}/${max}${pk.length?' · '+pk.map(nm).join(', '):''}`,c:[
@@ -2848,7 +2848,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 무한 모드에서 oldAge살을 넘기면 히든 엔딩 (한 번만, 이어서 살아갈 수 있다) */
     if(G.infinite&&!G.ch.oldEnd&&age(G)>=CFG.oldAge){G.ch.oldEnd=true;return {type:'end',win:true,old:true}}
     /* 무한 모드에서 overflowAge살에 닿으면 끝나는 히든 엔딩 (기록실에는 올라가지 않고, 이어갈 수 없다) */
-    if(G.infinite&&!G.ch.overflowEnd&&age(G)>=CFG.overflowAge){G.ch.overflowEnd=true;return G.ch.famBind&&G.ch.famBind.end?{type:'end',win:true,out:G.ch.famBind.end}:{type:'end',win:true,overflow:true}}
+    if(G.infinite&&age(G)>=CFG.overflowAge){G.ch.overflowEnd=true;   /* 이미 한 번 나온 뒤에도(저장 불러오기 등으로 이어 간 경우) 1000살을 넘길 수 없다: 같은 엔딩이 다시 나온다 */
+      return G.ch.famBind&&G.ch.famBind.end?{type:'end',win:true,out:G.ch.famBind.end}:{type:'end',win:true,overflow:true}}
     /* 무한 모드 추가 엔딩: 한 번씩, 끝낸 뒤에도 이어서 살아갈 수 있다 */
     if(G.infinite){const ch=G.ch,OE=CFG.outEnds;ch.outSeen=ch.outSeen||{};
       const baseEnd_=CFG.years+CFG.endless.span*CFG.endless.grades.length;
