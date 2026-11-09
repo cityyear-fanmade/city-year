@@ -210,7 +210,7 @@
    "fx": {
     "maxHp": 30,
     "eva": 4,
-    "defUp": 8
+    "dr": 8
    }
   },
   "hw_pill": {
