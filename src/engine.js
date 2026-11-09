@@ -556,8 +556,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const SF=CFG.office.staff,staffOwner=ch=>!!(ch.office&&ch.aff&&(ch.aff.own||(ch.office.ws&&isWs(ch))));
   const staffList=ch=>(ch.office&&ch.office.staff)||[];
   const staffLv=(s,year)=>Math.max(1,Math.min(SF.lvMax,1+Math.floor(((year==null?s.y:year)-s.y)/SF.growEvery)));
-  const staffFxAt=(s,lv)=>{const T_=SF.types[s.type],o={},m=s.sp?CFG.office.staffEv.spMul:1;for(const [k,v] of Object.entries(T_.fx||{}))o[k]=Math.floor(v*lv*m+1e-9);for(const id of (s.ab||[])){const A=CFG.office.staffEv.spAb.find(x=>x.id===id);if(A)for(const [k,v] of Object.entries(A.fx))o[k]=(o[k]||0)+v}return o};
-  function staffIncome(ch){let t=0;for(const s of staffList(ch)){const T_=SF.types[s.type];t+=((T_&&T_.inc)||0)*staffLv(s,ch.yearNow)-SF.wage}return t}
+  const staffFxAt=(s,lv)=>{const T_=SF.types[s.type],o={},m=(s.sp?CFG.office.staffEv.spMul:1)*(1+CFG.office.staffEv.rank.per*(s.rk||0));for(const [k,v] of Object.entries(T_.fx||{}))o[k]=Math.floor(v*lv*m+1e-9);for(const id of (s.ab||[])){const A=CFG.office.staffEv.spAb.find(x=>x.id===id);if(A)for(const [k,v] of Object.entries(A.fx))o[k]=(o[k]||0)+v}return o};
+  function staffIncome(ch){let t=0;for(const s of staffList(ch)){const T_=SF.types[s.type];t+=Math.floor(((T_&&T_.inc)||0)*staffLv(s,ch.yearNow)*(1+CFG.office.staffEv.rank.per*(s.rk||0))+1e-9)-SF.wage}return t}
   /* 지금 단계에 맞는 능력치로 맞춘다 (이미 받은 만큼과의 차이만 더하고 뺀다) */
   function staffTick(ch,year){
     if(!staffOwner(ch))return;ch.yearNow=year;
@@ -576,13 +576,27 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 직원 이벤트: D.staffEvents 템플릿에서 조건에 맞는 직원·이야기를 골라 해마다 한 번 연다 ===== */
   const SE=CFG.office.staffEv,josaF=(n,j)=>{const c=n.charCodeAt(n.length-1),f=c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28!==0;return j==='은'?(f?'은':'는'):j==='이'?(f?'이':'가'):j==='과'?(f?'과':'와'):j==='을'?(f?'을':'를'):''};
   const staffFill=(o,n,m)=>JSON.parse(JSON.stringify(o).replace(/\{(n|m)\}(은|이|과|을)?/g,(x,w,j)=>{const nm=w==='n'?n:(m||'동료');return nm+(j?josaF(nm,j):'')}));
+  /* 무한 모드: 시간이 어긋난 자리에서 직원이 과거의 승급 심사를 받는다(플레이어의 과거 승급 심사장과 같은 결). 최고 단계 직원만, 승급은 max번까지 */
+  function staffPromoEvent(G){
+    const ch=G.ch,R=SE.rank;if(!R||!ch.infinite||!staffOwner(ch))return null;const O=ch.office,y=G.year;
+    if(y<(O.rkNext||0))return null;
+    const el=staffList(ch).filter(s=>staffLv(s,y)>=SF.lvMax&&(s.rk||0)<R.max&&y>=(s.rkAt||0));
+    if(!el.length)return null;O.rkNext=y+R.gap;if(d(100)>R.chance)return null;
+    const s=el[Math.floor(rng()*el.length)],tr=s.trust==null?SE.trustStart:s.trust,dc=Math.max(1,R.dc-R.trustMul*tr),k=s.rk||0;
+    return {t:'공간의 뒤틀림 · 과거의 승급 심사',staffEv:true,x:`외곽의 공기가 한 번 접혔다. 눈을 뜨자 오래전 사무소의 승급 심사 자리에 ${s.n}${josaF(s.n,'이')} 서 있다. 심사관들이 ${s.n}의 서류를 넘긴다. 지금까지 해 온 일이 한 줄도 빠짐없이 적혀 있다.`,
+      c:[{l:`${s.n}의 승급을 추천한다`,h:`1d100 · ${dc} 이상이면 승급 (신뢰 ${tr}점 반영) · 승급 ${k}/${R.max} · 합격하면 효과 +${Math.round(R.per*100)}%`,check:{s:null,dc,pure:true},
+          ok:{t:`심사관들이 서류를 덮었다. ${s.n}의 이름 옆에 단계가 하나 올랐다. 공간이 풀렸다.`,fx:{staff:{n:s.n,rank:'ok'}}},
+          fail:{t:`심사관들은 고개를 저었다. ${s.n}은 말없이 서류를 받아 들었다. 공간이 풀렸다.`,fx:{staff:{n:s.n,rank:'fail'}}}},
+        {l:'다음에 하자고 한다',h:`신뢰 +1 · ${R.laterGap}년 뒤 다시`,ok:{t:`${s.n}은 웃으며 물러났다. 공간이 풀렸다.`,fx:{staff:{n:s.n,trust:1,rank:'later'}}}}]}
+  }
   function staffEventPick(G){
-    const ch=G.ch,y=G.year;if(!staffOwner(ch)||ch.infinite)return null;const O=ch.office,list=staffList(ch);if(!list.length)return null;
+    const ch=G.ch,y=G.year;if(!staffOwner(ch))return null;const inf=!!ch.infinite,O=ch.office,list=staffList(ch);if(!list.length)return null;
     if(O.evNext==null)O.evNext=y+1;if(y<O.evNext)return null;
     const pool=[];
     for(const s of list){const ten=y-s.y,tr=s.trust==null?SE.trustStart:s.trust;
       for(const t of (D.staffEvents||[])){
         if((s.seen||[]).includes(t.id))continue;
+        if(inf&&!t.exam)continue;   /* 무한 모드: 직원 면담은 닫혀 있고 특색 시험만 열린다 */
         if(t.type&&!t.type.includes(s.type))continue;if(t.trait&&!t.trait.some(x=>(s.traits||[]).includes(x)))continue;
         if(t.tenureMin!=null&&ten<t.tenureMin)continue;if(t.tenureMax!=null&&ten>t.tenureMax)continue;
         if(t.trustMin!=null&&tr<t.trustMin)continue;if(t.trustMax!=null&&tr>t.trustMax)continue;
@@ -611,6 +625,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       chips.push(`${s.n} · 특색 시험 합격${s.spName?` · 「${s.spName}」`:''} · 효과 ×${SE.spMul}`);{const A=SE.spAb.find(x=>x.id===s.ab[0]);if(A)chips.push(`특수능력 · ${A.n} · ${A.e}${s.ab.length>1?' (효과 ×'+s.ab.length+')':''}`)}}
     if(o.exam==='later')s.seen=(s.seen||[]).filter(x=>x!=='exam');
     if(o.exam==='fail'){s.tries=(s.tries||0)+1;s.examY=ch.year||ch.yearNow||0;s.seen=(s.seen||[]).filter(x=>x!=='exam');s.trust=Math.max(0,(s.trust==null?SE.trustStart:s.trust)-1);chips.push(`${s.n} · 특색 시험 불합격 · 신뢰 −1`+((s.tries||0)>=SE.exam.maxTry?' · 더는 응시할 수 없다':` · ${SE.exam.gap}년 뒤 다시`))}
+    if(o.rank){const R=SE.rank,y=ch.year||ch.yearNow||0;
+      if(o.rank==='ok'){s.rk=(s.rk||0)+1;s.rkAt=y+R.gap;chips.push(`${s.n} · 승급 ${s.rk}/${R.max} · 효과 +${Math.round(R.per*100)}% (지금 ×${(1+R.per*s.rk).toFixed(1)})`)}
+      else if(o.rank==='fail'){s.rkAt=y+R.failGap;s.trust=Math.max(0,(s.trust==null?SE.trustStart:s.trust)-1);chips.push(`${s.n} · 승급 심사 불합격 · 신뢰 −1 · ${R.failGap}년 뒤 다시`)}
+      else if(o.rank==='later'){s.rkAt=y+R.laterGap}}
     if(o.leave){const i=staffList(ch).indexOf(s);officeLogAdd(ch.office,ch.year||0,`${s.n}이(가) 사무소를 떠났다`);dismissStaff(ch,i);chips.push(`${s.n} · 사무소를 떠났다`)}
     staffTick(ch,ch.year||ch.yearNow||0);
   }
@@ -2770,7 +2788,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
          {l:'들어가지 않는다',h:'지금처럼 한 해씩 이어진다 · 되돌릴 수 없다',ok:{t:'문턱 앞에서 돌아섰다. 이곳의 시간은 한 해씩, 평소대로 흘러간다.',fx:{accel:'no'}}}]}}
   function accelPass(G){
     const ch=G.ch,ev=e=>e?{type:'event',ev:e}:null;
-    for(const fn of [()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G))]){const r=fn();if(r)return r}
+    for(const fn of [()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G)),()=>ev(staffPromoEvent(G))]){const r=fn();if(r)return r}
     return null}
   /* ===== 가속 스텝 보상과 변화(제3의 강화) ===== */
   const CHGST={atk:'공격',maxHp:'최대 HP',spd:'속도',eva:'회피'};
@@ -3010,6 +3028,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const se=surgEvent(G);if(se)return {type:'event',ev:se}}
     {const me=officeMoveEvent(G);if(me)return {type:'event',ev:me}}
     {const se=staffEventPick(G);if(se)return {type:'event',ev:se}}
+    {const se=staffPromoEvent(G);if(se)return {type:'event',ev:se}}
     if(D.officeFound&&canFound(ch)&&G.year>=(ch.officeNext||0)){ch.officeNext=G.year+CFG.office.foundEvery;return {type:'event',ev:isWs(ch)?Object.assign({},D.officeFound,{x:D.officeFound.x+' 공방의 작업대는 그대로 두고, 그 옆에 간판을 하나 더 건다.'}):D.officeFound}}
     if(D.officeKnock&&ch.licensed&&!ch.aff&&!ch.job&&!noFixer(ch)&&G.year>CFG.affiliationYear&&G.year>=(ch.knockNext||0)){ch.knockNext=G.year+CFG.office.knockEvery;return {type:'event',ev:D.officeKnock}}
     {const lk=lakeYear(G);if(lk)return lk.type==='fight'?lk:{type:'event',ev:lk}}
@@ -4346,5 +4365,5 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
-    canFound,pvProfile,staffList,staffLv,staffEventPick,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+    canFound,pvProfile,staffList,staffLv,staffEventPick,staffPromoEvent,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
