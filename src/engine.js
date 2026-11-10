@@ -1483,7 +1483,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   /* ===== 정신력 ===== */
   const M=CFG.mind;
-  const mindFloor=ch=>ch.ego?M.ego[ch.ego.type].floor:0;
+  const mindFloor=ch=>ch.ego?M.ego[ch.ego.type].floor:(ch.o&&ch.o.key==='blackmask'&&!ch.infinite)?1:0;   // 검은 가면은 무한 모드 전까지 정신력 1 밑으로 내려가지 않는다(뒤틀림·개화 없음)
   /* 성장기 '목소리가 들림': 정신력 최대치 +5 */
   const mindMax=ch=>Math.min(M.cap||Infinity,M.max+((ch.stats&&ch.stats.mindMax)||0));
   /* ===== 전투 중 정신력이 0이 되면: 50% E.G.O 개화, 아니면 육신 뒤틀림 (둘 다 그 자리에서 전투에 반영) =====
@@ -1528,6 +1528,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(n<=0||ch.distForm)return;if(hasInn(ch,'will'))n=Math.ceil(n*CFG.innate.willCut);const m0=ch.mind;ch.mind=Math.max(mindFloor(ch),ch.mind-n);
     if(ch.mind<m0&&out)out(`정신력 −${m0-ch.mind} (${ch.mind}/${mindMax(ch)})`);
     if(ch.ego)return;
+    /* 검은 가면: 무한 모드 전까지는 정신력이 바닥에 닿아도 뒤틀리지도 E.G.O가 개화하지도 않는다(정신력 1에서 버틴다) */
+    if(ch.o&&ch.o.key==='blackmask'&&!ch.infinite){if(ch.mind<1)ch.mind=1;return}
     /* 뒤틀림은 전투가 끝난 뒤 사건에서 고른다: 아직 그 사건을 겪지 않았으면 정신력 1에서 버틴다 */
     if(ch.mind<=0&&!ch.distortDone){ch.mind=1;out&&out('정신력 1 · 마음이 한계 끝에서 버틴다 (전투가 끝나면 고른다)')}
     if(ch.mind<=0){if(activeC&&activeC.ch===ch&&!activeC.over)mindBreak(activeC);else ch.mindDead=true}
