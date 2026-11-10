@@ -1860,10 +1860,19 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const bondTx=ch=>(lakeOn(ch)&&D.bond&&D.bond.lake)?Object.assign({},D.bond,D.bond.lake):D.bond;
   /* 해금 출생이 2막 끝에서 이어 살 때 쓰는 엔딩 키: 무한 모드 도입 문구가 이 키로 갈린다 */
   const infKey=ch=>{const o=ch&&ch.o&&ch.o.key,f=(ch&&ch.flags)||{};return o==='crow'&&f.crow_succeed?'crowsucceed':(o==='hermes'||(ch&&ch.o&&ch.o.herm))?(f.herm_obey?'hermobey':'hermfree'):o==='librarian'?(f.lib_block?'libclose':'libstay'):o==='claw'?(f.cl_return?'clawreturn':'clawstay'):o==='arbiter'?(f.ab_keep?'arbkeep':'arbdown'):o==='gweapon'?(f.gw_king&&ch.gw&&ch.gw.form?'gw'+ch.gw.form:'gwhuman'):''};
-  const bondRouteOf=ch=>(ch.o&&ch.o.herm)?(ch.bond?'hermes':null):(ch.o&&(ch.o.key==='claw'||ch.o.key==='arbiter'))?ch.o.key:(ch.o&&ch.o.key==='librarian')?'librarian':(ch.o&&ch.o.key==='crow')?'crow':(ch.o&&ch.o.key==='gweapon'&&ch.flags&&ch.flags.gw_fall)?'gweapon':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
+  const bondRouteOf=ch=>(ch.o&&ch.o.herm)?(ch.bond?'hermes':null):(ch.o&&ch.o.key==='blackmask')?'blackmask':(ch.o&&(ch.o.key==='claw'||ch.o.key==='arbiter'))?ch.o.key:(ch.o&&ch.o.key==='librarian')?'librarian':(ch.o&&ch.o.key==='crow')?'crow':(ch.o&&ch.o.key==='gweapon'&&ch.flags&&ch.flags.gw_fall)?'gweapon':lakeOn(ch)?'lake':(ch.o&&ch.o.race==='hyeolgwi')?'hyeolgwi':ch.hw?'hcorp':ch.rb&&ch.rb.out?'rcorp':(ch.o&&ch.o.n==='동부 출신 외곽 생존자')?'east':(ch.pinky&&!isFinger(ch)&&!ch.hw)?'finger':(ch.licensed&&(!ch.aff||ch.aff.own||(ch.office&&isWs(ch)))?'freelance':(synOf(ch)?synOf(ch):ch.aff&&ch.aff.type==='finger'&&FINGER_ROUTE[ch.aff.name]?FINGER_ROUTE[ch.aff.name]:ch.aff&&BD.routes.includes(ch.aff.type)?ch.aff.type:null));
   /* 루트에 variants가 있으면 만날 때 무작위로 하나가 정해진다 */
   const bondData=ch=>{const b=ch.bond,R=b&&D.bond&&D.bond.routes[b.route];return R?(R.variants?R.variants[b.variant||0]:R):null};
+  /* 검은 가면: 12년차에 고급 해결사(특색 1급)와 강제로 만난다. 거절하면 3년 뒤 책을 읽는 사람을 한 번 더 만나고, 그것도 거절하면 닫힌다 */
+  function bmMeet(ch){
+    const B=bondTx(ch),y=ch.year||0,s=(ch.flags&&ch.flags.bmStage)||0;if(!B)return null;
+    if(s===0){if(y<12)return null;const R=B.routes.highfixer.variants[1];
+      return {t:R.meet.t,x:R.meet.x,c:[{l:B.meetYes,h:'동반자의 이름을 정한다 · 이후 몇 해마다 사건이 온다',ok:{t:B.meetYesT,fx:{bondMeet:'highfixer',bondVariant:1}}},{l:B.meetNo,h:'다시 만나지 않는다 · 3년 뒤 다른 사람을 만날 수 있다',ok:{t:B.meetNoT,fx:{bmDecline:1}}}]}}
+    if(s===1){if(y<(ch.bmNext||0))return null;const R=B.routes.bookish;if(!R)return null;
+      return {t:R.meet.t,x:R.meet.x,c:[{l:B.meetYes,h:'동반자의 이름을 정한다 · 이후 몇 해마다 사건이 온다',ok:{t:B.meetYesT,fx:{bondMeet:'bookish',bondVariant:0}}},{l:B.meetNo,h:'다시 만나지 않는다 · 인연의 길이 닫힌다',ok:{t:B.meetNoT,fx:{bondDecline:true}}}]}}
+    return null}
   function bondMeetEvent(ch){
+    if(ch.o&&ch.o.key==='blackmask')return bmMeet(ch);
     const B=bondTx(ch);let rt=bondRouteOf(ch);
     /* 히든: 해결사 급수가 BD.hidden.rank급 이상(숫자 rank<=)이면 가끔 처음부터 2~1급 해결사인 상대를 만난다 */
     if(['thumb','pointer','middle','ring'].includes(rt)&&B.routes.finger&&d(100)<=BD.fingerGeneric)rt='finger';
@@ -3211,6 +3220,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.corpForb)corpForb(ch,chips);
     if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
     if(fx.bondDecline)ch.bond={st:'declined'};
+    if(fx.bmDecline){ch.flags=ch.flags||{};ch.flags.bmStage=1;ch.bmNext=(ch.year||0)+3;chips.push('3년 뒤 다른 사람을 만날 수 있다')}
     if(fx.bondDeath&&ch.bond&&ch.bond.st==='married'){bondDeath(ch,chips);ch.bond.dieBy=fx.bondDie||'risk';ch.bond.dieYear=ch.year||0}
     if(fx.bondGrand&&ch.bond){const kk=(ch.bond.kids||[]).find(k=>k.n===fx.bondGrand.k&&!k.grand);if(kk){kk.grand={n:fx.bondGrand.g,born:ch.year||0,race:kk.race||(ch.race==='hyeolgwi'?'hyeolgwi':'human')};chips.push(`손주가 태어났다 · ${fx.bondGrand.g}`)}}
     if(fx.bondCol&&ch.bond&&!ch.bond.col){const ci=one(D.colors.map((c,i)=>i).filter(i=>i!==ch.ci)),C_=D.colors[ci];ch.bond.col={adj:C_.adj,hex:C_.hex};ch.bondColPick=true;chips.push(`${ch.bond.name} · ${C_.adj} 특색`)}
