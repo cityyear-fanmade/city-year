@@ -1350,7 +1350,7 @@ export function startUI(E,app){
   }
   /* 일대기: 클리어·쓰러짐 결과 화면을 판마다 자동 저장(최대 10개). 명예의 전당은 직접 고른 판만(최대 5개). 둘 다 직접 삭제할 수 있다 */
   const CHRON='cityYearChron',CHRON_LIFE=15,CHRON_KEEP=10,CHRON_FAME=5;
-  /* 보호구역: 일대기에서 밀려나는 판이 완주한 판이거나 55년 이상 산 판이면 한 번 이곳으로 옮겨 가 남는다(최대 CHRON_KEEP개, 가득 차면 가장 오래된 것부터). 직접 삭제할 수 있다 */
+  /* 보호구역: 완주한 판과 55년 이상 산 판은 일대기와 따로 이곳에 보관된다(최대 CHRON_KEEP개, 가득 차면 가장 오래된 것부터). 예전에 일대기에 있던 그런 판도 밀려날 때 이곳으로 온다. 직접 삭제할 수 있다 */
   const chronKeep=e=>!!(e&&(e.win||(e.yr||0)>=55));
   const loadChron=()=>{try{const o=JSON.parse(store.get(CHRON)||'{}');return{life:Array.isArray(o.life)?o.life:[],fame:Array.isArray(o.fame)?o.fame:[],keep:Array.isArray(o.keep)?o.keep:[]}}catch(e){return{life:[],fame:[],keep:[]}}};
   const saveChron=o=>store.set(CHRON,JSON.stringify(o));
@@ -1364,6 +1364,7 @@ export function startUI(E,app){
   function chronAuto(){
     const e=chronSnap();if(!e)return;const o=loadChron();
     if(o.life.some(x=>x.key===e.key)||o.fame.some(x=>x.key===e.key))return;
+    if(chronKeep(e)){o.keep.unshift(e);o.keep=o.keep.slice(0,CHRON_KEEP);saveChron(o);return}   // 완주·55년 이상 판은 일대기 자리를 쓰지 않고 처음부터 보호구역에 따로 보관한다
     o.life.unshift(e);
     while(o.life.length>CHRON_LIFE){const x=o.life.pop();if(chronKeep(x)&&!o.keep.some(k=>k.key===x.key)){o.keep.unshift(x);o.keep=o.keep.slice(0,CHRON_KEEP)}}
     saveChron(o);
@@ -1383,9 +1384,9 @@ export function startUI(E,app){
     const row=e=>`<div class="panel stack" style="gap:5px"><div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">${esc(e.name||e.line)}</b><span class="mono small dim" style="white-space:nowrap;text-align:right">${chDate(e.t)}${e.v?`<br>${esc(e.v)}`:''}</span></div><span class="small dim">${esc(e.line)}${e.wp?' · '+esc(e.wp):''}</span>${e.lover?`<span class="small dim">가족 · ${esc(e.lover)}${e.lost?(e.lostAge?' (수명을 다해 세상을 떠났다)':' (세상을 떠났다)'):''}</span>`:''}<span class="small" style="color:var(--gold)">${esc(e.res)}${e.yr?` · ${e.yr}년차`:''}${e.dy?` · 오늘의 시드 ${esc(e.dy)}`:''}</span>${chBtns(tab,e)}</div>`;
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저에만 남는 기록</div><h2>일대기</h2></div>
       <div class="seg">${b('life',`일대기 ${o.life.length}/${CHRON_LIFE}`)}${b('fame',`명예의 전당 ${o.fame.length}/${CHRON_FAME}`)}${b('keep',`보호구역 ${o.keep.length}/${CHRON_KEEP}`)}</div>
-      <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 밀려나는 판이 완주한 판이거나 55년 이상 산 판이면 보호구역으로 옮겨져 남는다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:tab==='keep'?`일대기에서 밀려난 완주·55년 이상 판이 한 번 옮겨 와 남는 곳. 최대 ${CHRON_KEEP}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
+      <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 완주한 판과 55년 이상 산 판은 일대기 자리를 쓰지 않고 따로 보호구역에 보관된다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:tab==='keep'?`완주한 판과 55년 이상 산 판이 일대기와 따로 보관되는 곳. 최대 ${CHRON_KEEP}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
       ${msg?`<p class="small bad">${esc(msg)}</p>`:''}
-      ${L.length?L.map(row).join(''):`<div class="panel"><p class="small dim">${tab==='life'?'아직 저장된 판이 없다. 이야기가 끝나면 여기에 쌓인다.':tab==='keep'?'아직 보호된 판이 없다. 완주·55년 이상 판이 밀려나면 여기로 온다.':'아직 올린 판이 없다. 일대기에서 골라 올린다.'}</p></div>`}
+      ${L.length?L.map(row).join(''):`<div class="panel"><p class="small dim">${tab==='life'?'아직 저장된 판이 없다. 이야기가 끝나면 여기에 쌓인다.':tab==='keep'?'아직 보호된 판이 없다. 완주하거나 55년 이상 살면 여기에 저장된다.':'아직 올린 판이 없다. 일대기에서 골라 올린다.'}</p></div>`}
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   const chMsgP=()=>{const m=UI.chMsg;UI.chMsg='';return m?`<p class="small bad">${esc(m)}</p>`:''};
