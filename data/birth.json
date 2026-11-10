@@ -9043,6 +9043,16 @@
    "yearly": {
     "act1": [],
     "act2": []
+   },
+   "trial": {
+    "bm_pianist": {
+     "hp": 0.8,
+     "atk": -2
+    },
+    "black": {
+     "hp": 0.45,
+     "atk": -4
+    }
    }
   }
  },
