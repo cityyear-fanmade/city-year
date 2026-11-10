@@ -1265,6 +1265,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(k==='fend'){r.done=1;chips.push('추격이 끝났다')}
     }
     if(fx.tbJoin){const Bd=CFG.nWing.tbBody;addStats(ch.stats,Bd);ch.hp+=Bd.maxHp;chips.push(`N사 육체 시술 · 최대 HP +${Bd.maxHp} · 공격 +${Bd.atk} · 속도 +${Bd.spd} (의체가 아니라 몸 자체를 고친 것이다)`);if(ch.licensed&&ch.rank>CFG.nWing.tbRank){while(ch.rank>CFG.nWing.tbRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급으로 시작한다`)}}
+    if(fx.bmLose&&ch.bond&&ch.bond.st!=='lost'&&ch.bond.st!=='declined'){const b_=ch.bond;if(b_.st==='married')bondDeath(ch,chips);else{b_.st='lost';ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`곁에 있던 사람을 잃었다 · 최대 정신력 −${BD.lossMind} (영구)`)}b_.dieBy='risk';b_.dieYear=ch.year||0}
     if(fx.tbMark){ch.tabooMarks=Math.min(5,(ch.tabooMarks||0)+fx.tbMark);chips.push(`금기 표식 ${ch.tabooMarks}/5`)}
     if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
     if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}
@@ -2639,7 +2640,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
        arc가 같은 임무끼리는 한 줄기로 이어진다: 줄기가 열려 있는 동안(end 임무가 끝날 때까지)은 다른 줄기의 임무도 처분 의뢰도 나오지 않는다.
        문구의 {c}는 협력한 후보, {r}은 맞서는 후보, {foe}는 싸울 후보의 적 id로 바뀐다 */
     if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},last=st.mAt||0;
-      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&((ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend))||(ch.bond.st==='met'&&ch.bond.companion))):true))&&(!st.arc||m.arc===st.arc));
+      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.bond||(ch.bond&&['met','married'].includes(ch.bond.st)))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&((ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend))||(ch.bond.st==='met'&&ch.bond.companion))):true))&&(!st.arc||m.arc===st.arc));
       if(M){md.push(M.id);st.mAt=y;if(M.arc)st.arc=M.end?null:M.arc;
         const A=fl_.crow_hwA>0,cn=A?'가환(賈環)':'설보차(薛寶釵)',rn=A?'설보차(薛寶釵)':'유상련(柳湘蓮)',fid=A?'hr_1':'hr_3';
         const ev_=JSON.parse(JSON.stringify(M.ev).replace(/\{c\}/g,cn).replace(/\{r\}/g,rn).replace(/\{foe\}/g,fid));
@@ -3419,13 +3420,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         ch.packOffer={n:'엄지 검술',cards:td.deck.slice(),relic:'엄지 검술'};chips.push(`전리품 · ${td.n} (${td.gear.e}) · 장착할지 고른다`);chips.push('엄지 검술 · 덱을 바꿀지 고른다')}
       /* 특수환: 승리하면 능력치 하나를 골라 영구 증가 (전리품보다 먼저, 전리품이 맨 끝) */
       if(foe.pill){ch.pillPick=true;chips.push(`${foe.pill.n} · 능력치 하나를 골라 +${foe.pill.v} (영구)`)}
-      if(foe.drop&&!td&&!(foe.drop.once&&(ch.relics||[]).includes(foe.drop.n))){const bondOk0=!foe.drop.needBond||(ch.bond&&ch.bond.st==='married'),dr=!bondOk0&&foe.drop.alt?foe.drop.alt:foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
+      if(foe.drop&&!td&&!(foe.drop.once&&(ch.relics||[]).includes(foe.drop.n))){const bondOk0=!foe.drop.needBond||(ch.bond&&ch.bond.st==='married'),dr=ch.o&&ch.o.key==='blackmask'&&foe.dropBm?foe.dropBm:!bondOk0&&foe.drop.alt?foe.drop.alt:foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
         const bondOk=!dr.needBond||(ch.bond&&ch.bond.st==='married');
         if(dr.flag&&bondOk)ch.flags[dr.flag]=1;
         if(dr.promote&&ch.fi===(dr.promoteFrom||1)&&canFingerUp(ch))chips.push(...fingerStep(ch))
         if(dr.title&&bondOk){ch.titles=ch.titles||[];if(!ch.titles.includes(dr.title)){ch.titles.push(dr.title);(ch.titleLog=ch.titleLog||[]).push(dr.title)}chips.push('칭호 · '+dr.title)}
         for(const x of bondOk?dr.extra||[]:[]){addStats(ch.stats,x.fx);if(x.fx.maxHp)ch.hp+=x.fx.maxHp;ch.relics.push(x.n);if(x.flag)ch.flags[x.flag]=1;chips.push(`전리품 · ${x.n} (${x.e}, 영구)`)}
-        if(dr.gear&&!(dr.ego&&ch.distForm)){offerGear(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 · ${dr.gear.n} (${dr.gear.e}) · 장착할지 고른다`)}
+        if(dr.bmMerge){equip(ch,Object.assign({grade:5},dr.gear));ch.deck=D.bmBook.slice();ch.packName='검은 침묵의 책장';chips.push(`합체 · ${dr.gear.n} (${dr.gear.e})`);chips.push('책장이 검은 침묵의 책장 9장으로 바뀐다')}
+        else if(dr.gear&&!(dr.ego&&ch.distForm)){offerGear(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 · ${dr.gear.n} (${dr.gear.e}) · 장착할지 고른다`)}
         for(const g of dr.gears||[]){if(dr.ego&&ch.distForm)continue;if(dr.gear&&dr.gearChance!=null&&d(100)>dr.gearChance+(ch.stats.gearUp||0))continue;offerGear(ch,Object.assign({grade:5},g));chips.push(`전리품 ${g.slot==='armor'?'방어구':'장비'} · ${g.n} (${g.e}) · 장착할지 고른다`)}
         chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,(D.cards[dr.card]&&D.cards[dr.card].fixed&&!ch.rb&&D.cards[dr.card+'_free'])?dr.card+'_free':dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
         else for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
@@ -3648,6 +3650,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.form)P.hand=P.hand.map(id=>formId(id,P.form));
     if(P.handPlusNext){const dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))),ex=sample(dk.length?dk:P.deck,P.handPlusNext);P.hand=P.hand.concat(ex);P.handPlusNext=0}
     if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
+    if(P.furiosoBm){P.hand.push('bm_furioso');P.furiosoBm=false}
     if(P.boneNext){P.hand.push('bl_bone');P.boneNext=false}
     if(P.grantNext){P.hand.push(P.grantNext);P.grantNext=null}
     if(P.grantQ&&P.grantQ.length){for(const id of P.grantQ)P.hand.push(id);P.grantQ=null}
@@ -4188,6 +4191,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       if(B.wx&&B.wx.thorns&&A.hp>0){A.hp=Math.max(0,A.hp-B.wx.thorns);L('dmg',`  ${B.name}의 무기 반격 · ${A.name} 피해 ${B.wx.thorns}`)}
       /* 검은 침묵의 장갑: 서로 다른 무기 3종을 쓰면 이번 전투에 한 번, 다음 손패에 Furioso */
       if(A.wx&&A.wx.arsenal&&(C.furiosoN||0)<CFG.spec.furioso.max&&(C.ars||[]).length>=CFG.spec.furioso.need){C.furiosoN=(C.furiosoN||0)+1;C.ars=[];A.furiosoNext=true;L('sys',`  ${A.name} · 서로 다른 무기 ${CFG.spec.furioso.need}종 · 다음 손패에 Furioso (${C.furiosoN}/${CFG.spec.furioso.max}회)`)}
+      if(A.isP&&A.wx&&A.wx.bookFurioso&&c.bm&&!(C.bmSet||[]).includes(c.n)){(C.bmSet=C.bmSet||[]).push(c.n);if(C.bmSet.length>=3){C.bmSet=[];A.furiosoBm=true;C.bmFurN=(C.bmFurN||0)+1;L('sys',`  ${A.name} · 책장의 서로 다른 카드 3장 · 다음 손패에 Furioso`)}}
       /* 회피 실패: 1d5에서 1이면 정신력 1 감소 (E.G.O 장비 1개당 +1) */
       if(B.isP&&d(M.evadeDie)===1&&!(corpType(C.ch)&&corpType(C.ch).year))loseMind(C.ch,1+(C.ch.egoGear||0),t=>L('kw',`  ${B.name} · ${t}`));
       /* 레바테인 계열: 적중 시 화상 */
