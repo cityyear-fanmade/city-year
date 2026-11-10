@@ -8595,6 +8595,82 @@
     "atk": 2,
     "eva": 1
    }
+  },
+  "tb_yuria": {
+   "n": "금기 위반자 유리아",
+   "why": "사유 · 불법 의체 이식. 면허 없이 사람의 팔과 다리를 쇠로 바꿔 주고, 대가로 남은 몸의 일부를 받아 왔다.",
+   "color": "#8d8f98",
+   "hp": 44,
+   "atk": 4,
+   "eva": 1,
+   "spd": 3,
+   "deck": [
+    "thrust",
+    "heavy",
+    "f_ironfist",
+    "guard"
+   ],
+   "trait": "callus",
+   "intro": "수술복 소매에 쇳가루가 묻어 있다. 유리아는 도구를 내려놓지 않은 채 당신의 팔을 먼저 본다.",
+   "tier": "mid",
+   "aug": true
+  },
+  "tb_oren": {
+   "n": "금기 위반자 오렌",
+   "why": "사유 · 못의 위조. N사의 못을 본떠 만든 가짜를 구역마다 팔았고, 가짜가 박힌 곳은 낫지 않았다.",
+   "color": "#a1865c",
+   "hp": 40,
+   "atk": 4,
+   "eva": 2,
+   "spd": 2,
+   "deck": [
+    "smash",
+    "f_hammer",
+    "thrust",
+    "guard"
+   ],
+   "trait": "counter",
+   "intro": "오렌의 작업대에는 못이 가지런히 놓여 있다. 어느 것이 진짜인지는 오렌만 안다.",
+   "tier": "mid",
+   "aug": true
+  },
+  "tb_mara": {
+   "n": "금기 위반자 마라",
+   "why": "사유 · 기계 몸의 설교. 쇠로 바꾼 몸이 더 낫다고 광장에서 매일 가르쳤고, 따르는 사람은 매달 늘었다.",
+   "color": "#7d8a9a",
+   "hp": 46,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "heavy",
+    "smash",
+    "guard",
+    "f_ironfist"
+   ],
+   "trait": "swarm",
+   "intro": "마라가 두 팔을 벌리자 쇠 관절이 한꺼번에 울린다. 뒤에서 신도들이 같은 박자로 고개를 끄덕인다.",
+   "tier": "mid",
+   "aug": true
+  },
+  "tb_kael": {
+   "n": "금기 위반자 카엘",
+   "why": "사유 · 기록 장치의 유포. 뒤틀린 몸으로 구역을 걸으며 찍은 영상을 벽마다 틀어 두어, 본 사람의 기억을 오염시켰다.",
+   "color": "#6f7c70",
+   "hp": 42,
+   "atk": 4,
+   "eva": 1,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "tremor",
+    "e_burden",
+    "guard"
+   ],
+   "trait": "focus",
+   "intro": "카엘의 눈이 있어야 할 자리에 렌즈가 돌아간다. 렌즈가 멈추는 곳마다 당신의 모습이 한 장 남는다.",
+   "tier": "mid",
+   "aug": true
   }
  },
  "fixedFights": {
