@@ -822,7 +822,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const eastN=ch=>isN(ch)&&isEastOuter(ch);
   /* 동부 외곽의 N사 직급과 해결사 급수를 맞춘다: 직급에 맞는 급수보다 낮으면(숫자가 크면) 그 급수까지 올린다 */
   const alignOf=ch=>lakeOn(ch)?CFG.lake.align:CFG.eastN.align;
-  function alignEast(ch,chips){if(!(eastN(ch)||lakeOn(ch))||!ch.licensed||ch.fi==null)return;const tgt=alignOf(ch)[ch.fi]??9;while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);chips.push(...p.chips)}}
+  function alignEast(ch,chips){if(!(eastN(ch)||lakeOn(ch))||(ch.flags&&ch.flags.tbHunt)||!ch.licensed||ch.fi==null)return;const tgt=alignOf(ch)[ch.fi]??9;while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);chips.push(...p.chips)}}
   /* ===== 공방 해결사의 작업대: 전용 무기·방어구·의수를 보관함 장비를 녹여 끝없이 강화한다 ===== */
   const WS=CFG.ws,wsKey=sl=>sl==='weapon'?'w':sl==='armor'?'a':'g';
   const wsNeed=n=>1+Math.floor(n/WS.needEvery);
@@ -1101,7 +1101,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function promoteAny(ch){
     if(canFingerUp(ch))return {chips:fingerStep(ch),finger:true};
     if(isFinger(ch))return null;
-    const k=career(ch);if(k&&k!=='fixer'){const c=careerStep(ch);if(c&&(eastN(ch)||lakeOn(ch))&&ch.licensed){const tgt=Math.min(ch.rank-1,alignOf(ch)[ch.fi]??9);while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);c.push(...p.chips)}}return c?{chips:c}:null}
+    const k=career(ch);if(k&&k!=='fixer'){const c=careerStep(ch);if(c&&(eastN(ch)||lakeOn(ch))&&ch.licensed){const tgt=ch.flags&&ch.flags.tbHunt?ch.rank-1:Math.min(ch.rank-1,alignOf(ch)[ch.fi]??9);while(ch.rank>Math.max(tgt,T.rankTop)){const p=promote(ch);c.push(...p.chips)}}return c?{chips:c}:null}
     if(ch.licensed&&ch.rank>T.rankTop)return promote(ch);
     return null;
   }
@@ -1263,6 +1263,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(k==='fhide'){r.fh++;r.cnext=(ch.year||0)+CFG.hw.fleeGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
       else if(k==='fend'){r.done=1;chips.push('추격이 끝났다')}
     }
+    if(fx.tbJoin){const Bd=CFG.nWing.tbBody;addStats(ch.stats,Bd);ch.hp+=Bd.maxHp;chips.push(`N사 육체 시술 · 최대 HP +${Bd.maxHp} · 공격 +${Bd.atk} · 속도 +${Bd.spd} (의체가 아니라 몸 자체를 고친 것이다)`);if(ch.licensed&&ch.rank>CFG.nWing.tbRank){while(ch.rank>CFG.nWing.tbRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급으로 시작한다`)}}
     if(fx.tbMark){ch.tabooMarks=Math.min(5,(ch.tabooMarks||0)+fx.tbMark);chips.push(`금기 표식 ${ch.tabooMarks}/5`)}
     if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
     if(fx.mindUp){const g_=gainMind(ch,fx.mindUp);if(g_)chips.push('정신력 +'+g_)}
@@ -2522,7 +2523,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const routeOf=ch=>(ch&&ch.o&&ch.o.route&&!(ch.flags&&ch.flags.route_off)&&D.routes&&D.routes[ch.o.route])||(ch&&ch.flags&&ch.flags.tbHunt&&!ch.flags.route_off&&D.routes&&D.routes.taboo)||null;
   /* 금기 사냥팀 차출: 동부 출신 N사가 과장이 되면 한 번 온다. 수락하면 금기사냥꾼 줄기(routes.taboo)에 고정된다 */
   function tabooOffer(G){const ch=G.ch,T_=D.taboo;if(!T_||!eastN(ch)||(ch.fi??0)<2||ch.flags.tbHunt||ch.flags.tbNo||ch.distForm)return null;const O=T_.offer;
-    return {t:O.t,x:O.x,c:[{l:O.yes.l,h:O.yes.h,ok:{t:O.yes.t,fx:{flag:'tbHunt'}}},{l:O.no.l,h:O.no.h,ok:{t:O.no.t,fx:{flag:'tbNo'}}}]}}
+    return {t:O.t,x:O.x,c:[{l:O.yes.l,h:O.yes.h,ok:{t:O.yes.t,fx:{flag:'tbHunt',tbJoin:1}}},{l:O.no.l,h:O.no.h,ok:{t:O.no.t,fx:{flag:'tbNo'}}}]}}
   const routeSt=ch=>ch.rt=ch.rt||{used:{},n:0};
   const routeEnd=()=>CFG.years+CFG.endless.span*CFG.endless.grades.length;
   const routeShop=ch=>{const R=routeOf(ch);return !R||R.shop!==false||!!(R.shopInf&&ch.infinite)};   // shopInf: 공방 거리가 없는 줄기도 무한 모드(외곽)에서는 가게를 쓴다
