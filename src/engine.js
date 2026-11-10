@@ -2203,13 +2203,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const en=D.enemies[C.id],gain=en&&en.hidden?BT.hidden:1;ch.bloodCnt=(ch.bloodCnt||0)+gain;chips&&chips.push(`혈량 +${gain} (${ch.bloodCnt})`);
     const tier=BT.need.filter(n=>ch.bloodCnt>=n).length;while((ch.bloodTier||0)<tier){const ok=bloodTierUp(ch,(ch.bloodTier||0)+1,chips);if(!ok){ch.bloodTier=tier;break}}
     bloodTail(ch,chips)}
-  /* 3단계(끓는 혈귀 무기) 이후: 혈량이 BT.tail.every 쌓일 때마다 공격 +BT.tail.atk, 최대 +cap. 약하지만 고정으로 오른다 */
+  /* 3단계(끓는 혈귀 무기) 이후: 혈량이 1 쌓일 때마다 공격 +atk · 최대 HP +hp를 번갈아 얻는다(홀수 번째는 공격, 짝수 번째는 HP). 각각 cap까지. 약하지만 고정으로 무한 모드까지 이어진다 */
   function bloodTail(ch,chips){
     const BT=CFG.bloodTiers,T=BT&&BT.tail,wp=ch.gear&&ch.gear.weapon;if(!T||(ch.bloodTier||0)<BT.need.length||!wp||!/^w_blood_/.test(wp.id))return;
-    const add=Math.min(T.cap,Math.floor(Math.max(0,(ch.bloodCnt||0)-BT.need[BT.need.length-1])/T.every)*T.atk);if(add===(ch.bloodTailAtk||0))return;
+    const n=Math.min(2*T.cap,Math.max(0,(ch.bloodCnt||0)-BT.need[BT.need.length-1])),atkAdd=Math.ceil(n/2)*T.atk,hpAdd=Math.floor(n/2)*T.hp;
+    if(atkAdd===(ch.bloodTailAtk||0)&&hpAdd===(ch.bloodTailHp||0))return;
     const key=wp.id.slice(8),g=(BT.tiers[key]||[])[BT.need.length-1];if(!g)return;
-    const it={id:wp.id,slot:'weapon',grade:5,lvl:BT.need.length,n:g.n,e:g.e.replace(/ · 이후 혈량.*$/,'')+` · 혈귀 연륜 공격 +${add}`+(add>=T.cap?' (최대)':''),lore:g.lore,fx:Object.assign({},g.fx,{atk:(g.fx.atk||0)+add}),wx:Object.assign({dice:g.dice.slice()},g.wx)};
-    equip(ch,carryTune(wp,it));ch.stash=(ch.stash||[]).filter(x=>x!==wp);const d_=add-(ch.bloodTailAtk||0);ch.bloodTailAtk=add;chips&&chips.push(`${g.n} · 혈귀 연륜 · 공격 +${d_} (지금 +${add}/${T.cap})`)}
+    const full=n>=2*T.cap,fx=Object.assign({},g.fx,{atk:(g.fx.atk||0)+atkAdd});if(hpAdd)fx.maxHp=(g.fx.maxHp||0)+hpAdd;
+    const it={id:wp.id,slot:'weapon',grade:5,lvl:BT.need.length,n:g.n,e:g.e.replace(/ · 이후 혈량.*$/,'')+` · 혈귀 연륜 공격 +${atkAdd} · 최대 HP +${hpAdd}`+(full?' (최대)':''),lore:g.lore,fx,wx:Object.assign({dice:g.dice.slice()},g.wx)};
+    const dA=atkAdd-(ch.bloodTailAtk||0),dH=hpAdd-(ch.bloodTailHp||0),hp0=ch.stats.maxHp;
+    equip(ch,carryTune(wp,it));ch.stash=(ch.stash||[]).filter(x=>x!==wp);if(ch.stats.maxHp>hp0)ch.hp=Math.min(ch.stats.maxHp,ch.hp+(ch.stats.maxHp-hp0));
+    ch.bloodTailAtk=atkAdd;ch.bloodTailHp=hpAdd;chips&&chips.push(`${g.n} · 혈귀 연륜${dA?` · 공격 +${dA}`:''}${dH?` · 최대 HP +${dH}`:''} (지금 공격 +${atkAdd}/${T.cap} · HP +${hpAdd}/${T.cap*T.hp})`)}
   function routeWeaponUp(ch,kind,key,chips){
     const W=CFG.routeWeapon[kind];let g=W[key]||W.lv[key];if(!g)return;
     {const tv=kind==='rb'&&typeof key==='number'&&ch.rteam&&W.team&&W.team[ch.rteam]&&W.team[ch.rteam][key];if(tv)g=Object.assign({},g,tv)}
