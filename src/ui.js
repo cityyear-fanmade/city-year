@@ -1349,7 +1349,10 @@ export function startUI(E,app){
     return `<button class="btn primary" data-a="cont"><b>이어서 하기</b><span class="small">${esc(c.name||'이름 없는 사람')} · ${E.rankLabel(c)} · ${y}년차 · ${CFG.startAge+y-1}세</span><span class="dim small">${when} 저장${o.v!==UPDATES.v?` · ${o.v} 저장본`:''}</span></button>`;
   }
   /* 일대기: 클리어·쓰러짐 결과 화면을 판마다 자동 저장(최대 10개). 명예의 전당은 직접 고른 판만(최대 5개). 둘 다 직접 삭제할 수 있다 */
-  const CHRON='cityYearChron',CHRON_LIFE=10,CHRON_FAME=5;
+  const CHRON='cityYearChron',CHRON_LIFE=10,CHRON_MAX=20,CHRON_FAME=5;
+  /* 완주한 판과 55년 이상 산 판은 일대기가 가득 차도 쓰러진 판부터 밀려난다(최대 CHRON_MAX개까지 지켜진다) */
+  const chronKeep=e=>!!(e&&(e.win||(e.yr||0)>=55));
+  const chronCnt=n=>n>CHRON_LIFE?`${n}개`:`${n}/${CHRON_LIFE}`;
   const loadChron=()=>{try{const o=JSON.parse(store.get(CHRON)||'{}');return{life:Array.isArray(o.life)?o.life:[],fame:Array.isArray(o.fame)?o.fame:[]}}catch(e){return{life:[],fame:[]}}};
   const saveChron=o=>store.set(CHRON,JSON.stringify(o));
   function chronSnap(){
@@ -1362,7 +1365,9 @@ export function startUI(E,app){
   function chronAuto(){
     const e=chronSnap();if(!e)return;const o=loadChron();
     if(o.life.some(x=>x.key===e.key)||o.fame.some(x=>x.key===e.key))return;
-    o.life.unshift(e);o.life=o.life.slice(0,CHRON_LIFE);saveChron(o);
+    o.life.unshift(e);
+    while(o.life.length>CHRON_LIFE){let i=-1;for(let k=o.life.length-1;k>=0;k--)if(!chronKeep(o.life[k])){i=k;break}if(i<0){if(o.life.length<=CHRON_MAX)break;i=o.life.length-1}o.life.splice(i,1)}
+    saveChron(o);
   }
   /* 손주 이름: 명예의 전당에 직접 올린 지난 삶의 이름(나·연인·아이)을 엔진에 넘긴다. 지금 진행 중인 판의 기록(제1막 종료 때 자동으로 남는 것)은 뺀다. 예전에 저장한 판은 이름만 있다 */
   E.setGhost(()=>loadRec().ghost||null);
@@ -1372,14 +1377,14 @@ export function startUI(E,app){
     return `<div class="row" style="gap:6px;flex-wrap:wrap">${view?'':`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chview" data-i="${tab}:${e.id}">펼쳐 보기</button>`}${tab==='life'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chfame" data-i="${e.id}">명예의 전당에 올리기</button>`:''}${tab==='fame'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chmove" data-i="up:${e.id}" aria-label="위로">▲ 위로</button><button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chmove" data-i="down:${e.id}" aria-label="아래로">▼ 아래로</button>`:''}<button class="btn quiet" data-a="chdel" data-i="${tab}:${e.id}"${UI.delAsk===tab+':'+e.id?' style="width:auto;padding:8px 12px;border-color:#c25050;color:#c25050"':' style="width:auto;padding:8px 12px"'}>${UI.delAsk===tab+':'+e.id?'정말 삭제 · 한 번 더':'삭제'}</button></div>`;
   }
   /* 시작 화면 일대기 버튼: 좁은 화면은 위 한 줄(chron-in), 넓은 화면은 틀 바깥 왼쪽 위 모서리(chron-out). 틀 안에 두면 단테·검지 테마의 clip-path에 잘린다 */
-  const chronBtn=cls=>{const o=loadChron();return `<button class="btn chronbtn ${cls}" data-a="chron"><b>📜 일대기 · 명예의 전당</b><span class="dim small">지난 판의 결과 화면 ${o.life.length}/${CHRON_LIFE} · 명예의 전당 ${o.fame.length}/${CHRON_FAME}</span></button>`};
+  const chronBtn=cls=>{const o=loadChron();return `<button class="btn chronbtn ${cls}" data-a="chron"><b>📜 일대기 · 명예의 전당</b><span class="dim small">지난 판의 결과 화면 ${chronCnt(o.life.length)} · 명예의 전당 ${o.fame.length}/${CHRON_FAME}</span></button>`};
   function vChron(){
     const o=loadChron(),tab=UI.chTab==='fame'?'fame':'life',L=o[tab],msg=UI.chMsg;UI.chMsg='';
     const b=(k,l)=>`<button class="${tab===k?'on':''}" data-a="chtab" data-i="${k}">${l}</button>`;
     const row=e=>`<div class="panel stack" style="gap:5px"><div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">${esc(e.name||e.line)}</b><span class="mono small dim" style="white-space:nowrap;text-align:right">${chDate(e.t)}${e.v?`<br>${esc(e.v)}`:''}</span></div><span class="small dim">${esc(e.line)}${e.wp?' · '+esc(e.wp):''}</span>${e.lover?`<span class="small dim">가족 · ${esc(e.lover)}${e.lost?(e.lostAge?' (수명을 다해 세상을 떠났다)':' (세상을 떠났다)'):''}</span>`:''}<span class="small" style="color:var(--gold)">${esc(e.res)}${e.yr?` · ${e.yr}년차`:''}${e.dy?` · 오늘의 시드 ${esc(e.dy)}`:''}</span>${chBtns(tab,e)}</div>`;
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저에만 남는 기록</div><h2>일대기</h2></div>
-      <div class="seg">${b('life',`일대기 ${o.life.length}/${CHRON_LIFE}`)}${b('fame',`명예의 전당 ${o.fame.length}/${CHRON_FAME}`)}</div>
-      <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
+      <div class="seg">${b('life',`일대기 ${chronCnt(o.life.length)}`)}${b('fame',`명예의 전당 ${o.fame.length}/${CHRON_FAME}`)}</div>
+      <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. ${CHRON_LIFE}개까지 모이고, 가득 차면 쓰러진 판 중 가장 오래된 것부터 밀려난다. 완주한 판과 55년 이상 산 판은 ${CHRON_MAX}개까지 지켜진다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
       ${msg?`<p class="small bad">${esc(msg)}</p>`:''}
       ${L.length?L.map(row).join(''):`<div class="panel"><p class="small dim">${tab==='life'?'아직 저장된 판이 없다. 이야기가 끝나면 여기에 쌓인다.':'아직 올린 판이 없다. 일대기에서 골라 올린다.'}</p></div>`}
       <button class="btn primary" data-a="title">돌아가기</button>`;
