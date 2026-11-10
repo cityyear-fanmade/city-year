@@ -3368,7 +3368,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!ch.beaten.includes(C.id)){ch.beaten.push(C.id);jr(ch,'boss',{n:foe.n,id:C.id})}chips.push(T.hiddenWin+' · '+foe.n);
       if(C.id==='kasetti'){ch.titles=ch.titles||[];if(!ch.titles.includes('혈귀를 잠재운 자')){ch.titles.push('혈귀를 잠재운 자');(ch.titleLog=ch.titleLog||[]).push('혈귀를 잠재운 자');chips.push('칭호 · 혈귀를 잠재운 자')}}
       if(C.id==='hongru'&&ch.hw&&ch.hw.accept&&!ch.hw.maker){ch.hw.maker=1;ch.hw.done=1;chips.push('홍루를 쓰러뜨렸다 · 선황충을 품은 가주 곁의 필두로 남는다')}
-      if(foe.chain){ch.flags.zenaPend=1;chips.push('연전 · 쉴 틈 없이 다음 상대가 나선다')}else if(C.id===CFG.endless.finalNext)ch.flags.zenaPend=0;
+      /* 줄기가 이미 연전의 다음 상대를 임무로 갖고 있으면(도서관의 지정사서: 응시자 → 조율) 연전을 또 걸지 않는다 — 같은 상대와 두 번 싸우던 문제 */
+      const routeOwnsChain=foe.chain&&(()=>{const R_=routeOf(ch);return !!(R_&&(R_.missions||[]).some(m=>JSON.stringify(m.ev||{}).includes('"combat":"'+foe.chain+'"')))})();
+      if(foe.chain&&!routeOwnsChain){ch.flags.zenaPend=1;chips.push('연전 · 쉴 틈 없이 다음 상대가 나선다')}else if(C.id===CFG.endless.finalNext)ch.flags.zenaPend=0;
       if(ch.corp&&ch.corp.trial===C.id)ch.corp.trial=null;
       /* 기업 루트: 머리의 시험(발톱 → 조율자)을 끝까지 넘으면 영구 강화 */
       if(ch.corp&&ch.corp.headSeen&&!ch.corp.cleared&&!(ch.corp.chain||[]).length&&CP.chain.every(id=>ch.beaten.includes(id))){ch.corp.cleared=true;chips.push('머리의 시험을 넘었다');corpBump(ch,CP.clear,chips)}
