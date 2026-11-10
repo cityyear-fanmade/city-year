@@ -193,7 +193,7 @@ export function startUI(E,app){
     const w=/^w_d(blade|scythe|gaunt)([1-5])$/.exec(wid);if(w)return 'n_warp'+w[2];
     if(wid==='w_violet_dagger')return VFORM[(C&&C.P&&C.P.form)||'a']||'n_vi_slash';
     if(wid==='w_durandal')return 'n_bs3';
-    if(wid==='w_blacksilence_bm'){const M={'느티나무 공방 도끼':'n_bs1','묵 공방 장검':'n_bs2','뒤랑달':'n_bs3','크리스탈 아틀리에 쌍검':'n_bs4','랑아 공방 단검':'n_bs5','로직 아틀리에 샷건':'n_bs6','알라스 공방 랜스':'n_bs7','휠스 인더스트리 대검':'n_bs8','올드보이 공방 해머':'n_bs9','Furioso':'n_bsF'};return (e.card&&M[e.card.n])||'n_bs0'}
+    if(wid==='w_blacksilence_bm'){const M={'느티나무 공방 도끼':'n_bs1','묵 공방 장검':'n_bs2','뒤랑달':'n_bs3','크리스탈 아틀리에 쌍검':'n_bs4','랑아 공방 단검':'n_bs5','로직 아틀리에 샷건':'n_bs6','알라스 공방 랜스':'n_bs7','휠스 인더스트리 대검':'n_bs8','늙은소년 공방 해머':'n_bs9','Furioso':'n_bsF'};return (e.card&&M[e.card.n])||'n_bs0'}
     if(wid==='w_blacksilence'){if(e.card&&(e.card.id==='x_furioso'||/Furioso/i.test(e.card.n||'')))return 'n_bsF';const m=/장갑 1d9 (\d)/.exec(e.note||'');return m?'n_bs'+m[1]:'n_bs0'}
     return '';
   }
