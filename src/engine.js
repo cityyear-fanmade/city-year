@@ -177,6 +177,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
     if(o.weapon==='star'){equip(ch,starItem(0,''));ch.starPick=true}
+    if(o.gear2)equip(ch,Object.assign({grade:5},o.gear2));
     if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e;if(o.rb)routeWeaponUp(ch,'rb',0)}}
     /* E.G.O 적성자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;egoDeck(ch,g.id,0,true);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
