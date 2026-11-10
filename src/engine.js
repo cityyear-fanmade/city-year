@@ -1106,7 +1106,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return null;
   }
   /* 날개·손가락 진로면 해결사 급수 대신 그 진로의 직급을 보여 준다 (해결사 급수는 그 진로에서 오르지 않는다) */
-  const rankLabelBase=ch=>{if(isFounder(ch)&&!ch.job)return ch.title?`${ch.title} · 날개 대표`:'날개 대표';if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr){const fx_=eastN(ch)&&ch.licensed?` · ${ch.rank}${T.rankUnit} 해결사`:'';const fn_=ch.flags&&ch.flags.tbHunt&&ch.fi>=2?'사냥조 '+ch.fr.n:ch.fr.n;return (ch.title?`${ch.title} · ${fn_}`:fn_)+fx_}return rankLabel0(ch)};
+  const rankLabelBase=ch=>{if(isFounder(ch)&&!ch.job)return ch.title?`${ch.title} · 날개 대표`:'날개 대표';if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr){const fx_=eastN(ch)&&ch.licensed?` · ${ch.rank}${T.rankUnit} 해결사`:'';const tb_=ch.flags&&ch.flags.tbHunt&&ch.fi>=2;if(tb_)return (ch.title===CFG.nWing.eastTitle?ch.title:CFG.nWing.eastTitle)+fx_;return (ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n)+fx_}return rankLabel0(ch)};
   const rankLabel=ch=>rankLabelBase(ch)+(ch.legacyTier?` · 연륜 ${ch.legacyTier}단계`:'');
   const rankLabel0=ch=>!ch.licensed?T.unranked:ch.title?`${ch.title} · ${ch.rank}${T.rankUnit}`:`${ch.rank}${T.rankUnit} ${T.licensed}`;
   /* 카드 얻기: 덱이 고정(엄지 검술)이면 카드 대신 돈 */
