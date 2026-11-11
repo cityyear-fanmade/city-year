@@ -226,6 +226,7 @@ export const CFG = {
   /* 6시즌 N사 날개: 의체를 쓰지 않는다(의수 칸 사용 불가). 대신 전투마다 신체 강화(공격·회피·속도), 의체 심판: 의체 상대(enemies aug, 소개 문구에 의체가 분명한 적만) 적중마다 피해 +augDmg */
   /* 동부 외곽 해결사 히든 제안: rank급 이하에서 N사가 startFi번째 직급(0 사원 · 1 대리)으로 스카우트. tries번까지, 거절하면 gap년 뒤. align = N사 직급(사원~임원)별로 해결사 급수가 이만큼은 되도록 맞춘다 */
   eastN: {rank: 5, startFi: 1, tries: 2, gap: 4, align: [9, 8, 6, 4, 2], promoMul: 0.6 /* 동부 출신 N사의 승진 요구량 배율(임원까지) */, huntMul: 1 /* 금기 사냥팀에 들어간 뒤의 배율(조금 느리다) */},
+  bmMood: {deal: 3, take: 1.5} /* 검은 가면: 피아니스트·검은 침묵과 싸울 때 절망(허무 루트)·결의(지킴 루트) — 주는 피해 ×deal, 받는 피해 ×take */,
   taboo: {execNail: 10, markAt: 3, nailAt: 3, execDmg: 8, execPer: 2, execHeal: 6} /* 금기사냥꾼 패시브: 금기 표식(표식 markAt개부터, 못 nailAt 이상인 적에게 표식 수만큼 추가 피해) · 집행(적의 못이 execNail에 닿는 순간 확정 일격 execDmg+표식×execPer, HP execHeal 회복, 라운드당 1회) */,
   nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastNail: 2 /* 동부 출신은 운명과 함께 못도 적중마다 이만큼 건다(전에는 0) */, eastTitle: '금기사냥꾼', tbRank: 3 /* 금기사냥꾼은 해결사 3급으로 시작한다 */, tbBody: {maxHp: 30, atk: 3, spd: 1} /* N사 육체 시술(의체 아님)로 강화된 몸 */, brand: 1 /* 낙인: 금기 사냥팀에 들어가면 못 적중이 이만큼 더 강해진다 */},
   /* N사 날개 · 못(상대에게 쌓임, 최대 cap): 적중마다 hit(의체 적은 augHit). 3·4코스트 망치 카드가 못을 모두 흐트러짐으로 바꾼다 (nailBurst.mul배).
