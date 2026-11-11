@@ -9,7 +9,7 @@ export function startUI(E,app){
   /* 일본어 등 다른 언어: 전투 로그·상태줄처럼 렌더 뒤에 글자를 직접 바꾸는 곳도 번역한다(DOM이 바뀌면 한 프레임 뒤 한 번만 훑는다) */
   if(getLang()!=='ko'&&typeof MutationObserver!=='undefined'){let q=0,pend=new Set();const mo=new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')pend.add(m.target);else m.addedNodes.forEach(n=>pend.add(n))}if(q)return;q=requestAnimationFrame(()=>{q=0;const list=[...pend];pend=new Set();mo.disconnect();try{trNodes(list)}finally{mo.observe(app,{childList:true,subtree:true,characterData:true})}})});mo.observe(app,{childList:true,subtree:true,characterData:true})}
   const D=E.D,T=D.text;
-  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',tremor:'#c9a35a',harpoon:'#6fa3b8',wspear:'#3f7fb0',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',obey:'#8a7fb8'};
+  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',tremor:'#c9a35a',harpoon:'#6fa3b8',wspear:'#3f7fb0',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',melody:'#6fb4e8',obey:'#8a7fb8'};
   const kwc=k=>KWC[k]||'var(--gold)';
 
   /* ===== 설정 저장 (연출 속도, 배경 테마) ===== */

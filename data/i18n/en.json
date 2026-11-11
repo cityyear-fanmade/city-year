@@ -16734,5 +16734,22 @@
  "연기를 벤다": "Cut the smoke",
  "전투 (흑조의 꿈) · 이기면 최대 HP +10 · 공격 +2": "Battle (Dream of a Black Swan) · On victory, Max HP +10 · Atk +2",
  "연기가 걷혔다. 전쟁은 끝났다. 이주권은 서류로만 받았다.": "The smoke cleared. The war is over. The relocation permit was received only on paper.",
- "사유 칸에는 이렇게 적혀 있다. 연기 전쟁에 참전한 사람은 둥지로 이주할 수 없다. 규정은 오래전에 바뀌었다고 한다.": "The reason field reads: those who took part in the Smoke War may not relocate to a Nest. They say the regulation changed long ago."
+ "사유 칸에는 이렇게 적혀 있다. 연기 전쟁에 참전한 사람은 둥지로 이주할 수 없다. 규정은 오래전에 바뀌었다고 한다.": "The reason field reads: those who took part in the Smoke War may not relocate to a Nest. They say the regulation changed long ago.",
+ "선율": "Melody",
+ "첫 음": "First Note",
+ "선율 +1": "Melody +1",
+ "스타카토": "Staccato",
+ "짧게 끊어 친다 · 선율 +2": "A short, clipped strike · Melody +2",
+ "아르페지오": "Arpeggio",
+ "두 번 흩어 친다 · 적중마다 선율 +1": "Two scattered strikes · Melody +1 per hit",
+ "페르마타": "Fermata",
+ "숨을 늘인다 · 보호막 5 · 선율 +2": "Hold the breath · Shield 5 · Melody +2",
+ "레가토": "Legato",
+ "이어서 긋는다 · 선율 +2": "A connected stroke · Melody +2",
+ "화음": "Chord",
+ "선율을 모두 소모한다 · 선율 1마다 피해 +2 · 3 이상 +3 · 6 이상 +5 더 · 9면 ×1.3": "Consumes all Melody · +2 damage per Melody · +3 at 3 or more · +5 more at 6 or more · ×1.3 at 9",
+ "불협화음": "Dissonance",
+ "첫 적중에 선율을 모두 소모한다 (화음과 같은 추가 피해) · 적중마다 파열 +1": "Consumes all Melody on the first hit (same bonus damage as Chord) · Rupture +1 per hit",
+ "종지": "Cadence",
+ "곡을 맺는다 · 선율을 모두 소모한다 (화음과 같은 추가 피해)": "Closes the piece · Consumes all Melody (same bonus damage as Chord)"
 }

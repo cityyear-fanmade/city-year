@@ -3485,7 +3485,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const laevFrac=w=>w&&LAEV_F[w.id]!=null?LAEV_F[w.id]:null;
   const laevState=w=>{const f=laevFrac(w);return f==null?null:f>=0.5?'open':'sealed'};
   const isBlue=X=>X.flame>0&&(X.blue||X.flame>=CFG.laev.blueAt);
-  const snap=C=>{const f=X=>({hunger:X.hunger||0,hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,burn:X.burn||0,vt:X.vtStack||0,ink:X.ink||0,obey:X.obey||0,flame:X.flame||0,nail:X.nail||0,stagger:X.stagger||0,stunned:!!X.stunned,work:X.work||0,blue:isBlue(X),echo:X.echo||0,ledger:X.ledger||0,prescript:X.prescript||0,warp:X.warp||0,shock:X.shock||0,chain:X.chain||0,web:X.web||0,mk:X.mk||0,grudge:X.grudge||0,shield:X.shield||0,matc:X.matc||0,mat:X.mat||0,wecho:X.wecho||0,revenge:X.revenge||0,revMul:X.revMul||0,presc:X.presc||0,serum:X.serum||0,ammo:X.ammo||0,manner:X.manner||0,mannerPer:X.mannerPer||0,disp:X.disp||0,sealMark:X.sealMark||0,accel:X.accel||0,cloud:X.cloud||0,black:X.black?1:0,harpoon:X.harpoon||0,wspear:X.wspear||0,charge:X.charge||0,sink:X.sink||0,fairy:X.fairy||0,imprint:X.imprint||0,cmark:X.cmark||0,dimCharge:X.dimCharge||0});return {P:f(C.P),E:f(C.E)}};
+  const snap=C=>{const f=X=>({melody:X.melody||0,hunger:X.hunger||0,hp:Math.max(0,X.hp),bleed:X.bleed,rupture:X.rupture,breath:X.breath,burn:X.burn||0,vt:X.vtStack||0,ink:X.ink||0,obey:X.obey||0,flame:X.flame||0,nail:X.nail||0,stagger:X.stagger||0,stunned:!!X.stunned,work:X.work||0,blue:isBlue(X),echo:X.echo||0,ledger:X.ledger||0,prescript:X.prescript||0,warp:X.warp||0,shock:X.shock||0,chain:X.chain||0,web:X.web||0,mk:X.mk||0,grudge:X.grudge||0,shield:X.shield||0,matc:X.matc||0,mat:X.mat||0,wecho:X.wecho||0,revenge:X.revenge||0,revMul:X.revMul||0,presc:X.presc||0,serum:X.serum||0,ammo:X.ammo||0,manner:X.manner||0,mannerPer:X.mannerPer||0,disp:X.disp||0,sealMark:X.sealMark||0,accel:X.accel||0,cloud:X.cloud||0,black:X.black?1:0,harpoon:X.harpoon||0,wspear:X.wspear||0,charge:X.charge||0,sink:X.sink||0,fairy:X.fairy||0,imprint:X.imprint||0,cmark:X.cmark||0,dimCharge:X.dimCharge||0});return {P:f(C.P),E:f(C.E)}};
   /* 오랜 굶주림: HP를 회복할 때마다 스택 */
   let RS_=null;   /* 이번 전투에서 쌓는 판 전체 전투 기록(입힌·받은 피해, 회복, 버프·디버프) */
   const HG=(X,h)=>{if(h>0&&X&&X.hunger!=null)X.hunger=Math.min(CFG.hunger.max,X.hunger+h)};
@@ -3853,7 +3853,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
       if(k==='burn'&&to!=='s'&&A.wx&&A.wx.burnPlus)n+=A.wx.burnPlus;
       if(A.kwPlus&&to!=='s'&&(k==='bleed'||k==='burn'||k==='rupture'||k==='stagger'||k==='sink'||k==='nail'||k==='tremor'))n+=A.kwPlus;
-      let cap_=k==='breath'?bcap(X):k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='tremor'?CFG.tremor.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
+      let cap_=k==='breath'?bcap(X):k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='melody'?CFG.melody.cap:k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='tremor'?CFG.tremor.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
       if(to!=='s'&&A.kwCapUp&&A.kwCapUp[k])cap_+=A.kwCapUp[k];
       X[k]=Math.min(cap_,b4_+n);
       {const R_=RS_;const gn_=X[k]-b4_;if(R_&&gn_>0){if(A.isP){if(to==='s')R_.buff=(R_.buff||0)+gn_;else R_.debuff=(R_.debuff||0)+gn_}else if(X.isP&&to!=='s')R_.debuffTaken=(R_.debuffTaken||0)+gn_}}
@@ -4059,6 +4059,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.matBonus){dmg+=A.matBonus;note+=` 신체관극+${A.matBonus}`}
       if(c.reuse&&A.mat>0){let x=0;for(let i=0;i<A.mat;i++)x+=d(c.die||6);dmg+=x;note+=` 폐장 재사용 ${A.mat}회+${x}`;A.mat=0}
       if(A.warp){dmg=Math.max(1,dmg-A.warp);note+=` 왜곡−${A.warp}`}
+      /* 화음: 쌓인 선율을 모두 소모해 추가 피해 (선율 1마다 per, 3·6 이상이면 가산, 9면 배수) */
+      if(c.chord&&(A.melody||0)>0){const n=A.melody,Z=CFG.melody;A.melody=0;C.chordN=(C.chordN||0)+1;C.chordSum=(C.chordSum||0)+n;let x=n*Z.per+(n>=3?Z.t3:0)+(n>=6?Z.t6:0);dmg+=x;note+=` 화음(선율 ${n})+${x}`;if(n>=Z.cap){dmg=Math.round(dmg*Z.t9);note+=` ×${Z.t9}`}}
       {const g2=staggerStage(B);if(g2&&g2.take){dmg+=g2.take;note+=` 흐트러짐 취약+${g2.take}`}}
       if(A.tbMarks>=CFG.taboo.markAt&&(B.nail||0)>=CFG.taboo.nailAt){dmg+=A.tbMarks;C.tbMkN=(C.tbMkN||0)+1;note+=` 금기 표식+${A.tbMarks}`}
       {const g_=staggerStage(A);if(g_&&g_.dmg){dmg=Math.max(1,dmg-g_.dmg);note+=` 흐트러짐−${g_.dmg}`}}
