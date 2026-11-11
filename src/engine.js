@@ -1265,7 +1265,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(k==='fend'){r.done=1;chips.push('추격이 끝났다')}
     }
     if(fx.tbJoin){const Bd=CFG.nWing.tbBody;addStats(ch.stats,Bd);ch.hp+=Bd.maxHp;chips.push(`N사 육체 시술 · 최대 HP +${Bd.maxHp} · 공격 +${Bd.atk} · 속도 +${Bd.spd} (의체가 아니라 몸 자체를 고친 것이다)`);if(ch.licensed&&ch.rank>CFG.nWing.tbRank){while(ch.rank>CFG.nWing.tbRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급으로 시작한다`)}}
-    if(fx.bmLose&&ch.bond&&ch.bond.st!=='lost'&&ch.bond.st!=='declined'){const b_=ch.bond;if(b_.st==='married')bondDeath(ch,chips);else{b_.st='lost';ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`곁에 있던 사람을 잃었다 · 최대 정신력 −${BD.lossMind} (영구)`)}b_.dieBy='risk';b_.dieYear=ch.year||0}
+    if(fx.bmLose&&ch.bond&&ch.bond.st!=='lost'&&ch.bond.st!=='declined'&&ch.bond.st!=='left'){const b_=ch.bond;if(b_.st==='married')bondDeath(ch,chips);else{b_.st='lost';ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`곁에 있던 사람을 잃었다 · 최대 정신력 −${BD.lossMind} (영구)`)}b_.dieBy='risk';b_.dieYear=ch.year||0}
     if(fx.bmMind){const g_=gainMind(ch,fx.bmMind);if(g_)chips.push('정신력 +'+g_+' (무한 모드에 들어서며 마음이 가라앉는다)')}
     if(fx.bmMindMax){ch.stats.mindMax=(ch.stats.mindMax||0)+fx.bmMindMax;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`최대 정신력 ${fx.bmMindMax} (영구)`)}
     if(fx.bmCalm){const g_=gainMind(ch,fx.bmCalm);if(g_)chips.push('정신력 +'+g_)}
@@ -1966,9 +1966,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     /* 인연 이벤트를 하나도 쌓지 않았다면 상대는 관심이 없다: 청혼 자리가 열리지 않고 조용히 떠난다 */
     /* 검은 가면: 청혼은 상대가 먼저 한다. 플레이어는 받을지 미룰지만 고른다. 미뤄도 기회가 줄지 않고 상대는 떠나지 않는다 */
-    if(ch.o&&ch.o.key==='blackmask')return {t:R.propose.t,x:bondFill(R.propose.x,b)+'\n\n'+bondFill('{n}이 먼저 말을 꺼냈다. 함께 살자고 했다.',b),xs:[bondFill(R.propose.x,b),bondFill('{n}이 먼저 말을 꺼냈다. 함께 살자고 했다.',b)],c:[
-      {l:'받아들인다',h:'결혼 · 최대 HP·정신력·판정 상승',ok:{t:bondFill('가면 아래에서 고개를 끄덕였다. {n}은 그 대답을 알아보았다.',b),fx:{bmMarry:true}}},
-      {l:'조금 더 시간을 달라고 한다',h:'상대는 기다린다 · 몇 해 뒤 다시 묻는다 · 떠나지 않는다',ok:{t:bondFill('{n}은 재촉하지 않았다. 기다리는 쪽도 나쁘지 않다고 했다.',b),fx:{bmLater:true}}}]};
+    if(ch.o&&ch.o.key==='blackmask'){const n=b.bmAsk||0,x0=bondFill(R.propose.x,b),x1=bondFill('{n}이 먼저 말을 꺼냈다. 함께 살자고 했다.',b);
+      const yes={l:'받아들인다',h:'결혼 · 최대 HP·정신력·판정 상승',ok:{t:bondFill('가면 아래에서 고개를 끄덕였다. {n}은 그 대답을 알아보았다.',b),fx:{bmMarry:true}}};
+      const later={l:'조금 더 시간을 달라고 한다',h:'상대는 기다린다 · 몇 해 뒤 다시 묻는다 · 떠나지 않는다',ok:{t:bondFill('{n}은 재촉하지 않았다. 기다리는 쪽도 나쁘지 않다고 했다.',b),fx:{bmLater:true}}};
+      const no={l:'받아들일 수 없다',h:'친구로 곁에 남는다 · 결혼하지 않는다',ok:{t:bondFill('연기 속에서 본 것이 눈앞에 떠올랐다. 누군가와 함께 산다는 말만 들어도 속이 뒤집혔다. 고개를 저었다. {n}은 오래 말이 없다가, 그럼 친구로 곁에 있겠다고 했다.',b),fx:{bmRefuse:true}}};
+      return {t:R.propose.t,x:x0+'\n\n'+x1,xs:[x0,x1],c:n===0?[yes,later]:n===1?[yes,later,no]:[yes,no]}}
     if(!(b.love||0)&&!(b.extra||0))return {t:'말없이 떠난 사람',x:bondFill(R.left,b)+' 함께한 시간은 있었지만 쌓인 것은 없었다.',c:[{l:'떠나는 뒷모습을 본다',h:`최대 정신력 −${BD.leaveMind} (영구)`,ok:{t:bondFill('{n}의 이름을 한 번 불러 보았다. 대답은 돌아오지 않았다.',b),fx:{bondLeave:true}}}]};
     /* 흑수 루트: 청혼이 아니라 약한 후보가 먼저 고백한다. 플레이어는 지금의 자리를 보고 받아들일지 정한다 */
     if(ch.hw&&ch.hw.beast){const rk=(ch.hw.rank2?'필두':ch.hw.rank1?'흑수':'아직 이름을 얻지 못한 몸')+' · '+CFG.hw.candRanks[hwCandRank(ch.hw.mk||0)];
@@ -2653,7 +2655,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
        arc가 같은 임무끼리는 한 줄기로 이어진다: 줄기가 열려 있는 동안(end 임무가 끝날 때까지)은 다른 줄기의 임무도 처분 의뢰도 나오지 않는다.
        문구의 {c}는 협력한 후보, {r}은 맞서는 후보, {foe}는 싸울 후보의 적 id로 바뀐다 */
     if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},last=st.mAt||0;
-      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.bond||(ch.bond&&['met','married'].includes(ch.bond.st)))&&(!m.beat||(ch.beaten||[]).includes(m.beat))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&((ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend))||(ch.bond.st==='met'&&ch.bond.companion))):true))&&(!st.arc||m.arc===st.arc));
+      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.bond||(ch.bond&&['met','married'].includes(ch.bond.st)))&&(!m.friend||(ch.bond&&ch.bond.st==='friend'))&&(!m.beat||(ch.beaten||[]).includes(m.beat))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&((ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend))||(ch.bond.st==='met'&&ch.bond.companion))):true))&&(!st.arc||m.arc===st.arc));
       if(M){md.push(M.id);st.mAt=y;if(M.arc)st.arc=M.end?null:M.arc;
         const A=fl_.crow_hwA>0,cn=A?'가환(賈環)':'설보차(薛寶釵)',rn=A?'설보차(薛寶釵)':'유상련(柳湘蓮)',fid=A?'hr_1':'hr_3';
         const ev_=JSON.parse(JSON.stringify(M.ev).replace(/\{c\}/g,cn).replace(/\{r\}/g,rn).replace(/\{foe\}/g,fid));
@@ -3289,7 +3291,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.hwLoveYes&&ch.bond&&ch.bond.st==='met'){bondMarry(ch,chips);if(ch.hw)ch.hw.loved=1}
     if(fx.hwLoveNo&&ch.bond&&ch.bond.st==='met'){ch.bond.st='refused';if(ch.hw)ch.hw.refused=1;chips.push('후보의 마음을 받아들이지 않았다 · 흑수로 곁에 남는다')}
     if(fx.bmMarry&&ch.bond&&ch.bond.st==='met')bondMarry(ch,chips);
-    if(fx.bmLater&&ch.bond&&ch.bond.st==='met'){ch.bond.next=(ch.year||0)+bondGap();chips.push('곁의 사람은 기다려 준다')}
+    if(fx.bmRefuse&&ch.bond&&ch.bond.st==='met'){ch.bond.st='friend';ch.bond.companion=false;chips.push('곁의 사람은 친구로 남는다 · 결혼하지 않는다')}
+    if(fx.bmLater&&ch.bond&&ch.bond.st==='met'){ch.bond.bmAsk=(ch.bond.bmAsk||0)+1;ch.bond.next=(ch.year||0)+bondGap();chips.push('곁의 사람은 기다려 준다')}
     if(fx.bondPropose)bondPropose(ch,chips,true);
     if(fx.bondSlip)bondPropose(ch,chips,false);
     if(fx.bondWait&&ch.bond){ch.bond.extra=(ch.bond.extra||0)+1;chips.push('인연을 더 쌓았다 · 청혼 기회는 그대로다')}
