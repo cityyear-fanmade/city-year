@@ -229,6 +229,7 @@ export const CFG = {
   bmVoid: {ragePer: 0.08, rageMax: 10, glitchYear: 79} /* 검은 가면 허무 루트: 분노 1마다 주는 피해 +ragePer(최대 rageMax), 이름이 흩어지는 장면이 나오는 연차 */,
   bmKeep: {yearMind: 1} /* 검은 가면 지킴 루트: 곁의 사람이 있는 동안 해마다 정신력 회복 */,
   melody: {cap: 9, per: 2, t3: 3, t6: 5, t9: 1.3} /* 음악 카드: 선율(자신에게 쌓는 버프, 최대 cap) · 화음 카드가 선율을 모두 소모해 선율 1마다 피해 +per, 3 이상 +t3, 6 이상 +t6 더, cap이면 그 타격 ×t9 */,
+  bmElate: {max: 3, atk: 3, eva: 3, healPct: 0.2} /* 검은 가면 연기전쟁 연전의 고양감: 이길 때마다 스택(최대 max), 체력 healPct 회복, 다음 전투 공격·회피 스택당 +atk·+eva */,
   bmMood: {deal: 3, take: 1.5} /* 검은 가면: 피아니스트·검은 침묵과 싸울 때 절망(허무 루트)·불안(지킴 루트) — 주는 피해 ×deal, 받는 피해 ×take */,
   taboo: {execNail: 10, markAt: 3, nailAt: 3, execDmg: 8, execPer: 2, execHeal: 6} /* 금기사냥꾼 패시브: 금기 표식(표식 markAt개부터, 못 nailAt 이상인 적에게 표식 수만큼 추가 피해) · 집행(적의 못이 execNail에 닿는 순간 확정 일격 execDmg+표식×execPer, HP execHeal 회복, 라운드당 1회) */,
   nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastNail: 2 /* 동부 출신은 운명과 함께 못도 적중마다 이만큼 건다(전에는 0) */, eastTitle: '금기사냥꾼', tbRank: 3 /* 금기사냥꾼은 해결사 3급으로 시작한다 */, tbBody: {maxHp: 30, atk: 3, spd: 1} /* N사 육체 시술(의체 아님)로 강화된 몸 */, brand: 1 /* 낙인: 금기 사냥팀에 들어가면 못 적중이 이만큼 더 강해진다 */},

@@ -3350,6 +3350,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function winRewards0(G,C){
     const ch=G.ch,chips=[];
     bloodGain(ch,C,chips);
+    /* 검은 가면 연기전쟁 연전: 이길 때마다 고양감이 쌓인다(최대 max). 체력을 healPct 회복하고 다음 전투에 공격·회피가 스택당 오른다. 마지막 상대(흑조의 꿈)를 이기면 사라진다 */
+    if(ch.o&&ch.o.key==='blackmask'&&/^bm_war/.test(C.id)){const Z=CFG.bmElate;if(C.id==='bm_war3'){ch.bmElation=0}else{ch.bmElation=Math.min(Z.max,(ch.bmElation||0)+1);const hh=Math.min(Math.round(ch.stats.maxHp*Z.healPct),ch.stats.maxHp-C.P.hp);if(hh>0)C.P.hp+=hh;chips.push(`고양감 ${ch.bmElation}/${Z.max} · HP +${Math.max(0,hh)} · 다음 전투 공격 +${Z.atk*ch.bmElation} · 회피 +${Z.eva*ch.bmElation}`)}}
     if(ch.aff&&ch.aff.name==='약지'&&!ch.distForm){const gain=Math.min(5,(C.E.matc||0)+(C.P.mat||0));if(gain>0){ch.matStock=Math.min(CFG.art.stockMax,(ch.matStock||0)+gain);chips.push(`모아 둔 재료 +${gain} (지금 ${ch.matStock})`)}}
     /* 인연 도시락: 인연이 있으면 전투를 이긴 뒤 가끔 받는다 */
     if(ch.bond&&['met','married'].includes(ch.bond.st)&&!ch.distForm&&d(100)<=CFG.supply.lunchChance){const L_=CFG.supply.lunch,hp0=C.P.hp,hh=Math.min(Math.round(ch.stats.maxHp*L_.hpPct/100),ch.stats.maxHp-C.P.hp);if(hh>0)C.P.hp+=hh;const g_=gainMind(ch,L_.mind);chips.push(`인연 도시락 · ${ch.bond.name||'인연'}이(가) 도시락을 건넸다${hh>0?' · HP +'+hh:''}${g_?' · 정신력 +'+g_:''}`)}
@@ -3566,6 +3568,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;
+    if(ch.bmElation&&ch.o&&ch.o.key==='blackmask'&&/^bm_war/.test(id)){const n_=ch.bmElation;P.atk+=CFG.bmElate.atk*n_;P.eva+=CFG.bmElate.eva*n_}   // 연기전쟁 연전: 고양감
     if(ch.flags&&ch.flags.tbHunt){P.tbMarks=ch.tabooMarks||0;P.tbExec=ch.title===CFG.nWing.eastTitle}
     if(isN(ch)){P.atk+=CFG.nWing.atk;P.eva+=CFG.nWing.eva;P.spd+=CFG.nWing.spd;P.nailHit=CFG.nail.hit;if(ch.fate){P.nailHit=(CFG.nWing.eastNail||CFG.nail.hit)+(ch.flags&&ch.flags.tbHunt?CFG.nWing.brand||1:0);P.atk+=CFG.nWing.fate;P.eva+=CFG.nWing.fate}}
     if(pen&&!rankMet(ch,pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
