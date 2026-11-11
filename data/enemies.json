@@ -8781,6 +8781,98 @@
     },
     "e": "속도+1 · HP+5"
    }
+  },
+  "bm_gear1": {
+   "n": "톱니교단 신도",
+   "why": "몸에 톱니를 박아 넣으면 도시의 박자와 하나가 된다고 믿는다.",
+   "color": "#8f7a52",
+   "hp": 78,
+   "atk": 7,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "f_ironfist",
+    "smash",
+    "thrust",
+    "guard"
+   ],
+   "trait": "callus",
+   "intro": "가슴에 박힌 톱니가 숨을 쉴 때마다 한 칸씩 돈다. 신도는 당신에게도 톱니를 권한다.",
+   "tier": "mid",
+   "aug": true
+  },
+  "bm_gear2": {
+   "n": "톱니교단 사제",
+   "why": "교단의 톱니가 멈추지 않게 하는 것이 사제의 일이다. 멈추게 하려는 자는 부품이 된다.",
+   "color": "#a38a55",
+   "hp": 160,
+   "atk": 11,
+   "eva": 3,
+   "spd": 3,
+   "deck": [
+    "f_hammer",
+    "heavy",
+    "smash",
+    "guard"
+   ],
+   "trait": "bulwark",
+   "intro": "사제의 등 뒤에서 커다란 톱니바퀴가 천천히 돈다. 설교는 톱니 소리에 묻혀 들리지 않는다.",
+   "tier": "boss",
+   "aug": true
+  },
+  "bm_pup1": {
+   "n": "인형사의 인형",
+   "why": "실험실에서 만들어져 문을 지킨다. 지키라는 말 말고는 들은 것이 없다.",
+   "color": "#b9a7a0",
+   "hp": 82,
+   "atk": 8,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "thrust",
+    "thrust",
+    "smash",
+    "guard"
+   ],
+   "trait": "swarm",
+   "intro": "실에 매달린 것처럼 걷는 인형들이 복도를 메운다. 얼굴은 모두 같은 틀에서 나왔다.",
+   "tier": "mid"
+  },
+  "bm_pup2": {
+   "n": "인형사",
+   "why": "사람과 인형의 경계를 실험한다. 실험실에 들어온 사람은 재료이거나 손님이다.",
+   "color": "#9a8fa8",
+   "hp": 150,
+   "atk": 12,
+   "eva": 5,
+   "spd": 5,
+   "deck": [
+    "heavy",
+    "thrust",
+    "tremor",
+    "guard"
+   ],
+   "trait": "regen",
+   "intro": "인형사의 손가락마다 실이 감겨 있다. 실 끝이 어디에 닿아 있는지는 천장이 어두워 보이지 않는다.",
+   "tier": "boss"
+  },
+  "bm_broker": {
+   "n": "잿빛 중개소의 주인",
+   "why": "도시의 소문을 사고판다. 장부를 뒤지려는 손님은 받지 않는다.",
+   "color": "#7f8389",
+   "hp": 155,
+   "atk": 12,
+   "eva": 6,
+   "spd": 6,
+   "deck": [
+    "thrust",
+    "heavy",
+    "smash",
+    "guard"
+   ],
+   "trait": "coward",
+   "intro": "주인은 서류 더미 뒤에서 일어나지 않는다. 대신 서랍에서 꺼낸 것이 당신을 향한다.",
+   "tier": "boss"
   }
  },
  "fixedFights": {
