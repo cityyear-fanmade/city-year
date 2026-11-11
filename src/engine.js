@@ -4107,7 +4107,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           if(A.hp<=A.maxHp*0.3)m+=pactV(ch_,'lastb');if(m!==1){dmg=Math.round(dmg*m);note+=` 값 ×${m.toFixed(2)}`}}
         else if(B.isP&&B.hp<=B.maxHp*0.3){const x=pactV(ch_,'lastb');if(x){const m=Math.max(0.4,1-x/2);dmg=Math.round(dmg*m);note+=` 마지막 숨 ×${m.toFixed(2)}`}}}
       if(C.ch.infinite&&A.isP&&dmg>0&&C.ch.limStrike){const x=Math.round(A.maxHp*C.ch.limStrike);dmg+=x;note+=` 일격 +${x}`}
-      {const f_=C.ch.flags||{},md=C.ch.o&&C.ch.o.key==='blackmask'&&(C.id==='bm_pianist'||C.id==='black')?(f_.bm_void?'절망':f_.bm_keep?'결의':''):'';if(md&&dmg>0){const m=A.isP?CFG.bmMood.deal:B.isP?CFG.bmMood.take:1;if(m!==1){dmg=Math.round(dmg*m);note+=` ${md} ×${m}`}}}
+      {const f_=C.ch.flags||{},md=C.ch.o&&C.ch.o.key==='blackmask'&&(C.id==='bm_pianist'||C.id==='black')?(f_.bm_void?'절망':f_.bm_keep?'불안':''):'';if(md&&dmg>0){const m=A.isP?CFG.bmMood.deal:B.isP?CFG.bmMood.take:1;if(m!==1){dmg=Math.round(dmg*m);note+=` ${md} ×${m}`}}}
       if(C.ch.infinite&&A.isP&&dmg>0&&(C.ch.infBoost||C.ch.infShard||C.ch.famLoss||C.ch.limDmg)){const m=1+(C.ch.limDmg||0)+(C.ch.infBoost||0)*CFG.infinite.century.dmg+(C.ch.infShard||0)*CFG.infinite.shard.dmg+(C.ch.famLoss||0)*CFG.infinite.grief.dmg;dmg=Math.round(dmg*m);note+=` 백 해 ×${m.toFixed(2)}`}
       {const SG=CFG.infinite.surge;if(C.ch.infinite&&A.isP&&dmg>0&&SG&&(C.ch.year||0)>=SG.year&&C.round>SG.round){const m=Math.min(SG.max,Math.pow(SG.per,C.round-SG.round));dmg=Math.round(dmg*m);note+=` 기세 ×${m>=1000?m.toExponential(1):m.toFixed(1)}`}}
       if(B.shield>0&&!ig){const ab=Math.min(B.shield,dmg);B.shield-=ab;dmg-=ab;note+=` 보호막−${ab}`}else if(B.shield>0&&ig)note+=' 보호막 무시'
