@@ -16781,5 +16781,9 @@
  "」과 싸워 쓰러뜨린다.": "」: fight and defeat it.",
  "최대 정신력 {0} (영구)": "Max Sanity {0} (permanent)",
  "경험치 +{0}": "XP +{0}",
- "화음(선율 {0})+{1}": "Chord (Melody {0}) +{1}"
+ "화음(선율 {0})+{1}": "Chord (Melody {0}) +{1}",
+ "전투 첫 공격 피해 +300%": "First attack of the battle deals +300% damage",
+ "준 피해의 1.5% 회복": "Recover 1.5% of damage dealt",
+ "맞은 피해의 40%를 되돌려줌": "Reflect 40% of damage taken",
+ "전투 시작 때 최대 HP의 15% 보호막": "Start the battle with a Shield of 15% of Max HP"
 }
