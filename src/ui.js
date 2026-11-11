@@ -3409,6 +3409,7 @@ ${symRec(r)}
     testG(o){if(!G)return;Object.assign(G,o);render()},
     testLedger(){if(!G)return;UI.ledger={a:G.year,b:G.year+24,n:24,st:null};UI.screen='ledger';render()},
     testAccel(y,mode){if(!G)return;const c=G.ch;G.infinite=true;G.endless=true;c.infinite=true;c.infImp=1;c.infIntro=1;c.outSeen=c.outSeen||{};c.outSeen.seal=1;if(mode==='offer'){delete c.accelChoice;c.accelOfferAt=0}else c.accelChoice='yes';c.accelAge=null;c.oldEnd=true;c.infCent=[1,2];c.limAt=1e9;c.pactAt=1e9;G.year=c.year=(y||200)-1;c.hp=c.stats.maxHp;nextYear()},
+    testBmDemote(on){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.licensed=true;c.rank=1;if(on)c.flags.bm_demote=1;else delete c.flags.bm_demote;render()},
     testGlitch(){if(!G)return;const Z=D.bmVoid.glitch;UI.ev={t:Z.t,x:'',gl:Z.gl,c:[{l:Z.a,h:'잃는 것은 없다',ok:{t:Z.at,fx:{}}}]};UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
     testInfLake(n){if(!G)return null;const c=G.ch,X=CFG.endless,be=CFG.years+X.span*X.grades.length,out={};G.infinite=true;c.infinite=true;c.infIntro=1;c.flags=c.flags||{};c.flags.lake=1;c.lake=c.lake||{};c.lake.captain=true;
