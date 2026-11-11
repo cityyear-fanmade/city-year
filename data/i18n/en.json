@@ -16777,5 +16777,8 @@
  "검은 가면: 해금 조건이 기록실에 보이지 않던 문제와, 검은 침묵을 쓰러뜨려도 해금되지 않던 문제를 고쳤습니다. 이제 기록실에서 조건을 볼 수 있고, 검은 침묵을 쓰러뜨리면 판이 끝날 때 해금됩니다. 이미 검은 침묵을 쓰러뜨린 기록이 있으면 새로 고침 뒤 바로 해금됩니다.": "Black Mask: Fixed the issue where the unlock condition was not shown in the Records, and the issue where defeating Black Silence did not unlock it. You can now see the condition in the Records, and defeating Black Silence unlocks it when the run ends. If you have already defeated Black Silence, it unlocks right after a refresh.",
  "히든 보스 「검은 침묵」과 싸워 쓰러뜨린다.": "Fight and defeat the hidden boss 「Black Silence」.",
  "조건 · ": "Condition · ",
- "검은 가면: 기록실 힌트와 실제 해금 조건이 겹쳐 조건이 사라진 상태여서, 검은 가면이 해금되지 않는 정황이 확인되어 바로 수정했습니다. 기록실에 검은 침묵을 쓰러뜨린 기록이 있으면 새로 고침 뒤 바로 해금됩니다.": "Black Mask: We found that the Records hint and the actual unlock condition overlapped and the condition had vanished, so Black Mask could not be unlocked, and fixed it right away. If the Records show you have already defeated Black Silence, it unlocks right after a refresh."
+ "검은 가면: 기록실 힌트와 실제 해금 조건이 겹쳐 조건이 사라진 상태여서, 검은 가면이 해금되지 않는 정황이 확인되어 바로 수정했습니다. 기록실에 검은 침묵을 쓰러뜨린 기록이 있으면 새로 고침 뒤 바로 해금됩니다.": "Black Mask: We found that the Records hint and the actual unlock condition overlapped and the condition had vanished, so Black Mask could not be unlocked, and fixed it right away. If the Records show you have already defeated Black Silence, it unlocks right after a refresh.",
+ "전투 2번 (전선의 병사들 · 흉탄의 사수) · 이길 때마다 고양감: 체력 회복, 다음 전투 공격·회피 +2 (최대 3스택)": "2 battles (Soldiers of the Front · Der Fluchschütze) · Each win gives Elation: recover HP, and next battle Atk and Evasion +2 (up to 3 stacks)",
+ "전투 (흑조의 꿈) · 이기면 최대 HP +10 · 공격 +2 · 앞 전투의 고양감이 이어진다": "Battle (Dream of a Black Swan) · On victory, Max HP +10 · Atk +2 · Elation from the previous battles carries over",
+ "고양감 {0}/{1} · HP +{2} · 다음 전투 공격 +{3} · 회피 +{4}": "Elation {0}/{1} · HP +{2} · Next battle Atk +{3} · Evasion +{4}"
 }
