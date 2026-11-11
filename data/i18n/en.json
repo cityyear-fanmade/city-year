@@ -16776,5 +16776,6 @@
  "🆕 새로 들어온 것": "🆕 New",
  "검은 가면: 해금 조건이 기록실에 보이지 않던 문제와, 검은 침묵을 쓰러뜨려도 해금되지 않던 문제를 고쳤습니다. 이제 기록실에서 조건을 볼 수 있고, 검은 침묵을 쓰러뜨리면 판이 끝날 때 해금됩니다. 이미 검은 침묵을 쓰러뜨린 기록이 있으면 새로 고침 뒤 바로 해금됩니다.": "Black Mask: Fixed the issue where the unlock condition was not shown in the Records, and the issue where defeating Black Silence did not unlock it. You can now see the condition in the Records, and defeating Black Silence unlocks it when the run ends. If you have already defeated Black Silence, it unlocks right after a refresh.",
  "히든 보스 「검은 침묵」과 싸워 쓰러뜨린다.": "Fight and defeat the hidden boss 「Black Silence」.",
- "조건 · ": "Condition · "
+ "조건 · ": "Condition · ",
+ "검은 가면: 기록실 힌트와 실제 해금 조건이 겹쳐 조건이 사라진 상태여서, 검은 가면이 해금되지 않는 정황이 확인되어 바로 수정했습니다. 기록실에 검은 침묵을 쓰러뜨린 기록이 있으면 새로 고침 뒤 바로 해금됩니다.": "Black Mask: We found that the Records hint and the actual unlock condition overlapped and the condition had vanished, so Black Mask could not be unlocked, and fixed it right away. If the Records show you have already defeated Black Silence, it unlocks right after a refresh."
 }
