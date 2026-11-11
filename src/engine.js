@@ -3234,7 +3234,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.wingPick){ch.wingPick=true;chips.push('날개 설립 · 이름을 정한다')}
     if(fx.singGrow)corpGrow(ch,chips);
     if(fx.singUp)corpUp(ch,chips);
-    if(fx.corpXp&&corpYes(ch)){const up=gainXp(ch,CP.devXp||1);chips.push(`경험치 +${CP.devXp||1}`);if(up)chips.push('레벨 업 · Lv '+ch.lv)}
+    if(fx.corpXp&&corpYes(ch)){const up=gainXp(ch,CP.devXp||1);chips.push(`경험치 +${CP.devXp||1}`);if(up)chips.push('레벨 업 · Lv '+ch.lv);corpBump(ch,{[one(['atk','eva','spd','check'])]:1},chips)}
     if(fx.corpForb)corpForb(ch,chips);
     if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
     if(fx.bondDecline)ch.bond={st:'declined'};
@@ -3553,15 +3553,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ch.infBandI!==bi){ch.infBandI=bi;ch.infBandStart=ch.infImp||0}
       const k=Math.max(0,(ch.infImp||0)-(ch.infBandStart||0));const jit=k>0?(((ch.year||0)*37+k*91)%11-5)*0.003:0;   // 숫자가 규칙적으로만 보이지 않게 ±1.5% 안에서 조금 흔든다 (같은 해에는 항상 같은 값)
       return Math.round(v*(1+Math.min(IF2.hpBandMax,k*IF2.hpPerKill)+jit))})():0;
-    const ehhX=infTab?Math.round(infTab*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)):ehh0_;
-    const ehhCap=ch.infinite?Math.min(ehhX,CFG.infinite.hpMax):ehhX;
+    const ehhX=infTab?Math.round(infTab*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp+(CFG.hard.hpLate-CFG.hard.hp)*Math.max(0,Math.min(1,((CFG.startAge+(ch.year||0)-1)-100)/900)):1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)):ehh0_;   // 하드의 불순물 체력 배수: 100살 2배 → 1000살 hpLate배로 커진다
+    const hpCapX=ch.hard&&infTab?CFG.hard.hpMaxLate:CFG.infinite.hpMax,ehhCap=ch.infinite?Math.min(ehhX,hpCapX):ehhX;
     const lastImp=ch.infinite&&id===X_.final&&(ch.year||0)+CFG.infinite.every>CFG.overflowAge-CFG.startAge+1;   // 1000살 오버플로우 전의 마지막 불순물 전투
-    const ehh0=lastImp?CFG.infinite.hpMax:ehhCap,ehh1=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0,ehh=id==='redmist'&&(ch.redPost||0)>0?Math.round(ehh1*Math.pow(CFG.redBook.hpMul,ch.redPost)):ehh1;
+    const ehh0=lastImp?(ch.hard?CFG.hard.hpMaxLate:CFG.infinite.hpMax):ehhCap,ehh1=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0,ehh=id==='redmist'&&(ch.redPost||0)>0?Math.round(ehh1*Math.pow(CFG.redBook.hpMul,ch.redPost)):ehh1;
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
     const E=mkEnt({uid:'E',name:(ch.rt&&ch.rt.guestFoe===id&&ch.rt.guestName)?`${ch.rt.guestName} · ${e.n}`:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),maxHp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),atk:Math.max(1,((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.atk:0)+e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,herm:(e.passive&&e.passive.id==='hermes')?{n:0,wait:false}:null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,kali:e.kali||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 무한 모드에서도 적의 회피는 enemyMax에서 멈춘다. 공격(명중)도 enemyMax에서 멈추지만, 균열을 닫은(균열 엔딩을 본) 뒤에는 균열 피해가 없어지므로 atkMax까지 올라 플레이어 회피가 아무리 높아도 결국 맞게 한다 */
     if(P.auxFoeSink)E.sink=(E.sink||0)+P.auxFoeSink;
     E.atk+=Math.floor(infYears(ch)/CFG.infinite.atkEvery);E.atk=Math.min(E.atk,CFG.infinite.atkCap||(ch.outSeen&&ch.outSeen.seal?(CFG.infinite.atkMax||CFG.infinite.enemyMax):CFG.infinite.enemyMax));E.eva=Math.max(0,Math.min(E.eva,CFG.infinite.enemyMax)-Math.floor(infYears(ch)*CFG.infinite.evaDown));
+    if(ch.hard&&ch.infinite&&id===X_.final){const m=CFG.hard.impStat;E.atk=Math.round(E.atk*m);E.eva=Math.round(E.eva*m);E.spd=Math.round((E.spd||0)*m)}   // 하드의 불순물은 능력치(공격·회피·속도)도 1.5배
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;

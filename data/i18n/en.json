@@ -16785,5 +16785,9 @@
  "전투 첫 공격 피해 +300%": "First attack of the battle deals +300% damage",
  "준 피해의 1.5% 회복": "Recover 1.5% of damage dealt",
  "맞은 피해의 40%를 되돌려줌": "Reflect 40% of damage taken",
- "전투 시작 때 최대 HP의 15% 보호막": "Start the battle with a Shield of 15% of Max HP"
+ "전투 시작 때 최대 HP의 15% 보호막": "Start the battle with a Shield of 15% of Max HP",
+ "경험치 +1 · 능력치 하나 무작위 +1 · 금기에 손대지 않는다 · 강화는 더 오르지 않는다": "XP +1 · +1 to one random stat · Do not touch the taboo · Upgrades no longer rise",
+ "전투 첫 공격 피해 +600%": "First attack of the battle deals +600% damage",
+ "맞은 피해의 50%를 되돌려줌": "Reflect 50% of damage taken",
+ "전투 시작 때 최대 HP의 20% 보호막": "Start the battle with a Shield of 20% of Max HP"
 }
