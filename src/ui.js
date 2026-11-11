@@ -9,7 +9,7 @@ export function startUI(E,app){
   /* 일본어 등 다른 언어: 전투 로그·상태줄처럼 렌더 뒤에 글자를 직접 바꾸는 곳도 번역한다(DOM이 바뀌면 한 프레임 뒤 한 번만 훑는다) */
   if(getLang()!=='ko'&&typeof MutationObserver!=='undefined'){let q=0,pend=new Set();const mo=new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')pend.add(m.target);else m.addedNodes.forEach(n=>pend.add(n))}if(q)return;q=requestAnimationFrame(()=>{q=0;const list=[...pend];pend=new Set();mo.disconnect();try{trNodes(list)}finally{mo.observe(app,{childList:true,subtree:true,characterData:true})}})});mo.observe(app,{childList:true,subtree:true,characterData:true})}
   const D=E.D,T=D.text;
-  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',tremor:'#c9a35a',harpoon:'#6fa3b8',wspear:'#3f7fb0',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',obey:'#8a7fb8'};
+  const KWC={bleed:'var(--bleed)',rupture:'var(--rupture)',breath:'var(--breath)',burn:'#f0903c',flame:'#e0503c',nail:'#9aa0a6',tremor:'#c9a35a',harpoon:'#6fa3b8',wspear:'#3f7fb0',stagger:'#b07cc6',charge:'#e8d44d',sink:'#4a8fb0',ink:'#5a6ea0',melody:'#6fb4e8',obey:'#8a7fb8'};
   const kwc=k=>KWC[k]||'var(--gold)';
 
   /* ===== 설정 저장 (연출 속도, 배경 테마) ===== */
@@ -22,7 +22,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v11.0.2';
+  const VERSION='v11.1.0';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   /* 시험판에서 "해금 규칙대로 보기"를 켜면 기록실·꾸미기가 실제 플레이어처럼 잠겨 보인다(시험장 4번 칸에서 바꾼다) */
   const realUnlock=()=>{try{return localStorage.getItem('cityYearRealUnlock')==='1'}catch(e){return false}};
@@ -192,6 +192,8 @@ export function startUI(E,app){
     if(wid in LAEV)return 'n_lev'+LAEV[wid];
     const w=/^w_d(blade|scythe|gaunt)([1-5])$/.exec(wid);if(w)return 'n_warp'+w[2];
     if(wid==='w_violet_dagger')return VFORM[(C&&C.P&&C.P.form)||'a']||'n_vi_slash';
+    if(wid==='w_durandal')return 'n_bs3';
+    if(wid==='w_blacksilence_bm'){const M={'느티나무 공방 도끼':'n_bs1','묵 공방 장검':'n_bs2','뒤랑달':'n_bs3','크리스탈 아틀리에 쌍검':'n_bs4','랑아 공방 단검':'n_bs5','로직 아틀리에 샷건':'n_bs6','알라스 공방 랜스':'n_bs7','휠스 인더스트리 대검':'n_bs8','늙은소년 공방 해머':'n_bs9','Furioso':'n_bsF'};return (e.card&&M[e.card.n])||'n_bs0'}
     if(wid==='w_blacksilence'){if(e.card&&(e.card.id==='x_furioso'||/Furioso/i.test(e.card.n||'')))return 'n_bsF';const m=/장갑 1d9 (\d)/.exec(e.note||'');return m?'n_bs'+m[1]:'n_bs0'}
     return '';
   }
@@ -1349,8 +1351,10 @@ export function startUI(E,app){
     return `<button class="btn primary" data-a="cont"><b>이어서 하기</b><span class="small">${esc(c.name||'이름 없는 사람')} · ${E.rankLabel(c)} · ${y}년차 · ${CFG.startAge+y-1}세</span><span class="dim small">${when} 저장${o.v!==UPDATES.v?` · ${o.v} 저장본`:''}</span></button>`;
   }
   /* 일대기: 클리어·쓰러짐 결과 화면을 판마다 자동 저장(최대 10개). 명예의 전당은 직접 고른 판만(최대 5개). 둘 다 직접 삭제할 수 있다 */
-  const CHRON='cityYearChron',CHRON_LIFE=10,CHRON_FAME=5;
-  const loadChron=()=>{try{const o=JSON.parse(store.get(CHRON)||'{}');return{life:Array.isArray(o.life)?o.life:[],fame:Array.isArray(o.fame)?o.fame:[]}}catch(e){return{life:[],fame:[]}}};
+  const CHRON='cityYearChron',CHRON_LIFE=15,CHRON_KEEP=10,CHRON_FAME=5;
+  /* 보호구역: 완주한 판과 55년 이상 산 판은 일대기와 따로 이곳에 보관된다(최대 CHRON_KEEP개, 가득 차면 가장 오래된 것부터). 예전에 일대기에 있던 그런 판도 밀려날 때 이곳으로 온다. 직접 삭제할 수 있다 */
+  const chronKeep=e=>!!(e&&(e.win||(e.yr||0)>=55));
+  const loadChron=()=>{try{const o=JSON.parse(store.get(CHRON)||'{}');return{life:Array.isArray(o.life)?o.life:[],fame:Array.isArray(o.fame)?o.fame:[],keep:Array.isArray(o.keep)?o.keep:[]}}catch(e){return{life:[],fame:[],keep:[]}}};
   const saveChron=o=>store.set(CHRON,JSON.stringify(o));
   function chronSnap(){
     const el=$('endShot');if(!el)return null;
@@ -1362,33 +1366,36 @@ export function startUI(E,app){
   function chronAuto(){
     const e=chronSnap();if(!e)return;const o=loadChron();
     if(o.life.some(x=>x.key===e.key)||o.fame.some(x=>x.key===e.key))return;
-    o.life.unshift(e);o.life=o.life.slice(0,CHRON_LIFE);saveChron(o);
+    if(chronKeep(e)){o.keep.unshift(e);o.keep=o.keep.slice(0,CHRON_KEEP);saveChron(o);return}   // 완주·55년 이상 판은 일대기 자리를 쓰지 않고 처음부터 보호구역에 따로 보관한다
+    o.life.unshift(e);
+    while(o.life.length>CHRON_LIFE){const x=o.life.pop();if(chronKeep(x)&&!o.keep.some(k=>k.key===x.key)){o.keep.unshift(x);o.keep=o.keep.slice(0,CHRON_KEEP)}}
+    saveChron(o);
   }
   /* 손주 이름: 명예의 전당에 직접 올린 지난 삶의 이름(나·연인·아이)을 엔진에 넘긴다. 지금 진행 중인 판의 기록(제1막 종료 때 자동으로 남는 것)은 뺀다. 예전에 저장한 판은 이름만 있다 */
   E.setGhost(()=>loadRec().ghost||null);
   E.setLegacy(()=>{const o=loadChron(),out=[],sd=G&&G.ch&&G.ch.seed!=null?G.ch.seed+'|':null;for(const e of o.fame){if(sd&&String(e.key||'').startsWith(sd))continue;if(e.name)out.push({n:e.name,k:'self'});if(e.lover)out.push({n:e.lover,k:'lover'});for(const n of e.kids||[])out.push({n:n,k:'kid'})}return out});
   const chDate=t=>new Date(t).toLocaleString('ko-KR',{year:'2-digit',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
   function chBtns(tab,e,view){
-    return `<div class="row" style="gap:6px;flex-wrap:wrap">${view?'':`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chview" data-i="${tab}:${e.id}">펼쳐 보기</button>`}${tab==='life'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chfame" data-i="${e.id}">명예의 전당에 올리기</button>`:''}${tab==='fame'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chmove" data-i="up:${e.id}" aria-label="위로">▲ 위로</button><button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chmove" data-i="down:${e.id}" aria-label="아래로">▼ 아래로</button>`:''}<button class="btn quiet" data-a="chdel" data-i="${tab}:${e.id}"${UI.delAsk===tab+':'+e.id?' style="width:auto;padding:8px 12px;border-color:#c25050;color:#c25050"':' style="width:auto;padding:8px 12px"'}>${UI.delAsk===tab+':'+e.id?'정말 삭제 · 한 번 더':'삭제'}</button></div>`;
+    return `<div class="row" style="gap:6px;flex-wrap:wrap">${view?'':`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chview" data-i="${tab}:${e.id}">펼쳐 보기</button>`}${tab==='life'||tab==='keep'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chfame" data-i="${e.id}">명예의 전당에 올리기</button>`:''}${tab==='fame'?`<button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chmove" data-i="up:${e.id}" aria-label="위로">▲ 위로</button><button class="btn quiet" style="width:auto;padding:8px 12px" data-a="chmove" data-i="down:${e.id}" aria-label="아래로">▼ 아래로</button>`:''}<button class="btn quiet" data-a="chdel" data-i="${tab}:${e.id}"${UI.delAsk===tab+':'+e.id?' style="width:auto;padding:8px 12px;border-color:#c25050;color:#c25050"':' style="width:auto;padding:8px 12px"'}>${UI.delAsk===tab+':'+e.id?'정말 삭제 · 한 번 더':'삭제'}</button></div>`;
   }
   /* 시작 화면 일대기 버튼: 좁은 화면은 위 한 줄(chron-in), 넓은 화면은 틀 바깥 왼쪽 위 모서리(chron-out). 틀 안에 두면 단테·검지 테마의 clip-path에 잘린다 */
   const chronBtn=cls=>{const o=loadChron();return `<button class="btn chronbtn ${cls}" data-a="chron"><b>📜 일대기 · 명예의 전당</b><span class="dim small">지난 판의 결과 화면 ${o.life.length}/${CHRON_LIFE} · 명예의 전당 ${o.fame.length}/${CHRON_FAME}</span></button>`};
   function vChron(){
-    const o=loadChron(),tab=UI.chTab==='fame'?'fame':'life',L=o[tab],msg=UI.chMsg;UI.chMsg='';
+    const o=loadChron(),tab=UI.chTab==='fame'?'fame':UI.chTab==='keep'?'keep':'life',L=o[tab],msg=UI.chMsg;UI.chMsg='';
     const b=(k,l)=>`<button class="${tab===k?'on':''}" data-a="chtab" data-i="${k}">${l}</button>`;
     const row=e=>`<div class="panel stack" style="gap:5px"><div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">${esc(e.name||e.line)}</b><span class="mono small dim" style="white-space:nowrap;text-align:right">${chDate(e.t)}${e.v?`<br>${esc(e.v)}`:''}</span></div><span class="small dim">${esc(e.line)}${e.wp?' · '+esc(e.wp):''}</span>${e.lover?`<span class="small dim">가족 · ${esc(e.lover)}${e.lost?(e.lostAge?' (수명을 다해 세상을 떠났다)':' (세상을 떠났다)'):''}</span>`:''}<span class="small" style="color:var(--gold)">${esc(e.res)}${e.yr?` · ${e.yr}년차`:''}${e.dy?` · 오늘의 시드 ${esc(e.dy)}`:''}</span>${chBtns(tab,e)}</div>`;
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저에만 남는 기록</div><h2>일대기</h2></div>
-      <div class="seg">${b('life',`일대기 ${o.life.length}/${CHRON_LIFE}`)}${b('fame',`명예의 전당 ${o.fame.length}/${CHRON_FAME}`)}</div>
-      <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
+      <div class="seg">${b('life',`일대기 ${o.life.length}/${CHRON_LIFE}`)}${b('fame',`명예의 전당 ${o.fame.length}/${CHRON_FAME}`)}${b('keep',`보호구역 ${o.keep.length}/${CHRON_KEEP}`)}</div>
+      <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 완주한 판과 55년 이상 산 판은 일대기 자리를 쓰지 않고 따로 보호구역에 보관된다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:tab==='keep'?`완주한 판과 55년 이상 산 판이 일대기와 따로 보관되는 곳. 최대 ${CHRON_KEEP}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
       ${msg?`<p class="small bad">${esc(msg)}</p>`:''}
-      ${L.length?L.map(row).join(''):`<div class="panel"><p class="small dim">${tab==='life'?'아직 저장된 판이 없다. 이야기가 끝나면 여기에 쌓인다.':'아직 올린 판이 없다. 일대기에서 골라 올린다.'}</p></div>`}
+      ${L.length?L.map(row).join(''):`<div class="panel"><p class="small dim">${tab==='life'?'아직 저장된 판이 없다. 이야기가 끝나면 여기에 쌓인다.':tab==='keep'?'아직 보호된 판이 없다. 완주하거나 55년 이상 살면 여기에 저장된다.':'아직 올린 판이 없다. 일대기에서 골라 올린다.'}</p></div>`}
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   const chMsgP=()=>{const m=UI.chMsg;UI.chMsg='';return m?`<p class="small bad">${esc(m)}</p>`:''};
   function vChronView(){
     const o=loadChron(),sel=UI.chSel||{},e=(o[sel.tab]||[]).find(x=>x.id===sel.id);
     if(!e)return `<div class="panel"><p class="small dim">기록을 찾을 수 없다.</p></div><button class="btn primary" data-a="chron">돌아가기</button>`;
-    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':'일대기'} · ${chDate(e.t)} 저장${e.v?' · '+esc(e.v):''}</div></div><div id="chShot" class="stack" style="gap:12px">${e.html}</div>${chMsgP()}${UI.imgUrl&&UI.screen==='chronview'?`<img alt="일대기 이미지" src="${UI.imgUrl}" style="width:100%;border-radius:6px"><p class="small dim">이미지를 길게 눌러(또는 오른쪽 클릭) 저장한다.</p>`:''}<button class="btn" data-a="chimg" data-i="${sel.tab}:${e.id}"><b>이미지로 저장 · 공유</b><span class="dim small">이 결과 화면을 그림 파일로 만든다</span></button>${e.sum?`<button class="btn" data-a="chimg2" data-i="${sel.tab}:${e.id}"><b>정리해서 저장 · 공유</b><span class="dim small">능력치·전투 기록·덱을 한 장으로 요약한 그림</span></button>`:''}${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
+    return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">${sel.tab==='fame'?'명예의 전당':sel.tab==='keep'?'보호구역':'일대기'} · ${chDate(e.t)} 저장${e.v?' · '+esc(e.v):''}</div></div><div id="chShot" class="stack" style="gap:12px">${e.html}</div>${chMsgP()}${UI.imgUrl&&UI.screen==='chronview'?`<img alt="일대기 이미지" src="${UI.imgUrl}" style="width:100%;border-radius:6px"><p class="small dim">이미지를 길게 눌러(또는 오른쪽 클릭) 저장한다.</p>`:''}<button class="btn" data-a="chimg" data-i="${sel.tab}:${e.id}"><b>이미지로 저장 · 공유</b><span class="dim small">이 결과 화면을 그림 파일로 만든다</span></button>${e.sum?`<button class="btn" data-a="chimg2" data-i="${sel.tab}:${e.id}"><b>정리해서 저장 · 공유</b><span class="dim small">능력치·전투 기록·덱을 한 장으로 요약한 그림</span></button>`:''}${chBtns(sel.tab,e,true)}<button class="btn primary" data-a="chron">목록으로</button>`;
   }
   /* 기록실 */
   /* 난이도: easy(쉬움) / normal(보통) / hard(하드). 예전 하드 켜기 설정(cityYearHard)도 이어 받는다 */
@@ -1619,9 +1626,17 @@ ${symRec(r)}
   const V1102SEC=[['🔧 조정과 수정',[
     '혈귀 태생: 혈귀 무기가 3단계(혈량 16)에 오른 뒤에도 혈량이 1 쌓일 때마다 공격 +1과 최대 HP +4를 번갈아 얻습니다. 공격은 최대 +40, 최대 HP는 최대 +160까지이고 무한 모드에서도 이어집니다.',
     '도서관의 지정사서: 바랄을 쓰러뜨린 뒤 제나와 두 번 싸우던 문제를 고쳤습니다. 이제 제나는 한 번만 만납니다.']]];
-  const NOTICE={id:'v11.0.2',t:'도시의 한 해 '+VERSION+' · 새 소식',
+  const V1110SEC=[['🆕 새로 들어온 것',[
+    '새 해금 출생 "검은 가면": 전용 무기와 전용 책장으로 시작하는 출생입니다. 해금 조건은 기록실에서 확인할 수 있습니다.',
+    '금기사냥꾼 개편: 동부 출신 외곽 생존자가 N사에서 과장이 되면 "금기 사냥팀 차출" 제안이 한 번 옵니다. 수락하면 해결사 3급으로 시작하고 몸이 강해지며, 금기 위반자를 쫓는 전용 임무 5개가 이어집니다. 새 패시브 낙인 · 금기 표식 · 집행이 생깁니다. 거절하면 지금까지처럼 N사 사다리를 오릅니다.',
+    '음악 카드 8장: 새 키워드 선율(쌓아 두는 버프)과 화음(쌓인 선율을 소모해 추가 피해). 일반 카드 보상에서 나옵니다.',
+    '금기 위반자: 금기사냥꾼의 임무에서 만나는 새로운 적 5종입니다.']],
+    ['🔧 조정과 수정',[
+    '일대기: 한도가 10개에서 15개로 늘었습니다. 완주한 판과 55년 이상 산 판은 일대기 자리를 쓰지 않고 "보호구역"에 따로 보관됩니다(최대 10개). 오래된 순으로 지워져 중요한 기록을 잃을 수 있던 문제를 고쳤습니다.',
+    '영어 화면: 설정의 언어에서 English를 고를 수 있습니다. 아직 부족한 번역이 있을 수 있습니다.']]];
+  const NOTICE={id:'v11.1.0',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:V1102SEC};
+    sec:V1110SEC};
   /* 공지는 이번 버전 것만 위에 보인다. 버전을 올릴 때: 지금 쓰던 VXXXXSEC를 PAST 맨 앞에 ['vX.Y.Z',VXXXXSEC]로 옮기고, 새 VXXXXSEC를 만들어 NOTICE.sec에 넣는다 */
   const V1029MIX=[['🔧 v10.1.7 조정',['공방 해결사 편의성 증가','연출 강도 차이가 나지 않던 것 수정','환상체 몇 명 조정','라운드마다 HP UI 조정']],['🔧 v10.1.8 조정',['세이브 불러오기 시 해금 목록이 바로 적용되지 않던 문제 수정']],['🔧 v10.1.9 조정',['공방 해결사 보조 장비 종류 선택 · 강화 개편','카드 보상을 받을 때 돈 500안을 함께 지급','R사 팀별 시작 무기 변경','손가락 승급 이벤트 추가']],['🔧 v10.2.0 조정',['호흡이 최대치를 넘어 쌓이던 버그 수정','보호막이 최대치를 넘은 상태에서 카드로 보호막을 얻으면 줄어들던 버그 수정','1000해 달성 이후 불순물 너프']],['🔧 v10.2.1 조정',['무기와 보조 장비로 부여할 수 있는 키워드량을 정리했습니다. 한 키워드당 라운드마다 무기 5, 보조 장비 5까지 부여하고, 둘을 합쳐 최대 10까지 부여할 수 있습니다.','공방 해결사 지팡이의 집중 키워드는 이 제한을 받지 않습니다. 강화 단계가 오를수록 쌓을 수 있는 최대치도 함께 늘어납니다.','위 부여량 제한이 규칙 요약에 빠져 있던 것을 추가했습니다.']],['🔧 v10.2.2 조정',['카드 보상을 받을 때 함께 주는 돈을 500안에서 200안으로 조정했습니다.']],['🔧 v10.2.3 조정',['무기로 거는 파열은 라운드 제한 대신 적중 한 번마다 5까지 부여합니다. 파열은 소모가 빨라 높게 쌓기 어려웠던 점을 고쳤습니다. 쌓이는 최대치는 그대로입니다.']],['🔧 v10.2.4 조정',['흑운회 전용 카드 흑운도를 낼 수 없던 문제를 고쳤습니다. 이제 구름이 3 이상이면 쓸 수 있고, 낼 차례에 구름이 모자라면 불발합니다(앞선 카드로 구름을 채웁니다).','흑운도를 강화했습니다. 주사위 5개 → 6개, 출혈 5 → 7.','카드가 효과를 내려면 필요한 구름이 카드에 표시됩니다.']],['🔧 v10.2.5 조정',['상대 HP 조건이 있는 카드(내부 숙청 · 처형 선고)를 낼 수 없을 때 이유를 카드에 표시합니다.']],['🔧 v10.2.6 조정',['검계·흑운회 보상 패치: 흑운도 강화, 육참·골단 조정, 폭발·반격 배율 표시 수정']],['🔧 v10.2.7 조정',['오늘의 시드가 11월 5일까지 특수 출신과 타고난 것 조합으로 바뀝니다. 타고난 것이 둘 함께 붙는 날도 있습니다.']],['🔧 v10.2.8 조정',['푸른 잔향 난이도를 조정했습니다.']],['🔧 v10.2.9 조정',['장비금지 가시성을 조금 올렸습니다.']]];
 
@@ -1745,7 +1760,7 @@ ${symRec(r)}
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v11.0.1',V1101SEC],['v11.0.0',V1100SEC],['v10.4.2',V1042SEC],['v10.4.1',V1041SEC],['v10.4.0',V1040SEC],['v10.3.0',V1030SEC],['v10.1.7 ~ v10.2.9 조정 모음',V1029MIX],['v10.1.5',V1015SEC],['v10.1.0',V1010SEC],['v10.0.8',V1008SEC],['v10.0.7',V1007SEC],['v10.0.6',V1006SEC],['v10.0.5',V1005SEC],['v10.0.4',V1004SEC],['v10.0.3',V1003SEC],['v10.0.2',V1002SEC],['v10.0.1',V1001SEC],['v10.0.0',V1000SEC],['v9.9.4',V994SEC],['v9.8.7',V987SEC],['v9.8.6',V986SEC],['v9.8.5',V985SEC],['v9.8.4',V984SEC],['v9.4.4',V944SEC],['v9.4.3',V943SEC],['v9.4.2',V942SEC],['v9.4.0',V940SEC],['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v11.0.2',V1102SEC],['v11.0.1',V1101SEC],['v11.0.0',V1100SEC],['v10.4.2',V1042SEC],['v10.4.1',V1041SEC],['v10.4.0',V1040SEC],['v10.3.0',V1030SEC],['v10.1.7 ~ v10.2.9 조정 모음',V1029MIX],['v10.1.5',V1015SEC],['v10.1.0',V1010SEC],['v10.0.8',V1008SEC],['v10.0.7',V1007SEC],['v10.0.6',V1006SEC],['v10.0.5',V1005SEC],['v10.0.4',V1004SEC],['v10.0.3',V1003SEC],['v10.0.2',V1002SEC],['v10.0.1',V1001SEC],['v10.0.0',V1000SEC],['v9.9.4',V994SEC],['v9.8.7',V987SEC],['v9.8.6',V986SEC],['v9.8.5',V985SEC],['v9.8.4',V984SEC],['v9.4.4',V944SEC],['v9.4.3',V943SEC],['v9.4.2',V942SEC],['v9.4.0',V940SEC],['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -1908,6 +1923,12 @@ ${symRec(r)}
     }).concat(lockBtns).sort((a,b)=>a.i-b.i).map(x=>x.html).join('');
     if(ev.pact){const K=CFG.infinite.pact,cs=E.options(G,ev).map(({c,i})=>{const q=c.pc||{};return `<button class="pcard ${ev.pact==='c'?'pc-c':'pc-b'}" data-a="choose" data-i="${i}"><span class="pk">${ev.pact==='c'?'제약':'버프'}</span><b class="pn">${esc(c.l)}</b><span class="pe">${esc(q.e||'')}</span><span class="pm mono small">${q.n||0}/${q.cap||K.cap}번 → ${(q.n||0)+1}번째${q.syn?' · 짝 제약 효과 ×'+K.pairMul:''}</span></button>`}).join('');
       return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead" style="white-space:pre-line">${ev.x}</p></div><div class="pcards">${cs}</div>`}
+    /* 검은 가면 허무 루트의 한 번뿐인 장면: 위아래 검은 띠, 색이 빠진 화면, 한 줄씩 나타나는 글. 이름은 이 장면 안에서만 흩어졌다가 돌아온다(저장된 이름은 그대로) */
+    if(ev.gl){const nm=[...(ch.name||'이름')],st=2.4;let i=0;
+      const row=g=>{const dl=(i++)*st;if(g.x)return `<p class="gline${g.dup?' gdup':''}" style="animation-delay:${dl}s">${g.x}</p>`;
+        return `<p class="gline gname g${g.name}" style="animation-delay:${dl}s" aria-label="${esc(ch.name||'')}">${nm.map((c_,k)=>`<span style="animation-delay:${(dl+k*.37).toFixed(2)}s">${esc(c_)}</span>`).join('')}</p>`};
+      const body=ev.gl.map(row).join('');
+      return `<div class="gscene"><div class="gbar"></div><div class="gbody"><div class="eyebrow gline" style="animation-delay:0s">${ev.t}</div>${body}<div class="stack gline" style="animation-delay:${i*st}s">${btns}</div></div><div class="gbar"></div></div>`}
     const page=`${vHud()}<div class="stack${ev.shake?' wave-shake':''}" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2>${ev.xs?ev.xs.map(x_=>`<p class="lead">${x_}</p>`).join(''):`<p class="lead" style="white-space:pre-line">${ev.x}</p>`}</div><div class="stack">${btns}</div>${officeLegend(ev)}`;
     return ev.voices&&G.ch.mind<=CFG.mind.voiceAt&&UI.voicePicked!==ev?page+voiceOverlay(ev):page;
   }
@@ -2913,7 +2934,7 @@ ${symRec(r)}
     if(!O||!E.staffOwner(ch))return `<div class="panel"><p class="small dim">사무소가 없다.</p></div>`;
     const kw={bleed:'출혈',rupture:'파열',breath:'호흡',burn:'화상',sink:'침잠'}[O.kw]||O.kw,list=E.staffList(ch),cands=list.length<SF_.max?E.staffCands(ch,G.year):[];
     const GR_=CFG.office.grade,gr=E.officeGrade(ch),top=gr>=GR_.names.length,lock=UI.screen==='combat',inc=E.staffIncome(ch),nextB=O.brokerNext>G.year?`${O.brokerNext}년차`:'이번 방문';
-    const sRow=(s,i)=>{const T_=SF_.types[s.type],lv=E.staffLv(s,G.year);return `<div class="panel stack" style="gap:4px"><div class="row between"><b class="serif">${esc(s.n)}</b><span class="chip">${esc(T_.n)} · ${lv}단계${lv>=SF_.lvMax?' (최대)':''}${s.sp&&!s.spName?' · 특색':''}</span></div>${s.spName?`<span class="mono small" style="color:${s.ci!=null&&D.colors[s.ci]?D.colors[s.ci].hex:'var(--gold)'}">특색 · 「${esc(s.spName)}」</span>`:''}
+    const sRow=(s,i)=>{const T_=SF_.types[s.type],lv=E.staffLv(s,G.year);return `<div class="panel stack" style="gap:4px"><div class="row between"><b class="serif">${esc(s.n)}</b><span class="chip">${esc(T_.n)} · ${lv}단계${lv>=SF_.lvMax?' (최대)':''}${s.rk?` · 승급 ${s.rk}`:''}${s.sp&&!s.spName?' · 특색':''}</span></div>${s.spName?`<span class="mono small" style="color:${s.ci!=null&&D.colors[s.ci]?D.colors[s.ci].hex:'var(--gold)'}">특색 · 「${esc(s.spName)}」</span>`:''}
       <span class="mono small">신뢰 ${'●'.repeat(s.trust==null?CFG.office.staffEv.trustStart:s.trust)}${'○'.repeat(CFG.office.staffEv.trustMax-(s.trust==null?CFG.office.staffEv.trustStart:s.trust))} · ${esc((s.traits||[]).join(' · ')||'—')}</span>
       <span class="mono small" style="color:var(--gold)">${esc(T_.e)}${lv>1?` ×${lv}`:''}</span>${(s.ab||[]).length?`<span class="mono small" style="color:var(--gold)">특수능력 · ${esc([...new Set(s.ab)].map(id=>{const A=CFG.office.staffEv.spAb.find(x=>x.id===id),k=s.ab.filter(x=>x===id).length;return A?A.n+'('+A.e+')'+(k>1?' ×'+k:''):id}).join(' · '))}</span>`:''}<span class="mono small dim">${s.y}년차에 고용 · 월급 ${E.money(SF_.wage)}/해 · 의뢰 해결 ${s.done||0}건${!s.sp?` · 특색 시험 ${lv>=SF_.lvMax?((s.done||0)>=CFG.office.staffEv.exam.doneMin?((s.tries||0)>=CFG.office.staffEv.exam.maxTry?'응시 끝':'응시 가능'):'실적 '+CFG.office.staffEv.exam.doneMin+'건 필요'):'최대 단계부터'}`:''}</span>
       ${UI.officeAsk===i?`<div class="row" style="gap:8px"><button class="btn" data-a="staffdel" data-i="${i}">정말 내보낸다</button><button class="btn quiet" data-a="staffno">그만둔다</button></div>`:`<button class="btn quiet" data-a="staffdel" data-i="${i}" style="width:auto;padding:6px 12px">내보낸다</button>`}</div>`};
@@ -3165,9 +3186,9 @@ ${symRec(r)}
     chimg2(v){return ACT.chimg(v,true)},
     chron(){UI.delAsk=null;UI.screen='chron';render()},
     rfold(k){const f=recFold(),i=f.indexOf(k);if(i<0)f.push(k);else f.splice(i,1);try{localStorage.setItem(RFK,JSON.stringify(f))}catch(e){}render()},
-    chtab(k){UI.delAsk=null;UI.chTab=k==='fame'?'fame':'life';UI.screen='chron';render()},
+    chtab(k){UI.delAsk=null;UI.chTab=k==='fame'?'fame':k==='keep'?'keep':'life';UI.screen='chron';render()},
     chview(v){const [tab,id]=String(v).split(':');UI.delAsk=null;UI.imgUrl=null;UI.chSel={tab,id};UI.screen='chronview';render()},
-    chfame(id){const o=loadChron(),e=o.life.find(x=>x.id===id);if(!e)return;
+    chfame(id){const o=loadChron(),e=o.life.find(x=>x.id===id)||o.keep.find(x=>x.id===id);if(!e)return;
       if(o.fame.some(x=>x.key===e.key)){UI.chMsg='이미 명예의 전당에 있다.'}
       else if(o.fame.length>=CHRON_FAME){UI.chMsg=`명예의 전당은 최대 ${CHRON_FAME}개다. 하나를 삭제한 뒤 올려 주세요.`;UI.chTab='fame'}
       else{o.fame.unshift(e);saveChron(o);UI.chMsg='명예의 전당에 올렸다.'}
@@ -3399,6 +3420,8 @@ ${symRec(r)}
     testG(o){if(!G)return;Object.assign(G,o);render()},
     testLedger(){if(!G)return;UI.ledger={a:G.year,b:G.year+24,n:24,st:null};UI.screen='ledger';render()},
     testAccel(y,mode){if(!G)return;const c=G.ch;G.infinite=true;G.endless=true;c.infinite=true;c.infImp=1;c.infIntro=1;c.outSeen=c.outSeen||{};c.outSeen.seal=1;if(mode==='offer'){delete c.accelChoice;c.accelOfferAt=0}else c.accelChoice='yes';c.accelAge=null;c.oldEnd=true;c.infCent=[1,2];c.limAt=1e9;c.pactAt=1e9;G.year=c.year=(y||200)-1;c.hp=c.stats.maxHp;nextYear()},
+    testBmDemote(on){if(!G)return;const c=G.ch;c.flags=c.flags||{};c.licensed=true;c.rank=1;if(on)c.flags.bm_demote=1;else delete c.flags.bm_demote;render()},
+    testGlitch(){if(!G)return;const Z=D.bmVoid.glitch;UI.ev={t:Z.t,x:'',gl:Z.gl,c:[{l:Z.a,h:'잃는 것은 없다',ok:{t:Z.at,fx:{}}}]};UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
     testInfLake(n){if(!G)return null;const c=G.ch,X=CFG.endless,be=CFG.years+X.span*X.grades.length,out={};G.infinite=true;c.infinite=true;c.infIntro=1;c.flags=c.flags||{};c.flags.lake=1;c.lake=c.lake||{};c.lake.captain=true;
       for(let i=0;i<(n||300);i++){G.year=c.year=be+1+i;c.hp=c.stats.maxHp;c.mind=E.mindMax(c);try{const st=E.advanceYear(G);const k=st.type==='omen'?'omen:'+st.boss+(st.echo?'(echo)':''):st.type==='fight'?'fight:'+st.enemy:st.type;out[k]=(out[k]||0)+1}catch(e){out['ERR '+e.message]=(out['ERR '+e.message]||0)+1}}try{E.answerOmen(G,{boss:'hongwon',rift:true,escape:true,spec:'table:late'},true);out._intro=D.enemies.hongwon.intro}catch(e){out._intro='ERR '+e.message}return out},

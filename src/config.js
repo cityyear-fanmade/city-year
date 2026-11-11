@@ -225,8 +225,13 @@ export const CFG = {
   duel: {org: '생크 협회', n: '결투 선언', dmg: 3},
   /* 6시즌 N사 날개: 의체를 쓰지 않는다(의수 칸 사용 불가). 대신 전투마다 신체 강화(공격·회피·속도), 의체 심판: 의체 상대(enemies aug, 소개 문구에 의체가 분명한 적만) 적중마다 피해 +augDmg */
   /* 동부 외곽 해결사 히든 제안: rank급 이하에서 N사가 startFi번째 직급(0 사원 · 1 대리)으로 스카우트. tries번까지, 거절하면 gap년 뒤. align = N사 직급(사원~임원)별로 해결사 급수가 이만큼은 되도록 맞춘다 */
-  eastN: {rank: 5, startFi: 1, tries: 2, gap: 4, align: [9, 8, 6, 4, 2], promoMul: 0.6 /* 동부 출신 N사의 승진 요구량 배율(임원까지) */},
-  nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastNail: 2 /* 동부 출신은 운명과 함께 못도 적중마다 이만큼 건다(전에는 0) */, eastTitle: '금기사냥꾼'},
+  eastN: {rank: 5, startFi: 1, tries: 2, gap: 4, align: [9, 8, 6, 4, 2], promoMul: 0.6 /* 동부 출신 N사의 승진 요구량 배율(임원까지) */, huntMul: 1 /* 금기 사냥팀에 들어간 뒤의 배율(조금 느리다) */},
+  bmVoid: {ragePer: 0.08, rageMax: 10, glitchYear: 79} /* 검은 가면 허무 루트: 분노 1마다 주는 피해 +ragePer(최대 rageMax), 이름이 흩어지는 장면이 나오는 연차 */,
+  bmKeep: {yearMind: 1} /* 검은 가면 지킴 루트: 곁의 사람이 있는 동안 해마다 정신력 회복 */,
+  melody: {cap: 9, per: 2, t3: 3, t6: 5, t9: 1.3} /* 음악 카드: 선율(자신에게 쌓는 버프, 최대 cap) · 화음 카드가 선율을 모두 소모해 선율 1마다 피해 +per, 3 이상 +t3, 6 이상 +t6 더, cap이면 그 타격 ×t9 */,
+  bmMood: {deal: 3, take: 1.5} /* 검은 가면: 피아니스트·검은 침묵과 싸울 때 절망(허무 루트)·불안(지킴 루트) — 주는 피해 ×deal, 받는 피해 ×take */,
+  taboo: {execNail: 10, markAt: 3, nailAt: 3, execDmg: 8, execPer: 2, execHeal: 6} /* 금기사냥꾼 패시브: 금기 표식(표식 markAt개부터, 못 nailAt 이상인 적에게 표식 수만큼 추가 피해) · 집행(적의 못이 execNail에 닿는 순간 확정 일격 execDmg+표식×execPer, HP execHeal 회복, 라운드당 1회) */,
+  nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastNail: 2 /* 동부 출신은 운명과 함께 못도 적중마다 이만큼 건다(전에는 0) */, eastTitle: '금기사냥꾼', tbRank: 3 /* 금기사냥꾼은 해결사 3급으로 시작한다 */, tbBody: {maxHp: 30, atk: 3, spd: 1} /* N사 육체 시술(의체 아님)로 강화된 몸 */, brand: 1 /* 낙인: 금기 사냥팀에 들어가면 못 적중이 이만큼 더 강해진다 */},
   /* N사 날개 · 못(상대에게 쌓임, 최대 cap): 적중마다 hit(의체 적은 augHit). 3·4코스트 망치 카드가 못을 모두 흐트러짐으로 바꾼다 (nailBurst.mul배).
      흐트러짐: 단계(stages)마다 상대의 명중 −hit · 주는 피해 −dmg · 받는 피해 +take, 라운드 끝에 decay씩 줄고, stun(적 등급별) 이상이면 다음 라운드 기절 */
   /* 대호수 작살: 작살 카드가 적중하면 쌓이고, 당기는 카드(harpoonPull)가 모두 소모해 스택당 per 피해를 더한다 */
@@ -399,7 +404,7 @@ export const CFG = {
       buff: [{}, {maxHp: 6}, {maxHp: 10, check: 1}, {maxHp: 14, check: 1, atk: 1}, {maxHp: 20, check: 2, atk: 2}], buffTxt: ['없음', '최대 HP +6', '최대 HP +10 · 판정 +1', '최대 HP +14 · 판정 +1 · 공격 +1', '최대 HP +20 · 판정 +2 · 공격 +2'],
       pay: [300, 500, 800, 1200, 1800]},
     /* 직원 이벤트: 직원마다 신뢰(0~trustMax, 시작 trustStart)와 성격 2개가 있다. 해마다 chance% 확률로 직원 이벤트가 열리고 다음은 gap해 뒤. 신뢰는 성과를 올릴 확률(신뢰 1당 trustChance%)과 이탈·배신 이벤트의 조건이 된다. 특색(sp)을 인정받은 직원은 효과가 spMul배 */
-    staffEv: {chance: 40, gap: 2, trustStart: 2, trustMax: 5, trustChance: 4, spMul: 1.5, traits: ['성실', '욕심', '겁많음', '불같음'],
+    staffEv: {rank: {max: 4, per: 0.2, gap: 6, chance: 70, dc: 60, trustMul: 5, failGap: 12, laterGap: 4} /* 무한 모드 직원 승급: 최고 단계(3단계)가 된 직원이 과거의 승급 심사로 승급 단계가 오르면 효과 +per씩(최대 max번). gap해마다 chance%로 심사 사건 */, chance: 40, gap: 2, trustStart: 2, trustMax: 5, trustChance: 4, spMul: 1.5, traits: ['성실', '욕심', '겁많음', '불같음'],
       /* 특색 시험: 직원이 최대 단계(1급)이고 의뢰 해결(실적)이 doneMin건 이상이면 시험 사건이 열린다. 1d100 + 신뢰×trustMul ≥ dc면 합격(특색 인정 + 특수능력), 불합격이면 신뢰 −1, gap해 뒤에 다시(최대 maxTry번).
          합격하면 뽑힌 두 글자 이름의 특수능력(spAb)을 얻는다. 신뢰가 가득 찬 직원은 효과가 두 배(능력 2번). 직원끼리 같은 능력이면 중첩된다 */
       /* 직원 특색 이름: 플레이어 특색처럼 '색 + 두 글자'. 색은 플레이어·다른 직원과 겹치지 않게 뽑고, 두 글자는 아래 목록에서 겹치지 않게 뽑는다 */
