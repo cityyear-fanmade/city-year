@@ -226,7 +226,7 @@ export const CFG = {
   /* 6시즌 N사 날개: 의체를 쓰지 않는다(의수 칸 사용 불가). 대신 전투마다 신체 강화(공격·회피·속도), 의체 심판: 의체 상대(enemies aug, 소개 문구에 의체가 분명한 적만) 적중마다 피해 +augDmg */
   /* 동부 외곽 해결사 히든 제안: rank급 이하에서 N사가 startFi번째 직급(0 사원 · 1 대리)으로 스카우트. tries번까지, 거절하면 gap년 뒤. align = N사 직급(사원~임원)별로 해결사 급수가 이만큼은 되도록 맞춘다 */
   eastN: {rank: 5, startFi: 1, tries: 2, gap: 4, align: [9, 8, 6, 4, 2], promoMul: 0.6 /* 동부 출신 N사의 승진 요구량 배율(임원까지) */, huntMul: 1 /* 금기 사냥팀에 들어간 뒤의 배율(조금 느리다) */},
-  bmVoid: {ragePer: 0.08, rageMax: 10, glitchYear: 100} /* 검은 가면 허무 루트: 분노 1마다 주는 피해 +ragePer(최대 rageMax), 이름이 흩어지는 장면이 나오는 연차 */,
+  bmVoid: {ragePer: 0.08, rageMax: 10, glitchYear: 79} /* 검은 가면 허무 루트: 분노 1마다 주는 피해 +ragePer(최대 rageMax), 이름이 흩어지는 장면이 나오는 연차 */,
   bmKeep: {yearMind: 1} /* 검은 가면 지킴 루트: 곁의 사람이 있는 동안 해마다 정신력 회복 */,
   melody: {cap: 9, per: 2, t3: 3, t6: 5, t9: 1.3} /* 음악 카드: 선율(자신에게 쌓는 버프, 최대 cap) · 화음 카드가 선율을 모두 소모해 선율 1마다 피해 +per, 3 이상 +t3, 6 이상 +t6 더, cap이면 그 타격 ×t9 */,
   bmMood: {deal: 3, take: 1.5} /* 검은 가면: 피아니스트·검은 침묵과 싸울 때 절망(허무 루트)·불안(지킴 루트) — 주는 피해 ×deal, 받는 피해 ×take */,
