@@ -1267,6 +1267,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.tbJoin){const Bd=CFG.nWing.tbBody;addStats(ch.stats,Bd);ch.hp+=Bd.maxHp;chips.push(`N사 육체 시술 · 최대 HP +${Bd.maxHp} · 공격 +${Bd.atk} · 속도 +${Bd.spd} (의체가 아니라 몸 자체를 고친 것이다)`);if(ch.licensed&&ch.rank>CFG.nWing.tbRank){while(ch.rank>CFG.nWing.tbRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급으로 시작한다`)}}
     if(fx.bmLose&&ch.bond&&ch.bond.st!=='lost'&&ch.bond.st!=='declined'){const b_=ch.bond;if(b_.st==='married')bondDeath(ch,chips);else{b_.st='lost';ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`곁에 있던 사람을 잃었다 · 최대 정신력 −${BD.lossMind} (영구)`)}b_.dieBy='risk';b_.dieYear=ch.year||0}
     if(fx.bmMind){const g_=gainMind(ch,fx.bmMind);if(g_)chips.push('정신력 +'+g_+' (무한 모드에 들어서며 마음이 가라앉는다)')}
+    if(fx.bmCalm){const g_=gainMind(ch,fx.bmCalm);if(g_)chips.push('정신력 +'+g_)}
     if(fx.bmRage){ch.bmRage=Math.min(CFG.bmVoid.rageMax,(ch.bmRage||0)+fx.bmRage);chips.push(`분노 ${ch.bmRage}/${CFG.bmVoid.rageMax} · 주는 피해 +${Math.round(ch.bmRage*CFG.bmVoid.ragePer*100)}%`)}
     if(fx.tbMark){ch.tabooMarks=Math.min(5,(ch.tabooMarks||0)+fx.tbMark);chips.push(`금기 표식 ${ch.tabooMarks}/5`)}
     if(fx.hw){const r=ch.hw,k=fx.hw,Z=CFG.hw,y=ch.year||0;
@@ -2961,7 +2962,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(G.infinite&&G.ch.infinite&&G.ch.colorDone){const Lm=CFG.infinite.limit;if(G.year%Lm.traitYearEvery===0)G.ch.stats.atk+=1}
     if(lakeOn(G.ch)&&!G.ch.distForm&&G.ch.mind>CFG.lake.mindKeep)loseMind(G.ch,Math.min(CFG.lake.mindYear,G.ch.mind-CFG.lake.mindKeep));if(hasInn(G.ch,'will'))gainMind(G.ch,CFG.innate.willHeal);
       {const mt=corpType(G.ch);if(mt&&mt.year)gainMind(G.ch,mt.year+corpLv(G.ch)*(mt.yearPer||0))}
-      if(bondMarried(G.ch))gainMind(G.ch,BD.yearMind);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
+      if(bondMarried(G.ch))gainMind(G.ch,BD.yearMind);if(G.ch.flags&&G.ch.flags.bm_family&&G.ch.bond&&['met','married'].includes(G.ch.bond.st))gainMind(G.ch,CFG.bmKeep.yearMind);G.lastIncome=earn(G.ch,income(G.ch));G.ch.money+=G.lastIncome}
     /* 근속: 진로가 있으면 해마다 포인트가 조금씩 쌓인다 */
     if(G.year>1&&CFG.promo.gain.year&&canPromote(G.ch))G.ch.pp=(G.ch.pp||0)+CFG.promo.gain.year*(isFinger(G.ch)&&G.ch.fingerMul||1);
     {const wv=webStep(G);if(wv)return wv}
