@@ -1965,6 +1965,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         {l:bondFill(S.b,b),h:'변화 없음',ok:{t:resT(S.bt,B.stepBTs,B.stepBT),fx:{}}}]};
     }
     /* 인연 이벤트를 하나도 쌓지 않았다면 상대는 관심이 없다: 청혼 자리가 열리지 않고 조용히 떠난다 */
+    /* 검은 가면: 청혼은 상대가 먼저 한다. 플레이어는 받을지 미룰지만 고른다. 미뤄도 기회가 줄지 않고 상대는 떠나지 않는다 */
+    if(ch.o&&ch.o.key==='blackmask')return {t:R.propose.t,x:bondFill(R.propose.x,b)+'\n\n'+bondFill('{n}이 먼저 말을 꺼냈다. 함께 살자고 했다.',b),xs:[bondFill(R.propose.x,b),bondFill('{n}이 먼저 말을 꺼냈다. 함께 살자고 했다.',b)],c:[
+      {l:'받아들인다',h:'결혼 · 최대 HP·정신력·판정 상승',ok:{t:bondFill('가면 아래에서 고개를 끄덕였다. {n}은 그 대답을 알아보았다.',b),fx:{bmMarry:true}}},
+      {l:'조금 더 시간을 달라고 한다',h:'상대는 기다린다 · 몇 해 뒤 다시 묻는다 · 떠나지 않는다',ok:{t:bondFill('{n}은 재촉하지 않았다. 기다리는 쪽도 나쁘지 않다고 했다.',b),fx:{bmLater:true}}}]};
     if(!(b.love||0)&&!(b.extra||0))return {t:'말없이 떠난 사람',x:bondFill(R.left,b)+' 함께한 시간은 있었지만 쌓인 것은 없었다.',c:[{l:'떠나는 뒷모습을 본다',h:`최대 정신력 −${BD.leaveMind} (영구)`,ok:{t:bondFill('{n}의 이름을 한 번 불러 보았다. 대답은 돌아오지 않았다.',b),fx:{bondLeave:true}}}]};
     /* 흑수 루트: 청혼이 아니라 약한 후보가 먼저 고백한다. 플레이어는 지금의 자리를 보고 받아들일지 정한다 */
     if(ch.hw&&ch.hw.beast){const rk=(ch.hw.rank2?'필두':ch.hw.rank1?'흑수':'아직 이름을 얻지 못한 몸')+' · '+CFG.hw.candRanks[hwCandRank(ch.hw.mk||0)];
@@ -3284,6 +3288,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.bondLeave&&ch.bond&&ch.bond.st==='met')bondLeft(ch,chips);
     if(fx.hwLoveYes&&ch.bond&&ch.bond.st==='met'){bondMarry(ch,chips);if(ch.hw)ch.hw.loved=1}
     if(fx.hwLoveNo&&ch.bond&&ch.bond.st==='met'){ch.bond.st='refused';if(ch.hw)ch.hw.refused=1;chips.push('후보의 마음을 받아들이지 않았다 · 흑수로 곁에 남는다')}
+    if(fx.bmMarry&&ch.bond&&ch.bond.st==='met')bondMarry(ch,chips);
+    if(fx.bmLater&&ch.bond&&ch.bond.st==='met'){ch.bond.next=(ch.year||0)+bondGap();chips.push('곁의 사람은 기다려 준다')}
     if(fx.bondPropose)bondPropose(ch,chips,true);
     if(fx.bondSlip)bondPropose(ch,chips,false);
     if(fx.bondWait&&ch.bond){ch.bond.extra=(ch.bond.extra||0)+1;chips.push('인연을 더 쌓았다 · 청혼 기회는 그대로다')}
