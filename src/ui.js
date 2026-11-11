@@ -1912,6 +1912,12 @@ ${symRec(r)}
     }).concat(lockBtns).sort((a,b)=>a.i-b.i).map(x=>x.html).join('');
     if(ev.pact){const K=CFG.infinite.pact,cs=E.options(G,ev).map(({c,i})=>{const q=c.pc||{};return `<button class="pcard ${ev.pact==='c'?'pc-c':'pc-b'}" data-a="choose" data-i="${i}"><span class="pk">${ev.pact==='c'?'제약':'버프'}</span><b class="pn">${esc(c.l)}</b><span class="pe">${esc(q.e||'')}</span><span class="pm mono small">${q.n||0}/${q.cap||K.cap}번 → ${(q.n||0)+1}번째${q.syn?' · 짝 제약 효과 ×'+K.pairMul:''}</span></button>`}).join('');
       return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2><p class="lead" style="white-space:pre-line">${ev.x}</p></div><div class="pcards">${cs}</div>`}
+    /* 검은 가면 허무 루트의 한 번뿐인 장면: 위아래 검은 띠, 색이 빠진 화면, 한 줄씩 나타나는 글. 이름은 이 장면 안에서만 흩어졌다가 돌아온다(저장된 이름은 그대로) */
+    if(ev.gl){const nm=[...(ch.name||'이름')],st=2.4;let i=0;
+      const row=g=>{const dl=(i++)*st;if(g.x)return `<p class="gline${g.dup?' gdup':''}" style="animation-delay:${dl}s">${g.x}</p>`;
+        return `<p class="gline gname g${g.name}" style="animation-delay:${dl}s" aria-label="${esc(ch.name||'')}">${nm.map((c_,k)=>`<span style="animation-delay:${(dl+k*.37).toFixed(2)}s">${esc(c_)}</span>`).join('')}</p>`};
+      const body=ev.gl.map(row).join('');
+      return `<div class="gscene"><div class="gbar"></div><div class="gbody"><div class="eyebrow gline" style="animation-delay:0s">${ev.t}</div>${body}<div class="stack gline" style="animation-delay:${i*st}s">${btns}</div></div><div class="gbar"></div></div>`}
     const page=`${vHud()}<div class="stack${ev.shake?' wave-shake':''}" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2>${ev.xs?ev.xs.map(x_=>`<p class="lead">${x_}</p>`).join(''):`<p class="lead" style="white-space:pre-line">${ev.x}</p>`}</div><div class="stack">${btns}</div>${officeLegend(ev)}`;
     return ev.voices&&G.ch.mind<=CFG.mind.voiceAt&&UI.voicePicked!==ev?page+voiceOverlay(ev):page;
   }
@@ -3403,6 +3409,7 @@ ${symRec(r)}
     testG(o){if(!G)return;Object.assign(G,o);render()},
     testLedger(){if(!G)return;UI.ledger={a:G.year,b:G.year+24,n:24,st:null};UI.screen='ledger';render()},
     testAccel(y,mode){if(!G)return;const c=G.ch;G.infinite=true;G.endless=true;c.infinite=true;c.infImp=1;c.infIntro=1;c.outSeen=c.outSeen||{};c.outSeen.seal=1;if(mode==='offer'){delete c.accelChoice;c.accelOfferAt=0}else c.accelChoice='yes';c.accelAge=null;c.oldEnd=true;c.infCent=[1,2];c.limAt=1e9;c.pactAt=1e9;G.year=c.year=(y||200)-1;c.hp=c.stats.maxHp;nextYear()},
+    testGlitch(){if(!G)return;const Z=D.bmVoid.glitch;UI.ev={t:Z.t,x:'',gl:Z.gl,c:[{l:Z.a,h:'잃는 것은 없다',ok:{t:Z.at,fx:{}}}]};UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testOverflow(){if(!G)return;G.infinite=true;G.endless=true;G.ch.infinite=true;G.year=G.ch.year=984;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.outEnd=null;UI.outerEnd=false;UI.overflowEnd=true;UI.death=null;UI.screen='end';render()},
     testInfLake(n){if(!G)return null;const c=G.ch,X=CFG.endless,be=CFG.years+X.span*X.grades.length,out={};G.infinite=true;c.infinite=true;c.infIntro=1;c.flags=c.flags||{};c.flags.lake=1;c.lake=c.lake||{};c.lake.captain=true;
       for(let i=0;i<(n||300);i++){G.year=c.year=be+1+i;c.hp=c.stats.maxHp;c.mind=E.mindMax(c);try{const st=E.advanceYear(G);const k=st.type==='omen'?'omen:'+st.boss+(st.echo?'(echo)':''):st.type==='fight'?'fight:'+st.enemy:st.type;out[k]=(out[k]||0)+1}catch(e){out['ERR '+e.message]=(out['ERR '+e.message]||0)+1}}try{E.answerOmen(G,{boss:'hongwon',rift:true,escape:true,spec:'table:late'},true);out._intro=D.enemies.hongwon.intro}catch(e){out._intro='ERR '+e.message}return out},
