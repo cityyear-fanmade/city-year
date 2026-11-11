@@ -16769,5 +16769,17 @@
  "곁의 사람은 친구로 남는다 · 결혼하지 않는다": "The person beside you remains a friend · No marriage",
  "일반 개발을 이어 간다": "Continue regular development",
  "경험치 +1 · 금기에 손대지 않는다 · 강화는 더 오르지 않는다": "XP +1 · Do not touch the taboo · Upgrades no longer rise",
- "보고할 수 있는 일만 했다. 수치는 조금씩 맞아 갔고, 어떤 서류에도 적을 수 없는 것은 늘지 않았다.": "You only did what could be reported. The numbers fell into line little by little, and nothing that could not be written in any document grew."
+ "보고할 수 있는 일만 했다. 수치는 조금씩 맞아 갔고, 어떤 서류에도 적을 수 없는 것은 늘지 않았다.": "You only did what could be reported. The numbers fell into line little by little, and nothing that could not be written in any document grew.",
+ "0이 되면 쓰러진다.": "You fall when it reaches 0.",
+ "명중(공격÷2)과 모든 타격 피해(공격÷6)를 올린다.": "Raises accuracy (Atk÷2) and all hit damage (Atk÷6).",
+ "상대의 명중 굴림에 맞서는 값이다.": "The value that opposes the opponent's accuracy roll.",
+ "라운드 순서 굴림(1d100 + 속도×{0})에 더해 먼저 움직일지 정한다.": "Adds to the round order roll (1d100 + Speed×{0}) to decide who moves first.",
+ "사건의 1d100 판정에 더한다.": "Added to an event's 1d100 check.",
+ "명중 굴림에만 더해진다.": "Added to accuracy rolls only.",
+ "0이 되면 E.G.O 개화나 뒤틀림이 일어난다.": "At 0, E.G.O blooming or Distortion occurs.",
+ "히든 보스 「": "Hidden boss 「",
+ "」과 싸워 쓰러뜨린다.": "」: fight and defeat it.",
+ "최대 정신력 {0} (영구)": "Max Sanity {0} (permanent)",
+ "경험치 +{0}": "XP +{0}",
+ "화음(선율 {0})+{1}": "Chord (Melody {0}) +{1}"
 }
