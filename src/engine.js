@@ -3234,6 +3234,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.wingPick){ch.wingPick=true;chips.push('날개 설립 · 이름을 정한다')}
     if(fx.singGrow)corpGrow(ch,chips);
     if(fx.singUp)corpUp(ch,chips);
+    if(fx.corpXp&&corpYes(ch)){const up=gainXp(ch,CP.devXp||1);chips.push(`경험치 +${CP.devXp||1}`);if(up)chips.push('레벨 업 · Lv '+ch.lv)}
     if(fx.corpForb)corpForb(ch,chips);
     if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
     if(fx.bondDecline)ch.bond={st:'declined'};
