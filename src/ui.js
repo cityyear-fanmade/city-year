@@ -83,6 +83,8 @@ export function startUI(E,app){
   const loadUnlocks=()=>{let u=[];try{u=JSON.parse(store.get('cityYearUnlocks')||'[]')}catch(e){u=[]}if(typeof UNLOCKTEST!=='undefined'&&UNLOCKTEST){const all=[...(D.unlockOrigins||[]).map(o=>'origin:'+o.key),...Object.keys(D.hiddenJobs||{})];u=[...new Set([...u,...all])]}
     /* 직업 해금(발톱·조율자)은 'claw'·'arbiter'로 저장돼 있으니 같은 해금 출생도 열린 것으로 읽는다 */
     for(const o of D.unlockOrigins||[])if(o.job&&u.includes(o.job)&&!u.includes('origin:'+o.key))u=[...u,'origin:'+o.key];
+    /* 히든 보스를 쓰러뜨린 기록(기록실의 도감)이 이미 있으면 그 보스가 조건인 해금 출생도 열린 것으로 읽는다 */
+    try{const bt=(loadRec().beaten)||[];for(const o of D.unlockOrigins||[]){const cd=o.cond||{};if(cd.beat&&!cd.origin&&bt.includes(cd.beat)&&!u.includes('origin:'+o.key))u=[...u,'origin:'+o.key]}}catch(e){}
     return u};
   const addUnlock=k=>{const u=loadUnlocks();if(!u.includes(k)){u.push(k);store.set('cityYearUnlocks',JSON.stringify(u))}};
   if(!SKINS.some(s=>s.k===SKIN))SKIN='base';
@@ -1756,8 +1758,8 @@ ${symRec(r)}
   const dailySeed=k=>{let h=2166136261;for(const c of 'city-year:'+k)h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;return h%1000000000};
   function vOrigins(){
     const u=loadUnlocks();if(!(D.unlockOrigins||[]).length)return '';
-    const hc=(loadRec().hardClear||0)>0,UH={crow:'숨은 출생 「부화장에서 태어난 자」로 태어나 제 2막의 끝까지 간다.',hermes:'전리품 「신의 단말기」를 들고 제 2막의 끝까지 간다.',librarian:'출생 「도서관의 손님」으로 태어나, 도서관 관장 아벨을 이긴 뒤 제 2막의 끝까지 간다.',claw:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.baral.n+'」를 이긴다.',arbiter:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.zena.n+'」를 이긴다.',gweapon:'G사 날개 소속이거나 특이점 응용 의수를 들고 제 2막의 끝까지 간다.'};
-    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="stack" style="gap:4px"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}" style="align-self:flex-start">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>${o.shopNote?`<p class="small dim" style="margin:-4px 0 0">${esc(o.shopNote)}</p>`:''}${hc&&UH[o.key]&&!u.includes('origin:'+o.key)?`<p class="small dim" style="margin:-4px 0 0">조건 · ${esc(UH[o.key])}</p>`:''}`).join('')}
+    const hc=(loadRec().hardClear||0)>0,UH={crow:'숨은 출생 「부화장에서 태어난 자」로 태어나 제 2막의 끝까지 간다.',hermes:'전리품 「신의 단말기」를 들고 제 2막의 끝까지 간다.',librarian:'출생 「도서관의 손님」으로 태어나, 도서관 관장 아벨을 이긴 뒤 제 2막의 끝까지 간다.',claw:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.baral.n+'」를 이긴다.',arbiter:'보통 이상 난이도에서 제 2막의 마지막 상대 「'+D.enemies.zena.n+'」를 이긴다.',gweapon:'G사 날개 소속이거나 특이점 응용 의수를 들고 제 2막의 끝까지 간다.',blackmask:'히든 보스 「'+D.enemies.black.n+'」과 싸워 쓰러뜨린다.'};
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">해금 출생</span>${(D.unlockOrigins||[]).map(o=>`<div class="stack" style="gap:4px"><span>${esc(o.n)}</span><span class="chip${u.includes('origin:'+o.key)?'':' dim'}" style="align-self:flex-start">${u.includes('origin:'+o.key)?'해금 · 출생 화면에서 고를 수 있다':'잠김'}</span></div>${o.shopNote?`<p class="small dim" style="margin:-4px 0 0">${esc(o.shopNote)}</p>`:''}${(hc||o.key==='blackmask')&&UH[o.key]&&!u.includes('origin:'+o.key)?`<p class="small dim" style="margin:-4px 0 0">조건 · ${esc(UH[o.key])}</p>`:''}`).join('')}
       <p class="small dim">${hc?'':'하드로 한 번 완주하면 각 출생의 구체적인 조건이 여기에 보인다. '}정해진 출생으로 태어나거나 정해진 물건을 들고 무한 모드 전, 제 2막의 끝까지 가면 열린다. 무한 모드(제 2막)의 마지막 상대 「${D.enemies.baral.n}」와 「${D.enemies.zena.n}」를 보통 이상 난이도에서 이기면 머리의 발톱과 조율자가 각각 열린다. 쉬움에서는 열리지 않는다.</p></div>`;
   }
   function vJobs(){
@@ -2958,9 +2960,9 @@ ${symRec(r)}
     checkInnateUnlock();
     /* 해금 출생(D.unlockOrigins): 무한 모드 전 2막 끝까지 간 판이 cond의 출생(origin 이름) 또는 아이템(item id)을 만족하면 열린다. 굴림 번호 히든 출생과는 별개 */
     {const cc=G.ch,cleared=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||UI.overflowEnd||G.infinite||((UI.rbEnd||UI.hwEnd)&&G.endless)),u0=loadUnlocks();
-      if(cleared)for(const o of D.unlockOrigins||[]){const k='origin:'+o.key,cd=o.cond||{};if(u0.includes(k))continue;
+      for(const o of D.unlockOrigins||[]){const k='origin:'+o.key,cd=o.cond||{};if(u0.includes(k)||(!cleared&&!(cd.beat&&!cd.origin)))continue;
         const has=cd.item?[...Object.values(cc.gear||{}),...(cc.stash||[])].some(x=>x&&x.id===cd.item):false;
-        if((cd.origin&&cc.o&&cc.o.n===cd.origin&&(!cd.beat||(cc.beaten||[]).includes(cd.beat)))||(cd.aff&&((cc.aff&&cc.aff.name===cd.aff)||(cc.affLog||[]).includes(cd.aff)))||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=(UI.newOrigin&&UI.newOriginRun===G?UI.newOrigin+' · ':'')+o.n;UI.newOriginRun=G}}}
+        if((cd.beat&&!cd.origin&&(cc.beaten||[]).includes(cd.beat))||(cd.origin&&cc.o&&cc.o.n===cd.origin&&(!cd.beat||(cc.beaten||[]).includes(cd.beat)))||(cd.aff&&((cc.aff&&cc.aff.name===cd.aff)||(cc.affLog||[]).includes(cd.aff)))||has||(cd.relic&&(cc.relics||[]).includes(cd.relic))){addUnlock(k);UI.newOrigin=(UI.newOrigin&&UI.newOriginRun===G?UI.newOrigin+' · ':'')+o.n;UI.newOriginRun=G}}}
     /* 심볼: 보통 이상으로 이야기(2막)를 끝낸 판의 마지막 소속 심볼을 얻는다(쉬움은 인정하지 않는다) */
     UI.symNew=null;
     {const cc=G.ch,cl=UI.endWin&&(UI.trueEnd||UI.crowEnd||UI.outEnd||UI.oldEnd||UI.outerEnd||UI.overflowEnd||G.infinite||((UI.rbEnd||UI.hwEnd)&&G.endless));
