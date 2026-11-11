@@ -9157,7 +9157,8 @@
     "eva": 2,
     "maxHp": 12,
     "card": "ch_elite"
-   }
+   },
+   "rule": "charles"
   }
  ],
  "officeKnock": {

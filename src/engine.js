@@ -75,7 +75,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const d=n=>1+Math.floor(rng()*n);
   const T=D.text;
   /* 6시즌: 세계관 사무소. 급수 범위(hi~lo급)에 맞는 곳만 문이 열린다. 갈림길과 '사무소 문을 두드린다'가 같은 목록을 쓴다 */
-  const officeChoice=o=>({l:o.n,h:o.h,lock:`해결사 ${o.hi}~${(D.orgs.office||[]).includes(o.n)?9:o.lo}급만 들어갈 수 있다`,lockReq:['licensed','canfix'],req:['licensed','canfix',`rankin:${o.hi}-${(D.orgs.office||[]).includes(o.n)?9:o.lo}`],ok:{t:o.t,fx:Object.assign({},o.fx,{join:{type:'office',name:o.n}})}});
+  const officeChoice=o=>({l:o.n,h:o.h,lock:`해결사 ${o.hi}~${(D.orgs.office||[]).includes(o.n)?9:o.lo}급만 들어갈 수 있다`,lockReq:['licensed','canfix'],req:['licensed','canfix',o.rule==='charles'?'charles':`rankin:${o.hi}-${(D.orgs.office||[]).includes(o.n)?9:o.lo}`],ok:{t:o.t,fx:Object.assign({},o.fx,{join:{type:'office',name:o.n}})}});
   if(D.offices&&!D.officesBuilt){D.officesBuilt=true;
     if(D.officeKnock)D.officeKnock.c=[...D.offices.map(officeChoice),{l:'혼자 일한다',ok:{t:'아직은 혼자가 편하다.',fx:{}}}];
     if(D.affiliation)D.affiliation.c=[...D.offices.map(officeChoice),...D.affiliation.c]}
@@ -177,6 +177,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
     if(o.weapon==='star'){equip(ch,starItem(0,''));ch.starPick=true}
+    if(o.startRank&&!o.egoWeapons&&!ch.licensed){license(ch);ch.rank=o.startRank}   // 해금 출생이 정한 급수로 해결사에 등록된 채 시작한다(검은 가면 3급)
     if(o.gear2)equip(ch,Object.assign({grade:5},o.gear2));
     if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e;if(o.rb)routeWeaponUp(ch,'rb',0)}}
     /* E.G.O 적성자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
@@ -1451,6 +1452,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.startsWith('notaffname:'))return !(ch.aff&&ch.aff.name===req.slice(11));
     if(req.startsWith('affname:'))return !!ch.aff&&ch.aff.name===req.slice(8);
     if(req.startsWith('rank<='))return ch.licensed&&ch.rank<=+req.slice(6);
+    if(req==='charles')return ch.licensed&&(ch.rank<=1||(ch.o&&ch.o.key==='blackmask'&&ch.rank<=3));   // 찰스 사무소: 1급, 그리고 검은 가면 출생은 3급부터
     if(req.startsWith('rankin:')){const [a,b]=req.slice(7).split('-').map(Number);return ch.licensed&&ch.rank>=a&&ch.rank<=b}
     if(req.startsWith('memo:')){const [k,v]=req.slice(5).split('='),m=ch.memo&&ch.memo[k];return !!m&&!m.done&&(v==null||m.v===v)}
     if(req.startsWith('memoyears:')){const [k,n]=req.slice(10).split('>='),m=ch.memo&&ch.memo[k];return !!m&&(ch.year||0)-m.y>=+n}
