@@ -16792,5 +16792,6 @@
  "전투 시작 때 최대 HP의 20% 보호막": "Start the battle with a Shield of 20% of Max HP",
  "전투 2번 (전선의 병사들 · 흉탄의 사수) · 이길 때마다 고양감: 체력 회복, 다음 전투 공격·회피 +3 (최대 3스택)": "2 battles (Soldiers of the Front · Der Fluchschütze) · Each win gives Elation: recover HP, and next battle Atk and Evasion +3 (up to 3 stacks)",
  "전투 (흑조의 꿈) · 이기면 최대 HP +10 · 공격 +2 · 앞 전투의 고양감이 이어진다": "Battle (Dream of a Black Swan) · On victory, Max HP +10 · Atk +2 · Elation from the previous battles carries over",
- "고양감 {0}/{1} · HP +{2} · 다음 전투 공격 +{3} · 회피 +{4}": "Elation {0}/{1} · HP +{2} · Next battle Atk +{3} · Evasion +{4}"
+ "고양감 {0}/{1} · HP +{2} · 다음 전투 공격 +{3} · 회피 +{4}": "Elation {0}/{1} · HP +{2} · Next battle Atk +{3} · Evasion +{4}",
+ "전투 2번 (전선의 병사들 · 흉탄의 사수) · 이길 때마다 고양감: 체력 회복, 다음 전투 공격·회피 +2 (최대 3스택)": "2 battles (Soldiers of the Front · Der Fluchschütze) · Each win gives Elation: recover HP, and next battle Atk and Evasion +2 (up to 3 stacks)"
 }
