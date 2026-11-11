@@ -16773,5 +16773,8 @@
  "금기 위반자: 금기사냥꾼의 임무에서 만나는 새로운 적 5종입니다.": "Taboo Violators: 5 new enemies met on the Taboo Hunter missions.",
  "일대기: 한도가 10개에서 15개로 늘었습니다. 완주한 판과 55년 이상 산 판은 일대기 자리를 쓰지 않고 \"보호구역\"에 따로 보관됩니다(최대 10개). 오래된 순으로 지워져 중요한 기록을 잃을 수 있던 문제를 고쳤습니다.": "Chronicle: The limit rose from 10 to 15. Completed runs and runs of 55+ years no longer use a Chronicle slot and are kept separately in the \"Sanctuary\" (up to 10). Fixed the issue where the oldest runs were deleted first and important records could be lost.",
  "영어 화면: 설정의 언어에서 English를 고를 수 있습니다. 아직 부족한 번역이 있을 수 있습니다.": "English display: You can pick English under Language in Settings. Some translations may still be incomplete.",
- "🆕 새로 들어온 것": "🆕 New"
+ "🆕 새로 들어온 것": "🆕 New",
+ "검은 가면: 해금 조건이 기록실에 보이지 않던 문제와, 검은 침묵을 쓰러뜨려도 해금되지 않던 문제를 고쳤습니다. 이제 기록실에서 조건을 볼 수 있고, 검은 침묵을 쓰러뜨리면 판이 끝날 때 해금됩니다. 이미 검은 침묵을 쓰러뜨린 기록이 있으면 새로 고침 뒤 바로 해금됩니다.": "Black Mask: Fixed the issue where the unlock condition was not shown in the Records, and the issue where defeating Black Silence did not unlock it. You can now see the condition in the Records, and defeating Black Silence unlocks it when the run ends. If you have already defeated Black Silence, it unlocks right after a refresh.",
+ "히든 보스 「검은 침묵」과 싸워 쓰러뜨린다.": "Fight and defeat the hidden boss 「Black Silence」.",
+ "조건 · ": "Condition · "
 }
