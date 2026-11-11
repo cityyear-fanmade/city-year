@@ -1109,7 +1109,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 날개·손가락 진로면 해결사 급수 대신 그 진로의 직급을 보여 준다 (해결사 급수는 그 진로에서 오르지 않는다) */
   const rankLabelBase=ch=>{if(isFounder(ch)&&!ch.job)return ch.title?`${ch.title} · 날개 대표`:'날개 대표';if(ch.job)return ch.title?`${ch.title} · ${T.jobs[ch.job]}`:T.jobs[ch.job];const k=career(ch);if((k==='wing'||k==='finger')&&ch.fr){const fx_=eastN(ch)&&ch.licensed?` · ${ch.rank}${T.rankUnit} 해결사`:'';const tb_=ch.flags&&ch.flags.tbHunt&&ch.fi>=2;if(tb_)return (ch.title===CFG.nWing.eastTitle?ch.title:CFG.nWing.eastTitle)+fx_;return (ch.title?`${ch.title} · ${ch.fr.n}`:ch.fr.n)+fx_}return rankLabel0(ch)};
   const rankLabel=ch=>rankLabelBase(ch)+(ch.legacyTier?` · 연륜 ${ch.legacyTier}단계`:'');
-  const rankLabel0=ch=>!ch.licensed?T.unranked:ch.title?`${ch.title} · ${ch.rank}${T.rankUnit}`:`${ch.rank}${T.rankUnit} ${T.licensed}`;
+  const rankLabel0=ch=>{const rk=ch.flags&&ch.flags.bm_demote?9:ch.rank;return !ch.licensed?T.unranked:ch.title?`${ch.title} · ${rk}${T.rankUnit}`:`${rk}${T.rankUnit} ${T.licensed}`};   // 검은 가면 허무 루트의 강등은 표기만 9급으로 바꾼다(실제 급수·보정은 그대로)
   /* 카드 얻기: 덱이 고정(엄지 검술)이면 카드 대신 돈 */
   /* offer: 바로 넣지 않고 받을지 고르게 한다 (일반 전투 보상) */
   function addCard(ch,cid,chips,label,offer){
