@@ -7973,11 +7973,9 @@
  "머리의 발톱": "Claw of the Head",
  "머리의 명령을 몸으로 집행한다. 빠르고, 망설이지 않는다.": "Executes the Head's orders with their own body. Fast and unhesitating.",
  "공격+3 · 속도+3 · HP+20 · 전용 무기 발톱 · 전용 책장 12장 (덱 고정 · 새 카드 대신 돈) · 패시브 질주 · 공방 3등급": "Atk+3 · Speed+3 · HP+20 · Exclusive Weapon: Claw · 12 Exclusive Pages (Fixed deck · Money instead of new cards) · Passive: Dash · Workshop Grade 3",
- "공격+5 · 속도+3 · 적중마다 2d2 추가": "Atk+5 · Speed+3 · Adds 2d2 per hit",
  "3라운드마다 그 라운드 빛 +1": "Light +1 every 3 rounds",
  "머리의 권한으로 도시의 균형을 맞춘다. 판정과 버티는 힘이 남다르다.": "Maintains the City's balance with the authority of the Head. Exceptional judgment and resilience.",
  "공격+3 · 회피+3 · HP+30 · 판정+10 · 전용 무기 요정 · 전용 책장 12장 (덱 고정 · 새 카드 대신 돈) · 패시브 봉인 · 공방 3등급": "Atk+3 · Evasion+3 · HP+30 · Check+10 · Unique Weapon: Fairy · 12 Unique Pages (Fixed Deck · Money instead of new cards) · Passive Sealed · Workshop Grade 3",
- "공격+5 · 회피+4 · 피해+2": "Atk+5 · Evasion+4 · Dmg+2",
  "4라운드마다 그 라운드에 상대가 낼 공격 카드 1장을 취소한다 (봉인 각인 스택과는 별개 · 상대 패에 공격 카드가 있을 때만 · 봉인의 권한을 고를 때마다 주기가 1라운드 짧아진다, 최소 2라운드)": "Every 4 rounds, cancel 1 attack card the opponent would play that round (Separate from Seal Imprint stacks · Only when the opponent has attack cards in hand · Cycle shortens by 1 round each time Seal Authority is chosen, minimum 2 rounds)",
  "성장력": "Growth Potential",
  "레벨 업 성장 능력치 1.2배 (소수점은 쌓였다가 1이 되면 오른다)": "Level-up stat growth 1.2x (Decimals accumulate until they reach 1)",
@@ -16813,5 +16811,7 @@
  "클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 {0}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 일대기에서 밀려날 때 완주한 판과 55년 이상 산 판은 보호구역으로 옮겨지고, 그전에 쓰러진 판은 사라진다. 남기고 싶은 판은 명예의 전당에 올려 둔다.": "Each time you clear or fall, that run's result screen is saved automatically. Up to {0}; once full, the oldest runs are pushed out first. When pushed out of the Chronicle, completed runs and runs of 55+ years are moved to the Sanctuary; runs that fell earlier are lost. Place runs you want to keep in the Hall of Fame.",
  "일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 옮겨 와 보관되는 곳. 최대 {0}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.": "Where completed runs and runs of 55+ years are moved after being pushed out of the Chronicle. Up to {0}; once full, the oldest is deleted first. Place runs you want to keep long-term in the Hall of Fame yourself.",
  "아직 보호된 판이 없다. 일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 여기로 온다.": "No protected runs yet. Completed runs and runs of 55+ years pushed out of the Chronicle come here.",
- "공+45 · 회피+19 · 피해 2d12 · 상대 HP 50% 이하에서 적중하면 고정 피해 80 (요정: 파괴) · 적중마다 요정 +8 (최대 80 · 요정만큼 추가 피해 · 라운드마다 −3) · 각인 +1 (상대 공격 카드 봉인 확률 15%씩, 5가 되면 행동 봉인)": "Atk+45 · Eva+19 · Dmg 2d12 · If hit at 50% or less HP, deal 80 fixed damage (Fairy: Destruction) · On hit, Fairy +8 (Max 80 · Bonus damage equal to Fairy · −3 per round) · Imprint +1 (15% chance to seal opponent's attack cards; seals actions at 5)"
+ "공+45 · 회피+19 · 피해 2d12 · 상대 HP 50% 이하에서 적중하면 고정 피해 80 (요정: 파괴) · 적중마다 요정 +8 (최대 80 · 요정만큼 추가 피해 · 라운드마다 −3) · 각인 +1 (상대 공격 카드 봉인 확률 15%씩, 5가 되면 행동 봉인)": "Atk+45 · Eva+19 · Dmg 2d12 · If hit at 50% or less HP, deal 80 fixed damage (Fairy: Destruction) · On hit, Fairy +8 (Max 80 · Bonus damage equal to Fairy · −3 per round) · Imprint +1 (15% chance to seal opponent's attack cards; seals actions at 5)",
+ "공격+12 · 속도+3 · 적중마다 3d2 추가": "Atk+12 · Speed+3 · Adds 3d2 per hit",
+ "공격+12 · 회피+4 · 피해+5": "Atk+12 · Evasion+4 · Dmg+5"
 }
