@@ -1369,9 +1369,8 @@ export function startUI(E,app){
   function chronAuto(){
     const e=chronSnap();if(!e)return;const o=loadChron();
     if(o.life.some(x=>x.key===e.key)||o.fame.some(x=>x.key===e.key))return;
-    /* 모든 판은 일대기에 들어가고, 완주·55년 이상 판은 보호구역에도 한 부 더 보관된다(일대기에서 밀려나도 보호구역에는 남는다) */
+    /* 모든 판은 일대기에 들어간다. 일대기가 가득 차 밀려날 때, 완주·55년 이상 판만 보호구역으로 옮겨지고 그전에 쓰러진 판은 사라진다 */
     o.life.unshift(e);
-    if(chronKeep(e)&&!o.keep.some(k=>k.key===e.key)){o.keep.unshift(Object.assign({},e,{id:e.id+'k'}));o.keep=o.keep.slice(0,CHRON_KEEP)}
     while(o.life.length>CHRON_LIFE){const x=o.life.pop();if(chronKeep(x)&&!o.keep.some(k=>k.key===x.key)){o.keep.unshift(x);o.keep=o.keep.slice(0,CHRON_KEEP)}}
     saveChron(o);
   }
@@ -1390,9 +1389,9 @@ export function startUI(E,app){
     const row=e=>`<div class="panel stack" style="gap:5px"><div class="row between" style="flex-wrap:nowrap;gap:8px"><b class="serif">${esc(e.name||e.line)}</b><span class="mono small dim" style="white-space:nowrap;text-align:right">${chDate(e.t)}${e.v?`<br>${esc(e.v)}`:''}</span></div><span class="small dim">${esc(e.line)}${e.wp?' · '+esc(e.wp):''}</span>${e.lover?`<span class="small dim">가족 · ${esc(e.lover)}${e.lost?(e.lostAge?' (수명을 다해 세상을 떠났다)':' (세상을 떠났다)'):''}</span>`:''}<span class="small" style="color:var(--gold)">${esc(e.res)}${e.yr?` · ${e.yr}년차`:''}${e.dy?` · 오늘의 시드 ${esc(e.dy)}`:''}</span>${chBtns(tab,e)}</div>`;
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저에만 남는 기록</div><h2>일대기</h2></div>
       <div class="seg">${b('life',`일대기 ${o.life.length}/${CHRON_LIFE}`)}${b('fame',`명예의 전당 ${o.fame.length}/${CHRON_FAME}`)}${b('keep',`보호구역 ${o.keep.length}/${CHRON_KEEP}`)}</div>
-      <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 완주한 판과 55년 이상 산 판은 보호구역에도 한 부 더 보관되어, 일대기에서 밀려나도 남는다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:tab==='keep'?`완주한 판과 55년 이상 산 판이 일대기와 별도로 한 부 더 보관되는 곳. 일대기에서 밀려나도 여기에는 남는다. 최대 ${CHRON_KEEP}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
+      <p class="small dim">${tab==='life'?`클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 ${CHRON_LIFE}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 일대기에서 밀려날 때 완주한 판과 55년 이상 산 판은 보호구역으로 옮겨지고, 그전에 쓰러진 판은 사라진다. 남기고 싶은 판은 명예의 전당에 올려 둔다.`:tab==='keep'?`일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 옮겨 와 보관되는 곳. 최대 ${CHRON_KEEP}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.`:`직접 고른 판만 모아 두는 곳. 최대 ${CHRON_FAME}개이고, 일대기가 밀려나도 남는다. 지우려면 삭제를 누른다.`}</p>
       ${msg?`<p class="small bad">${esc(msg)}</p>`:''}
-      ${L.length?L.map(row).join(''):`<div class="panel"><p class="small dim">${tab==='life'?'아직 저장된 판이 없다. 이야기가 끝나면 여기에 쌓인다.':tab==='keep'?'아직 보호된 판이 없다. 완주하거나 55년 이상 살면 여기에 저장된다.':'아직 올린 판이 없다. 일대기에서 골라 올린다.'}</p></div>`}
+      ${L.length?L.map(row).join(''):`<div class="panel"><p class="small dim">${tab==='life'?'아직 저장된 판이 없다. 이야기가 끝나면 여기에 쌓인다.':tab==='keep'?'아직 보호된 판이 없다. 일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 여기로 온다.':'아직 올린 판이 없다. 일대기에서 골라 올린다.'}</p></div>`}
       <button class="btn primary" data-a="title">돌아가기</button>`;
   }
   const chMsgP=()=>{const m=UI.chMsg;UI.chMsg='';return m?`<p class="small bad">${esc(m)}</p>`:''};

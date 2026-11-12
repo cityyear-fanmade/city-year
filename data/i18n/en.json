@@ -16528,7 +16528,6 @@
  "완주한 판과 55년 이상 산 판이 일대기와 따로 보관되는 곳. 최대 {0}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.": "The place where completed runs and runs of 55+ years are kept apart from the Chronicle. Up to {0}; once full, the oldest is deleted first. Place runs you want to keep long-term in the Hall of Fame yourself.",
  "승급 {0}": "Promotion {0}",
  "{0} · {1}단계{2}{3}{4}": "{0} · Stage {1}{2}{3}{4}",
- "아직 보호된 판이 없다. 완주하거나 55년 이상 살면 여기에 저장된다.": "No protected runs yet. Complete a run or live 55+ years and it is saved here.",
  "보호구역": "Sanctuary",
  "혈귀 태생: 시작 무기 설명에 강화 조건을 넣었습니다. 혈귀 무기를 쥐고 전투에서 이길 때마다 혈량이 1 쌓이고(히든 보스는 +3), 혈량 5 · 10 · 16에서 한 단계씩 강화됩니다. 다른 무기로 바꿔 쓰는 동안에는 혈량이 쌓이지 않고, 쌓인 혈량은 그대로 남습니다.": "Hyeolgwi origin: the starting weapon description now states its upgrade conditions. Each battle you win while holding the Hyeolgwi weapon adds 1 Blood (+3 for hidden bosses), and it upgrades one stage at Blood 5 · 10 · 16. While you use another weapon, Blood does not accumulate, and accumulated Blood remains.",
  "정신 붕괴 엔딩을 다시 볼 수 있게 고쳤습니다. 뒤틀림 사건에서 개화도 뒤틀림도 오지 않는 결과가 나올 수 있고, 그 뒤 정신력이 다시 0이 되면 정신 붕괴로 끝납니다.": "Fixed the Mental Collapse ending so it can be seen again. The Distortion event can now yield a result where neither Blooming nor Distortion arrives, and if Sanity hits 0 again afterward, the run ends in Mental Collapse.",
@@ -16812,6 +16811,7 @@
  "해결사 3급이 된다 · 급수 승급 보너스": "Become a Rank 3 Fixer · Promotion bonus",
  "가면 위로 인장이 찍혔다. 이름은 여전히 비어 있었지만 급수만은 숫자로 남았다.": "The seal was stamped over the mask. The name was still blank, but the rank remained as a number.",
  "해결사 {0}급이 되었다": "Became a Rank {0} Fixer",
- "클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 {0}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 완주한 판과 55년 이상 산 판은 보호구역에도 한 부 더 보관되어, 일대기에서 밀려나도 남는다. 남기고 싶은 판은 명예의 전당에 올려 둔다.": "Each time you clear or fall, that run's result screen is saved automatically. Up to {0}; once full, the oldest runs are pushed out first. Completed runs and runs of 55+ years are also kept as an extra copy in the Sanctuary, so they remain even after being pushed out of the Chronicle. Place runs you want to keep in the Hall of Fame.",
- "완주한 판과 55년 이상 산 판이 일대기와 별도로 한 부 더 보관되는 곳. 일대기에서 밀려나도 여기에는 남는다. 최대 {0}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.": "Where completed runs and runs of 55+ years are kept as an extra copy, separate from the Chronicle. They remain here even after being pushed out of the Chronicle. Up to {0}; once full, the oldest is deleted first. Place runs you want to keep long-term in the Hall of Fame yourself."
+ "클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 {0}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 일대기에서 밀려날 때 완주한 판과 55년 이상 산 판은 보호구역으로 옮겨지고, 그전에 쓰러진 판은 사라진다. 남기고 싶은 판은 명예의 전당에 올려 둔다.": "Each time you clear or fall, that run's result screen is saved automatically. Up to {0}; once full, the oldest runs are pushed out first. When pushed out of the Chronicle, completed runs and runs of 55+ years are moved to the Sanctuary; runs that fell earlier are lost. Place runs you want to keep in the Hall of Fame.",
+ "일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 옮겨 와 보관되는 곳. 최대 {0}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.": "Where completed runs and runs of 55+ years are moved after being pushed out of the Chronicle. Up to {0}; once full, the oldest is deleted first. Place runs you want to keep long-term in the Hall of Fame yourself.",
+ "아직 보호된 판이 없다. 일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 여기로 온다.": "No protected runs yet. Completed runs and runs of 55+ years pushed out of the Chronicle come here."
 }
