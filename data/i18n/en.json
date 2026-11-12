@@ -16815,5 +16815,18 @@
  "쪽지는 접어서 서랍에 넣었다. 자리는 비워 두겠다는 말이 오래 귓가에 남았다.": "You folded the note and put it in a drawer. The words about keeping a seat open stayed in your ears for a long time.",
  "개문": "Gate-Breaker",
  "닫힌 문을 베어 가장 먼저 들어선다 · 두 번 벤다 · 고정 피해 +10 · 찰스 사무소의 기술": "Cut down the closed door and step in first · Slashes twice · Flat damage +10 · A Charles Office technique",
- "찰스 사무소의 기술 · 개문 · 시작 책장에 들어왔다 (검은 침묵과 합쳐지면 책장이 바뀐다)": "Charles Office technique · Gate-Breaker · Added to your starting shelf (the shelf changes when merged with Black Silence)"
+ "찰스 사무소의 기술 · 개문 · 시작 책장에 들어왔다 (검은 침묵과 합쳐지면 책장이 바뀐다)": "Charles Office technique · Gate-Breaker · Added to your starting shelf (the shelf changes when merged with Black Silence)",
+ "연기 전쟁이 끝난 뒤, 이름이 적힌 봉투 대신 가면의 소문만 적힌 쪽지가 문 앞에 놓였다. 찰스 사무소였다. 아무나 문을 열 수 없다는 최상위 정예 사무소가, 3급 해결사 서류에 적힌 이력과 전쟁에서 살아 돌아온 가면의 소문을 먼저 읽고 사람을 보냈다. 대장은 얼굴을 보여 달라고 하지 않았다. 자리를 하나 비워 두겠다고만 했다.": "After the Smoke War ended, instead of an envelope with a name, a note carrying only rumors of the mask was left at the door. It was Charles Office. The top elite office, said to be open to no one, had read the record in the Rank 3 Fixer papers and the rumor of the masked one who came back alive from the war, and sent someone. The chief did not ask to see a face. They only said a seat would be kept open.",
+ "전쟁의 실적": "Record of the War",
+ "전쟁이 끝난 뒤 협회에서 서류가 왔다. 연기 전쟁에서 올린 실적이 급수 심사에 반영되었다. 5급 칸에 선이 그어지고 그 옆에 새 숫자가 적혀 있다. 얼굴을 확인하는 절차는 없었다. 가면을 쓴 채로 서명하는 칸만 있었다.": "After the war ended, a document arrived from the Association. The results earned in the Smoke War were reflected in the rank review. A line was drawn through the Rank 5 box, with a new number beside it. There was no procedure to check a face. There was only a box to sign with the mask on.",
+ "서류에 서명한다": "Sign the document",
+ "해결사 3급이 된다 · 급수 승급 보너스": "Become a Rank 3 Fixer · Promotion bonus",
+ "가면 위로 인장이 찍혔다. 이름은 여전히 비어 있었지만 급수만은 숫자로 남았다.": "The seal was stamped over the mask. The name was still blank, but the rank remained as a number.",
+ "해결사 {0}급이 되었다": "Became a Rank {0} Fixer",
+ "무한 모드 특수 능력 조정: 흡혈 1.5%, 반격 50%, 보호막 20%, 선공의 권리 +600%.": "Endless Mode special abilities adjusted: Leech 1.5%, Counter 50%, Shield 20%, Right of First Strike +600%.",
+ "날개: 실험 일정에 \"일반 개발을 이어 간다\"가 추가되었습니다. 경험치 +1과 무작위 능력치 +1을 얻고, 금기 없이 반복할 수 있습니다.": "Wing: \"Continue regular development\" was added to the experiment schedule. It grants XP +1 and +1 to a random stat, and can be repeated without touching the taboo.",
+ "하드 불순물 난이도 증가: 체력이 100살 2배에서 1000살 5배(상한 5억)까지 오르고, 공격·회피·속도가 1.5배가 됩니다.": "Hard Impurity difficulty increased: HP rises from 2× at age 100 to 5× at age 1000 (cap 500 million), and Atk, Evasion and Speed are 1.5×.",
+ "검은 가면: 해결사 시작 등급이 적용되지 않던 문제를 고쳤습니다. 5급으로 시작하고, 연기 전쟁이 끝난 뒤 실적으로 3급이 되며, 그 뒤에 찰스 사무소의 제안이 옵니다. 입단하면 출생 전용 책장에 카드 \"개문\"이 추가됩니다(다른 책장에는 적용되지 않습니다).": "Black Mask: Fixed the issue where the starting Fixer rank was not applied. You start at Rank 5, become Rank 3 through your record after the Smoke War, and then receive an offer from Charles Office. Joining adds the card \"Gate-Breaker\" to the origin-exclusive shelf (it does not apply to other shelves).",
+ "연기 전쟁 난이도를 한 번 더 조정했습니다.": "Smoke War difficulty was adjusted once more.",
+ "도움말의 능력치 설명을 최신으로 고쳤습니다.": "The stat explanations in the help screen have been updated."
 }
