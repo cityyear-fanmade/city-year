@@ -3710,7 +3710,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(pv==='forms'){const F=E.passive,st=F.order[Math.floor((C.round-1)/F.every)%F.order.length];
       if(E.stance!==st){E.stance=st;E.deck=F.decks[st];E.formImmune=st==='guard';if(!C.quiet){const m={t:'kw',s:`${E.name} · ${F.names[st]}${st==='guard'?' · 상태 이상에 걸리지 않는다':''}`};C.log.push(m);C.cur.push(m)}}
       if(C.round%F.leapEvery===0){E.leap=true;if(!C.quiet){const m={t:'kw',s:`${E.name} · 평행세계 도약 · 이번 라운드 첫 공격은 닿지 않는다`};C.log.push(m);C.cur.push(m)}}}
-    P.locked=pv==='lock'&&C.round%E.passive.every===0?d(P.hand.length)-1:-1;
+    /* 조율자 제나: 체력에 따라 세 단계. 1단계 선(봉인) · 2단계 새장(적중당하면 다음 라운드 내 빛 −1) · 3단계 충격파(충전 예고 뒤 전체 충격, 방어 자세면 절반). 단계가 바뀌는 라운드에는 연설을 해서 그 라운드 받는 피해가 늘어난다 */
+    if(pv==='zena'&&E.hp>0){const Z=E.passive,ph=E.hp<=E.maxHp*Z.p3?3:E.hp<=E.maxHp*Z.p2?2:1;
+      if(E.zph&&ph!==E.zph){E.zTalk=C.round;if(!C.quiet){const m={t:'kw',s:`${E.name} · ${ph===2?'새장':'충격파'} · 연설이 길어진다 · 이번 라운드 ${E.name}가 받는 피해 +${Math.round(Z.talk*100)}%`};C.log.push(m);C.cur.push(m)}}
+      E.zph=ph;
+      if(P.zCage){P.zCage=false;if(P.light>0){P.light--;if(!C.quiet){const m={t:'kw',s:`${E.name} · 새장 · ${P.name}의 빛 −1`};C.log.push(m);C.cur.push(m)}}}
+      if(ph===3){const k=C.round%Z.shockEvery;E.zCharge=k===Z.shockEvery-1;E.zShock=k===0;if(E.zCharge&&!C.quiet){const m={t:'kw',s:`${E.name} · 충격파 충전 · 다음 라운드 끝에 전체 충격 (방어 자세로 받으면 절반)`};C.log.push(m);C.cur.push(m)}}else{E.zCharge=false;E.zShock=false}}
+    P.locked=(pv==='lock'||pv==='zena')&&C.round%E.passive.every===0?d(P.hand.length)-1:-1;
     C.order=P.tot>=E.tot?[P,E]:[E,P];
     /* 히든 직업 패시브: 발톱 질주(빛), 조율자 봉인(적 공격 카드 1장) */
     const jp=P.jobPassive;C.jobNote=null;
@@ -4073,6 +4079,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.mark){const x=d(3)+d(3);dmg+=x;note+=` 표지+${x}`}
       /* 무한 모드: 상대 능력치를 떨구는 디버프(침잠·예의)는 상대가 받는 피해도 키운다 */
       if(C.ch.infinite&&!B.isP){const K=CFG.infinite.weak,hid=D.enemies[C.id]&&D.enemies[C.id].hidden,sg_=staggerStage(B),w=Math.min(K.cap,Math.floor((B.sink||0)/CFG.sink.per)*K.sink+(B.manner||0)*K.manner+((B.prescript||0)+(B.obey||0)+(B.shock||0)+(B.warp||0))*K.short+((B.chain||0)+(B.web||0))*K.chain+(sg_?CFG.nail.stages.indexOf(sg_)+1:0)*K.stagger)*(hid?K.hidden:1);if(w>0){dmg=Math.floor(dmg*(1+w));note+=` 약화×${Math.round((1+w)*100)/100}`}}
+      if(B.passive&&B.passive.id==='zena'&&B.zTalk===C.round){dmg=Math.floor(dmg*(1+B.passive.talk));note+=` 연설×${1+B.passive.talk}`}
       const rawDmg=dmg;
       if(B.guarding&&!ig){dmg=Math.floor(dmg*G_.guardFailMul);note+=` 방어 감소×${G_.guardFailMul}`}else if(B.guarding&&ig)note+=' 방어 무시'
       /* 무기 디버프: 왜곡(내가 주는 피해 감소), 표적(3스택이면 2배), 원한(쌓인 만큼 추가) */
@@ -4146,6 +4153,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.ch.infinite&&C.ch.pact&&dmg>0){const ch_=C.ch;
         if(A.isP){const lv=Math.round(dmg*pactV(ch_,'leech')),rc=Math.round(dmg*pactV(ch_,'recoil'));if(lv>0&&A.hp>0){A.hp=Math.min(A.maxHp,A.hp+lv);L('kw',`  ${A.name} · 흡혈 · HP +${lv}`)}if(rc>0){A.hp=Math.max(1,A.hp-rc);L('kw',`  ${A.name} · 반동 · HP −${rc}`)}}
         else if(B.isP&&A.hp>0){const ct=Math.round(dmg*pactV(ch_,'counter'));if(ct>0){A.hp=Math.max(0,A.hp-ct);L('kw',`  ${B.name} · 반격 · ${A.name} HP −${ct}`)}}}
+if(dmg>0&&!A.isP&&A.passive&&A.passive.id==='zena'&&(A.zph||1)>=2)B.zCage=true;
 if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
       L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
@@ -4349,6 +4357,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       else L('kw',`${E.name} · ${R.n} ${E.recital}/${R.every}${E.recital===R.every-1?' · 다음 라운드 끝에 절정 (방어 자세면 절반)':''}`);
       push({k:'buff',side:'E',card:{n:R.n}});
     }
+    if(E.passive&&E.passive.id==='zena'&&E.zShock&&E.hp>0&&P.hp>0){const Z=E.passive,x0=Math.round(P.maxHp*Z.shockPct),x=P.guarding?Math.floor(x0/2):x0;E.zShock=false;hpLoss(C,P,x,L);L('dmg',`${E.name} · 충격파 · ${P.name} 고정 피해 ${x}${P.guarding?' (방어 자세로 절반)':''}`)}
     /* 푸른 화염: 라운드 끝에 스택 × blueDot 피해, 그 뒤 1 감소. 해방 레바테인 소지자의 일반 화상은 줄지 않는다 */
     for(const X of [P,E]){
       if(isBlue(X)&&X.hp>0){const x=X.flame*(X.blueD||CFG.laev.blueDot);hpLoss(C,X,x,L);X.flame--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.flame})`)}
