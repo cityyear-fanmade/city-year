@@ -3917,7 +3917,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.hp<=0||B.hp<=0)return;
       /* 출혈: 공격할 때마다(명중 여부 무관) 스택만큼 피해, 그 뒤 1 감소 */
       if(A.bleed>0){
-        const wm=(A.wspear||0)>0?Math.pow(A.wspearMul||1.2,A.wspear):1,bd=Math.round(A.bleed*wm);hpLoss(C,A,bd,L);A.bleed--;
+        const wm=(A.wspear||0)>0?Math.pow(A.wspearMul||1.2,A.wspear):1,bd=dotInf(C,A,'bleed',Math.round(A.bleed*wm),A.bleed);hpLoss(C,A,bd,L);A.bleed--;
         L('dmg',`${A.name} ${D.keywords.bleed.n} ${bd} 피해 (공격하며 상처가 벌어진다)${wm>1?` · ${D.keywords.wspear.n} ${A.wspear}개 ×${(Math.round(wm*100)/100)}`:''}`);
         push({k:'bleed',side:A.uid,dmg:bd});
         /* 혈귀 패시브 혈찬: 상대의 출혈이 5번 발동할 때마다 HP 15 회복 */
@@ -4050,7 +4050,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       if(A.blade&&A.breath>=CFG.syn['검계'].burst.at&&(A.bbRound==null||C.round-A.bbRound>=CFG.syn['검계'].burst.every)){const bs=CFG.syn['검계'].burst,sp=Math.min(A.breath,bs.max),x=Math.floor(sp*bs.per[A.synT||0]);A.bbRound=C.round;A.breath-=Math.ceil(sp/2);dmg+=x;note+=` 호흡 폭발 · 호흡 ${sp} 사용(절반 ${Math.ceil(sp/2)} 소모) → +${x}`}
       if(A.awl&&A.synT>=2&&(A.awlMark||0)>=CFG.syn['밤의 송곳'].mark.burst.at&&B.bleed>0){const mk=CFG.syn['밤의 송곳'].mark,x=B.bleed*mk.burst.mul[A.synT];A.awlMark-=mk.burst.at;dmg+=x;note+=` 송곳 박기 · 출혈 ${B.bleed} → +${x}`}
-      if(B.rupture>0){dmg+=B.rupture;note+=` ${D.keywords.rupture.n}+${B.rupture}`;B.rupture--}
+      if(B.rupture>0){const rx=dotInf(C,B,'rupture',B.rupture,B.rupture);dmg+=rx;note+=` ${D.keywords.rupture.n}+${rx}`;B.rupture--}
       if(A.ring&&A.work>0){dmg+=CFG.ring.dmg*A.work;note+=` 작품 ${A.work}+${CFG.ring.dmg*A.work}`;if(A.work>=CFG.ring.max){dmg=Math.floor(dmg*CFG.ring.finish);A.work=CFG.ring.after;note+=` 완성×${CFG.ring.finish}`}}
       if(A.dmgB){dmg+=A.dmgB;note+=` 무기+${A.dmgB}`}
       if(A.augPas==='over'&&A.ovRound!==C.round){A.ovRound=C.round;dmg+=4;note+=' 과부하 코어+4'}
@@ -4354,10 +4354,10 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       /* 화상: 라운드 끝에 스택만큼 피해, 그 뒤 스택은 keep 비율만 남는다 (내림) */
       if(X.oracleMiss){X.oracleMiss=false;X.passHitNext=(X.passHitNext||0)-CFG.oracle.missHit;X.evaPenNext=CFG.oracle.missEva}
       if(X.stunned){X.stunned=false;X.stagger=0;X.stunImmune=C.round+3}else if(X.stagger>0)X.stagger=Math.max(0,X.stagger-CFG.nail.decay);
-      if(X.burn>0&&X.hp>0){const x=X.burn*(X.isP?CFG.burn.dmgMe:CFG.burn.dmg),O_=X===P?E:P,tk=O_.wx&&O_.wx.burnTick?Math.min(X.burn,CFG.burn.tickCap):0;hpLoss(C,X,x,L);X.burn=Math.floor(X.burn*CFG.burn.keep);L('dmg',`${X.name} · 화상 ${x} 피해 (남은 ${X.burn})`);
+      if(X.burn>0&&X.hp>0){const x=dotInf(C,X,'burn',X.burn*(X.isP?CFG.burn.dmgMe:CFG.burn.dmg),X.burn),O_=X===P?E:P,tk=O_.wx&&O_.wx.burnTick?Math.min(X.burn,CFG.burn.tickCap):0;hpLoss(C,X,x,L);X.burn=Math.floor(X.burn*CFG.burn.keep);L('dmg',`${X.name} · 화상 ${x} 피해 (남은 ${X.burn})`);
         /* 달궈진 십자가: 라운드 끝에 화상 수치만큼 고정 피해를 더 준다 (상한 tickCap) */
         if(tk>0&&X.hp>0){hpLoss(C,X,tk,L);L('dmg',`${O_.name} · 달궈진 십자가 · ${X.name} 고정 피해 ${tk}`)}}
-      if(X.ink>0&&X.hp>0){const x=X.ink*(X.isP?CFG.ink.dmgMe:CFG.ink.dmg);hpLoss(C,X,x,L);X.ink=Math.floor(X.ink*CFG.ink.keep);L('dmg',`${X.name} · 수흔 ${x} 피해 (남은 ${X.ink})`)}
+      if(X.ink>0&&X.hp>0){const x=dotInf(C,X,'ink',X.ink*(X.isP?CFG.ink.dmgMe:CFG.ink.dmg),X.ink);hpLoss(C,X,x,L);X.ink=Math.floor(X.ink*CFG.ink.keep);L('dmg',`${X.name} · 수흔 ${x} 피해 (남은 ${X.ink})`)}
       if(X.kuro&&X.black){X.black=false;X.cloud=CFG.syn['흑운회'].reset;L('kw',`${X.name} · 흑운이 가라앉았다 · 구름 ${X.cloud}`)}
       for(const k of ['prescript','warp','shock','chain','web','sink'])if(X[k]>0)X[k]--}
     /* 무한 모드 침식: 오래 살수록 라운드마다 고정 피해 (회피·보호막으로 막을 수 없다) */
@@ -4376,6 +4376,14 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
   }
   /* K사 엠플: 살아 있고 HP가 최대 HP의 belowPct 이하이면 자동으로 쓴다 (한 번에 1개, 전투당 제한 없음) */
   /* HP를 잃는다. 플레이어가 한 번에 쓰러질 피해(공격·출혈·화상·고정 피해 모두)를 받으면, 쓰러지기 전에 K사 엠플이 먼저 쓰이고 받은 피해만큼 회복이 깎인다 (HP − 피해 + 회복) */
+  /* 무한 모드 지속 피해: 적의 최대 HP에 비례하는 몫을 스택에 곱해 고정값과 비교해 큰 쪽을 쓴다. 한 라운드에 지속 피해로 깎이는 총량은 최대 HP의 cap으로 막는다(고정값은 그대로) */
+  function dotInf(C,X,k,fixed,n){
+    if(X.isP||!C.ch.infinite)return fixed;
+    const K=CFG.infinite.dot,hid=D.enemies[C.id]&&D.enemies[C.id].hidden;
+    let x=Math.max(fixed,Math.round(n*K[k]*X.maxHp*(hid?K.hidden:1)));
+    if(C.dotR!==C.round){C.dotR=C.round;C.dotT=0}
+    if(x>fixed)x=Math.max(fixed,Math.min(x,Math.round(X.maxHp*K.cap)-C.dotT));
+    C.dotT+=x;return x}
   function hpLoss(C,X,x,L){
     if(X.isP&&X.wx&&X.wx.survive&&!X.survUsed&&x>=X.hp&&!X.distorted){X.survUsed=true;X.hp=1;L('amp',`${X.name} · 바퀴 황제의 끈질김 · 치명적인 피해 ${x}를 HP 1로 버텼다`);return}
     if(X.isP&&X.ample>0&&x>=X.hp&&!X.distorted){
