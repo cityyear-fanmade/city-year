@@ -16524,11 +16524,8 @@
  "일반 N사 사다리 유지 · 이 제안은 다시 오지 않는다": "Stay on the regular N Corp ladder · This offer will not come again",
  "서류는 책상 서랍으로 들어갔다. 팀장은 어깨를 한 번 두드리고 다른 이름을 찾으러 갔다.": "The document went into the desk drawer. The team lead clapped a shoulder once and went to look for another name.",
  "보호구역 {0}/{1}": "Sanctuary {0}/{1}",
- "클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 {0}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 완주한 판과 55년 이상 산 판은 일대기 자리를 쓰지 않고 따로 보호구역에 보관된다. 남기고 싶은 판은 명예의 전당에 올려 둔다.": "Each time you clear or fall, that run's result screen is saved automatically. Up to {0}; once full, the oldest runs are pushed out first. Completed runs and runs that lasted 55 years or more do not use a Chronicle slot and are kept separately in the Sanctuary. Place runs you want to keep in the Hall of Fame.",
- "완주한 판과 55년 이상 산 판이 일대기와 따로 보관되는 곳. 최대 {0}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.": "The place where completed runs and runs of 55+ years are kept apart from the Chronicle. Up to {0}; once full, the oldest is deleted first. Place runs you want to keep long-term in the Hall of Fame yourself.",
  "승급 {0}": "Promotion {0}",
  "{0} · {1}단계{2}{3}{4}": "{0} · Stage {1}{2}{3}{4}",
- "아직 보호된 판이 없다. 완주하거나 55년 이상 살면 여기에 저장된다.": "No protected runs yet. Complete a run or live 55+ years and it is saved here.",
  "보호구역": "Sanctuary",
  "혈귀 태생: 시작 무기 설명에 강화 조건을 넣었습니다. 혈귀 무기를 쥐고 전투에서 이길 때마다 혈량이 1 쌓이고(히든 보스는 +3), 혈량 5 · 10 · 16에서 한 단계씩 강화됩니다. 다른 무기로 바꿔 쓰는 동안에는 혈량이 쌓이지 않고, 쌓인 혈량은 그대로 남습니다.": "Hyeolgwi origin: the starting weapon description now states its upgrade conditions. Each battle you win while holding the Hyeolgwi weapon adds 1 Blood (+3 for hidden bosses), and it upgrades one stage at Blood 5 · 10 · 16. While you use another weapon, Blood does not accumulate, and accumulated Blood remains.",
  "정신 붕괴 엔딩을 다시 볼 수 있게 고쳤습니다. 뒤틀림 사건에서 개화도 뒤틀림도 오지 않는 결과가 나올 수 있고, 그 뒤 정신력이 다시 0이 되면 정신 붕괴로 끝납니다.": "Fixed the Mental Collapse ending so it can be seen again. The Distortion event can now yield a result where neither Blooming nor Distortion arrives, and if Sanity hits 0 again afterward, the run ends in Mental Collapse.",
@@ -16828,5 +16825,8 @@
  "하드 불순물 난이도 증가: 체력이 100살 2배에서 1000살 5배(상한 5억)까지 오르고, 공격·회피·속도가 1.5배가 됩니다.": "Hard Impurity difficulty increased: HP rises from 2× at age 100 to 5× at age 1000 (cap 500 million), and Atk, Evasion and Speed are 1.5×.",
  "검은 가면: 해결사 시작 등급이 적용되지 않던 문제를 고쳤습니다. 5급으로 시작하고, 연기 전쟁이 끝난 뒤 실적으로 3급이 되며, 그 뒤에 찰스 사무소의 제안이 옵니다. 입단하면 출생 전용 책장에 카드 \"개문\"이 추가됩니다(다른 책장에는 적용되지 않습니다).": "Black Mask: Fixed the issue where the starting Fixer rank was not applied. You start at Rank 5, become Rank 3 through your record after the Smoke War, and then receive an offer from Charles Office. Joining adds the card \"Gate-Breaker\" to the origin-exclusive shelf (it does not apply to other shelves).",
  "연기 전쟁 난이도를 한 번 더 조정했습니다.": "Smoke War difficulty was adjusted once more.",
- "도움말의 능력치 설명을 최신으로 고쳤습니다.": "The stat explanations in the help screen have been updated."
+ "도움말의 능력치 설명을 최신으로 고쳤습니다.": "The stat explanations in the help screen have been updated.",
+ "클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 {0}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 일대기에서 밀려날 때 완주한 판과 55년 이상 산 판은 보호구역으로 옮겨지고, 그전에 쓰러진 판은 사라진다. 남기고 싶은 판은 명예의 전당에 올려 둔다.": "Each time you clear or fall, that run's result screen is saved automatically. Up to {0}; once full, the oldest runs are pushed out first. When pushed out of the Chronicle, completed runs and runs of 55+ years are moved to the Sanctuary; runs that fell earlier are lost. Place runs you want to keep in the Hall of Fame.",
+ "일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 옮겨 와 보관되는 곳. 최대 {0}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.": "Where completed runs and runs of 55+ years are moved after being pushed out of the Chronicle. Up to {0}; once full, the oldest is deleted first. Place runs you want to keep long-term in the Hall of Fame yourself.",
+ "아직 보호된 판이 없다. 일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 여기로 온다.": "No protected runs yet. Completed runs and runs of 55+ years pushed out of the Chronicle come here."
 }
