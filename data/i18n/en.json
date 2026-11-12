@@ -1700,7 +1700,6 @@
  "제나의 봉인 파편": "Jena's Seal Shard",
  "공+5 · 회피+5 · HP+9 · 무기 제나의 요정 (요정: 파괴) · 방어구 제나의 요정복 (요정: 조율)": "Atk+5 · Eva+5 · HP+9 · Weapon: Jena's Fairy (Fairy: Destruction) · Armor: Jena's Fairy Suit (Fairy: Tuning)",
  "제나의 요정": "Jena's Fairy",
- "공+37 · 회피+19 · 피해 2d8 · 상대 HP 35% 이하에서 적중하면 고정 피해 42 (요정: 파괴) · 적중마다 요정 +2 (최대 30 · 요정만큼 추가 피해 · 라운드마다 −3) · 각인 +1 (상대 공격 카드 봉인 확률 15%씩, 5가 되면 행동 봉인)": "Atk+37 · Eva+19 · Dmg 2d8 · If hit at 35% or less HP, deal 42 fixed damage (Fairy: Destruction) · On hit, Fairy +2 (Max 30 · Bonus damage equal to Fairy · −3 per round) · Imprint +1 (15% chance to seal opponent's attack cards; seals actions at 5)",
  "제나의 요정복": "Jena's Fairy Suit",
  "HP+39 · 회피+6 · 방어 카드 회피+10 · 피해 감소 10% (요정: 조율)": "HP+39 · Eva+6 · Defense card Eva+10 · Dmg reduction 10% (Fairy: Tuning)",
  "원한의 장부 · 첫 페이지": "Ledger of Grudges · First Page",
@@ -16813,5 +16812,6 @@
  "해결사 {0}급이 되었다": "Became a Rank {0} Fixer",
  "클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 {0}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 일대기에서 밀려날 때 완주한 판과 55년 이상 산 판은 보호구역으로 옮겨지고, 그전에 쓰러진 판은 사라진다. 남기고 싶은 판은 명예의 전당에 올려 둔다.": "Each time you clear or fall, that run's result screen is saved automatically. Up to {0}; once full, the oldest runs are pushed out first. When pushed out of the Chronicle, completed runs and runs of 55+ years are moved to the Sanctuary; runs that fell earlier are lost. Place runs you want to keep in the Hall of Fame.",
  "일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 옮겨 와 보관되는 곳. 최대 {0}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.": "Where completed runs and runs of 55+ years are moved after being pushed out of the Chronicle. Up to {0}; once full, the oldest is deleted first. Place runs you want to keep long-term in the Hall of Fame yourself.",
- "아직 보호된 판이 없다. 일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 여기로 온다.": "No protected runs yet. Completed runs and runs of 55+ years pushed out of the Chronicle come here."
+ "아직 보호된 판이 없다. 일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 여기로 온다.": "No protected runs yet. Completed runs and runs of 55+ years pushed out of the Chronicle come here.",
+ "공+45 · 회피+19 · 피해 2d12 · 상대 HP 50% 이하에서 적중하면 고정 피해 80 (요정: 파괴) · 적중마다 요정 +8 (최대 80 · 요정만큼 추가 피해 · 라운드마다 −3) · 각인 +1 (상대 공격 카드 봉인 확률 15%씩, 5가 되면 행동 봉인)": "Atk+45 · Eva+19 · Dmg 2d12 · If hit at 50% or less HP, deal 80 fixed damage (Fairy: Destruction) · On hit, Fairy +8 (Max 80 · Bonus damage equal to Fairy · −3 per round) · Imprint +1 (15% chance to seal opponent's attack cards; seals actions at 5)"
 }
