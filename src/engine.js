@@ -75,7 +75,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const d=n=>1+Math.floor(rng()*n);
   const T=D.text;
   /* 6시즌: 세계관 사무소. 급수 범위(hi~lo급)에 맞는 곳만 문이 열린다. 갈림길과 '사무소 문을 두드린다'가 같은 목록을 쓴다 */
-  const officeChoice=o=>({l:o.n,h:o.h,lock:`해결사 ${o.hi}~${(D.orgs.office||[]).includes(o.n)?9:o.lo}급만 들어갈 수 있다`,lockReq:['licensed','canfix'],req:['licensed','canfix',`rankin:${o.hi}-${(D.orgs.office||[]).includes(o.n)?9:o.lo}`],ok:{t:o.t,fx:Object.assign({},o.fx,{join:{type:'office',name:o.n}})}});
+  const officeChoice=o=>({l:o.n,h:o.h,lock:`해결사 ${o.hi}~${(D.orgs.office||[]).includes(o.n)?9:o.lo}급만 들어갈 수 있다`,lockReq:['licensed','canfix'],req:['licensed','canfix',o.rule==='charles'?'charles':`rankin:${o.hi}-${(D.orgs.office||[]).includes(o.n)?9:o.lo}`],ok:{t:o.t,fx:Object.assign({},o.fx,{join:{type:'office',name:o.n}})}});
   if(D.offices&&!D.officesBuilt){D.officesBuilt=true;
     if(D.officeKnock)D.officeKnock.c=[...D.offices.map(officeChoice),{l:'혼자 일한다',ok:{t:'아직은 혼자가 편하다.',fx:{}}}];
     if(D.affiliation)D.affiliation.c=[...D.offices.map(officeChoice),...D.affiliation.c]}
@@ -177,6 +177,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(J&&J.weapon)equip(ch,Object.assign({grade:5},J.weapon));
     if(o.weapon===true)equip(ch,bonItem(0));
     if(o.weapon==='star'){equip(ch,starItem(0,''));ch.starPick=true}
+    if(o.startRank&&!o.egoWeapons&&!ch.licensed){license(ch);ch.rank=o.startRank}   // 해금 출생이 정한 급수로 해결사에 등록된 채 시작한다(검은 가면 3급)
     if(o.gear2)equip(ch,Object.assign({grade:5},o.gear2));
     if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e;if(o.rb)routeWeaponUp(ch,'rb',0)}}
     /* E.G.O 적성자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
@@ -1181,7 +1182,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.check){s.check+=fx.check;chips.push('사건 판정 '+sg(fx.check))}
     if(fx.startBreath){s.startBreath+=fx.startBreath;chips.push('시작 '+D.keywords.breath.n+' +'+fx.startBreath)}
     if(fx.wsMat){(ch.stash=ch.stash||[]).push({id:'hidmat',n:'히든 강화재료',slot:'any',grade:5,e:'어떤 전용 장비든 녹이면 히든 한 단계'});chips.push('히든 강화재료 · 보관함에 들어왔다')}
-    if(fx.card)addCard(ch,fx.card,chips,null,true);else if(fx.reward)offerPick(ch,D.rewards,chips,null);
+    if(fx.card&&fx.card==='ch_elite'&&ch.o&&ch.o.key==='blackmask'){if(!ch.deck.includes('bm_gaemun'))ch.deck.push('bm_gaemun');chips.push('찰스 사무소의 기술 · 개문 · 시작 책장에 들어왔다 (검은 침묵과 합쳐지면 책장이 바뀐다)')}   // 검은 가면은 덱이 고정이라, 사무소 카드 대신 이 책장 카드를 한 장 더한다
+    else if(fx.card)addCard(ch,fx.card,chips,null,true);else if(fx.reward)offerPick(ch,D.rewards,chips,null);
     if(fx.escort)ch.flags.escortNext=1;
     if(fx.staff)staffFx(ch,fx.staff,chips);if(fx.staff2)staffFx(ch,fx.staff2,chips);
     if(fx.rep){ch.rep=Math.max(RP.min,Math.min(RP.max,repOf(ch)+fx.rep));chips.push(`평판 ${fx.rep>0?'+':'−'}${Math.abs(fx.rep)} (지금 ${ch.rep<0?'−'+(-ch.rep):ch.rep})`)}
@@ -1451,6 +1453,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req.startsWith('notaffname:'))return !(ch.aff&&ch.aff.name===req.slice(11));
     if(req.startsWith('affname:'))return !!ch.aff&&ch.aff.name===req.slice(8);
     if(req.startsWith('rank<='))return ch.licensed&&ch.rank<=+req.slice(6);
+    if(req==='charles')return ch.licensed&&(ch.rank<=1||(ch.o&&ch.o.key==='blackmask'&&ch.rank<=3));   // 찰스 사무소: 1급, 그리고 검은 가면 출생은 3급부터
     if(req.startsWith('rankin:')){const [a,b]=req.slice(7).split('-').map(Number);return ch.licensed&&ch.rank>=a&&ch.rank<=b}
     if(req.startsWith('memo:')){const [k,v]=req.slice(5).split('='),m=ch.memo&&ch.memo[k];return !!m&&!m.done&&(v==null||m.v===v)}
     if(req.startsWith('memoyears:')){const [k,n]=req.slice(10).split('>='),m=ch.memo&&ch.memo[k];return !!m&&(ch.year||0)-m.y>=+n}
@@ -2655,7 +2658,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
        arc가 같은 임무끼리는 한 줄기로 이어진다: 줄기가 열려 있는 동안(end 임무가 끝날 때까지)은 다른 줄기의 임무도 처분 의뢰도 나오지 않는다.
        문구의 {c}는 협력한 후보, {r}은 맞서는 후보, {foe}는 싸울 후보의 적 id로 바뀐다 */
     if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},last=st.mAt||0;
-      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.bond||(ch.bond&&['met','married'].includes(ch.bond.st)))&&(!m.friend||(ch.bond&&ch.bond.st==='friend'))&&(!m.beat||(ch.beaten||[]).includes(m.beat))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&((ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend))||(ch.bond.st==='met'&&ch.bond.companion))):true))&&(!st.arc||m.arc===st.arc));
+      const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.bond||(ch.bond&&['met','married'].includes(ch.bond.st)))&&(!m.friend||(ch.bond&&ch.bond.st==='friend'))&&(!m.noAff||!ch.aff)&&(!m.beat||(ch.beaten||[]).includes(m.beat))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&((ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend))||(ch.bond.st==='met'&&ch.bond.companion))):true))&&(!st.arc||m.arc===st.arc));
       if(M){md.push(M.id);st.mAt=y;if(M.arc)st.arc=M.end?null:M.arc;
         const A=fl_.crow_hwA>0,cn=A?'가환(賈環)':'설보차(薛寶釵)',rn=A?'설보차(薛寶釵)':'유상련(柳湘蓮)',fid=A?'hr_1':'hr_3';
         const ev_=JSON.parse(JSON.stringify(M.ev).replace(/\{c\}/g,cn).replace(/\{r\}/g,rn).replace(/\{foe\}/g,fid));
@@ -3234,6 +3237,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.wingPick){ch.wingPick=true;chips.push('날개 설립 · 이름을 정한다')}
     if(fx.singGrow)corpGrow(ch,chips);
     if(fx.singUp)corpUp(ch,chips);
+    if(fx.corpXp&&corpYes(ch)){const up=gainXp(ch,CP.devXp||1);chips.push(`경험치 +${CP.devXp||1}`);if(up)chips.push('레벨 업 · Lv '+ch.lv);corpBump(ch,{[one(['atk','eva','spd','check'])]:1},chips)}
     if(fx.corpForb)corpForb(ch,chips);
     if(fx.bondMeet){ch.bond={st:'pick',route:fx.bondMeet,variant:fx.bondVariant||0,name:'',step:0,tries:0,love:0};ch.bondPick=true;chips.push('인연 · 동반자의 이름을 정한다')}
     if(fx.bondDecline)ch.bond={st:'declined'};
@@ -3554,15 +3558,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ch.infBandI!==bi){ch.infBandI=bi;ch.infBandStart=ch.infImp||0}
       const k=Math.max(0,(ch.infImp||0)-(ch.infBandStart||0));const jit=k>0?(((ch.year||0)*37+k*91)%11-5)*0.003:0;   // 숫자가 규칙적으로만 보이지 않게 ±1.5% 안에서 조금 흔든다 (같은 해에는 항상 같은 값)
       return Math.round(v*(1+Math.min(IF2.hpBandMax,k*IF2.hpPerKill)+jit))})():0;
-    const ehhX=infTab?Math.round(infTab*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp:1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)):ehh0_;
-    const ehhCap=ch.infinite?Math.min(ehhX,CFG.infinite.hpMax):ehhX;
+    const ehhX=infTab?Math.round(infTab*(nm?nm.hp:1)*(tr?tr.hp:1)*(ch.hard?CFG.hard.hp+(CFG.hard.hpLate-CFG.hard.hp)*Math.max(0,Math.min(1,((CFG.startAge+(ch.year||0)-1)-100)/900)):1)*(EZ?EZ.hp*(EZ.boss&&EZ.boss[id]||1):1)):ehh0_;   // 하드의 불순물 체력 배수: 100살 2배 → 1000살 hpLate배로 커진다
+    const hpCapX=ch.hard&&infTab?CFG.hard.hpMaxLate:CFG.infinite.hpMax,ehhCap=ch.infinite?Math.min(ehhX,hpCapX):ehhX;
     const lastImp=ch.infinite&&id===X_.final&&(ch.year||0)+CFG.infinite.every>CFG.overflowAge-CFG.startAge+1;   // 1000살 오버플로우 전의 마지막 불순물 전투
-    const ehh0=lastImp?CFG.infinite.hpMax:ehhCap,ehh1=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0,ehh=id==='redmist'&&(ch.redPost||0)>0?Math.round(ehh1*Math.pow(CFG.redBook.hpMul,ch.redPost)):ehh1;
+    const ehh0=lastImp?(ch.hard?CFG.hard.hpMaxLate:CFG.infinite.hpMax):ehhCap,ehh1=EZ&&e.hidden?Math.max(ehh0,EZ.hiddenMin||0):ehh0,ehh=id==='redmist'&&(ch.redPost||0)>0?Math.round(ehh1*Math.pow(CFG.redBook.hpMul,ch.redPost)):ehh1;
     /* 네임드: 로보토미 직원처럼 무작위 이름. 절반은 세력 이름 목록, 절반은 공용 이름 목록에서 */
     const E=mkEnt({uid:'E',name:(ch.rt&&ch.rt.guestFoe===id&&ch.rt.guestName)?`${ch.rt.guestName} · ${e.n}`:e.names&&e.names.length?`${e.n} · ${(D.namePool&&d(2)===1?one(D.namePool):one(e.names))}`:e.n,color:e.color,hp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),maxHp:Math.round(ehh*((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.hp:1)),atk:Math.max(1,((ch.infinite&&lakeOn(ch)&&/^lake_/.test(id)&&!e.hidden&&e.tier!=='boss')?CFG.lake.infMob.atk:0)+e.atk+up+xa+CFG.infinite.impAtk*IM_+CFG.infinite.atkGrow*SI_+Math.round((hd&&hd.atk||0)*(EZ?EZ.bossHard:1))-(EZ?EZ.atkMinus:0))+(nm?nm.atk:0)+(tr?tr.atk:0)+(ch.hard?CFG.hard.atk:0),eva:e.eva+up+Math.round(CFG.infinite.evaGrow*SI_)+Math.round((hd&&hd.eva||0)*(EZ?EZ.bossHard:1))+(ch.hard?CFG.hard.eva:0),spd:e.spd,deck:e.deck,isP:false,passive:e.passive&&e.passive.id==='lockledger'&&ch.infinite?null:e.passive||null,herm:(e.passive&&e.passive.id==='hermes')?{n:0,wait:false}:null,aug:!!e.aug,hyeolchan:!!e.hyeolchan,trait:e.trait||null,kali:e.kali||null,ul:e.ul||null,middle:!!(e.passive&&e.passive.id==='brother'),revMul:e.passive&&e.passive.id==='brother'?e.passive.mul:0});
     /* 무한 모드에서도 적의 회피는 enemyMax에서 멈춘다. 공격(명중)도 enemyMax에서 멈추지만, 균열을 닫은(균열 엔딩을 본) 뒤에는 균열 피해가 없어지므로 atkMax까지 올라 플레이어 회피가 아무리 높아도 결국 맞게 한다 */
     if(P.auxFoeSink)E.sink=(E.sink||0)+P.auxFoeSink;
     E.atk+=Math.floor(infYears(ch)/CFG.infinite.atkEvery);E.atk=Math.min(E.atk,CFG.infinite.atkCap||(ch.outSeen&&ch.outSeen.seal?(CFG.infinite.atkMax||CFG.infinite.enemyMax):CFG.infinite.enemyMax));E.eva=Math.max(0,Math.min(E.eva,CFG.infinite.enemyMax)-Math.floor(infYears(ch)*CFG.infinite.evaDown));
+    if(ch.hard&&ch.infinite&&id===X_.final){const m=CFG.hard.impStat;E.atk=Math.round(E.atk*m);E.eva=Math.round(E.eva*m);E.spd=Math.round((E.spd||0)*m)}   // 하드의 불순물은 능력치(공격·회피·속도)도 1.5배
     /* 급수 부족 보정: 히든 보스 규칙에 penalty가 있고 fullRank보다 급수가 낮으면 내 명중·회피가 깎인다 */
     const rule=(D.hiddenBosses||[]).find(h=>h.id===id),pen=rule&&rule.penalty;
     let penalty=null;
