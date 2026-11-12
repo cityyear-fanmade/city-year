@@ -1182,7 +1182,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.check){s.check+=fx.check;chips.push('사건 판정 '+sg(fx.check))}
     if(fx.startBreath){s.startBreath+=fx.startBreath;chips.push('시작 '+D.keywords.breath.n+' +'+fx.startBreath)}
     if(fx.wsMat){(ch.stash=ch.stash||[]).push({id:'hidmat',n:'히든 강화재료',slot:'any',grade:5,e:'어떤 전용 장비든 녹이면 히든 한 단계'});chips.push('히든 강화재료 · 보관함에 들어왔다')}
-    if(fx.card)addCard(ch,fx.card,chips,null,true);else if(fx.reward)offerPick(ch,D.rewards,chips,null);
+    if(fx.card&&fx.card==='ch_elite'&&ch.o&&ch.o.key==='blackmask'){if(!ch.deck.includes('bm_gaemun'))ch.deck.push('bm_gaemun');chips.push('찰스 사무소의 기술 · 개문 · 시작 책장에 들어왔다 (검은 침묵과 합쳐지면 책장이 바뀐다)')}   // 검은 가면은 덱이 고정이라, 사무소 카드 대신 이 책장 카드를 한 장 더한다
+    else if(fx.card)addCard(ch,fx.card,chips,null,true);else if(fx.reward)offerPick(ch,D.rewards,chips,null);
     if(fx.escort)ch.flags.escortNext=1;
     if(fx.staff)staffFx(ch,fx.staff,chips);if(fx.staff2)staffFx(ch,fx.staff2,chips);
     if(fx.rep){ch.rep=Math.max(RP.min,Math.min(RP.max,repOf(ch)+fx.rep));chips.push(`평판 ${fx.rep>0?'+':'−'}${Math.abs(fx.rep)} (지금 ${ch.rep<0?'−'+(-ch.rep):ch.rep})`)}
