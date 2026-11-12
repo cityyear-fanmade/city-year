@@ -4072,7 +4072,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(isBlue(B)){const bm=B.blueM||CFG.laev.blueMul;dmg=Math.floor(dmg*bm);note+=` 푸른 화염×${bm}`}else if(B.flame>0){dmg=Math.floor(dmg*1.5);note+=' 붉은 화염×1.5'}
       if(A.mark){const x=d(3)+d(3);dmg+=x;note+=` 표지+${x}`}
       /* 무한 모드: 상대 능력치를 떨구는 디버프(침잠·예의)는 상대가 받는 피해도 키운다 */
-      if(C.ch.infinite&&!B.isP){const K=CFG.infinite.weak,hid=D.enemies[C.id]&&D.enemies[C.id].hidden,w=Math.min(K.cap,Math.floor((B.sink||0)/CFG.sink.per)*K.sink+(B.manner||0)*K.manner)*(hid?K.hidden:1);if(w>0){dmg=Math.floor(dmg*(1+w));note+=` 약화×${Math.round((1+w)*100)/100}`}}
+      if(C.ch.infinite&&!B.isP){const K=CFG.infinite.weak,hid=D.enemies[C.id]&&D.enemies[C.id].hidden,sg_=staggerStage(B),w=Math.min(K.cap,Math.floor((B.sink||0)/CFG.sink.per)*K.sink+(B.manner||0)*K.manner+((B.prescript||0)+(B.obey||0)+(B.shock||0)+(B.warp||0))*K.short+((B.chain||0)+(B.web||0))*K.chain+(sg_?CFG.nail.stages.indexOf(sg_)+1:0)*K.stagger)*(hid?K.hidden:1);if(w>0){dmg=Math.floor(dmg*(1+w));note+=` 약화×${Math.round((1+w)*100)/100}`}}
       const rawDmg=dmg;
       if(B.guarding&&!ig){dmg=Math.floor(dmg*G_.guardFailMul);note+=` 방어 감소×${G_.guardFailMul}`}else if(B.guarding&&ig)note+=' 방어 무시'
       /* 무기 디버프: 왜곡(내가 주는 피해 감소), 표적(3스택이면 2배), 원한(쌓인 만큼 추가) */
