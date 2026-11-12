@@ -16811,5 +16811,7 @@
  "서류에 서명한다": "Sign the document",
  "해결사 3급이 된다 · 급수 승급 보너스": "Become a Rank 3 Fixer · Promotion bonus",
  "가면 위로 인장이 찍혔다. 이름은 여전히 비어 있었지만 급수만은 숫자로 남았다.": "The seal was stamped over the mask. The name was still blank, but the rank remained as a number.",
- "해결사 {0}급이 되었다": "Became a Rank {0} Fixer"
+ "해결사 {0}급이 되었다": "Became a Rank {0} Fixer",
+ "클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 {0}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 완주한 판과 55년 이상 산 판은 보호구역에도 한 부 더 보관되어, 일대기에서 밀려나도 남는다. 남기고 싶은 판은 명예의 전당에 올려 둔다.": "Each time you clear or fall, that run's result screen is saved automatically. Up to {0}; once full, the oldest runs are pushed out first. Completed runs and runs of 55+ years are also kept as an extra copy in the Sanctuary, so they remain even after being pushed out of the Chronicle. Place runs you want to keep in the Hall of Fame.",
+ "완주한 판과 55년 이상 산 판이 일대기와 별도로 한 부 더 보관되는 곳. 일대기에서 밀려나도 여기에는 남는다. 최대 {0}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.": "Where completed runs and runs of 55+ years are kept as an extra copy, separate from the Chronicle. They remain here even after being pushed out of the Chronicle. Up to {0}; once full, the oldest is deleted first. Place runs you want to keep long-term in the Hall of Fame yourself."
 }
