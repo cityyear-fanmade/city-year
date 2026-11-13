@@ -3582,7 +3582,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(pen&&!rankMet(ch,pen.fullRank)){P.atk+=pen.atk||0;P.eva+=pen.eva||0;penalty=pen}
     /* 홍루: 홍루를 따르는 흑수들. 내 부하 두 사람은 빠진다 */
     /* 1000해를 넘긴 캐릭터가 이름 없는 불순물이 되어 돌아온다: 그 캐릭터가 쓰던 덱으로 싸운다 */
-    if(id==='impurity'){const gh=ghostOf(ch);if(gh){const one=ghostCard(gh.deck);E.deck=(E.deck||[]).concat(one?[one]:[]);E.ghost=true;E.name+=' · '+(gh.name||T.you)}}
+    if(id==='impurity'){const gh=ghostOf(ch);if(gh){
+      /* 1000살 직전의 마지막 불순물: 오버플로우에 닿았던 캐릭터가 쓰던 덱과 무기(주사위·추가 타·키워드)로 싸운다. 방어구·보조 장비·장신구는 쓰지 않는다 */
+      if(lastImp&&CFG.infinite.ghostBoss){const dk=(gh.deck||[]).filter(c=>D.cards[c]&&['atk','def','buff'].includes(D.cards[c].t)).slice(0,12);if(dk.length>=3){E.deck=dk;E.ghostBoss=true;{const M=CFG.infinite.enemyMax;E.atk=Math.max(E.atk,Math.min(gh.atk||0,M));E.eva=Math.max(E.eva,Math.min(gh.eva||0,M));E.spd=Math.max(E.spd||0,Math.min(gh.spd||0,M))}
+        if(gh.wx){const W=gh.wx,wx={};for(const k of ['dice','extraHit','hitKw','extraD2'])if(W[k]!=null)wx[k]=JSON.parse(JSON.stringify(W[k]));if(Object.keys(wx).length)E.wx=wx}}}
+      else{const one=ghostCard(gh.deck);E.deck=(E.deck||[]).concat(one?[one]:[])}
+      E.ghost=true;E.name+=' · '+(gh.name||T.you)}}
     if(e.zodiac10){const own=hwHave(ch);E.zChain=ZKEYS.filter(k=>!own.slice(0,2).includes(k));E.zExtra=Math.min(CFG.hw.zExtraMax,Math.max(0,own.length-CFG.hw.zExtraFrom));E.deck=['z_'+E.zChain[0]]}
     if(e.hwKamo){const n=hwHave(ch).length,cut=Math.min(CFG.hw.kamoCutMax,Math.max(0,n-3)*CFG.hw.kamoCut);E.maxHp=Math.round(E.maxHp*(1-cut));E.hp=E.maxHp}
     /* 히든 보스: 체력이 너무 낮으면 최소치까지 채운 상태로 시작 */
