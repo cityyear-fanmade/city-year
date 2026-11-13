@@ -3026,6 +3026,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       for(const h of D.hiddenBosses||[]){
         if(h.infOnly&&!G.infinite)continue;
+        if(h.id==='black'&&G.ch.o&&G.ch.o.key==='blackmask'&&!G.infinite)continue;   // 검은 가면 출신의 검은 침묵은 전용 줄기(bm_black)에서만 만난다 — 일반 히든 보스로 한 번 더 만나면 합체 보상이 중복된다
         if(h.afterKey&&G.year<(G.ch[h.afterKey]||0))continue;
         if(G.year<(h.from||1)||G.ch.beaten.includes(h.id)||(G.met||[]).includes(h.id)||!meets(G.ch,h.req))continue;
         /* chanceBonus: 조건이 맞으면 확률 가산 (예: 검지 소속은 대행자 +30%) */
