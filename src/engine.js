@@ -3715,7 +3715,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(E.zph&&ph!==E.zph){E.zTalk=C.round;if(!C.quiet){const m={t:'kw',s:`${E.name} · ${ph===2?'새장':'충격파'} · 연설이 길어진다 · 이번 라운드 ${E.name}가 받는 피해 +${Math.round(Z.talk*100)}%`};C.log.push(m);C.cur.push(m)}}
       E.zph=ph;
       if(P.zCage){P.zCage=false;if(P.light>E.passive.cageMin){P.light--;if(!C.quiet){const m={t:'kw',s:`${E.name} · 새장 · ${P.name}의 빛 −1`};C.log.push(m);C.cur.push(m)}}}
-      if(ph===3){const k=C.round%Z.shockEvery;E.zCharge=k===Z.shockEvery-1;E.zShock=k===0;if(E.zCharge&&!C.quiet){const m={t:'kw',s:`${E.name} · 충격파 충전 · 다음 라운드 끝에 전체 충격 (방어 자세로 받으면 절반)`};C.log.push(m);C.cur.push(m)}}else{E.zCharge=false;E.zShock=false}}
+      if(ph===3){const k=C.round%Z.shockEvery;E.zCharge=k===Z.shockEvery-1;E.zShock=k===0;if(E.zCharge&&!C.quiet){const m={t:'kw',s:`${E.name} · 충격파 충전 · 다음 라운드 끝에 회피할 수 없는 충격 (방어 자세로 받으면 피해 80% 감소)`};C.log.push(m);C.cur.push(m)}}else{E.zCharge=false;E.zShock=false}}
     P.locked=(pv==='lock'||pv==='zena')&&C.round%E.passive.every===0?d(P.hand.length)-1:-1;
     C.order=P.tot>=E.tot?[P,E]:[E,P];
     /* 히든 직업 패시브: 발톱 질주(빛), 조율자 봉인(적 공격 카드 1장) */
@@ -3798,6 +3798,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function autoTri(C){if(!triOk(C)||C.triRound===C.round)return;const want=C.P.hp<=C.P.maxHp*0.6?['ri','gon','gun']:['gun','gon','ri'];setTri(C,want.find(k=>k!==C.triPrev))}
   function autoPick(C){autoTri(C);autoForm(C);
     const P=C.P,low=P.hp/P.maxHp<0.35;
+    if(C.E.passive&&C.E.passive.id==='zena'&&C.E.zShock)return [];   // 제나의 충격파가 닿는 라운드에는 자동 전투도 방어 자세(카드를 내지 않는다)를 취한다
     const bad=P.bleed+P.rupture+(P.burn||0)+(P.flame||0),score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5):c.t==='buff'?(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.shield||0)*0.5+(c.passNext||0)*0.4+(c.gain||0)*2-(c.hpCost||0)*0.3+(c.inkCall?9:0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
       :c.hits*(c.dice*((c.die||6)+1)/2+c.b+(P.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(P.bonB&&BONA.has(c)?P.bonB:0))+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05+(c.spend?Math.min(P.charge||0,c.spend)*(c.fixPer||0)*c.hits:0)+(P.oracle&&P.starId&&c===D.cards[P.starId]?30:0)+(c.nailBurst&&C.E.nail>=Math.min(5,nailThr(C)-(C.E.stagger||0))?(C.E.nail||0)*2*c.nailBurst.mul+(c.nailBurst.add||0):0);
     let best=[],bs=-1;
@@ -4357,7 +4358,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       else L('kw',`${E.name} · ${R.n} ${E.recital}/${R.every}${E.recital===R.every-1?' · 다음 라운드 끝에 절정 (방어 자세면 절반)':''}`);
       push({k:'buff',side:'E',card:{n:R.n}});
     }
-    if(E.passive&&E.passive.id==='zena'&&E.zShock&&E.hp>0&&P.hp>0){const Z=E.passive,x0=Math.round(P.maxHp*Z.shockPct),x=P.guarding?Math.floor(x0/2):x0;E.zShock=false;hpLoss(C,P,x,L);L('dmg',`${E.name} · 충격파 · ${P.name} 고정 피해 ${x}${P.guarding?' (방어 자세로 절반)':''}`)}
+    if(E.passive&&E.passive.id==='zena'&&E.zShock&&E.hp>0&&P.hp>0){const Z=E.passive,x0=Math.round(P.maxHp*Z.shockPct),x=P.guarding?Math.round(x0*(1-Z.guardCut)):x0;E.zShock=false;hpLoss(C,P,x,L);L('dmg',`${E.name} · 충격파 · ${P.name} 고정 피해 ${x}${P.guarding?' (방어 자세로 80% 감소)':' (회피 불가)'}`)}
     /* 푸른 화염: 라운드 끝에 스택 × blueDot 피해, 그 뒤 1 감소. 해방 레바테인 소지자의 일반 화상은 줄지 않는다 */
     for(const X of [P,E]){
       if(isBlue(X)&&X.hp>0){const x=X.flame*(X.blueD||CFG.laev.blueDot);hpLoss(C,X,x,L);X.flame--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.flame})`)}
