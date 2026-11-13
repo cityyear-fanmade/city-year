@@ -214,9 +214,9 @@
   "claw": {
    "n": "발톱",
    "color": "#e8e2d0",
-   "hp": 208,
-   "atk": 11,
-   "eva": 6,
+   "hp": 248,
+   "atk": 12,
+   "eva": 7,
    "spd": 8,
    "deck": [
     "x_exec",
@@ -290,9 +290,9 @@
   "arbiter": {
    "n": "조율자",
    "color": "#f2d27a",
-   "hp": 364,
-   "atk": 18,
-   "eva": 11,
+   "hp": 404,
+   "atk": 19,
+   "eva": 12,
    "spd": 7,
    "deck": [
     "x_bind",
@@ -4327,9 +4327,9 @@
   "baral": {
    "n": "발톱 · 바랄",
    "color": "#f0ead8",
-   "hp": 650,
-   "atk": 28,
-   "eva": 16,
+   "hp": 700,
+   "atk": 30,
+   "eva": 18,
    "spd": 15,
    "deck": [
     "x_exec",
@@ -4410,9 +4410,9 @@
   "zena": {
    "n": "조율자 · 제나",
    "color": "#f6dc8c",
-   "hp": 950,
-   "atk": 32,
-   "eva": 17,
+   "hp": 1000,
+   "atk": 34,
+   "eva": 19,
    "spd": 12,
    "deck": [
     "x_bind",
