@@ -3107,7 +3107,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const ti=one(tagged);
       if(d(100)<=(G.ch.paths[D.events[ti].tag]||0)*CFG.pathEventMul){G.pool.splice(G.pool.indexOf(ti),1);return evOut(ti)}
     }
-    while(G.pool.length){const pi=G.pool.pop(),ev=D.events[pi];if(!(G.ch.hw&&ev.noHw)&&meets(G.ch,ev.req)&&(!ev.chance||d(100)<=ev.chance))return evOut(pi)}
+    /* 무한 모드: 같은 사건은 genCool해가 지나기 전에는 다시 나오지 않는다(풀이 한 바퀴 돌아도 같은 일이 연달아 반복되지 않게) */
+    const gc=G.infinite?CFG.infinite.genCool:0,ea=G.evAt||(G.evAt={});
+    while(G.pool.length){const pi=G.pool.pop(),ev=D.events[pi];if(gc&&ea[pi]!=null&&G.year-ea[pi]<gc)continue;if(!(G.ch.hw&&ev.noHw)&&meets(G.ch,ev.req)&&(!ev.chance||d(100)<=ev.chance)){if(gc)ea[pi]=G.year;return evOut(pi)}}
     return {type:'event',ev:D.events.find(e=>e.fallback)||D.events[0]};
   }
   /* 불길한 예감에 대한 답: go면 히든 보스, 아니면 원래 고정 전투 지정대로 조우 */
