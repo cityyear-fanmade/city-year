@@ -3818,6 +3818,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function aiPlan(C){
     const G_=CFG.enemyGuard,E=C.E;
     /* 연계 카드: 직전 라운드에 쓴 카드가 다음 카드를 열면 그 카드 하나만 낸다 (빛 무시) */
+    if(E.passive&&E.passive.id==='zena'&&(E.zCharge||E.zShock))return [];   // 제나는 충격파를 모으는 라운드와 쏘는 라운드에는 다른 행동을 하지 않는다
     if(E.forceNext){const id=E.forceNext;E.forceNext=null;return [D.cards[id]]}
     let hand=drawHand(E.deck,CFG.hand);
     /* 연속 사용 불가(noRepeat): 직전 라운드에 낸 카드는 이번에 손에서 뺀다 (다른 카드가 하나라도 있을 때만) */
@@ -4306,7 +4307,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
     if(P.laev==='open'&&C.round>1&&C.round%CFG.laev.selfEvery===0){P.flame=Math.min(CFG.stackCap,(P.flame||0)+1);L('kw',`${P.name} · 레바테인 · 자신에게 붉은 화염 1 (지금 ${P.flame})`)}
     /* 아무 카드도 내지 않으면 방어 자세 */
     for(const [X,plays] of [[P,pp],[E,ep]]){
-      X.guarding=plays.length===0&&!X.stunned;
+      X.guarding=plays.length===0&&!X.stunned&&!(X===E&&E.passive&&E.passive.id==='zena'&&(E.zCharge||E.zShock));
       if(X.guarding){
         X.passHitNext=CFG.guard.nextHit;X.lightNext=CFG.guard.lightNext||0;X.lightUp=Math.max(X.lightUp,Math.min(CFG.guard.lightUpMax,X.lightUp+CFG.guard.lightUp));
         L('sys',`${X.name} · 방어 자세 · 이번 라운드 방어 판정 · 다음 라운드 명중 +${CFG.guard.nextHit} · 빛 +${CFG.guard.lightUp} (전투 동안)`);
