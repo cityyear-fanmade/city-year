@@ -2139,7 +2139,7 @@ ${symRec(r)}
     return `<div class="panel stack ent${compact?' compact':''}${isDanger(v.hp,X.maxHp)?' danger':''}${side==='P'?' deco-'+decoGet().frame:''}" id="ent-${side}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
       ${head}
       <div class="bar" id="bar-${side}"><i style="width:${clamp(v.hp/X.maxHp*100,0,100)}%;background:${col}"></i></div>
-      <div class="chips" id="chips-${side}">${stacks(v)}</div>${side==='P'&&C&&C.ally?`<div class="small" style="color:var(--bleed)">${esc(C.ally.name)} · 함께 싸운다 <span class="dim">· 같은 공격을 함께 굴려 주사위 합 ¾씩 · 상대 명중 +${CFG.bond.allyHit}</span></div>`:''}${side==='E'&&X.passive?`<div class="small" style="color:var(--gold)">패시브 · ${esc(X.passive.n)}${X.passive.id==='recital'?` (악장 ${X.recital||0}/${X.passive.every})`:''}${X.passive.id==='stance'?` (${X.stance==='bear'?'곰 사냥':'범 사냥'} · 살 ${X.sal==null?5:X.sal}/${X.passive.salMax})`:''}${X.maskOn?' <b>(이번 라운드 발동)</b>':''} <span class="dim">· ${esc(X.passive.d)}</span></div>`:''}${side==='E'&&X.trait&&D.traits&&D.traits[X.trait]?`<div class="small" style="color:var(--gold)">특성 · ${esc(D.traits[X.trait].n)} <span class="dim">· ${esc(D.traits[X.trait].d)}</span></div>`:''}</div>`;
+      <div class="chips" id="chips-${side}">${stacks(v)}</div>${side==='P'&&C&&C.ally?`<div class="small" style="color:var(--bleed)">${esc(C.ally.name)} · 함께 싸운다 <span class="dim">· 같은 공격을 함께 굴려 주사위 합 ¾씩 · 상대 명중 +${CFG.bond.allyHit}</span></div>`:''}${side==='E'&&X.passive?`<details class="small pasv"${UI.pvOpen?' open':''} style="color:var(--gold)"><summary>패시브 · ${esc(X.passive.n)}${X.passive.id==='recital'?` (악장 ${X.recital||0}/${X.passive.every})`:''}${X.passive.id==='stance'?` (${X.stance==='bear'?'곰 사냥':'범 사냥'} · 살 ${X.sal==null?5:X.sal}/${X.passive.salMax})`:''}${X.maskOn?' <b>(이번 라운드 발동)</b>':''}</summary> <span class="dim">· ${esc(X.passive.d)}</span></details>`:''}${side==='E'&&X.trait&&D.traits&&D.traits[X.trait]?`<div class="small" style="color:var(--gold)">특성 · ${esc(D.traits[X.trait].n)} <span class="dim">· ${esc(D.traits[X.trait].d)}</span></div>`:''}</div>`;
   }
   function arenaHtml(play){
     if(!play)return MODE==='off'?'':`<div class="arena"><div class="alabel">손패를 고르고 행동 개시를 누르면 주사위가 굴러간다</div></div>`;
@@ -2159,10 +2159,16 @@ ${symRec(r)}
     if(compact){
       /* 휴대폰: 접을 수 있는 라운드 패널. 접혀 있어도 요약 줄(재생 중이면 지금 행동)이 보인다 */
       const n=E.queue(C,PLAYING?UI.lastPP:UI.sel.map(i=>D.cards[C.P.hand[i]]),C.ePlan).length;
-      return `<details class="panel roundbox"${UI.roundOpen?' open':''}><summary><span class="eyebrow">${C.round}라운드</span> · 선공 <b style="color:${C.order[0].color}">${esc(C.order[0].name)}</b> · 행동 ${n}개<span class="qnow" id="qnow"></span></summary>
+      return `${vZenaBanner()}<details class="panel roundbox"${UI.roundOpen?' open':''}><summary><span class="eyebrow">${C.round}라운드</span> · 선공 <b style="color:${C.order[0].color}">${esc(C.order[0].name)}</b> · 행동 ${n}개<span class="qnow" id="qnow"></span></summary>
         <div class="stack" style="gap:6px;margin-top:10px"><span class="eyebrow">순서 1d100 + 속도×${CFG.spdMul}</span><div class="ordline">${li}</div>${pen}${vQueue()}</div></details>`;
     }
-    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">${C.round}라운드 · 순서 1d100 + 속도×${CFG.spdMul}</span>${li}${pen}${vQueue()}</div>`;
+    return `${vZenaBanner()}<div class="panel stack" style="gap:6px"><span class="eyebrow">${C.round}라운드 · 순서 1d100 + 속도×${CFG.spdMul}</span>${li}${pen}${vQueue()}</div>`;
+  }
+  /* 조율자 제나: 충격파 충전·발동 라운드를 눈에 띄게 알린다 (접힌 라운드 패널 밖에 둔다) */
+  function vZenaBanner(){
+    const ZE=C.E&&C.E.passive&&C.E.passive.id==='zena'&&C.E.hp>0?C.E:null,ZP=ZE&&ZE.passive,zc=ZP?Math.round(ZP.guardCut*100):0;
+    const zb=ZE&&ZE.zShock?`<div class="zb zb-warn"><div class="zb-bar"></div><div class="zb-in"><span class="zb-tag">WARNING</span><b>충격파 발동 라운드</b><span class="zb-d"><b>방어 자세</b>를 취하면 피해 ${zc}% 감소 · 취하지 않으면 ${ZP.shockMin}~${ZP.shockMax} 피해를 회피할 수 없이 받는다 (방어 카드를 내도 줄어들지 않는다)</span></div><div class="zb-bar"></div></div>`:ZE&&ZE.zCharge?`<div class="zb zb-caut"><div class="zb-bar"></div><div class="zb-in"><span class="zb-tag">CAUTION</span><b>충격파 충전 중</b><span class="zb-d">다음 라운드 끝에 ${ZP.shockMin}~${ZP.shockMax} 피해 (회피 불가) · 다음 라운드에 방어 자세를 취하면 피해 ${zc}% 감소 (방어 카드로는 줄어들지 않는다) · 충전 중에는 ${ZE.name}가 받는 피해 ${Math.round(ZP.chargeCut*100)}% 감소</span></div><div class="zb-bar"></div></div>`:'';
+    return zb;
   }
   /* 이번 라운드에 실제로 발동하는 순서. 적 카드는 미리 공개된 의도, 내 카드는 고른 대로 */
   function vQueue(){
@@ -2176,10 +2182,7 @@ ${symRec(r)}
     const items=q.map((st,i)=>`<li data-i="${i}" class="${st.side==='E'?'foe':''}"><span class="qn">${i+1}</span><span>${what(st)}</span></li>`).join('');
     const g=CFG.guard;
     const hint=!PLAYING&&!UI.sel.length?`<li><span class="qn">·</span><span>${who('P')}의 <b>방어 자세</b> <span class="dim">· 카드를 하나도 고르지 않으면 이번 라운드는 방어 판정(막으면 피해 ${g.guardHit}, 못 막으면 피해 ×${g.guardFailMul}, 소수점 버림)${g.bleedCut&&C.P.bleed?` · ${D.keywords.bleed.n} ${C.P.bleed} → ${Math.floor(C.P.bleed*g.bleedCut)}`:''} · 다음 라운드 명중 +${g.nextHit}${g.lightUp?` · 전투 동안 빛 +${g.lightUp}`:''}${g.lightNext?` · 다음 라운드 빛 +${g.lightNext}`:''}</span></span></li>`:'';
-    /* 조율자 제나: 충격파 충전·발동 라운드를 눈에 띄게 알린다 */
-    const ZE=C.E&&C.E.passive&&C.E.passive.id==='zena'&&C.E.hp>0?C.E:null,ZP=ZE&&ZE.passive,zc=ZP?Math.round(ZP.guardCut*100):0;
-    const zb=ZE&&ZE.zShock?`<div class="zb zb-warn"><div class="zb-bar"></div><div class="zb-in"><span class="zb-tag">WARNING</span><b>충격파 발동 라운드</b><span class="zb-d"><b>방어 자세</b>를 취하면 피해 ${zc}% 감소 · 취하지 않으면 ${ZP.shockMin}~${ZP.shockMax} 피해를 회피할 수 없이 받는다 (방어 카드를 내도 줄어들지 않는다)</span></div><div class="zb-bar"></div></div>`:ZE&&ZE.zCharge?`<div class="zb zb-caut"><div class="zb-bar"></div><div class="zb-in"><span class="zb-tag">CAUTION</span><b>충격파 충전 중</b><span class="zb-d">다음 라운드 끝에 ${ZP.shockMin}~${ZP.shockMax} 피해 (회피 불가) · 다음 라운드에 방어 자세를 취하면 피해 ${zc}% 감소 (방어 카드로는 줄어들지 않는다) · 충전 중에는 ${ZE.name}가 받는 피해 ${Math.round(ZP.chargeCut*100)}% 감소</span></div><div class="zb-bar"></div></div>`:'';
-    return `${zb}<span class="eyebrow" style="margin-top:6px">이번 라운드 행동 순서 · ${who('E')}의 의도 공개</span><ol class="queue" id="queue">${items}${hint}</ol>`;
+    return `<span class="eyebrow" style="margin-top:6px">이번 라운드 행동 순서 · ${who('E')}의 의도 공개</span><ol class="queue" id="queue">${items}${hint}</ol>`;
   }
   function vCombat(){
     const {P,E:X}=C;
@@ -3365,6 +3368,7 @@ ${symRec(r)}
   app.addEventListener('toggle',e=>{const t=e.target;if(!t.classList)return;
     if(t.classList.contains('logbox')&&t.querySelector('#log'))UI.logOpen=t.open;
     if(t.classList.contains('roundbox'))UI.roundOpen=t.open;
+    if(t.classList&&t.classList.contains('pasv'))UI.pvOpen=t.open;
     if(t.classList.contains('inv'))UI.invOpen=t.open;
     if(t.classList.contains('bhelp'))UI.helpOpen=t.open;
     if(t.classList.contains('stsec')&&t.dataset.k){UI.stOpen=UI.stOpen||{};UI.stOpen[t.dataset.k]=t.open}},true);
@@ -3396,6 +3400,7 @@ ${symRec(r)}
     /* 자동 테스트용: 진행 중인 게임에서 지정한 적과 바로 싸운다 (적 HP를 낮출 수 있다) */
     testCard:()=>ACT.testCard(),testBgm:()=>BGM.debug(),testBgmLevel:()=>BGM.level(),testBgmScene:k=>BGM.setScene(k),testBgmStyle:k=>BGM.setStyle(k),testBgmStage:n=>BGM.setStage(n),testWfxWs:(h,r)=>{const sv=C;C={P:{},ch:{wsRelic:Object.fromEntries(Array.from({length:r||0},(_,i)=>['r'+i,true]))}};const o=weaponFx('ws_weapon',{},true,{wsH:h});C=sv;return o},testWfx:(id,form,note)=>{const sv=C;C={P:{form},ch:{}};const r=weaponFx(id,{note:note||'장갑 1d9 3'},true);C=sv;return r},testInfNote:y=>{if(G)G.year=y||300;showInfNote(G?infNote():D.infinite.notes[2][3])},testBgmPos:()=>BGM.pos(),testBgmVol:v=>BGM.setVol(v),testTitles:a=>ACT.testTitles(a),
     testShareLink:()=>shareLinkAsync(),testShareLinkOld:()=>shareLink(),
+    testFight(id,p3){if(!G||!D.enemies[id])return;if(p3!=null&&D.enemies[id].passive)D.enemies[id].passive.p3=p3;UI.omen=null;UI.fight=null;UI.pending=id;flow();if(p3!=null&&C&&C.E&&C.E.passive&&C.E.passive.id==='zena')C.E.passive.p3=p3},
     testDistort(){if(!G)return;UI.ev=D.mindEvents.distort;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},

@@ -933,3 +933,9 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 .zb-warn{animation:zbpulse 1.1s ease-in-out infinite}
 @keyframes zbpulse{0%,100%{filter:none}50%{filter:drop-shadow(0 0 6px rgba(255,60,48,.75))}}
 @media (prefers-reduced-motion:reduce){.zb-warn{animation:none}}
+/* 적 패시브: 접을 수 있는 칸(길어도 카드 높이를 키우지 않는다) */
+.pasv summary{cursor:pointer;list-style:none;line-height:1.6}
+.pasv summary::-webkit-details-marker{display:none}
+.pasv summary::before{content:'▸ ';color:var(--dim)}
+.pasv[open] summary::before{content:'▾ '}
+.pasv>.dim{display:block;margin-top:4px;line-height:1.6}
