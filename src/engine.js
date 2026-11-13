@@ -3019,7 +3019,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(pool.length){const h=one(pool),nm=D.enemies[h.id].n;
           return {type:'omen',boss:h.id,omen:riftOmenFor(G.ch,nm),rift:true,escape:true,spec:f}}
         /* 만날 수 있는 히든을 모두 만났다면, 이미 이긴 상대가 '불순물'이 되어 다시 나타난다 (전리품 대신 불순물의 조각과 경험치) */
-        {const all=riftBosses().map(h=>h.id);if(lakeOn(G.ch))for(const k of (G.ch.lake&&G.ch.lake.killed)||[])if(/^lake_whale_/.test(k)&&!all.includes(k))all.push(k);if(all.length){const bid=one(all),nm=D.enemies[bid].n;
+        {const all=riftBosses().map(h=>h.id);if(lakeOn(G.ch))for(const k of (G.ch.lake&&G.ch.lake.killed)||[])if(/^lake_whale_/.test(k)&&!all.includes(k))all.push(k);if(all.length){const rec=G.ch.echoRecent=G.ch.echoRecent||[];let pool2=all.filter(x=>!rec.includes(x));if(!pool2.length)pool2=all;const bid=one(pool2),nm=D.enemies[bid].n;rec.push(bid);while(rec.length>Math.max(0,Math.min(10,all.length-1)))rec.shift();
           return {type:'omen',boss:bid,omen:riftEchoOmenFor(G.ch,nm),rift:true,echo:true,escape:true,spec:f}}}
       }
       for(const h of D.hiddenBosses||[]){
