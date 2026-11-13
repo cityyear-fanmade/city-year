@@ -3715,7 +3715,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(E.zph&&ph!==E.zph){E.zTalk=C.round;if(!C.quiet){const m={t:'kw',s:`${E.name} · ${ph===2?'새장':'충격파'} · 연설이 길어진다 · 이번 라운드 ${E.name}가 받는 피해 +${Math.round(Z.talk*100)}%`};C.log.push(m);C.cur.push(m)}}
       E.zph=ph;
       if(P.zCage){P.zCage=false;if(P.light>E.passive.cageMin){P.light--;if(!C.quiet){const m={t:'kw',s:`${E.name} · 새장 · ${P.name}의 빛 −1`};C.log.push(m);C.cur.push(m)}}}
-      if(ph===3){if(E.zS0==null)E.zS0=C.round+1;const k=(C.round-E.zS0+Z.shockEvery*100)%Z.shockEvery;E.zCharge=C.round===E.zS0-1||(C.round>=E.zS0&&k===Z.shockEvery-1);E.zShock=C.round>=E.zS0&&k===0;if(E.zCharge&&!C.quiet){const m={t:'kw',s:`${E.name} · 충격파 충전 · 다음 라운드 끝에 회피할 수 없는 충격 ${Z.shockMin}~${Z.shockMax} (방어 자세로 받으면 피해 80% 감소)`};C.log.push(m);C.cur.push(m)}}else{E.zCharge=false;E.zShock=false}}
+      if(ph===3){if(E.zS0==null)E.zS0=C.round+1;const k=(C.round-E.zS0+Z.shockEvery*100)%Z.shockEvery;E.zCharge=C.round===E.zS0-1||(C.round>=E.zS0&&k===Z.shockEvery-1);E.zShock=C.round>=E.zS0&&k===0;if(E.zCharge&&!C.quiet){const m={t:'kw',s:`${E.name} · 충격파 충전 · 다음 라운드 끝에 회피할 수 없는 충격 ${Z.shockMin}~${Z.shockMax} (방어 자세로 받으면 피해 80% 감소) · 충전 중에는 ${E.name}가 받는 피해 ${Math.round(Z.chargeCut*100)}% 감소`};C.log.push(m);C.cur.push(m)}}else{E.zCharge=false;E.zShock=false}}
     P.locked=(pv==='lock'||pv==='zena')&&C.round%E.passive.every===0?d(P.hand.length)-1:-1;
     C.order=P.tot>=E.tot?[P,E]:[E,P];
     /* 히든 직업 패시브: 발톱 질주(빛), 조율자 봉인(적 공격 카드 1장) */
@@ -4081,6 +4081,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.mark){const x=d(3)+d(3);dmg+=x;note+=` 표지+${x}`}
       /* 무한 모드: 상대 능력치를 떨구는 디버프(침잠·예의)는 상대가 받는 피해도 키운다 */
       if(C.ch.infinite&&!B.isP){const K=CFG.infinite.weak,hid=D.enemies[C.id]&&D.enemies[C.id].hidden,sg_=staggerStage(B),w=Math.min(K.cap,Math.floor((B.sink||0)/CFG.sink.per)*K.sink+(B.manner||0)*K.manner+((B.prescript||0)+(B.obey||0)+(B.shock||0)+(B.warp||0))*K.short+((B.chain||0)+(B.web||0))*K.chain+(sg_?CFG.nail.stages.indexOf(sg_)+1:0)*K.stagger)*(hid?K.hidden:1);if(w>0){dmg=Math.floor(dmg*(1+w));note+=` 약화×${Math.round((1+w)*100)/100}`}}
+      if(B.passive&&B.passive.id==='zena'&&B.zCharge&&B.passive.chargeCut){dmg=Math.floor(dmg*(1-B.passive.chargeCut));note+=` 충전 중×${1-B.passive.chargeCut}`}
       if(B.passive&&B.passive.id==='zena'&&B.zTalk===C.round){dmg=Math.floor(dmg*(1+B.passive.talk));note+=` 연설×${1+B.passive.talk}`}
       const rawDmg=dmg;
       if(B.guarding&&!ig){dmg=Math.floor(dmg*G_.guardFailMul);note+=` 방어 감소×${G_.guardFailMul}`}else if(B.guarding&&ig)note+=' 방어 무시'
