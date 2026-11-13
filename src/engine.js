@@ -2914,6 +2914,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const pe=bondPartnerEvent(G);if(pe)return {type:'event',ev:pe}}
     {const sw=bondSweetEvent(G);if(sw)return {type:'event',ev:sw}}
     if(mc.resoPend&&D.familyReso&&G.year>=(mc.resoAt||0)){mc.resoPend=false;mc.resoAsked=true;return {type:'event',ev:D.familyReso}}
+    if(mc.eastPend&&D.eastReso&&G.year>=(mc.eastAt||0)){mc.eastPend=false;mc.eastAsked=true;return {type:'event',ev:D.eastReso}}
     if(mc.familyPend&&D.familyCall){mc.familyPend=false;mc.familyAsked=true;return {type:'event',ev:D.familyCall}}
     /* 조율자: 10년마다 머리의 권한이 한 단계 오른다 (해는 넘어가지 않음) */
     /* 혈귀: 16년차에 라만차랜드 초대장 (해는 넘어가지 않음) */
@@ -3204,10 +3205,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 선택지의 정신력: mind -1이면 2d3 감소, +1이면 2d3 회복 */
     if(c.mind){const x=d(3)+d(3);if(c.mind<0)loseMind(ch,x,t=>chips.push(t+' · 2d3'));else{const g=gainMind(ch,x);if(g)chips.push(`정신력 +${g} (${ch.mind}/${M.max})`)}}
     if(fx.relicRoll){const ca=relicChance(ch),r=d(100),ok=r<=ca&&relicChoices(ch).length;chips.push(`1d100 · ${r} (${ca} 이하${(ch.stats.relicApt||0)>0?' · 유물 적성':''}${ch.relicBase?' · 출신 보정':''})`);
-      if(ok){ch.relicPickLate=true;chips.push('유물이 손에 감긴다 · 하나를 고른다')}else{chips.push('손끝에 먼지만 묻었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.familyAsked)ch.familyPend=true}}
+      if(ok){ch.relicPickLate=true;chips.push('유물이 손에 감긴다 · 하나를 고른다')}else{chips.push('손끝에 먼지만 묻었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.familyAsked)ch.familyPend=true;if(ch.o&&ch.o.n==='동부 출신 외곽 생존자'&&!ch.eastAsked){ch.eastPend=true;ch.eastAt=(ch.year||0)+2}}}
     /* 보냐텔리 가문: 잊힌 유물을 놓치면 가문의 부름 · 오딘의 눈 */
     if(fx.odinRoll){const r=d(100),ok=r<=fx.odinRoll&&!(ch.relicIds||[]).includes('odin');chips.push(`1d100 · ${r} (${fx.odinRoll} 이하)`);
       if(ok){const wn_=giveRelic(ch,'odin',true);if(wn_)chips.push('유물 · '+D.relics.odin.n+' · '+wn_);else chips.push('유물 · '+D.relics.odin.n+' ('+D.relics.odin.e+')');if(wn_){}else if(ch.yeji)chips.push('패시브 · 가속하는 미래 · 버프 · 예지안 (전용 검술 카드 피해 +'+CFG.odin.yeji+')');else chips.push('버프 · 순간의 예지 · 첫 라운드 회피 +'+CFG.odin.first+' · 이후 +'+CFG.odin.after)}else{chips.push(ch.resoAsked?'유물고의 울림이 잦아들었다':'보물고는 비어 있었다');if(ch.o&&ch.o.n==='보냐텔리 가문'&&!ch.resoAsked){ch.resoPend=true;ch.resoAt=(ch.year||0)+3}}}
+    /* 동부 출신 외곽 생존자: 잊힌 유물을 놓치면 몇 해 뒤 궁니르의 울림이 한 번 더 찾아온다 */
+    if(fx.gungRoll){const r=d(100),ok=r<=fx.gungRoll&&!(ch.relicIds||[]).includes('gungnir');chips.push(`1d100 · ${r} (${fx.gungRoll} 이하)`);
+      if(ok){const wn_=giveRelic(ch,'gungnir',true);chips.push('유물 · '+D.relics.gungnir.n+(wn_?' · '+wn_:' ('+D.relics.gungnir.e+')'))}else chips.push('울림이 잦아들었다')}
     if(fx.wsRoll){
       const r=d(WF.die);chips.push(`1d${WF.die} · ${r} (${WF.minRoll} 이상)`);
       if(r>=WF.minRoll&&!ch.infinite){const was=ch.licensed;if(!was)license(ch);ch.aff={type:'workshop',name:'공방 해결사'};

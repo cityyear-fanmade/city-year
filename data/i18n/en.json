@@ -16830,5 +16830,12 @@
  "(회피 불가)": "(cannot be evaded)",
  "를 취하면 피해 {0}% 감소 · 취하지 않으면 {1}~{2} 피해를 회피할 수 없이 받는다 (방어 카드를 내도 줄어들지 않는다)": " reduces the damage by {0}% · Without it you take {1}~{2} damage that cannot be evaded (defense cards do not reduce it)",
  "다음 라운드 끝에 {0}~{1} 피해 (회피 불가) · 다음 라운드에 방어 자세를 취하면 피해 {2}% 감소 (방어 카드로는 줄어들지 않는다) · 충전 중에는 {3}가 받는 피해 {4}% 감소": "At the end of next round, {0}~{1} damage (cannot be evaded) · Taking a guard stance next round reduces the damage by {2}% (defense cards do not reduce it) · While charging, {3} takes {4}% less damage",
- "최대 HP +6 · 회피 +2 · 보조 무기 환도 · 환도 검술 카드 9장 · 해결사 진로 +20 · 잊힌 유물 확률 40% · 새 카드 대신 돈": "Max HP +6 · Evasion +2 · Secondary Weapon: Hwando · 9 Hwando Swordplay Pages · Fixer Career +20 · Forgotten Relic chance 40% · Money instead of new cards"
+ "최대 HP +6 · 회피 +2 · 보조 무기 환도 · 환도 검술 카드 9장 · 해결사 진로 +20 · 잊힌 유물 확률 40% · 새 카드 대신 돈": "Max HP +6 · Evasion +2 · Secondary Weapon: Hwando · 9 Hwando Swordplay Pages · Fixer Career +20 · Forgotten Relic chance 40% · Money instead of new cards",
+ "궁니르의 울림": "The Echo of Gungnir",
+ "잊힌 유물을 놓친 뒤로, 허리의 환도가 밤마다 낮게 울었다. 칼집 속에서 쇠가 쇠를 부르듯 응답하는 곳이 있다. 오래전 동부에서 선택받았다고 들은 창이 아직 어딘가에 남아 있는 모양이다.": "Since missing the forgotten relic, the hwando at your waist has hummed low every night. Somewhere, iron answers iron as if called from inside the scabbard. The spear you were told long ago had chosen someone in the east seems to be still out there.",
+ "1d100 · 40 이하가 나오면 궁니르": "1d100 · Gungnir if 40 or less",
+ "울림이 멈춘 자리에서 오래된 창끝이 빛을 냈다.": "Where the echo stopped, an old spearhead glinted.",
+ "환도를 눌러 울림을 죽인다": "Press down on the hwando to silence the echo",
+ "칼집을 눌러 울림을 죽였다. 울림은 다시 오지 않는다.": "You pressed the scabbard and silenced the echo. It will not come again.",
+ "울림이 잦아들었다": "The echo faded."
 }
