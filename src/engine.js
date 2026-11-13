@@ -1902,7 +1902,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 인연이 맺어진 뒤의 사건(3~4년마다)과 청혼. 만남은 일상 사건 안에서 일어난다 */
   /* 1000해 불순물이 가져오는 카드: 기록된 덱 중 가장 센 카드 한 장 (예전 기록의 12장 덱도 이 한 장으로 줄여 쓴다) */
   const ghostCard=deck=>{let best=null,bs=-1;for(const id of deck||[]){const c=D.cards[id];if(!c)continue;const s=((c.dice||0)+(c.b||0))*(c.hits||1);if(s>bs){bs=s;best=id}}return best};
-  let legacyFn=null,ghostFn=null;const ghostOf=ch=>{const g=ghostFn?ghostFn():null;return g&&g.deck&&g.deck.length>=3&&ch.infinite?g:null};
+  let legacyFn=null,ghostFn=null;const ghostOf=ch=>{const g=ghostFn?ghostFn():null,L=(Array.isArray(g)?g:g?[g]:[]).filter(x=>x&&x.deck&&x.deck.length>=3);if(!L.length||!ch.infinite)return null;if(ch.ghostIdx==null)ch.ghostIdx=d(L.length)-1;return L[ch.ghostIdx%L.length]};   /* 보관된 기록(최대 3개) 중 이 판에서 만날 하나를 처음 필요할 때 무작위로 정해 둔다 */
   /* 배우자·자식의 죽음 앞에서 고르는 길: 나이 100을 넘긴 뒤 혈귀(불사의 강물) · 홍원 가주/군주(금지된 환) · 까마귀(배양조의 시간) · 대호수(선원의 이름)만 방도가 열린다.
      방도를 따르면 주인공은 불순물이 되어 떠나고 영생을 얻은 곁의 사람은 남는 엔딩으로 이 판이 끝난다. 받아들이면 지금의 죽음 사건 */
   function pvProfile(ch,b){
@@ -3584,7 +3584,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 1000해를 넘긴 캐릭터가 이름 없는 불순물이 되어 돌아온다: 그 캐릭터가 쓰던 덱으로 싸운다 */
     if(id==='impurity'){const gh=ghostOf(ch);if(gh){
       /* 1000살 직전의 마지막 불순물: 오버플로우에 닿았던 캐릭터가 쓰던 덱과 무기(주사위·추가 타·키워드)로 싸운다. 방어구·보조 장비·장신구는 쓰지 않는다 */
-      if(lastImp&&CFG.infinite.ghostBoss){const dk=(gh.deck||[]).filter(c=>D.cards[c]&&['atk','def','buff'].includes(D.cards[c].t)).slice(0,12);if(dk.length>=3){E.deck=dk;E.ghostBoss=true;{const M=CFG.infinite.enemyMax;E.atk=Math.max(E.atk,Math.min(gh.atk||0,M));E.eva=Math.max(E.eva,Math.min(gh.eva||0,M));E.spd=Math.max(E.spd||0,Math.min(gh.spd||0,M))}
+      if(lastImp&&CFG.infinite.ghostBoss){const dk=(gh.deck||[]).filter(c=>D.cards[c]&&['atk','def','buff'].includes(D.cards[c].t)).slice(0,12);if(dk.length>=3){E.deck=dk;E.ghostBoss=true;if(CFG.infinite.ghostBonus){E.atk+=CFG.infinite.ghostBonus;E.eva+=CFG.infinite.ghostBonus}{const M=CFG.infinite.enemyMax;E.atk=Math.max(E.atk,Math.min(gh.atk||0,M));E.eva=Math.max(E.eva,Math.min(gh.eva||0,M));E.spd=Math.max(E.spd||0,Math.min(gh.spd||0,M))}
         if(gh.wx){const W=gh.wx,wx={};for(const k of ['dice','extraHit','hitKw','extraD2'])if(W[k]!=null)wx[k]=JSON.parse(JSON.stringify(W[k]));if(Object.keys(wx).length)E.wx=wx}}}
       else{const one=ghostCard(gh.deck);E.deck=(E.deck||[]).concat(one?[one]:[])}
       E.ghost=true;E.name+=' · '+(gh.name||T.you)}}

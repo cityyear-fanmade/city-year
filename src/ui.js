@@ -1375,7 +1375,7 @@ export function startUI(E,app){
     saveChron(o);
   }
   /* 손주 이름: 명예의 전당에 직접 올린 지난 삶의 이름(나·연인·아이)을 엔진에 넘긴다. 지금 진행 중인 판의 기록(제1막 종료 때 자동으로 남는 것)은 뺀다. 예전에 저장한 판은 이름만 있다 */
-  E.setGhost(()=>loadRec().ghost||null);
+  E.setGhost(()=>{const r=loadRec();return Array.isArray(r.ghosts)&&r.ghosts.length?r.ghosts:(r.ghost?[r.ghost]:null)});
   E.setLegacy(()=>{const o=loadChron(),out=[],sd=G&&G.ch&&G.ch.seed!=null?G.ch.seed+'|':null;for(const e of o.fame){if(sd&&String(e.key||'').startsWith(sd))continue;if(e.name)out.push({n:e.name,k:'self'});if(e.lover)out.push({n:e.lover,k:'lover'});for(const n of e.kids||[])out.push({n:n,k:'kid'})}return out});
   const chDate=t=>new Date(t).toLocaleString('ko-KR',{year:'2-digit',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
   function chBtns(tab,e,view){
@@ -2977,7 +2977,7 @@ ${symRec(r)}
         if(got.length)UI.symNew=got.join(' · ')}}
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=Math.min(REC_MAXYR,w?G.year:Math.max(0,G.year-1));
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:w&&UI.overflowEnd?'overflow':(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
-    if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;r.ghost={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp}}
+    if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;const gst={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp};r.ghosts=[gst,...(Array.isArray(r.ghosts)?r.ghosts:(r.ghost?[r.ghost]:[]))].slice(0,3);r.ghost=gst}
     if(!r.endings.includes(k))r.endings.push(k);if(fe==='wed'&&!r.endings.includes('wed'))r.endings.push('wed');r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;if(w&&c.easy)r.easyClear=(r.easyClear||0)+1;
     const S=r.st=r.st||{n:0,sum:0,min:null,max:0,ends:{},aff:{},ori:{},inn:{}},bump=(m,n)=>{if(n)m[n]=(m[n]||0)+1};
     S.n++;S.sum+=lived;S.min=S.min==null?lived:Math.min(S.min,lived);S.max=Math.max(S.max,lived);if(!UI.overflowEnd)bump(S.ends,k);bump(S.aff,affName(c)||(c.licensed?T.licensed:''));bump(S.ori,c.o&&c.o.n);
