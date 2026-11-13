@@ -10930,7 +10930,6 @@
  "환상체": "Abnormality",
  "마주치면 정신력이 2d3 깎인다{0}": "Sanity decreases by 2d3 upon encounter {0}",
  "갈라진 틈 너머에서 {0}이(가) 흘러들었다. 이 세계의 사건과는 이어지지 않은 채 다른 운명에서 건너온 존재다. 만날 수 없던 상대가 지금 눈앞에 서 있다.": "{0} has flowed in from beyond the rift. An existence from a different fate, unconnected to the events of this world. An opponent you could never have met now stands before you.",
- "그런데 낯익다. 천 살을 넘긴 {0}. 이름을 잃고 저 자리에 서 있다{1}.": "Yet, it feels familiar. {0}, who has lived over a thousand years. Having lost their name, they stand in that place {1}.",
  "{0}{1}세의 해 · 전투": "Year {0}{1}· Battle",
  "1d100 · {0} 이하가 나오면 유물을 고른다{1}{2}": "1d100 · If {0} or lower, choose an Artifact {1}{2}",
  "1d{0} × {1} · 모두 {2} 이상이면 E.G.O 개화 · 셋 다 실패하면 바로 뒤틀린다{3} · 실패하면 정신력 감소": "1d {0}×{1}· If all are {2} or higher, E.G.O Awakening · If all three fail, immediately undergo Distortion {3}· On failure, Sanity decreases",
@@ -16837,5 +16836,6 @@
  "울림이 멈춘 자리에서 오래된 창끝이 빛을 냈다.": "Where the echo stopped, an old spearhead glinted.",
  "환도를 눌러 울림을 죽인다": "Press down on the hwando to silence the echo",
  "칼집을 눌러 울림을 죽였다. 울림은 다시 오지 않는다.": "You pressed the scabbard and silenced the echo. It will not come again.",
- "울림이 잦아들었다": "The echo faded."
+ "울림이 잦아들었다": "The echo faded.",
+ "그런데 낯익다. 다른 세계에서 천 살을 넘겼다는 {0}의 모습을 닮았다. 이름을 잃고 저 자리에 서 있다{1}. 같은 사람인지는 알 수 없다.": "It looks familiar. It resembles {0}, said to have passed a thousand years in another world. It stands there having lost its name{1}. There is no telling whether it is the same person."
 }
