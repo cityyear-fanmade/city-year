@@ -920,3 +920,16 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 @keyframes gin{to{opacity:1}}
 @keyframes gch1{0%,100%{transform:none;opacity:1;filter:none}50%{transform:translate(3px,-5px) rotate(4deg);opacity:.45;filter:blur(1.5px)}}
 @keyframes gch2{0%{transform:translate(-9px,6px) scale(1.3);opacity:.15;filter:blur(3px)}50%{transform:translate(12px,-10px) rotate(-12deg);opacity:.6;filter:blur(1px)}100%{transform:translate(-4px,14px) rotate(9deg);opacity:.08;filter:blur(4px)}}
+
+/* 조율자 제나: 충격파 충전(노랑 주의) · 발동(빨강 경고) 안내 배너 */
+.zb{position:relative;margin-top:8px;padding:0;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px);color:var(--zbc);background:linear-gradient(var(--zbg),var(--zbg)),var(--panel,#1c1c1c)}
+.zb-warn{--zbc:#ff4d3f;--zbg:rgba(255,52,40,.16)}
+.zb-caut{--zbc:#f2c21b;--zbg:rgba(242,194,27,.14)}
+.zb-bar{height:7px;background:repeating-linear-gradient(-45deg,var(--zbc) 0 9px,transparent 9px 18px);opacity:.9}
+.zb-in{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:9px 16px;font-size:13px;line-height:1.5;border-left:3px solid var(--zbc);border-right:3px solid var(--zbc)}
+.zb-in b{color:var(--zbc);letter-spacing:.04em}
+.zb-in .zb-d{color:var(--fg,#eee);flex:1 1 220px;min-width:0}
+.zb-tag{font:700 12px/1 var(--mono,ui-monospace,monospace);letter-spacing:.18em;padding:4px 8px;border:1px solid var(--zbc);color:var(--zbc)}
+.zb-warn{animation:zbpulse 1.1s ease-in-out infinite}
+@keyframes zbpulse{0%,100%{filter:none}50%{filter:drop-shadow(0 0 6px rgba(255,60,48,.75))}}
+@media (prefers-reduced-motion:reduce){.zb-warn{animation:none}}
