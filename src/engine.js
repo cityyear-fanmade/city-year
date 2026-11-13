@@ -599,8 +599,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const pool=[];
     for(const s of list){const ten=y-s.y,tr=s.trust==null?SE.trustStart:s.trust;
       for(const t of (D.staffEvents||[])){
-        if((s.seen||[]).includes(t.id))continue;
-        if(inf&&!t.exam)continue;   /* 무한 모드: 직원 면담은 닫혀 있고 특색 시험만 열린다 */
+        /* 한 번 본 면담은 다시 나오지 않는다. 무한 모드에서는 repeatGap해가 지나면 같은 직원에게 다시 나올 수 있다(오래 일하는 직원도 면담이 계속 이어진다) */
+        if((s.seen||[]).includes(t.id)){if(!inf||t.exam||t.id==='first')continue;const ly=(s.seenY||{})[t.id];if(ly!=null&&y-ly<SE.repeatGap)continue}
         if(t.type&&!t.type.includes(s.type))continue;if(t.trait&&!t.trait.some(x=>(s.traits||[]).includes(x)))continue;
         if(t.tenureMin!=null&&ten<t.tenureMin)continue;if(t.tenureMax!=null&&ten>t.tenureMax)continue;
         if(t.trustMin!=null&&tr<t.trustMin)continue;if(t.trustMax!=null&&tr>t.trustMax)continue;
@@ -612,7 +612,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const firsts=pool.filter(([,t])=>t.id==='first'||t.exam);
     if(!firsts.length&&d(100)>SE.chance)return null;
     const [s,t]=(firsts.length?firsts:pool)[Math.floor(rng()*(firsts.length||pool.length))],other=t.staffMin?one(list.filter(x=>x!==s)):null;
-    (s.seen=s.seen||[]).push(t.id);O.evNext=y+SE.gap;
+    if(!(s.seen=s.seen||[]).includes(t.id))s.seen.push(t.id);(s.seenY=s.seenY||{})[t.id]=y;O.evNext=y+SE.gap;
     const ev=staffFill(t,s.n,other&&other.n);ev.staffEv=true;
     if(t.exam){const tr=s.trust==null?SE.trustStart:s.trust,dc=Math.max(1,SE.exam.dc-SE.exam.trustMul*tr),c0=ev.c[0];c0.check.dc=dc;c0.h=`1d100 · ${dc} 이상이면 합격 (신뢰 ${tr}점 반영) · 실적 ${s.done||0}건 · 합격하면 효과 ×${SE.spMul}와 이름에 맞는 특수능력${tr>=SE.exam.bonusTrust?' (신뢰 가득: 효과 두 배)':''}`}
     return ev;
