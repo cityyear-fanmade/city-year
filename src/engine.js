@@ -3583,9 +3583,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 홍루: 홍루를 따르는 흑수들. 내 부하 두 사람은 빠진다 */
     /* 1000해를 넘긴 캐릭터가 이름 없는 불순물이 되어 돌아온다: 그 캐릭터가 쓰던 덱으로 싸운다 */
     if(id==='impurity'){const gh=ghostOf(ch);if(gh){
-      /* 1000살 직전의 마지막 불순물: 오버플로우에 닿았던 캐릭터가 쓰던 덱과 무기(주사위·추가 타·키워드)로 싸운다. 방어구·보조 장비·장신구는 쓰지 않는다 */
-      if(lastImp&&CFG.infinite.ghostBoss){const dk=(gh.deck||[]).filter(c=>D.cards[c]&&['atk','def','buff'].includes(D.cards[c].t)).slice(0,12);if(dk.length>=3){E.deck=dk;E.ghostBoss=true;if(CFG.infinite.ghostBonus){E.atk+=CFG.infinite.ghostBonus;E.eva+=CFG.infinite.ghostBonus}{const M=CFG.infinite.enemyMax;E.atk=Math.max(E.atk,Math.min(gh.atk||0,M));E.eva=Math.max(E.eva,Math.min(gh.eva||0,M));E.spd=Math.max(E.spd||0,Math.min(gh.spd||0,M))}
-        if(gh.wx){const W=gh.wx,wx={};for(const k of ['dice','extraHit','hitKw','extraD2'])if(W[k]!=null)wx[k]=JSON.parse(JSON.stringify(W[k]));if(Object.keys(wx).length)E.wx=wx}}}
+      /* 1000살 직전의 마지막 불순물: 불순물 자신의 카드와 능력치 그대로(하드 최종 체력 포함), 카드 이름만 기록된 과거의 나가 쓰던 대표 카드 이름으로 바뀐다. 효과·무기·방어구는 쓰지 않는다 */
+      if(lastImp&&CFG.infinite.ghostBoss){const sc=c=>{const k=D.cards[c];return ((k.dice||0)+(k.b||0))*(k.hits||1)},nm=(gh.deck||[]).filter(c=>D.cards[c]).sort((a,b)=>sc(b)-sc(a)).map(c=>D.cards[c].n);
+        if(nm.length>=3){const seen=new Map();E.deck=(E.deck||[]).map(cid=>{const o=D.cards[cid];if(!o)return cid;if(seen.has(cid))return seen.get(cid);const gid='ghost_'+seen.size,cl=Object.assign({},o,{n:nm[seen.size%nm.length]});D.cards[gid]=cl;cardId.set(cl,gid);seen.set(cid,gid);return gid});E.ghostBoss=true}}
       else{const one=ghostCard(gh.deck);E.deck=(E.deck||[]).concat(one?[one]:[])}
       E.ghost=true;E.name+=' · '+(gh.name||T.you)}}
     if(e.zodiac10){const own=hwHave(ch);E.zChain=ZKEYS.filter(k=>!own.slice(0,2).includes(k));E.zExtra=Math.min(CFG.hw.zExtraMax,Math.max(0,own.length-CFG.hw.zExtraFrom));E.deck=['z_'+E.zChain[0]]}
