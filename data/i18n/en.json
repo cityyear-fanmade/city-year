@@ -1690,7 +1690,6 @@
  "바랄의 하얀 옷자락": "Baral's White Hem",
  "공+3 · 속도+3 · HP+9 · 무기 바랄의 하얀 발톱 · 방어구 엠플 외투": "Atk+3 · Speed+3 · HP+9 · Weapon: Baral's White Claw · Armor: Ample Cloak",
  "바랄의 하얀 발톱": "Baral's White Claw",
- "공+37 · 회피+16 · 피해 1d10 · 공격 카드마다 2타 추가 · 적중마다 파열 +2 · 적중마다 발톱자국 +1 (스택당 적중 피해 +2, 5가 되면 추가타)": "Atk+37 · Evasion+16 · Damage 1d10 · +2 hits per Attack card · Rupture +2 per hit · Claw Mark +1 per hit (Hit damage +2 per stack, additional hit at 5)",
  "엠플 외투": "Ample Cloak",
  "HP+39 · 회피+6 · 방어 카드 회피+10 · 피해 감소 10%": "HP+39 · Evasion+6 · Defense Card Evasion+10 · Damage Reduction 10%",
  "조율자 · 제나": "Arbiter · Zena",
@@ -16805,7 +16804,6 @@
  "클리어하거나 쓰러질 때마다 그 판의 결과 화면이 자동으로 저장된다. 최대 {0}개이고, 가득 차면 가장 오래된 판부터 밀려난다. 일대기에서 밀려날 때 완주한 판과 55년 이상 산 판은 보호구역으로 옮겨지고, 그전에 쓰러진 판은 사라진다. 남기고 싶은 판은 명예의 전당에 올려 둔다.": "Each time you clear or fall, that run's result screen is saved automatically. Up to {0}; once full, the oldest runs are pushed out first. When pushed out of the Chronicle, completed runs and runs of 55+ years are moved to the Sanctuary; runs that fell earlier are lost. Place runs you want to keep in the Hall of Fame.",
  "일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 옮겨 와 보관되는 곳. 최대 {0}개이고, 가득 차면 가장 오래된 것부터 지워진다. 오래 두고 싶은 판은 직접 명예의 전당에 올려 둔다.": "Where completed runs and runs of 55+ years are moved after being pushed out of the Chronicle. Up to {0}; once full, the oldest is deleted first. Place runs you want to keep long-term in the Hall of Fame yourself.",
  "아직 보호된 판이 없다. 일대기에서 밀려난 판 중 완주했거나 55년 이상 산 판이 여기로 온다.": "No protected runs yet. Completed runs and runs of 55+ years pushed out of the Chronicle come here.",
- "공+37 · 회피+19 · 피해 2d8 · 상대 HP 45% 이하에서 적중하면 고정 피해 60 (요정: 파괴) · 적중마다 요정 +4 (최대 40 · 요정만큼 추가 피해 · 라운드마다 −3) · 각인 +1 (상대 공격 카드 봉인 확률 15%씩, 5가 되면 행동 봉인)": "Atk+37 · Eva+19 · Dmg 2d8 · If hit at 45% or less HP, deal 60 fixed damage (Fairy: Destruction) · On hit, Fairy +4 (Max 40 · Bonus damage equal to Fairy · −3 per round) · Imprint +1 (15% chance to seal opponent's attack cards; seals actions at 5)",
  "{0} · {1} · 연설이 길어진다 · 이번 라운드 {2}가 받는 피해 +{3}%": "{0} · {1} · The speech runs long · {2} takes +{3}% damage this round",
  "{0} · 새장 · {1}의 빛 −1": "{0} · Birdcage · {1}'s Light −1",
  "연설×{0}": "Speech ×{0}",
@@ -16837,5 +16835,7 @@
  "환도를 눌러 울림을 죽인다": "Press down on the hwando to silence the echo",
  "칼집을 눌러 울림을 죽였다. 울림은 다시 오지 않는다.": "You pressed the scabbard and silenced the echo. It will not come again.",
  "울림이 잦아들었다": "The echo faded.",
- "그런데 낯익다. 저 서 있는 모양을, 어디선가 본 적이 있는 것 같다.": "It feels familiar. That way of standing there — you feel you have seen it somewhere before."
+ "그런데 낯익다. 저 서 있는 모양을, 어디선가 본 적이 있는 것 같다.": "It feels familiar. That way of standing there — you feel you have seen it somewhere before.",
+ "공+35 · 회피+15 · 피해 1d10 · 공격 카드마다 1타 추가 · 적중마다 파열 +2 · 적중마다 발톱자국 +1 (스택당 적중 피해 +2, 5가 되면 추가타)": "Atk+35 · Evasion+15 · Damage 1d10 · +1 hit per Attack card · Rupture +2 per hit · Claw Mark +1 per hit (Hit damage +2 per stack, additional hit at 5)",
+ "공+37 · 회피+19 · 피해 2d8 · 상대 HP 45% 이하에서 적중하면 고정 피해 60 (요정: 파괴) · 적중마다 요정 +5 (최대 45 · 요정만큼 추가 피해 · 라운드마다 −3) · 각인 +1 (상대 공격 카드 봉인 확률 15%씩, 5가 되면 행동 봉인)": "Atk+37 · Eva+19 · Dmg 2d8 · If hit at 45% or less HP, deal 60 fixed damage (Fairy: Destruction) · On hit, Fairy +5 (Max 45 · Bonus damage equal to Fairy · −3 per round) · Imprint +1 (15% chance to seal opponent's attack cards; seals actions at 5)"
 }
