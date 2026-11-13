@@ -2176,7 +2176,10 @@ ${symRec(r)}
     const items=q.map((st,i)=>`<li data-i="${i}" class="${st.side==='E'?'foe':''}"><span class="qn">${i+1}</span><span>${what(st)}</span></li>`).join('');
     const g=CFG.guard;
     const hint=!PLAYING&&!UI.sel.length?`<li><span class="qn">·</span><span>${who('P')}의 <b>방어 자세</b> <span class="dim">· 카드를 하나도 고르지 않으면 이번 라운드는 방어 판정(막으면 피해 ${g.guardHit}, 못 막으면 피해 ×${g.guardFailMul}, 소수점 버림)${g.bleedCut&&C.P.bleed?` · ${D.keywords.bleed.n} ${C.P.bleed} → ${Math.floor(C.P.bleed*g.bleedCut)}`:''} · 다음 라운드 명중 +${g.nextHit}${g.lightUp?` · 전투 동안 빛 +${g.lightUp}`:''}${g.lightNext?` · 다음 라운드 빛 +${g.lightNext}`:''}</span></span></li>`:'';
-    return `<span class="eyebrow" style="margin-top:6px">이번 라운드 행동 순서 · ${who('E')}의 의도 공개</span><ol class="queue" id="queue">${items}${hint}</ol>`;
+    /* 조율자 제나: 충격파 충전·발동 라운드를 눈에 띄게 알린다 */
+    const ZE=C.E&&C.E.passive&&C.E.passive.id==='zena'&&C.E.hp>0?C.E:null,ZP=ZE&&ZE.passive,zc=ZP?Math.round(ZP.guardCut*100):0;
+    const zb=ZE&&ZE.zShock?`<div class="panel small bad" style="margin-top:6px"><b>충격파 발동 라운드</b> · 카드를 내면 ${ZP.shockMin}~${ZP.shockMax} 피해를 회피할 수 없이 받는다 · <b>카드를 하나도 내지 않으면 방어 자세</b>로 피해 ${zc}% 감소</div>`:ZE&&ZE.zCharge?`<div class="panel small bad" style="margin-top:6px"><b>충격파 충전 중</b> · 다음 라운드 끝에 ${ZP.shockMin}~${ZP.shockMax} 피해 (회피 불가) · 다음 라운드에 카드를 내지 않고 방어 자세를 취하면 피해 ${zc}% 감소</div>`:'';
+    return `${zb}<span class="eyebrow" style="margin-top:6px">이번 라운드 행동 순서 · ${who('E')}의 의도 공개</span><ol class="queue" id="queue">${items}${hint}</ol>`;
   }
   function vCombat(){
     const {P,E:X}=C;

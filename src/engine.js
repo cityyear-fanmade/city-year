@@ -3715,7 +3715,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(E.zph&&ph!==E.zph){E.zTalk=C.round;if(!C.quiet){const m={t:'kw',s:`${E.name} · ${ph===2?'새장':'충격파'} · 연설이 길어진다 · 이번 라운드 ${E.name}가 받는 피해 +${Math.round(Z.talk*100)}%`};C.log.push(m);C.cur.push(m)}}
       E.zph=ph;
       if(P.zCage){P.zCage=false;if(P.light>E.passive.cageMin){P.light--;if(!C.quiet){const m={t:'kw',s:`${E.name} · 새장 · ${P.name}의 빛 −1`};C.log.push(m);C.cur.push(m)}}}
-      if(ph===3){if(E.zS0==null)E.zS0=C.round+1;const k=(C.round-E.zS0+Z.shockEvery*100)%Z.shockEvery;E.zCharge=C.round===E.zS0-1||(C.round>=E.zS0&&k===Z.shockEvery-1);E.zShock=C.round>=E.zS0&&k===0;if(E.zCharge&&!C.quiet){const m={t:'kw',s:`${E.name} · 충격파 충전 · 다음 라운드 끝에 회피할 수 없는 충격 (방어 자세로 받으면 피해 80% 감소)`};C.log.push(m);C.cur.push(m)}}else{E.zCharge=false;E.zShock=false}}
+      if(ph===3){if(E.zS0==null)E.zS0=C.round+1;const k=(C.round-E.zS0+Z.shockEvery*100)%Z.shockEvery;E.zCharge=C.round===E.zS0-1||(C.round>=E.zS0&&k===Z.shockEvery-1);E.zShock=C.round>=E.zS0&&k===0;if(E.zCharge&&!C.quiet){const m={t:'kw',s:`${E.name} · 충격파 충전 · 다음 라운드 끝에 회피할 수 없는 충격 ${Z.shockMin}~${Z.shockMax} (방어 자세로 받으면 피해 80% 감소)`};C.log.push(m);C.cur.push(m)}}else{E.zCharge=false;E.zShock=false}}
     P.locked=(pv==='lock'||pv==='zena')&&C.round%E.passive.every===0?d(P.hand.length)-1:-1;
     C.order=P.tot>=E.tot?[P,E]:[E,P];
     /* 히든 직업 패시브: 발톱 질주(빛), 조율자 봉인(적 공격 카드 1장) */
@@ -4358,7 +4358,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       else L('kw',`${E.name} · ${R.n} ${E.recital}/${R.every}${E.recital===R.every-1?' · 다음 라운드 끝에 절정 (방어 자세면 절반)':''}`);
       push({k:'buff',side:'E',card:{n:R.n}});
     }
-    if(E.passive&&E.passive.id==='zena'&&E.zShock&&E.hp>0&&P.hp>0){const Z=E.passive,x0=Math.round(P.maxHp*Z.shockPct),x=P.guarding?Math.round(x0*(1-Z.guardCut)):x0;E.zShock=false;hpLoss(C,P,x,L);L('dmg',`${E.name} · 충격파 · ${P.name} 고정 피해 ${x}${P.guarding?' (방어 자세로 80% 감소)':' (회피 불가)'}`)}
+    if(E.passive&&E.passive.id==='zena'&&E.zShock&&E.hp>0&&P.hp>0){const Z=E.passive,x0=Z.shockMin+d(Z.shockMax-Z.shockMin+1)-1,x=P.guarding?Math.round(x0*(1-Z.guardCut)):x0;E.zShock=false;hpLoss(C,P,x,L);L('dmg',`${E.name} · 충격파 · ${P.name} 고정 피해 ${x}${P.guarding?' (방어 자세로 80% 감소)':' (회피 불가)'}`)}
     /* 푸른 화염: 라운드 끝에 스택 × blueDot 피해, 그 뒤 1 감소. 해방 레바테인 소지자의 일반 화상은 줄지 않는다 */
     for(const X of [P,E]){
       if(isBlue(X)&&X.hp>0){const x=X.flame*(X.blueD||CFG.laev.blueDot);hpLoss(C,X,x,L);X.flame--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.flame})`)}
