@@ -8007,7 +8007,6 @@
  "공격 +3 · 전용 검술 카드 9장 · 전용 무기 보냐텔리의 검(가속) · 손가락 진로 +20 · 1년차에 손가락이 먼저 찾아온다 · 손가락 서열 점수 ×2 · 새 카드 대신 돈": "Atk+3 · 9 Unique Fencing Pages · Unique Weapon: Bonyatelli's Sword (Acceleration) · Finger Career +20 · The Fingers find you in Year 1 · Finger Rank Score ×2 · Money instead of new cards",
  "동부 출신 외곽 생존자": "Eastern Outskirts Survivor",
  "공간이동에 가까운 순간적이고 폭발적인 도약법. 동부에서 전해져 내려온 검술을, 생과 사를 오가는 시술을 견뎌 내고 물려받았다.": "An explosive, instantaneous leaping technique akin to teleportation. You inherited swordplay passed down from the East, having endured procedures that straddled the line between life and death.",
- "최대 HP +6 · 회피 +2 · 보조 무기 환도 · 환도 검술 카드 9장 · 해결사 진로 +20 · 잊힌 유물 확률 25% · 새 카드 대신 돈": "Max HP +6 · Evasion +2 · Secondary Weapon: Hwando · 9 Hwando Swordplay Pages · Fixer Career +20 · Forgotten Relic chance 25% · Money instead of new cards",
  "환도": "Hwando",
  "보조 무기 · 속도+2 · 전투 시작 호흡+2 · 섬봉광 검술: 호흡 1당 치명 피해 +10%": "Secondary Weapon · Speed+2 · Combat Start Poise+2 · Seombonggwang Swordplay: Crit Dmg +10% per Poise",
  "E.G.O 적성자": "E.G.O Aptitude",
@@ -16830,5 +16829,6 @@
  "(방어 자세로 80% 감소)": "(80% reduced by guard stance)",
  "(회피 불가)": "(cannot be evaded)",
  "를 취하면 피해 {0}% 감소 · 취하지 않으면 {1}~{2} 피해를 회피할 수 없이 받는다 (방어 카드를 내도 줄어들지 않는다)": " reduces the damage by {0}% · Without it you take {1}~{2} damage that cannot be evaded (defense cards do not reduce it)",
- "다음 라운드 끝에 {0}~{1} 피해 (회피 불가) · 다음 라운드에 방어 자세를 취하면 피해 {2}% 감소 (방어 카드로는 줄어들지 않는다) · 충전 중에는 {3}가 받는 피해 {4}% 감소": "At the end of next round, {0}~{1} damage (cannot be evaded) · Taking a guard stance next round reduces the damage by {2}% (defense cards do not reduce it) · While charging, {3} takes {4}% less damage"
+ "다음 라운드 끝에 {0}~{1} 피해 (회피 불가) · 다음 라운드에 방어 자세를 취하면 피해 {2}% 감소 (방어 카드로는 줄어들지 않는다) · 충전 중에는 {3}가 받는 피해 {4}% 감소": "At the end of next round, {0}~{1} damage (cannot be evaded) · Taking a guard stance next round reduces the damage by {2}% (defense cards do not reduce it) · While charging, {3} takes {4}% less damage",
+ "최대 HP +6 · 회피 +2 · 보조 무기 환도 · 환도 검술 카드 9장 · 해결사 진로 +20 · 잊힌 유물 확률 40% · 새 카드 대신 돈": "Max HP +6 · Evasion +2 · Secondary Weapon: Hwando · 9 Hwando Swordplay Pages · Fixer Career +20 · Forgotten Relic chance 40% · Money instead of new cards"
 }
