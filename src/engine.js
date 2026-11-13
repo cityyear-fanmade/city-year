@@ -3585,7 +3585,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(id==='impurity'){const gh=ghostOf(ch);if(gh){
       /* 1000살 직전의 마지막 불순물: 불순물 자신의 카드와 능력치 그대로(하드 최종 체력 포함), 카드 이름만 기록된 과거의 나가 쓰던 대표 카드 이름으로 바뀐다. 효과·무기·방어구는 쓰지 않는다 */
       if(lastImp&&CFG.infinite.ghostBoss){const sc=c=>{const k=D.cards[c];return ((k.dice||0)+(k.b||0))*(k.hits||1)},nm=(gh.deck||[]).filter(c=>D.cards[c]).sort((a,b)=>sc(b)-sc(a)).map(c=>D.cards[c].n);
-        if(nm.length>=3){const seen=new Map();E.deck=(E.deck||[]).map(cid=>{const o=D.cards[cid];if(!o)return cid;if(seen.has(cid))return seen.get(cid);const gid='ghost_'+seen.size,cl=Object.assign({},o,{n:nm[seen.size%nm.length]});D.cards[gid]=cl;cardId.set(cl,gid);seen.set(cid,gid);return gid});E.ghostBoss=true}}
+        if(nm.length>=3){if(CFG.infinite.ghostBonus){E.atk+=CFG.infinite.ghostBonus;E.eva+=CFG.infinite.ghostBonus}const seen=new Map();E.deck=(E.deck||[]).map(cid=>{const o=D.cards[cid];if(!o)return cid;if(seen.has(cid))return seen.get(cid);const gid='ghost_'+seen.size,cl=Object.assign({},o,{n:nm[seen.size%nm.length]});D.cards[gid]=cl;cardId.set(cl,gid);seen.set(cid,gid);return gid});E.ghostBoss=true}}
       else{const one=ghostCard(gh.deck);E.deck=(E.deck||[]).concat(one?[one]:[])}
       E.ghost=true;E.name+=' · '+(gh.name||T.you)}}
     if(e.zodiac10){const own=hwHave(ch);E.zChain=ZKEYS.filter(k=>!own.slice(0,2).includes(k));E.zExtra=Math.min(CFG.hw.zExtraMax,Math.max(0,own.length-CFG.hw.zExtraFrom));E.deck=['z_'+E.zChain[0]]}
