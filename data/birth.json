@@ -990,7 +990,8 @@
    "weapon": true,
    "cardMoney": true,
    "fingerEarly": true,
-   "fingerMul": 2
+   "fingerMul": 2,
+   "relicBase": 5
   },
   {
    "roll": 80,
