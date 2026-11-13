@@ -3714,7 +3714,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(pv==='zena'&&E.hp>0){const Z=E.passive,ph=E.hp<=E.maxHp*Z.p3?3:E.hp<=E.maxHp*Z.p2?2:1;
       if(E.zph&&ph!==E.zph){E.zTalk=C.round;if(!C.quiet){const m={t:'kw',s:`${E.name} · ${ph===2?'새장':'충격파'} · 연설이 길어진다 · 이번 라운드 ${E.name}가 받는 피해 +${Math.round(Z.talk*100)}%`};C.log.push(m);C.cur.push(m)}}
       E.zph=ph;
-      if(P.zCage){P.zCage=false;if(P.light>0){P.light--;if(!C.quiet){const m={t:'kw',s:`${E.name} · 새장 · ${P.name}의 빛 −1`};C.log.push(m);C.cur.push(m)}}}
+      if(P.zCage){P.zCage=false;if(P.light>E.passive.cageMin){P.light--;if(!C.quiet){const m={t:'kw',s:`${E.name} · 새장 · ${P.name}의 빛 −1`};C.log.push(m);C.cur.push(m)}}}
       if(ph===3){const k=C.round%Z.shockEvery;E.zCharge=k===Z.shockEvery-1;E.zShock=k===0;if(E.zCharge&&!C.quiet){const m={t:'kw',s:`${E.name} · 충격파 충전 · 다음 라운드 끝에 전체 충격 (방어 자세로 받으면 절반)`};C.log.push(m);C.cur.push(m)}}else{E.zCharge=false;E.zShock=false}}
     P.locked=(pv==='lock'||pv==='zena')&&C.round%E.passive.every===0?d(P.hand.length)-1:-1;
     C.order=P.tot>=E.tot?[P,E]:[E,P];
