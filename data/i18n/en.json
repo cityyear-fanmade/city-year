@@ -16841,10 +16841,10 @@
  "뒤랑달이 검은 침묵의 차원 장갑 안으로 수납되었다 · 공격+37 · 명중+24 · 책장 9장": "Durandal has been stored inside Black Silence's dimensional gloves · Atk +37 · Accuracy +24 · 9 shelf cards",
  "합체 · {0}{1} ({2})": "Merge · {0}{1} ({2})",
  "이(가) 차원 장갑 안으로 수납된다": " is stored inside the dimensional gloves",
- "{0} · 운명 · 못 {1}개가 가득 차 저절로 흐트러짐으로 바뀐다": "{0} · Fate · {1} nails fill up and turn into Stagger on their own",
- "운명 · 못이 가득 차면 자동으로 흐트러짐으로 바뀐다": "Fate · When Nails are full, they turn into Stagger automatically",
  "소지 표식을 가진 채 손가락 조직원이 아닌 곳(사무소·협회·날개·무소속)에서 지내면, 말수가 적은 사람이 먼저 눈을 마주친다. 엄지·검지·중지·약지 소속도 가끔 같은 사람을 만난다": "If you hold a Mark and reside in a place that is not a Finger organization (Office, Association, Wing, Unaffiliated), a quiet person will make eye contact first. Members of Thumb, Pointer, Middle and Ring sometimes meet the same person.",
  "검은 가면으로 태어나 첫 만남을 거절했을 때 (3년 뒤)": "Born as Black Mask and declined the first meeting (3 years later)",
  "소지 표식을 가졌거나, 엄지·검지·중지·약지 소속일 때 (가끔": "When you hold the Possession mark, or belong to Thumb, Pointer, Middle or Ring (sometimes",
- "손가락 공통(소지)": "Finger-common (Possession)"
+ "손가락 공통(소지)": "Finger-common (Possession)",
+ "운명 · 못이 {0}개 쌓이면 자동으로 흐트러짐으로 바뀐다": "Fate · When Nails reach {0}, they turn into Stagger automatically",
+ "{0} · 운명 · 못 {1}개가 쌓여 저절로 흐트러짐으로 바뀐다": "{0} · Fate · {1} nails pile up and turn into Stagger on their own"
 }

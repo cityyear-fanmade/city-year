@@ -1149,7 +1149,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(isN(ch)&&ch.gear.aug&&(ch.gear.aug.kind||'의수')==='의수'&&!/^ws_/.test(ch.gear.aug.id||'')){chips.push(`의체를 버린다 · ${ch.gear.aug.n} → 보관함`);unequip(ch,'aug')}
     ch.fi=undefined;ch.fr=null;ch.pp=0;ch.promos=0;ch.strikes=0;
     /* 동부 출신 외곽 생존자가 N사 날개에 들어가면 못 대신 전용 키워드 '운명': 모든 판정(사건 판정 · 전투 명중·회피 굴림) +fate */
-    if(isN(ch)&&isEastOuter(ch)&&!ch.fate){ch.fate=true;addStats(ch.stats,{check:CFG.nWing.fate});(ch.relics=ch.relics||[]).push('운명');chips.push(`운명 · 모든 판정 +${CFG.nWing.fate} (사건 판정 · 전투 명중·회피)`);chips.push('운명 · 못이 가득 차면 자동으로 흐트러짐으로 바뀐다')}
+    if(isN(ch)&&isEastOuter(ch)&&!ch.fate){ch.fate=true;addStats(ch.stats,{check:CFG.nWing.fate});(ch.relics=ch.relics||[]).push('운명');chips.push(`운명 · 모든 판정 +${CFG.nWing.fate} (사건 판정 · 전투 명중·회피)`);chips.push(`운명 · 못이 ${CFG.nail.autoAt}개 쌓이면 자동으로 흐트러짐으로 바뀐다`)}
     if(noFixer(ch)&&ch.licensed){ch.licensed=false;ch.title=null;chips.push(`해결사 자격 반납 · ${T.affTypes[ch.aff.type]}은(는) 해결사를 겸할 수 없다`)}
     /* 전용 책장이 없는 날개(K·J·G사)는 카드팩 대신 보정치를 조금 더 받고, 덱은 스스로 꾸린다 */
     {const FW=CFG.freeWing;if(J.type==='wing'&&FW.names.includes(name)){addStats(ch.stats,FW.fx);if(FW.fx.maxHp)ch.hp+=FW.fx.maxHp;chips.push(`${name} · 전용 책장 없음 · 보정 최대 HP +${FW.fx.maxHp} · 공격·회피·속도 +${FW.fx.atk} · 사건 판정 +${FW.fx.check}`)}}
@@ -4195,7 +4195,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       if(A.awl&&A.synT>=3&&A.lead&&!A.awlUsed&&B.hp>0){A.awlUsed=true;B.bleed=Math.min(bleedCap(B),B.bleed+1);L('kw',`  ${A.name} · 선공 첫 적중 · ${B.name}에게 출혈 +1 (지금 ${B.bleed})`);if(A.kuro)addCloud(A,L)}
       if(A.ring&&A.work<CFG.ring.max){A.work++;L('kw',`  ${A.name} · 작품 ${A.work}/${CFG.ring.max}`)}
       if(A.herm&&B.hp>0&&(A.isP?(!A.herm.wait&&A.starId&&c===D.cards[A.starId]):true))hermHit(A,B,C,L,push);   // 지령(☆) 카드로 적중한 만큼 타수가 쌓인다
-      if(A.nailHit&&B.hp>0){const n=B.aug?Math.max(CFG.nail.augHit,A.nailHit):A.nailHit;B.nail=Math.min(CFG.nail.cap,(B.nail||0)+n);L('kw',`  ${B.name}에게 못 +${n} (지금 ${B.nail})`);if(A.nailAuto&&B.nail>=CFG.nail.cap){const used=B.nail;B.nail=0;L('kw',`  ${A.name} · 운명 · 못 ${used}개가 가득 차 저절로 흐트러짐으로 바뀐다`);addStagger(C,B,Math.round(used*CFG.nail.autoMul),L)}}
+      if(A.nailHit&&B.hp>0){const n=B.aug?Math.max(CFG.nail.augHit,A.nailHit):A.nailHit;B.nail=Math.min(CFG.nail.cap,(B.nail||0)+n);L('kw',`  ${B.name}에게 못 +${n} (지금 ${B.nail})`);if(A.nailAuto&&B.nail>=(CFG.nail.autoAt||CFG.nail.cap)){const used=B.nail;B.nail=0;L('kw',`  ${A.name} · 운명 · 못 ${used}개가 쌓여 저절로 흐트러짐으로 바뀐다`);addStagger(C,B,Math.round(used*CFG.nail.autoMul),L)}}
       if(A.tbExec&&A.isP&&B.hp>0&&(B.nail||0)>=CFG.taboo.execNail&&C.tbExecR!==C.round){C.tbExecR=C.round;C.tbExecN=(C.tbExecN||0)+1;const x=CFG.taboo.execDmg+(A.tbMarks||0)*CFG.taboo.execPer,h=Math.min(CFG.taboo.execHeal,A.maxHp-A.hp);B.hp=Math.max(1,B.hp-x);A.hp+=h;L('kw',`  ${A.name} · 집행 · ${B.name}에게 확정 일격 ${x}${h>0?` · HP +${h}`:''}`)}
       if(c.nailBurst&&B.hp>0&&(B.nail||0)>0){const used=B.nail;B.nail=0;L('kw',`  ${B.name} · 못 ${used}개를 흐트러짐으로`);addStagger(C,B,Math.round(used*c.nailBurst.mul)+(c.nailBurst.add||0),L)}
       if(c.nextSwift){A.swiftNext=true;L('kw',`  ${A.name} · 다음 라운드 신속`)}

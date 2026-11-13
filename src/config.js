@@ -232,12 +232,12 @@ export const CFG = {
   bmElate: {max: 3, atk: 2, eva: 2, healPct: 0.1} /* 검은 가면 연기전쟁 연전의 고양감: 이길 때마다 스택(최대 max), 체력 healPct 회복, 다음 전투 공격·회피 스택당 +atk·+eva */,
   bmMood: {deal: 3, take: 1.5} /* 검은 가면: 피아니스트·검은 침묵과 싸울 때 절망(허무 루트)·불안(지킴 루트) — 주는 피해 ×deal, 받는 피해 ×take */,
   taboo: {execNail: 10, markAt: 3, nailAt: 3, execDmg: 8, execPer: 2, execHeal: 6} /* 금기사냥꾼 패시브: 금기 표식(표식 markAt개부터, 못 nailAt 이상인 적에게 표식 수만큼 추가 피해) · 집행(적의 못이 execNail에 닿는 순간 확정 일격 execDmg+표식×execPer, HP execHeal 회복, 라운드당 1회) */,
-  nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastNail: 2 /* 동부 출신은 운명과 함께 못도 적중마다 이만큼 건다(전에는 0) */, eastTitle: '금기사냥꾼', tbRank: 3 /* 금기사냥꾼은 해결사 3급으로 시작한다 */, tbBody: {maxHp: 30, atk: 3, spd: 1} /* N사 육체 시술(의체 아님)로 강화된 몸 */, brand: 1 /* 낙인: 금기 사냥팀에 들어가면 못 적중이 이만큼 더 강해진다 */},
+  nWing: {name: 'N사 날개', atk: 2, eva: 2, spd: 2, augDmg: 3, fate: 10, eastNail: 3 /* 동부 출신은 운명과 함께 못도 적중마다 이만큼 건다(전에는 0) */, eastTitle: '금기사냥꾼', tbRank: 3 /* 금기사냥꾼은 해결사 3급으로 시작한다 */, tbBody: {maxHp: 30, atk: 3, spd: 1} /* N사 육체 시술(의체 아님)로 강화된 몸 */, brand: 1 /* 낙인: 금기 사냥팀에 들어가면 못 적중이 이만큼 더 강해진다 */},
   /* N사 날개 · 못(상대에게 쌓임, 최대 cap): 적중마다 hit(의체 적은 augHit). 3·4코스트 망치 카드가 못을 모두 흐트러짐으로 바꾼다 (nailBurst.mul배).
      흐트러짐: 단계(stages)마다 상대의 명중 −hit · 주는 피해 −dmg · 받는 피해 +take, 라운드 끝에 decay씩 줄고, stun(적 등급별) 이상이면 다음 라운드 기절 */
   /* 대호수 작살: 작살 카드가 적중하면 쌓이고, 당기는 카드(harpoonPull)가 모두 소모해 스택당 per 피해를 더한다 */
   harpoon: {cap: 10},
-  nail: {autoMul: 1 /* 동부 N사: 못이 가득 차면 저절로 흐트러짐으로 바뀌는 배수(균열 망치와 같은 1) */, cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},
+  nail: {autoAt: 8 /* 동부 N사: 이 개수에 닿으면 저절로 변환 */, autoMul: 1 /* 동부 N사: 못이 가득 차면 저절로 흐트러짐으로 바뀌는 배수(균열 망치와 같은 1) */, cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */
   /* 별에 선택받은 자의 성도: 단계별 공격·회피·추가 피해. fastFrom 단계부터 별 잇기가 3번째 적중마다, max 단계에서 빛 +1 */
   /* 전용 성장기 표를 가진 숨은 출생도 이 굴림이 나오면 일반 표의 특별한 결과를 받는다 (1 목소리가 들림 · 50 무너진 유적 탐험 · 100 장비의 형상이 보임) */
