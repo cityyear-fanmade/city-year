@@ -16840,5 +16840,7 @@
  "몸을 일으킨다 · HP +{0}": "You push yourself back up · HP +{0}",
  "뒤랑달이 검은 침묵의 차원 장갑 안으로 수납되었다 · 공격+37 · 명중+24 · 책장 9장": "Durandal has been stored inside Black Silence's dimensional gloves · Atk +37 · Accuracy +24 · 9 shelf cards",
  "합체 · {0}{1} ({2})": "Merge · {0}{1} ({2})",
- "이(가) 차원 장갑 안으로 수납된다": " is stored inside the dimensional gloves"
+ "이(가) 차원 장갑 안으로 수납된다": " is stored inside the dimensional gloves",
+ "{0} · 운명 · 못 {1}개가 가득 차 저절로 흐트러짐으로 바뀐다": "{0} · Fate · {1} nails fill up and turn into Stagger on their own",
+ "운명 · 못이 가득 차면 자동으로 흐트러짐으로 바뀐다": "Fate · When Nails are full, they turn into Stagger automatically"
 }

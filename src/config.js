@@ -237,7 +237,7 @@ export const CFG = {
      흐트러짐: 단계(stages)마다 상대의 명중 −hit · 주는 피해 −dmg · 받는 피해 +take, 라운드 끝에 decay씩 줄고, stun(적 등급별) 이상이면 다음 라운드 기절 */
   /* 대호수 작살: 작살 카드가 적중하면 쌓이고, 당기는 카드(harpoonPull)가 모두 소모해 스택당 per 피해를 더한다 */
   harpoon: {cap: 10},
-  nail: {cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},
+  nail: {autoMul: 1 /* 동부 N사: 못이 가득 차면 저절로 흐트러짐으로 바뀌는 배수(균열 망치와 같은 1) */, cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */
   /* 별에 선택받은 자의 성도: 단계별 공격·회피·추가 피해. fastFrom 단계부터 별 잇기가 3번째 적중마다, max 단계에서 빛 +1 */
   /* 전용 성장기 표를 가진 숨은 출생도 이 굴림이 나오면 일반 표의 특별한 결과를 받는다 (1 목소리가 들림 · 50 무너진 유적 탐험 · 100 장비의 형상이 보임) */
