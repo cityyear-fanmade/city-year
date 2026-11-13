@@ -4384,6 +4384,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       if(P.middle&&(P.defRound===C.round||P.guarding)&&E.dealtR===C.round)E.dealtR=0;
       for(const X of [P,E]){if(X.dealtR===C.round){X.dry=0;continue}X.dry=(X.dry||0)+1;if(X.dry<F.miss)continue;
         const r=!X.isP&&X.maxHp>=CFG.infinite.hpMax?F.capRate.reduce((q,[at,v])=>n>at?v:q,F.capRate[0][1]):Math.min(F.max,F.per*(X.dry-F.miss+1)),x=Math.max(1,Math.round(X.maxHp*r));hpLoss(C,X,x,L);L('dmg',`${X.name} · 지침 · ${X.dry}라운드째 피해를 주지 못했다 · 고정 피해 ${x}`)}}}
+    if(E.passive&&E.passive.id==='zena'&&E.zCharge&&E.hp<=0)E.hp=1;   // 충전 중에는 어떤 피해로도 쓰러지지 않는다
     ampUse(C,L);
     if(P.hp<=0&&!C.ch.mindDead&&C.ch.infinite&&C.ch.pact&&pactN(C.ch,'rewind')&&!C.pactRewound){C.pactRewound=1;P.hp=Math.max(1,Math.min(P.maxHp,Math.round(P.maxHp*pactV(C.ch,'rewind'))));L('kw',`  ${P.name} · 되감기 · HP ${P.hp}로 일어난다`)}
     if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0&&E.passive&&E.passive.id==='lkGenesis'&&(E.reborn||0)<E.passive.times){E.reborn=(E.reborn||0)+1;E.hp=Math.round(E.maxHp*E.passive.back);E.bleed=0;E.rupture=0;E.harpoon=0;L('kw',`${E.name} · 쓰러진 줄 알았던 몸이 호수에서 다시 일어선다 · HP ${E.hp}`)}else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
@@ -4408,7 +4409,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       return;
     }
     if(X.isP&&X.riteGuard&&!X.guardUsed&&x>=X.hp&&x>0&&!X.distorted){X.guardUsed=true;X.hp=1;X.riteShieldTo=(C.round||0)+(X.riteGuard.rounds||0);X.riteShieldPct=X.riteGuard.pct||0;L('amp',`${X.name} · 보증 휘장 · 치명적인 피해 ${x}를 HP 1로 버텼다${X.riteGuard.rounds?` · ${X.riteGuard.rounds}라운드 동안 받는 피해 감소`:''}`);return}
-    {const b_=X.hp;X.hp=Math.max(0,X.hp-x);const R_=C&&C.ch&&C.ch.rs;if(R_&&b_>X.hp){if(X.isP)R_.taken=(R_.taken||0)+(b_-X.hp);else R_.dealt=(R_.dealt||0)+(b_-X.hp)}}
+    {const b_=X.hp,fl=(!X.isP&&X.passive&&X.passive.id==='zena'&&X.zCharge)?1:0;X.hp=Math.max(fl,X.hp-x);if(fl&&b_-x<1&&X.zFloorR!==C.round){X.zFloorR=C.round;L('kw',`  ${X.name} · 충전 중에는 쓰러지지 않는다 · 충격파가 먼저 나간다`)}const R_=C&&C.ch&&C.ch.rs;if(R_&&b_>X.hp){if(X.isP)R_.taken=(R_.taken||0)+(b_-X.hp);else R_.dealt=(R_.dealt||0)+(b_-X.hp)}}
   }
   function ampUse(C,L){
     const P=C.P,K=CFG.ample;if(!(P.ample>0)||P.hp<=0||P.hp>Math.floor(P.maxHp*K.belowPct)||C.E.hp<=0)return;
