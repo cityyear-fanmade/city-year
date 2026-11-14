@@ -62,6 +62,7 @@ export function startUI(E,app){
   const syncTitles=()=>{syncAffs();const c=G&&G.ch;if(!c||!(c.titleLog||[]).length)return;const done=c.titleSeen||0;if(c.titleLog.length<=done)return;
     const r=loadRec();r.titles=r.titles||{};for(const n of c.titleLog.slice(done))r.titles[n]=(r.titles[n]||0)+1;c.titleSeen=c.titleLog.length;store.set(REC,JSON.stringify(r))};
   E.setInnateOpen(loadRec().unl||[]);
+  const pityLoad=()=>E.setPity(loadRec().pity,m=>{const r=loadRec();r.pity=m;store.set(REC,JSON.stringify(r))});pityLoad();
   /* 해금 조건이 있는 타고난 것: 전투가 끝날 때와 한 판이 끝날 때 조건을 살핀다. 새로 열리면 이름을 돌려준다 */
   function checkInnateUnlock(){
     if(!G||!G.ch)return [];const r=loadRec(),open=r.unl||[],now=E.innateUnlocks(G.ch,r.best.lv).filter(k=>!open.includes(k));
@@ -1493,7 +1494,7 @@ export function startUI(E,app){
       else tx='';
       return [seen,seen?esc(e.n)+(won?' ✓':''):'???',tx||(seen?'':'하드 완주 후에 어디서 만나는지 알 수 있다')]});
     const got=rows.filter(x=>x[0]).length;
-    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 보스 도감 · 만난 ${got}/${rows.length}</span><div class="stack" style="gap:10px">${rows.map(([o,l,h])=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${o?'':' dim'}">${l}</span><span class="small dim" style="white-space:pre-line">${esc(h)}</span></div>`).join('')}</div><p class="small dim">${r.hardClear?'하드 완주 보상: 만나지 못한 상대는 어디서 만나는지, 만난 상대는 얻는 방법이 열려 있다.':'하드 완주를 하면 만나지 못한 상대가 어디서 나오는지 알 수 있다.'}</p></div>`}
+    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 보스 도감 · 만난 ${got}/${rows.length} · 보조 장비 ${((r.pity&&r.pity.got)||[]).length}/${Object.values(D.enemies).reduce((n,e)=>n+[...((e.drop&&e.drop.gears)||[]),...((e.drop&&e.drop.gear)?[e.drop.gear]:[])].filter(g=>/^aux_h_/.test(g.id||'')).length,0)}</span><div class="stack" style="gap:10px">${rows.map(([o,l,h])=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${o?'':' dim'}">${l}</span><span class="small dim" style="white-space:pre-line">${esc(h)}</span></div>`).join('')}</div><p class="small dim">${r.hardClear?'하드 완주 보상: 만나지 못한 상대는 어디서 만나는지, 만난 상대는 얻는 방법이 열려 있다.':'하드 완주를 하면 만나지 못한 상대가 어디서 나오는지 알 수 있다.'}</p></div>`}
   const ENDS0=[['gwmoth','나방 공주의 밤'],['gwroach','바퀴 황제의 왕좌'],['gwfly','파리 대왕의 식탁'],['gwhuman','인간으로 남은 병기'],['clawreturn','돌아온 발톱'],['clawstay','길을 닫은 발톱'],['arbkeep','한쪽을 남긴 조율자'],['arbdown','내려온 조율자'],['libstay','책이 된 사서'],['libclose','문을 닫는 사서'],['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['hermobey','끝난 지령'],['hermfree','지령 없는 아침'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['out_famblood','불사의 강물'],['out_fampill','금지된 환'],['out_famcrow','배양조의 시간'],['out_famlake','선원의 이름'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
   const REC_TABS=['요약','칭호','인연','엔딩','히든 보스','출생·소속','심볼','장비','상대'];
   const recTabOf=t=>/^(최고 기록|판 통계)/.test(t)?'요약':/^칭호/.test(t)?'칭호':/^인연/.test(t)?'인연':/^엔딩/.test(t)?'엔딩':/^히든 보스/.test(t)?'히든 보스':/^(히든 출생|소속|타고난 것|해금 출생|히든 직업)/.test(t)?'출생·소속':/^심볼/.test(t)?'심볼':/^특수 장비/.test(t)?'장비':'상대';
@@ -1749,7 +1750,7 @@ ${symRec(r)}
     let r;try{r=xDecode(txt)}catch(e){UI.xmsg=[false,'불러오지 못했다 · '+(e&&e.message||'코드를 확인해 주세요')];UI.xask=null;UI.xopen=true;render();return}
     if(loadSave()&&UI.xask!==txt){UI.xask=txt;UI.xmsg=[false,'이 기기에 이어하기 세이브가 있다. 한 번 더 누르면 덮어쓴다.'];UI.xopen=true;render();return}
     for(const k of XKEYS){if(r.out[k])store.set(k,r.out[k])}
-    E.setInnateOpen(loadRec().unl||[]);   // 불러온 해금 목록을 바로 적용(새로고침 전에는 옛 목록이 남아 해금 타고난 것이 안 나왔다)
+    pityLoad();E.setInnateOpen(loadRec().unl||[]);   // 불러온 해금 목록을 바로 적용(새로고침 전에는 옛 목록이 남아 해금 타고난 것이 안 나왔다)
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
