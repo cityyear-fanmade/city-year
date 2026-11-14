@@ -1281,6 +1281,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(k==='fend'){r.done=1;chips.push('추격이 끝났다')}
     }
     if(fx.sisEnter){const S_=D.sisyphus,ks=Object.keys(S_.subj),k=fx.sisEnter==='rand'?one(ks):fx.sisEnter;ch.sis={subj:k,turn:1,grade:0,rewound:0,lean:0,in:ch.year||0,pts:0,st:'day1',mat:{},dyes:[],cloth:[],fac:null};chips.push(S_.subj[k].t);chips.push('시지프형 선고 · 시지프 백화점에 갇힌다 · 고객 등급 토파즈')}
+    if(fx.sisAssim){const Z=D.sisyphus.assim[fx.sisAssim];ch.sis.assimDone=1;if(Z.pack&&!ch.packOffer){ch.packOffer={n:Z.pack.n,cards:Z.pack.cards.slice(),passive:null,e:Z.pack.e,sis:fx.sisAssim};chips.push(`${Z.pack.n} · 덱을 바꿀지 고른다`)}else if(fx.sisAssim==='kaki')chips.push('유행 · 전투마다 유행하는 키워드가 바뀐다')}
     if(fx.sisGo||fx.sisHunt||fx.sisCraft||fx.sisSell||fx.sisTrade||fx.sisRest)sisFx(ch,fx,chips);
     if(fx.tbJoin){const Bd=CFG.nWing.tbBody;addStats(ch.stats,Bd);ch.hp+=Bd.maxHp;chips.push(`N사 육체 시술 · 최대 HP +${Bd.maxHp} · 공격 +${Bd.atk} · 속도 +${Bd.spd} (의체가 아니라 몸 자체를 고친 것이다)`);if(ch.licensed&&ch.rank>CFG.nWing.tbRank){while(ch.rank>CFG.nWing.tbRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급으로 시작한다`)}}
     if(fx.bmRank&&ch.licensed){while(ch.rank>fx.bmRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급이 되었다`)}   // 검은 가면: 전쟁의 실적으로 급수가 오른다
@@ -2576,7 +2577,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const sisAn=n=>`${n}안`;
   function sisMat(ch,k,n){const m=ch.sis.mat;m[k]=(m[k]||0)+n}
   function sisColorsOpen(ch){return D.sisyphus.tailor.colors.filter(c=>c.grade<=sisGrade(ch))}
-  function sisGradeUp(ch,chips){const G_=D.sisyphus.grades;let g=0;G_.forEach((x,i)=>{if(ch.sis.pts>=x.at)g=i});if(g>sisGrade(ch)){ch.sis.grade=g;chips.push(`고객 등급 · ${G_[g].n} · 열린 구역이 늘었다`)}}
+  function sisGradeUp(ch,chips){const G_=D.sisyphus.grades;let g=0;G_.forEach((x,i)=>{if(ch.sis.pts>=x.at)g=i});if(g>sisGrade(ch)){ch.sis.grade=g;chips.push(`고객 등급 · ${G_[g].n} · 열린 구역이 늘었다`);
+    if(g===G_.length-1&&ch.sis.assimDone&&ch.sis.fac!=='kaki'&&!ch.sis.extraGiven){ch.sis.extraGiven=1;for(const id of D.sisyphus.assim[ch.sis.fac].pack.extra)putCard(ch,id,chips,'소속 카드')}}}
   function sisFacCheck(ch,turn,chips){const S_=CFG.sis;if(ch.sis.fac||turn<S_.facTurn)return;const l=ch.sis.lean;ch.sis.fac=(ch.sis.made||0)<S_.facMin?'kaki':l>=S_.facLean?'rouge':l<=-S_.facLean?'noir':'kaki';chips.push('백화점에서 어느 쪽에 가까운지가 정해졌다')}
   const sisZones=ch=>D.sisyphus.zones.filter(z=>z.grade<=sisGrade(ch));
   function sisLoot(ch,zone,chips){
@@ -2647,6 +2649,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const ch=G.ch;if(!sisOn(ch))return null;const sv=ch.sis,S_=D.sisyphus,A=S_.act;
     if(sv.turnYear!==G.year){sv.turnYear=G.year;sv.turn=Math.max(1,G.year-sv.in+1);sv.st='day1';sv.back=null;{const c=[];sisFacCheck(ch,sv.turn,c)}}
     G.free=true;
+    /* 동화: 소속이 정해진 뒤 한 번, 소속 책장(르루주·르누아르)을 받거나 유행을 따른다(르카키) */
+    if(sv.fac&&!sv.assimDone&&sv.st==='day1'){const Z=S_.assim[sv.fac];return {type:'event',ev:{t:Z.t,x:Z.x,c:[{l:Z.l,h:Z.h,ok:{t:Z.ok,fx:{sisAssim:sv.fac}}}]}}}
     if(sv.st==='day1'){
       return {type:'event',ev:{t:A.day1.t,x:`${A.day1.x}\n\n${sisInv(ch)}`,c:[
         ...sisZones(ch).map(z=>({l:`${z.n}으로 나간다`,h:z.x,ok:{t:'채비를 하고 나선다.',fx:{sisHunt:z.id}}})),
@@ -3772,6 +3776,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
     /* 덱 시너지(일반 키워드 6종): 덱에서 그 키워드가 붙은 카드의 비율이 ratio 이상이면 작은 보너스가 켜진다 */
     {const S_=CFG.deckSyn;P.deckSyn={};if(S_.on&&ch.deck&&ch.deck.length){for(const k of Object.keys(S_.kws)){const n=ch.deck.filter(id=>D.cards[id]&&((D.cards[id].kw||[]).some(x=>x[0]===k)||(k==='charge'&&D.cards[id].spend))).length;if(n>=S_.min&&n/ch.deck.length>=S_.ratio){P.deckSyn[k]=1;mindNote.push(`덱 시너지 · ${D.keywords[k].n} ${n}/${ch.deck.length}장 · ${S_.kws[k]}`)}}}}
+    P.trend=!!(CFG.sis.on&&ch.sis&&ch.sis.fac==='kaki'&&ch.sis.assimDone);
     P.inkIds=ch.hw&&ch.hw.mission&&hwHave(ch).length?hwHave(ch).map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
     {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;if(o==='W사 날개'){const fi_=ch.fi??-1;if(fi_>=4)P.chargeRound=4;else if(fi_>=2)P.chargeRound=3}P.chargeHit=CH.hit||0;P.chargeExp=CH.express||null;if(CH.start)P.charge=Math.min(P.chargeCap,(P.charge||0)+CH.start);P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}
@@ -3810,6 +3815,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const SM=CFG.shinmang;if(P.sm&&C.round%SM.ringEvery===0&&P.sm.rings<P.sm.limit){const cost=SM.ringCost[P.sm.rings]||SM.ringCost[SM.ringCost.length-1];
       if(C.ch.mind-cost>=Math.max(1,mindFloor(C.ch))){C.ch.mind-=cost;P.sm.rings++;const m={t:'kw',s:`망(望) ${P.sm.rings}망 · 정신력 −${cost} (지금 ${C.ch.mind}) · 주는 피해 +${Math.round((SM.dealShin+P.sm.rings*SM.dealRing)*100)}% · 명중 +${P.sm.rings*SM.ringHit}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}}
     P.evaPen=P.evaPenNext||0;P.evaPenNext=0;
+    if(P.trend&&P.hp>0){P.trendKw=one(CFG.sis.trendKws);const m={t:'kw',s:`${P.name} · 이번 라운드의 유행 · ${D.keywords[P.trendKw].n} (이 키워드가 +${CFG.sis.trendPlus})`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     /* 토끼 강화·충전 자극 근력: 체력이 낮거나 충전이 충분하면 라운드 동안 속도가 오른다 */
     if(P.spdBoost){const B_=P.spdBoost;P.spd=P.spdBase+(P.hp<=P.maxHp*B_.low[0]?B_.low[1]:0)+(P.charge>=B_.charge[0]?B_.charge[1]:0)}
     /* 순록팀·코뿔소팀: 체력을 잃을수록 공격 피해(순록) · 방어(코뿔소)가 오르고, 충전이 충분하면 코뿔소는 받는 피해가 줄어든다 */
@@ -4038,6 +4044,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
       if(k==='burn'&&to!=='s'&&A.wx&&A.wx.burnPlus)n+=A.wx.burnPlus;
       if(A.deckSyn&&to!=='s'&&A.deckSyn[k]&&(k==='bleed'||k==='rupture'))n+=CFG.deckSyn.plus;
+      if(A.trend&&A.trendKw===k)n+=CFG.sis.trendPlus;
       if(A.kwPlus&&to!=='s'&&(k==='bleed'||k==='burn'||k==='rupture'||k==='stagger'||k==='sink'||k==='nail'||k==='tremor'))n+=A.kwPlus;
       let cap_=k==='breath'?bcap(X):k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='melody'?CFG.melody.cap:k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='tremor'?CFG.tremor.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
       if(to!=='s'&&A.kwCapUp&&A.kwCapUp[k])cap_+=A.kwCapUp[k];
