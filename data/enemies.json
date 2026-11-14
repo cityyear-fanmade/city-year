@@ -4086,7 +4086,7 @@
       "rShield": 5
      }
     ],
-    "gearChance": 0
+    "gearChance": 50
    },
    "kali": {
     "at": 0.5,
