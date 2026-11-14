@@ -237,6 +237,8 @@ export const CFG = {
      흐트러짐: 단계(stages)마다 상대의 명중 −hit · 주는 피해 −dmg · 받는 피해 +take, 라운드 끝에 decay씩 줄고, stun(적 등급별) 이상이면 다음 라운드 기절 */
   /* 대호수 작살: 작살 카드가 적중하면 쌓이고, 당기는 카드(harpoonPull)가 모두 소모해 스택당 per 피해를 더한다 */
   harpoon: {cap: 10},
+  deckSyn: {on: true, ratio: 0.3 /* 덱에서 그 키워드 카드가 차지하는 비율 */, min: 3 /* 그리고 최소 장수 */, plus: 1, burnKeep: 0.6, sinkStep: 1, chargeLoss: 1,
+    kws: {bleed: '출혈을 거는 카드가 출혈 +1 더', rupture: '파열을 거는 카드가 파열 +1 더', breath: '호흡이 2라운드마다 줄어든다', burn: '화상이 라운드 끝에 40%만 줄어든다', sink: '침잠 피해 감소 한 단계 더', charge: '맞아서 줄어드는 충전 −1'}},
   pity: {step: 10 /* 보조 히든 장비: 못 얻을 때마다 다음 드랍 확률 +%p */, max: 50 /* 보정 상한 */},
   nail: {autoAt: 8 /* 동부 N사: 이 개수에 닿으면 저절로 변환 */, autoMul: 1 /* 동부 N사: 못이 가득 차면 저절로 흐트러짐으로 바뀌는 배수(균열 망치와 같은 1) */, cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */

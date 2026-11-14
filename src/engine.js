@@ -3631,6 +3631,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const f=ch.flags||{};P.lk={silence:!!f.lkL_silence,lamp:!!f.lkL_lamp,anchor:!!f.lkL_anchor,tide:!!f.lkL_tide,genesis:!!f.lkL_genesis,pale:!!f.lkL_pale};if(P.lk.lamp)P.lightUp=(P.lightUp||0)+1}
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.lightUp=(P.lightUp||0)+CFG.lvLight.up*n}
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
+    /* 덱 시너지(일반 키워드 6종): 덱에서 그 키워드가 붙은 카드의 비율이 ratio 이상이면 작은 보너스가 켜진다 */
+    {const S_=CFG.deckSyn;P.deckSyn={};if(S_.on&&ch.deck&&ch.deck.length){for(const k of Object.keys(S_.kws)){const n=ch.deck.filter(id=>D.cards[id]&&((D.cards[id].kw||[]).some(x=>x[0]===k)||(k==='charge'&&D.cards[id].spend))).length;if(n>=S_.min&&n/ch.deck.length>=S_.ratio){P.deckSyn[k]=1;mindNote.push(`덱 시너지 · ${D.keywords[k].n} ${n}/${ch.deck.length}장 · ${S_.kws[k]}`)}}}}
     P.inkIds=ch.hw&&ch.hw.mission&&hwHave(ch).length?hwHave(ch).map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
     {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;if(o==='W사 날개'){const fi_=ch.fi??-1;if(fi_>=4)P.chargeRound=4;else if(fi_>=2)P.chargeRound=3}P.chargeHit=CH.hit||0;P.chargeExp=CH.express||null;if(CH.start)P.charge=Math.min(P.chargeCap,(P.charge||0)+CH.start);P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}
@@ -3690,7 +3692,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(kn>0&&P.hp>0){P.hc=(P.hc||0)+CFG.kids.per*kn;let h=0;while(P.hc>=5){P.hc-=5;const x=hcHeal(P);P.hp+=x;h+=x}HG(P,h);
         C.kidNote=`${P.name} · 피에 각인된 갈망 · 자식 ${kn}명 · 혈찬 +${CFG.kids.per*kn}${h?` · HP +${h}`:''}`}}
     if(C.round>1)for(const X of [P,E])if(X.awl&&X.awlMark>0)X.awlMark=Math.max(0,X.awlMark-CFG.syn['밤의 송곳'].mark.decay);
-    if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-(X.blade?(X.bladeBoost&&X.synT>=2?0:CFG.syn['검계'].decay[X.synT]):CFG.breath.decay));
+    if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-(X.blade?(X.bladeBoost&&X.synT>=2?0:CFG.syn['검계'].decay[X.synT]):(X.deckSyn&&X.deckSyn.breath&&C.round%2===0?0:CFG.breath.decay)));
     if(P.blade){const g=P.synT>=2?2:1;P.breath=Math.min(bcap(P),P.breath+g);if(!C.quiet){const m={t:'kw',s:`${P.name} · 호흡결 · 호흡 +${g} (지금 ${P.breath})`};C.log.push(m);C.cur.push(m)}}
     {const cdOk=id=>!((D.cards[id].cd||0)&&((C.cdUntil||{})[id]||0)>C.round),dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))&&cdOk(id));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
     if(P.form)P.hand=P.hand.map(id=>formId(id,P.form));
@@ -3896,6 +3898,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(X.formImmune&&X!==A)continue;
       if(k==='burn'&&!A.isP&&to!=='s')n=Math.max(1,Math.floor(n*CFG.burn.foe));
       if(k==='burn'&&to!=='s'&&A.wx&&A.wx.burnPlus)n+=A.wx.burnPlus;
+      if(A.deckSyn&&to!=='s'&&A.deckSyn[k]&&(k==='bleed'||k==='rupture'))n+=CFG.deckSyn.plus;
       if(A.kwPlus&&to!=='s'&&(k==='bleed'||k==='burn'||k==='rupture'||k==='stagger'||k==='sink'||k==='nail'||k==='tremor'))n+=A.kwPlus;
       let cap_=k==='breath'?bcap(X):k==='charge'?X.chargeCap:k==='burn'?Math.round(CFG.burn.max*((to!=='s'&&A.wx&&A.wx.burnCap)||1)):k==='melody'?CFG.melody.cap:k==='ink'?CFG.ink.cap+(A.wx&&A.wx.inkCap||0):k==='rupture'?CFG.rupture.max:k==='nail'?CFG.nail.cap:k==='tremor'?CFG.tremor.cap:k==='harpoon'?CFG.harpoon.cap:k==='bleed'?bleedCap(X):CFG.stackCap,b4_=X[k]||0;
       if(to!=='s'&&A.kwCapUp&&A.kwCapUp[k])cap_+=A.kwCapUp[k];
@@ -4112,7 +4115,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {const g2=staggerStage(B);if(g2&&g2.take){dmg+=g2.take;note+=` 흐트러짐 취약+${g2.take}`}}
       if(A.tbMarks>=CFG.taboo.markAt&&(B.nail||0)>=CFG.taboo.nailAt){dmg+=A.tbMarks;C.tbMkN=(C.tbMkN||0)+1;note+=` 금기 표식+${A.tbMarks}`}
       {const g_=staggerStage(A);if(g_&&g_.dmg){dmg=Math.max(1,dmg-g_.dmg);note+=` 흐트러짐−${g_.dmg}`}}
-      if((A.sink||0)>=CFG.sink.per){const x=Math.floor(A.sink/CFG.sink.per)*CFG.sink.dmg;dmg=Math.max(1,dmg-x);note+=` 침잠−${x}`}
+      if((A.sink||0)>=CFG.sink.per){const x=(Math.floor(A.sink/CFG.sink.per)+(B.deckSyn&&B.deckSyn.sink?CFG.deckSyn.sinkStep:0))*CFG.sink.dmg;dmg=Math.max(1,dmg-x);note+=` 침잠−${x}`}
       if(A.wx&&A.wx.mark){B.mk=(B.mk||0)+1;if(B.mk>=A.wx.mark.need){dmg*=2;B.mk=0;note+=` ${A.wx.mark.n||'표적'}×2`}}
       /* 중지 패시브 되갚음: 맞을 때마다 1 (최대 5), 다음 적중 피해 +2×스택 */
       if(A.middle&&(A.revenge||0)>0){const x=A.revenge*(A.revMul||CFG.middle.dmg);dmg+=x;note+=` 되갚음+${x}`;const hl=A.isP?Math.min(A.revenge*CFG.middle.heal,A.maxHp-A.hp):0;if(hl>0){A.hp+=hl;HG(A,hl);note+=` 스택 ${A.revenge} 소모 · HP +${hl}`}A.revenge=Math.floor(A.revenge*CFG.middle.keep)}
@@ -4207,7 +4210,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       if(c.nextSwift){A.swiftNext=true;L('kw',`  ${A.name} · 다음 라운드 신속`)}
       if(c.handPlus){A.handPlusNext=Math.max(A.handPlusNext||0,c.handPlus);L('kw',`  ${A.name} · 다음 손패 +${c.handPlus}장`)}
       if(A.chargeHit){A.charge=Math.min(A.chargeCap,A.charge+A.chargeHit);L('kw',`  ${A.name} · 충전 +${A.chargeHit} (지금 ${A.charge})`)}
-      if(B.chargeLoss>0&&B.charge>0&&B.isP){B.charge=Math.max(0,B.charge-B.chargeLoss);L('kw',`  ${B.name} · 피격 · 충전 −${B.chargeLoss} (남은 ${B.charge})`)}
+      {const cl_=Math.max(0,B.chargeLoss-(B.deckSyn&&B.deckSyn.charge?CFG.deckSyn.chargeLoss:0));if(cl_>0&&B.charge>0&&B.isP){B.charge=Math.max(0,B.charge-cl_);L('kw',`  ${B.name} · 피격 · 충전 −${cl_} (남은 ${B.charge})`)}}
       if(c.hitHeal&&A.hp>0){const h=Math.min(c.hitHeal,A.maxHp-A.hp);if(h>0){A.hp+=h;HG(A,h);L('kw',`  ${A.name} · ${c.n} · HP +${h}`)}}
       /* 보냐텔리 검술: 처분 표식, 엘레판테(표식이 있으면 다음 라운드 처분 1회) */
       if(c.grant&&(B.disp||0)>0&&B.hp>0){giveNext(A,c.grant);L('sys',`  ${A.name} · 처분 표식 · 다음 손패에 ${D.cards[c.grant].n}`)}
@@ -4386,7 +4389,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       /* 화상: 라운드 끝에 스택만큼 피해, 그 뒤 스택은 keep 비율만 남는다 (내림) */
       if(X.oracleMiss){X.oracleMiss=false;X.passHitNext=(X.passHitNext||0)-CFG.oracle.missHit;X.evaPenNext=CFG.oracle.missEva}
       if(X.stunned){X.stunned=false;X.stagger=0;X.stunImmune=C.round+3}else if(X.stagger>0)X.stagger=Math.max(0,X.stagger-CFG.nail.decay);
-      if(X.burn>0&&X.hp>0){const x=dotInf(C,X,'burn',X.burn*(X.isP?CFG.burn.dmgMe:CFG.burn.dmg),X.burn),O_=X===P?E:P,tk=O_.wx&&O_.wx.burnTick?Math.min(X.burn,CFG.burn.tickCap):0;hpLoss(C,X,x,L);X.burn=Math.floor(X.burn*CFG.burn.keep);L('dmg',`${X.name} · 화상 ${x} 피해 (남은 ${X.burn})`);
+      if(X.burn>0&&X.hp>0){const x=dotInf(C,X,'burn',X.burn*(X.isP?CFG.burn.dmgMe:CFG.burn.dmg),X.burn),O_=X===P?E:P,tk=O_.wx&&O_.wx.burnTick?Math.min(X.burn,CFG.burn.tickCap):0;hpLoss(C,X,x,L);X.burn=Math.floor(X.burn*(O_.deckSyn&&O_.deckSyn.burn?CFG.deckSyn.burnKeep:CFG.burn.keep));L('dmg',`${X.name} · 화상 ${x} 피해 (남은 ${X.burn})`);
         /* 달궈진 십자가: 라운드 끝에 화상 수치만큼 고정 피해를 더 준다 (상한 tickCap) */
         if(tk>0&&X.hp>0){hpLoss(C,X,tk,L);L('dmg',`${O_.name} · 달궈진 십자가 · ${X.name} 고정 피해 ${tk}`)}}
       if(X.ink>0&&X.hp>0){const x=dotInf(C,X,'ink',X.ink*(X.isP?CFG.ink.dmgMe:CFG.ink.dmg),X.ink);hpLoss(C,X,x,L);X.ink=Math.floor(X.ink*CFG.ink.keep);L('dmg',`${X.name} · 수흔 ${x} 피해 (남은 ${X.ink})`)}
