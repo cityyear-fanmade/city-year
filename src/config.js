@@ -239,6 +239,7 @@ export const CFG = {
   harpoon: {cap: 10},
   deckSyn: {on: true, ratio: 0.3 /* 덱에서 그 키워드 카드가 차지하는 비율 */, min: 3 /* 그리고 최소 장수 */, plus: 1, burnKeep: 0.6, sinkStep: 1, chargeLoss: 1,
     kws: {bleed: '출혈을 거는 카드가 출혈 +1 더', rupture: '파열을 거는 카드가 파열 +1 더', breath: '호흡이 2라운드마다 줄어든다', burn: '화상이 라운드 끝에 40%만 줄어든다', sink: '침잠 피해 감소 한 단계 더', charge: '맞아서 줄어드는 충전 −1'}},
+  sis: {on: false /* 시지프 백화점 1단계(진입)까지만 구현됨 · 2단계(사냥·제작·판매 순환)가 끝날 때까지 꺼 둔다 */, from: 6, to: 30 /* 이 연차 사이에 한 번 나온다 */, chance: 30 /* 해마다 % */},
   pity: {step: 10 /* 보조 히든 장비: 못 얻을 때마다 다음 드랍 확률 +%p */, max: 50 /* 보정 상한 */},
   nail: {autoAt: 8 /* 동부 N사: 이 개수에 닿으면 저절로 변환 */, autoMul: 1 /* 동부 N사: 못이 가득 차면 저절로 흐트러짐으로 바뀌는 배수(균열 망치와 같은 1) */, cap: 15, hit: 1, augHit: 2, staggerCap: 30, decay: 2, stages: [{at: 3, hit: 8, dmg: 0, take: 0}, {at: 6, hit: 15, dmg: 2, take: 2}, {at: 10, hit: 20, dmg: 3, take: 4}], stun: {early: 6, mid: 8, late: 10, boss: 12, hidden: 16}},
   /* 6시즌 보냐텔리의 검: 강화 단계별 수치(0~5), 단계마다 필요한 재료 등급, 가속 */
