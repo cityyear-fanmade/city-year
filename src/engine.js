@@ -829,7 +829,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return r;
   }
   /* 해마다 들어오는 돈: 소속 봉급 + 해결사 급수 수당 */
-  const income=ch=>(D.money.salary[ch.aff?ch.aff.type:'none']||0)+(ch.licensed?(T.rankStart-ch.rank)*D.money.rankSalary:0)
+  const income=ch=>sisOn(ch)?0:(D.money.salary[ch.aff?ch.aff.type:'none']||0)+(ch.licensed?(T.rankStart-ch.rank)*D.money.rankSalary:0)
     +(isFinger(ch)&&ch.fr?(ch.fr.tier-1)*D.fingerRules.salaryPerTier:0)+(ch.pinky?D.pinky.money:0)+(ch.art&&ch.art.gallery?CFG.art.income:0)+((ch.gear&&ch.gear.aug&&ch.gear.aug.inc)||0)+staffIncome(ch);
   const money=n=>n.toLocaleString('ko-KR')+D.money.unit;
   function setColor(ch,ci){ch.ci=ci;ch.color=D.colors[ci].hex}
@@ -2577,7 +2577,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisMat(ch,k,n){const m=ch.sis.mat;m[k]=(m[k]||0)+n}
   function sisColorsOpen(ch){return D.sisyphus.tailor.colors.filter(c=>c.grade<=sisGrade(ch))}
   function sisGradeUp(ch,chips){const G_=D.sisyphus.grades;let g=0;G_.forEach((x,i)=>{if(ch.sis.pts>=x.at)g=i});if(g>sisGrade(ch)){ch.sis.grade=g;chips.push(`고객 등급 · ${G_[g].n} · 열린 구역이 늘었다`)}}
-  function sisFacCheck(ch,turn,chips){const S_=CFG.sis;if(ch.sis.fac||turn<S_.facTurn)return;const l=ch.sis.lean;ch.sis.fac=l>=S_.facLean?'rouge':l<=-S_.facLean?'noir':'kaki';chips.push('백화점에서 어느 쪽에 가까운지가 정해졌다')}
+  function sisFacCheck(ch,turn,chips){const S_=CFG.sis;if(ch.sis.fac||turn<S_.facTurn)return;const l=ch.sis.lean;ch.sis.fac=(ch.sis.made||0)<S_.facMin?'kaki':l>=S_.facLean?'rouge':l<=-S_.facLean?'noir':'kaki';chips.push('백화점에서 어느 쪽에 가까운지가 정해졌다')}
   const sisZones=ch=>D.sisyphus.zones.filter(z=>z.grade<=sisGrade(ch));
   function sisLoot(ch,zone,chips){
     const S_=D.sisyphus,out=[];const mats=zone.mat;
@@ -2604,7 +2604,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisCraft(G,spec){
     const ch=G.ch;if(!sisOn(ch))return {ok:false,why:'백화점 안에서만 할 수 있다'};const I=sisCraftInfo(ch,spec);if(!I.ok)return I;
     ch.sis.mat[I.sh.base]-=I.need;if(I.co.id!=='gray')ch.sis.dyes.splice(ch.sis.dyes.indexOf(I.co.id),1);ch.sis.mat.trim-=I.tr.length;
-    ch.sis.cloth.push({shape:I.sh.id,pattern:I.pt.id,color:I.co.id,trims:I.tr.map(x=>x.id),price:I.price,lean:I.lean});
+    ch.sis.cloth.push({shape:I.sh.id,pattern:I.pt.id,color:I.co.id,trims:I.tr.map(x=>x.id),price:I.price,lean:I.lean});ch.sis.made=(ch.sis.made||0)+1;
     ch.sis.lean=Math.max(-CFG.sis.leanMax,Math.min(CFG.sis.leanMax,ch.sis.lean+I.lean));
     return {ok:true,name:`${I.co.n} ${I.pt.n} ${I.sh.n}`,price:I.price,lean:I.lean};
   }
@@ -2615,9 +2615,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 손님 취향과 맞는 옷을 먼저 고르고, 없으면 값이 가장 높은 옷 */
     const idx=ch.sis.cloth.map((c,i)=>i).sort((a,b)=>{const A=ch.sis.cloth[a],B=ch.sis.cloth[b],ma=(cu.likes===0||A.lean===cu.likes)?1:0,mb=(cu.likes===0||B.lean===cu.likes)?1:0;return mb-ma||B.price-A.price})[0];
     const c=ch.sis.cloth[idx],match=cu.likes===0||c.lean===cu.likes;
-    if(d(100)<=Math.round(M.fail*100)){ch.sis.lean=Math.max(-CFG.sis.leanMax,Math.min(CFG.sis.leanMax,ch.sis.lean+M.lean));chips.push(`${cu.n}가 고개를 저었다 · 팔지 못했다`);return}
+    if(d(100)<=Math.round(M.fail*100)){chips.push(`${cu.n}가 고개를 저었다 · 팔지 못했다`);return}
     const v=Math.round(c.price*M.mul*(match?1.2:cu.likes===0?1:0.9)),pts=M.pts+(match?1:0);
-    ch.sis.cloth.splice(idx,1);ch.money+=v;ch.sis.pts+=pts;ch.sis.lean=Math.max(-CFG.sis.leanMax,Math.min(CFG.sis.leanMax,ch.sis.lean+M.lean));
+    ch.sis.cloth.splice(idx,1);ch.money+=v;ch.sis.pts+=pts;
     chips.push(`판매 · ${cu.n} · +${sisAn(v)} · 고객 점수 +${pts}`);sisGradeUp(ch,chips);
   }
   function sisTradeDo(ch,v,i,color,chips){
@@ -2685,6 +2685,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {type:'event',ev:{t:S_.act.trade.t,x:`${S_.act.trade.x}\n\n${sisInv(ch)}`,c}};
     }
     return null;
+  }
+  /* 사냥에서 지면(백화점 설정): 죽지 않고 샘터에서 깨어난다. 진행(그날)만 되돌리고 얻은 물건은 그대로, 안은 일부 잃는다 */
+  const sisCanRevive=G=>!!(G&&sisOn(G.ch)&&!G.ch.mindDead&&!G.ch.sunk&&!G.ch.distorted);
+  function sisRevive(G,C){
+    const ch=G.ch,sv=ch.sis,lost=Math.round(ch.money*CFG.sis.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CFG.sis.fallHp));
+    sv.falls=(sv.falls||0)+1;sv.st='day1';sv.lootDone=false;sv.back=null;
+    return {text:D.sisyphus.act.fall.x,chips:[`샘터에서 깨어났다 · 체력 ${ch.hp}`,lost?`안 ${lost} 잃었다`:'잃은 것은 없다','얻은 물건은 그대로 남아 있다']};
   }
   /* 백화점 안에서는 해가 바뀌어도 일반 사건 대신 조용히 지나가고, 다음 하루가 시작된다 */
   function sisQuiet(G){return sisOn(G.ch)?{type:'quiet',year:G.year}:null}
@@ -4611,6 +4618,6 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
-    setPity,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setPity,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     canFound,pvProfile,staffList,staffLv,staffEventPick,staffPromoEvent,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

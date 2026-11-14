@@ -1895,6 +1895,34 @@ ${symRec(r)}
   }
   /* 사무소 사건 도움말: 신뢰·평판·돈 표시가 무슨 뜻인지 한 줄로 알려 준다 */
   const officeLegend=ev=>ev&&ev.staffEv?'<p class="small dim">신뢰: 이 직원이 나를 믿는 정도(0~5). 높을수록 직원이 의뢰를 더 잘 해결한다 · 안: 돈. 빨간 −는 사무소 돈이 나가고 초록 +는 들어온다.</p>':ev&&ev.t==='이직 제안'?'<p class="small dim">평판: 지금 사무소에서 쌓은 신용(−5~+3). 옮기면 깎이고 오래 머물면 오른다. 평판이 낮으면 장비 값이 오르고 높으면 내린다.</p>':'';
+  /* ── 시지프 백화점 재단대: 마네킹 위에 형태·무늬·색·장식을 겹쳐 그린다(SVG). 이미지가 없어도 동작한다 ── */
+  const SIS_PATH={daily:'M32 44 L50 34 Q60 42 70 34 L88 44 L98 66 L84 72 L84 118 L36 118 L36 72 L22 66 Z',suit:'M30 44 L48 34 L60 54 L72 34 L90 44 L100 70 L86 76 L84 128 L36 128 L34 76 L20 70 Z',coat:'M28 44 L48 34 L60 48 L72 34 L92 44 L104 80 L88 86 L88 148 L32 148 L32 86 L16 80 Z',gala:'M44 36 L52 32 Q60 40 68 32 L76 36 L74 70 L100 148 L20 148 L46 70 Z',gold:'M34 38 Q60 28 86 38 L92 150 L28 150 Z'};
+  function sisSvg(sp,T){
+    const co=(T.colors.find(c=>c.id===sp.color)||T.colors[0]).hex,P=SIS_PATH[sp.shape]||SIS_PATH.daily,hem=sp.shape==='gold'?150:sp.shape==='coat'||sp.shape==='gala'?148:sp.shape==='suit'?128:118;
+    const pat={stripe:'<pattern id="sbp" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="3" height="8" fill="rgba(255,255,255,.35)"/></pattern>',band:'<pattern id="sbp" width="120" height="44" patternUnits="userSpaceOnUse"><rect y="12" width="120" height="5" fill="rgba(255,255,255,.4)"/><rect y="30" width="120" height="3" fill="rgba(255,255,255,.3)"/></pattern>',check:'<pattern id="sbp" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 0H12M0 0V12" stroke="rgba(255,255,255,.35)" stroke-width="1.5" fill="none"/></pattern>',dots:'<pattern id="sbp" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r="2" fill="rgba(255,255,255,.4)"/></pattern>'}[sp.pattern]||'';
+    const tr=sp.trims||[],t={button:'<g fill="#e6e6e6" stroke="#0c0e12" stroke-width="1"><circle cx="56" cy="70" r="2.4"/><circle cx="64" cy="70" r="2.4"/><circle cx="56" cy="84" r="2.4"/><circle cx="64" cy="84" r="2.4"/></g>',tooth:'<g fill="#efe9dc" stroke="#0c0e12" stroke-width=".8">'+[44,52,60,68,76].map(x=>`<path d="M${x-3} 50 L${x} 58 L${x+3} 50 Z"/>`).join('')+'</g>',eye:'<g stroke="#0c0e12" stroke-width="1"><circle cx="60" cy="92" r="6.5" fill="#efe9dc"/><circle cx="60" cy="92" r="2.8" fill="#c9a24a"/></g>',buckle:'<g fill="none" stroke="#c9a24a" stroke-width="2"><rect x="52" y="104" width="16" height="9" rx="1.5"/><path d="M60 104V113"/></g>'};
+    return `<svg viewBox="0 0 120 170" width="150" height="212" role="img" aria-label="재단대 미리보기"><defs><clipPath id="sbc"><path d="${P}"/></clipPath>${pat}</defs>
+      <ellipse cx="60" cy="18" rx="11" ry="14" fill="#3d424c" stroke="#0c0e12" stroke-width="2"/><rect x="56" y="30" width="8" height="8" fill="#3d424c"/>
+      <path d="M42 40 L78 40 L74 122 L46 122 Z" fill="#3d424c" stroke="#0c0e12" stroke-width="2"/><path d="M60 122V158" stroke="#0c0e12" stroke-width="3"/><ellipse cx="60" cy="161" rx="18" ry="4" fill="#3d424c" stroke="#0c0e12" stroke-width="2"/>
+      <path d="${P}" fill="${co}" stroke="#0c0e12" stroke-width="2" stroke-linejoin="round"/>
+      ${pat?`<rect x="0" y="0" width="120" height="170" fill="url(#sbp)" clip-path="url(#sbc)"/>`:''}
+      ${sp.pattern==='stitch'?`<path d="M60 56V${hem-4}M38 ${hem-5}H82" stroke="rgba(255,255,255,.55)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" clip-path="url(#sbc)"/>`:''}
+      ${tr.map(k=>t[k]||'').join('')}</svg>`;
+  }
+  function vSisBench(ev){
+    const T=D.sisyphus.tailor,ch=G.ch,g=ch.sis.grade||0;
+    if(UI.sbEv!==ev){UI.sbEv=ev;const first=T.shapes.find(s=>E.sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok)||T.shapes[0];UI.sb={shape:first.id,pattern:'plain',color:'gray',trims:[]}}
+    const sp=UI.sb,info=E.sisCraftInfo(ch,sp),has=k=>ch.sis.mat[k]||0;
+    const seg=(key,list,cur,dis)=>`<div class="seg kinds">${list.map(x=>`<button class="${cur===x.id?'on':''}" ${dis(x)?'disabled':''} data-a="sbset" data-i="${key}:${x.id}">${esc(x.n)}</button>`).join('')}</div>`;
+    const sw=T.colors.map(c=>{const lock=c.grade>g,nod=c.id!=='gray'&&!ch.sis.dyes.includes(c.id);return `<button class="sb-sw${sp.color===c.id?' on':''}" ${lock||nod?'disabled':''} style="background:${c.hex}" data-a="sbset" data-i="color:${c.id}" title="${esc(c.n)}${lock?' · 아직 열리지 않음':nod?' · 염료 없음':''}" aria-label="${esc(c.n)}"></button>`}).join('');
+    const skip=ev.c.findIndex(c=>c.ok&&c.ok.fx&&c.ok.fx.sisGo==='day2'),inv=(ev.x||'').split('\n\n').filter(Boolean);
+    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 재단대</div><h2>${ev.t}</h2>${inv[0]&&/사냥/.test(inv[0])?`<p class="small dim" style="white-space:pre-line">${inv[0]}</p>`:''}
+      <div class="panel stack" style="gap:8px;align-items:center">${sisSvg(sp,T)}<span class="small dim">${info.ok?`값 약 ${info.price}안`:esc(info.why)}</span></div>
+      <div class="panel stack" style="gap:8px"><span class="eyebrow">형태</span>${seg('shape',T.shapes,sp.shape,s=>!(has(s.base)>=(s.need||1)))}<span class="eyebrow">무늬</span>${seg('pattern',T.patterns,sp.pattern,p=>p.grade>g)}<span class="eyebrow">색</span><div class="row" style="gap:6px;flex-wrap:wrap">${sw}</div><span class="eyebrow">장식 (부품 ${has('trim')}개)</span><div class="seg kinds">${T.trims.map(x=>`<button class="${sp.trims.includes(x.id)?'on':''}" ${has('trim')<1&&!sp.trims.includes(x.id)?'disabled':''} data-a="sbset" data-i="trim:${x.id}">${esc(x.n)}</button>`).join('')}</div>
+        <span class="small dim">${sp.trims.length?'고른 장식 · '+sp.trims.map(k=>T.trims.find(t=>t.id===k).n).join(', '):'고른 장식 없음'}</span></div>
+      <p class="small dim">${inv[inv.length-1]||''}</p></div>
+      <div class="stack" style="gap:8px"><button class="btn primary" data-a="sbmake" ${info.ok?'':'disabled'}><b>옷을 짓는다</b></button>${skip>=0?`<button class="btn" data-a="choose" data-i="${skip}"><b>${ev.c[skip].l}</b></button>`:''}</div>`;
+  }
   function vEvent(){
     if(UI.omen)return vOmen();
     if(UI.fight){
@@ -1906,6 +1934,7 @@ ${symRec(r)}
         <button class="btn primary" data-a="fight">맞선다</button>`;
     }
     const ev=UI.ev,ch=G.ch;
+    if(ev.sisBench)return vSisBench(ev);
     const lockBtns=E.lockedOptions(G,ev).map(({c,i})=>({i,html:`<button class="btn" disabled><b>🔒 ${c.l}</b><span class="mono small dim">${c.lock}</span></button>`}));
     const btns=E.options(G,ev).map(({c,i})=>{
       let hint=c.h||'판정 없음 · 결과 확정';
@@ -1929,6 +1958,7 @@ ${symRec(r)}
   function nextLabel(){
     if(G.ch.lvPend>0)return '성장 굴림';
     if(UI.pending)return '맞선다';
+    if(CFG.sis.on&&G.ch.sis&&G.ch.sis.st&&G.ch.sis.st!=='done')return '이어서';
     return G.year>=E.lastYear(G)?'결말을 본다':'다음 해로';
   }
   function vResult(){
@@ -2995,6 +3025,10 @@ ${symRec(r)}
   function startCombat(id){recAdd('seen',id);C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.paused=false;UI.screen='combat';render()}
 
   const ACT={
+    sbset(kv){const [k,v]=String(kv).split(':'),sb=UI.sb;if(!sb)return;
+      if(k==='trim'){const at=sb.trims.indexOf(v);if(at>=0)sb.trims.splice(at,1);else if(sb.trims.length<3)sb.trims.push(v)}else sb[k]=v;
+      render()},
+    sbmake(){const ev=UI.ev;if(!ev||!ev.sisBench||!UI.sb)return;const sp=JSON.parse(JSON.stringify(UI.sb));ev.c.push({l:'옷을 짓는다',ok:{t:'가위가 천을 따라 움직인다.',fx:{sisCraft:sp}}});ACT.choose(ev.c.length-1)},
     lrelic(k){if(!E.relicChoices(G.ch).includes(k))return;const wn=E.giveRelic(G.ch,k,true);UI.res.chips=[...UI.res.chips,'유물 · '+D.relics[k].n+(wn?' · '+wn:'')];render()},
     offkw(k){UI.offName=(($('offname')||{}).value||UI.offName||'');UI.offKw=k;render()},
     offset(){
@@ -3327,7 +3361,7 @@ ${symRec(r)}
       const pp=UI.sel.map(i=>D.cards[C.P.hand[i]]);
       const lb=C.log.length;PRE=E.snap(C);UI.lastPP=pp;
       E.resolveRound(C,pp,C.ePlan);UI.sel=[];
-      if(C.over==='lose')store.del(SAVE);
+      if(C.over==='lose'&&!E.sisCanRevive(G))store.del(SAVE);
       if(MODE==='off'){if(!C.over)E.newRound(C);render();return}
       C.logBefore=lb;PLAYING=true;render();if(isMobile())window.scrollTo(0,0);runPlayback(C.evs);
     },
@@ -3345,6 +3379,7 @@ ${symRec(r)}
     skip(){SKIP=true;if(wake)wake();if(tapWake)tapWake()},
     tap(){if(tapWake)tapWake()},
     fin(){
+      if(C.over==='lose'&&E.sisCanRevive(G)){const r=E.sisRevive(G,C);UI.res={t:r.text,chips:r.chips,title:null,roll:null};saveGame({after:true,pending:null});UI.screen='result';render();return}
       if(C.over==='lose')checkInnateUnlock();
       if(C.over==='lose'){UI.outEnd=null;UI.outerEnd=false;UI.endWin=false;UI.trueEnd=false;UI.death=G.ch.mindDead?{year:G.year,foe:'정신 붕괴',cause:'mind'}:{year:G.year,id:C.id,foe:D.enemies[C.id].n,hidden:!!D.enemies[C.id].hidden,hunt:C.id==='kid_hunt'?G.ch.kidFoe:null};recordEnd();UI.screen='end';render();return}
       const r=E.winRewards(G,C);syncTitles();recAdd('beaten',C.id);const unl=checkInnateUnlock();
@@ -3406,6 +3441,7 @@ ${symRec(r)}
     testDistort(){if(!G)return;UI.ev=D.mindEvents.distort;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
+    testSis(){CFG.sis.on=true;G=E.newGame(E.newChar());const ch=G.ch;ch.o={n:'둥지 노동자'};ch.aff={type:'wing',name:CFG.nWing.name};ch.year=G.year=5;ch.sis={subj:'can',turn:2,turnYear:5,grade:2,rewound:0,lean:0,in:4,pts:30,st:'craft',pend:'b3',lootDone:true,lootNote:'사냥 · 가죽 2 · 22안',mat:{leather:2,cloth:3,thread:1,trim:2},dyes:['black','red','white','navy'],cloth:[],fac:null,made:0};ch.money=120;const st=E.advanceYear(G);UI.ev=st.ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testRouteEnd(k,act2){if(!G)return;G.endless=!!act2;G.year=G.ch.year=act2?66:CFG.years;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=k==='rcorp';UI.hwEnd=k==='rcorp'?null:(k||'hwhost');UI.death=null;UI.screen='end';render()},
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testCrowEnd(k){if(!G)return;G.endless=true;G.ch.year=G.year=73;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=false;UI.hwEnd=null;UI.crowEnd=k;UI.death=null;UI.screen='end';render()},
