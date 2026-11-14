@@ -369,12 +369,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const ownsCard=(ch,cid)=>ch.deck.includes(cid)||(ch.side||[]).includes(cid)||(ch.offers||[]).includes(cid)||(ch.picks||[]).some(g=>g.includes(cid));
   const deckMax=ch=>CFG.deck.max+((ch.ego||ch.egoApt)?CFG.mind.deckPlus:0);   // E.G.O 적성자는 개화하지 않아도 덱 +deckPlus·전투 처음 라운드 빛 +1을 누린다
   const deckRoom=ch=>ch.deck.length<deckMax(ch);
+  /* 선율을 쌓는 카드를 처음 받을 때, 터뜨리는 카드(화음)가 하나도 없으면 화음을 짝으로 한 장 같이 내준다(판마다 한 번) */
+  function melodyPair(ch,cid,chips){
+    const c=D.cards[cid];if(!c||c.chord||!(c.kw||[]).some(k=>k[0]==='melody')||(ch.flags||{}).melodyPair||ch.deckLocked||ch.cardMoney)return;
+    if([...(ch.deck||[]),...(ch.side||[]),...(ch.offers||[])].some(id=>D.cards[id]&&D.cards[id].chord))return;
+    (ch.flags=ch.flags||{}).melodyPair=1;(ch.offers=ch.offers||[]).push('mu_6');chips&&chips.push(`짝 카드 발견 · ${D.cards.mu_6.n} (받을지 고른다)`);
+  }
   function putCard(ch,cid,chips,label){
+    melodyPair(ch,cid,chips);
     if(deckRoom(ch)){ch.deck.push(cid);chips&&chips.push((label||'카드')+' · '+D.cards[cid].n);return}
     (ch.side=ch.side||[]).push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} (덱이 가득 차서 카드함으로)`);
   }
   function takeOffer(ch,i,to,swap){
     const o=ch.offers||[],cid=o[i];if(!cid)return false;
+    melodyPair(ch,cid,null);
     if(to==='deck'){if(!deckRoom(ch))return false;ch.deck.push(cid)}
     else if(to==='swap'){const j=+swap;if(ch.deckLocked||!ch.deck[j]||D.cards[ch.deck[j]].fixed)return false;(ch.side=ch.side||[]).push(ch.deck[j]);ch.deck[j]=cid}
     else (ch.side=ch.side||[]).push(cid);
