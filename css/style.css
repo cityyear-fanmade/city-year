@@ -944,3 +944,6 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 .sb-sw{width:30px;height:30px;border-radius:6px;border:2px solid var(--line,#2a2f3a);padding:0}
 .sb-sw.on{border-color:var(--gold,#c9a24a);box-shadow:0 0 0 2px rgba(201,162,74,.35)}
 .sb-sw[disabled]{opacity:.3;border-style:dashed}
+
+.seg button.sb-off{opacity:.35}
+.seg button small{opacity:.8;font-size:.72em}
