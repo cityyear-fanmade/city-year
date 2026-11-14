@@ -131,7 +131,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return out.filter(k=>D.innate[k]);
   }
   function newChar(job,fixO,keep){
-    /* 해금 출생이 직업을 가리키면(발톱·조율자) 그 직업으로 시작하고 줄기(route)를 붙인다 */
+    /* 해금 출생이 직업을 가리키면(발톱·조율자) 그 직업으로 시작하고 루트(route)를 붙인다 */
     const UJ=!keep&&!job&&typeof fixO==='string'&&(D.unlockOrigins||[]).find(x=>x.key===fixO&&x.job&&D.hiddenJobs[x.job])||null;if(UJ)job=UJ.job;
     const r=keep?Object.assign({},keep.r):{o:d(100),t:d(100),f:d(100),w:d(100),n:d(100)},J=!keep&&job&&D.hiddenJobs[job];
     const UO=!J&&!keep&&typeof fixO==='string'&&(D.unlockOrigins||[]).find(x=>x.key===fixO)||null;   // 해금 출생(D.unlockOrigins): 굴림 번호 없이 고른 출생
@@ -1343,7 +1343,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.topPass){const C_=CR[career(ch)];ch.title=isN(ch)&&isEastOuter(ch)&&ch.flags&&ch.flags.tbHunt?CFG.nWing.eastTitle:C_.topTitle;ch.titleKind='top';ch.topTries=0;ch.topNext=0;(ch.titleLog=ch.titleLog||[]).push(ch.title);addStats(s,C_.topFx||{});if((C_.topFx||{}).maxHp)ch.hp+=C_.topFx.maxHp;chips.push('칭호 · '+ch.title);if(lakeOn(ch)){ch.lake=ch.lake||{};ch.lake.captain=true;ch.lake.capYear=ch.year||0;chips.push('목표 · 대재앙 토벌');chips.push(`배를 얻었다 · 배 내구도 ${CFG.lake.hullMax}/${CFG.lake.hullMax}`);chips.push(`전투마다 내구도 -${CFG.lake.hullWear} · 파도에서는 크게 잃는다 · 항구에서 ${CFG.lake.repairCost}안으로 수리 · 0이 되면 침몰`);lakeCards(ch,C_.topRow,chips,'선장')}if(C_.topMinRank&&ch.licensed&&ch.rank>C_.topMinRank){ch.rank=C_.topMinRank;chips.push(`해결사 급수 ${ch.rank}급`)}const L_=C_.topLoot;if(L_){addStats(s,L_.fx);if(L_.fx.maxHp)ch.hp+=L_.fx.maxHp;(ch.relics=ch.relics||[]).push(L_.n);chips.push(`전리품 · ${L_.n} (${L_.e})`)}}
     if(fx.topFail)topFailed(ch,chips,'심사')
     if(fx.examSkip)ch.examSkipYear=ch.year;
-    /* 해금 출생 줄기: 처분 의뢰를 받으면(routeHunt) 준비물 고르기가 시작되고, 준비물을 고르면(routeKit) 수색이 시작된다 */
+    /* 해금 출생 루트: 처분 의뢰를 받으면(routeHunt) 준비물 고르기가 시작되고, 준비물을 고르면(routeKit) 수색이 시작된다 */
     if(fx.hermKill&&ch.bond){const b=ch.bond,kids=b.kids||[],n=kids.filter(k=>!k.dead).length;
       kids.forEach(k=>{if(!k.dead)k.dead='herm'});b.st='lost';b.hermKilled=true;ch.famLoss=(ch.famLoss||0)+n;ch.hermLv=Math.max(ch.hermLv||0,1);
       loseMind(ch,CFG.herm.killMind,t=>chips.push(t));chips.push(`가족을 잃었다 · 인연 사별${n?` · 아이 ${n}명`:''}`);chips.push('카두세우스-헤르메스 · 1차 강화')}
@@ -2544,13 +2544,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:`[거미집 ${n}/${total}] ${T.t}`,x:webTok(T.x,ch,w),c,web:true};
   }
   /* 거미집 안에서 해가 지나지 않는 턴(한 해의 2~5번째 턴) */
-  /* ── 해금 출생 줄기(route) ──
-     출생 데이터의 route 이름으로 D.routes[이름]을 읽는다. 줄기가 있는 출생은
-     ① 공방 거리가 없고(shop:false) ② 1막·2막 연례 사건이 줄기의 풀로 바뀌고(yearly.act1/act2)
-     ③ 고정 전투와 등급 전투가 줄기의 목록으로 바뀌며(fixed, grade) ④ 처분 의뢰(hunt)로 대상 수색을 한다.
-     무한 모드에 들어가면 줄기는 끝나고 일반 규칙으로 돌아간다 */
+  /* ── 해금 출생 루트(route) ──
+     출생 데이터의 route 이름으로 D.routes[이름]을 읽는다. 루트가 있는 출생은
+     ① 공방 거리가 없고(shop:false) ② 1막·2막 연례 사건이 루트의 풀로 바뀌고(yearly.act1/act2)
+     ③ 고정 전투와 등급 전투가 루트의 목록으로 바뀌며(fixed, grade) ④ 처분 의뢰(hunt)로 대상 수색을 한다.
+     무한 모드에 들어가면 루트는 끝나고 일반 규칙으로 돌아간다 */
   const routeOf=ch=>(ch&&ch.o&&ch.o.route&&!(ch.flags&&ch.flags.route_off)&&D.routes&&D.routes[ch.o.route])||(ch&&ch.flags&&ch.flags.tbHunt&&!ch.flags.route_off&&D.routes&&D.routes.taboo)||null;
-  /* 금기 사냥팀 차출: 동부 출신 N사가 과장이 되면 한 번 온다. 수락하면 금기사냥꾼 줄기(routes.taboo)에 고정된다 */
+  /* 금기 사냥팀 차출: 동부 출신 N사가 과장이 되면 한 번 온다. 수락하면 금기사냥꾼 루트(routes.taboo)에 고정된다 */
   /* 검은 가면 허무 루트: 외곽에서 한참 뒤 한 번만 나오는 장면(이름이 흩어졌다 돌아온다). 연출만 있고 잃는 것은 없다. 화면은 ui.js가 ev.gl로 따로 그린다 */
   function bmGlitchEvent(G){const ch=G.ch,Z=D.bmVoid;if(!Z||!ch.infinite||!(ch.flags&&ch.flags.bm_void)||ch.flags.bm_glitch||G.year<CFG.bmVoid.glitchYear||ch.distForm)return null;ch.flags.bm_glitch=1;
     return {t:Z.glitch.t,x:Z.glitch.gl.filter(g=>g.x).map(g=>g.x).join('\n'),gl:Z.glitch.gl,c:[{l:Z.glitch.a,h:'잃는 것은 없다',ok:{t:Z.glitch.at,fx:{}}}]}}
@@ -2558,7 +2558,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:O.t,x:O.x,c:[{l:O.yes.l,h:O.yes.h,ok:{t:O.yes.t,fx:{flag:'tbHunt',tbJoin:1}}},{l:O.no.l,h:O.no.h,ok:{t:O.no.t,fx:{flag:'tbNo'}}}]}}
   const routeSt=ch=>ch.rt=ch.rt||{used:{},n:0};
   const routeEnd=()=>CFG.years+CFG.endless.span*CFG.endless.grades.length;
-  const routeShop=ch=>{const R=routeOf(ch);return !R||R.shop!==false||!!(R.shopInf&&ch.infinite)};   // shopInf: 공방 거리가 없는 줄기도 무한 모드(외곽)에서는 가게를 쓴다
+  const routeShop=ch=>{const R=routeOf(ch);return !R||R.shop!==false||!!(R.shopInf&&ch.infinite)};   // shopInf: 공방 거리가 없는 루트도 무한 모드(외곽)에서는 가게를 쓴다
   function routeKitEvent(ch,R,st){
     const H=R.hunt,max=H.kitMax||CFG.route.kitMax,pk=st.kit.picks,nm=id=>(H.kit.find(k=>k.id===id)||{}).n;
     return {t:H.kitT,x:`${H.kitX}\n\n고른 것 ${pk.length}/${max}${pk.length?' · '+pk.map(nm).join(', '):''}`,c:[
@@ -2571,9 +2571,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function routeFight(G,R){
     const y=G.year,fx=(R.fixed||[]).find(x=>x.y===y);
-    if(fx&&!G.ch.beaten.includes(fx.enemy))return {type:'fight',enemy:fx.enemy,enc:{hidden:true,label:fx.label||'줄기의 상대'}};
+    if(fx&&!G.ch.beaten.includes(fx.enemy))return {type:'fight',enemy:fx.enemy,enc:{hidden:true,label:fx.label||'루트의 상대'}};
     const k=y-CFG.years;
-    if(k>0&&k%CFG.endless.span===0&&R.grade){const id=R.grade[gradeAt(y)];if(id&&!G.ch.beaten.includes(id))return {type:'fight',enemy:id,enc:{hidden:true,label:CFG.endless.grades[gradeAt(y)]+' · 줄기의 상대'}}}
+    if(k>0&&k%CFG.endless.span===0&&R.grade){const id=R.grade[gradeAt(y)];if(id&&!G.ch.beaten.includes(id))return {type:'fight',enemy:id,enc:{hidden:true,label:CFG.endless.grades[gradeAt(y)]+' · 루트의 상대'}}}
     return null;
   }
   /* ── 도서관 지정사서(R.guest): 해마다 초대장을 받은 손님이 온다. 손님 수(st.guests)로 도서관 위상(stages)이 오르고, 이기면 손님이 책(카드)이 된다 ── */
@@ -2632,7 +2632,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     guestAdvance(ch,chips);if(ch.infinite&&(ch.year||0)>routeEnd())routeSt(ch).itemDue=CFG.libInf.grade;   // 무한 모드: 손님마다 상위 장비
     chips.push(`손님 ${routeSt(ch).guests}명 · ${gnm?gnm+' · ':''}${D.enemies[id].n}이(가) 책이 되었다`);
     return true}
-  /* ── 도서관 지정사서의 무한 모드: 줄기가 끝난 뒤에도 손님이 찾아온다. 일반 무한 적 수준의 손님을 이기면 책 속의 물건(상위 장비) ──
+  /* ── 도서관 지정사서의 무한 모드: 루트가 끝난 뒤에도 손님이 찾아온다. 일반 무한 적 수준의 손님을 이기면 책 속의 물건(상위 장비) ──
      일반 진행은 libInf.every해마다, 가속 구간은 25년 스텝마다 한 명 (조용한 해에는 끼어들지 않는다) */
   function libInfEvent(G){
     const ch=G.ch,R=routeOf(ch),Z=R&&R.guest,LI=CFG.libInf;
@@ -2645,7 +2645,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!due)return null;
     const ids=guestPool(Z,{tiers:LI.tiers},ch);if(!ids.length)return null;
     const id=one(ids),E_=D.enemies[id],dc=LI.talkDc,nm=one(D.namePool&&D.namePool.length?D.namePool:['이름 모를 손님']);   // 이전 손님과 같은 상대지만 이름은 그때마다 새로 붙는다 (같은 부류를 이름만 바꿔 계속 만난다)
-    return {t:`${Z.t} · ${nm}`,x:`${E_.intro||'초대장을 든 손님이 서가 입구에 서 있다.'}\n\n도서관은 줄기가 끝난 뒤에도 문을 닫지 않았다. 이 손님은 상위의 물건을 쥐고 왔다.`,c:[
+    return {t:`${Z.t} · ${nm}`,x:`${E_.intro||'초대장을 든 손님이 서가 입구에 서 있다.'}\n\n도서관은 루트가 끝난 뒤에도 문을 닫지 않았다. 이 손님은 상위의 물건을 쥐고 왔다.`,c:[
       {l:'접대한다',h:'이기면 손님이 책이 되고, 쥐고 온 상위 장비를 얻는다 · 지면 사서도 책이 된다',ok:{t:'손님을 서가 안쪽으로 안내했다.',fx:{combat:id,routeGuest:id,libName:nm}}},
       {l:'먼저 이야기를 나눈다',h:'판정 · 성공하면 손님이 약해진다 · 실패하면 격앙해 더 강해진다 · 어느 쪽이든 접대로 이어진다',check:{s:null,dc},ok:{t:'이야기 끝에 손님이 스스로 약점을 흘렸다. 접대는 피할 수 없다.',fx:{combat:id,routeGuest:id,routeGuestTalk:'good',libName:nm}},fail:{t:'대화가 어긋났다. 손님이 칼을 쥐었다. 접대는 피할 수 없다.',fx:{combat:id,routeGuest:id,routeGuestTalk:'bad',libName:nm}}},
       {l:'돌려보낸다',h:'장비를 얻지 못한다 · 정신력 +1',ok:{t:'초대장을 돌려주고 문을 닫았다.',fx:{mindUp:1}}}]}}
@@ -2658,7 +2658,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {t:T.t,x:T.x+(kit.length?`\n\n준비한 것: ${kit.join(' · ')}`:''),c:[{l:T.l,h:T.h,ok:{t:T.ok,fx:{combat:T.enemy}}}]};
     }
     /* 전용 임무: 처분 대상 수색 중이 아닐 때, 연차(from)·처분 횟수(hunts)·앞 임무(after, 간격 gap년)·기록(flag)이 맞으면 나온다.
-       arc가 같은 임무끼리는 한 줄기로 이어진다: 줄기가 열려 있는 동안(end 임무가 끝날 때까지)은 다른 줄기의 임무도 처분 의뢰도 나오지 않는다.
+       arc가 같은 임무끼리는 한 줄기로 이어진다: 루트가 열려 있는 동안(end 임무가 끝날 때까지)은 다른 루트의 임무도 처분 의뢰도 나오지 않는다.
        문구의 {c}는 협력한 후보, {r}은 맞서는 후보, {foe}는 싸울 후보의 적 id로 바뀐다 */
     if(!st.hunt&&!st.kit){const md=st.mdone=st.mdone||[],fl_=ch.flags||{},last=st.mAt||0;
       const M=(R.missions||[]).find(m=>!md.includes(m.id)&&y>=(m.from||0)&&st.n>=(m.hunts||0)&&(!m.after||([].concat(m.after).some(a_=>md.includes(a_))&&y>=last+(m.gap||2)))&&(!m.flag||[].concat(m.flag).some(f=>fl_[f]))&&(!m.not||![].concat(m.not).some(f=>fl_[f]))&&(!m.bond||(ch.bond&&['met','married'].includes(ch.bond.st)))&&(!m.friend||(ch.bond&&ch.bond.st==='friend'))&&(!m.noAff||!ch.aff)&&(!m.beat||(ch.beaten||[]).includes(m.beat))&&(!m.cond||(m.cond==='family'?!!(ch.bond&&((ch.bond.st==='married'&&(ch.bond.kids||[]).some(x=>!x.dead&&!x.pend))||(ch.bond.st==='met'&&ch.bond.companion))):true))&&(!st.arc||m.arc===st.arc));
@@ -2667,7 +2667,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const ev_=JSON.parse(JSON.stringify(M.ev).replace(/\{c\}/g,cn).replace(/\{r\}/g,rn).replace(/\{foe\}/g,fid));
         for(const [fk,tx] of Object.entries(M.xAdd||{}))if(fl_[fk])ev_.x+='\n\n'+tx;
         return ev_}}
-    /* 처분(집행) 의뢰 선택이 매년 나오는 줄기도 인연 만남은 그보다 먼저 한 번 온다 */
+    /* 처분(집행) 의뢰 선택이 매년 나오는 루트도 인연 만남은 그보다 먼저 한 번 온다 */
     if(H&&!R.noBondMeet&&!ch.bond&&!st.hunt&&!st.kit&&!st.arc&&y>=BD.from&&bondRouteOf(ch)&&(y>=BD.by||d(100)<=BD.meetChance)){const bm=bondMeetEvent(ch);if(bm)return bm}
     if(H&&!st.hunt&&!st.kit&&!st.arc&&st.n<H.targets.length){const bv0=bondEvent(G);if(bv0)return bv0}
     if(H&&!st.hunt&&!st.kit&&!st.arc&&st.n<H.targets.length){
@@ -2675,7 +2675,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {t:C.t,x:C.x,c:[{l:C.supply.l,h:C.supply.h,ok:{t:C.supply.t,fx:C.supply.fx||{}}},{l:C.hunt.l,h:C.hunt.h,ok:{t:C.hunt.t,fx:{routeHunt:'start'}}}]};
     }
     {const bv=bondEvent(G);if(bv)return bv}
-    if(!R.noBondMeet&&!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&(y>=BD.by||d(100)<=BD.meetChance)){const bm=bondMeetEvent(ch);if(bm)return bm}   // 줄기의 해에는 일상 사건이 없으므로 인연 만남도 여기서
+    if(!R.noBondMeet&&!ch.bond&&y>=BD.from&&bondRouteOf(ch)&&(y>=BD.by||d(100)<=BD.meetChance)){const bm=bondMeetEvent(ch);if(bm)return bm}   // 루트의 해에는 일상 사건이 없으므로 인연 만남도 여기서
     if(R.guest&&!ch.distForm){const gv=guestEvent(G,R);if(gv)return gv}
     const pool=(R.yearly&&R.yearly[A])||[];
     if(pool.length){const all=pool.map((_,i)=>i),u=st.used[A]=st.used[A]||[];let left=all.filter(i=>!u.includes(i));if(!left.length){st.used[A]=[];left=all}const i=one(left);st.used[A].push(i);return pool[i]}
@@ -3000,7 +3000,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       f=k_%X_.span?null:'table:late';
     }else
     if(k_>0)f=k_%X_.span?null:gradeAt(G.year)===X_.grades.length-1?X_.finalFirst:gradeAt(G.year)===X_.grades.indexOf('도시의 별')&&!(G.ch.minis||[]).includes(X_.star)?X_.star:'table:late';
-    {const R_=routeOf(G.ch);if(R_&&(R_.noFight!==false||(R_.noFight2&&G.year>CFG.years))&&!(G.infinite&&G.year>baseEnd))f=null}   // 줄기가 있는 출생은 줄기의 상대만 만난다
+    {const R_=routeOf(G.ch);if(R_&&(R_.noFight!==false||(R_.noFight2&&G.year>CFG.years))&&!(G.infinite&&G.year>baseEnd))f=null}   // 루트가 있는 출생은 루트의 상대만 만난다
     /* R사 루트처럼 마지막 등급 전투 전에 이미 바랄을 쓰러뜨렸다면 같은 상대를 다시 세우지 않는다: 제나가 남았으면 제나가 나서고, 둘 다 쓰러뜨렸다면 평소 해로 넘어간다 */
     if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1&&G.ch.beaten.includes(X_.finalFirst))f=G.ch.beaten.includes(X_.finalNext)?null:X_.finalNext;
     if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1)return {type:'fight',enemy:f,enc:{label:X_.grades[gradeAt(G.year)]+' · 마지막 등급 전투'}};
@@ -3026,7 +3026,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       for(const h of D.hiddenBosses||[]){
         if(h.infOnly&&!G.infinite)continue;
-        if(h.id==='black'&&G.ch.o&&G.ch.o.key==='blackmask'&&!G.infinite)continue;   // 검은 가면 출신의 검은 침묵은 전용 줄기(bm_black)에서만 만난다 — 일반 히든 보스로 한 번 더 만나면 합체 보상이 중복된다
+        if(h.id==='black'&&G.ch.o&&G.ch.o.key==='blackmask'&&!G.infinite)continue;   // 검은 가면 출신의 검은 침묵은 전용 루트(bm_black)에서만 만난다 — 일반 히든 보스로 한 번 더 만나면 합체 보상이 중복된다
         if(h.afterKey&&G.year<(G.ch[h.afterKey]||0))continue;
         if(G.year<(h.from||1)||G.ch.beaten.includes(h.id)||(G.met||[]).includes(h.id)||!meets(G.ch,h.req))continue;
         /* chanceBonus: 조건이 맞으면 확률 가산 (예: 검지 소속은 대행자 +30%) */
@@ -3440,7 +3440,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!ch.beaten.includes(C.id)){ch.beaten.push(C.id);jr(ch,'boss',{n:foe.n,id:C.id})}chips.push(T.hiddenWin+' · '+foe.n);
       if(C.id==='kasetti'){ch.titles=ch.titles||[];if(!ch.titles.includes('혈귀를 잠재운 자')){ch.titles.push('혈귀를 잠재운 자');(ch.titleLog=ch.titleLog||[]).push('혈귀를 잠재운 자');chips.push('칭호 · 혈귀를 잠재운 자')}}
       if(C.id==='hongru'&&ch.hw&&ch.hw.accept&&!ch.hw.maker){ch.hw.maker=1;ch.hw.done=1;chips.push('홍루를 쓰러뜨렸다 · 선황충을 품은 가주 곁의 필두로 남는다')}
-      /* 줄기가 이미 연전의 다음 상대를 임무로 갖고 있으면(도서관의 지정사서: 응시자 → 조율) 연전을 또 걸지 않는다 — 같은 상대와 두 번 싸우던 문제 */
+      /* 루트가 이미 연전의 다음 상대를 임무로 갖고 있으면(도서관의 지정사서: 응시자 → 조율) 연전을 또 걸지 않는다 — 같은 상대와 두 번 싸우던 문제 */
       const routeOwnsChain=foe.chain&&(()=>{const R_=routeOf(ch);return !!(R_&&(R_.missions||[]).some(m=>JSON.stringify(m.ev||{}).includes('"combat":"'+foe.chain+'"')))})();
       if(foe.chain&&!routeOwnsChain){ch.flags.zenaPend=1;{const hp_=C.id===CFG.endless.finalFirst&&CFG.endless.chainHealPct?Math.ceil(ch.stats.maxHp*CFG.endless.chainHealPct):0,g_=hp_>ch.hp?Math.min(hp_,ch.stats.maxHp)-ch.hp:0;if(g_>0)ch.hp+=g_;chips.push('연전 · 쉴 틈 없이 다음 상대가 나선다'+(g_>0?` · 몸을 일으킨다 · HP +${g_}`:''))}}else if(C.id===CFG.endless.finalNext)ch.flags.zenaPend=0;
       if(ch.corp&&ch.corp.trial===C.id)ch.corp.trial=null;
