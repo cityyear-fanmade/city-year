@@ -182,7 +182,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(o.gear){equip(ch,Object.assign({grade:5},o.gear));if(o.rb||o.hw){const W=CFG.routeWeapon[o.rb?'rb':'hw'],g=W.lv[0];ch.gear.weapon.n=g.n;ch.gear.weapon.e=g.e;if(o.rb)routeWeaponUp(ch,'rb',0)}}
     /* E.G.O 적성자(20): 해결사 9급, 무작위 E.G.O 무기, 그 이름으로 개화한 E.G.O (종류 무작위) */
     if(o.egoWeapons){const g=o.egoWeapons[d(o.egoWeapons.length)-1];equip(ch,egoItem(g.id,0));ch.egoUses=0;egoDeck(ch,g.id,0,true);ch.stash=(ch.stash||[]).filter(x=>x.id!=='birth');
-      ch.egoGear=(ch.egoGear||0)+1;setEgo(ch,d(2)===1?'atk':'def',g.n);ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);if(o.startRank)ch.rank=o.startRank;ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
+      ch.egoGear=(ch.egoGear||0)+1;{const apt=d(2)===1?'atk':'def',E_=CFG.mind.ego[apt],hf=CFG.mind.aptHalf;ch.egoApt=apt;   /* 적성자는 개화한 채 태어나지 않는다: E.G.O 무기를 쥔 채 개화 효과의 절반만 타고나고, 정신력이 떨어지면 개화·뒤틀림 판정을 받는다(개화는 나중에 하나 더) */
+        if(E_.hit)s.atk+=Math.round(E_.hit*hf);if(E_.hp){const v=Math.round(E_.hp*hf);s.maxHp+=v;ch.hp+=v}if(E_.eva)s.eva+=Math.round(E_.eva*hf)}ch.mind=Math.min(CFG.mind.cap,CFG.mind.max+(s.mindMax||0));license(ch);if(o.startRank)ch.rank=o.startRank;ch.colorBonus=o.colorBonus||0;ch.colorFx=o.colorFx||null}
     ch.spd0=ch.stats.spd;if(ch.ego)ch.egoBorn=true;ch.packKind=ch.deckLocked||ch.cardMoney?'special':'origin';ch.packName=ch.packName||(ch.o&&ch.o.packName)||(ch.packKind==='special'?(ch.o&&ch.o.n?ch.o.n+' 전용 카드팩':'전용 카드팩'):(ch.o&&ch.o.n?ch.o.n+' 출신 카드팩':'출신 카드팩'));ch.birthPack=ch.packName;ch.packs=newBasicPacks();
     return ch;
   }
@@ -1500,7 +1501,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
      이름은 전투가 끝난 뒤 정한다 (ch.namePend) */
   let activeC=null;
   /* 목소리 선택(듣기 좋다/싫다)에 따른 개화 확률 보정: 좋다 −20%p, 싫다 +20%p */
-  const biasOf=ch=>ch.voiceBias==='good'?-CFG.mind.voiceBias:ch.voiceBias==='bad'?CFG.mind.voiceBias:0;
+  const biasOf=ch=>(ch.voiceBias==='good'?-CFG.mind.voiceBias:ch.voiceBias==='bad'?CFG.mind.voiceBias:0)+(ch.egoApt?CFG.mind.aptBonus:0);   /* E.G.O 적성자는 개화 확률 +aptBonus%p */
   const clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
   function mindBreak(C){
     const ch=C.ch,P=C.P,s=ch.stats;
