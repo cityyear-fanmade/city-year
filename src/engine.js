@@ -1283,7 +1283,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.sisPre){const P=ch.sisP=ch.sisP||{step:1};P.step=fx.sisPre;if(fx.sisSubj)P.subj=fx.sisSubj;if(fx.sisPre===1)chips.push('N사의 금기에 흥미를 가졌다')}
     if(fx.sisEnter){const S_=D.sisyphus,ks=Object.keys(S_.subj),k=fx.sisEnter==='rand'?one(ks):fx.sisEnter;ch.sisP=null;if(ch.licensed){ch.licensed=false;ch.title=null;chips.push('해결사 자격 반납 · 시지프형을 선고받으면 해결사 일은 할 수 없다')}ch.sis={subj:k,turn:1,grade:0,rewound:0,lean:0,in:ch.year||0,pts:0,st:'day1',mat:{},dyes:[],cloth:[],fac:null};chips.push(S_.subj[k].v||S_.subj[k].t);chips.push('시지프형 선고 · 시지프 백화점에 갇힌다 · 고객 등급 토파즈')}
     if(fx.sisAssim){const Z=D.sisyphus.assim[fx.sisAssim];ch.sis.assimDone=1;if(Z.pack&&!ch.packOffer){ch.packOffer={n:Z.pack.n,cards:Z.pack.cards.slice(),passive:null,e:Z.pack.e,sis:fx.sisAssim};chips.push(`${Z.pack.n} · 덱을 바꿀지 고른다`)}else if(fx.sisAssim==='kaki')chips.push('유행 · 전투마다 유행하는 키워드가 바뀐다')}
-    if(fx.sisGo||fx.sisHunt||fx.sisCraft||fx.sisSell||fx.sisTrade||fx.sisRest)sisFx(ch,fx,chips);
+    if(fx.sisGo||fx.sisHunt||fx.sisCraft||fx.sisSell||fx.sisTrade||fx.sisRest||fx.sisUpgrade||fx.sisBuy)sisFx(ch,fx,chips);
     if(fx.tbJoin){const Bd=CFG.nWing.tbBody;addStats(ch.stats,Bd);ch.hp+=Bd.maxHp;chips.push(`N사 육체 시술 · 최대 HP +${Bd.maxHp} · 공격 +${Bd.atk} · 속도 +${Bd.spd} (의체가 아니라 몸 자체를 고친 것이다)`);if(ch.licensed&&ch.rank>CFG.nWing.tbRank){while(ch.rank>CFG.nWing.tbRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급으로 시작한다`)}}
     if(fx.bmRank&&ch.licensed){while(ch.rank>fx.bmRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급이 되었다`)}   // 검은 가면: 전쟁의 실적으로 급수가 오른다
     if(fx.bmLose&&ch.bond&&ch.bond.st!=='lost'&&ch.bond.st!=='declined'&&ch.bond.st!=='left'){const b_=ch.bond;if(b_.st==='married')bondDeath(ch,chips);else{b_.st='lost';ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`곁에 있던 사람을 잃었다 · 최대 정신력 −${BD.lossMind} (영구)`)}b_.dieBy='risk';b_.dieYear=ch.year||0}
@@ -2580,6 +2580,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisMat(ch,k,n){const m=ch.sis.mat;m[k]=(m[k]||0)+n}
   function sisColorsOpen(ch){return D.sisyphus.tailor.colors.filter(c=>c.grade<=sisGrade(ch))}
   function sisGradeUp(ch,chips){const G_=D.sisyphus.grades;let g=0;G_.forEach((x,i)=>{if(ch.sis.pts>=x.at)g=i});if(g>sisGrade(ch)){ch.sis.grade=g;chips.push(`고객 등급 · ${G_[g].n} · 열린 구역이 늘었다`);
+    {const bd=G_[g].body;if(bd){addStats(ch.stats,bd);if(bd.maxHp)ch.hp+=bd.maxHp;chips.push('육체 강화 · '+Object.entries(bd).map(([k,v])=>(k==='maxHp'?'최대 HP':STAT[k]||k)+' +'+v).join(' · '))}}
     if(g===G_.length-1&&ch.sis.assimDone&&ch.sis.fac!=='kaki'&&!ch.sis.extraGiven){ch.sis.extraGiven=1;for(const id of D.sisyphus.assim[ch.sis.fac].pack.extra)putCard(ch,id,chips,'소속 카드')}}}
   function sisFacCheck(ch,turn,chips){const S_=CFG.sis;if(ch.sis.fac||turn<S_.facTurn)return;const l=ch.sis.lean;ch.sis.fac=(ch.sis.made||0)<S_.facMin?'kaki':l>=S_.facLean?'rouge':l<=-S_.facLean?'noir':'kaki';chips.push('백화점에서 어느 쪽에 가까운지가 정해졌다')}
   const sisZones=ch=>D.sisyphus.zones.filter(z=>z.grade<=sisGrade(ch));
@@ -2606,12 +2607,36 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {ok:true,sh,pt,co,tr,need,price,lean:Math.sign(sum)};
   }
   function sisCraft(G,spec){
-    const ch=G.ch;if(!sisOn(ch))return {ok:false,why:'백화점 안에서만 할 수 있다'};const I=sisCraftInfo(ch,spec);if(!I.ok)return I;
+    const ch=G.ch;if(!sisOn(ch))return {ok:false,why:'백화점 안에서만 할 수 있다'};if(ch.sis.crafted)return {ok:false,why:'오늘은 이미 한 벌을 지었다'};const I=sisCraftInfo(ch,spec);if(!I.ok)return I;
     ch.sis.mat[I.sh.base]-=I.need;if(I.co.id!=='gray')ch.sis.dyes.splice(ch.sis.dyes.indexOf(I.co.id),1);ch.sis.mat.trim-=I.tr.length;
-    ch.sis.cloth.push({shape:I.sh.id,pattern:I.pt.id,color:I.co.id,trims:I.tr.map(x=>x.id),price:I.price,lean:I.lean});ch.sis.made=(ch.sis.made||0)+1;
+    ch.sis.cloth.push({shape:I.sh.id,pattern:I.pt.id,color:I.co.id,trims:I.tr.map(x=>x.id),price:I.price,lean:I.lean,q:0});ch.sis.made=(ch.sis.made||0)+1;ch.sis.crafted=1;
     ch.sis.lean=Math.max(-CFG.sis.leanMax,Math.min(CFG.sis.leanMax,ch.sis.lean+I.lean));
     return {ok:true,name:`${I.co.n} ${I.pt.n} ${I.sh.n}`,price:I.price,lean:I.lean};
   }
+  /* 옷 손질(등급 올리기): 기본 완성 → 고급 완성 → 걸작 → 런웨이. 기본 확률에 넣은 재료만큼 오르고, 실패하면 그 단계에서 옷은 끝난다 */
+  function sisUpChance(mats){const Q=D.sisyphus.quality;return Math.min(Q.max,Q.base+mats.reduce((a,k)=>a+(Q.boost[k]||0),0))}
+  function sisUpgrade(ch,i,mats){
+    const Q=D.sisyphus.quality,c=ch.sis.cloth[i],out=[];
+    if(!c)return {chips:['손질할 옷이 없다']};if(c.q>=3)return {chips:['이미 런웨이에 오를 만한 옷이다']};if(c.sealed)return {chips:['이 옷은 더 손질할 수 없다']};
+    mats=mats.slice(0,Q.maxMats);const need={};for(const k of mats)need[k]=(need[k]||0)+1;
+    for(const [k,n] of Object.entries(need)){const have=k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0);if(have<n)return {chips:[`${D.sisyphus.mats[k].n}이 모자라다`]}}
+    for(const [k,n] of Object.entries(need)){if(k==='dye')for(let q=0;q<n;q++)ch.sis.dyes.shift();else ch.sis.mat[k]-=n}
+    const ch_=sisUpChance(mats),nm=`${D.sisyphus.tailor.colors.find(x=>x.id===c.color).n} ${D.sisyphus.tailor.patterns.find(x=>x.id===c.pattern).n} ${D.sisyphus.tailor.shapes.find(x=>x.id===c.shape).n}`;
+    if(d(100)<=ch_){c.q++;out.push(`손질 성공 · ${nm} · ${Q.names[c.q]} (확률 ${ch_}%)`);
+      if(c.q>=3){ch.titles=ch.titles||[];if(!ch.titles.includes(Q.title)){ch.titles.push(Q.title);(ch.titleLog=ch.titleLog||[]).push(Q.title);out.push('칭호 · '+Q.title)}out.push('런웨이에 오를 만한 옷이 완성되었다')}}
+    else{c.sealed=true;out.push(`손질 실패 · ${nm} · ${Q.names[c.q]}에서 끝났다 (확률 ${ch_}%)`)}
+    return {chips:out};
+  }
+  /* 백화점 매장: 고객 등급이 오를수록 더 좋은 장비(무기·방어구·장신구)를 안으로 살 수 있다. 날마다 슬롯별로 두 가지가 진열된다 */
+  function sisShop(ch){
+    const sv=ch.sis;if(sv.shopTurn!==sv.turn){sv.shopTurn=sv.turn;const g=sisGrade(ch)+1,list=[];
+      for(const slot of ['weapon','armor','aug']){const pool=Object.entries(D.items).filter(([id,it])=>it.slot===slot&&it.grade<=g&&!it.hw&&!it.lake&&!it.tool&&!it.perm&&it.price&&!(ch.gear[slot]&&ch.gear[slot].id===id));
+        const picks=[];while(picks.length<2&&pool.length)picks.push(pool.splice(d(pool.length)-1,1)[0][0]);list.push(...picks)}
+      sv.shop=list}
+    return sv.shop||[];
+  }
+  function sisBuy(ch,id,chips){const it=D.items[id];if(!it||!ch.sis.shop||!ch.sis.shop.includes(id))return;if(ch.money<it.price){chips.push('안이 모자라다');return}
+    ch.money-=it.price;ch.sis.shop=ch.sis.shop.filter(x=>x!==id);offerGear(ch,Object.assign({id,grade:it.grade},it));chips.push(`구매 · ${it.n} (${it.e}) · −${sisAn(it.price)} · 장착할지 고른다`)}
   function sisSell(ch,mode,chips){
     const S_=D.sisyphus,M=S_.sell[mode];if(!M)return;
     if(!ch.sis.cloth.length||mode==='empty'){chips.push(S_.sell.empty.x);return}
@@ -2620,9 +2645,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const idx=ch.sis.cloth.map((c,i)=>i).sort((a,b)=>{const A=ch.sis.cloth[a],B=ch.sis.cloth[b],ma=(cu.likes===0||A.lean===cu.likes)?1:0,mb=(cu.likes===0||B.lean===cu.likes)?1:0;return mb-ma||B.price-A.price})[0];
     const c=ch.sis.cloth[idx],match=cu.likes===0||c.lean===cu.likes;
     if(d(100)<=Math.round(M.fail*100)){chips.push(`${cu.n}가 고개를 저었다 · 팔지 못했다`);return}
-    const v=Math.round(c.price*M.mul*(match?1.2:cu.likes===0?1:0.9)),pts=M.pts+(match?1:0);
+    const Q=D.sisyphus.quality,q=c.q||0,v=Math.round(c.price*Q.mul[q]*M.mul*(match?1.2:cu.likes===0?1:0.9)),pts=M.pts+(match?1:0)+Q.pts[q];
     ch.sis.cloth.splice(idx,1);ch.money+=v;ch.sis.pts+=pts;
-    chips.push(`판매 · ${cu.n} · +${sisAn(v)} · 고객 점수 +${pts}`);sisGradeUp(ch,chips);
+    chips.push(`판매 · ${cu.n} · ${D.sisyphus.quality.names[q]} · +${sisAn(v)} · 고객 점수 +${pts}`);sisGradeUp(ch,chips);
   }
   function sisTradeDo(ch,v,i,color,chips){
     const S_=D.sisyphus,V=S_.trade.vendors.find(x=>x.id===v),O=V&&V.offers[i];if(!O)return;
@@ -2637,8 +2662,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const sv=ch.sis;if(!sv)return;
     if(fx.sisHunt){sv.hunt=fx.sisHunt;sv.st='hunt'}
     if(fx.sisRest){const h=Math.round(ch.stats.maxHp*0.3);ch.hp=Math.min(ch.stats.maxHp,ch.hp+h);chips.push(`쉬었다 · 체력 +${h}`);sv.st='day2'}
-    if(fx.sisCraft){const r=sisCraft({ch},fx.sisCraft);chips.push(r.ok?`제작 · ${r.name} · 값 ${sisAn(r.price)}`:`만들지 못했다 · ${r.why}`);sv.st='day2'}
+    if(fx.sisCraft){const r=sisCraft({ch},fx.sisCraft);chips.push(r.ok?`제작 · ${r.name} · ${D.sisyphus.quality.names[0]} · 값 ${sisAn(r.price)}`:`만들지 못했다 · ${r.why}`);if(!r.ok)sv.st='day2'}
+    if(fx.sisUpgrade){const r=sisUpgrade(ch,fx.sisUpgrade.i,fx.sisUpgrade.mats||[]);chips.push(...r.chips)}
     if(fx.sisSell){sisSell(ch,fx.sisSell,chips);sv.st='done'}
+    if(fx.sisBuy)sisBuy(ch,fx.sisBuy,chips);
     if(fx.sisTrade)sisTradeDo(ch,fx.sisTrade.v,fx.sisTrade.i,fx.sisTrade.color,chips);
     if(fx.sisGo){if(fx.sisGo==='back'){sv.st=sv.back||'day1'}else if(fx.sisGo==='trade'){sv.back=sv.st;sv.st='trade'}else sv.st=fx.sisGo}
   }
@@ -2670,19 +2697,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='hunt'){
       const z=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],bosses=z.foes.filter(f=>D.enemies[f].tier==='boss'),norm=z.foes.filter(f=>D.enemies[f].tier!=='boss');
       const id=bosses.length&&(!norm.length||d(100)<=CFG.sis.bossChance)?one(bosses):one(norm.length?norm:z.foes);
-      sv.pend=z.id;sv.st='craft';
+      sv.pend=z.id;sv.st='craft';sv.crafted=0;sv.lootDone=false;
       return {type:'fight',enemy:id,enc:{hidden:true,label:`${z.n} · ${D.enemies[id].n}`}};
     }
     if(sv.st==='craft'){
       const z=D.sisyphus.zones.find(x=>x.id===sv.pend),chips=[];
       if(z&&!sv.lootDone){sisLoot(ch,z,chips);sv.lootDone=true;sv.lootNote=chips.join('\n')}
-      const opts=D.sisyphus.tailor.shapes.filter(s=>sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok);
-      return {type:'event',ev:{t:A.craft.t,sisBench:true,x:`${sv.lootNote||''}\n\n${A.craft.x}\n\n${sisInv(ch)}`,c:[
+      const opts=sv.crafted?[]:D.sisyphus.tailor.shapes.filter(s=>sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok);
+      return {type:'event',ev:{t:A.craft.t,sisBench:true,sbCrafted:!!sv.crafted,x:`${sv.lootNote||''}\n\n${A.craft.x}\n\n${sisInv(ch)}`,c:[
         ...opts.map(s=>({l:`${s.n}을 짓는다 (민무늬·회색)`,h:`값 약 ${sisAn(s.price)}`,ok:{t:'가위가 천을 따라 움직인다.',fx:{sisCraft:{shape:s.id,pattern:'plain',color:'gray'}}}})),
-        {l:A.craft.skip,ok:{t:'작업대에 천을 개켜 둔다.',fx:{sisGo:'day2'}}}]}};
+        ...ch.sis.cloth.map((c,i)=>({c,i})).filter(x=>(x.c.q||0)<3&&!x.c.sealed).map(({c,i})=>({l:`손질 · ${D.sisyphus.tailor.colors.find(x=>x.id===c.color).n} ${D.sisyphus.tailor.shapes.find(x=>x.id===c.shape).n} (${D.sisyphus.quality.names[c.q||0]})`,h:`다음 단계 확률 ${sisUpChance([])}% · 재료를 더 넣으면 오른다`,ok:{t:'바늘이 천을 다시 한 번 훑는다.',fx:{sisUpgrade:{i,mats:[]}}}})),
+        {l:sv.crafted?'손질을 마친다':A.craft.skip,ok:{t:'작업대에 천을 개켜 둔다.',fx:{sisGo:'day2'}}}]}};
     }
     if(sv.st==='day2'){
-      sv.lootDone=false;
+      sv.lootDone=false;sv.crafted=0;
       const has=ch.sis.cloth.length>0;
       return {type:'event',ev:{t:A.day2.t,x:`${A.day2.x}\n\n${sisInv(ch)}`,c:[
         ...(has?[{l:S_.sell.push.n,h:'값은 높지만 거절당할 수 있다',ok:{t:S_.sell.push.x,fx:{sisSell:'push'}}},{l:S_.sell.trust.n,h:'값은 그대로, 믿음을 쌓는다',ok:{t:S_.sell.trust.x,fx:{sisSell:'trust'}}}]:[{l:S_.sell.empty.n,ok:{t:S_.sell.empty.x,fx:{sisSell:'empty'}}}]),
@@ -2695,6 +2723,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const give=Object.entries(o.give).map(([k,n])=>k==='an'?sisAn(n):`${k==='dye'?'염료':S_.mats[k].n} ${n}`).join(' · ');
         if(Object.keys(o.get).includes('dye')){for(const col of sisColorsOpen(ch).filter(x=>x.id!=='gold'&&x.id!=='gray'))c.push({l:`${v.n} · ${col.n} 염료`,h:`${give} → ${o.t}`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color:col.id}}}})}
         else c.push({l:`${v.n} · ${o.t}`,h:give,ok:{t:v.x,fx:{sisTrade:{v:v.id,i}}}})});
+      for(const id of sisShop(ch)){const it=D.items[id];if(ch.money>=it.price)c.push({l:`백화점 매장 · ${it.n}`,h:`${it.e} · ${sisAn(it.price)}`,ok:{t:'가격표를 확인하고 값을 치른다.',fx:{sisBuy:id}}})}
       c.push({l:S_.act.trade.leave,ok:{t:'값 부르는 소리가 멀어진다.',fx:{sisGo:'back'}}});
       return {type:'event',ev:{t:S_.act.trade.t,x:`${S_.act.trade.x}\n\n${sisInv(ch)}`,c}};
     }
@@ -4636,6 +4665,6 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
-    setPity,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setPity,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     canFound,pvProfile,staffList,staffLv,staffEventPick,staffPromoEvent,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
