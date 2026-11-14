@@ -4091,6 +4091,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.triDmg){dmg+=A.triDmg;note+=` 건+${A.triDmg}`}
       if(A.hungerUse>0){dmg+=A.hungerUse;note+=` 굶주림+${A.hungerUse}`;A.hungerUse=0}
       if(c.bleedDmg&&B.bleed>0){const wm=(B.wspear||0)>0?Math.pow(B.wspearMul||1.2,B.wspear):1,x=Math.round(B.bleed*c.bleedDmg*wm);dmg+=x;note+=` 출혈 ${B.bleed}×${c.bleedDmg}${wm>1?`×${Math.round(wm*100)/100}(${D.keywords.wspear.n})`:''}+${x}`}
+      if(c.nailDmg&&(B.nail||0)>=c.nailDmg.at){dmg+=c.nailDmg.dmg;note+=` 못 ${c.nailDmg.at}+ 피해+${c.nailDmg.dmg}`}
       if(c.sinkDmg&&(B.sink||0)>=CFG.sink.per){const n_=Math.floor(B.sink/CFG.sink.per),x=n_*c.sinkDmg;dmg+=x;note+=` 침잠 ${n_}단계+${x}`}
       if(C.duel){dmg+=C.duel;note+=` 결투+${C.duel}`}
       if(A.augHunt&&B.aug){dmg+=A.augHunt;note+=` 의체 심판+${A.augHunt}`}
@@ -4111,7 +4112,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.reuse&&A.mat>0){let x=0;for(let i=0;i<A.mat;i++)x+=d(c.die||6);dmg+=x;note+=` 폐장 재사용 ${A.mat}회+${x}`;A.mat=0}
       if(A.warp){dmg=Math.max(1,dmg-A.warp);note+=` 왜곡−${A.warp}`}
       /* 화음: 쌓인 선율을 모두 소모해 추가 피해 (선율 1마다 per, 3·6 이상이면 가산, 9면 배수) */
-      if(c.chord&&(A.melody||0)>0){const n=A.melody,Z=CFG.melody;A.melody=0;C.chordN=(C.chordN||0)+1;C.chordSum=(C.chordSum||0)+n;let x=n*Z.per+(n>=3?Z.t3:0)+(n>=6?Z.t6:0);dmg+=x;note+=` 화음(선율 ${n})+${x}`;if(n>=Z.cap){dmg=Math.round(dmg*Z.t9);note+=` ×${Z.t9}`}}
+      if(c.chord&&(A.melody||0)>0){const n=A.melody,Z=CFG.melody;A.melody=c.chordKeep?Math.floor(n/2):0;C.chordN=(C.chordN||0)+1;C.chordSum=(C.chordSum||0)+n;let x=n*Z.per+(n>=3?Z.t3:0)+(n>=6?Z.t6:0);dmg+=x;note+=` 화음(선율 ${n})+${x}`;if(n>=Z.cap){dmg=Math.round(dmg*Z.t9);note+=` ×${Z.t9}`}}
       {const g2=staggerStage(B);if(g2&&g2.take){dmg+=g2.take;note+=` 흐트러짐 취약+${g2.take}`}}
       if(A.tbMarks>=CFG.taboo.markAt&&(B.nail||0)>=CFG.taboo.nailAt){dmg+=A.tbMarks;C.tbMkN=(C.tbMkN||0)+1;note+=` 금기 표식+${A.tbMarks}`}
       {const g_=staggerStage(A);if(g_&&g_.dmg){dmg=Math.max(1,dmg-g_.dmg);note+=` 흐트러짐−${g_.dmg}`}}
@@ -4206,7 +4207,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       if(A.herm&&B.hp>0&&(A.isP?(!A.herm.wait&&A.starId&&c===D.cards[A.starId]):true))hermHit(A,B,C,L,push);   // 지령(☆) 카드로 적중한 만큼 타수가 쌓인다
       if(A.nailHit&&B.hp>0){const n=B.aug?Math.max(CFG.nail.augHit,A.nailHit):A.nailHit;B.nail=Math.min(CFG.nail.cap,(B.nail||0)+n);L('kw',`  ${B.name}에게 못 +${n} (지금 ${B.nail})`);if(A.nailAuto&&B.nail>=(CFG.nail.autoAt||CFG.nail.cap)){const used=B.nail;B.nail=0;L('kw',`  ${A.name} · 운명 · 못 ${used}개가 쌓여 저절로 흐트러짐으로 바뀐다`);addStagger(C,B,Math.round(used*CFG.nail.autoMul),L)}}
       if(A.tbExec&&A.isP&&B.hp>0&&(B.nail||0)>=CFG.taboo.execNail&&C.tbExecR!==C.round){C.tbExecR=C.round;C.tbExecN=(C.tbExecN||0)+1;const x=CFG.taboo.execDmg+(A.tbMarks||0)*CFG.taboo.execPer,h=Math.min(CFG.taboo.execHeal,A.maxHp-A.hp);B.hp=Math.max(1,B.hp-x);A.hp+=h;L('kw',`  ${A.name} · 집행 · ${B.name}에게 확정 일격 ${x}${h>0?` · HP +${h}`:''}`)}
-      if(c.nailBurst&&B.hp>0&&(B.nail||0)>0){const used=B.nail;B.nail=0;L('kw',`  ${B.name} · 못 ${used}개를 흐트러짐으로`);addStagger(C,B,Math.round(used*c.nailBurst.mul)+(c.nailBurst.add||0),L)}
+      if(c.nailBurst&&B.hp>0&&(B.nail||0)>0){const used=c.nailBurst.keep?Math.ceil(B.nail/2):B.nail;B.nail-=used;L('kw',`  ${B.name} · 못 ${used}개를 흐트러짐으로`);addStagger(C,B,Math.round(used*c.nailBurst.mul)+(c.nailBurst.add||0),L)}
       if(c.nextSwift){A.swiftNext=true;L('kw',`  ${A.name} · 다음 라운드 신속`)}
       if(c.handPlus){A.handPlusNext=Math.max(A.handPlusNext||0,c.handPlus);L('kw',`  ${A.name} · 다음 손패 +${c.handPlus}장`)}
       if(A.chargeHit){A.charge=Math.min(A.chargeCap,A.charge+A.chargeHit);L('kw',`  ${A.name} · 충전 +${A.chargeHit} (지금 ${A.charge})`)}
