@@ -17089,5 +17089,6 @@
  "냄새는 가슴 깊은 곳에 앉아 오래 가라앉았다.": "The smell settled deep in your chest and sank for a long while.",
  "주머니에 넣어 간직한다": "Keep it in a pocket",
  "주머니는 비어 있었지만 한동안 따뜻했다.": "The pocket was empty, but it stayed warm for a while.",
- "냄새는 따라오지 않았다. 그래서 더 오래 기억에 남았다.": "The smell did not follow. That is why it stayed in memory longer."
+ "냄새는 따라오지 않았다. 그래서 더 오래 기억에 남았다.": "The smell did not follow. That is why it stayed in memory longer.",
+ "음악 카드를 낼 때 자신에게 쌓는 스택. 최대 {0}스택이고, 라운드가 바뀌어도 줄지 않는다. 화음 카드(화음·불협화음·종지)가 선율을 모두 소모하면서 그 타격의 피해에 선율 1당 +{1}를 더한다. 선율이 3 이상이면 추가로 +{2}, 6 이상이면 추가로 +{3}. 선율이 최대({4})일 때 터뜨리면 그 타격의 피해가 {5}배가 된다.": "A stack you build on yourself by playing music cards. Max {0} stacks, and it does not decay when the round changes. A Chord card (Chord, Dissonance, Cadence) consumes all Melody and adds +{1} damage per Melody to that hit. At 3 or more Melody it adds a further +{2}, and at 6 or more a further +{3}. Releasing it at max Melody ({4}) makes that hit deal {5} times the damage."
 }
