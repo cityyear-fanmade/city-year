@@ -2667,7 +2667,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.sisSell){sisSell(ch,fx.sisSell,chips);sv.st='done'}
     if(fx.sisBuy)sisBuy(ch,fx.sisBuy,chips);
     if(fx.sisTrade)sisTradeDo(ch,fx.sisTrade.v,fx.sisTrade.i,fx.sisTrade.color,chips);
-    if(fx.sisGo){if(fx.sisGo==='back'){sv.st=sv.back||'day1'}else if(fx.sisGo==='trade'){sv.back=sv.st;sv.st='trade'}else sv.st=fx.sisGo}
+    if(fx.sisGo){if(fx.sisGo==='craft'){sv.skipHunt=1;sv.lootDone=true;sv.lootNote='';sv.crafted=0;sv.st='craft'}else if(fx.sisGo==='back'){sv.st=sv.back||'day1'}else if(fx.sisGo==='trade'){sv.back=sv.st;sv.st='trade'}else sv.st=fx.sisGo}
   }
   function sisInv(ch){
     const S_=D.sisyphus,m=ch.sis.mat,p=[];for(const k of Object.keys(S_.mats)){if(S_.mats[k].kind==='heal')continue;if(m[k])p.push(`${S_.mats[k].n} ${m[k]}`)}
@@ -2691,17 +2691,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='day1'){
       return {type:'event',ev:{t:A.day1.t,x:`${A.day1.x}\n\n${sisInv(ch)}`,c:[
         ...sisZones(ch).map(z=>({l:`${z.n}으로 나간다`,h:z.x,ok:{t:'채비를 하고 나선다.',fx:{sisHunt:z.id}}})),
+        ...(ch.sis.cloth.length||Object.values(ch.sis.mat).some(n=>n>0)?[{l:A.day1.bench,h:'옷 재단과 손질 · 사냥은 하지 않는다',ok:{t:'작업대에 불을 켠다.',fx:{sisGo:'craft'}}}]:[]),
         {l:'거래하러 간다',h:'가진 안과 재료를 맞바꾼다',ok:{t:'층마다 값을 부르는 이들이 있다.',fx:{sisGo:'trade'}}},
         {l:A.day1.stay,h:'체력을 조금 채우고 다음 날로 넘어간다',ok:{t:'쉬는 동안에도 어디선가 방송이 흐른다.',fx:{sisRest:1}}}]}};
     }
     if(sv.st==='hunt'){
       const z=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],bosses=z.foes.filter(f=>D.enemies[f].tier==='boss'),norm=z.foes.filter(f=>D.enemies[f].tier!=='boss');
       const id=bosses.length&&(!norm.length||d(100)<=CFG.sis.bossChance)?one(bosses):one(norm.length?norm:z.foes);
-      sv.pend=z.id;sv.st='craft';sv.crafted=0;sv.lootDone=false;
+      sv.pend=z.id;sv.st='craft';sv.crafted=0;sv.lootDone=false;sv.skipHunt=0;
       return {type:'fight',enemy:id,enc:{hidden:true,label:`${z.n} · ${D.enemies[id].n}`}};
     }
     if(sv.st==='craft'){
-      const z=D.sisyphus.zones.find(x=>x.id===sv.pend),chips=[];
+      const z=sv.skipHunt?null:D.sisyphus.zones.find(x=>x.id===sv.pend),chips=[];
       if(z&&!sv.lootDone){sisLoot(ch,z,chips);sv.lootDone=true;sv.lootNote=chips.join('\n')}
       const opts=sv.crafted?[]:D.sisyphus.tailor.shapes.filter(s=>sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok);
       return {type:'event',ev:{t:A.craft.t,sisBench:true,sbCrafted:!!sv.crafted,x:`${sv.lootNote||''}\n\n${A.craft.x}\n\n${sisInv(ch)}`,c:[

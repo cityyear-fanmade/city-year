@@ -1912,32 +1912,37 @@ ${symRec(r)}
       ${sp.pattern==='stitch'?`<path d="M60 56V${hem-4}M38 ${hem-5}H82" stroke="rgba(255,255,255,.55)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" clip-path="url(#sbc)"/>`:''}
       ${tr.map(k=>t[k]||'').join('')}${q?`<g fill="#c9a24a" stroke="#0c0e12" stroke-width=".6">${Array.from({length:q},(_,i)=>`<path transform="translate(${96+i*10} 14)" d="M0 -5 L1.5 -1.5 L5 -1.2 L2.3 1 L3.1 4.5 L0 2.6 L-3.1 4.5 L-2.3 1 L-5 -1.2 L-1.5 -1.5 Z"/>`).join('')}</g>`:''}</svg>`;
   }
+  /* 재단대: 위쪽 탭으로 "옷 재단"(새 옷 짓기)과 "옷 손질"(지은 옷의 등급 올리기)을 오간다 */
   function vSisUp(ev){
-    const ch=G.ch,Q=D.sisyphus.quality,T=D.sisyphus.tailor,cl=ch.sis.cloth.map((c,i)=>({c,i}));if(!cl.length)return '';
-    const up=UI.sbUp=UI.sbUp&&UI.sbUp.ev===ev?UI.sbUp:{ev,i:(cl.find(x=>(x.c.q||0)<3&&!x.c.sealed)||cl[0]).i,mats:[]};
+    const ch=G.ch,Q=D.sisyphus.quality,T=D.sisyphus.tailor,cl=ch.sis.cloth.map((c,i)=>({c,i}));
+    if(!cl.length)return `<div class="panel stack" style="gap:6px"><span class="eyebrow">옷 손질</span><p class="small dim">손질할 옷이 없다. 먼저 옷을 지어야 한다.</p></div>`;
+    const up=UI.sbUp=UI.sbUp&&UI.sbUp.ev===ev?UI.sbUp:{ev,i:(cl.find(x=>(x.c.q||0)<3&&!x.c.sealed)||cl[0]).i,slots:Q.parts.map(()=>null)};
     const sel=ch.sis.cloth[up.i],nm=c=>`${T.colors.find(x=>x.id===c.color).n} ${T.shapes.find(x=>x.id===c.shape).n}`,can=sel&&(sel.q||0)<3&&!sel.sealed;
-    const have=k=>k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0),used=k=>up.mats.filter(x=>x===k).length;
-    const ch_=E.sisUpChance(up.mats);
-    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">손질 · 옷의 등급 올리기</span><p class="small dim">${Q.x}</p>
-      <div class="seg kinds">${cl.map(({c,i})=>`<button class="${up.i===i?'on':''}" data-a="sbup" data-i="pick:${i}">${esc(nm(c))}<br><small>${Q.names[c.q||0]}${c.sealed?' · 끝':''}</small></button>`).join('')}</div>
-      ${can?`<span class="small dim">재료를 넣을수록 확률이 오른다 (최대 ${Q.max}%, 넣을 수 있는 재료 ${Q.maxMats}개)</span><div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(Q.boost).map(k=>`<span class="chip" style="display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap">${esc(D.sisyphus.mats[k].n)} ${used(k)}/${have(k)} <button class="btn quiet" style="padding:2px 10px;min-height:0;width:auto" data-a="sbup" data-i="sub:${k}" ${used(k)?'':'disabled'}>−</button><button class="btn quiet" style="padding:2px 10px;min-height:0;width:auto" data-a="sbup" data-i="add:${k}" ${used(k)<have(k)&&up.mats.length<Q.maxMats?'':'disabled'}>+</button></span>`).join('')}</div>
-      <button class="btn" data-a="sbup" data-i="go"><b>${Q.names[sel.q||0]} → ${Q.names[(sel.q||0)+1]} 손질한다 · 성공 확률 ${ch_}%</b></button>`:`<span class="small dim">${sel&&sel.sealed?'이 옷은 더 손질할 수 없다':'이미 런웨이에 오를 만한 옷이다'}</span>`}</div>`;
+    const have=k=>k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0),used=k=>up.slots.filter(x=>x===k).length;
+    const mats=up.slots.filter(Boolean),pct=E.sisUpChance(mats);
+    const star=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">옷 손질 · 지은 옷의 등급 올리기</span><p class="small dim">${Q.x}</p>
+      <div class="seg kinds">${cl.map(({c,i})=>`<button class="${up.i===i?'on':''}" data-a="sbup" data-i="pick:${i}">${esc(nm(c))}<br><small>${Q.names[c.q||0]} ${star(c.q||0)}${c.sealed?' · 끝':''}</small></button>`).join('')}</div>
+      ${can?`${Q.parts.map((pt,pi)=>`<div class="stack" style="gap:4px"><span class="small dim">${pt}</span><div class="seg kinds">${Object.keys(Q.boost).map(k=>`<button class="${up.slots[pi]===k?'on':''}${up.slots[pi]!==k&&used(k)>=have(k)?' sb-off':''}" ${up.slots[pi]!==k&&used(k)>=have(k)?'disabled':''} data-a="sbup" data-i="slot:${pi}:${k}">${esc(D.sisyphus.mats[k].n)}<br><small>${have(k)-used(k)+(up.slots[pi]===k?1:0)}개 · +${Q.boost[k]}%</small></button>`).join('')}<button class="${up.slots[pi]?'':'on'}" data-a="sbup" data-i="slot:${pi}:">비움</button></div></div>`).join('')}
+      <button class="btn primary" data-a="sbup" data-i="go"><b>${Q.names[sel.q||0]} → ${Q.names[(sel.q||0)+1]} 손질한다 · 성공 확률 ${pct}%</b></button>`:`<span class="small dim">${sel&&sel.sealed?'이 옷은 더 손질할 수 없다':'이미 런웨이에 오를 만한 옷이다'}</span>`}</div>`;
   }
   function vSisBench(ev){
     const T=D.sisyphus.tailor,ch=G.ch,g=ch.sis.grade||0;
-    if(ev.sbCrafted){const skip0=ev.c.findIndex(c=>c.ok&&c.ok.fx&&c.ok.fx.sisGo==='day2');return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 재단대</div><h2>${ev.t}</h2><p class="small dim">오늘은 이미 한 벌을 지었다. 더 손질하거나 마칠 수 있다.</p>${vSisUp(ev)}<p class="small dim">${(ev.x||'').split('\n\n').filter(Boolean).pop()||''}</p></div><div class="stack" style="gap:8px">${skip0>=0?`<button class="btn primary" data-a="choose" data-i="${skip0}"><b>${ev.c[skip0].l}</b></button>`:''}</div>`}
-    if(UI.sbEv!==ev){UI.sbEv=ev;const first=T.shapes.find(s=>E.sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok)||T.shapes[0];UI.sb={shape:first.id,pattern:'plain',color:'gray',trims:[]}}
-    const sp=UI.sb,info=E.sisCraftInfo(ch,sp),has=k=>ch.sis.mat[k]||0;
+    if(UI.sbEv!==ev){UI.sbEv=ev;UI.sbTab=ev.sbCrafted?'up':(UI.sbTab||'cut');const first=T.shapes.find(s=>E.sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok)||T.shapes[0];UI.sb={shape:first.id,pattern:'plain',color:'gray',trims:[]}}
+    const tab=UI.sbTab||'cut',sp=UI.sb,info=E.sisCraftInfo(ch,sp),has=k=>ch.sis.mat[k]||0;
     const seg=(key,list,cur,dis)=>`<div class="seg kinds">${list.map(x=>`<button class="${cur===x.id?'on':''}${dis(x)?' sb-off':''}" ${dis(x)?'disabled':''} data-a="sbset" data-i="${key}:${x.id}">${esc(x.n)}${key==='shape'?`<br><small>${esc(D.sisyphus.mats[x.base].n)}${x.need>1?' '+x.need:''}</small>`:''}</button>`).join('')}</div>`;
     const sw=T.colors.map(c=>{const lock=c.grade>g,nod=c.id!=='gray'&&!ch.sis.dyes.includes(c.id);return `<button class="sb-sw${sp.color===c.id?' on':''}" ${lock||nod?'disabled':''} style="background:${c.hex}" data-a="sbset" data-i="color:${c.id}" title="${esc(c.n)}${lock?' · 아직 열리지 않음':nod?' · 염료 없음':''}" aria-label="${esc(c.n)}"></button>`}).join('');
     const skip=ev.c.findIndex(c=>c.ok&&c.ok.fx&&c.ok.fx.sisGo==='day2'),inv=(ev.x||'').split('\n\n').filter(Boolean);
-    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 재단대</div><h2>${ev.t}</h2>${inv[0]&&/사냥/.test(inv[0])?`<p class="small dim" style="white-space:pre-line">${inv[0]}</p>`:''}
-      <div class="panel stack" style="gap:8px;align-items:center">${sisSvg(sp,T,0)}<span class="small dim">${info.ok?`값 약 ${info.price}안`:esc(info.why)}</span></div>
-      <div class="panel stack" style="gap:8px"><span class="eyebrow">형태</span>${seg('shape',T.shapes,sp.shape,s=>!(has(s.base)>=(s.need||1)))}<span class="eyebrow">무늬</span>${seg('pattern',T.patterns,sp.pattern,p=>p.grade>g)}<span class="eyebrow">색</span><div class="row" style="gap:6px;flex-wrap:wrap">${sw}</div><span class="eyebrow">장식 (부품 ${has('trim')}개)</span><div class="seg kinds">${T.trims.map(x=>`<button class="${sp.trims.includes(x.id)?'on':''}" ${has('trim')<1&&!sp.trims.includes(x.id)?'disabled':''} data-a="sbset" data-i="trim:${x.id}">${esc(x.n)}</button>`).join('')}</div>
+    const tabs=`<div class="seg kinds"><button class="${tab==='cut'?'on':''}" data-a="sbtab" data-i="cut">옷 재단</button><button class="${tab==='up'?'on':''}" data-a="sbtab" data-i="up">옷 손질${ch.sis.cloth.length?` (${ch.sis.cloth.length}벌)`:''}</button></div>`;
+    const cut=ev.sbCrafted?`<div class="panel stack" style="gap:6px"><p class="small dim">오늘은 이미 한 벌을 지었다. 새 옷은 내일 지을 수 있고, 지은 옷은 손질할 수 있다.</p></div>`:
+      `<div class="panel stack" style="gap:8px;align-items:center">${sisSvg(sp,T,0)}<span class="small dim">${info.ok?`값 약 ${info.price}안`:esc(info.why)}</span></div>
+      <div class="panel stack" style="gap:8px"><span class="eyebrow">형태</span>${seg('shape',T.shapes,sp.shape,s=>!(has(s.base)>=(s.need||1)))}<span class="eyebrow">무늬</span>${seg('pattern',T.patterns,sp.pattern,p=>p.grade>g)}<span class="eyebrow">색</span><div class="row" style="gap:6px;flex-wrap:wrap">${sw}</div><span class="eyebrow">장식 (부품 ${has('trim')}개)</span><div class="seg kinds">${T.trims.map(x=>`<button class="${sp.trims.includes(x.id)?'on':''}${has('trim')<1&&!sp.trims.includes(x.id)?' sb-off':''}" ${has('trim')<1&&!sp.trims.includes(x.id)?'disabled':''} data-a="sbset" data-i="trim:${x.id}">${esc(x.n)}</button>`).join('')}</div>
         <span class="small dim">${sp.trims.length?'고른 장식 · '+sp.trims.map(k=>T.trims.find(t=>t.id===k).n).join(', '):'고른 장식 없음'}</span></div>
-      ${vSisUp(ev)}
+      <button class="btn primary" data-a="sbmake" ${info.ok?'':'disabled'}><b>옷을 짓는다</b></button>`;
+    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 재단대</div><h2>${ev.t}</h2>${inv[0]&&/사냥/.test(inv[0])?`<p class="small dim" style="white-space:pre-line">${inv[0]}</p>`:''}
+      ${tabs}${tab==='up'?vSisUp(ev):cut}
       <p class="small dim">${inv[inv.length-1]||''}</p></div>
-      <div class="stack" style="gap:8px"><button class="btn primary" data-a="sbmake" ${info.ok?'':'disabled'}><b>옷을 짓는다</b></button>${skip>=0?`<button class="btn" data-a="choose" data-i="${skip}"><b>${ev.c[skip].l}</b></button>`:''}</div>`;
+      <div class="stack" style="gap:8px">${skip>=0?`<button class="btn" data-a="choose" data-i="${skip}"><b>${ev.sbCrafted||tab==='up'?'재단대를 마친다':ev.c[skip].l}</b></button>`:''}</div>`;
   }
   function vEvent(){
     if(UI.omen)return vOmen();
@@ -3041,9 +3046,11 @@ ${symRec(r)}
   function startCombat(id){recAdd('seen',id);C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.paused=false;UI.screen='combat';render()}
 
   const ACT={
-    sbup(kv){const [k,v]=String(kv).split(':'),up=UI.sbUp;if(!up)return;
-      if(k==='pick'){up.i=+v;up.mats=[]}else if(k==='add'){up.mats.push(v)}else if(k==='sub'){const at=up.mats.lastIndexOf(v);if(at>=0)up.mats.splice(at,1)}
-      else if(k==='go'){const ev=UI.ev;if(!ev||!ev.sisBench)return;ev.c.push({l:'손질한다',ok:{t:'바늘이 천을 다시 한 번 훑는다.',fx:{sisUpgrade:{i:up.i,mats:up.mats.slice()}}}});UI.sbUp=null;ACT.choose(ev.c.length-1);return}
+    sbtab(k){UI.sbTab=k==='up'?'up':'cut';render()},
+    sbup(kv){const [k,v,w]=String(kv).split(':'),up=UI.sbUp;if(!up)return;
+      if(k==='pick'){up.i=+v;up.slots=up.slots.map(()=>null)}
+      else if(k==='slot'){up.slots[+v]=w||null}
+      else if(k==='go'){const ev=UI.ev;if(!ev||!ev.sisBench)return;ev.c.push({l:'손질한다',ok:{t:'바늘이 천을 다시 한 번 훑는다.',fx:{sisUpgrade:{i:up.i,mats:up.slots.filter(Boolean)}}}});UI.sbUp=null;UI.sbTab='up';ACT.choose(ev.c.length-1);return}
       render()},
     sbset(kv){const [k,v]=String(kv).split(':'),sb=UI.sb;if(!sb)return;
       if(k==='trim'){const at=sb.trims.indexOf(v);if(at>=0)sb.trims.splice(at,1);else if(sb.trims.length<3)sb.trims.push(v)}else sb[k]=v;
