@@ -2159,6 +2159,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function testPreset(G,key){
     const ch=G.ch,setLv=n=>{ch.xp=xpFor(n);ch.lv=n},bonus=f=>{addStats(ch.stats,f);ch.hp=ch.stats.maxHp},year=y=>{G.year=y-1;ch.year=y-1};
     const mkBond=(y,killed)=>{ch.bond={st:killed?'lost':'married',route:'hermes',variant:0,name:'시험 인연',step:3,tries:1,love:3,since:y-12,next:y+4,saved:false,kids:[{n:'하늘',born:y-7,job:'assoc',told:true,dead:!!killed},{n:'이슬',born:y-3,job:'fixer',told:false,dead:!!killed}]};if(killed){ch.bond.hermKilled=true;ch.famLoss=2}};
+    if(key==='sis4'&&ch.o&&CFG.sis.origins.includes(ch.o.n)){setLv(6);bonus({maxHp:40,atk:4,eva:2,spd:1});year(4);return true}
     if(key==='crow55'&&ch.o&&ch.o.key==='crow'){
       setLv(30);bonus({maxHp:70,atk:14,eva:7,spd:5});routeWeaponUp(ch,'crow',2);
       const R=routeOf(ch),st=routeSt(ch);st.n=4;st.mdone=(R.missions||[]).filter(m=>m.arc!=='cmd').map(m=>m.id);st.mAt=54;st.arc=null;

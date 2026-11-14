@@ -1309,7 +1309,10 @@ export function startUI(E,app){
     return `<div class="check" style="border-color:var(--bleed)"><b>테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   const UNLOCKTEST=false; /* build --unlocktest: 해금 출생·히든 직업을 전부 열고, 출생 화면에서 중간 연차로 바로 시작할 수 있는 시험판 */
+  const SISTEST=false; /* build --sis: 시지프 백화점 시험판. 출생 화면에서 둥지 노동자로 태어나 4년차 갈림길부터 바로 시작한다 */
+  if(SISTEST)CFG.sis.on=true;
   const FINGERTEST=false; /* build --finger: 손가락 루트 전용 시험판. 출생 화면에 조직 출신·보냐텔리·별에 선택받은 자로 태어나는 버튼이 생긴다 */
+  const sisBtns=()=>SISTEST?`<div class="panel stack" style="gap:6px;border:2px solid var(--gold)"><div class="eyebrow">시지프 백화점 시험판</div><p class="small dim">둥지 노동자로 태어나 4년차 소속 선택 화면에서 "N사의 금기에 흥미를 가진다" · "가짜 경험 통조림을 판다" · "금지된 영상을 감상한다" 중 하나를 고르면 백화점에 들어간다. 아래 스위치를 켜면 4년차부터 바로 시작한다.</p><button class="btn" data-a="sisbirth" data-i="born"><b>둥지 노동자로 태어난다</b></button><button class="btn${UI.sisSkip?' primary':''}" data-a="sisbirth" data-i="skip"><b>4년차 갈림길부터 바로 시작: ${UI.sisSkip?'켜짐':'꺼짐'}</b></button></div>`:'';
   const fingerBtns=()=>FINGERTEST?`<div class="panel stack" style="gap:6px;border:2px solid var(--gold)"><div class="eyebrow">손가락 시험판 · 바로 태어나기</div><button class="btn" data-a="fbirth" data-i="조직"><b>조직 출신으로 태어나기</b><span class="dim small">1년차에 손가락이 먼저 찾아온다 · 2년차에 거미집 초대</span></button><button class="btn" data-a="fbirth" data-i="보냐텔리"><b>보냐텔리 가문으로 태어나기</b><span class="dim small">엄지 · 가문 전용 · 서열 점수 ×2</span></button><button class="btn" data-a="fbirth" data-i="별"><b>별에 선택받은 자(소지)로 태어나기</b><span class="dim small">정식 소지가 되면 거미집 초대</span></button></div>`:'';
   const MINDTEST=false; /* build --mind: 정신력 10 이하 연출만 시험하는 판 */
   function vMindTest(){
@@ -1822,7 +1825,7 @@ ${symRec(r)}
       ${vJobRoll()}${vJobPick()}${vOriginPick()}${vBloodPick()}${testPresetPanel()}
       ${b.fateChoices&&!b.fated?`<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">운명이 찾아왔다 · 하나를 고르거나 거절한다</span><span class="small">아무것도 쥐지 않고 태어났지만, 이름 없는 존재에게도 길이 두 갈래로 놓였다.</span>${b.fateChoices.map(r_=>{const h=D.hiddenOrigins.find(x=>x.roll===r_);return `<button class="btn" data-a="fate" data-i="${r_}"><b>${esc(h.n)}</b><span class="small">${esc(h.t)}</span><span class="mono small" style="color:var(--gold)">${esc(h.e)}</span></button>`}).join('')}<button class="btn" data-a="nofate"><b>운명을 거절한다</b><span class="small">아무것도 쥐지 않은 채 그대로 시작한다. 이름 없는 삶, 솔로 엔딩을 노리는 길이다.</span></button></div>`:''}
       <div class="stack"><button class="btn primary" data-a="live" ${(b.relicPick&&!UI.relic)||(b.teamPick&&!UI.team)||(b.fateChoices&&!b.fated)?'disabled':''}>${b.fateChoices&&!b.fated?'운명을 먼저 고른다':b.relicPick&&!UI.relic?'유물을 먼저 고른다':b.teamPick&&!UI.team?'팀을 먼저 고른다':'이 삶을 산다'}</button>
-      ${fingerBtns()}${b.blank||UI.job?'':'<button class="btn quiet" data-a="blank">어떤 출생 보정도 없이 시작한다</button>'}<button class="btn quiet" data-a="title"><b>첫 화면으로</b><span class="dim small">출생 굴림을 접고 처음으로 돌아간다</span></button></div>${vSettings()}`;
+      ${sisBtns()}${fingerBtns()}${b.blank||UI.job?'':'<button class="btn quiet" data-a="blank">어떤 출생 보정도 없이 시작한다</button>'}<button class="btn quiet" data-a="title"><b>첫 화면으로</b><span class="dim small">출생 굴림을 접고 처음으로 돌아간다</span></button></div>${vSettings()}`;
   }
   /* 6시즌: 출생 규칙 설명 + 표 전체 (이번에 나온 칸 표시) */
   function vBirthHelp(b){
@@ -3233,6 +3236,7 @@ ${symRec(r)}
     records(){UI.screen='records';render()},
     daily(){if(loadSave()&&UI.confirmNew!=='daily'){UI.confirmNew='daily';render();return}store.del(SAVE);UI.confirmNew=null;if(expired()){UI.screen='title';render();return}UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=todayKey();born(dailySeed(UI.daily),'',true);UI.endText=null;UI.screen='birth';render()},
     blank(){if(!BC||BC.blank||UI.job)return;const nm=BC.name,sd=BC.seed;BC=E.newChar(null,null,{r:BC.r,kid:BC.kid});BC.seed=sd;BC.name=nm;BC.fresh=false;UI.relic=null;BC.fateChoices=E.blankFate();render()},
+    sisbirth(k){if(!SISTEST||!BC)return;if(k==='skip'){UI.sisSkip=!UI.sisSkip;render();return}const nm=BC.name,sd=BC.seed;E.reseed(sd);let c;for(let i=0;i<20000;i++){c=E.newChar();if(c.o&&c.o.n==='둥지 노동자')break}c.seed=sd;c.name=nm;BC=c;BC.fresh=false;UI.relic=null;render()},
     fbirth(k){if(!FINGERTEST||!BC)return;const nm=BC.name,sd=BC.seed;E.reseed(sd);let c;
       if(k==='조직'){for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n==='조직 출신')break}}
       else{const roll=k==='보냐텔리'?90:50;for(let i=0;i<20000;i++){c=E.newChar();if(c.r.o===roll)break}}
@@ -3249,7 +3253,7 @@ ${symRec(r)}
     tpreset(k){UI.testPreset=k||null;render()},
     job(k){if(k)UI.origin=null;UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render();if(isMobile())window.scrollTo(0,0)},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.o&&BC.o.race==='hyeolgwi'&&UI.bloodW&&!UI.job)E.bloodWeapon(BC,UI.bloodW);if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);nextYear()},
+    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.o&&BC.o.race==='hyeolgwi'&&UI.bloodW&&!UI.job)E.bloodWeapon(BC,UI.bloodW);if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);if(SISTEST&&UI.sisSkip)E.testPreset(G,'sis4');nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.wsMsg=null;UI.enchMsg=null;E.wsEnsure(G.ch);UI.showIncome=false;UI.screen='shop';render()},
