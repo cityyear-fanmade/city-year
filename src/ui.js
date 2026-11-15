@@ -22,7 +22,7 @@ export function startUI(E,app){
   const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
-  const VERSION='v11.1.2';
+  const VERSION='v11.2.0';
   const loadDaily=()=>{try{const o=JSON.parse(store.get(DAILYK)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}};
   /* 시험판에서 "해금 규칙대로 보기"를 켜면 기록실·꾸미기가 실제 플레이어처럼 잠겨 보인다(시험장 4번 칸에서 바꾼다) */
   const realUnlock=()=>{try{return localStorage.getItem('cityYearRealUnlock')==='1'}catch(e){return false}};
@@ -62,6 +62,7 @@ export function startUI(E,app){
   const syncTitles=()=>{syncAffs();const c=G&&G.ch;if(!c||!(c.titleLog||[]).length)return;const done=c.titleSeen||0;if(c.titleLog.length<=done)return;
     const r=loadRec();r.titles=r.titles||{};for(const n of c.titleLog.slice(done))r.titles[n]=(r.titles[n]||0)+1;c.titleSeen=c.titleLog.length;store.set(REC,JSON.stringify(r))};
   E.setInnateOpen(loadRec().unl||[]);
+  const pityLoad=()=>E.setPity(loadRec().pity,m=>{const r=loadRec();r.pity=m;store.set(REC,JSON.stringify(r))});pityLoad();
   /* 해금 조건이 있는 타고난 것: 전투가 끝날 때와 한 판이 끝날 때 조건을 살핀다. 새로 열리면 이름을 돌려준다 */
   function checkInnateUnlock(){
     if(!G||!G.ch)return [];const r=loadRec(),open=r.unl||[],now=E.innateUnlocks(G.ch,r.best.lv).filter(k=>!open.includes(k));
@@ -865,9 +866,9 @@ export function startUI(E,app){
     const deck=grp(ch.deck),sd=grp(side);
     const out=can&&ch.deck.length>S.minDeck,inn=can&&E.deckRoom(ch);const xo=i=>UI.screen!=='combat'&&ch.deck.length>S.minDeck&&E.extraOut(ch,i);
     const dl=deck.map(({id,i,n})=>cardRow(id,out&&!D.cards[id].fixed?`<button class="chip" data-a="dout" data-i="${i}">카드함으로</button>`:xo(i)?`<button class="chip" data-a="dout" data-i="${i}">덱에서 빼기</button>`:D.cards[id].fixed?'<span class="small dim">전용 · 뺄 수 없다</span>':'',n)).join('')||'<p class="small dim">조건에 맞는 카드가 없다.</p>';
-    const sl=sd.map(({id,i,n})=>cardRow(id,can?`${inn?`<button class="chip" data-a="din" data-i="${i}">덱에 넣기</button>`:''}${ch.cardMoney?'':`<button class="chip${UI.dropAsk===i?' warn':''}" data-a="sdrop" data-i="${i}">${UI.dropAsk===i?'정말 버린다':'버리기'}</button>`}`:'',n)).join('');
+    const sl=sd.map(({id,i,n})=>cardRow(id,can?`${inn&&E.sameOk(ch,id)?`<button class="chip" data-a="din" data-i="${i}">덱에 넣기</button>`:inn?`<span class="small dim">같은 카드는 덱에 ${CFG.deck.sameMax}장까지</span>`:''}${ch.cardMoney?'':`<button class="chip${UI.dropAsk===i?' warn':''}" data-a="sdrop" data-i="${i}">${UI.dropAsk===i?'정말 버린다':'버리기'}</button>`}`:'',n)).join('');
     return `<div class="row between"><span class="eyebrow">덱 ${ch.deck.length}/${E.deckMax(ch)}</span>${ch.deckLocked||ch.cardMoney?`<span class="small dim">${ch.deckLocked?'덱 고정':'전용 카드팩'} · 넣고 뺄 수 없다</span>`:''}</div><div class="invcards">${dl}</div>
-      <div class="row between" style="margin-top:6px"><span class="eyebrow">카드함 ${side.length}</span>${side.length&&!inn&&can?'<span class="small dim">덱이 가득 찼다. 먼저 덱에서 빼야 넣을 수 있다</span>':''}</div>
+      <div class="row between" style="margin-top:6px"><span class="eyebrow">카드함 ${side.length}/${CFG.deck.boxMax}</span>${side.length&&!inn&&can?'<span class="small dim">덱이 가득 찼다. 먼저 덱에서 빼야 넣을 수 있다</span>':''}</div>
       <div class="invcards">${sl||`<p class="small dim">${side.length?'조건에 맞는 카드가 없다.':'비어 있다. 덱에서 뺀 카드와 덱이 가득 찼을 때 얻은 카드가 여기에 모인다.'}</p>`}</div>`;
   }
   function vCards(){
@@ -995,6 +996,7 @@ export function startUI(E,app){
       [K.burn.n,'burn',`라운드가 끝날 때 스택당 ${CFG.burn.dmg} 피해(내가 받으면 ${CFG.burn.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.burn.max}스택. 적이 거는 화상은 쌓이는 양이 절반이다.`],
       [K.flame.n,'flame',`(레바테인 전용) 최대 ${CFG.stackCap}스택. 받는 피해 ×1.5, 라운드 끝에 1 감소. ${CFG.laev.blueAt}스택 이상이면 푸른 화염이 되어 받는 피해 ×${CFG.laev.blueMul}, 라운드 끝에 스택당 ${CFG.laev.blueDot} 피해를 주고 1 감소한다.`],
       [K.charge.n,'charge',`자신에게 쌓는 스택. 기본 최대 ${CFG.charge.cap}스택(소속마다 다르다: R사 토끼팀 8, 순록·코뿔소팀 20). 카드가 정한 만큼 소모하면, 소모한 1당 고정 피해(피해 감소 무시, 보호막은 깎임)를 적중마다 더한다. 라운드가 바뀌어도 줄지 않고, 맞으면 줄어든다. 쌓이는 방식도 소속마다 다르다.`],
+      [K.melody.n,'melody',`음악 카드를 낼 때 자신에게 쌓는 스택. 최대 ${CFG.melody.cap}스택이고, 라운드가 바뀌어도 줄지 않는다. 화음 카드(화음·불협화음·종지)가 선율을 모두 소모하면서 그 타격의 피해에 선율 1당 +${CFG.melody.per}를 더한다. 선율이 3 이상이면 추가로 +${CFG.melody.t3}, 6 이상이면 추가로 +${CFG.melody.t6}. 선율이 최대(${CFG.melody.cap})일 때 터뜨리면 그 타격의 피해가 ${CFG.melody.t9}배가 된다.`],
       [K.sink.n,'sink',`상대에게 쌓는 스택. 최대 ${CFG.stackCap}스택. ${CFG.sink.per}스택마다 한 단계, 단계마다 침잠이 걸린 쪽의 명중 −${CFG.sink.hit} · 주는 피해 −${CFG.sink.dmg}. 라운드마다 1 줄어든다.`],
       [K.wspear.n,'wspear','쪽빛 노인의 작살(전용 무기)이 적중하면 상대에게 쌓인다. 최대 5스택. 스택 하나마다 상대가 입는 출혈 피해가 ×1.2로 곱해진다(5스택이면 약 ×2.5). 한 번의 싸움 동안 유지된다.'],
       [K.harpoon.n,'harpoon',`대호수: 작살 카드가 적중하면 상대에게 쌓인다. 최대 ${CFG.harpoon.cap}스택. 당기는 카드(감아올리기·당겨 뜯기·고래 사냥)가 쌓인 작살을 모두 소모해 스택당 고정 피해를 더한다. 로프 끊기는 내게 걸린 작살을 푼다.`],
@@ -1124,11 +1126,11 @@ export function startUI(E,app){
         <p class="small dim">고른 카드는 다음 화면에서 덱에 넣거나 카드함에 둘 수 있다.</p>`,'offer',false)}
     const cid=ch.offers[0],room=E.deckRoom(ch),many=ch.offers.length>1?` · 남은 ${ch.offers.length}장`:'';
     if(UI.swap)return sheet(`<span class="eyebrow">덱의 카드와 바꾸기 · 빠진 카드는 카드함으로</span>${cardRow(cid)}
-      <div class="invcards">${ch.deck.map((id,j)=>cardRow(id,D.cards[id].fixed?'<span class="small dim">전용 · 바꿀 수 없다</span>':`<button class="chip" data-a="oswap" data-i="${j}">이 카드와 바꾼다</button>`)).join('')}</div>
+      <div class="invcards">${ch.deck.map((id,j)=>cardRow(id,D.cards[id].fixed?'<span class="small dim">전용 · 바꿀 수 없다</span>':!E.boxRoom(ch)?'<span class="small dim">카드함이 가득 차 바꿀 수 없다</span>':`<button class="chip" data-a="oswap" data-i="${j}">이 카드와 바꾼다</button>`)).join('')}</div>
       <button class="btn" data-a="oswapmode">돌아가기</button>`,'offer',false);
     return sheet(`<span class="eyebrow">카드 발견 · 덱 ${ch.deck.length}/${E.deckMax(ch)}${many}</span><h2>받을까, 버릴까</h2>${cardRow(cid,ownTag(ch,cid))}
-      ${room?'<button class="btn primary" data-a="otake" data-i="deck">덱에 넣는다</button>':`<button class="btn primary" data-a="oswapmode">덱의 카드와 바꾼다</button><p class="small dim">덱이 가득 찼다 (최대 ${E.deckMax(ch)}장).</p>`}
-      <button class="btn" data-a="otake" data-i="side">카드함에 넣어 둔다</button>
+      ${room&&!E.sameOk(ch,cid)?`<p class="small dim">같은 카드는 덱에 ${CFG.deck.sameMax}장까지 들어간다. 카드함에 넣어 둘 수 있다.</p>`:room?'<button class="btn primary" data-a="otake" data-i="deck">덱에 넣는다</button>':`<button class="btn primary" data-a="oswapmode">덱의 카드와 바꾼다</button><p class="small dim">덱이 가득 찼다 (최대 ${E.deckMax(ch)}장).</p>`}
+      ${E.boxRoom(ch)?'<button class="btn" data-a="otake" data-i="side">카드함에 넣어 둔다</button>':`<p class="small dim">카드함이 가득 찼다 (최대 ${CFG.deck.boxMax}장).</p>`}
       <button class="btn quiet" data-a="odrop">버린다</button>`,'offer',false);
   }
   /* 공방: 등급별 목록. 들어갈 수 없는 등급은 조건을 보여 준다 */
@@ -1211,8 +1213,15 @@ export function startUI(E,app){
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
     return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">${hwHome()?'홍원의 저잣거리':lakeHome()?'U사의 어느 항구':(G.infinite&&G.ch.infinite)?'외곽의 가게':'공방'} · 내 등급 ${acc}${E.repOf(G.ch)?` · 평판 ${E.repOf(G.ch)>0?'+':''}${E.repOf(G.ch)} (장비 값 ${Math.round((E.repMul(G.ch)-1)*100)>0?'+':''}${Math.round((E.repMul(G.ch)-1)*100)}%)`:''}</div><h2>무엇을 맞출까</h2>
-      <p class="small dim">▾ 각 상점의 이름 줄을 누르면 접고 펼 수 있다.</p><div class="chips">${gear}</div>${(()=>{const g={};for(const k of Object.keys(D.slots)){const w=E.slotWhy(ch,k);if(w)(g[w]=g[w]||[]).push(D.slots[k])}return Object.entries(g).map(([w,ns])=>`<p class="small bad">🚫 ${ns.join('·')} · ${esc(w)}</p>`).join('')})()}${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}${E.isWs(ch)&&ch.ws?`<button class="btn quiet" data-a="automelt"><b>구매하면 바로 녹이기 · ${AUTOMELT?'켜짐':'꺼짐'}</b><span class="small dim">켜면 장비를 누르는 즉시 사서 작업대 재료로 녹인다 (확인 없이 같은 장비를 연달아 살 수 있다)</span></button>`:''}${UI.meltMsg?`<p class="good small">${esc(UI.meltMsg)}</p>`:''}</div>${shops}${vClinic()}${vHull()}${vSupplyShop()}${vCafe()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
+      <p class="small dim">▾ 각 상점의 이름 줄을 누르면 접고 펼 수 있다.</p><div class="chips">${gear}</div>${(()=>{const g={};for(const k of Object.keys(D.slots)){const w=E.slotWhy(ch,k);if(w)(g[w]=g[w]||[]).push(D.slots[k])}return Object.entries(g).map(([w,ns])=>`<p class="small bad">🚫 ${ns.join('·')} · ${esc(w)}</p>`).join('')})()}${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}${E.isWs(ch)&&ch.ws?`<button class="btn quiet" data-a="automelt"><b>구매하면 바로 녹이기 · ${AUTOMELT?'켜짐':'꺼짐'}</b><span class="small dim">켜면 장비를 누르는 즉시 사서 작업대 재료로 녹인다 (확인 없이 같은 장비를 연달아 살 수 있다)</span></button>`:''}${UI.meltMsg?`<p class="good small">${esc(UI.meltMsg)}</p>`:''}</div>${shops}${vClinic()}${vHull()}${vSupplyShop()}${vCafe()}${vBlack()}${vSell()}${vSellGear()}${vSwapCard()}${vForge()}${vTune()}
       <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':lakeHome()?'항구를 나간다':'공방을 나간다'}</button>`;
+  }
+  /* 장비 판매(공방 해결사가 아닌 사람): "장비 판매"를 눌러야 열린다. 장착한 장비는 목록에 없다 */
+  function vSellGear(){
+    const ch=G.ch;if(!E.canSellGear(ch))return '';const st=(ch.stash||[]).map((m,i)=>[m,i]).filter(([m])=>!(m.id==='birth'&&m.n==='맨손')),open=!!UI.sellGearOpen;
+    const rows=st.map(([m,i])=>`<button class="btn" data-a="sellgear" data-i="${i}"><span class="row between"><b>${esc(m.n)}</b><span class="mono" style="color:var(--gold)">${E.money(E.gearSellValue(m))}</span></span>${m.e?`<span class="mono small dim">${esc(m.e)}</span>`:''}</button>`).join('');
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">장비 판매</b><button class="btn quiet" data-a="sellgearopen">${open?'닫기':'열기'}${st.length?` · 보관함 ${st.length}`:''}</button></div>
+      ${open?`<p class="small dim">보관함에 쌓인 장비를 팔아 돈으로 바꾼다. 장착한 장비는 팔 수 없다.</p>${UI.sellGearMsg?`<p class="good small">${esc(UI.sellGearMsg)}</p>`:''}${rows||'<p class="small dim">팔 수 있는 장비가 없다.</p>'}`:''}</div>`;
   }
   /* 공방 해결사: 카드 판매 (장비 판매는 없다) */
   function vSell(){
@@ -1262,9 +1271,10 @@ export function startUI(E,app){
     const ch=G.ch,T=Object.assign({},CFG.shop.tune,{max:E.tuneMax(G.ch)}),slots=Object.keys(ch.gear).filter(k=>ch.gear[k]);
     const rows=slots.map(k=>{const g=ch.gear[k],n=g.tries||0,mx=E.tuneMax(ch,g),full=n>=mx,cost=E.tuneCost(g),tn=g.tune||{},ok=!full&&ch.money>=cost&&(!ch.distForm||ch.distStable);
       return `<div class="stack" style="gap:4px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>${esc(g.n)}</b><span class="mono small dim">정비 ${n}/${mx}${tn.atk||tn.eva?` · 공격+${tn.atk||0} 회피+${tn.eva||0}`:''}</span></div>
+        ${E.tuneFails(g)>0?`<button class="btn" data-a="tunerw" data-i="${k}" ${ch.money>=E.tuneRewindCost(g)&&(!ch.distForm||ch.distStable)?'':'disabled'}><b>실패한 정비 1번 되돌리기 (실패 ${E.tuneFails(g)}번)</b><span class="mono small" style="color:var(--gold)">${E.money(E.tuneRewindCost(g))}</span></button>`:''}
         ${full?'<p class="small dim">더는 정비할 수 없다.</p>':`<div class="row" style="gap:8px"><button class="btn" style="flex:1" data-a="tune" data-i="${k}" data-s="atk" ${ok?'':'disabled'}><b>공격 +1 시도</b><span class="mono small" style="color:var(--gold)">${E.money(cost)}</span></button><button class="btn" style="flex:1" data-a="tune" data-i="${k}" data-s="eva" ${ok?'':'disabled'}><b>회피 +1 시도</b><span class="mono small" style="color:var(--gold)">${E.money(cost)}</span></button></div>`}</div>`}).join('');
     return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">장비 정비</b><span class="chip">${T.chance}% 성공</span></div>
-      <p class="small dim">장착한 장비 하나에 공격 또는 회피 +1을 시도한다. 성공하면 고른 쪽만 오르고, 실패해도 시도 횟수는 소모된다. 장비마다 ${T.max}번까지.${ch.flags&&ch.flags.beatZena?` 제나를 쓰러뜨린 뒤로는 장비마다 ${CFG.shop.tune.zenaPlus}번씩 더 늘어난다. 바랄·제나의 장비는 기본 횟수만 정비할 수 있다.`:''}</p>
+      <p class="small dim">장착한 장비 하나에 공격 또는 회피 +1을 시도한다. 성공하면 고른 쪽만 오르고, 실패해도 시도 횟수는 소모된다. 실패한 정비는 돈을 내고 1번씩 되돌려 다시 시도할 수 있다(되돌릴 때마다 값이 오른다). 장비마다 ${T.max}번까지.${ch.flags&&ch.flags.beatZena?` 제나를 쓰러뜨린 뒤로는 장비마다 ${CFG.shop.tune.zenaPlus}번씩 더 늘어난다. 바랄·제나의 장비는 기본 횟수만 정비할 수 있다.`:''}</p>
       ${UI.tuneMsg?`<p class="${UI.tuneMsg.ok?'good':'bad'} small">${esc(UI.tuneMsg.t)}</p>`:''}
       ${ch.distForm&&!ch.distStable?'<p class="small dim">뒤틀린 몸은 장비를 쥘 수 없다.</p>':rows||'<p class="small dim">장착한 장비가 없다.</p>'}</div>`;
   }
@@ -1307,7 +1317,10 @@ export function startUI(E,app){
     return `<div class="check" style="border-color:var(--bleed)"><b>테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   const UNLOCKTEST=false; /* build --unlocktest: 해금 출생·히든 직업을 전부 열고, 출생 화면에서 중간 연차로 바로 시작할 수 있는 시험판 */
+  const SISTEST=false; /* build --sis: 시지프 백화점 시험판. 출생 화면에서 둥지 노동자로 태어나 4년차 갈림길부터 바로 시작한다 */
+  if(SISTEST)CFG.sis.on=true;
   const FINGERTEST=false; /* build --finger: 손가락 루트 전용 시험판. 출생 화면에 조직 출신·보냐텔리·별에 선택받은 자로 태어나는 버튼이 생긴다 */
+  const sisBtns=()=>SISTEST?`<div class="panel stack" style="gap:6px;border:2px solid var(--gold)"><div class="eyebrow">시지프 백화점 시험판</div><p class="small dim">둥지 노동자로 태어나 4년차 갈림길에서 "N사의 금기에 흥미를 가진다"를 고르면, 금지된 것에 손을 대는 사건(가짜 경험 통조림 · 영상 감상) → 붙잡힘 → 재판을 거쳐 백화점에 들어간다. 아래 스위치를 켜면 4년차부터 바로 시작한다.</p><button class="btn" data-a="sisbirth" data-i="born"><b>둥지 노동자로 태어난다</b></button><button class="btn${UI.sisSkip?' primary':''}" data-a="sisbirth" data-i="skip"><b>4년차 갈림길부터 바로 시작: ${UI.sisSkip?'켜짐':'꺼짐'}</b></button></div>`:'';
   const fingerBtns=()=>FINGERTEST?`<div class="panel stack" style="gap:6px;border:2px solid var(--gold)"><div class="eyebrow">손가락 시험판 · 바로 태어나기</div><button class="btn" data-a="fbirth" data-i="조직"><b>조직 출신으로 태어나기</b><span class="dim small">1년차에 손가락이 먼저 찾아온다 · 2년차에 거미집 초대</span></button><button class="btn" data-a="fbirth" data-i="보냐텔리"><b>보냐텔리 가문으로 태어나기</b><span class="dim small">엄지 · 가문 전용 · 서열 점수 ×2</span></button><button class="btn" data-a="fbirth" data-i="별"><b>별에 선택받은 자(소지)로 태어나기</b><span class="dim small">정식 소지가 되면 거미집 초대</span></button></div>`:'';
   const MINDTEST=false; /* build --mind: 정신력 10 이하 연출만 시험하는 판 */
   function vMindTest(){
@@ -1375,7 +1388,7 @@ export function startUI(E,app){
     saveChron(o);
   }
   /* 손주 이름: 명예의 전당에 직접 올린 지난 삶의 이름(나·연인·아이)을 엔진에 넘긴다. 지금 진행 중인 판의 기록(제1막 종료 때 자동으로 남는 것)은 뺀다. 예전에 저장한 판은 이름만 있다 */
-  E.setGhost(()=>loadRec().ghost||null);
+  E.setGhost(()=>{const r=loadRec();return Array.isArray(r.ghosts)&&r.ghosts.length?r.ghosts:(r.ghost?[r.ghost]:null)});
   E.setLegacy(()=>{const o=loadChron(),out=[],sd=G&&G.ch&&G.ch.seed!=null?G.ch.seed+'|':null;for(const e of o.fame){if(sd&&String(e.key||'').startsWith(sd))continue;if(e.name)out.push({n:e.name,k:'self'});if(e.lover)out.push({n:e.lover,k:'lover'});for(const n of e.kids||[])out.push({n:n,k:'kid'})}return out});
   const chDate=t=>new Date(t).toLocaleString('ko-KR',{year:'2-digit',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
   function chBtns(tab,e,view){
@@ -1412,7 +1425,7 @@ export function startUI(E,app){
     return `<div class="stack" style="gap:6px"><span class="eyebrow">난이도 · 새로 태어날 때부터 적용</span><div class="seg">${b('easy','쉬움')}${b('normal','보통')}${b('hard','하드')}</div>
       <div class="panel stack" style="gap:3px;padding:10px 12px">${info}</div></div>`}
   /* 칭호의 정확한 조건: 하드 완주를 한 번이라도 하면 기록실에 열린다 */
-  const TITLE_EXACT={"흑수 필두": "홍원에서 가주 승계를 포기하고 흑수로 활동해 필두에 오른다", "피의 왈츠": "결혼한 채 2급 이상, 직업 없이 18년차 이후에 만나는 \"엘레나 · 핏빛 밤\"을 이긴다", "엄지를 넘어선 자": "엄지에서 반역 줄기를 타고 \"엄지의 대모\"를 이긴다", "곰과 범을 넘어선 자": "검계의 배신 줄기에서 \"S사 절도사 · 김삿갓\"을 이긴다", "의리를 지킨 자": "중지 소속에서 원한의 장부를 받고 \"형님의 징벌을 받아들인다\"를 골라 큰누님의 시험(여섯 대)을 이긴다", "의리를 찢은 자": "중지 소속에서 원한의 장부를 받은 뒤 마지막 장부를 받아들이지 않고 찢는다", "끝내 갚지 않은 자": "의리를 찢은 뒤 나타나는 \"중지의 대리인\"을 이기고, 이어서 나타나는 \"중지의 큰형님의 사슬\"을 이긴다", "배신자를 갚은 자": "중지 3단계 이상(큰형님)으로 의리를 끝까지 마치고 큰누님을 쓰러뜨린 뒤 나타나는 \"배신자 마티아스\"를 이긴다", "허무를 넘어선 자": "허무 줄기에서 격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤 \"허무의 광대\"를 이긴다", "정리 요원장": "W사 열차 직원으로 무한 모드에 들어가 서류를 접어 서랍에 넣고 열차에 남는다", "열차를 내린 자": "W사 열차 직원으로 무한 모드에 들어가 퇴직 서류에 서명하거나 웨이페어러 컴퍼니의 제안을 받는다", "혈귀를 잠재운 자": "혈귀 훈련 줄기에서 \"혈귀 · 카세티\"를 이긴다"};
+  const TITLE_EXACT={"흑수 필두": "홍원에서 가주 승계를 포기하고 흑수로 활동해 필두에 오른다", "피의 왈츠": "결혼한 채 2급 이상, 직업 없이 18년차 이후에 만나는 \"엘레나 · 핏빛 밤\"을 이긴다", "엄지를 넘어선 자": "엄지에서 반역 루트를 타고 \"엄지의 대모\"를 이긴다", "곰과 범을 넘어선 자": "검계의 배신 루트에서 \"S사 절도사 · 김삿갓\"을 이긴다", "의리를 지킨 자": "중지 소속에서 원한의 장부를 받고 \"형님의 징벌을 받아들인다\"를 골라 큰누님의 시험(여섯 대)을 이긴다", "의리를 찢은 자": "중지 소속에서 원한의 장부를 받은 뒤 마지막 장부를 받아들이지 않고 찢는다", "끝내 갚지 않은 자": "의리를 찢은 뒤 나타나는 \"중지의 대리인\"을 이기고, 이어서 나타나는 \"중지의 큰형님의 사슬\"을 이긴다", "배신자를 갚은 자": "중지 3단계 이상(큰형님)으로 의리를 끝까지 마치고 큰누님을 쓰러뜨린 뒤 나타나는 \"배신자 마티아스\"를 이긴다", "허무를 넘어선 자": "허무 루트에서 격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤 \"허무의 광대\"를 이긴다", "정리 요원장": "W사 열차 직원으로 무한 모드에 들어가 서류를 접어 서랍에 넣고 열차에 남는다", "열차를 내린 자": "W사 열차 직원으로 무한 모드에 들어가 퇴직 서류에 서명하거나 웨이페어러 컴퍼니의 제안을 받는다", "혈귀를 잠재운 자": "혈귀 훈련 루트에서 \"혈귀 · 카세티\"를 이긴다"};
   Object.assign(TITLE_EXACT,{
     '본부 직속':'협회에서 과원 → 과장 → 부장 → 지부장까지 올라 "본부 호출"이 오면 시험에 응해 통과한다 (기회 3번, 실패하면 2년 뒤 다시)',
     '특이점 부서':'날개에서 사원 → 임원까지 올라 "특이점 부서 배치" 심사에 응해 통과한다 (기회 3번, 실패하면 2년 뒤 다시). 동부 외곽 출신의 N사는 대신 금기사냥꾼이 된다',
@@ -1420,9 +1433,9 @@ export function startUI(E,app){
     [CFG.nWing.eastTitle]:'동부 외곽 출신으로 해결사 5급 이상일 때 "N사의 제안"을 받아들여 임원까지 올라 "특이점 부서 배치" 심사에 응해 통과한다 (기회 3번, 실패하면 2년 뒤 다시)',
     '특색':'해결사 1급이 되면 오는 "특색 심사"에 응해 통과한다 (기회 3번, 실패하면 2년 뒤 다시). 협회에서 본부 직속이 된 뒤 1급이어도 받을 수 있다',
     '정해진 운명':'엄지에서 반역을 택해 "엄지의 대모"와 싸우다 쓰러져 생을 마친다'});
-  const TITLE_REC=['흑수 필두','본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','의리를 지킨 자','의리를 찢은 자','끝내 갚지 않은 자','배신자를 갚은 자','허무를 넘어선 자','정리 요원장','열차를 내린 자','혈귀를 잠재운 자','특색'];
+  const TITLE_REC=['흑수 필두','본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','의리를 지킨 자','의리를 찢은 자','끝내 갚지 않은 자','배신자를 갚은 자','허무를 넘어선 자','정리 요원장','열차를 내린 자','혈귀를 잠재운 자','특색','런웨이에 오르다'];
   /* 기록실 힌트: 아직 열리지 않은 칭호와 엔딩이 어떤 길 끝에 있는지 짐작만 하게 한다 */
-  const TITLE_HINT={'흑수 필두':'홍원에서 승계를 포기하고 흑수로 활동해 필두에 오른다','본부 직속':'협회 최고 자리에 올라 본부의 부름을 넘긴다','특이점 부서':'날개 임원에 오른 뒤 핵심 부서의 심사를 통과한다','상석':'손가락의 서열 맨 위에서 마지막 부름을 통과한다',[CFG.nWing.eastTitle]:'동쪽 외곽 출신으로 N사 날개에 들어가 끝까지 오른다','피의 왈츠':'인연과 함께 핏빛 존재와 맞선다','엄지를 넘어선 자':'엄지의 아랫 조직 끝에서 엄지에게 칼을 뽑는다','정해진 운명':'엄지의 가장 높은 이에게 맞섰다가 쓰러진다','곰과 범을 넘어선 자':'검계의 끝에서 본국의 칼을 마주한다','의리를 지킨 자':'중지의 동생이 되어 받은 장부를 갚고 큰누님의 여섯 대를 버틴다','배신자를 갚은 자':'큰형님이 되어 큰누님을 쓰러뜨린 뒤, 달아난 마티아스를 쫓는다','허무를 넘어선 자':'격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤, 하나가 된 무언가를 마주한다','의리를 찢은 자':'중지의 마지막 장부를 받아들이지 않고 찢는다','끝내 갚지 않은 자':'의리를 찢은 뒤 쫓아오는 중지의 사슬을 끊어낸다','특색':'해결사 1급에서 도시가 색을 불러 줄지 심사를 받는다'};
+  const TITLE_HINT={'런웨이에 오르다':'시지프 백화점에서 런웨이에 오를 만한 옷을 완성한다','흑수 필두':'홍원에서 승계를 포기하고 흑수로 활동해 필두에 오른다','본부 직속':'협회 최고 자리에 올라 본부의 부름을 넘긴다','특이점 부서':'날개 임원에 오른 뒤 핵심 부서의 심사를 통과한다','상석':'손가락의 서열 맨 위에서 마지막 부름을 통과한다',[CFG.nWing.eastTitle]:'동쪽 외곽 출신으로 N사 날개에 들어가 끝까지 오른다','피의 왈츠':'인연과 함께 핏빛 존재와 맞선다','엄지를 넘어선 자':'엄지의 아랫 조직 끝에서 엄지에게 칼을 뽑는다','정해진 운명':'엄지의 가장 높은 이에게 맞섰다가 쓰러진다','곰과 범을 넘어선 자':'검계의 끝에서 본국의 칼을 마주한다','의리를 지킨 자':'중지의 동생이 되어 받은 장부를 갚고 큰누님의 여섯 대를 버틴다','배신자를 갚은 자':'큰형님이 되어 큰누님을 쓰러뜨린 뒤, 달아난 마티아스를 쫓는다','허무를 넘어선 자':'격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤, 하나가 된 무언가를 마주한다','의리를 찢은 자':'중지의 마지막 장부를 받아들이지 않고 찢는다','끝내 갚지 않은 자':'의리를 찢은 뒤 쫓아오는 중지의 사슬을 끊어낸다','특색':'해결사 1급에서 도시가 색을 불러 줄지 심사를 받는다'};
   const END_HINT={gwmoth:'날개의 병기였던 몸이, 밤에 어울리는 모습으로 끝에서 군림한다',gwroach:'날개의 병기였던 몸이, 무너지지 않는 모습으로 끝에서 군림한다',gwfly:'날개의 병기였던 몸이, 무리를 이끄는 모습으로 끝에서 군림한다',gwhuman:'날개의 병기였던 몸이, 끝에서 사람으로 남는다',clawreturn:'머리의 명령을 끝까지 따른 발톱이 무언가를 가져온다',clawstay:'머리의 명령을 끝까지 따른 발톱이 무언가를 무너뜨린다',arbkeep:'균형을 맞추던 이가 얻은 것의 한쪽을 남기고 끝낸다',arbdown:'균형을 맞추던 이가 지운 뒤에 자리에서 내려온다',libstay:'도서관에 남은 사서의 끝',libclose:'도서관의 문을 닫는 사서의 끝',hermobey:'지령을 끝까지 따른 대행자의 끝',hermfree:'지령 없이 맞이하는 아침',crowsucceed:'복제체의 길 끝에 닿는다',crowrefuse:'복제체의 길 끝에서 돌아오지 못한다',wfree:'열차를 내리는 길이 있다',wrival:'열차 밖에서 제안이 온다',wstay:'열차에 남는 길이 있다',hwmaker:'가주를 세우고 문 밖을 지킨다',hwflee:'후보를 데리고 가문을 떠난다',hwlose:'붉은 누각의 등이 켜진다',hwhost:'선황충을 받아들이고 가주의 자리에 앉는다',hwfree:'선황충을 받아들이지 않고 가주의 자리에 앉는다',hwbreak:'흑수 부하의 재갈을 많이 모아 철함사를 친다',rcorp:'존재를 끝까지 증명한다',death:'어딘가에서 쓰러진다',mind:'정신력이 0이 된다',distort:'정신력이 한계에 닿아 몸이 뒤틀린다',win:CFG.years+'년을 끝까지 산다',true:'제 2막 마지막 등급을 넘는다',outer:'무한 모드에서 스스로 외곽에서 끝낸다',out_seal:'무한 모드에서 균열로 흘러드는 히든 보스를 모두 쓰러뜨린다',out_star:'무한 모드에서 이름난 상대를 아주 많이 이긴다',out_settle:'무한 모드에서 가족과 오래 산다',distwin:'뒤틀린 채로 '+CFG.years+'년을 넘긴다',old:'무한 모드에서 백 살을 넘겨 산다',blank:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 시작하고, 결혼하지 않은 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',blankwed:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 아무것도 없이 시작하고, 결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',wed:'결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',lovekill:'뒤틀린 채 사랑하던 이에게 쓰러진다',overflow:''};
   /* 엔딩 힌트: 그 엔딩으로 이어지는 갈림길을 한 번이라도 지나치면, 소개 문구가 정확한 조건으로 바뀐다 */
   const END_EXACT={gwmoth:'G사 병기 출신으로 히든 장비를 3개 이상 먹어 왕족 인자를 깨우고 "나방 공주"를 고른 뒤, 73년차 "왕족의 자리에 앉는다"를 고른다',gwroach:'G사 병기 출신으로 히든 장비를 3개 이상 먹어 왕족 인자를 깨우고 "바퀴 황제"를 고른 뒤, 73년차 "왕족의 자리에 앉는다"를 고른다',gwfly:'G사 병기 출신으로 히든 장비를 3개 이상 먹어 왕족 인자를 깨우고 "파리 대왕"을 고른 뒤, 73년차 "왕족의 자리에 앉는다"를 고른다',gwhuman:'G사 병기 출신으로 73년차 "인간으로 남는다"를 고른다',clawreturn:'머리의 발톱 해금 출생으로 2막 끝까지 가서 지정사서들과 도서관 관장 아벨을 쓰러뜨리고, 종막에서 "도서관의 힘을 추출한다"를 고른다',clawstay:'머리의 발톱 해금 출생으로 2막 끝까지 가서 지정사서들과 도서관 관장 아벨을 쓰러뜨리고, 종막에서 "도서관을 파괴한다"를 고른다',arbkeep:'조율자 해금 출생으로 2막 끝까지 가서 지정사서들과 도서관 관장 아벨을 쓰러뜨리고, 종막에서 "도서관의 힘을 추출하고 한쪽을 남긴다"를 고른다',arbdown:'조율자 해금 출생으로 2막 끝까지 가서 지정사서들과 도서관 관장 아벨을 쓰러뜨리고, 종막에서 "도서관을 파괴하고 조율의 자리에서 내려온다"를 고른다',libstay:'도서관의 지정사서로 56년차부터 요동치는 붉은 책, 붉은 안개, 추출 통지서, 푸른 잔향, 검은 침묵, 총류의 층, 침묵의 오케스트라를 지나, 71년차 "응시자"에서 "추출을 받아들인다"를 고르고 73년차에 마지막 장을 덮는다',libclose:'도서관의 지정사서로 71년차 "응시자"에서 "추출을 막는다"를 고르고 바랄과 제나를 쓰러뜨린 뒤 73년차에 마지막 장을 덮는다',hermobey:'신탁대행자 · 헤르메스로 38년차 이후 "가족을 없애라"에서 "지령을 따른다"를 고르고, 제 2막 73년차 "같은 단말기"에서 뤼엔을 쓰러뜨린다.',hermfree:'신탁대행자 · 헤르메스로 "가족을 없애라"에서 "지령을 거부한다"를 고르거나 가족 지령을 거부하고, 거부 연전과 헤르메스의 자비를 받은 뒤 제 2막 73년차에 뤼엔을 쓰러뜨린다.',crowsucceed:'까마귀팀 복제체로 2막 끝(73년차)의 "처분 판정서를 쓰는 사람"에서 "총사령관의 자리를 잇는다"를 고르고 총사령관 니콜라이를 쓰러뜨린다.',crowrefuse:'까마귀팀 복제체로 2막 끝(73년차)의 "처분 판정서를 쓰는 사람"에서 "자리를 거부하고 사령관으로 남는다"를 고르고 총사령관 니콜라이를 쓰러뜨린다.',wfree:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "퇴직 서류에 서명한다"를 고른다.',wrival:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "웨이페어러 컴퍼니의 제안을 받는다"를 고른다.',wstay:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "서류를 접어 서랍에 넣는다"를 고른다. ("조금 더 생각해 본다"는 5년 뒤 같은 서류가 다시 온다.)',
@@ -1466,10 +1479,10 @@ export function startUI(E,app){
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">대호수 도감 · 대재앙 ${w.filter(id=>r.beaten.includes(id)).length}/${w.length} · 어린 고래 ${y.filter(id=>r.beaten.includes(id)).length}/${y.length}</span>${rows(w,'대재앙')}${rows(y,'보스급 고래')}${rows(o,'그 밖에')}</div>`
   }
   /* 기록실: 칸 제목을 누르면 그 칸이 접히고 펼쳐진다 (브라우저에 기억) */
-  const BOND_COND={claw:'머리의 발톱으로 태어났을 때',arbiter:'조율자로 태어났을 때',librarian:'도서관의 지정사서일 때 (세 부서장 중 한 사람을 고른다)',gweapon:'G사 병기 출신으로 G사가 몰락한 뒤 해결사로 등록했을 때',office:'사무소 소속일 때',assoc:'협회 소속일 때',wing:'날개 소속일 때',freelance:'해결사로 등록하고 소속 없이 지내거나 자기 사무소를 열었을 때',thumb:'엄지 소속일 때',pointer:'검지 소속일 때',middle:'중지 소속일 때',ring:'약지 소속일 때',kuro:'흑운회 소속일 때',blade:'검계 소속일 때',awl:'밤의 송곳 소속일 때',hyeolgwi:'혈귀로 태어났을 때',east:'동부 출신 외곽 생존자로 태어났을 때',highfixer:'해결사 '+CFG.bond.hidden.rank+'급 이상일 때 ('+CFG.bond.hidden.chance+'%)',rcorp:'R사 부화장에서 쫓기는 줄기일 때',hcorp:'홍원(H사) 줄기일 때',hermes:'신탁대행자 · 헤르메스로 태어났을 때',crow:'까마귀팀 복제체로 태어났을 때',lake:'대호수로 나간 자일 때',finger:'소지 표식을 가진 채 손가락 조직원이 아닌 곳에서 지낼 때'};
-  const FLAG_TX={giri:'중지의 의리 줄기를 탄',giriDone:'의리 줄기를 끝까지 마친',giriObey:'의리에 순종한',giriTraitor:'의리를 배신한',thumbRebel:'엄지에 반역한',traitor:'배신 줄기를 탄',prophecy:'예언 줄기를 탄',starborn:'별 태생인',lamancha:'라만차 줄기를 탄',taboo:'금기를 어긴',libraryGuest:'도서관의 손님 줄기를 탄',defied:'지령을 어긴',synTop:'조직 최상위에 오른',nihil:'허무 줄기를 탄'};
+  const BOND_COND={claw:'머리의 발톱으로 태어났을 때',arbiter:'조율자로 태어났을 때',librarian:'도서관의 지정사서일 때 (세 부서장 중 한 사람을 고른다)',gweapon:'G사 병기 출신으로 G사가 몰락한 뒤 해결사로 등록했을 때',office:'사무소 소속일 때',assoc:'협회 소속일 때',wing:'날개 소속일 때',freelance:'해결사로 등록하고 소속 없이 지내거나 자기 사무소를 열었을 때',bookish:'검은 가면으로 태어나 첫 만남을 거절했을 때 (3년 뒤)',finger:'소지 표식을 가졌거나, 엄지·검지·중지·약지 소속일 때 (가끔 '+CFG.bond.fingerGeneric+'%)',thumb:'엄지 소속일 때',pointer:'검지 소속일 때',middle:'중지 소속일 때',ring:'약지 소속일 때',kuro:'흑운회 소속일 때',blade:'검계 소속일 때',awl:'밤의 송곳 소속일 때',hyeolgwi:'혈귀로 태어났을 때',east:'동부 출신 외곽 생존자로 태어났을 때',highfixer:'해결사 '+CFG.bond.hidden.rank+'급 이상일 때 ('+CFG.bond.hidden.chance+'%)',rcorp:'R사 부화장에서 쫓기는 루트일 때',hcorp:'홍원(H사) 루트일 때',hermes:'신탁대행자 · 헤르메스로 태어났을 때',crow:'까마귀팀 복제체로 태어났을 때',lake:'대호수로 나간 자일 때',finger:'소지 표식을 가진 채 손가락 조직원이 아닌 곳에서 지낼 때'};
+  const FLAG_TX={giri:'중지의 의리 루트를 탄',giriDone:'의리 루트를 끝까지 마친',giriObey:'의리에 순종한',giriTraitor:'의리를 배신한',thumbRebel:'엄지에 반역한',traitor:'배신 루트를 탄',prophecy:'예언 루트를 탄',starborn:'별 태생인',lamancha:'라만차 루트를 탄',taboo:'금기를 어긴',libraryGuest:'도서관의 손님 루트를 탄',defied:'지령을 어긴',synTop:'조직 최상위에 오른',nihil:'허무 루트를 탄'};
   const reqPart=t=>{const nm=id=>(D.enemies[id]||{}).n||id;let m;
-    if(t==='nojob')return '직업 없이';if(t==='pinky')return '소지 표식을 가진 채';if(t==='bondmarried')return '결혼한 채';if(t==='wtrain')return '혈귀 훈련 줄기일 때';
+    if(t==='nojob')return '직업 없이';if(t==='pinky')return '소지 표식을 가진 채';if(t==='bondmarried')return '결혼한 채';if(t==='wtrain')return '혈귀 훈련 루트일 때';
     if(m=t.match(/^affname:(.+)$/))return m[1]+' 소속일 때';if(m=t.match(/^notaffname:(.+)$/))return m[1]+' 소속이 아닐 때';
     if(m=t.match(/^rank<=(\d+)$/))return m[1]+'급 이상일 때';if(m=t.match(/^fi>=(\d+)$/))return '손가락 '+m[1]+'단계 이상일 때';
     if(t==='beat:any')return '히든 보스를 한 번 이긴 뒤';
@@ -1478,13 +1491,13 @@ export function startUI(E,app){
     if(m=t.match(/^flag:(\w+)$/))return (FLAG_TX[m[1]]||m[1])+' 상태일 때';
     return '';};
   const reqText=q=>{const out=[];const walk=x=>{if(!x)return;if(Array.isArray(x))x.forEach(walk);else if(typeof x==='object'){if(x.any)out.push((x.any.map(reqPart).filter(Boolean)).join(' 또는 '))}else{const t=reqPart(x);if(t)out.push(t)}};walk(q);return out.join(' · ')};
-  const BOSS_HOW={"pil1": ["중지의 의리 줄기", "중지 소속에서 의리 순례(원한의 장부)를 시작한다"], "pil2": ["중지의 의리 줄기", "원한의 장부 첫 페이지를 이긴다"], "pil_trial": ["중지의 의리 줄기", "장부를 받은 뒤 형님의 징벌을 받아들인다"], "pil_hunter1": ["중지의 의리 줄기", "장부를 찢어 의리를 배신한다"], "pil_hunter2": ["중지의 의리 줄기", "중지의 대리인을 이긴다"], "pil_matthias": ["중지의 의리 줄기", "중지 3단계 이상에서 의리를 마친 뒤 큰누님을 이긴다"], "bigsis": ["중지", "히든 보스를 한 번 이긴 뒤 만난다. 중지 소속일 때 훨씬 자주 나온다"], "matthias": ["중지", "중지 소속에서 의리 줄기를 타지 않고 15년차 이후에 만난다"], "matthias2": ["중지가 아닌 곳", "다른 소속에서 15년차 이후, 히든 보스를 한 번 이긴 뒤 만난다"], "godmother": ["엄지의 반역 줄기", "엄지에서 반역을 택한다"], "godfather": ["엄지", "히든 보스를 한 번 이긴 뒤 만난다. 엄지 성향이 높을수록 자주 나온다"], "leihuang": ["엄지", "엄지 소속이거나 히든 보스를 한 번 이긴 뒤 만난다. 엄지면 훨씬 자주 나온다"], "proxy": ["검지", "검지 소속이거나 지령을 어긴 뒤 13년차 이후에 만난다. 검지면 더 자주 나온다"], "araya": ["약지", "직업 없이 13년차 이후에 만난다. 약지 소속이면 훨씬 자주 나온다"], "ryoshu": ["약지", "약지 소속에서 신체파 도슨트를 이긴 뒤 18년차 이후에 만난다"], "twistedjun": ["검계", "검계 최상위(조직 정상)에 오른 뒤 만난다"], "jeoldosa": ["검계의 배신 줄기", "배신 줄기를 탄다"], "jester": ["허무 줄기", "허무 줄기를 탄다"], "apocalypse": ["예언 줄기", "예언 줄기를 타고 2급 이상으로 20년차 이후에 만난다"], "hongwon": ["홍원", "별 태생이면 65년차 이후, 소지 표식을 가진 채면 40년차 이후에 만난다"], "dulcinea": ["라만차 줄기", "라만차 줄기에서 신부를 이긴 뒤 18년차 이후에 만난다"], "priest": ["라만차 줄기", "라만차 줄기를 타고 17년차 이후에 만난다"], "arbiter": ["금기 줄기", "금기를 두 번 이상 어기고, 푸른 잔향·검은 침묵·도서관의 사서·검지 대행자·엄지의 대부·중지의 큰누님 중 하나를 이긴 뒤, 직업 없이 13년차 이후에 만난다."], "claw": ["금기 줄기", "금기를 한 번 어기고, 푸른 잔향·검은 침묵·도서관의 사서·검지 대행자·엄지의 대부·중지의 큰누님 중 하나를 이긴 뒤, 직업 없이 13년차 이후에 만난다."], "library": ["도서관 줄기", "도서관 손님 줄기를 탄다"], "abel": ["도서관 줄기", "도서관의 사서를 이긴 뒤 20년차 이후에 만난다"], "black": ["해결사 2급 이상", "2급 이상이 된 뒤 13년차 이후에 만난다"], "blue": ["해결사 2급 이상", "2급 이상이 된 뒤 13년차 이후에 만난다"], "scarlet": ["해결사 2급 이상", "2급 이상이 된 뒤 13년차 이후에 만난다. 열기 성향이면 더 자주 나온다"], "violet": ["해결사 2급 이상", "2급 이상이 되고 검은 침묵을 이긴 뒤 만난다. 검 성향이면 더 자주 나온다"], "nothing": ["해결사 3급 이상", "3급 이상이 되고 히든 보스를 한 번 이긴 뒤, 20년차 이후에 만난다"], "orchestra": ["해결사 3급 이상", "3급 이상이 되고 히든 보스를 한 번 이긴 뒤, 20년차 이후에 만난다"], "elena": ["결혼", "결혼한 채 2급 이상, 직업 없이 18년차 이후에 만난다"], "kasetti": ["혈귀 훈련 줄기", "혈귀 훈련 줄기를 탄다"]};
+  const BOSS_HOW={"pil1": ["중지의 의리 루트", "중지 소속에서 의리 순례(원한의 장부)를 시작한다"], "pil2": ["중지의 의리 루트", "원한의 장부 첫 페이지를 이긴다"], "pil_trial": ["중지의 의리 루트", "장부를 받은 뒤 형님의 징벌을 받아들인다"], "pil_hunter1": ["중지의 의리 루트", "장부를 찢어 의리를 배신한다"], "pil_hunter2": ["중지의 의리 루트", "중지의 대리인을 이긴다"], "pil_matthias": ["중지의 의리 루트", "중지 3단계 이상에서 의리를 마친 뒤 큰누님을 이긴다"], "bigsis": ["중지", "히든 보스를 한 번 이긴 뒤 만난다. 중지 소속일 때 훨씬 자주 나온다"], "matthias": ["중지", "중지 소속에서 의리 루트를 타지 않고 15년차 이후에 만난다"], "matthias2": ["중지가 아닌 곳", "다른 소속에서 15년차 이후, 히든 보스를 한 번 이긴 뒤 만난다"], "godmother": ["엄지의 반역 루트", "엄지에서 반역을 택한다"], "godfather": ["엄지", "히든 보스를 한 번 이긴 뒤 만난다. 엄지 성향이 높을수록 자주 나온다"], "leihuang": ["엄지", "엄지 소속이거나 히든 보스를 한 번 이긴 뒤 만난다. 엄지면 훨씬 자주 나온다"], "proxy": ["검지", "검지 소속이거나 지령을 어긴 뒤 13년차 이후에 만난다. 검지면 더 자주 나온다"], "araya": ["약지", "직업 없이 13년차 이후에 만난다. 약지 소속이면 훨씬 자주 나온다"], "ryoshu": ["약지", "약지 소속에서 신체파 도슨트를 이긴 뒤 18년차 이후에 만난다"], "twistedjun": ["검계", "검계 최상위(조직 정상)에 오른 뒤 만난다"], "jeoldosa": ["검계의 배신 루트", "배신 루트를 탄다"], "jester": ["허무 루트", "허무 루트를 탄다"], "apocalypse": ["예언 루트", "예언 루트를 타고 2급 이상으로 20년차 이후에 만난다"], "hongwon": ["홍원", "별 태생이면 65년차 이후, 소지 표식을 가진 채면 40년차 이후에 만난다"], "dulcinea": ["라만차 루트", "라만차 루트에서 신부를 이긴 뒤 18년차 이후에 만난다"], "priest": ["라만차 루트", "라만차 루트를 타고 17년차 이후에 만난다"], "arbiter": ["금기 루트", "금기를 두 번 이상 어기고, 푸른 잔향·검은 침묵·도서관의 사서·검지 대행자·엄지의 대부·중지의 큰누님 중 하나를 이긴 뒤, 직업 없이 13년차 이후에 만난다."], "claw": ["금기 루트", "금기를 한 번 어기고, 푸른 잔향·검은 침묵·도서관의 사서·검지 대행자·엄지의 대부·중지의 큰누님 중 하나를 이긴 뒤, 직업 없이 13년차 이후에 만난다."], "library": ["도서관 루트", "도서관 손님 루트를 탄다"], "abel": ["도서관 루트", "도서관의 사서를 이긴 뒤 20년차 이후에 만난다"], "black": ["해결사 2급 이상", "2급 이상이 된 뒤 13년차 이후에 만난다"], "blue": ["해결사 2급 이상", "2급 이상이 된 뒤 13년차 이후에 만난다"], "scarlet": ["해결사 2급 이상", "2급 이상이 된 뒤 13년차 이후에 만난다. 열기 성향이면 더 자주 나온다"], "violet": ["해결사 2급 이상", "2급 이상이 되고 검은 침묵을 이긴 뒤 만난다. 검 성향이면 더 자주 나온다"], "nothing": ["해결사 3급 이상", "3급 이상이 되고 히든 보스를 한 번 이긴 뒤, 20년차 이후에 만난다"], "orchestra": ["해결사 3급 이상", "3급 이상이 되고 히든 보스를 한 번 이긴 뒤, 20년차 이후에 만난다"], "elena": ["결혼", "결혼한 채 2급 이상, 직업 없이 18년차 이후에 만난다"], "kasetti": ["혈귀 훈련 루트", "혈귀 훈련 루트를 탄다"]};
   /* 히든 보스 도감: 하드 완주 전에는 ???, 하드 완주 후에는 1차(어디서·어떤 조건) 설명, 한 번이라도 만나면 2차(획득 방법) 설명 */
   function hiddenDex(r){
     const hb=D.hiddenBosses||[],ids=[...new Set(hb.map(h=>h.id))].filter(id=>D.enemies[id]);
     const rows=ids.map(id=>{const e=D.enemies[id],hs=hb.filter(h=>h.id===id),seen=(r.seen||[]).includes(id),won=(r.beaten||[]).includes(id);
       const conds=hs.map(h=>reqText(h.req)).filter(Boolean),from=Math.min(...hs.map(h=>h.from||1));
-      const route=hs.some(h=>JSON.stringify(h.req||'').includes('affname'))?'소속 줄기':'갈림길';
+      const route=hs.some(h=>JSON.stringify(h.req||'').includes('affname'))?'소속 루트':'갈림길';
       const d=e.drop||{},gears=[...(d.gears||[]).map(g=>g.n),...(d.gear?[d.gear.n]:[])];
       let tx;
       if(seen)tx=`만난 곳: ${BOSS_HOW[id]?BOSS_HOW[id][1]:(conds.join(' / ')||'조건 없음')+' · '+from+'년차부터'}\n이기면: ${gears.length?gears.join(' · ')+' 획득':(d.n?d.n+' 획득':'쓰러뜨린 기록이 남는다')}${won?'':'\n지면: 이야기가 거기서 끝난다'}${won?'\n✓ 쓰러뜨렸다':''}`;
@@ -1492,7 +1505,7 @@ export function startUI(E,app){
       else tx='';
       return [seen,seen?esc(e.n)+(won?' ✓':''):'???',tx||(seen?'':'하드 완주 후에 어디서 만나는지 알 수 있다')]});
     const got=rows.filter(x=>x[0]).length;
-    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 보스 도감 · 만난 ${got}/${rows.length}</span><div class="stack" style="gap:10px">${rows.map(([o,l,h])=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${o?'':' dim'}">${l}</span><span class="small dim" style="white-space:pre-line">${esc(h)}</span></div>`).join('')}</div><p class="small dim">${r.hardClear?'하드 완주 보상: 만나지 못한 상대는 어디서 만나는지, 만난 상대는 얻는 방법이 열려 있다.':'하드 완주를 하면 만나지 못한 상대가 어디서 나오는지 알 수 있다.'}</p></div>`}
+    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 보스 도감 · 만난 ${got}/${rows.length}</span><span class="small dim">보조 히든 장비 ${((r.pity&&r.pity.got)||[]).filter(x=>/^aux_h_/.test(x)).length}/${Object.values(D.enemies).reduce((n,e)=>n+[...((e.drop&&e.drop.gears)||[]),...((e.drop&&e.drop.gear)?[e.drop.gear]:[])].filter(g=>/^aux_h_/.test(g.id||'')).length,0)} · 일반 보스 보조 장비 ${((r.pity&&r.pity.got)||[]).filter(x=>/^aux_b_/.test(x)).length}/${Object.values(D.enemies).reduce((n,e)=>n+[...((e.drop&&e.drop.gears)||[]),...((e.drop&&e.drop.gear)?[e.drop.gear]:[])].filter(g=>/^aux_b_/.test(g.id||'')).length,0)}</span><div class="stack" style="gap:10px">${rows.map(([o,l,h])=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${o?'':' dim'}">${l}</span><span class="small dim" style="white-space:pre-line">${esc(h)}</span></div>`).join('')}</div><p class="small dim">${r.hardClear?'하드 완주 보상: 만나지 못한 상대는 어디서 만나는지, 만난 상대는 얻는 방법이 열려 있다.':'하드 완주를 하면 만나지 못한 상대가 어디서 나오는지 알 수 있다.'}</p></div>`}
   const ENDS0=[['gwmoth','나방 공주의 밤'],['gwroach','바퀴 황제의 왕좌'],['gwfly','파리 대왕의 식탁'],['gwhuman','인간으로 남은 병기'],['clawreturn','돌아온 발톱'],['clawstay','길을 닫은 발톱'],['arbkeep','한쪽을 남긴 조율자'],['arbdown','내려온 조율자'],['libstay','책이 된 사서'],['libclose','문을 닫는 사서'],['wfree','열차를 내린 사람'],['wrival','열차를 쓰지 않는 계약'],['wstay','출발 신호음 없는 열차'],['rcorp','나는 존재한다'],['hwhost','선황충을 품은 가주'],['hwmaker','가주메이커'],['hwflee','후보를 데리고 떠난 필두'],['hwlose','홍원 군주의 탄생'],['hwfree','홍원의 가주'],['hwbreak','철함사의 목을 친 가주'],['crowsucceed','처분 판정서의 마지막 장'],['hermobey','끝난 지령'],['hermfree','지령 없는 아침'],['crowrefuse','돌아가지 못한 사령관'],['death','쓰러짐'],['mind','정신 붕괴'],['distort','뒤틀림'],['win',CFG.years+'년 완주'],['true','발톱과 조율자 너머'],['outer','외곽에서 끝낸 이야기'],['out_seal','균열이 닫힌 외곽'],['out_star','도시의 별'],['out_settle','외곽의 작은 집'],['out_famblood','불사의 강물'],['out_fampill','금지된 환'],['out_famcrow','배양조의 시간'],['out_famlake','선원의 이름'],['distwin','뒤틀린 채 완주'],['old','늙어도 살아남은'],['blank','아무것도 없는 존재'],['blankwed','아무것도 없는 존재 · 가족'],['wed','함께 넘은 첫 번째 막'],['lovekill','사랑하던 이의 손에'],['overflow','히든 엔딩 · 오버플로우']];
   const REC_TABS=['요약','칭호','인연','엔딩','히든 보스','출생·소속','심볼','장비','상대'];
   const recTabOf=t=>/^(최고 기록|판 통계)/.test(t)?'요약':/^칭호/.test(t)?'칭호':/^인연/.test(t)?'인연':/^엔딩/.test(t)?'엔딩':/^히든 보스/.test(t)?'히든 보스':/^(히든 출생|소속|타고난 것|해금 출생|히든 직업)/.test(t)?'출생·소속':/^심볼/.test(t)?'심볼':/^특수 장비/.test(t)?'장비':'상대';
@@ -1515,8 +1528,8 @@ export function startUI(E,app){
         <div class="row between"><span>도달한 위협 등급</span><b class="mono">${r.best.grade>=0?X.grades[r.best.grade]:'—'}</b></div>
         <div class="row between"><span>끝낸 판</span><b class="mono">${r.runs}</b></div></div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">칭호 · 최고 등급에 오른 횟수</span><div class="stack" style="gap:6px">${TITLE_REC.map(n=>{const c=(r.titles||{})[n]||0;return hintRow(c,`${esc(n)} ×${c}`,!c&&r.hardClear&&TITLE_EXACT[n]?'[하드 완주 보상] '+TITLE_EXACT[n]:TITLE_HINT[n])}).join('')}</div></div>
-      ${(()=>{const BDc0=CFG.bond,LR={claw:'발톱',arbiter:'조율자',librarian:'도서관',gweapon:'G사 병기',office:'사무소',assoc:'협회',wing:'날개',finger:'소지',thumb:'엄지',pointer:'검지',middle:'중지',ring:'약지',kuro:'흑운회',blade:'검계',awl:'밤의 송곳',hyeolgwi:'혈귀',freelance:'무소속',east:'동부 외곽 출신',highfixer:'고급 해결사',rcorp:'R사',hcorp:'H사',lake:'대호수'},lov=r.lovers||{},rows=[];
-        for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++){const V=R.variants?R.variants[vi]:R,lv=lov[rk+':'+vi]||0;rows.push([lv,lv?`${lv>1?'♥':'✓'} ${V.who}`:'???',lv?`${LR[rk]||rk} · ${V.look||''}`:r.hardClear&&V.meet?`[하드 완주 보상] ${LR[rk]||rk} 줄기에서 만날 수 있다\n조건: ${BOND_COND[rk]||'해당 줄기일 때'} · ${BDc0.from}년차부터\n만남 사건 「${V.meet.t}」`:rk==='finger'?'소지 표식을 가진 채 손가락 조직원이 아닌 곳(사무소·협회·날개·무소속)에서 지내면, 말수가 적은 사람이 먼저 눈을 마주친다':`${LR[rk]||rk} 쪽에서 만난다`])}
+      ${(()=>{const BDc0=CFG.bond,LR={claw:'발톱',arbiter:'조율자',librarian:'도서관',gweapon:'G사 병기',office:'사무소',assoc:'협회',wing:'날개',finger:'손가락 공통(소지)',bookish:'검은 가면',thumb:'엄지',pointer:'검지',middle:'중지',ring:'약지',kuro:'흑운회',blade:'검계',awl:'밤의 송곳',hyeolgwi:'혈귀',freelance:'무소속',east:'동부 외곽 출신',highfixer:'고급 해결사',rcorp:'R사',hcorp:'H사',lake:'대호수'},lov=r.lovers||{},rows=[];
+        for(const [rk,R] of Object.entries((D.bond&&D.bond.routes)||{}))for(let vi=0;vi<(R.variants?R.variants.length:1);vi++){const V=R.variants?R.variants[vi]:R,lv=lov[rk+':'+vi]||0;rows.push([lv,lv?`${lv>1?'♥':'✓'} ${V.who}`:'???',lv?`${LR[rk]||rk} · ${V.look||''}`:r.hardClear&&V.meet?`[하드 완주 보상] ${LR[rk]||rk} 루트에서 만날 수 있다\n조건: ${BOND_COND[rk]||'해당 루트일 때'} · ${BDc0.from}년차부터\n만남 사건 「${V.meet.t}」`:rk==='finger'?'소지 표식을 가진 채 손가락 조직원이 아닌 곳(사무소·협회·날개·무소속)에서 지내면, 말수가 적은 사람이 먼저 눈을 마주친다. 엄지·검지·중지·약지 소속도 가끔 같은 사람을 만난다':`${LR[rk]||rk} 쪽에서 만난다`])}
         const met=rows.filter(x=>x[0]).length,wed=rows.filter(x=>x[0]>1).length;
         return `<div class="panel stack" style="gap:6px"><span class="eyebrow">인연 · 만난 ${met}/${rows.length} · 결혼 ${wed}</span><div class="stack" style="gap:6px">${rows.map(([lv,l,h])=>`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip${lv?'':' dim'}" style="${lv>1?'color:var(--bleed);border-color:var(--bleed)':''}">${esc(l)}</span><span class="small dim" style="white-space:pre-line">${esc(h)}</span></div>`).join('')}</div><p class="small dim">✓ 만나 본 인연 · ♥ 결혼까지 간 인연. 소속마다 만나는 사람이 다르다.</p></div>`})()}
       ${(()=>{const H=D.hiddenOrigins||[],got=r.births||[];return H.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 출생 ${H.filter(x=>got.includes(x.n)).length}/${H.length}</span><div class="stack" style="gap:6px">${H.map(x=>{const o=got.includes(x.n);return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${o?'':' dim'}" style="justify-self:start">${o?esc(x.n):'???'}</span><span class="small dim">${o?esc(String(x.t||'').split(/(?<=[.다])\s/)[0]):'아직 태어나 보지 못했다'}</span></div>`}).join('')}</div><p class="small dim">그 출생으로 한 번이라도 시작하면 열린다.</p></div>`:''})()}
@@ -1646,9 +1659,47 @@ ${symRec(r)}
     '검은 가면: 해결사 시작 등급이 적용되지 않던 문제를 고쳤습니다. 5급으로 시작하고, 연기 전쟁이 끝난 뒤 실적으로 3급이 되며, 그 뒤에 찰스 사무소의 제안이 옵니다. 입단하면 출생 전용 책장에 카드 "개문"이 추가됩니다(다른 책장에는 적용되지 않습니다).',
     '연기 전쟁 난이도를 한 번 더 조정했습니다.',
     '도움말의 능력치 설명을 최신으로 고쳤습니다.']]];
-  const NOTICE={id:'v11.1.2',t:'도시의 한 해 '+VERSION+' · 새 소식',
+const V1120SEC=[['🆕 카드',[
+    '호흡·화상·충전 카드 12장이 일반 보상에 추가되었습니다.',
+    '선율 카드 4장이 일반 보상에 추가되었습니다. 선율을 쌓는 카드를 처음 받으면, 터뜨리는 카드(화음)가 없을 때 화음이 짝으로 한 장 같이 제안됩니다(한 판에 한 번).',
+    'N사 날개 전용 못 카드 5장이 추가되었습니다. 코스트 2로 못을 흐트러짐으로 바꾸는 「쐐기 망치」도 있습니다.',
+    '덱 시너지: 출혈·호흡·침잠·충전 키워드의 카드가 덱에 3장 이상, 파열·화상 키워드의 카드가 덱에 2장 이상 있으면 전투에서 작은 보너스가 켜집니다. 출혈·파열은 그 키워드를 거는 카드가 1씩 더 걸고, 호흡은 2라운드마다 줄어듭니다. 화상은 라운드 끝에 20%만 줄고, 침잠은 피해 감소가 한 단계 더 붙고, 충전은 맞아서 줄어드는 양이 1 줄고 전투를 충전 3으로 시작합니다.',
+    '덱과 카드함에 합쳐 같은 카드를 5장 넘게 가지면 카드 보상에 덜 나옵니다. 덱에는 같은 카드가 3장까지 들어가고(덱이 고정된 전용 책장은 제외), 카드함에는 최대 100장까지 모을 수 있습니다.',
+    '덱이 고정된 전용 책장을 쓰는 중에도 보상 카드를 카드함에 받을 수 있습니다(쓰는 덱에는 끼우지 않습니다).']],
+  ['⚖ 전투 조정',[
+    '머리의 발톱과 조율자의 무기를 강화하고 마지막 상대의 체력을 조정했습니다.',
+    '바랄과 제나 전투 방식을 바꿨습니다. 제나는 단계마다 기믹이 생기고, 바랄을 이기면 체력이 크게 회복된 채 이어서 싸웁니다. 전투 화면에 충격파 경고 배너가 생겼고, 적의 패시브는 접어 볼 수 있습니다. 바랄·제나 무기도 조정했습니다.',
+    '동부 출신 N사: 적중마다 못이 3씩 쌓이고, 8개가 되면 저절로 흐트러짐으로 바뀝니다.',
+    'E.G.O 적성자: 정신력이 떨어지면 개화(또는 뒤틀림) 판정이 생깁니다. 타고나는 개화 효과, 덱 +2, 처음 3라운드 빛 +1은 그대로입니다.',
+    '유물 확률: 동부 출신 외곽 생존자는 40%, 보냐텔리 가문은 5%로 조정했습니다. 동부 출신은 첫 시도가 실패해도 2년 뒤 한 번 더 기회가 옵니다.']],
+  ['🌊 무한 모드',[
+    '화상·수흔·출혈·파열은 적 최대 체력 비율로 피해를 주고, 침잠·예의·지령·순종·충격·사슬·거미줄·흐트러짐·왜곡 같은 상태는 적이 받는 피해를 늘립니다(상한이 있습니다).',
+    '최근에 만난 불순물은 10번 동안 다시 나오지 않습니다.',
+    '사무소 직원 면담이 무한 모드에서도 나오고(같은 직원은 50년 뒤 반복), 사무소 외곽 이야기 13개가 추가되었습니다.']],
+  ['⛵ 대호수',[
+    '무한 모드의 가속(25해마다 불순물이 찾아오는 구간)에서 선원 모집 사건이 나오지 않아 선원이 보충되지 않던 문제를 고쳤습니다.',
+    '무한 모드에서 전투를 해도 배 내구도가 줄지 않던 문제를 고쳤습니다.',
+    '대호수의 세계의 균열이 호수 전투 확률에 묶여 지나치게 늦게 나오던 문제를 고쳤습니다. 이제 일반 무한 모드와 같은 확률로 나옵니다.']],
+  ['🛒 공방',[
+    '공방 거리에 "장비 판매" 칸이 생겼습니다. 열기를 누르면 보관함에 쌓인 장비를 돈으로 바꿀 수 있습니다(장착한 장비는 팔 수 없습니다. 공방 해결사는 제외).',
+    '공방 장비 정비에서 실패한 시도를 돈을 내고 1번씩 되돌려 다시 시도할 수 있습니다.']],
+  ['🎁 보스 보상',[
+    '일부 보스의 보상이 보조 장비로 바뀌고, 보스마다 서로 다른 장비가 나옵니다.',
+    '일반 보스도 이길 때마다 보조 장비를 줄 수 있습니다. 히든 보스의 장비보다 한참 약합니다.',
+    '보조 장비가 잘 나오지 않으면 다음에 나올 확률이 조금 올라갑니다. 기록실에서 수집 현황을 볼 수 있습니다.']],
+  ['🔧 수정',[
+    '같은 장비를 다시 장착하면 장비가 복사되던 문제를 고쳤습니다.',
+    '한 판에서 같은 상대를 두 번 만날 수 있던 문제를 고쳤습니다.',
+    '검은 가면: 해금 보상 장비가 기존 무기를 흡수하는 방식으로 정리되었습니다.',
+    '푸른 잔향의 공격 효과가 나올 때 설정 버튼이 밀리던 문제를 고쳤습니다.',
+    '기록실의 영문 키가 그대로 보이던 것과 \'줄기\' 표기를 고쳤습니다. 키워드 설명에 선율을 추가했습니다.',
+    '오늘의 시드가 일주일째 같은 출신(혈귀)으로 고정되어 있던 문제를 고쳤습니다. 이제 날마다 다른 출신과 타고난 것으로 시작합니다.',
+    '오늘의 시드는 해금 출생·직업과 상관없이, 날마다 정해진 출신으로 모두 같게 시작합니다.',
+    '조율자의 집행 권한으로 받는 집행 카드가 3장까지만 늘고, 그 뒤에는 카드 대신 공격이 오르도록 고쳤습니다(덱이 같은 카드로 가득 차던 문제).']]];
+  
+  const NOTICE={id:'v11.2.0',t:'도시의 한 해 '+VERSION+' · 새 소식',
     note:'이 공지는 업데이트 이후 처음 새로 고침한 분께 한 번만 표시됩니다. 확인을 누르면 다시 뜨지 않고, 첫 화면의 "이번 업데이트"에서 다시 볼 수 있습니다.',
-    sec:V1112SEC};
+    sec:V1120SEC};
   /* 공지는 이번 버전 것만 위에 보인다. 버전을 올릴 때: 지금 쓰던 VXXXXSEC를 PAST 맨 앞에 ['vX.Y.Z',VXXXXSEC]로 옮기고, 새 VXXXXSEC를 만들어 NOTICE.sec에 넣는다 */
   const V1029MIX=[['🔧 v10.1.7 조정',['공방 해결사 편의성 증가','연출 강도 차이가 나지 않던 것 수정','환상체 몇 명 조정','라운드마다 HP UI 조정']],['🔧 v10.1.8 조정',['세이브 불러오기 시 해금 목록이 바로 적용되지 않던 문제 수정']],['🔧 v10.1.9 조정',['공방 해결사 보조 장비 종류 선택 · 강화 개편','카드 보상을 받을 때 돈 500안을 함께 지급','R사 팀별 시작 무기 변경','손가락 승급 이벤트 추가']],['🔧 v10.2.0 조정',['호흡이 최대치를 넘어 쌓이던 버그 수정','보호막이 최대치를 넘은 상태에서 카드로 보호막을 얻으면 줄어들던 버그 수정','1000해 달성 이후 불순물 너프']],['🔧 v10.2.1 조정',['무기와 보조 장비로 부여할 수 있는 키워드량을 정리했습니다. 한 키워드당 라운드마다 무기 5, 보조 장비 5까지 부여하고, 둘을 합쳐 최대 10까지 부여할 수 있습니다.','공방 해결사 지팡이의 집중 키워드는 이 제한을 받지 않습니다. 강화 단계가 오를수록 쌓을 수 있는 최대치도 함께 늘어납니다.','위 부여량 제한이 규칙 요약에 빠져 있던 것을 추가했습니다.']],['🔧 v10.2.2 조정',['카드 보상을 받을 때 함께 주는 돈을 500안에서 200안으로 조정했습니다.']],['🔧 v10.2.3 조정',['무기로 거는 파열은 라운드 제한 대신 적중 한 번마다 5까지 부여합니다. 파열은 소모가 빨라 높게 쌓기 어려웠던 점을 고쳤습니다. 쌓이는 최대치는 그대로입니다.']],['🔧 v10.2.4 조정',['흑운회 전용 카드 흑운도를 낼 수 없던 문제를 고쳤습니다. 이제 구름이 3 이상이면 쓸 수 있고, 낼 차례에 구름이 모자라면 불발합니다(앞선 카드로 구름을 채웁니다).','흑운도를 강화했습니다. 주사위 5개 → 6개, 출혈 5 → 7.','카드가 효과를 내려면 필요한 구름이 카드에 표시됩니다.']],['🔧 v10.2.5 조정',['상대 HP 조건이 있는 카드(내부 숙청 · 처형 선고)를 낼 수 없을 때 이유를 카드에 표시합니다.']],['🔧 v10.2.6 조정',['검계·흑운회 보상 패치: 흑운도 강화, 육참·골단 조정, 폭발·반격 배율 표시 수정']],['🔧 v10.2.7 조정',['오늘의 시드가 11월 5일까지 특수 출신과 타고난 것 조합으로 바뀝니다. 타고난 것이 둘 함께 붙는 날도 있습니다.']],['🔧 v10.2.8 조정',['푸른 잔향 난이도를 조정했습니다.']],['🔧 v10.2.9 조정',['장비금지 가시성을 조금 올렸습니다.']]];
 
@@ -1768,11 +1819,11 @@ ${symRec(r)}
     let r;try{r=xDecode(txt)}catch(e){UI.xmsg=[false,'불러오지 못했다 · '+(e&&e.message||'코드를 확인해 주세요')];UI.xask=null;UI.xopen=true;render();return}
     if(loadSave()&&UI.xask!==txt){UI.xask=txt;UI.xmsg=[false,'이 기기에 이어하기 세이브가 있다. 한 번 더 누르면 덮어쓴다.'];UI.xopen=true;render();return}
     for(const k of XKEYS){if(r.out[k])store.set(k,r.out[k])}
-    E.setInnateOpen(loadRec().unl||[]);   // 불러온 해금 목록을 바로 적용(새로고침 전에는 옛 목록이 남아 해금 타고난 것이 안 나왔다)
+    pityLoad();E.setInnateOpen(loadRec().unl||[]);   // 불러온 해금 목록을 바로 적용(새로고침 전에는 옛 목록이 남아 해금 타고난 것이 안 나왔다)
     UI.xask=null;UI.xcode=null;UI.xopen=true;UI.xmsg=[true,`불러왔다${r.v?` (v${String(r.v).replace(/^v/i,'')} 세이브)`:''} · 위의 이어하기를 눌러 계속한다`];render();
   }
   /* 이전 공지: 한 번만 뜨는 공지를 다시 볼 수 있게 버전별로 모아 둔다 (규칙 요약 아래) */
-  const PAST=[['v11.1.1',V1111SEC],['v11.1.0',V1110SEC],['v11.0.2',V1102SEC],['v11.0.1',V1101SEC],['v11.0.0',V1100SEC],['v10.4.2',V1042SEC],['v10.4.1',V1041SEC],['v10.4.0',V1040SEC],['v10.3.0',V1030SEC],['v10.1.7 ~ v10.2.9 조정 모음',V1029MIX],['v10.1.5',V1015SEC],['v10.1.0',V1010SEC],['v10.0.8',V1008SEC],['v10.0.7',V1007SEC],['v10.0.6',V1006SEC],['v10.0.5',V1005SEC],['v10.0.4',V1004SEC],['v10.0.3',V1003SEC],['v10.0.2',V1002SEC],['v10.0.1',V1001SEC],['v10.0.0',V1000SEC],['v9.9.4',V994SEC],['v9.8.7',V987SEC],['v9.8.6',V986SEC],['v9.8.5',V985SEC],['v9.8.4',V984SEC],['v9.4.4',V944SEC],['v9.4.3',V943SEC],['v9.4.2',V942SEC],['v9.4.0',V940SEC],['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
+  const PAST=[['v11.1.2',V1112SEC],['v11.1.1',V1111SEC],['v11.1.0',V1110SEC],['v11.0.2',V1102SEC],['v11.0.1',V1101SEC],['v11.0.0',V1100SEC],['v10.4.2',V1042SEC],['v10.4.1',V1041SEC],['v10.4.0',V1040SEC],['v10.3.0',V1030SEC],['v10.1.7 ~ v10.2.9 조정 모음',V1029MIX],['v10.1.5',V1015SEC],['v10.1.0',V1010SEC],['v10.0.8',V1008SEC],['v10.0.7',V1007SEC],['v10.0.6',V1006SEC],['v10.0.5',V1005SEC],['v10.0.4',V1004SEC],['v10.0.3',V1003SEC],['v10.0.2',V1002SEC],['v10.0.1',V1001SEC],['v10.0.0',V1000SEC],['v9.9.4',V994SEC],['v9.8.7',V987SEC],['v9.8.6',V986SEC],['v9.8.5',V985SEC],['v9.8.4',V984SEC],['v9.4.4',V944SEC],['v9.4.3',V943SEC],['v9.4.2',V942SEC],['v9.4.0',V940SEC],['v9.3.4',V934SEC],['v9.3.3',V933SEC],['v9.3.2',V932SEC],['v9.1.0',V910SEC],['v9.0.0',V900SEC],['v7.3.2',V732SEC],['v7.3.1',V731SEC],['v7.3.0',V730SEC],['v7.2.1',V721SEC],['v7.2.0',V720SEC],['v7.1.0',V710SEC],['v7.0.4',V704SEC],['v7.0.3',V703SEC],['v7.0.1',V701SEC],['v7.0.0',V700SEC],['v6.1.0',V610SEC],['v6.0.9',V609SEC],['v6.0.8',V608SEC],['v6.0.7',V607SEC],['v6.0.6',V606SEC],['v6.0.5',V605SEC],['v6.0.4',V604SEC],['v6.0.3',V603SEC],['v6.0.2',V602SEC],['v6.0',V6SEC]];
   function vPast(){return `<details><summary>이전 공지</summary><div class="stack" style="gap:12px;margin-top:8px">${PAST.map(([v,sec])=>`<div class="stack" style="gap:6px"><div class="eyebrow">${v}</div>${noticeBody(sec)}</div>`).join('')}</div></details>`}
   /* 오늘의 시드: 한국 시간 날짜 → 숫자 */
   const todayKey=()=>{const t=new Date(Date.now()+9*3600e3);return t.toISOString().slice(0,10)};
@@ -1840,7 +1891,7 @@ ${symRec(r)}
       ${vJobRoll()}${vJobPick()}${vOriginPick()}${vBloodPick()}${testPresetPanel()}
       ${b.fateChoices&&!b.fated?`<div class="panel stack" style="gap:8px;border-color:var(--gold)"><span class="eyebrow" style="color:var(--gold)">운명이 찾아왔다 · 하나를 고르거나 거절한다</span><span class="small">아무것도 쥐지 않고 태어났지만, 이름 없는 존재에게도 길이 두 갈래로 놓였다.</span>${b.fateChoices.map(r_=>{const h=D.hiddenOrigins.find(x=>x.roll===r_);return `<button class="btn" data-a="fate" data-i="${r_}"><b>${esc(h.n)}</b><span class="small">${esc(h.t)}</span><span class="mono small" style="color:var(--gold)">${esc(h.e)}</span></button>`}).join('')}<button class="btn" data-a="nofate"><b>운명을 거절한다</b><span class="small">아무것도 쥐지 않은 채 그대로 시작한다. 이름 없는 삶, 솔로 엔딩을 노리는 길이다.</span></button></div>`:''}
       <div class="stack"><button class="btn primary" data-a="live" ${(b.relicPick&&!UI.relic)||(b.teamPick&&!UI.team)||(b.fateChoices&&!b.fated)?'disabled':''}>${b.fateChoices&&!b.fated?'운명을 먼저 고른다':b.relicPick&&!UI.relic?'유물을 먼저 고른다':b.teamPick&&!UI.team?'팀을 먼저 고른다':'이 삶을 산다'}</button>
-      ${fingerBtns()}${b.blank||UI.job?'':'<button class="btn quiet" data-a="blank">어떤 출생 보정도 없이 시작한다</button>'}<button class="btn quiet" data-a="title"><b>첫 화면으로</b><span class="dim small">출생 굴림을 접고 처음으로 돌아간다</span></button></div>${vSettings()}`;
+      ${sisBtns()}${fingerBtns()}${b.blank||UI.job?'':'<button class="btn quiet" data-a="blank">어떤 출생 보정도 없이 시작한다</button>'}<button class="btn quiet" data-a="title"><b>첫 화면으로</b><span class="dim small">출생 굴림을 접고 처음으로 돌아간다</span></button></div>${vSettings()}`;
   }
   /* 6시즌: 출생 규칙 설명 + 표 전체 (이번에 나온 칸 표시) */
   function vBirthHelp(b){
@@ -1913,6 +1964,52 @@ ${symRec(r)}
   }
   /* 사무소 사건 도움말: 신뢰·평판·돈 표시가 무슨 뜻인지 한 줄로 알려 준다 */
   const officeLegend=ev=>ev&&ev.staffEv?'<p class="small dim">신뢰: 이 직원이 나를 믿는 정도(0~5). 높을수록 직원이 의뢰를 더 잘 해결한다 · 안: 돈. 빨간 −는 사무소 돈이 나가고 초록 +는 들어온다.</p>':ev&&ev.t==='이직 제안'?'<p class="small dim">평판: 지금 사무소에서 쌓은 신용(−5~+3). 옮기면 깎이고 오래 머물면 오른다. 평판이 낮으면 장비 값이 오르고 높으면 내린다.</p>':'';
+  /* ── 시지프 백화점 재단대: 마네킹 위에 형태·무늬·색·장식을 겹쳐 그린다(SVG). 이미지가 없어도 동작한다 ── */
+  const SIS_PATH={daily:'M32 44 L50 34 Q60 42 70 34 L88 44 L98 66 L84 72 L84 118 L36 118 L36 72 L22 66 Z',suit:'M30 44 L48 34 L60 54 L72 34 L90 44 L100 70 L86 76 L84 128 L36 128 L34 76 L20 70 Z',coat:'M28 44 L48 34 L60 48 L72 34 L92 44 L104 80 L88 86 L88 148 L32 148 L32 86 L16 80 Z',gala:'M44 36 L52 32 Q60 40 68 32 L76 36 L74 70 L100 148 L20 148 L46 70 Z',gold:'M34 38 Q60 28 86 38 L92 150 L28 150 Z'};
+  function sisSvg(sp,T,q){
+    const co=(T.colors.find(c=>c.id===sp.color)||T.colors[0]).hex,P=SIS_PATH[sp.shape]||SIS_PATH.daily,hem=sp.shape==='gold'?150:sp.shape==='coat'||sp.shape==='gala'?148:sp.shape==='suit'?128:118;
+    const pat={stripe:'<pattern id="sbp" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="3" height="8" fill="rgba(255,255,255,.35)"/></pattern>',band:'<pattern id="sbp" width="120" height="44" patternUnits="userSpaceOnUse"><rect y="12" width="120" height="5" fill="rgba(255,255,255,.4)"/><rect y="30" width="120" height="3" fill="rgba(255,255,255,.3)"/></pattern>',check:'<pattern id="sbp" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 0H12M0 0V12" stroke="rgba(255,255,255,.35)" stroke-width="1.5" fill="none"/></pattern>',dots:'<pattern id="sbp" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r="2" fill="rgba(255,255,255,.4)"/></pattern>'}[sp.pattern]||'';
+    const tr=sp.trims||[],t={button:'<g fill="#e6e6e6" stroke="#0c0e12" stroke-width="1"><circle cx="56" cy="70" r="2.4"/><circle cx="64" cy="70" r="2.4"/><circle cx="56" cy="84" r="2.4"/><circle cx="64" cy="84" r="2.4"/></g>',tooth:'<g fill="#efe9dc" stroke="#0c0e12" stroke-width=".8">'+[44,52,60,68,76].map(x=>`<path d="M${x-3} 50 L${x} 58 L${x+3} 50 Z"/>`).join('')+'</g>',eye:'<g stroke="#0c0e12" stroke-width="1"><circle cx="60" cy="92" r="6.5" fill="#efe9dc"/><circle cx="60" cy="92" r="2.8" fill="#c9a24a"/></g>',buckle:'<g fill="none" stroke="#c9a24a" stroke-width="2"><rect x="52" y="104" width="16" height="9" rx="1.5"/><path d="M60 104V113"/></g>'};
+    return `<svg viewBox="0 0 120 170" width="150" height="212" role="img" aria-label="재단대 미리보기"><defs><clipPath id="sbc"><path d="${P}"/></clipPath>${pat}</defs>
+      <ellipse cx="60" cy="18" rx="11" ry="14" fill="#3d424c" stroke="#0c0e12" stroke-width="2"/><rect x="56" y="30" width="8" height="8" fill="#3d424c"/>
+      <path d="M42 40 L78 40 L74 122 L46 122 Z" fill="#3d424c" stroke="#0c0e12" stroke-width="2"/><path d="M60 122V158" stroke="#0c0e12" stroke-width="3"/><ellipse cx="60" cy="161" rx="18" ry="4" fill="#3d424c" stroke="#0c0e12" stroke-width="2"/>
+      <path d="${P}" fill="${co}" stroke="#0c0e12" stroke-width="2" stroke-linejoin="round"/>
+      ${pat?`<rect x="0" y="0" width="120" height="170" fill="url(#sbp)" clip-path="url(#sbc)"/>`:''}
+      ${sp.pattern==='stitch'?`<path d="M60 56V${hem-4}M38 ${hem-5}H82" stroke="rgba(255,255,255,.55)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" clip-path="url(#sbc)"/>`:''}
+      ${tr.map(k=>t[k]||'').join('')}${q?`<g fill="#c9a24a" stroke="#0c0e12" stroke-width=".6">${Array.from({length:q},(_,i)=>`<path transform="translate(${96+i*10} 14)" d="M0 -5 L1.5 -1.5 L5 -1.2 L2.3 1 L3.1 4.5 L0 2.6 L-3.1 4.5 L-2.3 1 L-5 -1.2 L-1.5 -1.5 Z"/>`).join('')}</g>`:''}</svg>`;
+  }
+  /* 재단대: 위쪽 탭으로 "옷 재단"(새 옷 짓기)과 "옷 손질"(지은 옷의 등급 올리기)을 오간다 */
+  function vSisUp(ev){
+    const ch=G.ch,Q=D.sisyphus.quality,T=D.sisyphus.tailor,cl=ch.sis.cloth.map((c,i)=>({c,i}));
+    if(!cl.length)return `<div class="panel stack" style="gap:6px"><span class="eyebrow">옷 손질</span><p class="small dim">손질할 옷이 없다. 먼저 옷을 지어야 한다.</p></div>`;
+    const up=UI.sbUp=UI.sbUp&&UI.sbUp.ev===ev?UI.sbUp:{ev,i:(cl.find(x=>(x.c.q||0)<3&&!x.c.sealed)||cl[0]).i,slots:Q.parts.map(()=>null)};
+    const sel=ch.sis.cloth[up.i],nm=c=>`${T.colors.find(x=>x.id===c.color).n} ${T.shapes.find(x=>x.id===c.shape).n}`,can=sel&&(sel.q||0)<3&&!sel.sealed;
+    const have=k=>k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0),used=k=>up.slots.filter(x=>x===k).length;
+    const mats=up.slots.filter(Boolean),pct=E.sisUpChance(mats);
+    const star=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+    return `<div class="panel stack" style="gap:8px"><span class="eyebrow">옷 손질 · 지은 옷의 등급 올리기</span><p class="small dim">${Q.x}</p>
+      <div class="seg kinds">${cl.map(({c,i})=>`<button class="${up.i===i?'on':''}" data-a="sbup" data-i="pick:${i}">${esc(nm(c))}<br><small>${Q.names[c.q||0]} ${star(c.q||0)}${c.sealed?' · 끝':''}</small></button>`).join('')}</div>
+      ${can?`${Q.parts.map((pt,pi)=>`<div class="stack" style="gap:4px"><span class="small dim">${pt}</span><div class="seg kinds">${Object.keys(Q.boost).map(k=>`<button class="${up.slots[pi]===k?'on':''}${up.slots[pi]!==k&&used(k)>=have(k)?' sb-off':''}" ${up.slots[pi]!==k&&used(k)>=have(k)?'disabled':''} data-a="sbup" data-i="slot:${pi}:${k}">${esc(D.sisyphus.mats[k].n)}<br><small>${have(k)-used(k)+(up.slots[pi]===k?1:0)}개 · +${Q.boost[k]}%</small></button>`).join('')}<button class="${up.slots[pi]?'':'on'}" data-a="sbup" data-i="slot:${pi}:">비움</button></div></div>`).join('')}
+      <button class="btn primary" data-a="sbup" data-i="go"><b>${Q.names[sel.q||0]} → ${Q.names[(sel.q||0)+1]} 손질한다 · 성공 확률 ${pct}%</b></button>`:`<span class="small dim">${sel&&sel.sealed?'이 옷은 더 손질할 수 없다':'이미 런웨이에 오를 만한 옷이다'}</span>`}</div>`;
+  }
+  function vSisBench(ev){
+    const T=D.sisyphus.tailor,ch=G.ch,g=ch.sis.grade||0;
+    if(UI.sbEv!==ev){UI.sbEv=ev;UI.sbTab=ev.sbCrafted?'up':(UI.sbTab||'cut');const first=T.shapes.find(s=>E.sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok)||T.shapes[0];UI.sb={shape:first.id,pattern:'plain',color:'gray',trims:[]}}
+    const tab=UI.sbTab||'cut',sp=UI.sb,info=E.sisCraftInfo(ch,sp),has=k=>ch.sis.mat[k]||0;
+    const seg=(key,list,cur,dis)=>`<div class="seg kinds">${list.map(x=>`<button class="${cur===x.id?'on':''}${dis(x)?' sb-off':''}" ${dis(x)?'disabled':''} data-a="sbset" data-i="${key}:${x.id}">${esc(x.n)}${key==='shape'?`<br><small>${esc(D.sisyphus.mats[x.base].n)}${x.need>1?' '+x.need:''}</small>`:''}</button>`).join('')}</div>`;
+    const sw=T.colors.map(c=>{const lock=c.grade>g,nod=c.id!=='gray'&&!ch.sis.dyes.includes(c.id);return `<button class="sb-sw${sp.color===c.id?' on':''}" ${lock||nod?'disabled':''} style="background:${c.hex}" data-a="sbset" data-i="color:${c.id}" title="${esc(c.n)}${lock?' · 아직 열리지 않음':nod?' · 염료 없음':''}" aria-label="${esc(c.n)}"></button>`}).join('');
+    const skip=ev.c.findIndex(c=>c.ok&&c.ok.fx&&c.ok.fx.sisGo==='day2'),inv=(ev.x||'').split('\n\n').filter(Boolean);
+    const tabs=`<div class="seg kinds"><button class="${tab==='cut'?'on':''}" data-a="sbtab" data-i="cut">옷 재단</button><button class="${tab==='up'?'on':''}" data-a="sbtab" data-i="up">옷 손질${ch.sis.cloth.length?` (${ch.sis.cloth.length}벌)`:''}</button></div>`;
+    const cut=ev.sbCrafted?`<div class="panel stack" style="gap:6px"><p class="small dim">오늘은 이미 한 벌을 지었다. 새 옷은 내일 지을 수 있고, 지은 옷은 손질할 수 있다.</p></div>`:
+      `<div class="panel stack" style="gap:8px;align-items:center">${sisSvg(sp,T,0)}<span class="small dim">${info.ok?`값 약 ${info.price}안`:esc(info.why)}</span></div>
+      <div class="panel stack" style="gap:8px"><span class="eyebrow">형태</span>${seg('shape',T.shapes,sp.shape,s=>!(has(s.base)>=(s.need||1)))}<span class="eyebrow">무늬</span>${seg('pattern',T.patterns,sp.pattern,p=>p.grade>g)}<span class="eyebrow">색</span><div class="row" style="gap:6px;flex-wrap:wrap">${sw}</div><span class="eyebrow">장식 (부품 ${has('trim')}개)</span><div class="seg kinds">${T.trims.map(x=>`<button class="${sp.trims.includes(x.id)?'on':''}${has('trim')<1&&!sp.trims.includes(x.id)?' sb-off':''}" ${has('trim')<1&&!sp.trims.includes(x.id)?'disabled':''} data-a="sbset" data-i="trim:${x.id}">${esc(x.n)}</button>`).join('')}</div>
+        <span class="small dim">${sp.trims.length?'고른 장식 · '+sp.trims.map(k=>T.trims.find(t=>t.id===k).n).join(', '):'고른 장식 없음'}</span></div>
+      <button class="btn primary" data-a="sbmake" ${info.ok?'':'disabled'}><b>옷을 짓는다</b></button>`;
+    return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 재단대</div><h2>${ev.t}</h2>${inv[0]&&/사냥/.test(inv[0])?`<p class="small dim" style="white-space:pre-line">${inv[0]}</p>`:''}
+      ${tabs}${tab==='up'?vSisUp(ev):cut}
+      <p class="small dim">${inv[inv.length-1]||''}</p></div>
+      <div class="stack" style="gap:8px">${skip>=0?`<button class="btn" data-a="choose" data-i="${skip}"><b>${ev.sbCrafted||tab==='up'?'재단대를 마친다':ev.c[skip].l}</b></button>`:''}</div>`;
+  }
   function vEvent(){
     if(UI.omen)return vOmen();
     if(UI.fight){
@@ -1920,10 +2017,11 @@ ${symRec(r)}
       const rule=(D.hiddenBosses||[]).find(h=>h.id===UI.fight),pen=rule&&rule.penalty&&!E.rankMet(G.ch,rule.penalty.fullRank)?rule.penalty:null;
       const enc=UI.enc&&UI.enc.hidden?`<div class="check"><b>${UI.enc.rift?(G.ch.flags&&G.ch.flags.lake?'호수 밑의 운명':'균열 너머의 운명'):T.hiddenBoss}</b>${pen?` · <span class="bad">${pen.label} · 명중 ${sg(pen.atk)} · 회피 ${sg(pen.eva)} (${pen.fullRank}${T.rankUnit}이면 보정 없음)</span>`:''}</div>`:UI.enc&&UI.enc.roll?`<div class="check">${UI.enc.label} · 1d100 ${UI.enc.roll} → <b>${e.n}</b></div>`:'';
       const avoid=UI.avoidText?`<p class="small dim">${UI.avoidText}</p>`:'';UI.avoidText=null;
-      return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 전투</div>${avoid}${enc}<h2 style="color:${e.color}">${ulName(e.n+(UI.enc&&UI.enc.echo?' · 불순물':''),e.ul)}</h2>${e.trait&&D.traits&&D.traits[e.trait]?`<div class="check"><b>특성 · ${esc(D.traits[e.trait].n)}</b> · ${esc(D.traits[e.trait].d)}</div>`:''}${e.abno?`<div class="check" style="border-color:#8a7fb8"><b style="color:#8a7fb8">환상체</b> · 마주치면 정신력이 2d3 깎인다${G.ch.ego?` (E.G.O 하한 ${CFG.mind.ego[G.ch.ego.type].floor})`:''}</div>`:''}<p class="lead">${UI.enc&&UI.enc.rift?`갈라진 틈 너머에서 ${esc(e.n)}이(가) 흘러들었다. 이 세계의 사건과는 이어지지 않은 채 다른 운명에서 건너온 존재다. 만날 수 없던 상대가 지금 눈앞에 서 있다.`:UI.enc&&UI.enc.echo?'예전에 상대한 적이 있는 모습이다. 하지만 불순물과 같은 느낌이 든다.':e.intro}${UI.fight==='impurity'&&G.ch.infinite&&E.ghostOf(G.ch)?` <span class="dim">그런데 낯익다. 천 살을 넘긴 ${esc(E.ghostOf(G.ch).name||T.you)}. 이름을 잃고 저 자리에 서 있다${E.ghostOf(G.ch).aff?' ('+esc(E.ghostOf(G.ch).aff)+' 출신)':''}.</span>`:''}</p>${e.why&&!(UI.enc&&UI.enc.rift)?`<p class="small dim" style="font-style:italic">${esc(e.why)}</p>`:''}</div>
+      return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 전투</div>${avoid}${enc}<h2 style="color:${e.color}">${ulName(e.n+(UI.enc&&UI.enc.echo?' · 불순물':''),e.ul)}</h2>${e.trait&&D.traits&&D.traits[e.trait]?`<div class="check"><b>특성 · ${esc(D.traits[e.trait].n)}</b> · ${esc(D.traits[e.trait].d)}</div>`:''}${e.abno?`<div class="check" style="border-color:#8a7fb8"><b style="color:#8a7fb8">환상체</b> · 마주치면 정신력이 2d3 깎인다${G.ch.ego?` (E.G.O 하한 ${CFG.mind.ego[G.ch.ego.type].floor})`:''}</div>`:''}<p class="lead">${UI.enc&&UI.enc.rift?`갈라진 틈 너머에서 ${esc(e.n)}이(가) 흘러들었다. 이 세계의 사건과는 이어지지 않은 채 다른 운명에서 건너온 존재다. 만날 수 없던 상대가 지금 눈앞에 서 있다.`:UI.enc&&UI.enc.echo?'예전에 상대한 적이 있는 모습이다. 하지만 불순물과 같은 느낌이 든다.':e.intro}${UI.fight==='impurity'&&G.ch.infinite&&E.ghostOf(G.ch)?` <span class="dim">그런데 낯익다. 저 서 있는 모양을, 어디선가 본 적이 있는 것 같다.</span>`:''}</p>${e.why&&!(UI.enc&&UI.enc.rift)?`<p class="small dim" style="font-style:italic">${esc(e.why)}</p>`:''}</div>
         <button class="btn primary" data-a="fight">맞선다</button>`;
     }
     const ev=UI.ev,ch=G.ch;
+    if(ev.sisBench)return vSisBench(ev);
     const lockBtns=E.lockedOptions(G,ev).map(({c,i})=>({i,html:`<button class="btn" disabled><b>🔒 ${c.l}</b><span class="mono small dim">${c.lock}</span></button>`}));
     const btns=E.options(G,ev).map(({c,i})=>{
       let hint=c.h||'판정 없음 · 결과 확정';
@@ -1947,6 +2045,7 @@ ${symRec(r)}
   function nextLabel(){
     if(G.ch.lvPend>0)return '성장 굴림';
     if(UI.pending)return '맞선다';
+    if(CFG.sis.on&&G.ch.sis&&G.ch.sis.st&&G.ch.sis.st!=='done')return '이어서';
     return G.year>=E.lastYear(G)?'결말을 본다':'다음 해로';
   }
   function vResult(){
@@ -2159,7 +2258,7 @@ ${symRec(r)}
     return `<div class="panel stack ent${compact?' compact':''}${isDanger(v.hp,X.maxHp)?' danger':''}${side==='P'?' deco-'+decoGet().frame:''}" id="ent-${side}" style="--c:${col};background:color-mix(in srgb,${col} 9%,var(--panel));border-color:color-mix(in srgb,${col} 45%,var(--line))">
       ${head}
       <div class="bar" id="bar-${side}"><i style="width:${clamp(v.hp/X.maxHp*100,0,100)}%;background:${col}"></i></div>
-      <div class="chips" id="chips-${side}">${stacks(v)}</div>${side==='P'&&C&&C.ally?`<div class="small" style="color:var(--bleed)">${esc(C.ally.name)} · 함께 싸운다 <span class="dim">· 같은 공격을 함께 굴려 주사위 합 ¾씩 · 상대 명중 +${CFG.bond.allyHit}</span></div>`:''}${side==='E'&&X.passive?`<div class="small" style="color:var(--gold)">패시브 · ${esc(X.passive.n)}${X.passive.id==='recital'?` (악장 ${X.recital||0}/${X.passive.every})`:''}${X.passive.id==='stance'?` (${X.stance==='bear'?'곰 사냥':'범 사냥'} · 살 ${X.sal==null?5:X.sal}/${X.passive.salMax})`:''}${X.maskOn?' <b>(이번 라운드 발동)</b>':''} <span class="dim">· ${esc(X.passive.d)}</span></div>`:''}${side==='E'&&X.trait&&D.traits&&D.traits[X.trait]?`<div class="small" style="color:var(--gold)">특성 · ${esc(D.traits[X.trait].n)} <span class="dim">· ${esc(D.traits[X.trait].d)}</span></div>`:''}</div>`;
+      <div class="chips" id="chips-${side}">${stacks(v)}</div>${side==='P'&&C&&C.ally?`<div class="small" style="color:var(--bleed)">${esc(C.ally.name)} · 함께 싸운다 <span class="dim">· 같은 공격을 함께 굴려 주사위 합 ¾씩 · 상대 명중 +${CFG.bond.allyHit}</span></div>`:''}${side==='E'&&X.passive?`<details class="small pasv"${UI.pvOpen?' open':''} style="color:var(--gold)"><summary>패시브 · ${esc(X.passive.n)}${X.passive.id==='recital'?` (악장 ${X.recital||0}/${X.passive.every})`:''}${X.passive.id==='stance'?` (${X.stance==='bear'?'곰 사냥':'범 사냥'} · 살 ${X.sal==null?5:X.sal}/${X.passive.salMax})`:''}${X.maskOn?' <b>(이번 라운드 발동)</b>':''}</summary> <span class="dim">· ${esc(X.passive.d)}</span></details>`:''}${side==='E'&&X.trait&&D.traits&&D.traits[X.trait]?`<div class="small" style="color:var(--gold)">특성 · ${esc(D.traits[X.trait].n)} <span class="dim">· ${esc(D.traits[X.trait].d)}</span></div>`:''}</div>`;
   }
   function arenaHtml(play){
     if(!play)return MODE==='off'?'':`<div class="arena"><div class="alabel">손패를 고르고 행동 개시를 누르면 주사위가 굴러간다</div></div>`;
@@ -2179,10 +2278,16 @@ ${symRec(r)}
     if(compact){
       /* 휴대폰: 접을 수 있는 라운드 패널. 접혀 있어도 요약 줄(재생 중이면 지금 행동)이 보인다 */
       const n=E.queue(C,PLAYING?UI.lastPP:UI.sel.map(i=>D.cards[C.P.hand[i]]),C.ePlan).length;
-      return `<details class="panel roundbox"${UI.roundOpen?' open':''}><summary><span class="eyebrow">${C.round}라운드</span> · 선공 <b style="color:${C.order[0].color}">${esc(C.order[0].name)}</b> · 행동 ${n}개<span class="qnow" id="qnow"></span></summary>
+      return `${vZenaBanner()}<details class="panel roundbox"${UI.roundOpen?' open':''}><summary><span class="eyebrow">${C.round}라운드</span> · 선공 <b style="color:${C.order[0].color}">${esc(C.order[0].name)}</b> · 행동 ${n}개<span class="qnow" id="qnow"></span></summary>
         <div class="stack" style="gap:6px;margin-top:10px"><span class="eyebrow">순서 1d100 + 속도×${CFG.spdMul}</span><div class="ordline">${li}</div>${pen}${vQueue()}</div></details>`;
     }
-    return `<div class="panel stack" style="gap:6px"><span class="eyebrow">${C.round}라운드 · 순서 1d100 + 속도×${CFG.spdMul}</span>${li}${pen}${vQueue()}</div>`;
+    return `${vZenaBanner()}<div class="panel stack" style="gap:6px"><span class="eyebrow">${C.round}라운드 · 순서 1d100 + 속도×${CFG.spdMul}</span>${li}${pen}${vQueue()}</div>`;
+  }
+  /* 조율자 제나: 충격파 충전·발동 라운드를 눈에 띄게 알린다 (접힌 라운드 패널 밖에 둔다) */
+  function vZenaBanner(){
+    const ZE=C.E&&C.E.passive&&C.E.passive.id==='zena'&&C.E.hp>0?C.E:null,ZP=ZE&&ZE.passive,zc=ZP?Math.round(ZP.guardCut*100):0;
+    const zb=ZE&&ZE.zShock?`<div class="zb zb-warn"><div class="zb-bar"></div><div class="zb-in"><span class="zb-tag">WARNING</span><b>충격파 발동 라운드</b><span class="zb-d"><b>방어 자세</b>를 취하면 피해 ${zc}% 감소 · 취하지 않으면 ${ZP.shockMin}~${ZP.shockMax} 피해를 회피할 수 없이 받는다 (방어 카드를 내도 줄어들지 않는다)</span></div><div class="zb-bar"></div></div>`:ZE&&ZE.zCharge?`<div class="zb zb-caut"><div class="zb-bar"></div><div class="zb-in"><span class="zb-tag">CAUTION</span><b>충격파 충전 중</b><span class="zb-d">다음 라운드 끝에 ${ZP.shockMin}~${ZP.shockMax} 피해 (회피 불가) · 다음 라운드에 방어 자세를 취하면 피해 ${zc}% 감소 (방어 카드로는 줄어들지 않는다) · 충전 중에는 ${ZE.name}가 받는 피해 ${Math.round(ZP.chargeCut*100)}% 감소</span></div><div class="zb-bar"></div></div>`:'';
+    return zb;
   }
   /* 이번 라운드에 실제로 발동하는 순서. 적 카드는 미리 공개된 의도, 내 카드는 고른 대로 */
   function vQueue(){
@@ -2991,7 +3096,7 @@ ${symRec(r)}
         if(got.length)UI.symNew=got.join(' · ')}}
     const r=loadRec(),c=G.ch,w=UI.endWin,dt=UI.death,lived=Math.min(REC_MAXYR,w?G.year:Math.max(0,G.year-1));
     const fe=blankEnd(c,w),k=(fe&&fe!=='wed')?fe:w&&UI.overflowEnd?'overflow':(w&&c.distForm?'distwin':w&&UI.outEnd?'out_'+UI.outEnd:w&&UI.outerEnd?'outer':w&&UI.oldEnd?'old':w&&UI.trueEnd?'true':w?'win':dt&&dt.hunt&&c.distForm?'lovekill':dt&&(dt.cause==='distort'||c.distForm)?'distort':dt&&dt.cause==='mind'?'mind':dt&&dt.id==='hongru'?'hwlose':'death');
-    if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;r.ghost={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp}}
+    if(w&&UI.overflowEnd){const wp=c.gear&&c.gear.weapon;const gst={name:c.name||T.you,lv:c.lv,aff:affName(c)||'',wpn:(wp&&wp.n)||'',wx:(wp&&wp.wx)?JSON.parse(JSON.stringify(wp.wx)):null,deck:(c.deck||[]).filter(id=>D.cards[id]&&['atk','def','buff'].includes(D.cards[id].t)).slice(0,12),atk:c.stats.atk,eva:c.stats.eva,spd:c.stats.spd,hp:c.stats.maxHp};r.ghosts=[gst,...(Array.isArray(r.ghosts)?r.ghosts:(r.ghost?[r.ghost]:[]))].slice(0,3);r.ghost=gst}
     if(!r.endings.includes(k))r.endings.push(k);if(fe==='wed'&&!r.endings.includes('wed'))r.endings.push('wed');r.runs++;if(w&&c.hard)r.hardClear=(r.hardClear||0)+1;if(w&&c.easy)r.easyClear=(r.easyClear||0)+1;
     const S=r.st=r.st||{n:0,sum:0,min:null,max:0,ends:{},aff:{},ori:{},inn:{}},bump=(m,n)=>{if(n)m[n]=(m[n]||0)+1};
     S.n++;S.sum+=lived;S.min=S.min==null?lived:Math.min(S.min,lived);S.max=Math.max(S.max,lived);if(!UI.overflowEnd)bump(S.ends,k);bump(S.aff,affName(c)||(c.licensed?T.licensed:''));bump(S.ori,c.o&&c.o.n);
@@ -3007,6 +3112,16 @@ ${symRec(r)}
   function startCombat(id){recAdd('seen',id);C=E.mkCombat(G.ch,id);UI.sel=[];PLAYING=false;UI.paused=false;UI.screen='combat';render()}
 
   const ACT={
+    sbtab(k){UI.sbTab=k==='up'?'up':'cut';render()},
+    sbup(kv){const [k,v,w]=String(kv).split(':'),up=UI.sbUp;if(!up)return;
+      if(k==='pick'){up.i=+v;up.slots=up.slots.map(()=>null)}
+      else if(k==='slot'){up.slots[+v]=w||null}
+      else if(k==='go'){const ev=UI.ev;if(!ev||!ev.sisBench)return;ev.c.push({l:'손질한다',ok:{t:'바늘이 천을 다시 한 번 훑는다.',fx:{sisUpgrade:{i:up.i,mats:up.slots.filter(Boolean)}}}});UI.sbUp=null;UI.sbTab='up';ACT.choose(ev.c.length-1);return}
+      render()},
+    sbset(kv){const [k,v]=String(kv).split(':'),sb=UI.sb;if(!sb)return;
+      if(k==='trim'){const at=sb.trims.indexOf(v);if(at>=0)sb.trims.splice(at,1);else if(sb.trims.length<3)sb.trims.push(v)}else sb[k]=v;
+      render()},
+    sbmake(){const ev=UI.ev;if(!ev||!ev.sisBench||!UI.sb)return;const sp=JSON.parse(JSON.stringify(UI.sb));ev.c.push({l:'옷을 짓는다',ok:{t:'가위가 천을 따라 움직인다.',fx:{sisCraft:sp}}});ACT.choose(ev.c.length-1)},
     lrelic(k){if(!E.relicChoices(G.ch).includes(k))return;const wn=E.giveRelic(G.ch,k,true);UI.res.chips=[...UI.res.chips,'유물 · '+D.relics[k].n+(wn?' · '+wn:'')];render()},
     offkw(k){UI.offName=(($('offname')||{}).value||UI.offName||'');UI.offKw=k;render()},
     offset(){
@@ -3090,6 +3205,8 @@ ${symRec(r)}
       const ty=UI.egoType||'atk';E.setEgo(G.ch,ty,n);UI.egoErr='';UI.egoName='';UI.egoType=null;
       UI.res.chips=[...UI.res.chips,`E.G.O · ${n} (${CFG.mind.ego[ty].n})`];render();
     },
+    sellgearopen(){UI.sellGearOpen=!UI.sellGearOpen;UI.sellGearMsg='';render()},
+    sellgear(i){const r=E.sellGear(G.ch,+i);if(r){UI.sellGearMsg=`${r.n}을(를) ${E.money(r.v)}에 팔았다.`;render()}},
     sellcard(i){if((UI.soldN||0)>=CFG.workshopFixer.cardMax)return;const r=E.sellCard(G.ch,+i);if(r){UI.soldN=(UI.soldN||0)+1;UI.sold=`${D.cards[r.id].n}을(를) ${E.money(r.v)}에 팔았다.`;resave();render()}},
     swapcard(i){if((UI.swapped||[]).length>=CFG.shop.swapMax)return;const r=E.swapCard(G.ch,+i);if(r){(UI.swapped=UI.swapped||[]).push([D.cards[r.old].n,D.cards[r.nid].n]);render()}},
     wsmelt(i){const [sl,ix]=String(i).split(':'),r=E.wsMelt(G.ch,sl,+ix);if(r){UI.wsMsg=`${r.m}을(를) 녹였다 · ${r.hidden?'히든 재료 · 한 단계 상승':r.step?'일반 재료 +'+r.val+' · '+(r.step>1?r.step+'단계 한꺼번에 ':'한 단계 ')+'상승 ('+r.n+'단계)':'일반 재료 +'+r.val+' · '+r.p+'/'+r.need}${r.sp?' · 특수 효과 획득 · '+({baral:'공격 카드마다 1타 추가',zena:'2번 적중마다 요정 +1',gebura:'적중마다 HP 1 흡수'})[r.sp]:''}`;resave();render()}},
@@ -3098,6 +3215,7 @@ ${symRec(r)}
     wsstkw(i){const r=E.wsSetStaffKw(G.ch,i);if(r){UI.wsMsg=`지팡이 집중 키워드 · ${r.n}`;resave();render()}},
     wsaugc(i){const r=E.wsAugChoose(G.ch,i);if(r){UI.wsMsg=`의수 특수 강화 · 적중 시 ${D.keywords[r.stat].n} +${r.amt}`;resave();render()}},
     wsaug(i){const [ix,k]=String(i).split(':'),r=E.wsAugPick(G.ch,+ix,k);if(r){UI.wsMsg=`${r.m}을(를) 녹여 의수를 개조했다 · ${CFG.ws.aug.stats[r.stat]} +${CFG.ws.aug.pick}`;resave();render()}},
+    tunerw(k){const r=E.tuneRewind(G.ch,k);if(r){UI.tuneMsg={ok:true,t:`${r.n} · 실패한 정비 1번을 되돌렸다 (${r.tries}/${E.tuneMax(G.ch)}) · 다음 되돌리기 ${E.money(r.next)}`};render()}},
     tune(k,el){const r=E.tuneGear(G.ch,k,el&&el.dataset?el.dataset.s:null);if(r){UI.tuneMsg={ok:r.ok,t:`${r.n} · ${r.stat==='atk'?'공격':'회피'} +1 ${r.ok?'성공':'실패'} (${r.tries}/${E.tuneMax(G.ch)})`};render()}},
     delcard(i){if((UI.deleted||[]).length>=CFG.shop.delMax)return;const c=E.delCard(G.ch,+i);if(c){(UI.deleted=UI.deleted||[]).push(D.cards[c].n);render()}},
     tname(){
@@ -3211,6 +3329,7 @@ ${symRec(r)}
     records(){UI.screen='records';render()},
     daily(){if(loadSave()&&UI.confirmNew!=='daily'){UI.confirmNew='daily';render();return}store.del(SAVE);UI.confirmNew=null;if(expired()){UI.screen='title';render();return}UI.shareText=UI.shareMsg=UI.imgUrl=null;UI.daily=todayKey();born(dailySeed(UI.daily),'',true);UI.endText=null;UI.screen='birth';render()},
     blank(){if(!BC||BC.blank||UI.job)return;const nm=BC.name,sd=BC.seed;BC=E.newChar(null,null,{r:BC.r,kid:BC.kid});BC.seed=sd;BC.name=nm;BC.fresh=false;UI.relic=null;BC.fateChoices=E.blankFate();render()},
+    sisbirth(k){if(!SISTEST||!BC)return;if(k==='skip'){UI.sisSkip=!UI.sisSkip;render();return}const nm=BC.name,sd=BC.seed;E.reseed(sd);let c;for(let i=0;i<20000;i++){c=E.newChar();if(c.o&&c.o.n==='둥지 노동자')break}c.seed=sd;c.name=nm;BC=c;BC.fresh=false;UI.relic=null;render()},
     fbirth(k){if(!FINGERTEST||!BC)return;const nm=BC.name,sd=BC.seed;E.reseed(sd);let c;
       if(k==='조직'){for(let i=0;i<5000;i++){c=E.newChar();if(c.o.n==='조직 출신')break}}
       else{const roll=k==='보냐텔리'?90:50;for(let i=0;i<20000;i++){c=E.newChar();if(c.r.o===roll)break}}
@@ -3227,7 +3346,7 @@ ${symRec(r)}
     tpreset(k){UI.testPreset=k||null;render()},
     job(k){if(k)UI.origin=null;UI.job=k||null;UI.jobAuto=false;UI.relic=null;born(BC.seed,BC.name);render();if(isMobile())window.scrollTo(0,0)},
     jobroll(k){if(k){UI.jobBase=BC.o.n;UI.job=k;UI.jobAuto=true}else{UI.job=null;UI.jobAuto=false}UI.relic=null;born(BC.seed,BC.name);render()},
-    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.o&&BC.o.race==='hyeolgwi'&&UI.bloodW&&!UI.job)E.bloodWeapon(BC,UI.bloodW);if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);nextYear()},
+    live(){if(BC&&BC.fateChoices&&!BC.fated)return;if(BC&&BC.o&&BC.o.race==='hyeolgwi'&&UI.bloodW&&!UI.job)E.bloodWeapon(BC,UI.bloodW);if(BC&&BC.starPick){const n=(($('starname')||{}).value||'').trim(),err=E.nameErr(n);if(err){UI.starErr=err;UI.starName=n;render();return}E.setStar(BC,n);UI.starErr='';UI.starName=''}{const dk=dailyKeyOf(BC.seed);if(dk)BC.daily=dk}if(BC.innate)recAdd('innate',BC.innate);if(BC.innate2)recAdd('innate',BC.innate2);if(BC.relicPick){if(!UI.relic)return;E.giveRelic(BC,UI.relic);UI.relic=null}if(BC.teamPick){if(!UI.team)return;E.setRbTeam(BC,UI.team);UI.team=null}if(isHard())BC.hard=true;else delete BC.hard;if(isEasy())BC.easy=true;else delete BC.easy;if(DICE!=='fixed')E.reseed(newSeed());G=E.newGame(BC);if(UNLOCKTEST&&UI.testPreset)E.testPreset(G,UI.testPreset);if(SISTEST&&UI.sisSkip)E.testPreset(G,'sis4');nextYear()},
     flow(){flow()},
     fight(){UI.pending=UI.fight;UI.fight=null;flow()},
     shop(){UI.wsMsg=null;UI.enchMsg=null;E.wsEnsure(G.ch);UI.showIncome=false;UI.screen='shop';render()},
@@ -3339,7 +3458,7 @@ ${symRec(r)}
       const pp=UI.sel.map(i=>D.cards[C.P.hand[i]]);
       const lb=C.log.length;PRE=E.snap(C);UI.lastPP=pp;
       E.resolveRound(C,pp,C.ePlan);UI.sel=[];
-      if(C.over==='lose')store.del(SAVE);
+      if(C.over==='lose'&&!E.sisCanRevive(G))store.del(SAVE);
       if(MODE==='off'){if(!C.over)E.newRound(C);render();return}
       C.logBefore=lb;PLAYING=true;render();if(isMobile())window.scrollTo(0,0);runPlayback(C.evs);
     },
@@ -3357,6 +3476,7 @@ ${symRec(r)}
     skip(){SKIP=true;if(wake)wake();if(tapWake)tapWake()},
     tap(){if(tapWake)tapWake()},
     fin(){
+      if(C.over==='lose'&&E.sisCanRevive(G)){const r=E.sisRevive(G,C);UI.res={t:r.text,chips:r.chips,title:null,roll:null};saveGame({after:true,pending:null});UI.screen='result';render();return}
       if(C.over==='lose')checkInnateUnlock();
       if(C.over==='lose'){UI.outEnd=null;UI.outerEnd=false;UI.endWin=false;UI.trueEnd=false;UI.death=G.ch.mindDead?{year:G.year,foe:'정신 붕괴',cause:'mind'}:{year:G.year,id:C.id,foe:D.enemies[C.id].n,hidden:!!D.enemies[C.id].hidden,hunt:C.id==='kid_hunt'?G.ch.kidFoe:null};recordEnd();UI.screen='end';render();return}
       const r=E.winRewards(G,C);syncTitles();recAdd('beaten',C.id);const unl=checkInnateUnlock();
@@ -3376,12 +3496,13 @@ ${symRec(r)}
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
   /* 오늘의 시드와 같은 시드(지나간 날의 시드를 번호로 입력한 경우 포함)면 그날의 출신·타고난 것 지정을 그대로 쓴다 */
   const dailyKeyOf=seed=>UI.daily&&seed===dailySeed(UI.daily)?UI.daily:(Object.keys(CFG.dailyPlan||{}).find(k=>dailySeed(k)===seed)||null);
-  function born(seed,name,daily){UI.team=null;const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,dly?(pl&&pl.origin)||CFG.dailyOrigin:(UI.origin&&loadUnlocks().includes('origin:'+UI.origin)?UI.origin:null));UI.newOrigin=null;if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;if(pl&&pl.innate2&&pl.innate2!==pl.innate&&D.innate[pl.innate2])BC.innate2=pl.innate2;BC.seed=seed;BC.name=name||'';BC.fresh=true}
+  function born(seed,name,daily){UI.team=null;const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];{const uo=!dly&&UI.origin&&loadUnlocks().includes('origin:'+UI.origin)?UI.origin:null;BC=E.newChar(!dly&&UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,uo||(dly?(pl&&pl.origin)||CFG.dailyOrigin:null))}UI.newOrigin=null;if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;if(pl&&pl.innate2&&pl.innate2!==pl.innate&&D.innate[pl.innate2])BC.innate2=pl.innate2;BC.seed=seed;BC.name=name||'';BC.fresh=true}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
   window.addEventListener('resize',()=>{if(UI.screen==='combat'&&!PLAYING&&UI.wasMobile!==isMobile())render()});
   app.addEventListener('toggle',e=>{const t=e.target;if(!t.classList)return;
     if(t.classList.contains('logbox')&&t.querySelector('#log'))UI.logOpen=t.open;
     if(t.classList.contains('roundbox'))UI.roundOpen=t.open;
+    if(t.classList&&t.classList.contains('pasv'))UI.pvOpen=t.open;
     if(t.classList.contains('inv'))UI.invOpen=t.open;
     if(t.classList.contains('bhelp'))UI.helpOpen=t.open;
     if(t.classList.contains('stsec')&&t.dataset.k){UI.stOpen=UI.stOpen||{};UI.stOpen[t.dataset.k]=t.open}},true);
@@ -3416,6 +3537,8 @@ ${symRec(r)}
     testDistort(){if(!G)return;UI.ev=D.mindEvents.distort;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
+    testSellGear(){G=E.newGame(E.newChar());const ch=G.ch;ch.year=G.year=20;ch.licensed=true;ch.rank=6;ch.money=800;ch.stash=[Object.assign({id:'club',grade:1},D.items.club),Object.assign({id:'dagger',grade:1},D.items.dagger),{id:'aux_h_claw',n:'흰 손톱 조각',slot:'aug',grade:5,e:'공+5 · 명중+3 · 속+3'}];UI.fight=null;UI.omen=null;UI.screen='shop';render()},
+    testSis(){CFG.sis.on=true;G=E.newGame(E.newChar());const ch=G.ch;ch.o={n:'둥지 노동자'};ch.aff={type:'wing',name:CFG.nWing.name};ch.year=G.year=5;ch.sis={subj:'can',turn:2,turnYear:5,grade:2,rewound:0,lean:0,in:4,pts:30,st:'craft',pend:'b3',lootDone:true,lootNote:'사냥 · 가죽 2 · 22안',mat:{leather:2,cloth:3,thread:1,trim:2},dyes:['black','red','white','navy'],cloth:[{shape:'suit',pattern:'stripe',color:'black',trims:['button'],price:80,lean:-1,q:1}],fac:null,made:1};ch.money=900;const st=E.advanceYear(G);UI.ev=st.ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testRouteEnd(k,act2){if(!G)return;G.endless=!!act2;G.year=G.ch.year=act2?66:CFG.years;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=k==='rcorp';UI.hwEnd=k==='rcorp'?null:(k||'hwhost');UI.death=null;UI.screen='end';render()},
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
     testCrowEnd(k){if(!G)return;G.endless=true;G.ch.year=G.year=73;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=false;UI.hwEnd=null;UI.crowEnd=k;UI.death=null;UI.screen='end';render()},
