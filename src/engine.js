@@ -1828,6 +1828,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 제약을 고른 바로 뒤(같은 해, 해를 넘기지 않고) 버프 셋 중 하나를 고른다 */
   function pactBuffEvent(G){const ch=G.ch;if(!ch.pactBuffDue)return null;ch.pactBuffDue=0;const o=pactOffer(ch,'b'),row=pactRow(ch);if(!o.length)return null;
     return {pact:'b',t:'버프 · 얻는 것',x:'값을 치렀으니 받을 것도 있다. 셋 가운데 하나만 몸에 남는다.',c:o.map(x=>row(x,'b'))}}
+  /* 제 2막 무한 모드의 세계의 균열: INF.crack% 확률로 아직 이기지 못한 히든 보스(없으면 이미 이긴 상대의 불순물)가 나타난다 */
+  function riftTry(G,f,INF){
+    if(d(100)>INF.crack)return null;
+    const pool=riftBosses().filter(h=>!G.ch.beaten.includes(h.id)&&!(G.met||[]).includes(h.id));
+    if(pool.length){const h=one(pool),nm=D.enemies[h.id].n;
+      return {type:'omen',boss:h.id,omen:riftOmenFor(G.ch,nm),rift:true,escape:true,spec:f}}
+    /* 만날 수 있는 히든을 모두 만났다면, 이미 이긴 상대가 '불순물'이 되어 다시 나타난다 (전리품 대신 불순물의 조각과 경험치) */
+    {const all=riftBosses().map(h=>h.id);if(lakeOn(G.ch))for(const k of (G.ch.lake&&G.ch.lake.killed)||[])if(/^lake_whale_/.test(k)&&!all.includes(k))all.push(k);if(all.length){const rec=G.ch.echoRecent=G.ch.echoRecent||[];let pool2=all.filter(x=>!rec.includes(x));if(!pool2.length)pool2=all;const bid=one(pool2),nm=D.enemies[bid].n;rec.push(bid);while(rec.length>Math.max(0,Math.min(10,all.length-1)))rec.shift();
+      return {type:'omen',boss:bid,omen:riftEchoOmenFor(G.ch,nm),rift:true,echo:true,escape:true,spec:f}}}
+    return null;
+  }
   function infiniteEvent(G){
     const ch=G.ch,I=D.infinite,K=CFG.infinite.century;if(!G.infinite||!ch.infinite||!I)return null;
     const LI=lakeOn(ch)&&D.lake&&D.lake.infinite;
@@ -3205,25 +3216,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1&&G.ch.beaten.includes(X_.finalFirst))f=G.ch.beaten.includes(X_.finalNext)?null:X_.finalNext;
     if(f&&k_>0&&!(G.infinite&&G.year>baseEnd)&&gradeAt(G.year)===X_.grades.length-1)return {type:'fight',enemy:f,enc:{label:X_.grades[gradeAt(G.year)]+' · 마지막 등급 전투'}};
     /* 대호수로 나간 자: 1막엔 고정 전투가 없고, 2막엔 등급마다 대재앙 하나(전투 중 도주 가능), 무한 모드엔 호수의 적과 대재앙이 번갈아 나선다 */
+    let lakeSkip=false;
     if(f&&lakeOn(G.ch)&&typeof f==='string'&&(f.startsWith('table:')||f===X_.star)){
       const L_=G.ch.lake=G.ch.lake||{},K_=L_.killed||[];
       if(G.year<=CFG.years)f=null;
       else if(G.year<=baseEnd){const order=['lake_whale_silence','lake_whale_lamp','lake_whale_anchor','lake_whale_tide','lake_whale_genesis','lake_whale_pale'],gi_=gradeAt(G.year),id=[0,1,2,3,4,5].map(i=>order[(gi_+i)%order.length]).find(x=>!K_.includes(x));if(id)return {type:'fight',enemy:id,enc:{hidden:true,label:'대재앙 토벌 · '+X_.grades[gi_]}};f=null}   /* 여섯 대재앙을 다 잡았으면 같은 고래를 또 내세우지 않는다(평소 조우로) */
-      else if(d(100)>CFG.lake.infFight)f=null;   // 무한 모드의 대호수: 전투보다 호수를 건너는 항해가 중심
+      else if(d(100)>CFG.lake.infFight){f=null;lakeSkip=true}   // 무한 모드의 대호수: 전투보다 호수를 건너는 항해가 중심(균열은 따로 굴린다)
       /* 그 밖에는 일반 무한 모드처럼 아직 이기지 못한 히든 보스가 호수의 틈으로 올라온다 (잡았던 고래는 다시 나오지 않는다). 아무도 없으면 호수의 적 */
     }
+    /* 대호수는 호수의 전투를 35%로 줄이지만 세계의 균열은 일반 무한 모드와 같은 확률로 굴린다(균열이 지나치게 늦던 문제) */
+    if(lakeSkip&&G.infinite&&G.year>baseEnd){const ro=riftTry(G,'table:late',INF);if(ro)return ro}
     if(f){
       /* 히든 보스: 목록 위에서부터 조건(과 확률)이 맞는 첫 보스가 불길한 예감(omen)으로 먼저 나타난다.
          맞서면 그 보스와 싸우고(다시 나오지 않음), 돌아서면 평소 조우로 넘어간다(조건이 맞으면 다음에 또 나올 수 있다) */
       /* 제 2막 무한 모드의 세계의 균열: 조건과 상관없이 아직 이기지 못한 히든 보스 중 무엇이든 나타난다 */
-      if(G.infinite&&G.year>baseEnd&&d(100)<=INF.crack){
-        const pool=riftBosses().filter(h=>!G.ch.beaten.includes(h.id)&&!(G.met||[]).includes(h.id));
-        if(pool.length){const h=one(pool),nm=D.enemies[h.id].n;
-          return {type:'omen',boss:h.id,omen:riftOmenFor(G.ch,nm),rift:true,escape:true,spec:f}}
-        /* 만날 수 있는 히든을 모두 만났다면, 이미 이긴 상대가 '불순물'이 되어 다시 나타난다 (전리품 대신 불순물의 조각과 경험치) */
-        {const all=riftBosses().map(h=>h.id);if(lakeOn(G.ch))for(const k of (G.ch.lake&&G.ch.lake.killed)||[])if(/^lake_whale_/.test(k)&&!all.includes(k))all.push(k);if(all.length){const rec=G.ch.echoRecent=G.ch.echoRecent||[];let pool2=all.filter(x=>!rec.includes(x));if(!pool2.length)pool2=all;const bid=one(pool2),nm=D.enemies[bid].n;rec.push(bid);while(rec.length>Math.max(0,Math.min(10,all.length-1)))rec.shift();
-          return {type:'omen',boss:bid,omen:riftEchoOmenFor(G.ch,nm),rift:true,echo:true,escape:true,spec:f}}}
-      }
+      if(G.infinite&&G.year>baseEnd){const ro=riftTry(G,f,INF);if(ro)return ro}
       for(const h of D.hiddenBosses||[]){
         if(h.infOnly&&!G.infinite)continue;
         if(h.id==='black'&&G.ch.o&&G.ch.o.key==='blackmask'&&!G.infinite)continue;   // 검은 가면 출신의 검은 침묵은 전용 루트(bm_black)에서만 만난다 — 일반 히든 보스로 한 번 더 만나면 합체 보상이 중복된다
