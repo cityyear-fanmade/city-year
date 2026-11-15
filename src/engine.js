@@ -400,6 +400,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 카드가 들어갈 자리: 전용 팩(덱 고정·전용 카드팩)을 쓰는 중에 다른 곳에서 강제로 들어오는 카드(의수·승진)는
      지금 덱에 끼우지 않고, 그 카드가 속한 팩(없으면 기본 카드팩)의 보관함으로 보낸다. 보낼 팩도 없으면(처음부터 전용 책장만 쓰는 판) 받지 않는다. 덱에 끼우지 않았으면 true */
   const packByName=(ch,n)=>(ch.packs||[]).find(p=>p.n===n);
+  /* 덱 고정·전용 책장에서 카드함에 받는 같은 카드는 최대 CFG.deck.boxCopies장(덱에 있는 것도 센다) */
+  const boxCopies=(ch,cid)=>ch.deck.filter(x=>x===cid).length+(ch.side||[]).filter(x=>x===cid).length;
   function routeCard(ch,cid,owner,chips,label){
     if(!(ch.deckLocked||ch.cardMoney))return false;
     if(owner&&(ch.orgPack===owner||ch.packName===owner+' 전용 카드팩'))return false;
@@ -407,7 +409,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!t){
       if(!owner&&(ch.packs||[]).some(p=>p.k==='basic')){for(const p of ch.packs)if(p.k==='basic'&&!p.deck.includes(cid)&&!p.side.includes(cid))(p.deck.length<deckMax(ch)?p.deck:p.side).push(cid);
         chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 기본 카드팩에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);return true}
-      {const sd=ch.side=ch.side||[];if(!sd.includes(cid)&&!ch.deck.includes(cid)){sd.push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 카드함에 보관 (전용 책장을 쓰는 중이라 덱에는 끼우지 않는다)`)}}return true}
+      {const sd=ch.side=ch.side||[];if(boxCopies(ch,cid)<CFG.deck.boxCopies){sd.push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 카드함에 보관 (전용 책장을 쓰는 중이라 덱에는 끼우지 않는다)`)}}return true}
     if((ch.packs||[]).some(p=>p.deck.includes(cid)||p.side.includes(cid)))return true;
     (t.deck.length<deckMax(ch)?t.deck:t.side).push(cid);
     chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → ${t.n}에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);
@@ -1143,7 +1145,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function addCard(ch,cid,chips,label,offer){
     if(!cid)return;
     /* 덱 고정(엄지 검술·책장) 또는 전용 카드팩(숨은 출생)이면 카드 대신 돈 */
-    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;const cp=copyToPacks(ch,cid);let held=false;if(!cp){const sd=ch.side=ch.side||[];if(!sd.includes(cid)&&!ch.deck.includes(cid)){sd.push(cid);held=true}}chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} +${money(m)}${cp?` · 카드는 기본 카드팩 ${cp}곳에 보관`:held?' · 카드는 카드함에 보관(쓰는 덱에는 끼울 수 없다)':' · 이미 가진 카드라 돈만 받는다'}`);return}
+    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;const cp=copyToPacks(ch,cid);let held=false;if(!cp){const sd=ch.side=ch.side||[];if(boxCopies(ch,cid)<CFG.deck.boxCopies){sd.push(cid);held=true}}chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} +${money(m)}${cp?` · 카드는 기본 카드팩 ${cp}곳에 보관`:held?' · 카드는 카드함에 보관(쓰는 덱에는 끼울 수 없다)':' · 같은 카드를 이미 최대 장수로 가져 돈만 받는다'}`);return}
     if(offer){(ch.offers=ch.offers||[]).push(cid);chips&&chips.push(`${label||'카드'} 발견 · ${D.cards[cid].n} (받을지 고른다)`);return}
     putCard(ch,cid,chips,label);
     /* 보상 카드는 다른 편집 가능한 팩에도 복사하고, 전용 카드(보스·책장·집행 카드)는 지금 팩에만 둔다 */
@@ -3579,6 +3581,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {chips,kind,nm,txt}
   }
   /* 인연 도시락은 일이 다 끝난 뒤 챙겨 주는 것이라 결과 줄의 맨 끝에 둔다 */
+  /* 보스 보조 장비 드랍: dr.gearChance%(못 얻을 때마다 pity 보정)로 dr.gears의 장비를 제안한다 */
+  function rollGears(ch,dr,C,chips){
+    for(const g of dr.gears||[]){if(dr.ego&&ch.distForm)continue;const auxH=/^aux_[hb]_/.test(g.id||''),pityOn=auxH&&dr.gearChance!=null;if(dr.gearChance!=null&&d(100)>dr.gearChance+(ch.stats.gearUp||0)+(pityOn?Math.min(CFG.pity.max,CFG.pity.step*(pity.miss[C.id]||0)):0)){if(pityOn){pity.miss[C.id]=(pity.miss[C.id]||0)+1;pityFn&&pityFn(pity)}continue}if(auxH){delete pity.miss[C.id];if(!pity.got.includes(g.id))pity.got.push(g.id);pityFn&&pityFn(pity)}offerGear(ch,Object.assign({grade:5},g));chips.push(`전리품 ${g.slot==='armor'?'방어구':'장비'} · ${g.n} (${g.e}) · 장착할지 고른다`)}
+  }
   function winRewards(G,C){const r=winRewards0(G,C);if(r&&Array.isArray(r.chips)){const i=r.chips.findIndex(c=>String(c).startsWith('인연 도시락'));if(i>=0&&i<r.chips.length-1)r.chips.push(r.chips.splice(i,1)[0])}return r}
   function winRewards0(G,C){
     const ch=G.ch,chips=[];
@@ -3683,12 +3689,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         for(const x of bondOk?dr.extra||[]:[]){addStats(ch.stats,x.fx);if(x.fx.maxHp)ch.hp+=x.fx.maxHp;ch.relics.push(x.n);if(x.flag)ch.flags[x.flag]=1;chips.push(`전리품 · ${x.n} (${x.e}, 영구)`)}
         if(dr.bmMerge){const oldW_=ch.gear.weapon;equip(ch,Object.assign({grade:5},dr.gear));if(oldW_&&ch.stash){const ix_=ch.stash.indexOf(oldW_);if(ix_>=0)ch.stash.splice(ix_,1)}ch.deck=D.bmBook.slice();ch.packName='검은 침묵의 책장';chips.push(`합체 · ${oldW_&&oldW_.n?oldW_.n+'이(가) 차원 장갑 안으로 수납된다 · ':''}${dr.gear.n} (${dr.gear.e})`);chips.push('책장이 검은 침묵의 책장 9장으로 바뀐다')}
         else if(dr.gear&&!(dr.ego&&ch.distForm)){if(/^aux_h_/.test(dr.gear.id||'')&&!pity.got.includes(dr.gear.id)){pity.got.push(dr.gear.id);pityFn&&pityFn(pity)}offerGear(ch,Object.assign({id:dr.gear.id,grade:5},dr.gear));chips.push(`전리품 무기 · ${dr.gear.n} (${dr.gear.e}) · 장착할지 고른다`)}
-        for(const g of dr.gears||[]){if(dr.ego&&ch.distForm)continue;const auxH=/^aux_h_/.test(g.id||''),pityOn=auxH&&dr.gear&&dr.gearChance!=null;if(dr.gear&&dr.gearChance!=null&&d(100)>dr.gearChance+(ch.stats.gearUp||0)+(pityOn?Math.min(CFG.pity.max,CFG.pity.step*(pity.miss[C.id]||0)):0)){if(pityOn){pity.miss[C.id]=(pity.miss[C.id]||0)+1;pityFn&&pityFn(pity)}continue}if(auxH){delete pity.miss[C.id];if(!pity.got.includes(g.id))pity.got.push(g.id);pityFn&&pityFn(pity)}offerGear(ch,Object.assign({grade:5},g));chips.push(`전리품 ${g.slot==='armor'?'방어구':'장비'} · ${g.n} (${g.e}) · 장착할지 고른다`)}
+        rollGears(ch,dr,C,chips);
         chips.push(`전리품 · ${dr.n} (${dr.e}, 영구)`);if(dr.card)addCard(ch,(D.cards[dr.card]&&D.cards[dr.card].fixed&&!ch.rb&&D.cards[dr.card+'_free'])?dr.card+'_free':dr.card,chips,'전용 카드');if(dr.cards&&dr.lockDeck){ch.packOffer={n:dr.packName||'전용 책장',cards:dr.cards.slice(),passive:dr.packPassive||null,e:dr.packE||null};chips.push(`${dr.packName||'전용 책장'} · 덱을 바꿀지 고른다`)}
         else for(const cc of dr.cards||[])addCard(ch,cc,chips,'전용 책장');}
       if(foe.quest){ch.flags[foe.quest.flag]=1;ch.bookNext=G.year+CFG.redBook.every;(ch.relics=ch.relics||[]).push(foe.quest.relic);chips.push(foe.quest.text)}
       if(foe.unlock&&!ch.unlocks.includes(foe.unlock)){if(foe.unlockNoEasy&&ch.easy)chips.push('쉬움에서는 해금되지 않는다 · 보통 이상에서 다시 이긴다');else{ch.unlocks.push(foe.unlock);unlock=foe.unlock;chips.push('해금 · '+(T.jobs[foe.unlock]||foe.unlock))}}
     }
+    /* 일반 보스의 보조 장비: 처음이 아니어도 이길 때마다 굴린다(못 얻으면 확률이 쌓인다) */
+    if(!foe.hidden&&foe.drop&&foe.drop.gears&&foe.drop.gearChance!=null)rollGears(ch,foe.drop,C,chips);
     /* 미니보스 전리품(once): 처음 이겼을 때만 */
     if(!foe.hidden&&foe.drop&&!(ch.minis||[]).includes(C.id)){
       (ch.minis=ch.minis||[]).push(C.id);const dr=foe.drop;if(dr.ego)ch.egoGear=(ch.egoGear||0)+1;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
