@@ -1156,8 +1156,18 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 카드 고르기: 새 카드를 한 장만 제안하지 않고 CFG.cardPick.n장 가운데 하나를 고르게 한다 (고정 덱이면 예전처럼 돈). 안 가진 카드를 먼저 뽑는다 */
   function offerPick(ch,pool,chips,label){
     if(ch.deckLocked||ch.cardMoney){const cid=one(pool.filter(id=>!ownsCard(ch,id)))||one(pool);return addCard(ch,cid,chips,label,true)}
-    const fresh=pool.filter(id=>!ownsCard(ch,id)),src=fresh.length>=CFG.cardPick.n?fresh:fresh.concat(pool.filter(id=>!fresh.includes(id))),set=[];
-    const left=src.slice();while(set.length<CFG.cardPick.n&&left.length)set.push(left.splice(d(left.length)-1,1)[0]);
+    /* 안 가진 카드를 먼저 뽑고, 모자라면 이미 가진 카드로 채운다. 이미 가진 카드는 많이 가질수록 덜 나온다(1장 1 · 2장 dupWeight[1] · 3장 이상 dupWeight[2], 덱에 3장 찬 카드는 일반 덱에서 빼고) */
+    const fresh=pool.filter(id=>!ownsCard(ch,id)),set=[],nPick=CFG.cardPick.n;
+    {const left=fresh.slice();while(set.length<nPick&&left.length)set.push(left.splice(d(left.length)-1,1)[0])}
+    if(set.length<nPick){
+      const own=pool.filter(id=>!fresh.includes(id)&&!set.includes(id)),W=CFG.cardPick.dupWeight,lockedDeck=!!(ch.deckLocked||ch.cardMoney);
+      const copies=id=>ch.deck.filter(x=>x===id).length+(ch.side||[]).filter(x=>x===id).length;
+      while(set.length<nPick&&own.length){
+        const w=own.map(id=>{const c=Math.max(1,copies(id));return !lockedDeck&&ch.deck.filter(x=>x===id).length>=CFG.deck.sameMax?0:W[Math.min(c,W.length)-1]});
+        const tot=w.reduce((a,b)=>a+b,0);if(tot<=0)break;
+        let r=d(10000)/10000*tot,i=0;while(i<own.length-1&&r>w[i]){r-=w[i];i++}
+        set.push(own.splice(i,1)[0])}
+    }
     if(!set.length)return null;
     /* 카드 보상은 돈도 같이 준다(고정액). 구매한 상자는 제외 */
     if(label!=='상자'){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;chips&&chips.push(`카드 보상 · +${money(m)}`)}
