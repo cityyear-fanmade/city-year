@@ -1213,8 +1213,15 @@ export function startUI(E,app){
     }).join('');
     const gear=Object.entries(D.slots).map(([k,n])=>`<span class="chip">${n} · ${ch.gear[k]?esc(ch.gear[k].n):'없음'}</span>`).join('');
     return `${vHud()}<div class="moneybar"><span>자산</span><b class="mono">${E.money(ch.money)}</b></div><div class="stack" style="gap:6px"><div class="eyebrow">${hwHome()?'홍원의 저잣거리':lakeHome()?'U사의 어느 항구':(G.infinite&&G.ch.infinite)?'외곽의 가게':'공방'} · 내 등급 ${acc}${E.repOf(G.ch)?` · 평판 ${E.repOf(G.ch)>0?'+':''}${E.repOf(G.ch)} (장비 값 ${Math.round((E.repMul(G.ch)-1)*100)>0?'+':''}${Math.round((E.repMul(G.ch)-1)*100)}%)`:''}</div><h2>무엇을 맞출까</h2>
-      <p class="small dim">▾ 각 상점의 이름 줄을 누르면 접고 펼 수 있다.</p><div class="chips">${gear}</div>${(()=>{const g={};for(const k of Object.keys(D.slots)){const w=E.slotWhy(ch,k);if(w)(g[w]=g[w]||[]).push(D.slots[k])}return Object.entries(g).map(([w,ns])=>`<p class="small bad">🚫 ${ns.join('·')} · ${esc(w)}</p>`).join('')})()}${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}${E.isWs(ch)&&ch.ws?`<button class="btn quiet" data-a="automelt"><b>구매하면 바로 녹이기 · ${AUTOMELT?'켜짐':'꺼짐'}</b><span class="small dim">켜면 장비를 누르는 즉시 사서 작업대 재료로 녹인다 (확인 없이 같은 장비를 연달아 살 수 있다)</span></button>`:''}${UI.meltMsg?`<p class="good small">${esc(UI.meltMsg)}</p>`:''}</div>${shops}${vClinic()}${vHull()}${vSupplyShop()}${vCafe()}${vBlack()}${vSell()}${vSwapCard()}${vForge()}${vTune()}
+      <p class="small dim">▾ 각 상점의 이름 줄을 누르면 접고 펼 수 있다.</p><div class="chips">${gear}</div>${(()=>{const g={};for(const k of Object.keys(D.slots)){const w=E.slotWhy(ch,k);if(w)(g[w]=g[w]||[]).push(D.slots[k])}return Object.entries(g).map(([w,ns])=>`<p class="small bad">🚫 ${ns.join('·')} · ${esc(w)}</p>`).join('')})()}${UI.bought?`<p class="good small">${esc(UI.bought)}을(를) 맞췄다.</p>`:''}${E.isWs(ch)&&ch.ws?`<button class="btn quiet" data-a="automelt"><b>구매하면 바로 녹이기 · ${AUTOMELT?'켜짐':'꺼짐'}</b><span class="small dim">켜면 장비를 누르는 즉시 사서 작업대 재료로 녹인다 (확인 없이 같은 장비를 연달아 살 수 있다)</span></button>`:''}${UI.meltMsg?`<p class="good small">${esc(UI.meltMsg)}</p>`:''}</div>${shops}${vClinic()}${vHull()}${vSupplyShop()}${vCafe()}${vBlack()}${vSell()}${vSellGear()}${vSwapCard()}${vForge()}${vTune()}
       <button class="btn primary" data-a="unshop">${hwHome()?'저잣거리를 나간다':lakeHome()?'항구를 나간다':'공방을 나간다'}</button>`;
+  }
+  /* 장비 판매(공방 해결사가 아닌 사람): "장비 판매"를 눌러야 열린다. 장착한 장비는 목록에 없다 */
+  function vSellGear(){
+    const ch=G.ch;if(!E.canSellGear(ch))return '';const st=(ch.stash||[]).map((m,i)=>[m,i]).filter(([m])=>!(m.id==='birth'&&m.n==='맨손')),open=!!UI.sellGearOpen;
+    const rows=st.map(([m,i])=>`<button class="btn" data-a="sellgear" data-i="${i}"><span class="row between"><b>${esc(m.n)}</b><span class="mono" style="color:var(--gold)">${E.money(E.gearSellValue(m))}</span></span>${m.e?`<span class="mono small dim">${esc(m.e)}</span>`:''}</button>`).join('');
+    return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">장비 판매</b><button class="btn quiet" data-a="sellgearopen">${open?'닫기':'열기'}${st.length?` · 보관함 ${st.length}`:''}</button></div>
+      ${open?`<p class="small dim">보관함에 쌓인 장비를 팔아 돈으로 바꾼다. 장착한 장비는 팔 수 없다.</p>${UI.sellGearMsg?`<p class="good small">${esc(UI.sellGearMsg)}</p>`:''}${rows||'<p class="small dim">팔 수 있는 장비가 없다.</p>'}`:''}</div>`;
   }
   /* 공방 해결사: 카드 판매 (장비 판매는 없다) */
   function vSell(){
@@ -3140,6 +3147,8 @@ ${symRec(r)}
       const ty=UI.egoType||'atk';E.setEgo(G.ch,ty,n);UI.egoErr='';UI.egoName='';UI.egoType=null;
       UI.res.chips=[...UI.res.chips,`E.G.O · ${n} (${CFG.mind.ego[ty].n})`];render();
     },
+    sellgearopen(){UI.sellGearOpen=!UI.sellGearOpen;UI.sellGearMsg='';render()},
+    sellgear(i){const r=E.sellGear(G.ch,+i);if(r){UI.sellGearMsg=`${r.n}을(를) ${E.money(r.v)}에 팔았다.`;render()}},
     sellcard(i){if((UI.soldN||0)>=CFG.workshopFixer.cardMax)return;const r=E.sellCard(G.ch,+i);if(r){UI.soldN=(UI.soldN||0)+1;UI.sold=`${D.cards[r.id].n}을(를) ${E.money(r.v)}에 팔았다.`;resave();render()}},
     swapcard(i){if((UI.swapped||[]).length>=CFG.shop.swapMax)return;const r=E.swapCard(G.ch,+i);if(r){(UI.swapped=UI.swapped||[]).push([D.cards[r.old].n,D.cards[r.nid].n]);render()}},
     wsmelt(i){const [sl,ix]=String(i).split(':'),r=E.wsMelt(G.ch,sl,+ix);if(r){UI.wsMsg=`${r.m}을(를) 녹였다 · ${r.hidden?'히든 재료 · 한 단계 상승':r.step?'일반 재료 +'+r.val+' · '+(r.step>1?r.step+'단계 한꺼번에 ':'한 단계 ')+'상승 ('+r.n+'단계)':'일반 재료 +'+r.val+' · '+r.p+'/'+r.need}${r.sp?' · 특수 효과 획득 · '+({baral:'공격 카드마다 1타 추가',zena:'2번 적중마다 요정 +1',gebura:'적중마다 HP 1 흡수'})[r.sp]:''}`;resave();render()}},
@@ -3471,6 +3480,7 @@ ${symRec(r)}
     testDistort(){if(!G)return;UI.ev=D.mindEvents.distort;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
+    testSellGear(){G=E.newGame(E.newChar());const ch=G.ch;ch.year=G.year=20;ch.licensed=true;ch.rank=6;ch.money=800;ch.stash=[Object.assign({id:'club',grade:1},D.items.club),Object.assign({id:'dagger',grade:1},D.items.dagger),{id:'aux_h_claw',n:'흰 손톱 조각',slot:'aug',grade:5,e:'공+5 · 명중+3 · 속+3'}];UI.fight=null;UI.omen=null;UI.screen='shop';render()},
     testSis(){CFG.sis.on=true;G=E.newGame(E.newChar());const ch=G.ch;ch.o={n:'둥지 노동자'};ch.aff={type:'wing',name:CFG.nWing.name};ch.year=G.year=5;ch.sis={subj:'can',turn:2,turnYear:5,grade:2,rewound:0,lean:0,in:4,pts:30,st:'craft',pend:'b3',lootDone:true,lootNote:'사냥 · 가죽 2 · 22안',mat:{leather:2,cloth:3,thread:1,trim:2},dyes:['black','red','white','navy'],cloth:[{shape:'suit',pattern:'stripe',color:'black',trims:['button'],price:80,lean:-1,q:1}],fac:null,made:1};ch.money=900;const st=E.advanceYear(G);UI.ev=st.ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testRouteEnd(k,act2){if(!G)return;G.endless=!!act2;G.year=G.ch.year=act2?66:CFG.years;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=k==='rcorp';UI.hwEnd=k==='rcorp'?null:(k||'hwhost');UI.death=null;UI.screen='end';render()},
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},

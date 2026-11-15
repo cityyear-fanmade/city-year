@@ -17140,5 +17140,12 @@
  "보조 히든 장비 {0}/{1}": "Aux Hidden Gear {0}/{1}",
  "실패한 정비 1번 되돌리기 (실패 {0}번)": "Undo 1 failed tune-up ({0} failures)",
  "장착한 장비 하나에 공격 또는 회피 +1을 시도한다. 성공하면 고른 쪽만 오르고, 실패해도 시도 횟수는 소모된다. 실패한 정비는 돈을 내고 1번씩 되돌려 다시 시도할 수 있다(되돌릴 때마다 값이 오른다). 장비마다 {0}번까지.{1}": "Attempt to add +1 to Attack or Evasion on one equipped item. Success increases the chosen stat; failure still consumes the attempt count. You can pay to undo failed attempts one at a time and try again (the price rises with each undo). Up to {0} times per equipment. {1}",
- "{0} · 실패한 정비 1번을 되돌렸다 ({1}/{2}) · 다음 되돌리기 {3}": "{0} · Undid 1 failed tune-up ({1}/{2}) · Next undo {3}"
+ "{0} · 실패한 정비 1번을 되돌렸다 ({1}/{2}) · 다음 되돌리기 {3}": "{0} · Undid 1 failed tune-up ({1}/{2}) · Next undo {3}",
+ "보관함에 쌓인 장비를 팔아 돈으로 바꾼다. 장착한 장비는 팔 수 없다.": "Sell gear piled up in storage for money. Equipped gear cannot be sold.",
+ "장비 판매": "Sell Gear",
+ "열기": "Open",
+ "팔 수 있는 장비가 없다.": "There is no gear to sell.",
+ "{0} · {1} → 카드함에 보관 (전용 책장을 쓰는 중이라 덱에는 끼우지 않는다)": "{0} · {1} → kept in the card box (not added to the deck while using an exclusive bookshelf)",
+ "카드는 카드함에 보관(쓰는 덱에는 끼울 수 없다)": "the card is kept in the card box (it cannot be added to the deck in use)",
+ "이미 가진 카드라 돈만 받는다": "You already have this card, so you only receive money"
 }

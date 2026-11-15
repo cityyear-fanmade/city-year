@@ -407,7 +407,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!t){
       if(!owner&&(ch.packs||[]).some(p=>p.k==='basic')){for(const p of ch.packs)if(p.k==='basic'&&!p.deck.includes(cid)&&!p.side.includes(cid))(p.deck.length<deckMax(ch)?p.deck:p.side).push(cid);
         chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 기본 카드팩에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);return true}
-      chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n}은(는) 전용 책장을 쓰는 중이라 받지 않는다`);return true}
+      {const sd=ch.side=ch.side||[];if(!sd.includes(cid)&&!ch.deck.includes(cid)){sd.push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 카드함에 보관 (전용 책장을 쓰는 중이라 덱에는 끼우지 않는다)`)}}return true}
     if((ch.packs||[]).some(p=>p.deck.includes(cid)||p.side.includes(cid)))return true;
     (t.deck.length<deckMax(ch)?t.deck:t.side).push(cid);
     chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → ${t.n}에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);
@@ -782,6 +782,19 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const isWs=ch=>(!!ch.aff&&ch.aff.type==='workshop')||(!!ch.ws&&!!ch.aff&&ch.aff.name===CFG.nWing.name);
   const priceOf=(ch,id)=>{const p=D.items[id].price*repMul(ch);if(!isWs(ch))return Math.round(p);const K=CFG.ws,up=1+(K.priceYearUp||0)*Math.floor((ch.year||0)/(K.priceYearEvery||20));return Math.round(p*(1-WF.discount)*up)};   /* 공방 해결사: 값은 고정이고 priceYearEvery년마다 한 번씩 오른다 */
   const sellValue=it=>it.id==='hidmat'?WF.sellBase*2:(it.grade>=5&&!(D.items[it.id]||D.special[it.id]))?WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0):Math.floor((it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price)||WF.sellBase)*WF.sell);
+  /* 장비 판매(공방 해결사가 아닌 사람): 공방 거리에서 보관함 장비를 판다. 장착 중인 장비는 보관함에 없으므로 팔리지 않는다 */
+  const gearSellValue=it=>{
+    if(it.id==='hidmat')return WF.sellBase*2;
+    const base=it.price||(D.items[it.id]&&D.items[it.id].price)||(D.special[it.id]&&D.special[it.id].price);
+    if(base)return Math.max(50,Math.floor(base*WF.sell));
+    const g=it.grade||1;if(g>=5)return WF.hiddenSell+WF.hiddenSellPer*(it.lvl||it.egoLv||0);
+    return CFG.shop.sellGrade[Math.max(0,Math.min(CFG.shop.sellGrade.length-1,g-1))];
+  };
+  const canSellGear=ch=>!isWs(ch)&&!(ch.distForm&&!ch.distStable);
+  function sellGear(ch,i){
+    const it=(ch.stash||[])[i];if(!it||!canSellGear(ch)||isBare(it))return null;
+    const v=gearSellValue(it);ch.stash.splice(i,1);ch.money+=v;return {n:it.n,v};
+  }
   /* 공방 해결사: 장비 판매는 없다. 대신 덱의 카드를 공방에 넘긴다 (덱 고정·전용 카드팩·고정 카드는 팔 수 없고, 덱은 minDeck장 아래로 줄이지 않는다) */
   const cardPrice=id=>WF.cardBase+WF.cardPer*((D.cards[id]&&D.cards[id].c)||0);
   function sellCard(ch,i){
@@ -1130,7 +1143,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function addCard(ch,cid,chips,label,offer){
     if(!cid)return;
     /* 덱 고정(엄지 검술·책장) 또는 전용 카드팩(숨은 출생)이면 카드 대신 돈 */
-    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;const cp=copyToPacks(ch,cid);chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} +${money(m)}${cp?` · 카드는 기본 카드팩 ${cp}곳에 보관`:' · 카드는 보관할 팩이 없어 돈만 받는다'}`);return}
+    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;const cp=copyToPacks(ch,cid);let held=false;if(!cp){const sd=ch.side=ch.side||[];if(!sd.includes(cid)&&!ch.deck.includes(cid)){sd.push(cid);held=true}}chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} +${money(m)}${cp?` · 카드는 기본 카드팩 ${cp}곳에 보관`:held?' · 카드는 카드함에 보관(쓰는 덱에는 끼울 수 없다)':' · 이미 가진 카드라 돈만 받는다'}`);return}
     if(offer){(ch.offers=ch.offers||[]).push(cid);chips&&chips.push(`${label||'카드'} 발견 · ${D.cards[cid].n} (받을지 고른다)`);return}
     putCard(ch,cid,chips,label);
     /* 보상 카드는 다른 편집 가능한 팩에도 복사하고, 전용 카드(보스·책장·집행 카드)는 지금 팩에만 둔다 */
@@ -4685,6 +4698,6 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
-    setPity,tuneRewind,tuneRewindCost,tuneFails,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setPity,sellGear,gearSellValue,canSellGear,tuneRewind,tuneRewindCost,tuneFails,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     canFound,pvProfile,staffList,staffLv,staffEventPick,staffPromoEvent,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
