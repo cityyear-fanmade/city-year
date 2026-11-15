@@ -1233,7 +1233,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.rep){ch.rep=Math.max(RP.min,Math.min(RP.max,repOf(ch)+fx.rep));chips.push(`평판 ${fx.rep>0?'+':'−'}${Math.abs(fx.rep)} (지금 ${ch.rep<0?'−'+(-ch.rep):ch.rep})`)}
     if(fx.officePts&&ch.office){ch.office.pts=(ch.office.pts||0)+fx.officePts;chips.push(`사무소 성과 +${fx.officePts}`)}
     if(fx.officeFound){ch.officePick=true;chips.push('사무소 개설 · 이름과 전문 분야를 정한다')}
-    if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.cardMoney){forceAdd(ch,'o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
+    if(fx.auth){(ch.auth=ch.auth||[]).push(fx.auth);chips.push('조율자 권한 · '+(fx.auth==='seal'?'봉인':'집행')+' ('+ch.auth.length+'단계)');if(fx.auth==='exec'){if(ch.deck.concat(ch.side||[]).filter(x=>x==='o_verdict').length>=CFG.arbiterVerdictMax){ch.stats.atk+=CFG.arbiterVerdictAtk;chips.push('집행 카드는 이미 '+CFG.arbiterVerdictMax+'장 · 공격 +'+CFG.arbiterVerdictAtk)}else if(ch.cardMoney){forceAdd(ch,'o_verdict');chips.push('전용 책장 · 집행')}else addCard(ch,'o_verdict',chips,'집행 카드')}}
     /* 표시 없이 쌓이는 기록(금기 위반, 초대 등). 조건 "flag:이름" / "flag:이름>=n"으로 읽는다 */
     for(const f of [].concat(fx.flag||[]))ch.flags[f]=(ch.flags[f]||0)+1;
     if(fx.title){ch.titles=ch.titles||[];if(!ch.titles.includes(fx.title)){ch.titles.push(fx.title);(ch.titleLog=ch.titleLog||[]).push(fx.title);chips.push('칭호 · '+fx.title)}}

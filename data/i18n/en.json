@@ -4267,7 +4267,6 @@
  "최대 HP +10 · 회피 +2 · 직업 봉인의 발동 주기 −1라운드 (4 → 3 → 2라운드마다, 최소 2) · 봉인 각인 스택이 오르는 것은 아니다": "Max HP +10 · Evasion +2 · Job Sealing activation cycle −1 round (Every 4 → 3 → 2 rounds, minimum 2) · Does not increase Seal Imprint stacks.",
  "상대가 꺼내려던 것이 손끝에서 멈춘다.": "What the opponent was about to pull out stops at their fingertips.",
  "집행의 권한": "Authority of Execution",
- "공격 +3 · 사건 판정 +5 · 집행 카드 1장": "Attack +3 · Event Check +5 · 1 Execution card",
  "판결은 이미 내려져 있다. 남은 것은 집행뿐이다.": "The verdict has already been rendered. All that remains is execution.",
  "라만차랜드의 초대장": "Invitation to L-Corp Land",
  "열여섯 해째, 피 냄새가 밴 초대장이 문틈으로 들어왔다. '같은 피를 가진 이에게.' 혈귀들이 모여 산다는 놀이공원, 라만차랜드. 가면 다시는 평범한 골목으로 돌아오지 못할 것 같다.": "In the sixteenth year, an invitation stained with the scent of blood slipped through the door. 'To one of the same blood.' L-Corp Land, an amusement park said to be inhabited by Bloodfiends. If you go, you likely won't be able to return to a normal alley ever again.",
@@ -17236,5 +17235,7 @@
  "🌊 무한 모드": "🌊 Endless Mode",
  "⛵ 대호수": "⛵ Great Lake",
  "🛒 공방": "🛒 Workshop",
- "🎁 보스 보상": "🎁 Boss Rewards"
+ "🎁 보스 보상": "🎁 Boss Rewards",
+ "공격 +3 · 사건 판정 +5 · 집행 카드 1장 (3장까지, 이후에는 공격 +2)": "Attack +3 · Event Check +5 · 1 Execution card (up to 3, then Attack +2 instead)",
+ "집행 카드는 이미 3장 · 공격 +2": "Already 3 Execution cards · Attack +2"
 }
