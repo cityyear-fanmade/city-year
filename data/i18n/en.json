@@ -17192,6 +17192,9 @@
  "공+4 · 명중+1 · 속+1": "Atk+4 · Accuracy+1 · Spd+1",
  "황금광 열쇠고리": "Gold Mine Keyring",
  "공+2 · HP+20": "Atk+2 · HP+20",
- "같은 카드를 이미 최대 장수로 가져 돈만 받는다": "You already hold the maximum copies of this card, so you only receive money",
- "보조 히든 장비 {0}/{1} · 일반 보스 보조 장비 {2}/{3}": "Aux Hidden Gear {0}/{1} · Boss Aux Gear {2}/{3}"
+ "보조 히든 장비 {0}/{1} · 일반 보스 보조 장비 {2}/{3}": "Aux Hidden Gear {0}/{1} · Boss Aux Gear {2}/{3}",
+ "같은 카드는 덱에 {0}장까지": "Up to {0} copies of a card in the deck",
+ "같은 카드는 덱에 {0}장까지 들어간다. 카드함에 넣어 둘 수 있다.": "Up to {0} copies of the same card can go into the deck. You can keep it in the card box.",
+ "{0} · {1} (같은 카드는 덱에 {2}장까지라 카드함으로)": "{0} · {1} (up to {2} copies per deck, so it goes to the card box)",
+ "카드함에 보관": "kept in the card box"
 }

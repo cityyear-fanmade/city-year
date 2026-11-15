@@ -369,6 +369,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const ownsCard=(ch,cid)=>ch.deck.includes(cid)||(ch.side||[]).includes(cid)||(ch.offers||[]).includes(cid)||(ch.picks||[]).some(g=>g.includes(cid));
   const deckMax=ch=>CFG.deck.max+((ch.ego||ch.egoApt)?CFG.mind.deckPlus:0);   // E.G.O 적성자는 개화하지 않아도 덱 +deckPlus·전투 처음 라운드 빛 +1을 누린다
   const deckRoom=ch=>ch.deck.length<deckMax(ch);
+  /* 덱에 들어가는 같은 카드는 CFG.deck.sameMax장까지(덱 고정·전용 책장은 정해진 대로) */
+  const deckCopies=(ch,cid)=>ch.deck.filter(x=>x===cid).length;
+  const sameOk=(ch,cid)=>!!(ch.deckLocked||ch.cardMoney)||deckCopies(ch,cid)<CFG.deck.sameMax;
   /* 선율을 쌓는 카드를 처음 받을 때, 터뜨리는 카드(화음)가 하나도 없으면 화음을 짝으로 한 장 같이 내준다(판마다 한 번) */
   function melodyPair(ch,cid,chips){
     const c=D.cards[cid];if(!c||c.chord||!(c.kw||[]).some(k=>k[0]==='melody')||(ch.flags||{}).melodyPair||ch.deckLocked||ch.cardMoney)return;
@@ -377,14 +380,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function putCard(ch,cid,chips,label){
     melodyPair(ch,cid,chips);
-    if(deckRoom(ch)){ch.deck.push(cid);chips&&chips.push((label||'카드')+' · '+D.cards[cid].n);return}
+    if(deckRoom(ch)&&sameOk(ch,cid)){ch.deck.push(cid);chips&&chips.push((label||'카드')+' · '+D.cards[cid].n);return}
+    if(deckRoom(ch)&&!sameOk(ch,cid)){(ch.side=ch.side||[]).push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} (같은 카드는 덱에 ${CFG.deck.sameMax}장까지라 카드함으로)`);return}
     (ch.side=ch.side||[]).push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} (덱이 가득 차서 카드함으로)`);
   }
   function takeOffer(ch,i,to,swap){
     const o=ch.offers||[],cid=o[i];if(!cid)return false;
     melodyPair(ch,cid,null);
-    if(to==='deck'){if(!deckRoom(ch))return false;ch.deck.push(cid)}
-    else if(to==='swap'){const j=+swap;if(ch.deckLocked||!ch.deck[j]||D.cards[ch.deck[j]].fixed)return false;(ch.side=ch.side||[]).push(ch.deck[j]);ch.deck[j]=cid}
+    if(to==='deck'){if(!deckRoom(ch)||!sameOk(ch,cid))return false;ch.deck.push(cid)}
+    else if(to==='swap'){const j=+swap;if(ch.deckLocked||!ch.deck[j]||D.cards[ch.deck[j]].fixed)return false;if(!ch.cardMoney&&ch.deck[j]!==cid&&deckCopies(ch,cid)>=CFG.deck.sameMax)return false;(ch.side=ch.side||[]).push(ch.deck[j]);ch.deck[j]=cid}
     else (ch.side=ch.side||[]).push(cid);
     copyToPacks(ch,cid);
     o.splice(i,1);return true;
@@ -394,14 +398,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const forceAdd=(ch,...ids)=>{(ch.extra=ch.extra||[]).push(...ids);ch.deck.push(...ids)};
   const extraOut=(ch,i)=>{const id=ch.deck[i];return !!id&&(ch.deckLocked||ch.cardMoney)&&!D.cards[id].fixed&&((ch.extra||[]).includes(id)||Object.values(ch.gear||{}).some(g=>g&&g.card===id))};
   function deckOut(ch,i){if(extraOut(ch,i)&&ch.deck.length>CFG.shop.minDeck){const xi=(ch.extra||[]).indexOf(ch.deck[i]);if(xi>=0)ch.extra.splice(xi,1);ch.deck.splice(i,1);return true}if(ch.deckLocked||ch.cardMoney||!ch.deck[i]||D.cards[ch.deck[i]].fixed||ch.deck.length<=CFG.shop.minDeck)return false;(ch.side=ch.side||[]).push(ch.deck.splice(i,1)[0]);return true}
-  function deckIn(ch,i){const sd=ch.side||[];if(ch.deckLocked||ch.cardMoney||!sd[i]||!deckRoom(ch))return false;ch.deck.push(sd.splice(i,1)[0]);return true}
+  function deckIn(ch,i){const sd=ch.side||[];if(ch.deckLocked||ch.cardMoney||!sd[i]||!deckRoom(ch)||!sameOk(ch,sd[i]))return false;ch.deck.push(sd.splice(i,1)[0]);return true}
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
   /* 카드가 들어갈 자리: 전용 팩(덱 고정·전용 카드팩)을 쓰는 중에 다른 곳에서 강제로 들어오는 카드(의수·승진)는
      지금 덱에 끼우지 않고, 그 카드가 속한 팩(없으면 기본 카드팩)의 보관함으로 보낸다. 보낼 팩도 없으면(처음부터 전용 책장만 쓰는 판) 받지 않는다. 덱에 끼우지 않았으면 true */
   const packByName=(ch,n)=>(ch.packs||[]).find(p=>p.n===n);
-  /* 덱 고정·전용 책장에서 카드함에 받는 같은 카드는 최대 CFG.deck.boxCopies장(덱에 있는 것도 센다) */
-  const boxCopies=(ch,cid)=>ch.deck.filter(x=>x===cid).length+(ch.side||[]).filter(x=>x===cid).length;
   function routeCard(ch,cid,owner,chips,label){
     if(!(ch.deckLocked||ch.cardMoney))return false;
     if(owner&&(ch.orgPack===owner||ch.packName===owner+' 전용 카드팩'))return false;
@@ -409,7 +411,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!t){
       if(!owner&&(ch.packs||[]).some(p=>p.k==='basic')){for(const p of ch.packs)if(p.k==='basic'&&!p.deck.includes(cid)&&!p.side.includes(cid))(p.deck.length<deckMax(ch)?p.deck:p.side).push(cid);
         chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 기본 카드팩에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);return true}
-      {const sd=ch.side=ch.side||[];if(boxCopies(ch,cid)<CFG.deck.boxCopies){sd.push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 카드함에 보관 (전용 책장을 쓰는 중이라 덱에는 끼우지 않는다)`)}}return true}
+      {const sd=ch.side=ch.side||[];{sd.push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 카드함에 보관 (전용 책장을 쓰는 중이라 덱에는 끼우지 않는다)`)}}return true}
     if((ch.packs||[]).some(p=>p.deck.includes(cid)||p.side.includes(cid)))return true;
     (t.deck.length<deckMax(ch)?t.deck:t.side).push(cid);
     chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → ${t.n}에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);
@@ -1145,7 +1147,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function addCard(ch,cid,chips,label,offer){
     if(!cid)return;
     /* 덱 고정(엄지 검술·책장) 또는 전용 카드팩(숨은 출생)이면 카드 대신 돈 */
-    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;const cp=copyToPacks(ch,cid);let held=false;if(!cp){const sd=ch.side=ch.side||[];if(boxCopies(ch,cid)<CFG.deck.boxCopies){sd.push(cid);held=true}}chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} +${money(m)}${cp?` · 카드는 기본 카드팩 ${cp}곳에 보관`:held?' · 카드는 카드함에 보관(쓰는 덱에는 끼울 수 없다)':' · 같은 카드를 이미 최대 장수로 가져 돈만 받는다'}`);return}
+    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;const cp=copyToPacks(ch,cid);let held=false;if(!cp){const sd=ch.side=ch.side||[];sd.push(cid);held=true}chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} +${money(m)}${cp?` · 카드는 기본 카드팩 ${cp}곳에 보관`:held?' · 카드는 카드함에 보관(쓰는 덱에는 끼울 수 없다)':' · 카드함에 보관'}`);return}
     if(offer){(ch.offers=ch.offers||[]).push(cid);chips&&chips.push(`${label||'카드'} 발견 · ${D.cards[cid].n} (받을지 고른다)`);return}
     putCard(ch,cid,chips,label);
     /* 보상 카드는 다른 편집 가능한 팩에도 복사하고, 전용 카드(보스·책장·집행 카드)는 지금 팩에만 둔다 */
@@ -4706,6 +4708,6 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
-    setPity,sellGear,gearSellValue,canSellGear,tuneRewind,tuneRewindCost,tuneFails,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setPity,sameOk,deckCopies,sellGear,gearSellValue,canSellGear,tuneRewind,tuneRewindCost,tuneFails,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     canFound,pvProfile,staffList,staffLv,staffEventPick,staffPromoEvent,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
