@@ -1717,6 +1717,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const CAPSUB=[[/선장에게 (손짓|눈짓)으로 알린다/g,'직접 $1으로 지시한다'],[/선장이 처리한다/g,'내가 처리한다'],[/선장도 아직 모르는 것 같다/g,'아직 아무도 수습하지 못했다'],[/선장의 명령/g,'내 명령'],[/선장이/g,'당신이'],[/선장은/g,'당신은'],[/선장도/g,'당신도'],[/선장의 /g,'당신의 '],[/선장에게/g,'당신에게']];
   const capView=o=>{if(typeof o==='string'){let t=o;for(const [a,b] of CAPSUB)t=t.replace(a,b);return t}if(Array.isArray(o))return o.map(capView);if(o&&typeof o==='object'){const r={};for(const k of Object.keys(o))r[k]=k==='fx'||k==='check'?o[k]:capView(o[k]);return r}return o};
   function lakeYear(G){const r=lakeYear0(G);return r&&r.type!=='fight'&&G.ch.lake&&G.ch.lake.captain?capView(r):r}
+  /* 선원 모집: 선원이 crewMax명보다 적고 모집 간격이 지났으면 나온다. 무한 모드의 가속(조용한 해)에서도 같은 사건을 쓴다 */
+  function lakeCrewEvent(G){
+    const ch=G.ch,Lk=D.lake;if(!Lk||!Lk.crew||!lakeOn(ch)||ch.distForm)return null;const L=ch.lake=ch.lake||{};if(!L.captain)return null;
+    const crew=L.crew=L.crew||[];if(crew.length>=CFG.lake.crewMax||G.year<(L.crewAt||0))return null;
+    L.crewAt=G.year+CFG.lake.crewEvery;const keys=sample(Object.keys(Lk.crew.roles),3);
+    return capView({t:Lk.crew.t,x:Lk.crew.x+(crew.length?` 지금 배에는 선원이 ${crew.length}명 있다 (${crew.map(m=>m.n).join(', ')}).`:''),c:[...keys.map(k=>{const R_=Lk.crew.roles[k];return {l:`${R_.n}를 태운다`,h:`${R_.e} · ${R_.t}`,ok:{t:`${R_.n} 한 사람이 당신의 배에 올랐다. 이름은 묻지 않았다. 이 호수에서는 이름이 오래 남지 않는다.`,fx:{lakeCrew:k}}}}),{l:Lk.crew.later,ok:{t:'선장은 고개를 저었다. 사람이 더 필요하면 소문이 먼저 알아서 돈다.',fx:{}}}]})}
   function lakeYear0(G){
     const ch=G.ch,Lk=D.lake;if(!Lk||!lakeOn(ch)||ch.distForm)return null;
     const L=ch.lake=ch.lake||{},ids=Object.keys(Lk.lakes);
@@ -1732,9 +1738,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 선장이 된 뒤: 선원 모집(최대 crewMax명, 직책을 고른다) · 선원이 생기면 호수에 변모하는 징후 */
     if(L.captain&&L.phase!=='whale'&&Lk.crew){
       const crew=L.crew=L.crew||[];
-      if(crew.length<CFG.lake.crewMax&&G.year>=(L.crewAt||0)){
-        L.crewAt=G.year+CFG.lake.crewEvery;const keys=sample(Object.keys(Lk.crew.roles),3);
-        return {t:Lk.crew.t,x:Lk.crew.x+(crew.length?` 지금 배에는 선원이 ${crew.length}명 있다 (${crew.map(m=>m.n).join(', ')}).`:''),c:[...keys.map(k=>{const R_=Lk.crew.roles[k];return {l:`${R_.n}를 태운다`,h:`${R_.e} · ${R_.t}`,ok:{t:`${R_.n} 한 사람이 당신의 배에 올랐다. 이름은 묻지 않았다. 이 호수에서는 이름이 오래 남지 않는다.`,fx:{lakeCrew:k}}}}),{l:Lk.crew.later,ok:{t:'선장은 고개를 저었다. 사람이 더 필요하면 소문이 먼저 알아서 돈다.',fx:{}}}]}}
+      {const ce=lakeCrewEvent(G);if(ce)return ce}
       if(crew.length&&Lk.crewSign&&G.year>=(L.signAt||0)){L.signAt=G.year+CFG.lake.signEvery;const sg=(L.signSeen=L.signSeen||[]);let pool=Lk.crewSign.map((e,i)=>i).filter(i=>!sg.includes(i));if(!pool.length){sg.length=0;pool=Lk.crewSign.map((e,i)=>i)}
         const i=one(pool);sg.push(i);const s_=Lk.crewSign[i];return {t:s_.t,x:s_.x,c:[{l:s_.a,h:'변모의 징후 · 항해 공적 +1',ok:{t:s_.at,fx:{pts:1}}},{l:s_.b,h:'변모의 징후 · 항해 공적 +1',ok:{t:s_.bt,fx:{pts:1}}}]}}
     }
@@ -3022,7 +3026,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
          {l:'들어가지 않는다',h:'지금처럼 한 해씩 이어진다 · 되돌릴 수 없다',ok:{t:'문턱 앞에서 돌아섰다. 이곳의 시간은 한 해씩, 평소대로 흘러간다.',fx:{accel:'no'}}}]}}
   function accelPass(G){
     const ch=G.ch,ev=e=>e?{type:'event',ev:e}:null;
-    for(const fn of [()=>ev(bmGlitchEvent(G)),()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G)),()=>ev(staffPromoEvent(G))]){const r=fn();if(r)return r}
+    for(const fn of [()=>ev(bmGlitchEvent(G)),()=>ev(distStableEvent(G)),()=>ev(infiniteEvent(G)),()=>ev(lakeCrewEvent(G)),()=>kidHuntEvent(G),()=>ev(bondEvent(G)),()=>ev(bondEscortEvent(G)),()=>ev(artEvent(G)),()=>ev(infPromoEvent(G)),()=>ev(surgEvent(G)),()=>ev(officeMoveEvent(G)),()=>ev(staffEventPick(G)),()=>ev(staffPromoEvent(G))]){const r=fn();if(r)return r}
     return null}
   /* ===== 가속 스텝 보상과 변화(제3의 강화) ===== */
   const CHGST={atk:'공격',maxHp:'최대 HP',spd:'속도',eva:'회피'};
