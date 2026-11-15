@@ -17137,5 +17137,8 @@
  "화상이 라운드 끝에 40%만 줄어든다": "Burn decays by only 40% at round end",
  "침잠 피해 감소 한 단계 더": "One extra step of Sinking damage reduction",
  "맞아서 줄어드는 충전 −1": "Charge lost when hit is reduced by 1",
- "보조 히든 장비 {0}/{1}": "Aux Hidden Gear {0}/{1}"
+ "보조 히든 장비 {0}/{1}": "Aux Hidden Gear {0}/{1}",
+ "실패한 정비 1번 되돌리기 (실패 {0}번)": "Undo 1 failed tune-up ({0} failures)",
+ "장착한 장비 하나에 공격 또는 회피 +1을 시도한다. 성공하면 고른 쪽만 오르고, 실패해도 시도 횟수는 소모된다. 실패한 정비는 돈을 내고 1번씩 되돌려 다시 시도할 수 있다(되돌릴 때마다 값이 오른다). 장비마다 {0}번까지.{1}": "Attempt to add +1 to Attack or Evasion on one equipped item. Success increases the chosen stat; failure still consumes the attempt count. You can pay to undo failed attempts one at a time and try again (the price rises with each undo). Up to {0} times per equipment. {1}",
+ "{0} · 실패한 정비 1번을 되돌렸다 ({1}/{2}) · 다음 되돌리기 {3}": "{0} · Undid 1 failed tune-up ({1}/{2}) · Next undo {3}"
 }

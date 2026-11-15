@@ -340,7 +340,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(old.chgFx){for(const [k,v] of Object.entries(old.chgFx))nw.fx[k]=(nw.fx[k]||0)+v;nw.chgFx=Object.assign({},old.chgFx);nw.chg=old.chg;nw.e=`${nw.e} · 변화 ${old.chg||0}단계`}
     if(old.enchN&&!nw.enchN)nw.enchN=old.enchN;
     return nw}
-  function carryTune(old,nw){carryEnch(old,nw);if(!old||!(old.tries||old.tune))return nw;nw.tries=old.tries||0;if(old.tune){nw.tune=Object.assign({},old.tune);for(const [k,v] of Object.entries(old.tune))nw.fx[k]=(nw.fx[k]||0)+v}return nw}
+  function carryTune(old,nw){carryEnch(old,nw);if(!old||!(old.tries||old.tune))return nw;nw.tries=old.tries||0;nw.rewinds=old.rewinds||0;if(old.tune){nw.tune=Object.assign({},old.tune);for(const [k,v] of Object.entries(old.tune))nw.fx[k]=(nw.fx[k]||0)+v}return nw}
   function egoGrow(ch){
     if(ch.egoUses==null)return null;
     const st=ch.stash||[],w=ch.gear.weapon,L=egoLvFor(ch.egoUses),own=w&&egoBase(w.id)?w:st.find(x=>egoBase(x.id));
@@ -2471,6 +2471,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 정비 최대 횟수: 공방 해결사는 더 많이 할 수 있다 */
   /* 제나를 쓰러뜨린 뒤에는 장비마다 정비를 zenaPlus번 더 할 수 있다 (바랄·제나의 장비는 기본 횟수만 — 후반 장비가 한 가지로 굳지 않게) */
   const tuneMax=(ch,g)=>(isWs(ch)?CFG.shop.tune.maxWs:CFG.shop.tune.max)+(ch.flags&&ch.flags.beatZena&&g&&!CFG.shop.tune.noPlus.includes(g.id)?CFG.shop.tune.zenaPlus:0);
+  /* 실패한 정비 되돌리기: 시도 횟수를 1 돌려 다시 시도할 수 있게 한다(성공한 정비는 되돌리지 않는다). 쓸수록 값이 오른다 */
+  const tuneFails=g=>Math.max(0,(g.tries||0)-((g.tune&&g.tune.atk)||0)-((g.tune&&g.tune.eva)||0));
+  const tuneRewindCost=g=>CFG.shop.tune.rewind.base+CFG.shop.tune.rewind.step*(g.rewinds||0);
+  function tuneRewind(ch,slot){
+    const g=ch.gear[slot];if(!g||(ch.distForm&&!ch.distStable)||tuneFails(g)<1||ch.money<tuneRewindCost(g))return null;
+    const cost=tuneRewindCost(g),ng=structuredClone(g);ch.money-=cost;ng.tries=(g.tries||0)-1;ng.rewinds=(g.rewinds||0)+1;ch.gear[slot]=ng;
+    return {cost,tries:ng.tries,n:ng.n,next:tuneRewindCost(ng)};
+  }
   function tuneGear(ch,slot,stat){
     const T=CFG.shop.tune,g=ch.gear[slot];
     if(!g||(ch.distForm&&!ch.distStable)||!['atk','eva'].includes(stat)||(g.tries||0)>=tuneMax(ch,g)||ch.money<tuneCost(g))return null;
@@ -3562,7 +3570,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.bond&&['met','married'].includes(ch.bond.st)&&!ch.distForm&&d(100)<=CFG.supply.lunchChance){const L_=CFG.supply.lunch,hp0=C.P.hp,hh=Math.min(Math.round(ch.stats.maxHp*L_.hpPct/100),ch.stats.maxHp-C.P.hp);if(hh>0)C.P.hp+=hh;const g_=gainMind(ch,L_.mind);chips.push(`인연 도시락 · ${ch.bond.name||'인연'}이(가) 도시락을 건넸다${hh>0?' · HP +'+hh:''}${g_?' · 정신력 +'+g_:''}`)}
     /* 대호수: 호수에서 싸울 때마다(항해) 정신이 닳는다. mindKeep 밑으로는 항해만으로 내려가지 않는다 */
     if(ch.flags&&ch.flags.lake&&/^lake_/.test(C.id)&&!ch.distForm&&ch.mind>CFG.lake.mindKeep){loseMind(ch,Math.min(CFG.lake.mindSail,ch.mind-CFG.lake.mindKeep),m=>chips.push('항해의 피로 · '+m))}
-    if(ch.flags&&ch.flags.lake&&ch.lake&&ch.lake.captain&&/^lake_/.test(C.id)&&hullOf(ch)>1)hullLose(ch,Math.min(CFG.lake.hullWear,hullOf(ch)-1),chips);
+    if(ch.flags&&ch.flags.lake&&ch.lake&&ch.lake.captain&&(/^lake_/.test(C.id)||ch.infinite)&&hullOf(ch)>1)hullLose(ch,Math.min(CFG.lake.hullWear,hullOf(ch)-1),chips);
     if(ch.flags&&ch.flags.lake&&ch.lake){if(C.id==='lake_mate')ch.lake.pirate='orca';if(C.id==='lake_orca')ch.lake.pirate='epi';
       if(/^lake_(ywhale|whale)_/.test(C.id)){const L=ch.lake,K=L.killed=L.killed||[];if(!K.includes(C.id))K.push(C.id);L.phase='enter';L.harbor=true;gainMind(ch,CFG.lake.harborMind);
         const ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length;chips.push(`고래 토벌 · 보스급 ${ny}/4 · 대재앙 ${na}/6`);
@@ -4670,6 +4678,6 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
-    setPity,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setPity,tuneRewind,tuneRewindCost,tuneFails,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     canFound,pvProfile,staffList,staffLv,staffEventPick,staffPromoEvent,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }

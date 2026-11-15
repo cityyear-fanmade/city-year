@@ -1264,9 +1264,10 @@ export function startUI(E,app){
     const ch=G.ch,T=Object.assign({},CFG.shop.tune,{max:E.tuneMax(G.ch)}),slots=Object.keys(ch.gear).filter(k=>ch.gear[k]);
     const rows=slots.map(k=>{const g=ch.gear[k],n=g.tries||0,mx=E.tuneMax(ch,g),full=n>=mx,cost=E.tuneCost(g),tn=g.tune||{},ok=!full&&ch.money>=cost&&(!ch.distForm||ch.distStable);
       return `<div class="stack" style="gap:4px;border-top:1px solid var(--line,#2a2f3a);padding-top:6px"><div class="row between"><b>${esc(g.n)}</b><span class="mono small dim">정비 ${n}/${mx}${tn.atk||tn.eva?` · 공격+${tn.atk||0} 회피+${tn.eva||0}`:''}</span></div>
+        ${E.tuneFails(g)>0?`<button class="btn" data-a="tunerw" data-i="${k}" ${ch.money>=E.tuneRewindCost(g)&&(!ch.distForm||ch.distStable)?'':'disabled'}><b>실패한 정비 1번 되돌리기 (실패 ${E.tuneFails(g)}번)</b><span class="mono small" style="color:var(--gold)">${E.money(E.tuneRewindCost(g))}</span></button>`:''}
         ${full?'<p class="small dim">더는 정비할 수 없다.</p>':`<div class="row" style="gap:8px"><button class="btn" style="flex:1" data-a="tune" data-i="${k}" data-s="atk" ${ok?'':'disabled'}><b>공격 +1 시도</b><span class="mono small" style="color:var(--gold)">${E.money(cost)}</span></button><button class="btn" style="flex:1" data-a="tune" data-i="${k}" data-s="eva" ${ok?'':'disabled'}><b>회피 +1 시도</b><span class="mono small" style="color:var(--gold)">${E.money(cost)}</span></button></div>`}</div>`}).join('');
     return `<div class="panel stack" style="gap:8px"><div class="row between"><b class="serif">장비 정비</b><span class="chip">${T.chance}% 성공</span></div>
-      <p class="small dim">장착한 장비 하나에 공격 또는 회피 +1을 시도한다. 성공하면 고른 쪽만 오르고, 실패해도 시도 횟수는 소모된다. 장비마다 ${T.max}번까지.${ch.flags&&ch.flags.beatZena?` 제나를 쓰러뜨린 뒤로는 장비마다 ${CFG.shop.tune.zenaPlus}번씩 더 늘어난다. 바랄·제나의 장비는 기본 횟수만 정비할 수 있다.`:''}</p>
+      <p class="small dim">장착한 장비 하나에 공격 또는 회피 +1을 시도한다. 성공하면 고른 쪽만 오르고, 실패해도 시도 횟수는 소모된다. 실패한 정비는 돈을 내고 1번씩 되돌려 다시 시도할 수 있다(되돌릴 때마다 값이 오른다). 장비마다 ${T.max}번까지.${ch.flags&&ch.flags.beatZena?` 제나를 쓰러뜨린 뒤로는 장비마다 ${CFG.shop.tune.zenaPlus}번씩 더 늘어난다. 바랄·제나의 장비는 기본 횟수만 정비할 수 있다.`:''}</p>
       ${UI.tuneMsg?`<p class="${UI.tuneMsg.ok?'good':'bad'} small">${esc(UI.tuneMsg.t)}</p>`:''}
       ${ch.distForm&&!ch.distStable?'<p class="small dim">뒤틀린 몸은 장비를 쥘 수 없다.</p>':rows||'<p class="small dim">장착한 장비가 없다.</p>'}</div>`;
   }
@@ -3147,6 +3148,7 @@ ${symRec(r)}
     wsstkw(i){const r=E.wsSetStaffKw(G.ch,i);if(r){UI.wsMsg=`지팡이 집중 키워드 · ${r.n}`;resave();render()}},
     wsaugc(i){const r=E.wsAugChoose(G.ch,i);if(r){UI.wsMsg=`의수 특수 강화 · 적중 시 ${D.keywords[r.stat].n} +${r.amt}`;resave();render()}},
     wsaug(i){const [ix,k]=String(i).split(':'),r=E.wsAugPick(G.ch,+ix,k);if(r){UI.wsMsg=`${r.m}을(를) 녹여 의수를 개조했다 · ${CFG.ws.aug.stats[r.stat]} +${CFG.ws.aug.pick}`;resave();render()}},
+    tunerw(k){const r=E.tuneRewind(G.ch,k);if(r){UI.tuneMsg={ok:true,t:`${r.n} · 실패한 정비 1번을 되돌렸다 (${r.tries}/${E.tuneMax(G.ch)}) · 다음 되돌리기 ${E.money(r.next)}`};render()}},
     tune(k,el){const r=E.tuneGear(G.ch,k,el&&el.dataset?el.dataset.s:null);if(r){UI.tuneMsg={ok:r.ok,t:`${r.n} · ${r.stat==='atk'?'공격':'회피'} +1 ${r.ok?'성공':'실패'} (${r.tries}/${E.tuneMax(G.ch)})`};render()}},
     delcard(i){if((UI.deleted||[]).length>=CFG.shop.delMax)return;const c=E.delCard(G.ch,+i);if(c){(UI.deleted=UI.deleted||[]).push(D.cards[c].n);render()}},
     tname(){
@@ -3427,7 +3429,7 @@ ${symRec(r)}
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
   /* 오늘의 시드와 같은 시드(지나간 날의 시드를 번호로 입력한 경우 포함)면 그날의 출신·타고난 것 지정을 그대로 쓴다 */
   const dailyKeyOf=seed=>UI.daily&&seed===dailySeed(UI.daily)?UI.daily:(Object.keys(CFG.dailyPlan||{}).find(k=>dailySeed(k)===seed)||null);
-  function born(seed,name,daily){UI.team=null;const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,dly?(pl&&pl.origin)||CFG.dailyOrigin:(UI.origin&&loadUnlocks().includes('origin:'+UI.origin)?UI.origin:null));UI.newOrigin=null;if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;if(pl&&pl.innate2&&pl.innate2!==pl.innate&&D.innate[pl.innate2])BC.innate2=pl.innate2;BC.seed=seed;BC.name=name||'';BC.fresh=true}
+  function born(seed,name,daily){UI.team=null;const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];{const uo=UI.origin&&loadUnlocks().includes('origin:'+UI.origin)?UI.origin:null;BC=E.newChar(UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,uo||(dly?(pl&&pl.origin)||CFG.dailyOrigin:null))}UI.newOrigin=null;if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;if(pl&&pl.innate2&&pl.innate2!==pl.innate&&D.innate[pl.innate2])BC.innate2=pl.innate2;BC.seed=seed;BC.name=name||'';BC.fresh=true}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
   window.addEventListener('resize',()=>{if(UI.screen==='combat'&&!PLAYING&&UI.wasMobile!==isMobile())render()});
   app.addEventListener('toggle',e=>{const t=e.target;if(!t.classList)return;
