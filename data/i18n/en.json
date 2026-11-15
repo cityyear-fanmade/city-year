@@ -17196,5 +17196,10 @@
  "같은 카드는 덱에 {0}장까지": "Up to {0} copies of a card in the deck",
  "같은 카드는 덱에 {0}장까지 들어간다. 카드함에 넣어 둘 수 있다.": "Up to {0} copies of the same card can go into the deck. You can keep it in the card box.",
  "{0} · {1} (같은 카드는 덱에 {2}장까지라 카드함으로)": "{0} · {1} (up to {2} copies per deck, so it goes to the card box)",
- "카드함에 보관": "kept in the card box"
+ "카드함에 보관": "kept in the card box",
+ "카드함 {0}/{1}": "Card Box {0}/{1}",
+ "카드함이 가득 찼다 (최대 {0}장).": "The card box is full (max {0}).",
+ "카드함이 가득 차 바꿀 수 없다": "The card box is full, so you cannot swap",
+ "{0} · {1}은(는) 받지 못했다 (카드함이 가득 찼다 · 최대 {2}장)": "{0} · Could not receive {1} (card box full · max {2})",
+ "카드함이 가득 차 카드는 받지 못했다 (최대 {0}장)": "the card box is full, so the card was not received (max {0})"
 }

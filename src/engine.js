@@ -371,6 +371,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const deckRoom=ch=>ch.deck.length<deckMax(ch);
   /* 덱에 들어가는 같은 카드는 CFG.deck.sameMax장까지(덱 고정·전용 책장은 정해진 대로) */
   const deckCopies=(ch,cid)=>ch.deck.filter(x=>x===cid).length;
+  /* 카드함은 최대 CFG.deck.boxMax장까지 */
+  const boxRoom=ch=>(ch.side||[]).length<CFG.deck.boxMax;
   const sameOk=(ch,cid)=>!!(ch.deckLocked||ch.cardMoney)||deckCopies(ch,cid)<CFG.deck.sameMax;
   /* 선율을 쌓는 카드를 처음 받을 때, 터뜨리는 카드(화음)가 하나도 없으면 화음을 짝으로 한 장 같이 내준다(판마다 한 번) */
   function melodyPair(ch,cid,chips){
@@ -381,6 +383,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function putCard(ch,cid,chips,label){
     melodyPair(ch,cid,chips);
     if(deckRoom(ch)&&sameOk(ch,cid)){ch.deck.push(cid);chips&&chips.push((label||'카드')+' · '+D.cards[cid].n);return}
+    if(!boxRoom(ch)&&!(deckRoom(ch)&&sameOk(ch,cid))){chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n}은(는) 받지 못했다 (카드함이 가득 찼다 · 최대 ${CFG.deck.boxMax}장)`);return}
     if(deckRoom(ch)&&!sameOk(ch,cid)){(ch.side=ch.side||[]).push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} (같은 카드는 덱에 ${CFG.deck.sameMax}장까지라 카드함으로)`);return}
     (ch.side=ch.side||[]).push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} (덱이 가득 차서 카드함으로)`);
   }
@@ -388,8 +391,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const o=ch.offers||[],cid=o[i];if(!cid)return false;
     melodyPair(ch,cid,null);
     if(to==='deck'){if(!deckRoom(ch)||!sameOk(ch,cid))return false;ch.deck.push(cid)}
-    else if(to==='swap'){const j=+swap;if(ch.deckLocked||!ch.deck[j]||D.cards[ch.deck[j]].fixed)return false;if(!ch.cardMoney&&ch.deck[j]!==cid&&deckCopies(ch,cid)>=CFG.deck.sameMax)return false;(ch.side=ch.side||[]).push(ch.deck[j]);ch.deck[j]=cid}
-    else (ch.side=ch.side||[]).push(cid);
+    else if(to==='swap'){const j=+swap;if(ch.deckLocked||!ch.deck[j]||D.cards[ch.deck[j]].fixed)return false;if(!ch.cardMoney&&ch.deck[j]!==cid&&deckCopies(ch,cid)>=CFG.deck.sameMax)return false;if(!boxRoom(ch))return false;(ch.side=ch.side||[]).push(ch.deck[j]);ch.deck[j]=cid}
+    else{if(!boxRoom(ch))return false;(ch.side=ch.side||[]).push(cid)}
     copyToPacks(ch,cid);
     o.splice(i,1);return true;
   }
@@ -411,7 +414,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!t){
       if(!owner&&(ch.packs||[]).some(p=>p.k==='basic')){for(const p of ch.packs)if(p.k==='basic'&&!p.deck.includes(cid)&&!p.side.includes(cid))(p.deck.length<deckMax(ch)?p.deck:p.side).push(cid);
         chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 기본 카드팩에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);return true}
-      {const sd=ch.side=ch.side||[];{sd.push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 카드함에 보관 (전용 책장을 쓰는 중이라 덱에는 끼우지 않는다)`)}}return true}
+      {const sd=ch.side=ch.side||[];if(!boxRoom(ch)){chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n}은(는) 받지 못했다 (카드함이 가득 찼다 · 최대 ${CFG.deck.boxMax}장)`);return true}{sd.push(cid);chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → 카드함에 보관 (전용 책장을 쓰는 중이라 덱에는 끼우지 않는다)`)}}return true}
     if((ch.packs||[]).some(p=>p.deck.includes(cid)||p.side.includes(cid)))return true;
     (t.deck.length<deckMax(ch)?t.deck:t.side).push(cid);
     chips&&chips.push(`${label||'카드'} · ${D.cards[cid].n} → ${t.n}에 보관 (쓰는 팩이 아니라 카드팩 보관함으로)`);
@@ -1147,7 +1150,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function addCard(ch,cid,chips,label,offer){
     if(!cid)return;
     /* 덱 고정(엄지 검술·책장) 또는 전용 카드팩(숨은 출생)이면 카드 대신 돈 */
-    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;const cp=copyToPacks(ch,cid);let held=false;if(!cp){const sd=ch.side=ch.side||[];sd.push(cid);held=true}chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} +${money(m)}${cp?` · 카드는 기본 카드팩 ${cp}곳에 보관`:held?' · 카드는 카드함에 보관(쓰는 덱에는 끼울 수 없다)':' · 카드함에 보관'}`);return}
+    if(ch.deckLocked||ch.cardMoney){const m=earn(ch,CFG.lockedCardMoney);ch.money+=m;const cp=copyToPacks(ch,cid);let held=false;if(!cp&&boxRoom(ch)){(ch.side=ch.side||[]).push(cid);held=true}chips&&chips.push(`${ch.deckLocked?'덱 고정':'전용 카드팩'} · ${D.cards[cid].n} +${money(m)}${cp?` · 카드는 기본 카드팩 ${cp}곳에 보관`:held?' · 카드는 카드함에 보관(쓰는 덱에는 끼울 수 없다)':` · 카드함이 가득 차 카드는 받지 못했다 (최대 ${CFG.deck.boxMax}장)`}`);return}
     if(offer){(ch.offers=ch.offers||[]).push(cid);chips&&chips.push(`${label||'카드'} 발견 · ${D.cards[cid].n} (받을지 고른다)`);return}
     putCard(ch,cid,chips,label);
     /* 보상 카드는 다른 편집 가능한 팩에도 복사하고, 전용 카드(보스·책장·집행 카드)는 지금 팩에만 둔다 */
@@ -1156,14 +1159,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 카드 고르기: 새 카드를 한 장만 제안하지 않고 CFG.cardPick.n장 가운데 하나를 고르게 한다 (고정 덱이면 예전처럼 돈). 안 가진 카드를 먼저 뽑는다 */
   function offerPick(ch,pool,chips,label){
     if(ch.deckLocked||ch.cardMoney){const cid=one(pool.filter(id=>!ownsCard(ch,id)))||one(pool);return addCard(ch,cid,chips,label,true)}
-    /* 안 가진 카드를 먼저 뽑고, 모자라면 이미 가진 카드로 채운다. 이미 가진 카드는 많이 가질수록 덜 나온다(1장 1 · 2장 dupWeight[1] · 3장 이상 dupWeight[2], 덱에 3장 찬 카드는 일반 덱에서 빼고) */
+    /* 안 가진 카드를 먼저 뽑고, 모자라면 이미 가진 카드로 채운다. 덱과 카드함에 합쳐 dupOver장을 넘게 가진 카드는 dupWeight배로 덜 나온다 */
     const fresh=pool.filter(id=>!ownsCard(ch,id)),set=[],nPick=CFG.cardPick.n;
     {const left=fresh.slice();while(set.length<nPick&&left.length)set.push(left.splice(d(left.length)-1,1)[0])}
     if(set.length<nPick){
-      const own=pool.filter(id=>!fresh.includes(id)&&!set.includes(id)),W=CFG.cardPick.dupWeight,lockedDeck=!!(ch.deckLocked||ch.cardMoney);
+      const own=pool.filter(id=>!fresh.includes(id)&&!set.includes(id)),P=CFG.cardPick;
       const copies=id=>ch.deck.filter(x=>x===id).length+(ch.side||[]).filter(x=>x===id).length;
       while(set.length<nPick&&own.length){
-        const w=own.map(id=>{const c=Math.max(1,copies(id));return !lockedDeck&&ch.deck.filter(x=>x===id).length>=CFG.deck.sameMax?0:W[Math.min(c,W.length)-1]});
+        const w=own.map(id=>copies(id)>P.dupOver?P.dupWeight:1);
         const tot=w.reduce((a,b)=>a+b,0);if(tot<=0)break;
         let r=d(10000)/10000*tot,i=0;while(i<own.length-1&&r>w[i]){r-=w[i];i++}
         set.push(own.splice(i,1)[0])}
@@ -4718,6 +4721,6 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
 
   return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
-    setPity,sameOk,deckCopies,sellGear,gearSellValue,canSellGear,tuneRewind,tuneRewindCost,tuneFails,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
+    setPity,boxRoom,sameOk,deckCopies,sellGear,gearSellValue,canSellGear,tuneRewind,tuneRewindCost,tuneFails,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     canFound,pvProfile,staffList,staffLv,staffEventPick,staffPromoEvent,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
 }
