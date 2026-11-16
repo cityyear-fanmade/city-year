@@ -9616,6 +9616,22 @@
    "tier": "boss",
    "intro": "붉은 것이 벽을 등지고 선다. 이름을 불러도 대답하지 않는다. 입이 한 번 벌어졌다 닫힌다.",
    "trait": "enrage"
+  },
+  "sis_trendy": {
+   "n": "유행에 민감한 손님",
+   "why": "가위를 든 손님. 유행에 어긋난 옷을 입은 사람을 가만두지 않는다.",
+   "color": "#6a4a6a",
+   "hp": 34,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard"
+   ],
+   "tier": "early",
+   "intro": "손님이 가위를 소리 내어 열고 닫는다. 입가는 웃고 있다."
   }
  },
  "fixedFights": {
