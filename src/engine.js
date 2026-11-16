@@ -2644,7 +2644,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const sisZones=ch=>D.sisyphus.zones.filter(z=>z.grade<=sisGrade(ch));
   function sisLoot(ch,zone,chips){
     const S_=D.sisyphus,out=[];const mats=zone.mat;
-    const k=one(mats),n=1+d(2)-1;
+    const fm=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].mat,k=one(fm&&fm.length?fm:mats),n=1+d(2)-1;
     if(k==='soda'){const h=Math.round(ch.stats.maxHp*0.15);ch.hp=Math.min(ch.stats.maxHp,ch.hp+h);out.push(`정육 소다 · 체력 +${h}`)}
     else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');const c=one(open);ch.sis.dyes.push(c.id);out.push(`염료(${c.n}) 1병`)}
     else{const amt=k==='goldskin'?(d(100)<=40?1:0):n;if(amt){sisMat(ch,k,amt);out.push(`${S_.mats[k].n} ${amt}`)}else out.push('황금가죽은 나오지 않았다')}
@@ -2833,7 +2833,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='hunt'){
       const z=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],bosses=z.foes.filter(f=>D.enemies[f].tier==='boss'),norm=z.foes.filter(f=>D.enemies[f].tier!=='boss');
       const id=bosses.length&&(!norm.length||d(100)<=CFG.sis.bossChance)?one(bosses):one(norm.length?norm:z.foes);
-      sv.pend=z.id;sv.st='craft';sv.crafted=0;sv.lootDone=false;sv.skipHunt=0;
+      sv.pend=z.id;sv.foe=id;sv.st='craft';sv.crafted=0;sv.lootDone=false;sv.skipHunt=0;
       return {type:'fight',enemy:id,enc:{sis:true,label:`${z.n} · ${D.enemies[id].n}`}};
     }
     if(sv.st==='craft'){

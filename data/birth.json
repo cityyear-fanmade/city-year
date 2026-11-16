@@ -10145,10 +10145,12 @@
     "grade": 0,
     "foes": [
      "sis_glove",
-     "sis_wallet"
+     "sis_wallet",
+     "sis_mannequin_lite"
     ],
     "mat": [
-     "leather"
+     "leather",
+     "cloth"
     ],
     "x": "옷걸이 줄 사이로 유행이 한 바퀴 돌고 있다."
    },
@@ -10157,11 +10159,13 @@
     "n": "지하 1층 푸드코트",
     "grade": 0,
     "foes": [
-     "sis_souschef"
+     "sis_souschef",
+     "sis_mannequin_lite"
     ],
     "mat": [
      "leather",
-     "soda"
+     "soda",
+     "cloth"
     ],
     "x": "정육 걸이 너머에서 국자 소리가 난다."
    },
