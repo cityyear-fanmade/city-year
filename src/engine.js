@@ -2734,6 +2734,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     sv.collapsed=true;chips.push(Z.out[out]);
     ch.titles=ch.titles||[];if(!ch.titles.includes(Z.title)){ch.titles.push(Z.title);(ch.titleLog=ch.titleLog||[]).push(Z.title);chips.push('칭호 · '+Z.title)}
     if(red==='with'){const nm=R.name||'붉은 신';addStats(ch.stats,{maxHp:20,atk:2});ch.hp+=20;(ch.relics=ch.relics||[]).push('동행 · '+nm);ch.flags=ch.flags||{};ch.flags.sisRed=nm;chips.push(`동행 · ${nm} · 최대 HP +20 · 공격 +2`)}
+    if(sv.inq===1){ch.titles=ch.titles||[];const T2='접수 번호를 받은 자';if(!ch.titles.includes(T2)){ch.titles.push(T2);(ch.titleLog=ch.titleLog||[]).push(T2);chips.push('칭호 · '+T2)}}
     ch.sisEnd=true;ch.sis=null;
     if(fac!=='kaki'){ch.distPick=true;chips.push('몸이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
   }
@@ -3966,7 +3967,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 덱 시너지(일반 키워드 6종): 덱에서 그 키워드가 붙은 카드의 비율이 ratio 이상이면 작은 보너스가 켜진다 */
     {const S_=CFG.deckSyn;P.deckSyn={};if(S_.on&&ch.deck&&ch.deck.length){for(const k of Object.keys(S_.kws)){const n=ch.deck.filter(id=>D.cards[id]&&((D.cards[id].kw||[]).some(x=>x[0]===k)||(k==='charge'&&D.cards[id].spend))).length;if(n>=((S_.mins||{})[k]||S_.min)&&n/ch.deck.length>=S_.ratio){P.deckSyn[k]=1;mindNote.push(`덱 시너지 · ${D.keywords[k].n} ${n}/${ch.deck.length}장 · ${S_.kws[k]}`)}}}}
     P.trend=!!(CFG.sis.on&&ch.sis&&ch.sis.fac==='kaki'&&ch.sis.assimDone);
-    P.rouge=!!(CFG.sis.on&&ch.sis&&ch.sis.fac==='rouge'&&ch.sis.assimDone);P.noir=!!(CFG.sis.on&&ch.sis&&ch.sis.fac==='noir'&&ch.sis.assimDone);P.rougeWith=!!(P.rouge&&ch.sis.red&&ch.sis.red.alive);
+    /* 르루주·르누아르의 전투 규칙은 백화점에서 나온 뒤(2막)에도 이어진다. 르카키는 일반 상태로 돌아간다 */
+    {const sd=ch.sisDone;P.rouge=!!(CFG.sis.on&&((ch.sis&&ch.sis.fac==='rouge'&&ch.sis.assimDone)||(sd&&sd.fac==='rouge')));P.noir=!!(CFG.sis.on&&((ch.sis&&ch.sis.fac==='noir'&&ch.sis.assimDone)||(sd&&sd.fac==='noir')));P.rougeWith=!!(P.rouge&&((ch.sis&&ch.sis.red&&ch.sis.red.alive)||(sd&&sd.red==='with')))}
     P.inkIds=ch.hw&&ch.hw.mission&&hwHave(ch).length?hwHave(ch).map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
     {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;if(o==='W사 날개'){const fi_=ch.fi??-1;if(fi_>=4)P.chargeRound=4;else if(fi_>=2)P.chargeRound=3}P.chargeHit=CH.hit||0;P.chargeExp=CH.express||null;if(CH.start)P.charge=Math.min(P.chargeCap,(P.charge||0)+CH.start);P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}if(P.deckSyn&&P.deckSyn.charge)P.charge=Math.min(P.chargeCap,(P.charge||0)+CFG.deckSyn.chargeStart);
