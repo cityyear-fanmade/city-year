@@ -512,6 +512,7 @@ export function startUI(E,app){
   function stacks(X){
     const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?`<small>받는 피해 ×${X.blueM||CFG.laev.blueMul} · 라운드마다 ${X[k]*(X.blueD||CFG.laev.blueDot)}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
     if(X.vt>0)out.push(`<span class="chip stk" style="--kc:#8e5fc7"><b>뱀의 장벽 ${X.vt}/${CFG.serpent.max}</b><small>환영난무 빛 −${X.vt} · 피해 +${X.vt}</small></span>`);
+    if(X.trend)out.push(`<span class="chip stk" style="--kc:#8a8f5a"><b>관성 ${X.inertia||0}/${CFG.sis.inertia.cap}</b><small>${(X.inertia||0)>=CFG.sis.inertia.rush?'질주 · 속도 우위 명중 2배 · 피해 +'+CFG.sis.inertia.dmg:CFG.sis.inertia.rush+'에서 질주'}</small></span>`);
     if(X.stunned)out.push('<span class="chip stk" style="--kc:#b07cc6"><b>기절</b><small>이번 라운드 행동 불가 · 회피 0</small></span>');
     /* 히든 보스 패시브 스택: 잔향(내게 쌓임), 장부(보스에게 쌓임) */
     const pv=C&&C.E&&C.E.passive;

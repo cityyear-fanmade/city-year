@@ -4004,7 +4004,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const SM=CFG.shinmang;if(P.sm&&C.round%SM.ringEvery===0&&P.sm.rings<P.sm.limit){const cost=SM.ringCost[P.sm.rings]||SM.ringCost[SM.ringCost.length-1];
       if(C.ch.mind-cost>=Math.max(1,mindFloor(C.ch))){C.ch.mind-=cost;P.sm.rings++;const m={t:'kw',s:`망(望) ${P.sm.rings}망 · 정신력 −${cost} (지금 ${C.ch.mind}) · 주는 피해 +${Math.round((SM.dealShin+P.sm.rings*SM.dealRing)*100)}% · 명중 +${P.sm.rings*SM.ringHit}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}}
     P.evaPen=P.evaPenNext||0;P.evaPenNext=0;
-    if(P.trend&&P.hp>0){P.trendKw=one(CFG.sis.trendKws);const m={t:'kw',s:`${P.name} · 이번 라운드의 유행 · ${D.keywords[P.trendKw].n} (이 키워드가 +${CFG.sis.trendPlus})`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
+    if(P.trend&&P.hp>0){P.trendKw=one(CFG.sis.trendKws);if(C.round>1)P.inertia=Math.max(0,(P.inertia||0)-CFG.sis.inertia.decay);const m={t:'kw',s:`${P.name} · 이번 라운드의 유행 · ${D.keywords[P.trendKw].n} (이 키워드가 +${CFG.sis.trendPlus} · 관성도 더 쌓인다) · 관성 ${P.inertia||0}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     /* 토끼 강화·충전 자극 근력: 체력이 낮거나 충전이 충분하면 라운드 동안 속도가 오른다 */
     if(P.spdBoost){const B_=P.spdBoost;P.spd=P.spdBase+(P.hp<=P.maxHp*B_.low[0]?B_.low[1]:0)+(P.charge>=B_.charge[0]?B_.charge[1]:0)}
     /* 순록팀·코뿔소팀: 체력을 잃을수록 공격 피해(순록) · 방어(코뿔소)가 오르고, 충전이 충분하면 코뿔소는 받는 피해가 줄어든다 */
@@ -4251,6 +4251,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function giveNext(A,id){if(!id)return;if(!A.grantNext)A.grantNext=id;else if(!A.grantQ||A.grantQ.length<1)A.grantQ=[id];else(A.grantWait=A.grantWait||[]).push(id)}
   function act(C,A,c,L,push){
     const B=A===C.P?C.E:C.P;
+    /* 르카키 관성: 행동할수록 쌓이고(유행 키워드 카드면 더), 11 이상이면 질주 */
+    if(A.trend){const I=CFG.sis.inertia,g=I.gain+((c.kw||[]).some(k=>k[0]===A.trendKw)?I.trend:0),b0=A.inertia||0;A.inertia=Math.min(I.cap,b0+g);if(b0<I.rush&&A.inertia>=I.rush)L('kw',`${A.name} · 관성 ${A.inertia} · 질주 (속도 우위 명중 2배 · 공격 피해 +${I.dmg})`)}
     if(c.noKill){if(A.noKill){L('sys',`${A.name} · ${c.n} · 이미 그런 마음이다`);return}A.noKill=true;A.eva-=80;A.takenMul=2;L('kw',`${A.name} · ${c.n} · 이번 전투 동안 받는 피해 2배 · 회피 −80`);return}
     if(c.flesh){A.evaB-=300;A.fleshRound=C.round;L('kw',`${A.name} · ${c.n} · 이번 라운드 회피 −300`)}
     if(c.cloudGain&&A.kuro)for(let i=0;i<c.cloudGain;i++)addCloud(A,L);
@@ -4305,7 +4307,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const acA=A.wx&&A.wx.accel?(A.accel||0)*A.wx.accel.hit:0,acB=B.wx&&B.wx.accel?(B.accel||0)*B.wx.accel.eva:0;
       const trH=(A.trait==='bloodscent'&&B.bleed>0?15:0)+(A.trait==='enrage'&&A.hp<=A.maxHp/2?15:0),trE=B.trait==='coward'&&B.hp<=B.maxHp/2?20:0;
       const exH=(c.execHit&&(B.disp||0)>0?c.execHit:0)+trH;if(exH)pnote+=` 처분 표식 명중+${exH}`;
-      let am=(CFG.atkRule.on?Math.trunc(A.atk*CFG.atkRule.hitPer)+(A.hitB||0):A.atk)+(!A.isP&&C.ally?CFG.bond.allyHit:0)+(A.awl&&B.bleed>0?CFG.syn['밤의 송곳'].bleedHit:0)+c.hit+(rk?rk.hit:0)+exH-Math.floor((A.manner||0)*(A.mannerPer||thumbPer(B)))-(A.obey||0)*CFG.hw.obey.hit+(gr?gr.hit:0)+fsb+Math.min(CFG.spdHit.max,Math.max(0,Math.floor((A.spd-B.spd)/CFG.spdHit.per)))+A.passHit+acA+(A.wx&&A.wx.hitB||0)+(A.ring?CFG.ring.hit*A.work:0)+(sub?sub.atk:0)-3*(A.prescript||0)-Math.floor((B.middle?CFG.middle.sinkHit:1)*CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per))-((staggerStage(A)||{}).hit||0)-(A.isP&&A.laev==='open'&&isBlue(A)?Math.round(CFG.laev.selfBlueHit*(A.laevF||1)):0),dm=B.eva+B.evaB-(B.evaPen||0)+(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0)+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?odinEva(C.round,B):0);
+      let am=(CFG.atkRule.on?Math.trunc(A.atk*CFG.atkRule.hitPer)+(A.hitB||0):A.atk)+(!A.isP&&C.ally?CFG.bond.allyHit:0)+(A.awl&&B.bleed>0?CFG.syn['밤의 송곳'].bleedHit:0)+c.hit+(rk?rk.hit:0)+exH-Math.floor((A.manner||0)*(A.mannerPer||thumbPer(B)))-(A.obey||0)*CFG.hw.obey.hit+(gr?gr.hit:0)+fsb+Math.min(CFG.spdHit.max,Math.max(0,Math.floor((A.spd+(A.trend?Math.floor((A.inertia||0)/CFG.sis.inertia.spdPer):0)-B.spd)/CFG.spdHit.per)))*(A.trend&&(A.inertia||0)>=CFG.sis.inertia.rush?2:1)+A.passHit+acA+(A.wx&&A.wx.hitB||0)+(A.ring?CFG.ring.hit*A.work:0)+(sub?sub.atk:0)-3*(A.prescript||0)-Math.floor((B.middle?CFG.middle.sinkHit:1)*CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per))-((staggerStage(A)||{}).hit||0)-(A.isP&&A.laev==='open'&&isBlue(A)?Math.round(CFG.laev.selfBlueHit*(A.laevF||1)):0),dm=B.eva+B.evaB-(B.evaPen||0)+(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0)+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?odinEva(C.round,B):0);
       if(A.sm&&A.sm.rings)am+=A.sm.rings*CFG.shinmang.ringHit;
       if(A.cb&&A.cb.k==='hit'&&A.hp>=A.maxHp*CFG.colorBuff.hpMin)am+=A.cb.v;
       if(B.cb&&B.cb.k==='eva'&&B.hp>=B.maxHp*CFG.colorBuff.hpMin)dm+=B.cb.v;
@@ -4321,7 +4323,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const sa=sub&&sub.sure?Math.max(ra+am,rd+dm+1):ra+am,sd=rd+dm,G_=CFG.guard;
       /* 판정에 더해지거나 깎인 요소를 하나씩 눈 아래에 보여 준다. 알려진 요소를 뺀 나머지는 '그 밖'으로 묶어 합계가 항상 맞는다 */
       const amL=[],dmL=[];{
-        const atkP=CFG.atkRule.on?Math.trunc(A.atk*CFG.atkRule.hitPer)+(A.hitB||0):A.atk,spdP=Math.min(CFG.spdHit.max,Math.max(0,Math.floor((A.spd-B.spd)/CFG.spdHit.per))),wpP=(A.wx&&A.wx.hitB)||0;
+        const atkP=CFG.atkRule.on?Math.trunc(A.atk*CFG.atkRule.hitPer)+(A.hitB||0):A.atk,spdP=Math.min(CFG.spdHit.max,Math.max(0,Math.floor((A.spd+(A.trend?Math.floor((A.inertia||0)/CFG.sis.inertia.spdPer):0)-B.spd)/CFG.spdHit.per)))*(A.trend&&(A.inertia||0)>=CFG.sis.inertia.rush?2:1),wpP=(A.wx&&A.wx.hitB)||0;
         const sk=Math.floor((B.middle?CFG.middle.sinkHit:1)*CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per)),pr=3*(A.prescript||0),mn=Math.floor((A.manner||0)*(A.mannerPer||thumbPer(B))),ob=(A.obey||0)*CFG.hw.obey.hit,sgP=((staggerStage(A)||{}).hit||0);
         const ps=[['공격',atkP],['카드',c.hit],['선공',fsb],['속도 우위',spdP],['무기',wpP],['가속',acA],['그 자세',A.passHit||0],['표식·노림',exH+(A.awl&&B.bleed>0?CFG.syn['밤의 송곳'].bleedHit:0)],['동료',(!A.isP&&C.ally?CFG.bond.allyHit:0)],['작품',(A.ring?CFG.ring.hit*A.work:0)],['장갑 무기',(sub?sub.atk:0)],['명중 보정',(gr?gr.hit:0)],['침잠',-sk],['지령',-pr],['예법',-mn],['복종',-ob],['흐트러짐',-sgP]];
         const known=ps.reduce((t,x)=>t+x[1],0),rest=am-known;for(const [n_,v_] of ps)if(v_)amL.push([n_,v_]);if(rest)amL.push(['그 밖',rest]);
@@ -4394,6 +4396,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(win&&g.heal){const h=Math.min(g.heal,A.maxHp-A.hp);A.hp+=h;note+=` HP+${h}`}
         if(!win&&g.self){A.hp=Math.max(1,A.hp-g.self);note+=` 반동 −${g.self}`}}
       if(gr&&gr.n)note+=` 등급${gr.n}`;
+      if(A.trend&&(A.inertia||0)>=CFG.sis.inertia.rush){dmg+=CFG.sis.inertia.dmg;note+=` 질주+${CFG.sis.inertia.dmg}`}
       if(rk)note+=` 서열 강화(주사위+${rk.dice} 피해+${rk.b} 명중+${rk.hit})`;
       note+=pnote;
       /* 장비 추가 주사위 (천퇴성도: 적중마다 1d2 × N) */
