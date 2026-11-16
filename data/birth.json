@@ -10106,14 +10106,14 @@
    },
    {
     "n": "에메랄드",
-    "at": 10,
+    "at": 8,
     "body": {
      "maxHp": 12
     }
    },
    {
     "n": "금",
-    "at": 28,
+    "at": 24,
     "body": {
      "maxHp": 12,
      "atk": 1
@@ -10121,7 +10121,7 @@
    },
    {
     "n": "루비",
-    "at": 55,
+    "at": 48,
     "body": {
      "maxHp": 16,
      "eva": 1,
@@ -10130,7 +10130,7 @@
    },
    {
     "n": "다이아몬드",
-    "at": 90,
+    "at": 80,
     "body": {
      "maxHp": 24,
      "atk": 2,
@@ -10146,6 +10146,8 @@
     "foes": [
      "sis_glove",
      "sis_wallet",
+     "sis_mannequin_lite",
+     "sis_mannequin_lite",
      "sis_mannequin_lite"
     ],
     "mat": [
@@ -10160,6 +10162,7 @@
     "grade": 0,
     "foes": [
      "sis_souschef",
+     "sis_mannequin_lite",
      "sis_mannequin_lite"
     ],
     "mat": [
@@ -10229,24 +10232,28 @@
   ],
   "mats": {
    "leather": {
-    "n": "가죽",
+    "n": "가죽 조각",
     "kind": "base",
-    "img": "sis_m_leather"
+    "img": "sis_m_leather",
+    "mul": 1
    },
    "thread": {
-    "n": "실",
+    "n": "무명실",
     "kind": "base",
-    "img": "sis_m_thread"
+    "img": "sis_m_thread",
+    "mul": 1
    },
    "cloth": {
-    "n": "원단",
+    "n": "무명",
     "kind": "base",
-    "img": "sis_m_cloth"
+    "img": "sis_m_cloth",
+    "mul": 1
    },
    "goldskin": {
     "n": "황금가죽",
     "kind": "base",
-    "img": "sis_m_goldskin"
+    "img": "sis_m_goldskin",
+    "mul": 1
    },
    "dye": {
     "n": "염료",
@@ -10265,6 +10272,31 @@
    "resin": {
     "n": "황금송진",
     "kind": "rare"
+   },
+   "wool": {
+    "n": "모직",
+    "kind": "base",
+    "mul": 1.4
+   },
+   "silk": {
+    "n": "비단",
+    "kind": "base",
+    "mul": 2
+   },
+   "tanned": {
+    "n": "무두질 가죽",
+    "kind": "base",
+    "mul": 1.3
+   },
+   "silver": {
+    "n": "은실",
+    "kind": "base",
+    "mul": 1.1
+   },
+   "goldthread": {
+    "n": "황금실",
+    "kind": "base",
+    "mul": 1.2
    }
   },
   "tailor": {
@@ -10281,21 +10313,27 @@
      "n": "정장 재킷",
      "base": "cloth",
      "price": 60,
-     "lean": -1
+     "lean": -1,
+     "need": 2
     },
     {
      "id": "coat",
      "n": "외투",
      "base": "leather",
      "price": 70,
-     "lean": 1
+     "lean": 1,
+     "need": 2
     },
     {
      "id": "gala",
      "n": "드레스",
      "base": "cloth",
      "price": 90,
-     "lean": 0
+     "lean": 0,
+     "need": 2,
+     "extra": {
+      "thread": 1
+     }
     },
     {
      "id": "gold",
@@ -10303,7 +10341,10 @@
      "base": "goldskin",
      "price": 220,
      "lean": 0,
-     "need": 4
+     "need": 3,
+     "extra": {
+      "goldthread": 1
+     }
     }
    ],
    "patterns": [
@@ -10789,7 +10830,12 @@
     "dye": 8,
     "trim": 10,
     "leather": 14,
-    "goldskin": 20
+    "goldskin": 20,
+    "wool": 8,
+    "silk": 10,
+    "tanned": 16,
+    "silver": 10,
+    "goldthread": 12
    },
    "title": "런웨이에 오르다",
    "x": "완성한 옷은 재단대의 손질에서 따로 등급을 올릴 수 있다. 옷깃·소매·몸판·안감 네 부위에 재료를 하나씩 넣을수록 성공 확률이 오르지만(최대 80%), 실패하면 그 단계에서 옷은 끝난다.",
@@ -11095,6 +11141,37 @@
       "l": "가만히 보낸다",
       "t": "손님은 낯선 사람을 보는 눈으로 멀어졌다."
      }
+    ]
+   }
+  },
+  "cats": {
+   "cloth": {
+    "n": "원단",
+    "of": [
+     "silk",
+     "wool",
+     "cloth"
+    ]
+   },
+   "leather": {
+    "n": "가죽",
+    "of": [
+     "tanned",
+     "leather"
+    ]
+   },
+   "thread": {
+    "n": "실",
+    "of": [
+     "goldthread",
+     "silver",
+     "thread"
+    ]
+   },
+   "goldskin": {
+    "n": "황금가죽",
+    "of": [
+     "goldskin"
     ]
    }
   }

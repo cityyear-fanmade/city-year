@@ -9370,7 +9370,11 @@
    "intro": "사람 머리만 한 가죽 덩어리가 벌레 같은 다리로 매장 바닥을 긁으며 다가온다. 이번엔 무슨 유행이냐고 묻는 소리가 가죽 밑에서 새어 나온다.",
    "mat": [
     "leather"
-   ]
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_wallet": {
    "n": "가죽 지갑",
@@ -9389,7 +9393,11 @@
    "intro": "매대 아래에서 지갑 하나가 입을 벌린다. 안쪽은 비어 있는데도 무언가를 지키는 것처럼 지퍼가 꽉 물려 있다.",
    "mat": [
     "leather"
-   ]
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_souschef": {
    "n": "수셰프",
@@ -9406,7 +9414,15 @@
     "lunge"
    ],
    "tier": "early",
-   "intro": "작은 봉제인형이 국자를 끌고 주방 문턱에 선다. 오늘의 재료를 고르는 눈이 당신에게서 멈춘다."
+   "intro": "작은 봉제인형이 국자를 끌고 주방 문턱에 선다. 오늘의 재료를 고르는 눈이 당신에게서 멈춘다.",
+   "mat": [
+    "soda",
+    "leather"
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_needle_warp": {
    "n": "날실 바늘이",
@@ -9423,7 +9439,14 @@
     "precise"
    ],
    "tier": "mid",
-   "intro": "초록 옷의 작은 손님들이 바늘을 곧추세우고 줄지어 다가온다. 시끄러운 소리가 싫다는 말이 한목소리로 되풀이된다."
+   "intro": "초록 옷의 작은 손님들이 바늘을 곧추세우고 줄지어 다가온다. 시끄러운 소리가 싫다는 말이 한목소리로 되풀이된다.",
+   "mat": [
+    "thread",
+    "thread",
+    "thread",
+    "dye",
+    "dye"
+   ]
   },
   "sis_needle_weft": {
    "n": "씨실 바늘이",
@@ -9440,7 +9463,14 @@
     "lunge"
    ],
    "tier": "mid",
-   "intro": "붉은 옷의 작은 손님들이 가로로 줄을 서서 바늘을 휘두른다. 가장자리를 따라 실밥이 터진다."
+   "intro": "붉은 옷의 작은 손님들이 가로로 줄을 서서 바늘을 휘두른다. 가장자리를 따라 실밥이 터진다.",
+   "mat": [
+    "thread",
+    "thread",
+    "thread",
+    "dye",
+    "dye"
+   ]
   },
   "sis_needleking": {
    "n": "바느질의 왕",
@@ -9459,7 +9489,14 @@
    ],
    "tier": "boss",
    "intro": "왕관을 쓰고 천을 두른 목각인형이 일어선다. 바늘이들이 길을 비키고, 땀수를 세는 낮은 목소리가 바닥에서 올라온다.",
-   "trait": "enrage"
+   "trait": "enrage",
+   "mat": [
+    "silver",
+    "silver",
+    "silver",
+    "wool",
+    "wool"
+   ]
   },
   "sis_mannequin": {
    "n": "마네킹",
@@ -9478,10 +9515,16 @@
    "tier": "mid",
    "intro": "얼굴 없는 몸통이 옷걸이에서 걸어 내려온다. 입은 옷에는 아직 가격표가 달려 있다.",
    "mat": [
-    "cloth",
-    "cloth",
+    "wool",
+    "wool",
+    "wool",
+    "leather",
     "leather"
-   ]
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_controller": {
    "n": "통제자",
@@ -9500,7 +9543,20 @@
    ],
    "tier": "boss",
    "intro": "등에 얼굴이 박힌 거대한 껍질이 거꾸로 선 채 말을 건다. 주문서에 적힌 것이 당신의 치수가 아니라는 듯 고개가 돌아간다.",
-   "trait": "bulwark"
+   "trait": "bulwark",
+   "mat": [
+    "tanned",
+    "tanned",
+    "tanned",
+    "tanned",
+    "tanned",
+    "wool",
+    "wool"
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_onelegs": {
    "n": "원레그",
@@ -9517,7 +9573,19 @@
     "guard"
    ],
    "tier": "late",
-   "intro": "외다리로 선 신발관의 주인이 턱을 든다. 두 발로 서 있는 모든 것이 천해 보인다는 얼굴이다."
+   "intro": "외다리로 선 신발관의 주인이 턱을 든다. 두 발로 서 있는 모든 것이 천해 보인다는 얼굴이다.",
+   "mat": [
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "silk",
+    "silk",
+    "silk",
+    "silk"
+   ]
   },
   "sis_dorothea": {
    "n": "도로테아",
@@ -9534,7 +9602,19 @@
     "guard"
    ],
    "tier": "late",
-   "intro": "붉은 구두를 신은 점원이 나른한 얼굴로 웃는다. 집에 돌아갈 수만 있다면, 하고 낮게 중얼거린다."
+   "intro": "붉은 구두를 신은 점원이 나른한 얼굴로 웃는다. 집에 돌아갈 수만 있다면, 하고 낮게 중얼거린다.",
+   "mat": [
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "silk",
+    "silk",
+    "silk",
+    "silk"
+   ]
   },
   "sis_couch": {
    "n": "살갗 소파",
@@ -9551,7 +9631,19 @@
     "precise"
    ],
    "tier": "late",
-   "intro": "살점으로 된 소파가 몸을 일으킨다. 한쪽 끝에 사람의 얼굴이 붙어 있고, 눈알이 얼마 있냐는 말부터 나온다."
+   "intro": "살점으로 된 소파가 몸을 일으킨다. 한쪽 끝에 사람의 얼굴이 붙어 있고, 눈알이 얼마 있냐는 말부터 나온다.",
+   "mat": [
+    "silk",
+    "silk",
+    "silk",
+    "silk",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "silver",
+    "silver"
+   ]
   },
   "sis_diner": {
    "n": "5층의 고객들",
@@ -9569,7 +9661,19 @@
     "guard"
    ],
    "tier": "boss",
-   "intro": "식탁 앞에 앉은 거대한 그림자들이 고개를 돌린다. 몸 안쪽이 유리처럼 비쳐서, 삼킨 것들이 아직 움직이는 것이 보인다."
+   "intro": "식탁 앞에 앉은 거대한 그림자들이 고개를 돌린다. 몸 안쪽이 유리처럼 비쳐서, 삼킨 것들이 아직 움직이는 것이 보인다.",
+   "mat": [
+    "silk",
+    "silk",
+    "silk",
+    "silk",
+    "goldthread",
+    "goldthread",
+    "goldthread",
+    "trim",
+    "trim",
+    "trim"
+   ]
   },
   "sis_fallen": {
    "n": "추락한 마네킹",
@@ -9587,7 +9691,19 @@
     "guard"
    ],
    "tier": "late",
-   "intro": "부서진 팔다리를 실로 이어 붙인 모델이 계단 아래에서 일어난다. 걸음마다 추락하는 소리가 따라온다."
+   "intro": "부서진 팔다리를 실로 이어 붙인 모델이 계단 아래에서 일어난다. 걸음마다 추락하는 소리가 따라온다.",
+   "mat": [
+    "silk",
+    "silk",
+    "silk",
+    "silk",
+    "goldthread",
+    "goldthread",
+    "goldthread",
+    "trim",
+    "trim",
+    "trim"
+   ]
   },
   "sis_warden": {
    "n": "간수",
@@ -9607,7 +9723,19 @@
    ],
    "tier": "boss",
    "intro": "검은 로브 위에 광배가 떠오른다. 등에 박힌 못끝에서 푸른 불꽃이 타오르고, 바닥에 촛대 모양의 못들이 솟아 길을 막는다.",
-   "trait": "enrage"
+   "trait": "enrage",
+   "mat": [
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldthread",
+    "goldthread",
+    "goldthread"
+   ]
   },
   "sis_red": {
    "n": "붉은 신(미생)",
@@ -9682,8 +9810,19 @@
    "mat": [
     "cloth",
     "cloth",
+    "cloth",
+    "cloth",
+    "cloth",
+    "cloth",
+    "cloth",
+    "leather",
+    "leather",
     "leather"
-   ]
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   }
  },
  "fixedFights": {

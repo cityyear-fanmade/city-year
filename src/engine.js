@@ -2647,26 +2647,34 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const fm=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].mat,k=one(fm&&fm.length?fm:mats),n=1+d(2)-1;
     if(k==='soda'){const h=Math.round(ch.stats.maxHp*0.15);ch.hp=Math.min(ch.stats.maxHp,ch.hp+h);out.push(`정육 소다 · 체력 +${h}`)}
     else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');const c=one(open);ch.sis.dyes.push(c.id);out.push(`염료(${c.n}) 1병`)}
-    else{const amt=k==='goldskin'?(d(100)<=40?1:0):n;if(amt){sisMat(ch,k,amt);out.push(`${S_.mats[k].n} ${amt}`)}else out.push('황금가죽은 나오지 않았다')}
+    else{const amt=k==='goldskin'?1:n;if(amt){sisMat(ch,k,amt);out.push(`${S_.mats[k].n} ${amt}`)}else out.push('황금가죽은 나오지 않았다')}
     const an=CFG.sis.huntAn[sisGrade(ch)]||5;ch.money+=an;out.push(sisAn(an));
+    {const fx_=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].extra;if(fx_&&d(100)<=fx_.pct){sisMat(ch,fx_.mat,1);out.push(`${S_.mats[fx_.mat].n} 1`)}}
     chips.push('사냥 · '+out.join(' · '));
     if(d(100)<=CFG.sis.cardChance)offerPick(ch,D.rewards,chips,'카드 보상');
   }
+  /* 재료 분류: 원단·가죽·실은 단계가 있고, 높은 단계부터 먼저 쓴다 */
+  const sisCat=k=>D.sisyphus.cats[k]?D.sisyphus.cats[k].of:[k];
+  const sisCatName=k=>D.sisyphus.cats[k]?D.sisyphus.cats[k].n:(D.sisyphus.mats[k]||{}).n||k;
+  const sisHaveCat=(ch,k)=>sisCat(k).reduce((a,m)=>a+(ch.sis.mat[m]||0),0);
+  function sisPick(ch,k,n){const used=[],left={};for(const m of sisCat(k))left[m]=ch.sis.mat[m]||0;for(const m of sisCat(k)){while(n>0&&left[m]>0){left[m]--;n--;used.push(m)}}return used}
+  const sisMulOf=used=>used.length?used.reduce((a,m)=>a+((D.sisyphus.mats[m]||{}).mul||1),0)/used.length:1;
   function sisCraftInfo(ch,spec){
     const T=D.sisyphus.tailor,sh=T.shapes.find(x=>x.id===spec.shape),pt=T.patterns.find(x=>x.id===(spec.pattern||'plain')),co=T.colors.find(x=>x.id===(spec.color||'gray')),tr=(spec.trims||[]).map(i=>T.trims.find(x=>x.id===i)).filter(Boolean);
     if(!sh||!pt||!co)return {ok:false,why:'고를 수 없는 조합이다'};
     const g=sisGrade(ch),need=sh.need||1;
     if(pt.grade>g||co.grade>g)return {ok:false,why:'아직 열리지 않은 무늬나 색이다'};
-    if((ch.sis.mat[sh.base]||0)<need)return {ok:false,why:`${D.sisyphus.mats[sh.base].n}이 모자라다`};
+    if(sisHaveCat(ch,sh.base)<need)return {ok:false,why:`${sisCatName(sh.base)}이 모자라다`};
+    for(const [k,n] of Object.entries(sh.extra||{}))if(sisHaveCat(ch,k)<n)return {ok:false,why:`${sisCatName(k)}이 모자라다`};
     if(co.id!=='gray'&&!ch.sis.dyes.includes(co.id))return {ok:false,why:`${co.n} 염료가 없다`};
     if((ch.sis.mat.trim||0)<tr.length)return {ok:false,why:'장식 부품이 모자라다'};
     if(ch.sis.cloth.length>=CFG.sis.clothMax)return {ok:false,why:'옷걸이가 가득 찼다'};
-    const price=sh.price+pt.add+tr.reduce((a,x)=>a+x.add,0),sum=sh.lean+co.lean+tr.reduce((a,x)=>a+x.lean,0);
-    return {ok:true,sh,pt,co,tr,need,price,lean:Math.sign(sum)};
+    const mul=sisMulOf(sisPick(ch,sh.base,need)),price=Math.round((sh.price*mul)+pt.add+tr.reduce((a,x)=>a+x.add,0)),sum=sh.lean+co.lean+tr.reduce((a,x)=>a+x.lean,0);
+    return {ok:true,sh,pt,co,tr,need,price,mul,lean:Math.sign(sum)};
   }
   function sisCraft(G,spec){
     const ch=G.ch;if(!sisOn(ch))return {ok:false,why:'백화점 안에서만 할 수 있다'};if(ch.sis.crafted)return {ok:false,why:'오늘은 이미 한 벌을 지었다'};const I=sisCraftInfo(ch,spec);if(!I.ok)return I;
-    ch.sis.mat[I.sh.base]-=I.need;if(I.co.id!=='gray')ch.sis.dyes.splice(ch.sis.dyes.indexOf(I.co.id),1);ch.sis.mat.trim-=I.tr.length;
+    for(const m of sisPick(ch,I.sh.base,I.need))ch.sis.mat[m]--;for(const [k,n] of Object.entries(I.sh.extra||{}))for(const m of sisPick(ch,k,n))ch.sis.mat[m]--;if(I.co.id!=='gray')ch.sis.dyes.splice(ch.sis.dyes.indexOf(I.co.id),1);ch.sis.mat.trim=(ch.sis.mat.trim||0)-I.tr.length;
     ch.sis.cloth.push({shape:I.sh.id,pattern:I.pt.id,color:I.co.id,trims:I.tr.map(x=>x.id),price:I.price,lean:I.lean,q:0});ch.sis.made=(ch.sis.made||0)+1;ch.sis.crafted=1;
     ch.sis.lean=Math.max(-CFG.sis.leanMax,Math.min(CFG.sis.leanMax,ch.sis.lean+I.lean));
     return {ok:true,name:`${I.co.n} ${I.pt.n} ${I.sh.n}`,price:I.price,lean:I.lean};
