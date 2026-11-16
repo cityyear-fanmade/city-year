@@ -2795,7 +2795,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {type:'event',ev:{t:X.t,x:`${sv.visited.length===0?X.intro+'\n\n':''}${X.x} (${sv.visited.length}/${X.need})`,c:left.map(p=>({l:p.n,ok:{t:p.x,fx:{sisExplore:p.id}}}))}}}
     {const i=CS.invTurns.findIndex((t,k)=>sv.turn>=t&&!sv.inv[k]);
       if(sv.st==='day1'&&i>=0){const Z=S_.invent,k=Math.min(i,1);return ev1(Z.t,`${Z.x[k]}\n\n${Z.mem[k]}\n\n${Z.rumor[k]}`,Z.l,{sisInvent:i+1},Z.ok)}}
-    if(sv.st==='day1'&&sv.cycle>=1&&!R&&(sv.fac==='rouge'||sv.fac==='noir')){const B=S_.red.born;return ev1(B.t,B.x,B.l,{sisRedBorn:1},B.ok)}
+    if(sv.st==='day1'&&sv.cycle>=1&&!R&&(sv.fac==='rouge'||sv.fac==='noir')){const B=S_.red.born;return ev1(B.t,`${B.x}\n\n${sv.fac==='rouge'?B.rouge:B.noir}`,B.l,{sisRedBorn:1},B.ok)}
     if(sv.st==='day1'&&R&&R.alive&&!ch.redPick){const Lg=S_.red.lang[R.stage||0];
       if(Lg&&sv.turn-R.born>=Lg.at)return {type:'event',ev:{t:Lg.t,x:Lg.x,c:(Lg.c||[{l:Lg.l,ok:Lg.ok}]).map(c=>({l:c.l,ok:{t:c.ok,fx:{sisRedLang:R.stage||0,sisH:c.hunger||0,sisT:c.trust||0}}}))}}}
     /* 동화: 소속이 정해진 뒤 한 번, 소속 책장(르루주·르누아르)을 받거나 유행을 따른다(르카키) */
