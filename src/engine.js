@@ -2931,7 +2931,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function webStep(G){
     const ch=G.ch,w=ch.web;
     if(w&&w.active){if(w.turn<w.total&&webPart(w.finger,w.route))return {type:'event',ev:webEvent(G,w.turn+1)};w.active=false;ch.webDone=true;return null}
-    if(ch.webDone||w||ch.distForm||ch.hw||lakeOn(ch)||!(ch.fingerEarly||webStar(ch))||!D.web||!D.web.invite)return null;
+    if(!CFG.webOn||ch.webDone||w||ch.distForm||ch.hw||lakeOn(ch)||!(ch.fingerEarly||webStar(ch))||!D.web||!D.web.invite)return null;
     const f=webFinger(ch);if(!f||G.year+9>lastYear(G))return null;
     const I=D.web.invite[f];if(!I)return null;
     const mk=(src,fxs)=>({t:src.t,x:src.x,c:[{l:src.yes.l,h:src.yes.h,ok:{t:src.yes.t,fx:{webStart:fxs}}},...(src.hold&&!ch.webHeld?[{l:src.hold.l,h:src.hold.h,ok:{t:src.hold.t,fx:{webHold:true}}}]:[]),{l:src.no.l,h:src.no.h,ok:{t:src.no.t,fx:{webDecline:true}}}]});
