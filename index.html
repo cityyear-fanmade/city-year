@@ -5986,8 +5986,8 @@ function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.mark){const x=d(3)+d(3);dmg+=x;note+=` 표지+${x}`}
       /* 무한 모드: 상대 능력치를 떨구는 디버프(침잠·예의)는 상대가 받는 피해도 키운다 */
       if(C.ch.infinite&&!B.isP){const K=CFG.infinite.weak,hid=D.enemies[C.id]&&D.enemies[C.id].hidden,sg_=staggerStage(B),w=Math.min(K.cap,Math.floor((B.sink||0)/CFG.sink.per)*K.sink+(B.manner||0)*K.manner+((B.prescript||0)+(B.obey||0)+(B.shock||0)+(B.warp||0))*K.short+((B.chain||0)+(B.web||0))*K.chain+(sg_?CFG.nail.stages.indexOf(sg_)+1:0)*K.stagger)*(hid?K.hidden:1);if(w>0){dmg=Math.floor(dmg*(1+w));note+=` 약화×${Math.round((1+w)*100)/100}`}}
-      if(B.passive&&B.passive.id==='zena'&&B.zCharge&&B.passive.chargeCut){dmg=Math.floor(dmg*(1-B.passive.chargeCut));note+=` 충전 중×${1-B.passive.chargeCut}`}
-      if(B.passive&&B.passive.id==='zena'&&B.zTalk===C.round){dmg=Math.floor(dmg*(1+B.passive.talk));note+=` 연설×${1+B.passive.talk}`}
+      if(B.passive&&B.passive.id==='zena'&&B.zCharge&&B.passive.chargeCut){dmg=Math.floor(dmg*(1-B.passive.chargeCut));note+=` 충전 중×${Math.round((1-B.passive.chargeCut)*100)/100}`}
+      if(B.passive&&B.passive.id==='zena'&&B.zTalk===C.round){dmg=Math.floor(dmg*(1+B.passive.talk));note+=` 연설×${Math.round((1+B.passive.talk)*100)/100}`}
       const rawDmg=dmg;
       if(B.guarding&&!ig){dmg=Math.floor(dmg*G_.guardFailMul);note+=` 방어 감소×${G_.guardFailMul}`}else if(B.guarding&&ig)note+=' 방어 무시'
       /* 무기 디버프: 왜곡(내가 주는 피해 감소), 표적(3스택이면 2배), 원한(쌓인 만큼 추가) */
@@ -6064,7 +6064,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
 if(dmg>0&&!A.isP&&A.passive&&A.passive.id==='zena'&&(A.zph||1)>=2)B.zCage=true;
 if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
-      L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${(c.b||0)+(gr&&gr.n?gr.b:0)?sg((c.b||0)+(gr&&gr.n?gr.b:0)):''}${gr&&gr.n&&gr.b?`(카드 ${c.b||0} + 등급 ${gr.b})`:''}${note} = ${dmg}`);
+      L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${(c.b||0)+(gr&&gr.n?gr.b:0)?sg((c.b||0)+(gr&&gr.n?gr.b:0)):''}${gr&&gr.n&&gr.b?(c.b?`(카드 ${c.b} + 등급 ${gr.b})`:`(등급 ${gr.b})`):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
       if(A.auxMat&&B.hp>0){B.matc=(B.matc||0)+A.auxMat;L('kw',`  ${B.name}에게 재료 수집 ${B.matc} (마에스트로의 증거)`)}
@@ -6183,7 +6183,8 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
     C.cur=[];C.evs=[];
     /* 궁니르 공명: 궁니르 카드를 낸 라운드는 받는 피해 60% 감소 */
     if(P.resonance&&pp.some(c=>c.gungnir))P.drRound=C.round;
-    const L=(t,s)=>{if(C.quiet)return;C.log.push({t,s});C.cur.push({t,s})};
+    /* 로그의 길게 이어지는 소수(예: 0.30000000000000004)는 두 자리로 줄여 적는다 */
+    const L=(t,s)=>{if(C.quiet)return;if(typeof s==='string')s=s.replace(/\d+\.\d{4,}/g,m=>String(Math.round(parseFloat(m)*100)/100));C.log.push({t,s});C.cur.push({t,s})};
     /* 보랏빛 사복검: 서로 다른 자세의 4코스트 카드를 두 가지 쓰면 다음 손패에 환영난무, 몇 라운드 동안 최대 빛 증가 (전투당 최대 3회, 세 자세) */
     if(P.isP&&P.wx&&P.wx.forms){C.vsTop=C.vsTop||['a','d','p','s'].slice(0,CFG.spec.vs.seed);pp.forEach(c=>{if(c.vsTop&&!C.vsTop.includes(c.vsTop))C.vsTop.push(c.vsTop)});if(C.vsTop.length>=CFG.spec.vs.need&&(C.vsN||0)<CFG.spec.vs.max){C.vsN=(C.vsN||0)+1;C.vsTop=[];giveNext(P,'x_vs_ego');P.burstLight=CFG.form.burstLight;P.burstTo=C.round+CFG.form.burstRounds;L('sys',`  ${P.name} · 3코스트 이상 ${CFG.spec.vs.need}자세 · 다음 손패에 환영난무 · 최대 빛 +${CFG.form.burstLight} (${CFG.form.burstRounds}라운드)`)}}
     const push=ev=>{if(C.quiet)return;if(C.rollPend){C.cur.unshift({t:'sys',s:`  판정 1d100 ${C.rollPend.r} / 개화 ${C.rollPend.th} 이하`,roll:C.rollPend});C.rollPend=null}ev.lines=C.cur;C.cur=[];ev.snap=snap(C);ev.step=C.step;C.evs.push(ev)};

@@ -2,3 +2,5 @@ dist/
 node_modules/
 data/i18n/todo-*.json
 docs/i18n/.tmp/
+*.orig
+*.rej
