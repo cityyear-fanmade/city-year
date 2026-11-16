@@ -2798,9 +2798,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='tpost'){const P=S_.opening.post;return ev1(P.t,P.x,P.l,{sisEx:{to:4,rule:P.rule}},P.ok)}
     if(sv.st==='day1'&&!sv.exploreDone){const O=S_.opening,X=S_.explore,ex=sv.exStep||0;
       const mk=(Ev,to)=>({type:'event',ev:{t:Ev.t,x:Ev.x,c:Ev.c.map(c=>({l:c.l,ok:{t:c.t,fx:{sisEx:{to,rule:c.rule||Ev.rule}}}}))}});
-      if(ex===0)return mk(O.e1,1);
-      if(ex===1)return mk(O.e2,2);
-      if(ex===2){const r=!!sv.trendLost;return {type:'event',ev:{t:O.e3.t,x:r?O.e3.retry:O.e3.x,c:[{l:O.e3.l,ok:{t:r?O.e3.okRetry:O.e3.ok,fx:{sisTfight:1}}}]}}}
+      if(ex===0){if(sv.trendLost)return {type:'event',ev:{t:O.e3.t,x:O.e3.retry,c:[{l:O.e3.l,ok:{t:O.e3.okRetry,fx:{sisTfight:1}}}]}};
+        return {type:'event',ev:{t:O.e1.t,x:O.e1.x,c:O.e1.c.map(c=>({l:c.l,ok:{t:c.t,fx:{sisTfight:1}}}))}}}
       const left=X.spots.filter(p=>!sv.visited.includes(p.id)&&!sv.rules.includes(p.rule));
       if(left.length)return {type:'event',ev:{t:X.t,x:`${sv.visited.length===0?X.intro+'\n\n':''}${X.x} (${sv.visited.length}/${X.need})`,c:left.map(p=>({l:p.n,ok:{t:p.x,fx:{sisExplore:p.id}}}))}};
       sv.exploreDone=true}
@@ -2862,7 +2861,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const sisCanRevive=G=>!!(G&&sisOn(G.ch)&&!G.ch.mindDead&&!G.ch.sunk&&!G.ch.distorted);
   function sisRevive(G,C){
     const ch=G.ch,sv=ch.sis,lost=Math.round(ch.money*CFG.sis.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CFG.sis.fallHp));
-    sv.falls=(sv.falls||0)+1;sv.st='day1';sv.lootDone=false;sv.back=null;if(C.id==='sis_red'&&sv.red){sv.red.fightDone=1;sv.red.state='left'}if(C.id==='sis_trendy'&&sv.exStep===2)sv.trendLost=1;
+    sv.falls=(sv.falls||0)+1;sv.st='day1';sv.lootDone=false;sv.back=null;if(C.id==='sis_red'&&sv.red){sv.red.fightDone=1;sv.red.state='left'}if(C.id==='sis_trendy'&&(sv.exStep||0)<3)sv.trendLost=1;
     return {text:D.sisyphus.act.fall.x,chips:[`샘터에서 깨어났다 · 체력 ${ch.hp}`,lost?`안 ${lost} 잃었다`:'잃은 것은 없다','얻은 물건은 그대로 남아 있다']};
   }
   /* 백화점 안에서는 해가 바뀌어도 일반 사건 대신 조용히 지나가고, 다음 하루가 시작된다 */
