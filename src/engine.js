@@ -4508,7 +4508,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 if(dmg>0&&!A.isP&&A.passive&&A.passive.id==='zena'&&(A.zph||1)>=2)B.zCage=true;
 if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
-      L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${(c.b||0)+(gr&&gr.n?gr.b:0)?sg((c.b||0)+(gr&&gr.n?gr.b:0)):''}${gr&&gr.n&&gr.b?`(카드 ${c.b||0} + 등급 ${gr.b})`:''}${note} = ${dmg}`);
+      L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${(c.b||0)+(gr&&gr.n?gr.b:0)?sg((c.b||0)+(gr&&gr.n?gr.b:0)):''}${gr&&gr.n&&gr.b?(c.b?`(카드 ${c.b} + 등급 ${gr.b})`:`(등급 ${gr.b})`):''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
       if(A.auxMat&&B.hp>0){B.matc=(B.matc||0)+A.auxMat;L('kw',`  ${B.name}에게 재료 수집 ${B.matc} (마에스트로의 증거)`)}
