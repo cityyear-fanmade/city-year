@@ -964,7 +964,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     equip(ch,carryTune(cur,wsItem(ch,slot)));ch.stash=ch.stash.filter(x=>x!==cur);
     return {hidden:hid,step,n:k.n,h:k.h,p:k.p,need:wsNeed(k.n),m:m.n,val,sp:newSp};
   }
-  const noFixer=ch=>!!ch.hw||isFinger(ch)||isFounder(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
+  /* 시지프형을 선고받은 사람은 해결사로 등록되지 않는다(백화점 안·밖 모두) */
+  const noFixer=ch=>!!ch.hw||!!ch.sis||!!ch.sisP||!!ch.sisDone||isFinger(ch)||isFounder(ch)||(!!ch.aff&&((ch.aff.type==='wing'&&!eastN(ch))||ch.aff.type==='head'));
   function license(ch){
     /* 손가락 조직원·날개 직원은 해결사로 등록될 수 없다 */
     if(ch.licensed||noFixer(ch))return false;
