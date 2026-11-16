@@ -11503,7 +11503,6 @@
  "매번 다르게": "Randomize every time",
  "시드 고정(재현)": "Fixed Seed (Replay)",
  "시드가 같고 선택이 같으면 인생 전체의 주사위가 똑같이 나온다 (공유·재현용)": "If the seed and choices are the same, all dice rolls in the life will be identical (for sharing/replaying).",
- "출생만 시드로 정해지고, 태어난 뒤의 사건 주사위는 판마다 달라진다": "Only the birth is determined by the seed; event dice after birth vary per run.",
  "강철": "Steel",
  "냉철": "Cold-hearted",
  "차선": "Next Best",
@@ -17240,5 +17239,6 @@
  "집행 카드는 이미 3장 · 공격 +2": "Already 3 Execution cards · Attack +2",
  "조율자의 집행 권한으로 받는 집행 카드가 3장까지만 늘고, 그 뒤에는 카드 대신 공격이 오르도록 고쳤습니다(덱이 같은 카드로 가득 차던 문제).": "The Execution cards gained from the Arbiter's Authority of Execution now stop at 3; after that you gain Attack instead (fixes decks filling with the same card).",
  "(카드 {0} + 등급 {1})": "(Card {0} + Grade {1})",
- "등급{0}": "Grade {0}"
+ "등급{0}": "Grade {0}",
+ "출생과 사건이 이어지는 큰 흐름은 시드대로이고, 주사위 값과 전투·보상의 운만 판마다 달라진다": "The overall flow of birth and events follows the seed; only dice values and the luck of battles and rewards change from run to run."
 }
