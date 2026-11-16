@@ -2395,6 +2395,8 @@ function createEngine(D,{rng:rng0=Math.random}={}){
     if((ch.licensed&&ch.rank<=A.rankBonus.rank)||fingerUp||topRank)g=Math.min(3,g+A.rankBonus.plus);
     /* 홍원의 자제가 가문 밖(외부 임무·가주 이후)에서 공방 거리에 들르면 1급 대접: 최고 등급(명장의 공방)까지 이용한다 */
     if(ch.hw&&(ch.hw.out||ch.hw.done))return A.max;
+    /* 신탁 대행자 헤르메스: 해결사 급수가 없고 검지 직급표에 최고 직급이 없어 명장의 공방이 열리지 않았다. 검지 3급(공방 등급 보너스 급)에 오르면 1급 대접 */
+    if(ch.o&&(ch.o.herm||ch.o.key==='hermes')&&ch.fr&&ch.fr.tier>=D.fingerRules.shopTier)return A.max;
     /* 까마귀팀 복제체: 덱이 고정이라 카드 대신 장비로 키운다. 무한 모드의 가게에서는 최고 등급(명장의 공방)까지 이용한다 */
     if(ch.o&&ch.o.key==='crow'&&ch.infinite)return A.max;
     /* 대호수에서 배를 맡아 선장이 되면 1급 대접: 항구에서도 최고 등급(명장의 공방)까지 이용한다 */
@@ -2751,7 +2753,7 @@ function createEngine(D,{rng:rng0=Math.random}={}){
   const thumbPer=A=>{const m=CFG.thumbManner;return Array.isArray(m)?m[Math.min(m.length-1,(A&&A.thumbFi)||0)]:m};
   /* 해결사 등록을 할 수 없는 진로(손가락·협회·날개 직원)는 그 진로의 최고 직급(손가락 대부·협회/날개 최고 직급·날개 대표)이면 해결사 1급과 같은 대접으로 본다 */
   const topOfCareer=ch=>{if(isFounder(ch))return true;if(isFinger(ch)){const rs=D.fingers[ch.aff.name].ranks||[];return !!ch.fr&&rs.length>0&&ch.fr.tier>=Math.max(...rs.map(x=>x.tier))}const C_=D.careers&&ch.aff&&D.careers[ch.aff.type];return !!(C_&&C_.ranks&&ch.fi!=null&&ch.fi>=C_.ranks.length-1)};
-  const rankMet=(ch,need)=>!!(ch.licensed&&ch.rank<=need)||(need>=1&&topOfCareer(ch));
+  const rankMet=(ch,need)=>!!(ch.licensed&&ch.rank<=need)||(need>=1&&(topOfCareer(ch)||!!(ch.hw&&ch.hw.done)))   /* 홍원의 가주는 해결사 급수가 없어도 1급 대접(급수 부족 패널티·공방 등급) */;
   /* 조직(흑운회·검계·밤의 송곳): 손가락 서열표를 쓰되 패시브는 덱 장수(6·8·10)로 단계가 열린다 */
   const synOf=ch=>isFinger(ch)&&CFG.syn[ch.aff.name]?CFG.syn[ch.aff.name].key:null;
   const synTier=n=>n>=CFG.syn.at[1]?3:n>=CFG.syn.at[0]?2:-1;
