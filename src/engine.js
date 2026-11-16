@@ -4302,7 +4302,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(c.gamble){const g=c.gamble,r=d(g.die),win=g.win.includes(r);if(g.keep){if(win)dmg=g.dmg;note+=` 1d${g.die} ${r}${win?` 사의 경계 · 피해 ${g.dmg}`:''}`}else{dmg=win?g.dmg:g.lose;rolls.length=0;rolls.push(r);note+=` 1d${g.die} ${r}${win?' 대박':''}`}
         if(win&&g.heal){const h=Math.min(g.heal,A.maxHp-A.hp);A.hp+=h;note+=` HP+${h}`}
         if(!win&&g.self){A.hp=Math.max(1,A.hp-g.self);note+=` 반동 −${g.self}`}}
-      if(gr&&gr.n)note+=` 등급${gr.n}(피해+${gr.b})`;
+      if(gr&&gr.n)note+=` 등급${gr.n}`;
       if(rk)note+=` 서열 강화(주사위+${rk.dice} 피해+${rk.b} 명중+${rk.hit})`;
       note+=pnote;
       /* 장비 추가 주사위 (천퇴성도: 적중마다 1d2 × N) */
@@ -4425,7 +4425,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
 if(dmg>0&&!A.isP&&A.passive&&A.passive.id==='zena'&&(A.zph||1)>=2)B.zCage=true;
 if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}
       if(B.isP&&dmg>0){B.hitN=(B.hitN||0)+1;if(B.hitN>=CFG.innateUnlock.hits)C.ch.tough=1}
-      L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${c.b?sg(c.b):''}${note} = ${dmg}`);
+      L('hit',`${A.name} → ${B.name} · ${c.n} · 명중 ${sa} vs ${B.guarding?'방어':'회피'} ${sd} · 피해 [${rolls.join(',')}]${(c.b||0)+(gr&&gr.n?gr.b:0)?sg((c.b||0)+(gr&&gr.n?gr.b:0)):''}${gr&&gr.n&&gr.b?`(카드 ${c.b||0} + 등급 ${gr.b})`:''}${note} = ${dmg}`);
       if(c.hitShield){A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+c.hitShield);L('kw',`  ${A.name} · 보호막 +${c.hitShield} (지금 ${A.shield})`)}
       applyKw(A,B,c,L);
       if(A.auxMat&&B.hp>0){B.matc=(B.matc||0)+A.auxMat;L('kw',`  ${B.name}에게 재료 수집 ${B.matc} (마에스트로의 증거)`)}

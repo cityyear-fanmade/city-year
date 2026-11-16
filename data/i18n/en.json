@@ -17219,5 +17219,7 @@
  "하드 불순물 난이도 증가: 체력이 100살 2배에서 1000살 5배(상한 5억)까지 오르고, 공격·회피·속도가 1.5배가 됩니다.": "Hard Impurity difficulty increased: HP rises from 2× at age 100 to 5× at age 1000 (cap 500 million), and Atk, Evasion and Speed are 1.5×.",
  "검은 가면: 해결사 시작 등급이 적용되지 않던 문제를 고쳤습니다. 5급으로 시작하고, 연기 전쟁이 끝난 뒤 실적으로 3급이 되며, 그 뒤에 찰스 사무소의 제안이 옵니다. 입단하면 출생 전용 책장에 카드 \"개문\"이 추가됩니다(다른 책장에는 적용되지 않습니다).": "Black Mask: Fixed the issue where the starting Fixer rank was not applied. You start at Rank 5, become Rank 3 through your record after the Smoke War, and then receive an offer from Charles Office. Joining adds the card \"Gate-Breaker\" to the origin-exclusive shelf (it does not apply to other shelves).",
  "연기 전쟁 난이도를 한 번 더 조정했습니다.": "Smoke War difficulty was adjusted once more.",
- "도움말의 능력치 설명을 최신으로 고쳤습니다.": "The stat explanations in the help screen have been updated."
+ "도움말의 능력치 설명을 최신으로 고쳤습니다.": "The stat explanations in the help screen have been updated.",
+ "(카드 {0} + 등급 {1})": "(Card {0} + Grade {1})",
+ "등급{0}": "Grade {0}"
 }
