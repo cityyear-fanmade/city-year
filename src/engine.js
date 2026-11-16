@@ -1116,8 +1116,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const thumbPer=A=>{const m=CFG.thumbManner;return Array.isArray(m)?m[Math.min(m.length-1,(A&&A.thumbFi)||0)]:m};
   /* 해결사 등록을 할 수 없는 진로(손가락·협회·날개 직원)는 그 진로의 최고 직급(손가락 대부·협회/날개 최고 직급·날개 대표)이면 해결사 1급과 같은 대접으로 본다 */
   const topOfCareer=ch=>{if(isFounder(ch))return true;if(isFinger(ch)){const rs=D.fingers[ch.aff.name].ranks||[];return !!ch.fr&&rs.length>0&&ch.fr.tier>=Math.max(...rs.map(x=>x.tier))}const C_=D.careers&&ch.aff&&D.careers[ch.aff.type];return !!(C_&&C_.ranks&&ch.fi!=null&&ch.fi>=C_.ranks.length-1)};
-  /* 해결사가 아닌 해금 출신 5종(까마귀 복제체·헤르메스·지정사서·발톱·조율자)은 해결사 급수가 없어도 1급 대접: 급수 부족 패널티 면제·명장의 공방 이용 */
-  const topOrigin=ch=>!!(ch.o&&(ch.o.herm||['crow','hermes','librarian','claw','arbiter'].includes(ch.o.key)));
+  /* 해결사가 아닌 해금 출신은 해결사 급수가 없어도 1급 대접(급수 부족 패널티 면제 · 명장의 공방): 머리의 발톱·조율자는 처음부터(이미 높은 자리), 헤르메스는 검지 3급에 오르면, 도서관의 지정사서·까마귀 복제체는 CFG.topOriginYear년차부터 */
+  const topOrigin=ch=>{const o=ch.o;if(!o)return false;if(o.key==='claw'||o.key==='arbiter')return true;if(o.herm||o.key==='hermes')return !!(ch.fr&&ch.fr.tier>=D.fingerRules.shopTier);if(o.key==='crow'||o.key==='librarian')return (ch.year||ch.yearNow||0)>=CFG.topOriginYear;return false};
   const rankMet=(ch,need)=>!!(ch.licensed&&ch.rank<=need)||(need>=1&&(topOfCareer(ch)||topOrigin(ch)||!!(ch.hw&&ch.hw.done)))   /* 홍원의 가주는 해결사 급수가 없어도 1급 대접(급수 부족 패널티·공방 등급) */;
   /* 조직(흑운회·검계·밤의 송곳): 손가락 서열표를 쓰되 패시브는 덱 장수(6·8·10)로 단계가 열린다 */
   const synOf=ch=>isFinger(ch)&&CFG.syn[ch.aff.name]?CFG.syn[ch.aff.name].key:null;
