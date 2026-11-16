@@ -1957,7 +1957,7 @@ ${symRec(r)}
     if(UI.fight){
       const e=D.enemies[UI.fight];
       const rule=(D.hiddenBosses||[]).find(h=>h.id===UI.fight),pen=rule&&rule.penalty&&!E.rankMet(G.ch,rule.penalty.fullRank)?rule.penalty:null;
-      const enc=UI.enc&&UI.enc.hidden?`<div class="check"><b>${UI.enc.rift?(G.ch.flags&&G.ch.flags.lake?'호수 밑의 운명':'균열 너머의 운명'):T.hiddenBoss}</b>${pen?` · <span class="bad">${pen.label} · 명중 ${sg(pen.atk)} · 회피 ${sg(pen.eva)} (${pen.fullRank}${T.rankUnit}이면 보정 없음)</span>`:''}</div>`:UI.enc&&UI.enc.roll?`<div class="check">${UI.enc.label} · 1d100 ${UI.enc.roll} → <b>${e.n}</b></div>`:'';
+      const enc=UI.enc&&UI.enc.hidden?`<div class="check"><b>${UI.enc.rift?(G.ch.flags&&G.ch.flags.lake?'호수 밑의 운명':'균열 너머의 운명'):T.hiddenBoss}</b>${pen?` · <span class="bad">${pen.label} · 명중 ${sg(pen.atk)} · 회피 ${sg(pen.eva)} (${pen.fullRank}${T.rankUnit}이면 보정 없음)</span>`:''}</div>`:UI.enc&&UI.enc.sis?`<div class="check">${esc(UI.enc.label)}</div>`:UI.enc&&UI.enc.roll?`<div class="check">${UI.enc.label} · 1d100 ${UI.enc.roll} → <b>${e.n}</b></div>`:'';
       const avoid=UI.avoidText?`<p class="small dim">${UI.avoidText}</p>`:'';UI.avoidText=null;
       return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 전투</div>${avoid}${enc}<h2 style="color:${e.color}">${ulName(e.n+(UI.enc&&UI.enc.echo?' · 불순물':''),e.ul)}</h2>${e.trait&&D.traits&&D.traits[e.trait]?`<div class="check"><b>특성 · ${esc(D.traits[e.trait].n)}</b> · ${esc(D.traits[e.trait].d)}</div>`:''}${e.abno?`<div class="check" style="border-color:#8a7fb8"><b style="color:#8a7fb8">환상체</b> · 마주치면 정신력이 2d3 깎인다${G.ch.ego?` (E.G.O 하한 ${CFG.mind.ego[G.ch.ego.type].floor})`:''}</div>`:''}<p class="lead">${UI.enc&&UI.enc.rift?`갈라진 틈 너머에서 ${esc(e.n)}이(가) 흘러들었다. 이 세계의 사건과는 이어지지 않은 채 다른 운명에서 건너온 존재다. 만날 수 없던 상대가 지금 눈앞에 서 있다.`:UI.enc&&UI.enc.echo?'예전에 상대한 적이 있는 모습이다. 하지만 불순물과 같은 느낌이 든다.':e.intro}${UI.fight==='impurity'&&G.ch.infinite&&E.ghostOf(G.ch)?` <span class="dim">그런데 낯익다. 저 서 있는 모양을, 어디선가 본 적이 있는 것 같다.</span>`:''}</p>${e.why&&!(UI.enc&&UI.enc.rift)?`<p class="small dim" style="font-style:italic">${esc(e.why)}</p>`:''}</div>
         <button class="btn primary" data-a="fight">맞선다</button>`;
@@ -2940,7 +2940,7 @@ ${symRec(r)}
     const y0=G.year;let st=E.advanceYear(G),q=0;
     /* 무한 모드 가속: 조용한 해는 화면 없이 이어서 넘기고, 사건·전투가 나오면 그 앞에서 멈춘다 */
     while(st&&st.type==='quiet'&&q<400){q++;st=E.advanceYear(G)}
-    if(q>0&&st&&st.type!=='end'){UI.ledger={a:y0,b:G.year,n:q,st};saveGame({st});UI.screen='ledger';render();return}
+    if(q>0&&st&&st.type!=='end'&&!(G.ch&&G.ch.sis)){UI.ledger={a:y0,b:G.year,n:q,st};saveGame({st});UI.screen='ledger';render();return}
     showYear(st,null);
   }
   /* 가속 구간이 끝났을 때의 도착 화면(1단계: 조용히 지나간 해를 한 줄로 접어 보여 준다. 일어난 일의 연표는 가족·직원 기록이 붙는 2단계부터) */
