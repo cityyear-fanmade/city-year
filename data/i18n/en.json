@@ -17238,5 +17238,7 @@
  "🎁 보스 보상": "🎁 Boss Rewards",
  "공격 +3 · 사건 판정 +5 · 집행 카드 1장 (3장까지, 이후에는 공격 +2)": "Attack +3 · Event Check +5 · 1 Execution card (up to 3, then Attack +2 instead)",
  "집행 카드는 이미 3장 · 공격 +2": "Already 3 Execution cards · Attack +2",
- "조율자의 집행 권한으로 받는 집행 카드가 3장까지만 늘고, 그 뒤에는 카드 대신 공격이 오르도록 고쳤습니다(덱이 같은 카드로 가득 차던 문제).": "The Execution cards gained from the Arbiter's Authority of Execution now stop at 3; after that you gain Attack instead (fixes decks filling with the same card)."
+ "조율자의 집행 권한으로 받는 집행 카드가 3장까지만 늘고, 그 뒤에는 카드 대신 공격이 오르도록 고쳤습니다(덱이 같은 카드로 가득 차던 문제).": "The Execution cards gained from the Arbiter's Authority of Execution now stop at 3; after that you gain Attack instead (fixes decks filling with the same card).",
+ "(카드 {0} + 등급 {1})": "(Card {0} + Grade {1})",
+ "등급{0}": "Grade {0}"
 }
