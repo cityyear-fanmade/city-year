@@ -9597,6 +9597,25 @@
    "tier": "boss",
    "intro": "검은 로브 위에 광배가 떠오른다. 등에 박힌 못끝에서 푸른 불꽃이 타오르고, 바닥에 촛대 모양의 못들이 솟아 길을 막는다.",
    "trait": "enrage"
+  },
+  "sis_red": {
+   "n": "붉은 신(미생)",
+   "why": "목소리를 만들기 위해 태어난 것. 벽을 먹고 자랐다.",
+   "color": "#7a1f2a",
+   "hp": 170,
+   "atk": 14,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "heavy",
+    "bloodlet",
+    "rend",
+    "guard",
+    "precise"
+   ],
+   "tier": "boss",
+   "intro": "붉은 것이 벽을 등지고 선다. 이름을 불러도 대답하지 않는다. 입이 한 번 벌어졌다 닫힌다.",
+   "trait": "enrage"
   }
  },
  "fixedFights": {

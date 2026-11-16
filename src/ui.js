@@ -1996,7 +1996,7 @@ ${symRec(r)}
     const die=an?`<div class="row"><div class="die big" id="rd" style="border-color:var(--gold)"><b id="rdb">–</b></div><span class="mono small dim">1d${r.roll.die||100} · 난이도 ${r.roll.dc}</span></div><button class="btn primary" id="tapBtn" data-a="tap" hidden>주사위를 굴린다</button>`:'';
     const tt=r.title?`<div class="panel stack" style="border-color:${G.ch.color}"><span class="eyebrow">${r.tlabel||T.titleLabel}</span><h2 style="color:${G.ch.color}">${r.title}</h2></div>`:'';
     return `${die}<div class="stack" id="after"${an?' style="visibility:hidden"':''}>${vHud()}${roll}<p>${r.t}</p>${tt}<div class="chips chipscroll">${r.chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>${r.chips.length>8?'<span class="small dim">결과가 길면 위 칸을 밀어서 볼 수 있다.</span>':''}
-      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.custPick?vCustPick():G.ch.colorPick?vColorPick():G.ch.singPick?vSingPick():G.ch.bondColPick?vBondCol():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
+      ${G.ch.relicPickLate?vLateRelic():G.ch.namePend?vNamePend():G.ch.pillPick?vPillPick():G.ch.custPick?vCustPick():G.ch.colorPick?vColorPick():G.ch.singPick?vSingPick():G.ch.bondColPick?vBondCol():G.ch.bondPick?vBondPick():G.ch.kidPick?vKidPick():G.ch.wingPick?vWingPick():G.ch.orgPick?vOrgPick():G.ch.fingerPick?vFingerPick():G.ch.seongPick?vSeongPick():G.ch.starPick?vStarPick():G.ch.officePick?vOfficePick():G.ch.redPick?vRedPick():G.ch.distPick?vDistPick():G.ch.egoPick?vEgoPick():G.ch.titlePick?vTitlePick():`<button class="btn primary" data-a="flow">${nextLabel()}</button>`}</div>`;
   }
   /* 특색 이름: 색은 고정, 뒤 단어(2~12글자)를 직접 적는다 */
   function vLateRelic(){
@@ -2101,6 +2101,13 @@ ${symRec(r)}
       <div class="row"><span class="small">이름</span><input id="bondalias" maxlength="12" value="${esc(UI.bondAlias||'')}" autocomplete="off" placeholder="2~12글자" style="width:min(14em,60vw)"></div>
       <span class="small bad">${UI.bondErr||''}</span>
       <button class="btn primary" data-a="bondaliasset">이 이름으로 부른다</button></div>`;
+  }
+  function vRedPick(){
+    return `<div class="panel stack" style="gap:8px;border-color:var(--bleed)"><span class="eyebrow">붉은 신</span>
+      <p class="small">이름을 정해 준다. 비워 두면 "붉은 신"이라 부른다.</p>
+      <div class="row"><span class="small">이름</span><input id="redname" maxlength="12" value="${esc(UI.redName||'')}" autocomplete="off" placeholder="1~12글자" style="width:min(14em,60vw)"></div>
+      <span class="small bad">${UI.redErr||''}</span>
+      <button class="btn primary" data-a="redset">이 이름으로 부른다</button></div>`;
   }
   function vBondPick(){
     const b=G.ch.bond,R=E.bondData(G.ch);
@@ -3102,6 +3109,12 @@ ${symRec(r)}
       if(err){UI.bondErr=err;UI.bondAlias=n;render();return}
       E.setPartnerAlias(G.ch,n);UI.bondErr='';UI.bondAlias='';resave();
       UI.res.chips=[...UI.res.chips,`특색 · ${n}`];render();
+    },
+    redset(){
+      const n=(($('redname')||{}).value||'').trim(),err=E.sisRedNameErr(n);
+      if(err){UI.redErr=err;UI.redName=n;render();return}
+      E.setSisRedName(G.ch,n);UI.redErr='';UI.redName='';resave();
+      UI.res.chips=[...UI.res.chips,`붉은 신 · ${n||'붉은 신'}`];render();
     },
     bondset(){
       const n=(($('bondname')||{}).value||'').trim(),err=E.bondNameErr(n);
