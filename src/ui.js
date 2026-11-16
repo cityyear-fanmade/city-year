@@ -1517,8 +1517,9 @@ export function startUI(E,app){
     /* 오버플로우(무한 모드 1000살)는 달성하기 전에는 칸도 개수도 보이지 않는다 */
     const ends=ends0.filter(([k])=>k!=='overflow'||r.endings.includes('overflow'));
     const groups=[['초반','early'],['중반','mid'],['후반','late'],['보스·이름난 상대','boss'],['히든','hidden']];
-    const foes=g=>Object.entries(D.enemies).filter(([,e])=>e.tier===g);
-    const total=Object.keys(D.enemies).length;
+    const vis=([id])=>CFG.sis.on||!/^sis_/.test(id);   // 시지프 백화점이 꺼져 있으면 시지프 적은 도감에 보이지 않는다
+    const foes=g=>Object.entries(D.enemies).filter(x=>vis(x)&&x[1].tier===g);
+    const total=Object.keys(D.enemies).filter(id=>vis([id])).length;
     return `<div class="stack" style="gap:6px;padding-top:12px"><div class="eyebrow">이 브라우저의 기록</div><h2>기록실</h2></div>
       <div class="seg kinds" style="margin:4px 0">${REC_TABS.map(k=>`<button class="${(UI.recTab||'요약')===k?'on':''}" data-a="rectab" data-i="${k}">${k}</button>`).join('')}</div>
       <div class="panel stack" style="gap:6px"><span class="eyebrow">최고 기록</span>
