@@ -60,8 +60,9 @@
 - tailor.shapes[0].n: 셔츠
 - tailor.shapes[1].n: 정장 재킷
 - tailor.shapes[2].n: 외투
-- tailor.shapes[3].n: 드레스
-- tailor.shapes[4].n: 황금가죽 망토
+- tailor.shapes[3].n: 휘감은 천 상의
+- tailor.shapes[4].n: 드레스
+- tailor.shapes[5].n: 황금가죽 망토
 - tailor.patterns[0].n: 민무늬
 - tailor.patterns[1].n: 줄무늬
 - tailor.patterns[2].n: 띠
@@ -223,7 +224,7 @@
 - explore.spots[6].n: 방송이 멈추면 무슨 일이 일어나는가 · 방송실 앞
 - explore.spots[6].x: 문 너머에서 같은 방송이 끝없이 반복된다. 어느 순간 방송이 끊기고, 층 전체가 한 번 숨을 멈춘다고 한다. 그 뒤 사람들은 며칠 전의 일을 기억하지 못한다. 재고를 정리하는 때다.
 - explore.spots[7].n: 어떻게 하면 이곳이 나를 믿어 주는가 · 4층 가구관 앞
-- explore.spots[7].x: 가구관 앞의 점원이 옷을 지어 파는 고객이 많을수록 층이 안정된다고 말한다. 고객이 옷을 팔 때마다 백화점이 그 사람을 믿어 준다는 것이다.
+- explore.spots[7].x: 가구관 앞의 점원이 옷을 지어 파는 고객이 많을수록 층이 안정된다고 말한다. 고객이 옷을 팔 때마다 점원들이 그 사람을 믿어 준다는 것이다.
 
 ## rules
 - rules[0].t: 층은 고객 등급에 맞게 열린다. 등급이 낮으면 위층으로 갈 수 없다.
@@ -233,20 +234,20 @@
 - rules[4].t: 6층 고객센터에서는 문의를 받는다. 가장 높은 등급이어야 올라갈 수 있다.
 - rules[5].t: 허용되지 않은 행동을 한 고객에게는 간수가 온다.
 - rules[6].t: 재고 정리가 걸리면 모두의 기억이 지워진다.
-- rules[7].t: 옷을 팔 때마다 백화점이 그 고객을 조금씩 믿는다.
+- rules[7].t: 옷을 팔 때마다 점원들이 그 고객을 조금씩 믿는다.
 
 ## comply
-- comply.names[0]: 백화점이 당신을 지켜보고 있다
-- comply.names[1]: 백화점이 당신을 지켜보고 있다
-- comply.names[2]: 백화점이 당신을 지켜보고 있다
-- comply.names[3]: 백화점이 당신을 경계하고 있다
-- comply.names[4]: 백화점이 당신을 낯설어한다
-- comply.names[5]: 백화점이 당신을 보고도 못 본 척한다
-- comply.names[6]: 백화점이 당신을 익숙해한다
-- comply.names[7]: 백화점이 당신을 익숙해한다
-- comply.names[8]: 백화점이 당신을 믿는다
-- comply.names[9]: 백화점이 당신을 믿는다
-- comply.names[10]: 백화점이 당신을 식구로 여긴다
+- comply.names[0]: 점원들이 당신에게서 눈을 떼지 않는다. 간수가 곧 올 수도 있다.
+- comply.names[1]: 점원들이 당신에게서 눈을 떼지 않는다. 간수가 곧 올 수도 있다.
+- comply.names[2]: 점원들이 당신에게서 눈을 떼지 않는다. 간수가 곧 올 수도 있다.
+- comply.names[3]: 점원들이 당신을 경계한다. 값을 깎아서 받는다.
+- comply.names[4]: 점원들이 당신을 처음 온 손님처럼 대한다.
+- comply.names[5]: 점원들이 당신을 처음 온 손님처럼 대한다.
+- comply.names[6]: 점원들이 당신을 처음 온 손님처럼 대한다.
+- comply.names[7]: 점원들이 당신 얼굴을 기억한다. 값을 더 쳐 준다.
+- comply.names[8]: 점원들이 당신 얼굴을 기억한다. 값을 더 쳐 준다.
+- comply.names[9]: 점원들이 당신 얼굴을 기억한다. 값을 더 쳐 준다.
+- comply.names[10]: 점원들이 당신을 식구로 여긴다. 값을 더 쳐 준다.
 
 ## warden
 - warden.t: 간수
