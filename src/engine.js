@@ -70,8 +70,13 @@ export function validateData(D){
 
 export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 난수: 기본은 주입된 것. reseed(시드)로 한 판 전체를 그 시드로 굴린다(같은 시드 + 같은 선택 = 같은 결과) */
-  let rng=rng0;
-  const reseed=seed=>{rng=mulberry32(seed>>>0)};
+  /* 난수는 두 줄기다. 길 줄기(rngP): 어떤 사건이 어떤 순서로 나오는지 · 운 줄기(rngL): 선택 뒤 굴림·전투·보상·성장. 그 처리 함수는 lucky()로 감싸 운 줄기를 쓴다.
+     reseed(시드)는 두 줄기를 모두 그 시드로 맞추고(같은 시드 + 같은 선택 = 같은 결과), relux(시드)는 운 줄기만 새로 뽑는다("매번 다르게": 길은 같고 주사위 값만 달라진다) */
+  let rngP=rng0,rngL=rng0,useL=false;
+  const rng=()=>useL?rngL():rngP();
+  const reseed=seed=>{rngP=mulberry32(seed>>>0);rngL=mulberry32((seed^0x9e3779b9)>>>0)};
+  const relux=seed=>{rngL=mulberry32(seed>>>0)};
+  const lucky=fn=>function(...a){const o=useL;useL=true;try{return fn.apply(this,a)}finally{useL=o}};
   const d=n=>1+Math.floor(rng()*n);
   const T=D.text;
   /* 6시즌: 세계관 사무소. 급수 범위(hi~lo급)에 맞는 곳만 문이 열린다. 갈림길과 '사무소 문을 두드린다'가 같은 목록을 쓴다 */
@@ -400,7 +405,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 덱이 고정이어도 사건·루트가 억지로 밀어 넣은 카드(고정 카드 제외)는 뺄 수 있다. 카드함 대신 사라진다 */
   const forceAdd=(ch,...ids)=>{(ch.extra=ch.extra||[]).push(...ids);ch.deck.push(...ids)};
   const extraOut=(ch,i)=>{const id=ch.deck[i];return !!id&&(ch.deckLocked||ch.cardMoney)&&!D.cards[id].fixed&&((ch.extra||[]).includes(id)||Object.values(ch.gear||{}).some(g=>g&&g.card===id))};
-  function deckOut(ch,i){if(extraOut(ch,i)&&ch.deck.length>CFG.shop.minDeck){const xi=(ch.extra||[]).indexOf(ch.deck[i]);if(xi>=0)ch.extra.splice(xi,1);ch.deck.splice(i,1);return true}if(ch.deckLocked||ch.cardMoney||!ch.deck[i]||D.cards[ch.deck[i]].fixed||ch.deck.length<=CFG.shop.minDeck)return false;(ch.side=ch.side||[]).push(ch.deck.splice(i,1)[0]);return true}
+  function deckOut(ch,i){if(extraOut(ch,i)&&ch.deck.length>CFG.shop.minDeck){const xi=(ch.extra||[]).indexOf(ch.deck[i]);if(xi>=0)ch.extra.splice(xi,1);const cid=ch.deck.splice(i,1)[0];if(boxRoom(ch))(ch.side=ch.side||[]).push(cid);return true}   /* 억지로 들어온 카드(궁니르 등)를 빼면 사라지지 않고 카드함으로 간다 */if(ch.deckLocked||ch.cardMoney||!ch.deck[i]||D.cards[ch.deck[i]].fixed||ch.deck.length<=CFG.shop.minDeck)return false;(ch.side=ch.side||[]).push(ch.deck.splice(i,1)[0]);return true}
   function deckIn(ch,i){const sd=ch.side||[];if(ch.deckLocked||ch.cardMoney||!sd[i]||!deckRoom(ch)||!sameOk(ch,sd[i]))return false;ch.deck.push(sd.splice(i,1)[0]);return true}
   function sideDrop(ch,i){const sd=ch.side||[];if(!sd[i]||ch.cardMoney||D.cards[sd[i]].fixed)return false;sd.splice(i,1);return true}
   /* 고르지 않고 넘어가면(시뮬레이션): 카드는 자리가 있으면 덱에, 없으면 버리고, 장비는 장착한다 */
@@ -4722,8 +4727,10 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
     return {n,rows,chain:chainSim(n,false),grown:chainSim(n,true),chainIds:chainIds()};
   }
 
-  return {D,d,reseed,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
+  const API={D,d,reseed,relux,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     setPity,boxRoom,sameOk,deckCopies,sellGear,gearSellValue,canSellGear,tuneRewind,tuneRewindCost,tuneFails,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     canFound,pvProfile,staffList,staffLv,staffEventPick,staffPromoEvent,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
+  for(const k of ['choose','winRewards','rollGrowth','fightAuto','resolveRound','newRound','mkCombat','takeOffer','pickTake','answerOmen','autoPlay'])if(typeof API[k]==='function')API[k]=lucky(API[k]);
+  return API;
 }

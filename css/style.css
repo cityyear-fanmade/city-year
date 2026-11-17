@@ -358,7 +358,9 @@ html.ovopen,html.ovopen body{overflow:hidden}
 @media (min-width:700px){.ov{align-items:center}.sheet{border-radius:16px;border-bottom:1px solid var(--line2)}}
 @keyframes bagopen{0%{transform:translateY(40px) scale(.92);opacity:0}60%{transform:translateY(-4px) scale(1.01);opacity:1}100%{transform:none}}
 .bagopen{animation:bagopen .38s cubic-bezier(.2,.8,.3,1)}
-.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.cmp>*{min-width:0}.cmp span,.btn span{overflow-wrap:anywhere}
+details.more{font-size:.85em}details.more summary{cursor:pointer;color:var(--dim);list-style:none}details.more summary::after{content:' ▾'}details.more[open] summary::after{content:' ▴'}details.more>div{margin-top:4px;line-height:1.55;overflow-wrap:anywhere}
 /* 카드 종류 표시 */
 .kb{font:600 11px/1 var(--mono);padding:3px 6px;border-radius:3px;color:var(--kc);border:1px solid var(--kc);background:color-mix(in srgb,var(--kc) 14%,transparent);white-space:nowrap}
 .invc{grid-template-columns:auto 1fr auto;border-left:3px solid var(--kc,var(--line))}

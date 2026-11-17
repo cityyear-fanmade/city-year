@@ -7003,7 +7003,8 @@
       ]
      }
     ]
-   }
+   },
+   "shopInf": true
   },
   "arbiter": {
    "shop": false,
@@ -8062,7 +8063,8 @@
       ]
      }
     ]
-   }
+   },
+   "shopInf": true
   },
   "gweapon": {
    "shop": false,
