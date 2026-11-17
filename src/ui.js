@@ -1323,10 +1323,13 @@ export function startUI(E,app){
     return `<div class="check" style="border-color:var(--bleed)"><b>테스트 서버</b> · ${new Date(EXP).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}까지 (${t} 남음)<br><span class="small">실시간으로 고치고 있어 중간에 화면이 바뀌거나 이어서 하기가 깨질 수 있다. 정식 기록은 본 서버에서.</span></div>`;
   }
   const UNLOCKTEST=false; /* build --unlocktest: 해금 출생·히든 직업을 전부 열고, 출생 화면에서 중간 연차로 바로 시작할 수 있는 시험판 */
+  const SISSHARE=false; /* build --sisshare: 시지프 공유 시험판. 시작부터 N사의 금기를 어기고 백화점에 들어가는 길 하나뿐이고, 붕괴로 백화점에서 나오면 끝난다 */
   const SISTEST=false; /* build --sis: 시지프 백화점 시험판. 출생 화면에서 둥지 노동자로 태어나 4년차 갈림길부터 바로 시작한다 */
   if(SISTEST)CFG.sis.on=true;
+  if(SISSHARE)CFG.sis.share=true;
+  const sisForce=()=>{const nm=BC.name,sd=BC.seed;E.reseed(sd);let c;for(let i=0;i<20000;i++){c=E.newChar();if(c.o&&c.o.n==='둥지 노동자')break}c.seed=sd;c.name=nm;BC=c;BC.fresh=true;UI.sisSkip=true};
   const FINGERTEST=false; /* build --finger: 손가락 루트 전용 시험판. 출생 화면에 조직 출신·보냐텔리·별에 선택받은 자로 태어나는 버튼이 생긴다 */
-  const sisBtns=()=>SISTEST?`<div class="panel stack" style="gap:6px;border:2px solid var(--gold)"><div class="eyebrow">시지프 백화점 시험판</div><p class="small dim">둥지 노동자로 태어나 4년차 갈림길에서 "N사의 금기에 흥미를 가진다"를 고르면, 금지된 것에 손을 대는 사건(가짜 경험 통조림 · 영상 감상) → 붙잡힘 → 재판을 거쳐 백화점에 들어간다. 아래 스위치를 켜면 4년차부터 바로 시작한다.</p><button class="btn" data-a="sisbirth" data-i="born"><b>둥지 노동자로 태어난다</b></button><button class="btn${UI.sisSkip?' primary':''}" data-a="sisbirth" data-i="skip"><b>4년차 갈림길부터 바로 시작: ${UI.sisSkip?'켜짐':'꺼짐'}</b></button></div>`:'';
+  const sisBtns=()=>SISSHARE?`<div class="panel stack" style="gap:6px;border:2px solid var(--gold)"><div class="eyebrow">시지프 백화점 시험판</div><p class="small dim">둥지 노동자로 태어나 4년차에 N사의 금기에 손을 댄다. 재판을 거쳐 시지프 백화점에 들어가고, 백화점이 무너져 밖으로 나오는 데까지가 이 시험판이다. 소속(르루주·르누아르·르카키)은 백화점 안에서 한 일에 따라 정해진다.</p></div>`:SISTEST?`<div class="panel stack" style="gap:6px;border:2px solid var(--gold)"><div class="eyebrow">시지프 백화점 시험판</div><p class="small dim">둥지 노동자로 태어나 4년차 갈림길에서 "N사의 금기에 흥미를 가진다"를 고르면, 금지된 것에 손을 대는 사건(가짜 경험 통조림 · 영상 감상) → 붙잡힘 → 재판을 거쳐 백화점에 들어간다. 아래 스위치를 켜면 4년차부터 바로 시작한다.</p><button class="btn" data-a="sisbirth" data-i="born"><b>둥지 노동자로 태어난다</b></button><button class="btn${UI.sisSkip?' primary':''}" data-a="sisbirth" data-i="skip"><b>4년차 갈림길부터 바로 시작: ${UI.sisSkip?'켜짐':'꺼짐'}</b></button></div>`:'';
   const fingerBtns=()=>FINGERTEST?`<div class="panel stack" style="gap:6px;border:2px solid var(--gold)"><div class="eyebrow">손가락 시험판 · 바로 태어나기</div><button class="btn" data-a="fbirth" data-i="조직"><b>조직 출신으로 태어나기</b><span class="dim small">1년차에 손가락이 먼저 찾아온다 · 2년차에 거미집 초대</span></button><button class="btn" data-a="fbirth" data-i="보냐텔리"><b>보냐텔리 가문으로 태어나기</b><span class="dim small">엄지 · 가문 전용 · 서열 점수 ×2</span></button><button class="btn" data-a="fbirth" data-i="별"><b>별에 선택받은 자(소지)로 태어나기</b><span class="dim small">정식 소지가 되면 거미집 초대</span></button></div>`:'';
   const MINDTEST=false; /* build --mind: 정신력 10 이하 연출만 시험하는 판 */
   function vMindTest(){
@@ -2510,6 +2513,18 @@ ${symRec(r)}
     if(pv){const d=cur.y-pv.y;cmp=cur.w&&!pv.w?'이전 최고보다 나아졌다 (완주).':!cur.w&&pv.w?`이전 최고는 완주 기록이다. 완주하지 못한 이번 판은 ${d>0?`${d}년 더 살았어도 `:''}그보다 낮게 친다.`:d>0?`이전 최고보다 ${d}년 더 살았다.`:d===0?'이전 최고와 같다.':`이전 최고보다 ${-d}년 짧다.`}
     return `<div class="panel stack" style="gap:6px"><span class="eyebrow">오늘의 시드 · ${esc(o.day)} · ${o.n}번째 도전</span>${row('이번',cur)}${pv?row('이전 최고',pv):''}<p class="small" style="color:var(--gold)">${cmp}</p></div>`;
   }
+  /* 시지프 공유 시험판의 끝: 붕괴로 백화점에서 나온 직후의 기록 */
+  function vSisShare(){
+    const c=G.ch,sd=c.sisDone||{},Z=D.sisyphus.collapse,f=sd.fac||'kaki',out=f==='kaki'?'kaki':f==='rouge'?(sd.red==='with'?'with':'buffet'):(sd.red==='slain'?'slain':'left'),facN={rouge:'르루주',noir:'르누아르',kaki:'르카키'}[f],redN={with:'붉은 신이 곁에 있다',buffet:'붉은 신이 뷔페가 되었다',slain:'붉은 신을 쓰러뜨렸다',left:'붉은 신이 행방불명이 되었다',none:'붉은 신 줄기가 없다'}[sd.red||'none'],gr=D.sisyphus.grades[Math.min(sd.grade||0,D.sisyphus.grades.length-1)];
+    return `<div class="stack" style="gap:12px"><div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow">시지프 백화점 시험판 · 1막 끝</div><h1 style="color:${c.color}">${esc(c.name||'이름 없는 사람')}</h1><div><span class="chip" style="color:var(--gold);border-color:var(--gold)">${esc(Z.title)}</span></div>
+      <p class="lead">${esc(Z.out[out]||'')}</p></div>
+      <div class="panel stack" style="gap:6px"><span class="eyebrow">이번 판의 기록</span>
+        <p class="small">소속 · ${facN} · 고객 등급 ${esc(gr.n)}</p>
+        <p class="small">${redN}</p>
+        <p class="small">취향에 맞춰 판 옷 · ${sd.fit||0}벌 (단골 맞춤 ${Math.min(CFG.sis.fit.maxTier,Math.floor((sd.fit||0)/CFG.sis.fit.per))}단계)</p>
+        <p class="small">${(c.titles||[]).slice(-3).map(esc).join(' · ')}</p></div>
+      <div class="panel stack" style="gap:6px"><span class="eyebrow">다음 이야기</span><p class="small dim">백화점 밖의 도시와 2막은 만드는 중이다. 이 시험판은 여기까지다. 플레이해 본 느낌과 어색했던 곳을 알려 주면 이어서 다듬는다.</p></div>
+      <div class="stack"><button class="btn primary" data-a="start"><b>처음부터 다시 한다</b></button></div></div>`}
   function vEnd(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),tr=w&&UI.trueEnd,df=c.distForm;
     /* 전투 중 E.G.O 개화·뒤틀림 이름을 정하기 전에 판이 끝났으면(전투에서 쓰러짐 등) 결과 화면에서 먼저 정한다 */
@@ -2922,7 +2937,7 @@ ${symRec(r)}
     if(['title','birth','end','records','chron','chronview'].includes(s)||!(G&&G.infinite)||!INFNOTE){const o=document.querySelector('.infnote');if(o)o.remove();if(['title','birth'].includes(s))UI.noteYear=null}
     BGM.setBossTrack&&BGM.setBossTrack(C&&D.enemies[C.id]&&D.enemies[C.id].bgm==='ruen'&&typeof window!=='undefined'&&window.CITY_BGM&&window.CITY_BGM.ruen?'ruen':'boss');   // 전용 곡이 실려 있을 때만 쓴다
     BGM.setScene(s==='combat'?(C&&D.enemies[C.id]&&D.enemies[C.id].hidden?'boss':'fight'):'calm');
-    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,symlab:vSymLab,title:vTitle,birth:vBirth,event:vEvent,ledger:vLedger,result:vResult,level:vLevel,combat:vCombat,end:vEnd,sim:vSim,shop:vShop}[s]();
+    const h={shared:vShared,records:vRecords,chron:vChron,chronview:vChronView,shopask:vShopAsk,symlab:vSymLab,title:vTitle,birth:vBirth,event:vEvent,ledger:vLedger,result:vResult,level:vLevel,combat:vCombat,sisshare:vSisShare,end:vEnd,sim:vSim,shop:vShop}[s]();
     const tab=`<span class="skin-tab">${SKIN_TAB[SKIN]}</span>`;
     /* 가방·받기 화면은 위에 덮는다. 받기(새 장비·카드)가 남아 있으면 그게 먼저다 */
     const ok=G&&G.ch&&['result','event','shop','shopask','level'].includes(s)&&!UI.animing;
@@ -2978,6 +2993,7 @@ ${symRec(r)}
   function showYear(st,stock,shopDone){
     UI.fight=null;UI.pending=null;UI.curSt=st;UI.oldEnd=false;UI.overflowEnd=false;
     /* 100살 히든 엔딩은 한 번 본 뒤로는 다시 뜨지 않는다 (이미 본 기록이 있으면 그냥 이어서 간다) */
+    if(st.type==='end'&&st.sisShare){store.del(SAVE);UI.screen='sisshare';render();return}
     if(st.type==='end'&&st.old&&loadRec().endings.includes('old')){nextYear();return}
     if(st.type==='end'){UI.confirmNew=null;UI.outEnd=st.out||null;UI.outerEnd=false;UI.endWin=st.win;UI.trueEnd=!!st.trueEnd;UI.crowEnd=st.crow||null;UI.oldEnd=!!st.old;UI.overflowEnd=!!st.overflow;UI.rbEnd=!!st.rb;UI.hwEnd=st.hw||null;UI.death=st.cause?{year:G.year,foe:st.cause==='sunk'?'침몰':st.cause==='mind'?'정신 붕괴':'뒤틀림',cause:st.cause}:null;recordEnd();UI.screen='end';render();return}
     UI.omen=null;UI.showIncome=G.year>1;
@@ -3474,7 +3490,7 @@ ${symRec(r)}
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
   /* 오늘의 시드와 같은 시드(지나간 날의 시드를 번호로 입력한 경우 포함)면 그날의 출신·타고난 것 지정을 그대로 쓴다 */
   const dailyKeyOf=seed=>UI.daily&&seed===dailySeed(UI.daily)?UI.daily:(Object.keys(CFG.dailyPlan||{}).find(k=>dailySeed(k)===seed)||null);
-  function born(seed,name,daily){UI.team=null;const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];{const uo=!dly&&UI.origin&&loadUnlocks().includes('origin:'+UI.origin)?UI.origin:null;BC=E.newChar(!dly&&UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,uo||(dly?(pl&&pl.origin)||CFG.dailyOrigin:null))}UI.newOrigin=null;if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;if(pl&&pl.innate2&&pl.innate2!==pl.innate&&D.innate[pl.innate2])BC.innate2=pl.innate2;BC.seed=seed;BC.name=name||'';BC.fresh=true}
+  function born(seed,name,daily){UI.team=null;const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];{const uo=!dly&&UI.origin&&loadUnlocks().includes('origin:'+UI.origin)?UI.origin:null;BC=E.newChar(!dly&&UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,uo||(dly?(pl&&pl.origin)||CFG.dailyOrigin:null))}UI.newOrigin=null;if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;if(pl&&pl.innate2&&pl.innate2!==pl.innate&&D.innate[pl.innate2])BC.innate2=pl.innate2;BC.seed=seed;BC.name=name||'';BC.fresh=true;if(SISSHARE)sisForce()}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
   window.addEventListener('resize',()=>{if(UI.screen==='combat'&&!PLAYING&&UI.wasMobile!==isMobile())render()});
   app.addEventListener('toggle',e=>{const t=e.target;if(!t.classList)return;
@@ -3517,6 +3533,7 @@ ${symRec(r)}
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
     testSellGear(){G=E.newGame(E.newChar());const ch=G.ch;ch.year=G.year=20;ch.licensed=true;ch.rank=6;ch.money=800;ch.stash=[Object.assign({id:'club',grade:1},D.items.club),Object.assign({id:'dagger',grade:1},D.items.dagger),{id:'aux_h_claw',n:'흰 손톱 조각',slot:'aug',grade:5,e:'공+5 · 명중+3 · 속+3'}];UI.fight=null;UI.omen=null;UI.screen='shop';render()},
+    testSisEnd(sd){CFG.sis.on=true;G=E.newGame(E.newChar());const ch=G.ch;ch.name='시험 주민';ch.titles=['백화점에서 나온 자','접수 번호를 받은 자'];ch.sisDone=Object.assign({fac:'rouge',fit:7,red:'with',inq:1,name:'미생',grade:4,hard:false},sd||{});UI.screen='sisshare';render()},
     testSis2(over,chOver){CFG.sis.on=true;G=E.newGame(E.newChar());const ch=G.ch;ch.o={n:'둥지 노동자'};ch.aff={type:'wing',name:CFG.nWing.name};ch.year=G.year=30;ch.stats.maxHp=Math.max(ch.stats.maxHp,260);ch.hp=ch.stats.maxHp;ch.stats.atk=Math.max(ch.stats.atk,28);ch.sis=Object.assign({subj:'can',turn:30,turnYear:30,grade:3,rewound:0,lean:3,in:4,pts:60,st:'day1',lootDone:true,mat:{leather:2,cloth:3,thread:1,trim:2,goldskin:1,resin:2},dyes:['black','red','white','navy'],cloth:[{shape:'coat',pattern:'check',color:'red',trims:[],price:90,lean:1,q:1}],fac:'rouge',assimDone:1,cycle:1,trendBack:1,exStep:3,made:4,comply:6,fit:4,inv:[1,1],exploreDone:true,visited:['info','food','dye'],rules:['grade','can','wall','fall','center','warden','reset','trust'],wardenTurn:30,shopTurn:30,shop:[]},over||{});Object.assign(ch,chOver||{});ch.money=900;const st=E.advanceYear(G);UI.ev=st.ev;UI.fight=null;UI.omen=null;UI.screen=st.type==='fight'?UI.screen:'event';render()},
     testSis(){CFG.sis.on=true;G=E.newGame(E.newChar());const ch=G.ch;ch.o={n:'둥지 노동자'};ch.aff={type:'wing',name:CFG.nWing.name};ch.year=G.year=5;ch.sis={subj:'can',turn:2,turnYear:5,grade:2,rewound:0,lean:0,in:4,pts:30,st:'craft',pend:'b3',lootDone:true,lootNote:'사냥 · 가죽 2 · 22안',mat:{leather:2,cloth:3,thread:1,trim:2},dyes:['black','red','white','navy'],cloth:[{shape:'suit',pattern:'stripe',color:'black',trims:['button'],price:80,lean:-1,q:1}],fac:null,made:1};ch.money=900;const st=E.advanceYear(G);UI.ev=st.ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testRouteEnd(k,act2){if(!G)return;G.endless=!!act2;G.year=G.ch.year=act2?66:CFG.years;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=k==='rcorp';UI.hwEnd=k==='rcorp'?null:(k||'hwhost');UI.death=null;UI.screen='end';render()},

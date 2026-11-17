@@ -3228,6 +3228,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const wp=one(w);
     return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${wp} ${tl}${fam}`,xs:[wp,tl].concat(fam?[fam.trim()]:[]),c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +${CFG.accel.change.story} (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
   function advanceYear(G){
+    if(CFG.sis.share&&G.ch&&G.ch.sisEnd&&!G.ch.sisShareEnd){G.ch.sisShareEnd=1;return {type:'end',win:true,sisShare:true}}   /* 시지프 공유 시험판: 붕괴를 지나 백화점에서 나오면 여기서 끝난다 */
     hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);staffTick(G.ch,G.year);officeYear(G.ch,G.year);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
     G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);starPinky(mc);if(isWs(mc))for(const id of (mc.relicIds||[]))if(!(mc.wsRelic&&mc.wsRelic[id]))wsAbsorb(mc,id);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
@@ -3475,7 +3476,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const e=encounter(G.ch,st.spec);return {type:'fight',enemy:e.id,enc:e,avoided:st.boss};
   }
   /* 고를 수 있는 선택지 (조건이 맞지 않는 선택지는 빠진다). i는 원래 번호 */
-  const options=(G,ev)=>ev.c.map((c,i)=>({c,i})).filter(o=>meets(G.ch,o.c.req));
+  const options=(G,ev)=>ev.c.map((c,i)=>({c,i})).filter(o=>meets(G.ch,o.c.req)).filter(o=>!(CFG.sis.share&&ev===D.affiliation&&!/금기/.test(o.c.l)));   /* 시지프 공유 시험판: 4년차 갈림길에서는 N사의 금기만 고를 수 있다 */
   /* 조건이 안 맞아 숨겨지는 선택지 중 lock(이유)이 적힌 것은 잠금으로 보여 준다. lockReq가 맞을 때만(해당 없는 선택지는 계속 숨김) */
   const lockedOptions=(G,ev)=>ev.c.map((c,i)=>({c,i})).filter(o=>o.c.lock&&!meets(G.ch,o.c.req)&&meets(G.ch,o.c.lockReq));
   /* 판정 보정 = 능력치 + 사건 판정 보정 + (그 진로 판정이면) 출신 진로 보정 */
