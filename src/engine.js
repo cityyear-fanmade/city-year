@@ -2720,6 +2720,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const c=ch.sis.cloth[idx],tmul=tm(c),match=tmul>=1.2;
     if(d(100)<=Math.round(M.fail*100)){chips.push(`${cu.n}가 고개를 저었다 · 팔지 못했다`);return}
     const Q=D.sisyphus.quality,q=c.q||0,v=Math.round(c.price*Q.mul[q]*M.mul*tmul*sisComplyMul(ch)),pts=M.pts+(match?1:0)+Q.pts[q];
+    if(match&&(ch.sis.fit||0)<CFG.sis.fit.per*CFG.sis.fit.maxTier){ch.sis.fit=(ch.sis.fit||0)+1;if(ch.sis.fit%CFG.sis.fit.per===0)chips.push(`단골 맞춤 ${ch.sis.fit/CFG.sis.fit.per}단계 · 소속 전투 규칙이 조금 강해진다`)}
     ch.sis.cloth.splice(idx,1);ch.money+=v;ch.sis.pts+=pts;sisAdj(ch,q>=2?2:1);
     chips.push(`판매 · ${cu.n} · ${D.sisyphus.quality.names[q]} · +${sisAn(v)} · 고객 점수 +${pts}`);sisLearn(ch,'trust',chips,false);sisGradeUp(ch,chips);
   }
@@ -2738,7 +2739,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fac==='rouge'){if(R&&R.alive){red=(sisGrade(ch)>=4&&(R.shroud||R.hunger<8))?'with':'buffet';sisRedDead(ch,red)}else red='buffet'}
     if(fac==='noir'){red=R&&R.state==='slain'?'slain':(R?'left':'none')}
     out=fac==='kaki'?'kaki':fac==='rouge'?(red==='with'?'with':'buffet'):(red==='slain'?'slain':'left');
-    ch.sisDone={fac,red,inq:sv.inq||0,name:R&&R.name||'',grade:sisGrade(ch),hard:!!ch.hard};
+    ch.sisDone={fac,fit:sv.fit||0,red,inq:sv.inq||0,name:R&&R.name||'',grade:sisGrade(ch),hard:!!ch.hard};
     sv.collapsed=true;chips.push(Z.out[out]);
     ch.titles=ch.titles||[];if(!ch.titles.includes(Z.title)){ch.titles.push(Z.title);(ch.titleLog=ch.titleLog||[]).push(Z.title);chips.push('칭호 · '+Z.title)}
     if(red==='with'){const nm=R.name||'붉은 신';addStats(ch.stats,{maxHp:20,atk:2});ch.hp+=20;(ch.relics=ch.relics||[]).push('동행 · '+nm);ch.flags=ch.flags||{};ch.flags.sisRed=nm;chips.push(`동행 · ${nm} · 최대 HP +20 · 공격 +2`)}
@@ -3980,6 +3981,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const S_=CFG.deckSyn;P.deckSyn={};if(S_.on&&ch.deck&&ch.deck.length){for(const k of Object.keys(S_.kws)){const n=ch.deck.filter(id=>D.cards[id]&&((D.cards[id].kw||[]).some(x=>x[0]===k)||(k==='charge'&&D.cards[id].spend))).length;if(n>=((S_.mins||{})[k]||S_.min)&&n/ch.deck.length>=S_.ratio){P.deckSyn[k]=1;mindNote.push(`덱 시너지 · ${D.keywords[k].n} ${n}/${ch.deck.length}장 · ${S_.kws[k]}`)}}}}
     P.trend=!!(CFG.sis.on&&ch.sis&&ch.sis.fac==='kaki'&&ch.sis.assimDone);
     /* 르루주·르누아르의 전투 규칙은 백화점에서 나온 뒤(2막)에도 이어진다. 르카키는 일반 상태로 돌아간다 */
+    {const sd0=ch.sisDone,ft=(ch.sis&&ch.sis.fit)||(sd0&&sd0.fit)||0;P.fitTier=Math.min(CFG.sis.fit.maxTier,Math.floor(ft/CFG.sis.fit.per))}
     {const sd=ch.sisDone;P.rouge=!!(CFG.sis.on&&((ch.sis&&ch.sis.fac==='rouge'&&ch.sis.assimDone)||(sd&&sd.fac==='rouge')));P.noir=!!(CFG.sis.on&&((ch.sis&&ch.sis.fac==='noir'&&ch.sis.assimDone)||(sd&&sd.fac==='noir')));P.rougeWith=!!(P.rouge&&((ch.sis&&ch.sis.red&&ch.sis.red.alive)||(sd&&sd.red==='with')))}
     P.inkIds=ch.hw&&ch.hw.mission&&hwHave(ch).length?hwHave(ch).map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
@@ -4020,7 +4022,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.ch.mind-cost>=Math.max(1,mindFloor(C.ch))){C.ch.mind-=cost;P.sm.rings++;const m={t:'kw',s:`망(望) ${P.sm.rings}망 · 정신력 −${cost} (지금 ${C.ch.mind}) · 주는 피해 +${Math.round((SM.dealShin+P.sm.rings*SM.dealRing)*100)}% · 명중 +${P.sm.rings*SM.ringHit}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}}
     P.evaPen=P.evaPenNext||0;P.evaPenNext=0;
     /* 르누아르 규율: 라운드마다 보호막이 저절로 생기고 규칙 한 줄이 정해진다. 지키면 보호막과 충전, 어기면 약한 반동 */
-    if(P.noir&&P.hp>0){const R=CFG.sis.noir;P.shield=Math.min(Math.max(CFG.shieldCap,P.shield||0),(P.shield||0)+R.shield);P.rule=one(Object.keys(R.rules));P.nAtk=0;P.nNon=0;P.nHeavy=0;const m={t:'kw',s:`${P.name} · 보존 · 보호막 +${R.shield} · 이번 라운드의 규율 · ${R.rules[P.rule]}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
+    if(P.noir&&P.hp>0){const R=CFG.sis.noir;P.shield=Math.min(Math.max(CFG.shieldCap,P.shield||0),(P.shield||0)+R.shield+(P.fitTier||0));P.rule=one(Object.keys(R.rules));P.nAtk=0;P.nNon=0;P.nHeavy=0;const m={t:'kw',s:`${P.name} · 보존 · 보호막 +${R.shield} · 이번 라운드의 규율 · ${R.rules[P.rule]}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     /* 르루주 맥동: 라운드마다 체력을 조금 내고 그 라운드의 공격 피해를 올린다(체력이 낮으면 멈춘다) */
     if(P.rouge&&P.hp>0){const R=CFG.sis.rouge,cost=Math.max(1,Math.round(P.maxHp*(P.rougeWith?R.costWith:R.cost)));P.pulse=P.hp>P.maxHp*R.minHp&&P.hp>cost;if(P.pulse)P.hp-=cost;const m={t:'kw',s:P.pulse?`${P.name} · 맥동 · 체력 −${cost} · 이번 라운드 공격 피해 +${R.dmg}${P.rougeWith?' (붉은 신이 곁에 있어 덜 든다)':''}`:`${P.name} · 체력이 낮아 맥동이 멎었다`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     if(P.trend&&P.hp>0){P.trendKw=one(CFG.sis.trendKws);if(C.round>1)P.inertia=Math.max(0,(P.inertia||0)-CFG.sis.inertia.decay);const m={t:'kw',s:`${P.name} · 이번 라운드의 유행 · ${D.keywords[P.trendKw].n} (이 키워드가 +${CFG.sis.trendPlus} · 관성도 더 쌓인다) · 관성 ${P.inertia||0}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
@@ -4418,8 +4420,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(!win&&g.self){A.hp=Math.max(1,A.hp-g.self);note+=` 반동 −${g.self}`}}
       if(gr&&gr.n)note+=` 등급${gr.n}`;
       if(A.noir&&A.order){dmg+=CFG.sis.noir.order;note+=` 정돈+${CFG.sis.noir.order}`}
-      if(A.rouge&&A.pulse){dmg+=CFG.sis.rouge.dmg;note+=` 맥동+${CFG.sis.rouge.dmg}`}
-      if(A.trend&&(A.inertia||0)>=CFG.sis.inertia.rush){dmg+=CFG.sis.inertia.dmg;note+=` 질주+${CFG.sis.inertia.dmg}`}
+      if(A.rouge&&A.pulse){const rd=CFG.sis.rouge.dmg+(A.fitTier||0);dmg+=rd;note+=` 맥동+${rd}${A.fitTier?' (단골 맞춤 '+A.fitTier+')':''}`}
+      if(A.trend&&(A.inertia||0)>=CFG.sis.inertia.rush){const rd=CFG.sis.inertia.dmg+(A.fitTier||0);dmg+=rd;note+=` 질주+${rd}${A.fitTier?' (단골 맞춤 '+A.fitTier+')':''}`}
       if(rk)note+=` 서열 강화(주사위+${rk.dice} 피해+${rk.b} 명중+${rk.hit})`;
       note+=pnote;
       /* 장비 추가 주사위 (천퇴성도: 적중마다 1d2 × N) */
