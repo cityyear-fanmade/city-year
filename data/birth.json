@@ -10327,6 +10327,14 @@
      "need": 2
     },
     {
+     "id": "shroud",
+     "n": "휘감은 천 상의",
+     "base": "cloth",
+     "price": 75,
+     "lean": 0,
+     "need": 2
+    },
+    {
      "id": "gala",
      "n": "드레스",
      "base": "cloth",
