@@ -4109,6 +4109,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(E.trait==='bulwark'&&E.hp>0){E.shield=Math.max(E.shield||0,3)}
     if(E.trait==='focus'&&E.hp>0){E.breath=Math.min(CFG.breath.cap,E.breath+2)}
     if(E.trait==='regen'&&E.hp>0&&E.hp<E.maxHp){const h=Math.min(3,E.maxHp-E.hp);E.hp+=h;C.traitNote=`${E.name} · 재생 · HP +${h}`}else C.traitNote=null;
+    if(E.trait==='famine'&&E.hp>0&&!E.p2&&E.hp<=E.maxHp/2){E.p2=1;const h=Math.round(E.maxHp*0.15);E.hp=Math.min(E.maxHp,E.hp+h);C.traitNote=`${E.name} · 굶주림이 발현한다 · HP +${h} · 명중 +10 · 피해 +3`}
     if(P.isP&&P.wx&&P.wx.imprint&&(E.imprint||0)>0&&E.hp>0&&C.ePlan.length){
       if(E.imprint>=5){C.ePlan=[];E.imprint=0;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 각인 5 · ${E.name}의 행동이 봉인됐다`}
       else if(d(100)<=15*E.imprint){const i=C.ePlan.findIndex(c=>c.t==='atk');if(i>=0){const c=C.ePlan.splice(i,1)[0];if(c.next)E.forceNext=c.next;C.jobNote=(C.jobNote?C.jobNote+' · ':'')+`${P.name} · 각인 ${E.imprint} · ${E.name}의 ${c.n}을(를) 봉인했다`}}}
@@ -4325,7 +4326,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.wx&&A.wx.arsenal){const i=d(A.wx.arsenal.length);sub=A.wx.arsenal[i-1];(C.ars=C.ars||[d(A.wx.arsenal.length)]);if(!C.ars.includes(i))C.ars.push(i);pnote+=` 장갑 1d9 ${i}·${sub.n}`}
       const gr=A.isP&&A.cg&&c.t==='atk'?A.cg:null,rk=A.isP&&A.rk&&c.t==='atk'&&(!A.rk.set||A.rk.set.has(c))?A.rk:null;
       const acA=A.wx&&A.wx.accel?(A.accel||0)*A.wx.accel.hit:0,acB=B.wx&&B.wx.accel?(B.accel||0)*B.wx.accel.eva:0;
-      const trH=(A.trait==='bloodscent'&&B.bleed>0?15:0)+(A.trait==='enrage'&&A.hp<=A.maxHp/2?15:0),trE=B.trait==='coward'&&B.hp<=B.maxHp/2?20:0;
+      const trH=(A.trait==='bloodscent'&&B.bleed>0?15:0)+(A.trait==='enrage'&&A.hp<=A.maxHp/2?15:0)+(A.trait==='famine'&&A.p2?10:0),trE=B.trait==='coward'&&B.hp<=B.maxHp/2?20:0;
       const exH=(c.execHit&&(B.disp||0)>0?c.execHit:0)+trH;if(exH)pnote+=` 처분 표식 명중+${exH}`;
       let am=(CFG.atkRule.on?Math.trunc(A.atk*CFG.atkRule.hitPer)+(A.hitB||0):A.atk)+(!A.isP&&C.ally?CFG.bond.allyHit:0)+(A.awl&&B.bleed>0?CFG.syn['밤의 송곳'].bleedHit:0)+c.hit+(rk?rk.hit:0)+exH-Math.floor((A.manner||0)*(A.mannerPer||thumbPer(B)))-(A.obey||0)*CFG.hw.obey.hit+(gr?gr.hit:0)+fsb+Math.min(CFG.spdHit.max,Math.max(0,Math.floor((A.spd+(A.trend?Math.floor((A.inertia||0)/CFG.sis.inertia.spdPer):0)-B.spd)/CFG.spdHit.per)))*(A.trend&&(A.inertia||0)>=CFG.sis.inertia.rush?2:1)+A.passHit+acA+(A.wx&&A.wx.hitB||0)+(A.ring?CFG.ring.hit*A.work:0)+(sub?sub.atk:0)-3*(A.prescript||0)-Math.floor((B.middle?CFG.middle.sinkHit:1)*CFG.sink.hit*Math.floor((A.sink||0)/CFG.sink.per))-((staggerStage(A)||{}).hit||0)-(A.isP&&A.laev==='open'&&isBlue(A)?Math.round(CFG.laev.selfBlueHit*(A.laevF||1)):0),dm=B.eva+B.evaB-(B.evaPen||0)+(B.breath>=1&&B.breath<=CFG.breath.evaMax?CFG.breath.eva:0)+acB+trE-3*(B.shock||0)-2*((B.chain||0)+(B.web||0))+(B.maskOn?B.passive.eva:0)+(B.odin?odinEva(C.round,B):0);
       if(A.sm&&A.sm.rings)am+=A.sm.rings*CFG.shinmang.ringHit;
@@ -4498,6 +4499,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.swift){const x=Math.floor(A.spd/CFG.innate.swiftPer);if(x>0){dmg+=x;note+=` 질풍 속도 ${A.spd}→+${x}`}}
       if(A.psycho||B.psycho){const m=(A.psycho?CFG.innate.psycho:1)*(B.psycho?CFG.innate.psycho:1);dmg*=m;note+=` 사이코패스×${m}`}
       if(A.trait==='enrage'&&A.hp<=A.maxHp/2){dmg+=2;note+=' 분노+2'}
+      if(A.trait==='famine'&&A.p2){dmg+=3;note+=' 굶주림+3'}
+      if((A.trait==='thirst'||A.trait==='famine')&&B.bleed>0&&A.hp>0){const h=Math.min(A.maxHp-A.hp,A.trait==='famine'?3:2);if(h>0){A.hp+=h;note+=` 갈증 회복+${h}`}}
       if(A.kaliOn){dmg+=A.kali.dmgB;note+=` 칼리+${A.kali.dmgB}`}
       if(B.takenMul>1){const r=Math.round(dmg*(B.takenMul-1));if(r>0){dmg+=r;note+=` 해치고 싶지 않다 +${r}`}}
       if(B.sm){const r=Math.floor(dmg*CFG.shinmang.takeShin);if(r>0){dmg-=r;note+=` 신−${r}`}}
