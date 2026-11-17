@@ -2672,7 +2672,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sisHaveCat(ch,sh.base)<need)return {ok:false,why:`${sisCatName(sh.base)}이 모자라다`};
     for(const [k,n] of Object.entries(sh.extra||{}))if(sisHaveCat(ch,k)<n)return {ok:false,why:`${sisCatName(k)}이 모자라다`};
     if(co.id!=='gray'&&!ch.sis.dyes.includes(co.id))return {ok:false,why:`${co.n} 염료가 없다`};
-    if((ch.sis.mat.trim||0)<tr.length)return {ok:false,why:'장식 부품이 모자라다'};
+    if((ch.sis.mat.trim||0)<tr.length)return {ok:false,why:'가공 재료가 모자라다'};
     if(ch.sis.cloth.length>=CFG.sis.clothMax)return {ok:false,why:'옷걸이가 가득 찼다'};
     const mul=sisMulOf(sisPick(ch,sh.base,need)),price=Math.round((sh.price*mul)+pt.add+tr.reduce((a,x)=>a+x.add,0)),sum=sh.lean+co.lean+tr.reduce((a,x)=>a+x.lean,0);
     return {ok:true,sh,pt,co,tr,need,price,mul,lean:Math.sign(sum)};
@@ -2685,14 +2685,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {ok:true,name:`${I.co.n} ${I.pt.n} ${I.sh.n}`,price:I.price,lean:I.lean};
   }
   /* 옷 손질(등급 올리기): 기본 완성 → 고급 완성 → 걸작 → 런웨이. 기본 확률에 넣은 재료만큼 오르고, 실패하면 그 단계에서 옷은 끝난다 */
-  function sisUpChance(mats){const Q=D.sisyphus.quality;return Math.min(Q.max,Q.base+mats.reduce((a,k)=>a+(Q.boost[k]||0),0))}
+  function sisUpChance(mats,cloth){const Q=D.sisyphus.quality,T=D.sisyphus.tailor,fab=cloth?(cloth.trims||[]).reduce((a,i)=>a+((T.trims.find(x=>x.id===i)||{}).up||0),0):0;return Math.min(Q.max,Q.base+fab+mats.reduce((a,k)=>a+(Q.boost[k]||0),0))}
   function sisUpgrade(ch,i,mats){
     const Q=D.sisyphus.quality,c=ch.sis.cloth[i],out=[];
     if(!c)return {chips:['손질할 옷이 없다']};if(c.q>=3)return {chips:['이미 런웨이에 오를 만한 옷이다']};if(c.sealed)return {chips:['이 옷은 더 손질할 수 없다']};
     mats=mats.slice(0,Q.maxMats);const need={};for(const k of mats)need[k]=(need[k]||0)+1;
     for(const [k,n] of Object.entries(need)){const have=k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0);if(have<n)return {chips:[`${D.sisyphus.mats[k].n}이 모자라다`]}}
     for(const [k,n] of Object.entries(need)){if(k==='dye')for(let q=0;q<n;q++)ch.sis.dyes.shift();else ch.sis.mat[k]-=n}
-    const ch_=sisUpChance(mats),nm=`${D.sisyphus.tailor.colors.find(x=>x.id===c.color).n} ${D.sisyphus.tailor.patterns.find(x=>x.id===c.pattern).n} ${D.sisyphus.tailor.shapes.find(x=>x.id===c.shape).n}`;
+    const ch_=sisUpChance(mats,c),nm=`${D.sisyphus.tailor.colors.find(x=>x.id===c.color).n} ${D.sisyphus.tailor.patterns.find(x=>x.id===c.pattern).n} ${D.sisyphus.tailor.shapes.find(x=>x.id===c.shape).n}`;
     if(d(100)<=ch_){c.q++;out.push(`손질 성공 · ${nm} · ${Q.names[c.q]} (확률 ${ch_}%)`);
       if(c.q>=3){ch.titles=ch.titles||[];if(!ch.titles.includes(Q.title)){ch.titles.push(Q.title);(ch.titleLog=ch.titleLog||[]).push(Q.title);out.push('칭호 · '+Q.title)}out.push('런웨이에 오를 만한 옷이 완성되었다')}}
     else{c.sealed=true;out.push(`손질 실패 · ${nm} · ${Q.names[c.q]}에서 끝났다 (확률 ${ch_}%)`)}
