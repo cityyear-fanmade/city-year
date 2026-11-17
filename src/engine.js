@@ -2763,7 +2763,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.sisRedBorn){sv.red={name:'',born:sv.turn,hunger:2,log:{},alive:true,stage:0,shroud:false,trust:0,state:'alive'};ch.redPick=true;chips.push('붉은 신이 태어났다 · 이름을 정한다')}
     if(fx.sisRedLang!=null){const R=sv.red;if(R){R.stage=(R.stage||0)+1;R.hunger=Math.max(0,Math.min(10,R.hunger+(fx.sisH||0)));R.trust=(R.trust||0)+(fx.sisT||0);chips.push(`${R.name||'붉은 신'} · 말이 트였다 (${R.stage}/3)`)}}
     if(fx.sisFeed){const R=sv.red,c=sisFeedCost(ch);if(R&&ch.money>=c){ch.money-=c;R.hunger=Math.max(0,R.hunger-2);sv.fed=sv.turn;chips.push(`${R.name||'붉은 신'}에게 먹이를 주었다 · −${sisAn(c)} · 허기 ${sisHungerText(R)}`)}}
-    if(fx.sisShroud){const R=sv.red;if(R&&(sv.mat.resin||0)>=2&&(sv.mat.goldskin||0)>=1){sv.mat.resin-=2;sv.mat.goldskin-=1;R.shroud=true;R.hunger=0;chips.push(`수의형 의복 · ${R.name||'붉은 신'}의 허기가 가라앉았다`)}}
+    if(fx.sisShroud){const R=sv.red;if(R&&(sv.mat.resin||0)>=2&&(sv.mat.goldskin||0)>=1){sv.mat.resin-=2;sv.mat.goldskin-=1;R.shroud=true;R.hunger=0;chips.push(`황금가죽 망토 · ${R.name||'붉은 신'}의 허기가 가라앉았다`)}}
     if(fx.sisAttack){const R=sv.red;if(R){R.fightDone=1;sv.st='redfight'}}
     if(fx.sisWall){sisMat(ch,'resin',1);sv.lean=Math.max(-CFG.sis.leanMax,sv.lean-2);sisAdj(ch,-2);sv.walls=(sv.walls||0)+1;chips.push('벽 뜯기 · 황금송진 1');sisLearn(ch,'wall',chips,true);if(d(100)<=CS.wallGuard){sv.st='wallfight';chips.push(Zs.wall.guard)}else sv.st='day2'}
     if(fx.sisWarden){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.warden=0;sv.comply=Math.max((sv.comply==null?5:sv.comply)+1,CS.wardenComply+1);sv.falls=(sv.falls||0)+1;sv.st='done';chips.push(`간수에게 끌려갔다 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`);sisLearn(ch,'warden',chips,false)}
