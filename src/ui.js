@@ -19,7 +19,7 @@ export function startUI(E,app){
   /* 이어하기: 해가 바뀔 때마다 판 전체를 저장한다 */
   const SAVE='cityYearSave';
   const HARDK='cityYearHard',DIFFK='cityYearDiff';
-  const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');return o&&o.G&&o.G.ch?o:null}catch(e){return null}};
+  const loadSave=()=>{try{const o=JSON.parse(store.get(SAVE)||'null');if(!(o&&o.G&&o.G.ch))return null;/* 보안: 가져온 세이브의 이름에서 HTML 문자를 지운다 */const cl=x=>typeof x==='string'?x.replace(/[<>&"']/g,''):x,ch=o.G.ch;ch.name=cl(ch.name);if(ch.bond)ch.bond.name=cl(ch.bond.name);if(ch.office)ch.office.name=cl(ch.office.name);return o}catch(e){return null}};
   /* 기록실: 만난 적·이긴 적·엔딩·타고난 것·최고 기록 */
   const REC='cityYearRecords',DAILYK='cityYearDaily';
   const VERSION='v11.2.0';
@@ -2620,8 +2620,9 @@ const V1120SEC=[['🆕 카드',[
   const zipB=async(u,Cls,fmt)=>{const st=new Cls(fmt),wr=st.writable.getWriter();wr.write(u);wr.close();return new Uint8Array(await new Response(st.readable).arrayBuffer())};
   /* 배열로 줄여 담는다(키 이름 생략). 순서를 바꾸지 말고 끝에만 덧붙인다 */
   const shArr=o=>[3,shHeadK(o.h),o.w,o.n,o.k,o.t,String(o.col||'').replace(/^#/,''),o.y,o.a,o.g,o.d,foeEnc(o.fi),o.e,o.i,o.o,o.lv,o.st.join(','),o.s,o.dy,o.df,o.ver,(o.fm||[]).join('|'),o.lf||'',(o.xt||[]).join('|')];
-  const shObj=a=>({v:a[0],h:a[0]>=3?shHeadV(a[1]):a[1],w:a[2],n:a[3],k:a[4],t:a[5],col:/^[0-9a-f]{3,8}$/i.test(a[6])?'#'+a[6]:a[6],y:a[7],a:a[8],g:a[9],d:a[10],
-    f:(a[0]>=3?foeDec(a[11]):String(a[11]||'').split(',').filter(Boolean)).map(id=>(D.enemies[id]&&D.enemies[id].n)||id),e:a[12],i:a[13],o:a[14],lv:a[15],st:String(a[16]||'0,0,0').split(',').map(Number),s:a[17],dy:a[18],df:a[19],ver:a[20],fm:a[21]?String(a[21]).split('|'):[],lf:a[22]||'',xt:a[23]?String(a[23]).split('|'):[]});
+  const shNum=x=>{const v=Number(x);return Number.isFinite(v)?v:0};
+  const shObj=a=>({v:shNum(a[0]),h:a[0]>=3?shHeadV(a[1]):a[1],w:a[2],n:a[3],k:a[4],t:a[5],col:/^[0-9a-f]{3,8}$/i.test(a[6])?'#'+a[6]:a[6],y:shNum(a[7]),a:shNum(a[8]),g:a[9],d:a[10],
+    f:(a[0]>=3?foeDec(a[11]):String(a[11]||'').split(',').filter(Boolean)).map(id=>(D.enemies[id]&&D.enemies[id].n)||id),e:a[12],i:a[13],o:a[14],lv:shNum(a[15]),st:String(a[16]||'0,0,0').split(',').map(Number),s:shNum(a[17]),dy:a[18],df:a[19],ver:a[20],fm:a[21]?String(a[21]).split('|'):[],lf:a[22]||'',xt:a[23]?String(a[23]).split('|'):[]});
   /* 기록 링크: #c= 압축(deflate) 배열, #a= 압축 없는 배열(압축을 못 쓰는 브라우저), #r= 예전 형식(그대로 읽는다) */
   async function shareLinkAsync(){
     const j=new TextEncoder().encode(JSON.stringify(shArr(shareRec()))),a='#a='+u8b64(j);
@@ -2642,7 +2643,7 @@ const V1120SEC=[['🆕 카드',[
     const r=UI.shared;
     const row=(k,v)=>v?`<div class="row between"><span class="dim">${k}</span><b class="mono" style="text-align:right">${esc(String(v))}</b></div>`:'';
     return `<div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow">공유된 기록 · ${esc(r.ver||'')}</div>
-      <div class="eyebrow" style="color:${r.w?'var(--gold)':'#c46a5a'}">${esc(r.h)} · ${r.a}세</div>
+      <div class="eyebrow" style="color:${r.w?'var(--gold)':'#c46a5a'}">${esc(r.h)} · ${esc(r.a)}세</div>
       <h1 style="color:${esc(r.col||'')};${String(r.n||r.k).length>14?'font-size:clamp(20px,5.6vw,30px);line-height:1.3;word-break:keep-all':''}">${esc(r.n||r.k)}</h1>${r.n?`<div class="mono small" style="color:${esc(r.col||'')}">${esc(r.k)}</div>`:''}
       ${r.t||(r.xt&&r.xt.length)?`<div class="row" style="gap:6px;flex-wrap:wrap">${r.t?`<span class="chip" style="color:var(--gold);border-color:var(--gold)">${esc(r.t)}</span>`:''}${(r.xt||[]).filter(x=>x!==r.t).map(x=>`<span class="chip" style="color:var(--gold);border-color:var(--gold)">${esc(x)}</span>`).join('')}</div>`:''}</div>
       <div class="panel stack" style="gap:6px">${row('산 햇수',r.y+'년')}${row('위협 등급',r.g)}${row('마지막',r.d)}${row('타고난 것',r.i)}${row('E.G.O',r.e)}
@@ -2650,7 +2651,7 @@ const V1120SEC=[['🆕 카드',[
         ${r.f&&r.f.length?`<div class="small"><span class="dim">쓰러뜨린 이름난 상대</span><br><b>${r.f.map(esc).join(' · ')}</b></div>`:''}</div>
       ${r.fm&&r.fm.length?`<div class="row" style="gap:6px;flex-wrap:wrap">${r.fm.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>`:''}
       ${r.lf?`<div class="panel stack" style="gap:8px"><span class="eyebrow">어떤 삶을 살았나</span>${String(r.lf).split('\n').map(t=>`<p class="small" style="line-height:1.65">${esc(t)}</p>`).join('')}</div>`:''}
-      <button class="btn primary" data-a="sharedSeed"><b>같은 시드로 태어나기</b><span class="small">시드 ${r.s}</span></button>
+      <button class="btn primary" data-a="sharedSeed"><b>같은 시드로 태어나기</b><span class="small">시드 ${esc(r.s)}</span></button>
       <button class="btn quiet" data-a="title">처음 화면</button>`;
   }
   /* 공유용 기록 글 */
@@ -3520,6 +3521,8 @@ const V1120SEC=[['🆕 카드',[
   document.addEventListener('pointerdown',e=>{if(UI.volOpen&&!e.target.closest('.volbox')){UI.volOpen=false;const p=document.querySelector('.volpop');if(p)p.remove()}});
   document.addEventListener('pointerdown',e=>{if(UI.styleOpen&&!e.target.closest('.stylebox')){UI.styleOpen=false;const p=document.querySelector('.stylepop');if(p)p.remove()}});
   app.addEventListener('keydown',e=>{if(e.target.id==='seedIn'&&e.key==='Enter'){e.preventDefault();e.target.blur();ACT.seed()}});
+  /* 보안: 한 줄 글자 입력칸(이름 등)에서 HTML에 쓰이는 문자(<>&"')를 입력 즉시 지운다 — 어떤 화면이 이름을 그대로 HTML에 넣어도 안전하다 */
+  app.addEventListener('input',e=>{const t=e.target;if(t&&t.tagName==='INPUT'&&(t.type==='text'||!t.type)&&t.maxLength>0&&/[<>&"']/.test(t.value)){const p=t.selectionStart;t.value=t.value.replace(/[<>&"']/g,'');try{t.setSelectionRange(p-1,p-1)}catch(x){}}},true);
   app.addEventListener('input',e=>{if(e.target.id==='nm'&&BC)BC.name=e.target.value.trim().slice(0,12);
     if(e.target.id==='cardq'){(UI.cf=UI.cf||{}).q=e.target.value.trim();const l=$('cardlist');if(l)l.innerHTML=cardListHtml()}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.bag){UI.bag=null;render()}});
