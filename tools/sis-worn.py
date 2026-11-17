@@ -15,35 +15,40 @@ def load(p):
     return a,green
 def bbox(green):
     ys,xs=np.where(~green);return xs.min(),ys.min(),xs.max()+1,ys.max()+1
+def fit(x0,y0,x1,y1):
+    """경계상자를 412:734 틀에 넣는다(위아래 약간 여백, 가운데 정렬)."""
+    ch=(y1-y0)*1.04;cw=ch*W/H
+    if x1-x0>cw*0.98:cw=(x1-x0)*1.04;ch=cw*H/W
+    cx=(x0+x1)/2;cy=(y0+y1)/2
+    return int(cx-cw/2),int(cy-ch/2),int(cx+cw/2),int(cy+ch/2)
 def main(src,dst):
     os.makedirs(dst,exist_ok=True)
-    ma,mg=load(os.path.join(src,'sis_w_mannequin.png'))
-    x0,y0,x1,y1=bbox(mg)
-    pad=int((y1-y0)*0.02);x0-=pad;y0-=pad;x1+=pad;y1+=pad
-    # 마네킹 비율(412:734)에 맞춰 폭을 맞춘다
-    cw=(y1-y0)*W/H;cx=(x0+x1)/2;x0=int(cx-cw/2);x1=int(cx+cw/2)
-    box=(x0,y0,x1,y1)
-    ms=(ma.max(2)-ma.min(2))/np.maximum(ma.max(2),1);bge=(ms>0.18)&~mg&(ma[...,0]>ma[...,2]+30);bmax=int(np.where(bge)[0].max())  # 베이지(마네킹 몸)가 끝나는 줄
-    names=[f[6:-4] for f in os.listdir(src) if f.startswith('sis_w_') and f.endswith('.png') and f!='sis_w_mannequin.png']
+    names=[f[6:-4] for f in sorted(os.listdir(src)) if f.startswith('sis_w_') and f.endswith('.png') and f!='sis_w_mannequin.png']
     for n in names:
         im=Image.open(os.path.join(src,f'sis_w_{n}.png')).convert('RGB')
         a=np.array(im).astype(int);r,g,b=a[...,0],a[...,1],a[...,2]
         green=(g>150)&(r<120)&(b<120)
         mx,mn=a.max(2),a.min(2);sat=(mx-mn)/np.maximum(mx,1)
-        gray=(~green)&(sat<0.18)&(mx>70)           # 옷(무채색, 외곽선 제외)
         beige=(sat>=0.18)&(r>b+30)&~green
+        if beige.sum()<500:print(n,'마네킹(베이지)이 안 보여 건너뜀');continue
+        h,w=green.shape
+        x0,y0,x1,y1=bbox(green);box=fit(x0,y0,x1,y1)
+        bmax=int(np.where(beige)[0].max())
+        gray=(~green)&(sat<0.18)&(mx>108)   # 옷의 밝은 회색(진한 회색 봉·받침대·외곽선·검은 띠는 제외)
         near=np.array(Image.fromarray((beige*255).astype('uint8'),'L').filter(__import__('PIL.ImageFilter',fromlist=['x']).MaxFilter(9)))>127
-        gray&=~near                                  # 마네킹 몸 가장자리의 번진 픽셀 제외
-        h,w=gray.shape
-        # 옷 = 무채색 영역 중 봉·받침대 위쪽. 마네킹 몸(베이지)이 끝나는 줄 근처까지만 보고, 그 아래는 폭이 넓은 줄(옷 밑단)만 옷으로 본다
+        gray&=~near
         ys=np.arange(h)[:,None]
-        rowgray=gray.sum(1)
-        wide=(rowgray>0.2*(x1-x0))[:,None]
-        mask=gray&((ys<=bmax)|((ys<=bmax+0.10*(y1-y0))&wide))
-        mask[: y0]=False
+        mask=gray.copy()
+        rs=mask.sum(1)>3;run=0;cut=None;seen_g=False        # 옷 밑단 아래 빈 줄이 이어지면 그 아래(받침대 하이라이트)는 버린다
+        for yy in range(h):
+            if rs[yy]:seen_g=True;run=0
+            elif seen_g:
+                run+=1
+                if run>=8:cut=yy;break
+        if cut:mask[cut:]=False
         m8=Image.fromarray((mask*255).astype('uint8'),'L').filter(__import__('PIL.ImageFilter',fromlist=['x']).MaxFilter(5));mask=np.array(m8)>127
         rgba=np.dstack([a.astype('uint8'),np.where(green,0,255).astype('uint8')])
-        out=Image.fromarray(rgba,'RGBA').crop(box).resize((W,H),Image.LANCZOS);out.save(os.path.join(dst,f'sis_w_{n}.png'),optimize=True)
+        Image.fromarray(rgba,'RGBA').crop(box).resize((W,H),Image.LANCZOS).save(os.path.join(dst,f'sis_w_{n}.png'),optimize=True)
         mk=Image.fromarray((mask*255).astype('uint8'),'L').crop(box).resize((W,H),Image.LANCZOS)
         Image.merge('LA',(Image.new('L',(W,H),255),mk)).save(os.path.join(dst,f'sis_wm_{n}.png'),optimize=True)
         print(n,'옷 영역',int(mask.sum()),'픽셀')
