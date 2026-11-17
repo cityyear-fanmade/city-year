@@ -80,5 +80,7 @@ if(pubTest)html=html.replace('<title>도시의 한 해</title>','<title>도시�
 const pages=process.argv.includes('--pages')&&!expires;
 const out=sisTest?'city-year-sis-test.html':allTest?'city-year-all-test.html':pubTest?'city-year-public-test.html':symTest?'city-year-symbol-test.html':augdemo?'aug-demo.html':lab?'motion-lab.html':unlockTest?'city-year-unlock-test.html':fingerTest?'city-year-finger-test.html':lakeTest?'city-year-lake-test.html':mindTest?'city-year-mind-test.html':pages?'index.html':routeTest&&expires?'city-year-route-playtest.html':routeTest?'city-year-route-test.html':expires?'city-year-playtest.html':'city-year.html';
 mkdirSync(new URL('../dist/',import.meta.url),{recursive:true});
+/* 본섭(--pages)만 서비스 워커를 등록한다: 홈 화면 설치 + 네트워크 우선(인터넷이 안 될 때만 저장본) */
+if(pages)html=html.replace('</head>',()=>'<script>if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script>\n</head>');
 writeFileSync(new URL((pages?'../':'../dist/')+out,import.meta.url),html);
 console.log(`${pages?'':'dist/'}${out} · ${(html.length/1024).toFixed(0)}KB${expires?' · 종료 '+new Date(expires).toISOString():''}`);
