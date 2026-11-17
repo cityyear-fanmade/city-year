@@ -949,3 +949,8 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 
 .seg button.sb-off{opacity:.35}
 .seg button small{opacity:.8;font-size:.72em}
+
+.sis-goldglow{filter:drop-shadow(0 0 8px rgba(255,205,90,.75));animation:sisglow 2.6s ease-in-out infinite}
+@keyframes sisglow{50%{filter:drop-shadow(0 0 16px rgba(255,220,120,.95))}}
+.sis-gleam{opacity:.55}
+@media (prefers-reduced-motion:reduce){.sis-goldglow{animation:none}}
