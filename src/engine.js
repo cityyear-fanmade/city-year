@@ -2675,7 +2675,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(co.id!=='gray'&&!ch.sis.dyes.includes(co.id))return {ok:false,why:`${co.n} 염료가 없다`};
     if((ch.sis.mat.trim||0)<tr.length)return {ok:false,why:'가공 재료가 모자라다'};
     if(ch.sis.cloth.length>=CFG.sis.clothMax)return {ok:false,why:'옷걸이가 가득 찼다'};
-    const mul=sisMulOf(sisPick(ch,sh.base,need)),price=Math.round((sh.price*mul)+pt.add+tr.reduce((a,x)=>a+x.add,0)),sum=sh.lean+co.lean+tr.reduce((a,x)=>a+x.lean,0);
+    const mul=sisMulOf(sisPick(ch,sh.base,need)),price=Math.round((sh.price*mul)+pt.add+(co.add||0)+tr.reduce((a,x)=>a+x.add,0)),sum=sh.lean+co.lean+tr.reduce((a,x)=>a+x.lean,0);
     return {ok:true,sh,pt,co,tr,need,price,mul,lean:Math.sign(sum)};
   }
   function sisCraft(G,spec){
@@ -2727,8 +2727,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function sisTradeDo(ch,v,i,color,chips){
     const S_=D.sisyphus,V=S_.trade.vendors.find(x=>x.id===v),O=V&&V.offers[i];if(!O)return;
-    for(const [k,n] of Object.entries(O.give)){const have=k==='an'?ch.money:k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0);if(have<n)return}
-    for(const [k,n] of Object.entries(O.give)){if(k==='an')ch.money-=n;else if(k==='dye')for(let q=0;q<n;q++)ch.sis.dyes.shift();else ch.sis.mat[k]-=n}
+    const colB=O.colorBuy?sisColorsOpen(ch).find(x=>x.id===color&&x.id!=='gold'&&x.id!=='gray'):null;if(O.colorBuy&&!colB)return;const GV=O.colorBuy?{an:colB.cost}:O.give;
+    for(const [k,n] of Object.entries(GV)){const have=k==='an'?ch.money:k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0);if(have<n)return}
+    for(const [k,n] of Object.entries(GV)){if(k==='an')ch.money-=n;else if(k==='dye')for(let q=0;q<n;q++)ch.sis.dyes.shift();else ch.sis.mat[k]-=n}
     for(const [k,n] of Object.entries(O.get)){if(k==='an')ch.money+=n;else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray'),c=open.find(x=>x.id===color)||one(open);for(let q=0;q<n;q++)ch.sis.dyes.push(c.id)}
       else if(k==='soda'){const h=Math.round(ch.stats.maxHp*0.2);ch.hp=Math.min(ch.stats.maxHp,ch.hp+h)}
       else sisMat(ch,k,n)}
@@ -2878,6 +2879,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='trade'){
       const vs=S_.trade.vendors.filter(v=>D.sisyphus.zones.some(z=>z.id===v.zone&&z.grade<=sisGrade(ch)));const c=[];
       for(const v of vs)v.offers.forEach((o,i)=>{
+        if(o.colorBuy){for(const col of sisColorsOpen(ch).filter(x=>x.id!=='gold'&&x.id!=='gray')){if(ch.money>=col.cost)c.push({l:`${v.n} · ${col.n} 염료`,h:`${sisAn(col.cost)} → 염료 한 병 · 이 색을 칠하면 옷값 +${col.add}안`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color:col.id}}}})}return}
         const ok=Object.entries(o.give).every(([k,n])=>(k==='an'?ch.money:k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0))>=n);if(!ok)return;
         const give=Object.entries(o.give).map(([k,n])=>k==='an'?sisAn(n):`${k==='dye'?'염료':S_.mats[k].n} ${n}`).join(' · ');
         if(Object.keys(o.get).includes('dye')){for(const col of sisColorsOpen(ch).filter(x=>x.id!=='gold'&&x.id!=='gray'))c.push({l:`${v.n} · ${col.n} 염료`,h:`${give} → ${o.t}`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color:col.id}}}})}

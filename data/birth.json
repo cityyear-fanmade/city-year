@@ -10401,56 +10401,72 @@
      "n": "회색",
      "hex": "#8a8f98",
      "lean": 0,
-     "grade": 0
+     "grade": 0,
+     "cost": 0,
+     "add": 0
     },
     {
      "id": "black",
      "n": "검은색",
      "hex": "#1c1c24",
      "lean": -1,
-     "grade": 0
+     "grade": 0,
+     "cost": 10,
+     "add": 40
     },
     {
      "id": "red",
      "n": "붉은색",
      "hex": "#a8323a",
      "lean": 1,
-     "grade": 0
+     "grade": 0,
+     "cost": 10,
+     "add": 40
     },
     {
      "id": "white",
      "n": "흰색",
      "hex": "#e8e6df",
      "lean": 0,
-     "grade": 1
+     "grade": 1,
+     "cost": 20,
+     "add": 80
     },
     {
      "id": "navy",
      "n": "남색",
      "hex": "#2a3a78",
      "lean": -1,
-     "grade": 1
+     "grade": 1,
+     "cost": 20,
+     "add": 80
     },
     {
      "id": "khaki",
      "n": "카키색",
      "hex": "#8a8a4a",
      "lean": 0,
-     "grade": 2
+     "grade": 2,
+     "cost": 30,
+     "add": 120
     },
     {
      "id": "wine",
      "n": "암적색",
      "hex": "#5a1a2a",
      "lean": 1,
-     "grade": 3
+     "grade": 3,
+     "cost": 40,
+     "add": 160
     },
     {
      "id": "gold",
      "n": "금색",
      "hex": "#c9a24a",
      "lean": 0,
-     "grade": 4
+     "grade": 4,
+     "cost": 0,
+     "add": 0
     }
    ],
    "trims": [
@@ -10667,8 +10683,8 @@
      "id": "palette",
      "n": "팔레트",
      "zone": "b2",
-     "grade": 1,
-     "x": "염색실 앞에 줄이 길다. 순서만 지키면 염료를 내준다.",
+     "grade": 0,
+     "x": "염색실 앞에 줄이 길다. 순서만 지키면 원하는 색의 염료를 내준다. 색마다 값이 다르고, 비싼 색일수록 옷값을 더 받는다.",
      "offers": [
       {
        "give": {
@@ -10677,7 +10693,8 @@
        "get": {
         "dye": 1
        },
-       "t": "염료 한 병 · 색은 열린 것 중에서 고른다"
+       "t": "염료 한 병 · 색을 고른다(열린 색 중에서)",
+       "colorBuy": true
       }
      ]
     },
