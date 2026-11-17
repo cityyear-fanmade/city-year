@@ -1104,9 +1104,10 @@ export function startUI(E,app){
     /* 전용 카드팩 제안은 장비보다 먼저 보여 준다 (전리품을 얻자마자 바로 고른다) */
     if((ch.gearOffers||[]).length&&!ch.packOffer){
       const it=ch.gearOffers[0],cur=ch.gear[it.slot],df=fxDiff(it,cur);
+      const longE=(s,st)=>{s=s||'';const first=s.split(' · ')[0].slice(0,60);return s.length>110?`<details class="more mono"${st?` style="${st}"`:''}><summary>${esc(first)}…</summary><div>${esc(s)}</div></details>`:`<span class="mono small${st?'':' dim'}"${st?` style="${st}"`:''}>${esc(s)}</span>`};
       return sheet(`${UI.eatMsg?`<p class="good small">${esc(UI.eatMsg)}</p>`:''}<span class="eyebrow">새 장비 · ${slotLbl(it.slot)}${ch.gearOffers.length>1?` · 남은 ${ch.gearOffers.length}개`:''}</span><h2>${esc(it.n)}</h2>
-        <div class="cmp"><div class="panel stack" style="gap:4px"><span class="eyebrow">지금 장착 중</span><b>${cur?esc(cur.n):'없음'}</b><span class="mono small dim">${cur?esc(cur.e||''):''}</span></div>
-          <div class="panel stack" style="gap:4px;border-color:var(--gold)"><span class="eyebrow">새 장비</span><b>${esc(it.n)}</b><span class="mono small" style="color:var(--gold)">${esc(it.e||'')}</span>${it.t?`<span class="small dim" style="line-height:1.55">${esc(it.t)}</span>`:''}</div></div>
+        <div class="cmp"><div class="panel stack" style="gap:4px"><span class="eyebrow">지금 장착 중</span><b>${cur?esc(cur.n):'없음'}</b>${cur?longE(cur.e):''}</div>
+          <div class="panel stack" style="gap:4px;border-color:var(--gold)"><span class="eyebrow">새 장비</span><b>${esc(it.n)}</b>${longE(it.e,'color:var(--gold)')}${it.t?`<span class="small dim" style="line-height:1.55">${esc(it.t)}</span>`:''}</div></div>
         <div class="mono small">바꾸면 · ${df||'능력치 변화 없음'}</div>
         ${E.equipWhy(ch,it)?`<p class="small bad">장착할 수 없다 · ${esc(E.equipWhy(ch,it))}</p>`:`<button class="btn primary" data-a="gwear">장착한다${cur?` · ${esc(cur.n)}은(는) 보관함으로`:''}</button>`}
         ${ch.gw&&ch.gw.proc?`<button class="btn" data-a="geat"><b>먹는다</b><span class="mono small dim">섭식 ${(ch.gw.eaten||0)+1}번째 · ${eatTxt(it)}${(it.grade||0)>=5?` · 히든 ${(ch.gw.hidden||0)+1}/${CFG.gweapon.hiddenNeed}`:''}</span></button>`:''}
