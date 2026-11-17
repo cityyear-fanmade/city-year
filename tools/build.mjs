@@ -64,7 +64,7 @@ const js=unlockTest?js4.replace('const UNLOCKTEST=false;','const UNLOCKTEST=true
 const jsL=(pubTest||allTest)?js.replace('비영리 · ${VERSION}</div>',()=>'비영리 · ${VERSION} · '+(allTest?'개인 시험판':'테스트 서버')+'</div>'):js;
 /* 시지프 시험판·공유판: 옛 버전 번호와 지난 공지가 보이지 않게 한다(버전 대신 '테섭 · 빌드 날짜') */
 const bd=new Date().toISOString().slice(0,10);
-const jsS=sisTest?jsL.replace('비영리 · ${VERSION}</div>',()=>'비영리 · 테스트 서버 · '+bd+'</div>').replace("store.get('cityYearNotice')!==NOTICE.id",'false').replace('${vUpdates()}',''):jsL;
+const jsS=sisTest?jsL.replace('비영리 · ${VERSION}</div>',()=>'비영리 · 테스트 서버 · '+bd+'</div>').replace("store.get('cityYearNotice')!==NOTICE.id",'false').replace('${vUpdates()}','').replace('const langSeg=()=>`','const langSeg=()=>\'\';const langSegOrig=()=>`'):jsL;
 const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[ai+1]):null;
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
