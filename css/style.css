@@ -954,3 +954,5 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 @keyframes sisglow{50%{filter:drop-shadow(0 0 16px rgba(255,220,120,.95))}}
 .sis-gleam{opacity:.55}
 @media (prefers-reduced-motion:reduce){.sis-goldglow{animation:none}}
+
+.btn-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn-grid2 .btn{padding:10px 12px;min-width:0}.btn-grid2 .btn b{font-size:14px}.btn-grid2 .btn span{font-size:11px;overflow-wrap:anywhere}

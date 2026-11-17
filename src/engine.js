@@ -2665,6 +2665,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisPick(ch,k,n){const used=[],left={};for(const m of sisCat(k))left[m]=ch.sis.mat[m]||0;for(const m of sisCat(k)){while(n>0&&left[m]>0){left[m]--;n--;used.push(m)}}return used}
   const sisMulOf=used=>used.length?used.reduce((a,m)=>a+((D.sisyphus.mats[m]||{}).mul||1),0)/used.length:1;
   function sisCraftInfo(ch,spec){
+    if(spec&&spec.shape==='gold'&&!(ch.sis&&ch.sis.goldKnown))return {ok:false,why:'아직 알지 못한다'};
     const T=D.sisyphus.tailor,sh=T.shapes.find(x=>x.id===spec.shape),pt=T.patterns.find(x=>x.id===(spec.pattern||'plain')),co=T.colors.find(x=>x.id===(spec.color||'gray')),tr=(spec.trims||[]).map(i=>T.trims.find(x=>x.id===i)).filter(Boolean);
     if(!sh||!pt||!co)return {ok:false,why:'고를 수 없는 조합이다'};
     const g=sisGrade(ch),need=sh.need||1;
@@ -2763,6 +2764,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       const R=sv.red;if(R&&R.alive){const tt=sv.turn-CS.invBack,h=R.log[tt];if(h!=null){R.hunger=h;chips.push(`${R.name||'붉은 신'}의 몸이 되돌려졌다 · 기억은 그대로`)}}}
     if(fx.sisRedBorn){sv.red={name:'',born:sv.turn,hunger:2,log:{},alive:true,stage:0,shroud:false,trust:0,state:'alive'};ch.redPick=true;chips.push('붉은 신이 태어났다 · 이름을 정한다')}
     if(fx.sisRedLang!=null){const R=sv.red;if(R){R.stage=(R.stage||0)+1;R.hunger=Math.max(0,Math.min(10,R.hunger+(fx.sisH||0)));R.trust=(R.trust||0)+(fx.sisT||0);chips.push(`${R.name||'붉은 신'} · 말이 트였다 (${R.stage}/3)`)}}
+    if(fx.sisGold){sv.goldKnown=1;chips.push('황금가죽 망토를 지을 수 있다는 것을 알게 되었다')}
     if(fx.sisFeed){const R=sv.red,c=sisFeedCost(ch);if(R&&ch.money>=c){ch.money-=c;R.hunger=Math.max(0,R.hunger-2);sv.fed=sv.turn;chips.push(`${R.name||'붉은 신'}에게 먹이를 주었다 · −${sisAn(c)} · 허기 ${sisHungerText(R)}`)}}
     if(fx.sisShroud){const R=sv.red;if(R&&(sv.mat.resin||0)>=2&&(sv.mat.goldskin||0)>=1){sv.mat.resin-=2;sv.mat.goldskin-=1;R.shroud=true;R.hunger=0;chips.push(`황금가죽 망토 · ${R.name||'붉은 신'}의 허기가 가라앉았다`)}}
     if(fx.sisAttack){const R=sv.red;if(R){R.fightDone=1;sv.st='redfight'}}
@@ -2838,7 +2840,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 허기가 가득 차면 붉은 신은 굶주림이 발현해 뷔페로 자란다(황금가죽 망토를 입힌 경우는 허기가 오르지 않는다) */
     if(sv.st==='day1'&&R&&R.alive&&!ch.redPick&&!R.shroud&&!R.buffetDone&&R.hunger>=10){const G_=S_.red.grow;return ev1(G_.t,G_.x,G_.l,{sisBuffet:1},G_.ok)}
     if(sv.st==='day1'&&R&&R.alive&&!ch.redPick){const Lg=S_.red.lang[R.stage||0];
-      if(Lg&&sv.turn-R.born>=Lg.at)return {type:'event',ev:{t:Lg.t,x:Lg.x,c:(Lg.c||[{l:Lg.l,ok:Lg.ok}]).map(c=>({l:c.l,ok:{t:c.ok,fx:{sisRedLang:R.stage||0,sisH:c.hunger||0,sisT:c.trust||0}}}))}}}
+      if(Lg&&sv.turn-R.born>=Lg.at)return {type:'event',ev:{t:Lg.t,x:Lg.x,c:(Lg.c||[{l:Lg.l,ok:Lg.ok}]).map(c=>({l:c.l,ok:{t:c.ok,fx:{sisRedLang:R.stage||0,sisH:c.hunger||0,sisT:c.trust||0,sisGold:Lg.unlock?1:0}}}))}}}
     /* 동화: 소속이 정해진 뒤 한 번, 소속 책장(르루주·르누아르)을 받거나 유행을 따른다(르카키) */
     if(sv.fac&&!sv.assimDone&&sv.st==='day1'){const Z=S_.assim[sv.fac];return {type:'event',ev:{t:Z.t,x:Z.x,c:[{l:Z.l,h:Z.h,ok:{t:Z.ok,fx:{sisAssim:sv.fac}}}]}}}
     if(sv.st==='day1'){
