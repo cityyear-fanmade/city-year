@@ -1921,7 +1921,7 @@ ${symRec(r)}
   function sisSvg(sp,T,q){
     /* GPT로 만든 옷 이미지가 있으면(시험판) 마네킹 위에 옷 그림을 겹치고, 고른 색은 곱하기로 입힌다. 무늬·장식은 아래 글로 알려 준다 */
     /* 마네킹이 옷을 입은 한 장 그림(sis_w_*)과 옷 영역 마스크(sis_wm_*, tools/sis-worn.py)가 있으면 그것을 쓴다: 옷만 물들이고 마네킹은 그대로 */
-    {const SW=typeof window!=='undefined'&&window.CITY_SIS,wk=sp.shape==='gold'?'cloak':sp.shape,wi=SW&&SW['sis_w_'+wk],wm=SW&&SW['sis_wm_'+wk];
+    {const SW=typeof window!=='undefined'&&window.CITY_SIS,wk=sp.shape==='gold'?'cloak':sp.shape,bk=(UI.sbBody==='m'&&wk!=='cloak'&&SW&&SW['sis_w_m_'+wk]&&SW['sis_wm_m_'+wk])?'m_':'',wi=SW&&SW['sis_w_'+bk+wk],wm=SW&&SW['sis_wm_'+bk+wk];
       if(wi&&wm){const co=(T.colors.find(c=>c.id===sp.color)||T.colors[0]),mask=`-webkit-mask:url(${wm}) center/100% 100% no-repeat;mask:url(${wm}) center/100% 100% no-repeat`,gold=wk==='cloak',tint=gold?`<div style="position:absolute;inset:0;background:#e0b640;mix-blend-mode:multiply;${mask}"></div><div class="sis-gleam" style="position:absolute;inset:0;background:#ffe9a0;mix-blend-mode:soft-light;${mask}"></div>`:co.id==='gray'?'':`<div style="position:absolute;inset:0;background:${co.hex};mix-blend-mode:multiply;${mask}"></div>`,pi=gold?null:SW['sis_pt_'+sp.pattern],pt=(T.patterns.find(x=>x.id===sp.pattern)||{}).n,patEl=pi?`<div style="position:absolute;inset:0;background:url(${pi}) 0 0/84px 84px;mix-blend-mode:multiply;opacity:.5;${mask}"></div>`:'';
         const trs=sp.trims||[],img=(k,x,y,w)=>`<img src="${SW['sis_tr_'+k]}" alt="" style="position:absolute;left:${x}%;top:${y}%;transform:translate(-50%,-50%);width:${w}px">`;
                 const trEl='',tr=trs.map(i=>(T.trims.find(x=>x.id===i)||{}).n).filter(Boolean); /* 새 그림의 옷은 띠·단추·브로치가 이미 그려져 있어 장식은 글로만 알린다 */
@@ -1965,7 +1965,7 @@ ${symRec(r)}
     const skip=ev.c.findIndex(c=>c.ok&&c.ok.fx&&c.ok.fx.sisGo==='day2'),inv=(ev.x||'').split('\n\n').filter(Boolean);
     const tabs=`<div class="seg kinds"><button class="${tab==='cut'?'on':''}" data-a="sbtab" data-i="cut">옷 재단</button><button class="${tab==='up'?'on':''}" data-a="sbtab" data-i="up">옷 손질${ch.sis.cloth.length?` (${ch.sis.cloth.length}벌)`:''}</button></div>`;
     const cut=ev.sbCrafted?`<div class="panel stack" style="gap:6px"><p class="small dim">오늘은 이미 한 벌을 지었다. 새 옷은 내일 지을 수 있고, 지은 옷은 손질할 수 있다.</p></div>`:
-      `<div class="panel stack" style="gap:8px;align-items:center">${sisSvg(sp,T,0)}<span class="small dim">${info.ok?`값 약 ${info.price}안`:esc(info.why)}</span>${sp.shape==='gold'?'':`<span class="small mono dim">손님 취향 · ${E.sisTasteList(sp.color,sp.pattern).map(t=>`${esc(t.n)} ×${t.mul}`).join(' · ')}</span>`}</div>
+      `<div class="panel stack" style="gap:8px;align-items:center;position:relative">${(()=>{const SW_=typeof window!=='undefined'&&window.CITY_SIS;return SW_&&SW_['sis_w_m_suit']&&sp.shape!=='gold'?`<button class="chip" data-a="sbbody" style="position:absolute;left:10px;top:10px;cursor:pointer">마네킹 · ${UI.sbBody==='m'?'남성형':'여성형'} ⇄</button>`:''})()}${sisSvg(sp,T,0)}<span class="small dim">${info.ok?`값 약 ${info.price}안`:esc(info.why)}</span>${sp.shape==='gold'?'':`<span class="small mono dim">손님 취향 · ${E.sisTasteList(sp.color,sp.pattern).map(t=>`${esc(t.n)} ×${t.mul}`).join(' · ')}</span>`}</div>
       <div class="panel stack" style="gap:8px"><span class="eyebrow">형태</span>${seg('shape',T.shapes,sp.shape,s=>!E.sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok)}${sp.shape==='gold'?'<span class="small dim">황금가죽 망토는 색과 무늬를 바꿀 수 없다. 금빛 그대로 완성된다.</span>':`<span class="eyebrow">무늬</span>${seg('pattern',T.patterns,sp.pattern,p=>p.grade>g)}<span class="eyebrow">색</span><div class="row" style="gap:6px;flex-wrap:wrap">${sw}</div>`}<span class="eyebrow">옷감 가공 (가공 재료 ${has('trim')}개) · 겉모양은 그대로, 값과 손질 성공 확률이 오른다</span><div class="seg kinds">${T.trims.map(x=>`<button class="${sp.trims.includes(x.id)?'on':''}${has('trim')<1&&!sp.trims.includes(x.id)?' sb-off':''}" ${has('trim')<1&&!sp.trims.includes(x.id)?'disabled':''} data-a="sbset" data-i="trim:${x.id}" title="${esc((T.trimNote||{})[x.id]||'')}">${esc(x.n)}<br><small>+${x.add}안 · 손질 +${x.up||0}%</small></button>`).join('')}</div>
         <span class="small dim">${sp.trims.length?'고른 가공 · '+sp.trims.map(k=>T.trims.find(t=>t.id===k).n).join(', '):'고른 가공 없음'}</span></div>
       <button class="btn primary" data-a="sbmake" ${info.ok?'':'disabled'}><b>옷을 짓는다</b></button>`;
@@ -3101,6 +3101,7 @@ ${symRec(r)}
 
   const ACT={
     sbtab(k){UI.sbTab=k==='up'?'up':'cut';render()},
+    sbbody(){UI.sbBody=UI.sbBody==='m'?'f':'m';render()},
     sbup(kv){const [k,v,w]=String(kv).split(':'),up=UI.sbUp;if(!up)return;
       if(k==='pick'){up.i=+v;up.slots=up.slots.map(()=>null)}
       else if(k==='slot'){up.slots[+v]=w||null}
