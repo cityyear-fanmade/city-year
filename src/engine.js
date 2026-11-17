@@ -2783,7 +2783,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisInv(ch){
     const S_=D.sisyphus,m=ch.sis.mat,p=[];for(const k of Object.keys(S_.mats)){if(S_.mats[k].kind==='heal')continue;if(m[k])p.push(`${S_.mats[k].n} ${m[k]}`)}
     if(ch.sis.dyes.length)p.push('염료 '+ch.sis.dyes.map(c=>D.sisyphus.tailor.colors.find(x=>x.id===c).n).join('·'));
-    return `${S_.grades[sisGrade(ch)].n} 고객 · ${sisAn(ch.money)}${p.length?' · '+p.join(' · '):''}${ch.sis.cloth.length?` · 만든 옷 ${ch.sis.cloth.length}벌`:''}\n${sisComplyName(ch)}${ch.sis.red&&ch.sis.red.alive?` · ${ch.sis.red.name||'붉은 신'}의 허기 ${sisHungerText(ch.sis.red)}`:''}${ch.sis.rules&&ch.sis.rules.length?'\n'+sisRulesText(ch):''}`;
+    return `${S_.grades[sisGrade(ch)].n} 고객 · ${sisAn(ch.money)}${p.length?' · '+p.join(' · '):''}${ch.sis.cloth.length?` · 만든 옷 ${ch.sis.cloth.length}벌`:''}${ch.sis.fac&&(ch.sis.fit||0)>0?` · 단골 맞춤 ${Math.min(CFG.sis.fit.maxTier,Math.floor(ch.sis.fit/CFG.sis.fit.per))}단계 (${ch.sis.fit}/${CFG.sis.fit.per*CFG.sis.fit.maxTier})`:''}\n${sisComplyName(ch)}${ch.sis.red&&ch.sis.red.alive?` · ${ch.sis.red.name||'붉은 신'}의 허기 ${sisHungerText(ch.sis.red)}`:''}${ch.sis.rules&&ch.sis.rules.length?'\n'+sisRulesText(ch):''}`;
   }
   /* 순응·규칙·붉은 신·재고 정리·붕괴(4단계) */
   const sisAdj=(ch,n)=>{ch.sis.comply=Math.max(0,Math.min(10,(ch.sis.comply==null?5:ch.sis.comply)+n))};
