@@ -62,11 +62,14 @@ const js4=fingerTest?js3b.replace('const FINGERTEST=false;','const FINGERTEST=tr
 const js=unlockTest?js4.replace('const UNLOCKTEST=false;','const UNLOCKTEST=true;').replace("store.get('cityYearNotice')!==NOTICE.id",pubTest?"store.get('cityYearNotice')!==NOTICE.id":'false'):js4;   /* 공개 테섭은 공지를 보여 준다(선공개) */
 /* 공개 테스트 서버·개인 시험판은 첫 화면 위쪽 글줄에 구분 표시를 붙인다 */
 const jsL=(pubTest||allTest)?js.replace('비영리 · ${VERSION}</div>',()=>'비영리 · ${VERSION} · '+(allTest?'개인 시험판':'테스트 서버')+'</div>'):js;
+/* 시지프 시험판·공유판: 옛 버전 번호와 지난 공지가 보이지 않게 한다(버전 대신 '테섭 · 빌드 날짜') */
+const bd=new Date().toISOString().slice(0,10);
+const jsS=sisTest?jsL.replace('비영리 · ${VERSION}</div>',()=>'비영리 · 테스트 서버 · '+bd+'</div>').replace("store.get('cityYearNotice')!==NOTICE.id",'false').replace('${vUpdates()}',''):jsL;
 const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[ai+1]):null;
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
   .replace('<link rel="stylesheet" href="css/style.css">',()=>`<style>\n${r('css/style.css')}</style>`)
-  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${process.argv.includes('--pages')?'':`window.CITY_SYM=${JSON.stringify(symData)};${sisTest?`window.CITY_SIS=${JSON.stringify(sisData)};`:''}\n`}${process.argv.includes('--pages')?'':`window.CITY_FRM=${JSON.stringify(frmData)};\n`}${process.argv.includes('--pages')?'':`window.CITY_I18N=${JSON.stringify(i18nData)};\n`}${symTest?'window.CITY_SYMTEST=true;\n':''}${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${jsL}\nconst DATA=${JSON.stringify(D)};\ninitI18n().then(()=>{localize(DATA);window.CITY=startUI(createEngine(DATA),document.getElementById('app'))});\n})();\n</script>`);
+  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${process.argv.includes('--pages')?'':`window.CITY_SYM=${JSON.stringify(symData)};${sisTest?`window.CITY_SIS=${JSON.stringify(sisData)};`:''}\n`}${process.argv.includes('--pages')?'':`window.CITY_FRM=${JSON.stringify(frmData)};\n`}${process.argv.includes('--pages')?'':`window.CITY_I18N=${JSON.stringify(i18nData)};\n`}${symTest?'window.CITY_SYMTEST=true;\n':''}${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${jsS}\nconst DATA=${JSON.stringify(D)};\ninitI18n().then(()=>{localize(DATA);window.CITY=startUI(createEngine(DATA),document.getElementById('app'))});\n})();\n</script>`);
 if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('\nwindow.CITY_BGM=',`\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_BGM=`);
 if(augdemo)html=html.replace('<title>도시의 한 해</title>','<title>의수 의뢰 체험</title>').replace('\nwindow.CITY_BGM=','\nwindow.CITY_AUGDEMO=true;\nwindow.CITY_BGM=');
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');
