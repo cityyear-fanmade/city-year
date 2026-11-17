@@ -2644,7 +2644,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisColorsOpen(ch){return D.sisyphus.tailor.colors.filter(c=>c.grade<=sisGrade(ch))}
   function sisGradeUp(ch,chips){const G_=D.sisyphus.grades;let g=0;G_.forEach((x,i)=>{if(ch.sis.pts>=x.at)g=i});if(g>sisGrade(ch)){ch.sis.grade=g;chips.push(`고객 등급 · ${G_[g].n} · 열린 구역이 늘었다`);sisLearn(ch,'grade',chips,false);
     {const bd=G_[g].body;if(bd){addStats(ch.stats,bd);if(bd.maxHp)ch.hp+=bd.maxHp;chips.push('육체 강화 · '+Object.entries(bd).map(([k,v])=>(k==='maxHp'?'최대 HP':STAT[k]||k)+' +'+v).join(' · '))}}
-    if(g===G_.length-1&&ch.sis.assimDone&&ch.sis.fac!=='kaki'&&!ch.sis.extraGiven){ch.sis.extraGiven=1;for(const id of D.sisyphus.assim[ch.sis.fac].pack.extra)putCard(ch,id,chips,'소속 카드')}}}
+    if(g===G_.length-1&&ch.sis.assimDone&&!ch.sis.extraGiven){ch.sis.extraGiven=1;for(const id of D.sisyphus.assim[ch.sis.fac].pack.extra)putCard(ch,id,chips,'소속 카드')}}}
   function sisFacCheck(ch,turn,chips){const S_=CFG.sis;if(ch.sis.fac||turn<S_.facTurn)return;const l=ch.sis.lean;ch.sis.fac=(ch.sis.made||0)<S_.facMin?'kaki':l>=S_.facLean?'rouge':l<=-S_.facLean?'noir':'kaki';chips.push('백화점에서 어느 쪽에 가까운지가 정해졌다')}
   const sisZones=ch=>D.sisyphus.zones.filter(z=>z.grade<=sisGrade(ch));
   function sisLoot(ch,zone,chips){
@@ -4280,7 +4280,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const B=A===C.P?C.E:C.P;
     if(A.noir){if(c.t==='atk')A.nAtk=(A.nAtk||0)+1;else A.nNon=(A.nNon||0)+1;if((c.c||0)>=2)A.nHeavy=(A.nHeavy||0)+1}
     /* 르카키 관성: 행동할수록 쌓이고(유행 키워드 카드면 더), 11 이상이면 질주 */
-    if(A.trend){const I=CFG.sis.inertia,g=I.gain+((c.kw||[]).some(k=>k[0]===A.trendKw)?I.trend:0),b0=A.inertia||0;A.inertia=Math.min(I.cap,b0+g);if(b0<I.rush&&A.inertia>=I.rush)L('kw',`${A.name} · 관성 ${A.inertia} · 질주 (속도 우위 명중 2배 · 공격 피해 +${I.dmg})`)}
+    if(A.trend){const I=CFG.sis.inertia,g=I.gain+((c.kw||[]).some(k=>k[0]===A.trendKw)?I.trend:0)+(c.inertia||0),b0=A.inertia||0;A.inertia=Math.min(I.cap,b0+g);if(b0<I.rush&&A.inertia>=I.rush)L('kw',`${A.name} · 관성 ${A.inertia} · 질주 (속도 우위 명중 2배 · 공격 피해 +${I.dmg})`)}
     if(c.noKill){if(A.noKill){L('sys',`${A.name} · ${c.n} · 이미 그런 마음이다`);return}A.noKill=true;A.eva-=80;A.takenMul=2;L('kw',`${A.name} · ${c.n} · 이번 전투 동안 받는 피해 2배 · 회피 −80`);return}
     if(c.flesh){A.evaB-=300;A.fleshRound=C.round;L('kw',`${A.name} · ${c.n} · 이번 라운드 회피 −300`)}
     if(c.cloudGain&&A.kuro)for(let i=0;i<c.cloudGain;i++)addCloud(A,L);
