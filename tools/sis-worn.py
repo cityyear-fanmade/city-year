@@ -55,7 +55,11 @@ def main(src,dst):
                 run+=1
                 if run>=8:cut=yy;break
         if cut:mask[cut:]=False
-        m8=Image.fromarray((mask*255).astype('uint8'),'L').filter(__import__('PIL.ImageFilter',fromlist=['x']).MaxFilter(5));mask=np.array(m8)>127
+        F=__import__('PIL.ImageFilter',fromlist=['x'])
+        m8=Image.fromarray((mask*255).astype('uint8'),'L')
+        m8=m8.filter(F.MaxFilter(27)).filter(F.MinFilter(27))   # 닫기: 어두운 주름·그림자 때문에 생긴 작은 구멍을 메운다
+        m8=m8.filter(F.MaxFilter(5));mask=np.array(m8)>127
+        mask&=~near                                              # 마네킹 목(베이지)은 그대로 둔다
         rgba=np.dstack([a.astype('uint8'),np.where(green,0,255).astype('uint8')])
         Image.fromarray(rgba,'RGBA').crop(box).resize((W,H),Image.LANCZOS).save(os.path.join(dst,f'sis_w_{n}.png'),optimize=True)
         mk=Image.fromarray((mask*255).astype('uint8'),'L').crop(box).resize((W,H),Image.LANCZOS)
