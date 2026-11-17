@@ -1968,7 +1968,7 @@ ${symRec(r)}
       <button class="btn primary" data-a="sbmake" ${info.ok?'':'disabled'}><b>옷을 짓는다</b></button>`;
     return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 재단대</div><h2>${ev.t}</h2>${inv[0]&&/사냥/.test(inv[0])?`<p class="small dim" style="white-space:pre-line">${inv[0]}</p>`:''}
       ${tabs}${tab==='up'?vSisUp(ev):cut}
-      <p class="small dim">${inv[inv.length-1]||''}</p></div>
+      <p class="small dim" style="white-space:pre-line">${inv[inv.length-1]||''}</p></div>
       <div class="stack" style="gap:8px">${skip>=0?`<button class="btn" data-a="choose" data-i="${skip}"><b>${ev.sbCrafted||tab==='up'?'재단대를 마친다':ev.c[skip].l}</b></button>`:''}</div>`;
   }
   function vEvent(){
@@ -3513,6 +3513,7 @@ ${symRec(r)}
     testMind(n){if(!G)return;G.ch.mind=n+1;E.loseMind(G.ch,1);render()},
     testEgoPick(){if(!G)return;G.ch.egoPick=true;UI.res=UI.res||{chips:[],t:''};UI.res.chips=UI.res.chips||[];UI.screen='result';render()},
     testSellGear(){G=E.newGame(E.newChar());const ch=G.ch;ch.year=G.year=20;ch.licensed=true;ch.rank=6;ch.money=800;ch.stash=[Object.assign({id:'club',grade:1},D.items.club),Object.assign({id:'dagger',grade:1},D.items.dagger),{id:'aux_h_claw',n:'흰 손톱 조각',slot:'aug',grade:5,e:'공+5 · 명중+3 · 속+3'}];UI.fight=null;UI.omen=null;UI.screen='shop';render()},
+    testSis2(over,chOver){CFG.sis.on=true;G=E.newGame(E.newChar());const ch=G.ch;ch.o={n:'둥지 노동자'};ch.aff={type:'wing',name:CFG.nWing.name};ch.year=G.year=30;ch.stats.maxHp=Math.max(ch.stats.maxHp,260);ch.hp=ch.stats.maxHp;ch.stats.atk=Math.max(ch.stats.atk,28);ch.sis=Object.assign({subj:'can',turn:30,turnYear:30,grade:3,rewound:0,lean:3,in:4,pts:60,st:'day1',lootDone:true,mat:{leather:2,cloth:3,thread:1,trim:2,goldskin:1,resin:2},dyes:['black','red','white','navy'],cloth:[{shape:'coat',pattern:'check',color:'red',trims:[],price:90,lean:1,q:1}],fac:'rouge',assimDone:1,cycle:1,trendBack:1,exStep:3,made:4,comply:6,fit:4,inv:[1,1],exploreDone:true,visited:['info','food','dye'],rules:['grade','can','wall','fall','center','warden','reset','trust'],wardenTurn:30,shopTurn:30,shop:[]},over||{});Object.assign(ch,chOver||{});ch.money=900;const st=E.advanceYear(G);UI.ev=st.ev;UI.fight=null;UI.omen=null;UI.screen=st.type==='fight'?UI.screen:'event';render()},
     testSis(){CFG.sis.on=true;G=E.newGame(E.newChar());const ch=G.ch;ch.o={n:'둥지 노동자'};ch.aff={type:'wing',name:CFG.nWing.name};ch.year=G.year=5;ch.sis={subj:'can',turn:2,turnYear:5,grade:2,rewound:0,lean:0,in:4,pts:30,st:'craft',pend:'b3',lootDone:true,lootNote:'사냥 · 가죽 2 · 22안',mat:{leather:2,cloth:3,thread:1,trim:2},dyes:['black','red','white','navy'],cloth:[{shape:'suit',pattern:'stripe',color:'black',trims:['button'],price:80,lean:-1,q:1}],fac:null,made:1};ch.money=900;const st=E.advanceYear(G);UI.ev=st.ev;UI.fight=null;UI.omen=null;UI.screen='event';render()},
     testRouteEnd(k,act2){if(!G)return;G.endless=!!act2;G.year=G.ch.year=act2?66:CFG.years;UI.endWin=true;UI.trueEnd=false;UI.oldEnd=false;UI.rbEnd=k==='rcorp';UI.hwEnd=k==='rcorp'?null:(k||'hwhost');UI.death=null;UI.screen='end';render()},
     testWin(){if(!G)return;G.year=G.ch.year=CFG.years;UI.endWin=true;UI.trueEnd=false;UI.death=null;UI.screen='end';render()},
