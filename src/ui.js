@@ -1971,6 +1971,10 @@ ${symRec(r)}
       <p class="small dim" style="white-space:pre-line">${inv[inv.length-1]||''}</p></div>
       <div class="stack" style="gap:8px">${skip>=0?`<button class="btn" data-a="choose" data-i="${skip}"><b>${ev.sbCrafted||tab==='up'?'재단대를 마친다':ev.c[skip].l}</b></button>`:''}</div>`;
   }
+  /* 시지프 하루 화면: 사건 글 / 상태(재료·단골·순응·허기) / 알게 된 규칙(접기)으로 나눠 길이를 줄인다 */
+  const sisDayText=x=>{x=String(x||'');const i=x.indexOf('\n\n');if(i<0)return null;const head=x.slice(0,i),rest=x.slice(i+2),lines=rest.split('\n');if(!/고객 · .*안/.test(lines[0]))return null;
+    const ri=lines.findIndex(l=>l==='알게 된 규칙'),st=(ri<0?lines:lines.slice(0,ri)).join('\n'),rules=ri<0?[]:lines.slice(ri+1);
+    return `<p class="lead" style="white-space:pre-line">${head}</p><p class="small mono" style="white-space:pre-line;color:var(--gold)">${st}</p>${rules.length?`<details class="more"><summary>알게 된 규칙 (${rules.length})</summary><div class="small dim" style="white-space:pre-line">${rules.join('\n')}</div></details>`:''}`};
   function vEvent(){
     if(UI.omen)return vOmen();
     if(UI.fight){
@@ -2000,7 +2004,7 @@ ${symRec(r)}
         return `<p class="gline gname g${g.name}" style="animation-delay:${dl}s" aria-label="${esc(ch.name||'')}">${nm.map((c_,k)=>`<span style="animation-delay:${(dl+k*.37).toFixed(2)}s">${esc(c_)}</span>`).join('')}</p>`};
       const body=ev.gl.map(row).join('');
       return `<div class="gscene"><div class="gbar"></div><div class="gbody"><div class="eyebrow gline" style="animation-delay:0s">${ev.t}</div>${body}<div class="stack gline" style="animation-delay:${i*st}s">${btns}</div></div><div class="gbar"></div></div>`}
-    const page=`${vHud()}<div class="stack${ev.shake?' wave-shake':''}" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2>${ev.xs?ev.xs.map(x_=>`<p class="lead">${x_}</p>`).join(''):`<p class="lead" style="white-space:pre-line">${ev.x}</p>`}</div><div class="stack">${btns}</div>${officeLegend(ev)}`;
+    const page=`${vHud()}<div class="stack${ev.shake?' wave-shake':''}" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해</div><h2>${ev.t}</h2>${ev.xs?ev.xs.map(x_=>`<p class="lead">${x_}</p>`).join(''):(sisDayText(ev.x)||`<p class="lead" style="white-space:pre-line">${ev.x}</p>`)}</div><div class="stack">${btns}</div>${officeLegend(ev)}`;
     return ev.voices&&G.ch.mind<=CFG.mind.voiceAt&&UI.voicePicked!==ev?page+voiceOverlay(ev):page;
   }
   function nextLabel(){
