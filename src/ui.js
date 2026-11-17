@@ -109,6 +109,7 @@ export function startUI(E,app){
   let PLAYING=false,SKIP=false,PRE=null,wake=null;
   const $=id=>document.getElementById(id);
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const foldE=(s,st)=>{s=s||'';const first=s.split(' · ')[0].slice(0,60);return s.length>110?`<details class="more mono small"${st?` style="${st}"`:''}><summary>${esc(first)}…</summary><div>${esc(s)}</div></details>`:`<span class="mono small"${st?` style="${st}"`:''}>${esc(s)}</span>`};
   /* 연출 속도: 빠르게 0.45배, 천천히·수동 1.4배 */
   const tm=()=>MODE==='fast'?0.45:1.4;
   /* 수동: 버튼을 눌러야 다음으로 넘어간다. 건너뛰기를 누르면 바로 풀린다 */
@@ -896,13 +897,13 @@ export function startUI(E,app){
   }
   function vGear(){
     const ch=G.ch,st=ch.stash||[],cbt=UI.screen==='combat';
-    const eq=Object.entries(D.slots).map(([k,n])=>{const g=ch.gear[k],w=E.slotWhy(ch,k);return `<div class="invr"><span>${n}</span><b>${g?esc(g.n):k==='weapon'?'맨손':'<span class="dim">없음</span>'}</b><span class="mono small" style="color:var(--gold)">${g?esc(g.e||''):''}</span>${g&&g.lore?`<span class="small dim" style="grid-column:1/-1;font-style:italic;line-height:1.6">${esc(g.lore)}</span>`:''}${w?`<span class="small bad" style="flex-basis:100%">🚫 ${esc(w)}</span>`:''}</div>`}).join('');
+    const eq=Object.entries(D.slots).map(([k,n])=>{const g=ch.gear[k],w=E.slotWhy(ch,k);return `<div class="invr"><span>${n}</span><b>${g?esc(g.n):k==='weapon'?'맨손':'<span class="dim">없음</span>'}</b>${g?foldE(g.e,'color:var(--gold)'):''}${g&&g.lore?`<span class="small dim" style="grid-column:1/-1;font-style:italic;line-height:1.6">${esc(g.lore)}</span>`:''}${w?`<span class="small bad" style="flex-basis:100%">🚫 ${esc(w)}</span>`:''}</div>`}).join('');
     /* 보관함 분류: 전체 · 무기 · 방어구 · 의수. 전체에서는 칸 순서(무기→방어구→의수)로 묶어 보여 준다 (장착·재료 번호는 그대로) */
     const slotKeys=Object.keys(D.slots),gt=UI.gTab&&slotKeys.includes(UI.gTab)?UI.gTab:'all',cnt=k=>st.filter(g=>g.slot===k).length;
     const order=st.map((g,i)=>i).filter(i=>gt==='all'||st[i].slot===gt).sort((a,b)=>slotKeys.indexOf(st[a].slot)-slotKeys.indexOf(st[b].slot)||a-b);
     const gtabs=st.length?`<div class="seg" style="margin:6px 0">${[['all','전체',st.length],...slotKeys.map(k=>[k,D.slots[k],cnt(k)])].map(([k,n,c])=>`<button class="${gt===k?'on':''}" data-a="gtab" data-i="${k}">${n} ${c}</button>`).join('')}</div>`:'';
     const sl=order.map(i=>{const g=st[i],cur=ch.gear[g.slot],df=fxDiff(g,cur);
-      return `<div class="invr stash"><span>${slotLbl(g.slot)}</span><div class="stack" style="gap:2px;min-width:0"><b>${esc(g.n)}</b><span class="mono small" style="color:var(--gold)">${esc(g.e||'')}</span>${df?`<span class="mono small">지금 장비보다 · ${df}</span>`:''}</div>
+      return `<div class="invr stash"><span>${slotLbl(g.slot)}</span><div class="stack" style="gap:2px;min-width:0"><b>${esc(g.n)}</b>${foldE(g.e,'color:var(--gold)')}${df?`<span class="mono small">지금 장비보다 · ${df}</span>`:''}</div>
         ${g.slot==='any'?'<span class="small dim">공방 해결사가 녹여 쓰는 재료</span>':cbt?'<span class="small dim">전투 중 교체 불가</span>':E.equipWhy(ch,g)?`<span class="small bad">${esc(E.equipWhy(ch,g))}</span>`:`<button class="chip" data-a="eqs" data-i="${i}">장착</button>`}${ch.gw&&ch.gw.proc&&!cbt?`<button class="chip warn" data-a="geats" data-i="${i}" title="${esc(eatTxt(g))}">먹는다 · ${eatTxt(g)}${(g.grade||0)>=5?' (히든)':''}</button>`:''}</div>`}).join('');
     const w=ch.gear.weapon,need=E.bonNeed(ch);
     const up=w&&(w.id==='bonatelli'||w.id==='star')?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><div class="row between"><b class="serif">${esc(w.n)}</b><span class="mono" style="color:var(--gold)">강화 ${w.lvl}/${w.id==='star'?CFG.star.max:CFG.bon.max}</span></div>
@@ -945,7 +946,7 @@ export function startUI(E,app){
   const kidStory=(o,i,x)=>{const P=o&&D.prologue&&D.prologue[o.n],T=x&&D.childhoodTale&&D.childhoodTale[x.n];if(P&&P.place&&T&&T[i])return T[i].replace(/\{a\}/g,P.place.a).replace(/\{b\}/g,P.place.b).replace(/\{w\}/g,P.place.w);return x&&x.t||''};
   function vStat(){
     const ch=G.ch,s0=ch.s0,sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(n);
-    const eff=x=>x&&x.e?`<span class="mono small" style="color:var(--gold)">${esc(x.e)}</span>`:'';
+    const eff=x=>x&&x.e?foldE(x.e,'color:var(--gold)'):'';
     const row=(lab,x)=>`<div class="roll"><span class="mono small dim">${lab}</span><div class="n"><b>${esc(x.n)}</b>${x.t?`<span>${esc(x.t)}</span>`:''}${eff(x)}</div></div>`;
     const place=placeOf(ch.o,ch.r,ch.blank);
     const lk_=ch.flags&&ch.flags.lake&&ch.lake?ch.lake:null,lakeLog=lk_?(()=>{const K=lk_.killed||[],ny=K.filter(x=>x.startsWith('lake_ywhale_')).length,na=K.filter(x=>x.startsWith('lake_whale_')).length,cr=(lk_.crew||[]).map(m=>m.n).join(' · ')||'없음',tl=lk_.tools||{},tn=Object.entries(tl).filter(([,v])=>v>0).map(([k,v])=>`${(D.lake&&D.lake.tools&&D.lake.tools[k]||{}).n||k} ×${v}`).join(' · ')||'없음';
