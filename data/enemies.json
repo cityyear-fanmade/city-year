@@ -9823,6 +9823,26 @@
     "mat": "trim",
     "pct": 15
    }
+  },
+  "sis_buffet": {
+   "n": "뷔페",
+   "why": "굶주림이 한 몸으로 자란 것. 붉은 신이라 불리던 것의 다음 모습이다.",
+   "color": "#5a0f18",
+   "hp": 240,
+   "atk": 16,
+   "eva": 4,
+   "spd": 6,
+   "deck": [
+    "heavy",
+    "bloodlet",
+    "rend",
+    "finale",
+    "guard",
+    "precise"
+   ],
+   "tier": "boss",
+   "intro": "벽이 한 겹 벗겨져 있다. 붉은 것의 어깨가 문틀을 넘고, 입 안쪽에서 접시 부딪히는 소리가 난다. 이름을 부르던 사람을 이제 알아보지 못한다.",
+   "trait": "enrage"
   }
  },
  "fixedFights": {
