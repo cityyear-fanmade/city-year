@@ -2672,7 +2672,7 @@ const V1120SEC=[['🆕 카드',[
     /* 파일에 넣어 둔 html2canvas가 있으면 인터넷 없이 바로 쓴다 */
     if(window.CITY_H2C){try{(0,eval)(window.CITY_H2C);if(window.html2canvas)return Promise.resolve(true)}catch(e){}}
     /* 한 곳에서 못 받으면 다른 곳에서 한 번 더 받는다 (휴대폰 앱 브라우저·학교·회사 망에서 막히는 경우) */
-    const get=src=>new Promise(res=>{const sc=document.createElement('script');sc.src=src;let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+    const get=src=>new Promise(res=>{const sc=document.createElement('script');sc.src=src;sc.integrity='sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H';sc.crossOrigin='anonymous';let done=false;const fin=v=>{if(!done){done=true;res(v)}};
       sc.onload=()=>fin(!!window.html2canvas);sc.onerror=()=>fin(false);document.head.appendChild(sc);setTimeout(()=>fin(!!window.html2canvas),8000)});
     return get(SHOTSRC[0]).then(ok=>ok||get(SHOTSRC[1]));
   }
