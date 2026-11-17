@@ -8,6 +8,7 @@ from collections import deque
 from PIL import Image
 import numpy as np
 W,H=412,734
+BASE_W,BASE_Y=190,700   # 받침대 폭(픽셀), 받침대 바닥 높이
 def load(p):
     a=np.array(Image.open(p).convert('RGB')).astype(int)
     r,g,b=a[...,0],a[...,1],a[...,2]
@@ -32,7 +33,15 @@ def main(src,dst):
         beige=(sat>=0.18)&(r>b+30)&~green
         if beige.sum()<500:print(n,'마네킹(베이지)이 안 보여 건너뜀');continue
         h,w=green.shape
-        x0,y0,x1,y1=bbox(green);box=fit(x0,y0,x1,y1)
+        x0,y0,x1,y1=bbox(green)
+        # 마네킹 크기를 일정하게: 받침대(진한 회색) 폭을 기준으로 배율을 정하고, 받침대 바닥·가운데를 같은 자리에 둔다
+        dark=(~green)&(sat<0.18)&(mx<=108)&(mx>30)
+        low=dark[int(y0+(y1-y0)*0.78):y1+1]
+        rw=low.sum(1);bw=int(rw.max());ys_=np.where(rw>bw*0.5)[0]
+        by=int(y0+(y1-y0)*0.78)+int(ys_.max());bxs=np.where(low[ys_.max()-2:ys_.max()+1].any(0))[0]
+        bxs=np.where(low[int(ys_.min()):int(ys_.max())+1].any(0))[0];bcx=(bxs.min()+bxs.max())/2;bw=bxs.max()-bxs.min()
+        k=BASE_W/bw   # 원본 1픽셀 = 결과 k픽셀
+        cw,ch=W/k,H/k;box=(int(bcx-cw/2),int(by-(BASE_Y)/k),int(bcx+cw/2),int(by-(BASE_Y)/k+ch))
         bmax=int(np.where(beige)[0].max())
         gray=(~green)&(sat<0.18)&(mx>108)   # 옷의 밝은 회색(진한 회색 봉·받침대·외곽선·검은 띠는 제외)
         near=np.array(Image.fromarray((beige*255).astype('uint8'),'L').filter(__import__('PIL.ImageFilter',fromlist=['x']).MaxFilter(9)))>127
