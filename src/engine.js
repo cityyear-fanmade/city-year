@@ -2812,13 +2812,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const CS=CFG.sis,ev1=(t,x,l,fx,ok)=>({type:'event',ev:{t,x,c:[{l,ok:{t:ok,fx}}]}}),R=sv.red;
     /* 붕괴(해 52): 징조 → (6층 고객센터) → 통로. 지나면 백화점 밖으로 나온다 */
     if(!sv.collapsed&&G.year>=CS.collapseYear){const Z=S_.collapse;
-      if(!sv.cs)return ev1(Z.omen.t,Z.omen.x,Z.omen.l,{sisCs:1},Z.omen.ok);
+      if(!sv.cs)return ev1(Z.omen.t,Z.omen.x+(Z.omenFac&&Z.omenFac[sv.fac]?'\n\n'+Z.omenFac[sv.fac]:''),Z.omen.l,{sisCs:1},Z.omen.ok);
       if(!sv.wardenDone){
         if(sv.st==='wfight'){sv.st='day1';return {type:'fight',enemy:'sis_warden_final',enc:{hidden:true,label:'간수'}}}
         const W=Z.warden,R_=sv.red,v=sv.fac==='rouge'&&R_&&R_.alive?W.with:sv.fac==='noir'?W.noir:sv.fac==='kaki'?W.kaki:'';
         return {type:'event',ev:{t:W.t,x:sv.wardenLost?W.retry:`${W.x}${v?'\n\n'+v:''}`,c:[{l:W.l,ok:{t:sv.wardenLost?W.okRetry:W.ok,fx:{sisWFight:1}}}]}}}
       if(sv.cs===1){if(sisGrade(ch)>=4&&sv.fac!=='kaki')return {type:'event',ev:{t:Z.center.t,x:Z.center.x,c:Z.center.c.map(c=>({l:c.l,ok:{t:c.ok,fx:{sisCs:2,sisInq:c.inq}}}))}};sv.cs=2}
-      return ev1(Z.exit.t,(sisGrade(ch)>=4&&sv.fac==='kaki'?Z.centerKaki+'\n\n':'')+Z.exit.x,Z.exit.l,{sisOut:1},'무너지는 층 사이로 한 걸음을 내딛는다.')}
+      return ev1(Z.exit.t,(sisGrade(ch)>=4&&sv.fac==='kaki'?Z.centerKaki+'\n\n':'')+Z.exit.x+(()=>{const R=sv.red,f=sv.fac;const k=f==='rouge'?((R&&R.alive&&sisGrade(ch)>=4&&(R.shroud||R.hunger<8))?'with':'buffet'):f==='noir'?(R&&R.state==='slain'?'slain':'left'):null;return k&&Z.exitFac&&Z.exitFac[k]?'\n\n'+Z.exitFac[k]:''})(),Z.exit.l,{sisOut:1},'무너지는 층 사이로 한 걸음을 내딛는다.')}
     if(sv.st==='redfight'){sv.st='day2';return {type:'fight',enemy:'sis_red',enc:{hidden:true,label:'붉은 신'}}}
     if(sv.st==='buffetfight'){sv.st='day2';return {type:'fight',enemy:'sis_buffet',enc:{hidden:true,label:'뷔페'}}}
     if(sv.st==='wallfight'){sv.st='day2';return {type:'fight',enemy:'sis_controller',enc:{sis:true,label:'벽 뒤의 경비'}}}

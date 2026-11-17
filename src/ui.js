@@ -923,7 +923,7 @@ export function startUI(E,app){
       ${st.length?`<p class="small dim">장착을 누르면 같은 칸의 지금 장비와 자리를 바꾼다. 아무것도 사라지지 않는다.</p>`:''}`;
   }
   /* 태어난 곳: 출신에서 정해진다. 날개 글자(K·R·W·N·J·G)와 둥지·뒷골목·외곽으로 적는다. 이미 굴린 값(r.n)으로만 정해 시드를 흔들지 않는다 */
-  function placeOf(o,r,blank){if(blank||!o)return null;const n=o.n,w='KRWNJG'[((r&&r.n)||1)%6];
+  function placeOf(o,r,blank){if(blank||!o)return null;const n=o.n,w=(SISSHARE||SISTEST)&&n==='둥지 노동자'?'N':'KRWNJG'[((r&&r.n)||1)%6];   /* 시지프 시험판: N사의 금기를 어기는 이야기라 태어난 곳은 N사 둥지로 고정 */
     if(n==='외곽 생존자'||n==='동부 출신 외곽 생존자')return {n:'외곽 출신',t:'도시 밖 외곽에서 났다'};
     /* 세계관상 날개가 정해진 출신은 고정한다 (R사 복제 부화장, H사 홍원) */
     if(n==='부화장에서 태어난 자')return {n:'R사 둥지 출신',t:'R사 날개의 부화장에서 났다'};
