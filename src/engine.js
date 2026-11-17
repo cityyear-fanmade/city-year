@@ -2709,7 +2709,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisBuy(ch,id,chips){const it=D.items[id];if(!it||!ch.sis.shop||!ch.sis.shop.includes(id))return;if(ch.money<it.price){chips.push('안이 모자라다');return}
     ch.money-=it.price;ch.sis.shop=ch.sis.shop.filter(x=>x!==id);offerGear(ch,Object.assign({id,grade:it.grade},it));chips.push(`구매 · ${it.n} (${it.e}) · −${sisAn(it.price)} · 장착할지 고른다`)}
   /* 손님 취향: 색 배율 × 무늬 배율(0.7~1.7). 어떤 색·무늬든 값을 더 쳐주는 손님이 있어, 싫은 것을 억지로 만들 필요가 없다 */
-  const sisTasteMul=(cu,color,pattern)=>{const t=cu&&cu.taste;if(!t)return 1;const m=((t.color||{})[color]||1)*((t.pattern||{})[pattern||'plain']||1);return Math.round(Math.min(1.7,Math.max(0.7,m))*100)/100};
+  const sisTasteMul=(cu,color,pattern)=>{const t=cu&&cu.taste;if(!t)return 1;const m=((t.color||{})[color]||1)*((t.pattern||{})[pattern||'plain']||1);return Math.round(Math.min(1.5,Math.max(0.7,m))*100)/100};
   function sisTasteList(color,pattern){return D.sisyphus.customers.filter(c=>c.taste).map(c=>({id:c.id,n:c.n.replace(' 손님',''),mul:sisTasteMul(c,color,pattern)}))}
   function sisSell(ch,mode,chips){
     const S_=D.sisyphus,M=S_.sell[mode];if(!M)return;
