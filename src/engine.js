@@ -2937,7 +2937,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         ...sisZones(ch).map(z=>({l:`${z.n}으로 나간다`,h:z.x,ok:{t:'채비를 하고 나선다.',fx:{sisHunt:z.id}}})),
         ...(ch.sis.cloth.length||Object.values(ch.sis.mat).some(n=>n>0)?[{l:A.day1.bench,h:'옷 재단과 손질 · 사냥은 하지 않는다',ok:{t:'작업대에 불을 켠다.',fx:{sisGo:'craft'}}}]:[]),
         ...(sv.cycle>=1?[{l:S_.wall.l,h:S_.wall.h,ok:{t:S_.wall.ok,fx:{sisWall:1}}}]:[]),
-        ...(R&&R.alive&&sv.fac==='rouge'&&!R.shroud&&(ch.sis.mat.resin||0)>=2&&(ch.sis.mat.goldskin||0)>=1?[{l:S_.red.shroud.l,h:S_.red.shroud.h,ok:{t:S_.red.shroud.ok,fx:{sisShroud:1}}}]:[]),
+        /* 붉은 신에게 망토 입히기는 지은 황금가죽 망토로만 한다(판매 화면). 재료(황금송진 2·황금가죽 1)로 바로 입히던 길은 겹쳐서 뺐다 */
         ...(R&&R.alive&&sv.fac==='noir'&&(R.stage||0)>=3&&!R.fightDone?[{l:S_.red.attack.l,h:S_.red.attack.h,ok:{t:S_.red.attack.ok,fx:{sisAttack:1}}}]:[]),
         {l:'거래하러 간다',h:'가진 안과 재료를 맞바꾼다',ok:{t:'층마다 값을 부르는 이들이 있다.',fx:{sisGo:'trade'}}},
         {l:'샘터에서 쉰다',h:'체력을 모두 채우고 다음 날로 넘어간다 · 샘터에는 아무도 따라 들어오지 못한다',ok:{t:'문턱 안쪽은 물소리뿐이다. 쉬는 동안에도 어디선가 방송이 흐른다.',fx:{sisRest:1}}}]}};
