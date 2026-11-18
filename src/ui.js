@@ -3530,6 +3530,11 @@ const V1120SEC=[['🆕 카드',[
   app.addEventListener('click',e=>{
     const b=e.target.closest('[data-a]');
     if(!b||b.disabled||PLAYING&&!['skip','tap','fightmode','qbgm','qstyle','qpick','qvol','qsfx','bartog','bgmreload','bgmfailclose'].includes(b.dataset.a))return;
+    /* 가방 시트가 열려 있을 때 시트 위로 보이는 아래 칸(정보·카드·전리품·사무소 등)을 누르면, 닫기만 하지 않고 그 칸으로 바로 옮겨 간다 */
+    if(b.dataset.a==='bagclose'&&b.classList.contains('ovbg')&&UI.bag&&typeof document.elementsFromPoint==='function'){
+      const under=document.elementsFromPoint(e.clientX,e.clientY).map(x=>x.closest&&x.closest('[data-a="bag"]')).find(x=>x&&!x.closest('.ov'));
+      if(under){ACT.bag(under.dataset.i,under);return}
+    }
     ACT[b.dataset.a](b.dataset.i,b);
   });
   /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */
