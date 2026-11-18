@@ -549,6 +549,7 @@ export function startUI(E,app){
     if(c.sinkDmg)x.push(`침잠 ${CFG.sink.per}당 +${c.sinkDmg}`);
     if(c.egT)x.push(c.egT);
     if(c.rr)x.push('낮은 피해 재굴림');
+    if(c.chord){const Z=CFG.melody;x.push(c.chordKeep?'선율을 절반만 소비한다 (남는 것은 내림) · 소비한 선율은 화음 추가 피해':`선율을 모두 소비한다${c.hits>1?' (첫 적중에서)':''} · 화음 추가 피해: 선율 1마다 +${Z.per} · 3 이상 +${Z.t3} · 6 이상 +${Z.t6} 더 · ${Z.cap}면 ×${Z.t9}`)}
     if(c.min)x.push('피해 최소 '+c.min);
     if(c.next)x.push('사용 후 다음 라운드 '+D.cards[c.next].n);
     if(c.rngDebuff)x.push('주사위마다 '+c.rngDebuff.map(k=>D.keywords[k].n).join('·')+' 중 무작위 +1');
