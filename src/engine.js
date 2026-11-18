@@ -2650,7 +2650,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const sisAn=n=>`${n}안`;
   function sisMat(ch,k,n){const m=ch.sis.mat;m[k]=(m[k]||0)+n}
   function sisColorsOpen(ch){return D.sisyphus.tailor.colors.filter(c=>c.grade<=sisGrade(ch))}
-  function sisGradeUp(ch,chips){const G_=D.sisyphus.grades;let g=0;G_.forEach((x,i)=>{if(ch.sis.pts>=x.at)g=i});if(g>sisGrade(ch)){ch.sis.grade=g;chips.push(`고객 등급 · ${G_[g].n} · 열린 구역이 늘었다`);sisLearn(ch,'grade',chips,false);
+  function sisGradeUp(ch,chips){const G_=D.sisyphus.grades;let g=0;G_.forEach((x,i)=>{if(ch.sis.pts>=x.at)g=i});if(g>sisGrade(ch)){ch.sis.grade=g;ch.sis.promo=g;chips.push(`고객 등급 · ${G_[g].n} · 열린 구역이 늘었다`);sisLearn(ch,'grade',chips,false);
     {const bd=G_[g].body;if(bd){addStats(ch.stats,bd);if(bd.maxHp)ch.hp+=bd.maxHp;chips.push('육체 강화 · '+Object.entries(bd).map(([k,v])=>(k==='maxHp'?'최대 HP':STAT[k]||k)+' +'+v).join(' · '))}}
     if(g===G_.length-1&&ch.sis.assimDone&&!ch.sis.extraGiven){ch.sis.extraGiven=1;for(const id of D.sisyphus.assim[ch.sis.fac].pack.extra)putCard(ch,id,chips,'소속 카드')}}}
   function sisFacCheck(ch,turn,chips){const S_=CFG.sis;if(ch.sis.fac||turn<S_.facTurn)return;const l=ch.sis.lean;ch.sis.fac=(ch.sis.made||0)<S_.facMin?'kaki':l>=S_.facLean?'rouge':l<=-S_.facLean?'noir':'kaki';chips.push('백화점에서 어느 쪽에 가까운지가 정해졌다')}
@@ -2873,6 +2873,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='redfight'){sv.st='day2';return {type:'fight',enemy:'sis_red',enc:{hidden:true,label:'붉은 신'}}}
     if(sv.st==='buffetfight'){sv.st='day2';return {type:'fight',enemy:'sis_buffet',enc:{hidden:true,label:'뷔페'}}}
     if(sv.st==='wallfight'){sv.st='day2';return {type:'fight',enemy:'sis_controller',enc:{sis:true,label:'벽 뒤의 경비'}}}
+    if(sv.st==='day1'&&sv.promo&&!sv.collapsed){const g=sv.promo;sv.promo=null;const PR=S_.promo,G_=S_.grades[g],zs=S_.zones.filter(z=>z.grade===g),mn=[...new Set(zs.flatMap(z=>z.mat))].filter(k=>S_.mats[k]&&S_.mats[k].kind!=='heal').map(k=>S_.mats[k].n);
+      const body=G_.body?`\n${PR.body}`:'';
+      return {type:'event',ev:{t:`${PR.t} · ${G_.n} 고객`,x:`${PR.cast}\n\n"${PR.line.replace('{g}',G_.n)}"\n\n${zs.length?PR.open.replace('{z}',zs.map(z=>z.n).join('·'))+'\n':''}${mn.length?PR.mats.replace('{m}',mn.join('·'))+'\n':''}${PR.more}${body}`,c:[{l:PR.l,ok:{t:PR.ok,fx:{sisGo:'day1'}}}]}}}
     if(sv.st==='day1'&&sv.wardenTurn!==sv.turn){sv.wardenTurn=sv.turn;if(sv.turn>5&&(sv.comply==null?5:sv.comply)<=CS.wardenComply&&d(100)<=CS.wardenChance)sv.warden=1}
     if(sv.st==='day1'&&!sv.mgrSeen&&!sv.collapsed&&sv.turn>=28&&sisGrade(ch)>=3){sv.mgrSeen=1;const F=S_.fate;return {type:'event',ev:{t:F.t,x:F.x,c:[{l:F.spare.l,ok:{t:F.spare.ok,fx:{sisGo:'back'}}},{l:F.kill.l,h:F.kill.h,ok:{t:F.kill.ok,fx:{sisFate:1}}}]}}}
     if(sv.st==='day1'&&sv.warden){const W=S_.warden;return ev1(W.t,W.x,W.l,{sisWarden:1},W.ok)}
