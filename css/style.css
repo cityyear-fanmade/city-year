@@ -1001,3 +1001,10 @@ html[data-skin="base"]:not([data-sis]) #app{position:relative;z-index:1}
 
 .sis-scene{height:118px;border-radius:8px;border:1px solid var(--line);background-size:cover;background-position:center;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
 @media (min-width:1020px){.sis-scene{height:150px}}
+
+.sis-clock{margin-left:auto;font:600 11px/1 var(--mono);color:var(--gold);letter-spacing:.04em;white-space:nowrap;align-self:center}
+.sis-floors{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sis-goal{font:12px/1.45 var(--sans);color:var(--fg)}
+.sis-goal b{color:var(--gold)}
+.sis-goal i{font-style:normal;color:var(--gold);font-weight:700}
+.sis-goal span{display:block;color:var(--dim);font-size:11px}

@@ -811,7 +811,10 @@ export function startUI(E,app){
     const gg=[['순응도',cp,10]];if(R&&R.alive)gg.push([`${R.name||'붉은 신'}의 허기`,R.hunger||0,10]);if(sv.fac&&(sv.fit||0)>0)gg.push(['단골 맞춤',sv.fit,CFG.sis.fit.per*CFG.sis.fit.maxTier]);
     const bars=gg.map(([n,v,m])=>`<span class="sis-g"><b>${esc(n)}</b><i style="--v:${Math.round(100*v/m)}%"></i><em>${v}/${m}</em></span>`).join('');
     const SWi=window.CITY_SIS||{},sc=(sv.st==='hunt'?sv.hunt:sv.st==='craft'?sv.pend:null),scene=sc&&SWi['sis_scene_'+sc]?`<div class="sis-scene" style="background-image:url(${SWi['sis_scene_'+sc]})" aria-hidden="true"></div>`:'';
-    return `<div class="sis-bar" role="status"><div class="sis-floors">${cells}</div>${scene}<div class="sis-tick"><span style="animation-delay:-${Date.now()%26000}ms">${msgs.filter(Boolean).map(esc).join('  ·  ')}</span></div><div class="sis-gauges">${bars}</div></div>`}
+    const GR=D.sisyphus.grades,nx=GR[gr+1],season=['봄','여름','가을','겨울'][Math.min(3,Math.floor(((sv.turn||1)-1)/13))],zn=nx?Z.filter(z=>z.grade===gr+1).map(z=>z.n):[];
+    const goal=nx?`<div class="sis-goal"><b>${esc(nx.n)} 고객</b>까지 <i>${Math.max(0,nx.at-(sv.pts||0))}점</i>${zn.length?` · ${esc(zn.join('·'))}이(가) 열립니다`:''} <span>옷을 팔면 고객 점수가 쌓입니다</span></div>`:'<div class="sis-goal"><b>가장 높은 고객 등급</b></div>';
+    const clock=`<span class="sis-clock">${sv.turn||1}일째 · ${season} 시즌</span>`;
+    return `<div class="sis-bar" role="status"><div class="sis-floors">${cells}${clock}</div>${goal}${scene}<div class="sis-tick"><span style="animation-delay:-${Date.now()%26000}ms">${msgs.filter(Boolean).map(esc).join('  ·  ')}</span></div><div class="sis-gauges">${bars}</div></div>`}
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `${vSisBar()}<div class="panel stack">

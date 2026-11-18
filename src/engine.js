@@ -2689,7 +2689,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisCraft(G,spec){
     const ch=G.ch;if(!sisOn(ch))return {ok:false,why:'백화점 안에서만 할 수 있다'};if(ch.sis.crafted)return {ok:false,why:'오늘은 이미 한 벌을 지었다'};const I=sisCraftInfo(ch,spec);if(!I.ok)return I;
     for(const m of sisPick(ch,I.sh.base,I.need))ch.sis.mat[m]--;for(const [k,n] of Object.entries(I.sh.extra||{}))for(const m of sisPick(ch,k,n))ch.sis.mat[m]--;if(I.co.id!=='gray')ch.sis.dyes.splice(ch.sis.dyes.indexOf(I.co.id),1);ch.sis.mat.trim=(ch.sis.mat.trim||0)-I.tr.length;
-    ch.sis.cloth.push({shape:I.sh.id,pattern:I.pt.id,color:I.co.id,trims:I.tr.map(x=>x.id),price:I.price,lean:I.lean,q:0});ch.sis.made=(ch.sis.made||0)+1;ch.sis.crafted=1;
+    ch.sis.cloth.push({shape:I.sh.id,pattern:I.pt.id,color:I.co.id,trims:I.tr.map(x=>x.id),price:I.price,lean:I.lean,q:0});ch.sis.made=(ch.sis.made||0)+1;ch.sis.dMade=(ch.sis.dMade||0)+1;ch.sis.crafted=1;
     ch.sis.lean=Math.max(-CFG.sis.leanMax,Math.min(CFG.sis.leanMax,ch.sis.lean+I.lean));
     return {ok:true,name:`${I.co.n} ${I.pt.n} ${I.sh.n}`,price:I.price,lean:I.lean};
   }
@@ -2725,6 +2725,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisOrderMake(ch){const sv=ch.sis,Z=D.sisyphus.orders,T=D.sisyphus.tailor,tp=one(Z.templates);
     const cols=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray'),col=one(cols),pts=T.patterns.filter(p=>p.id!=='plain'),pt=d(100)<=70?one(pts):T.patterns.find(p=>p.id==='plain'),sh=d(100)<=35?one(T.shapes.filter(s=>s.id!=='gold')).id:null;
     return {tp,col:col.id,pt:pt.id,sh}}
+  /* 지금 목표: 판매하면 고객 점수가 쌓이고, 등급이 오르면 더 높은 층이 열린다 */
+  function sisGoalText(ch){const G_=D.sisyphus.grades,g=ch.sis.grade||0,nx=G_[g+1];if(!nx)return '고객 등급이 가장 높다.';
+    const zs=D.sisyphus.zones.filter(z=>z.grade===g+1).map(z=>z.n);
+    return `옷을 팔면 고객 점수가 쌓인다 · ${nx.n} 고객까지 ${Math.max(0,nx.at-(ch.sis.pts||0))}점${zs.length?` · ${zs.join('·')}이(가) 열린다`:''}`}
   function sisSell(ch,mode,chips){
     const S_=D.sisyphus,M=S_.sell[mode];if(!M)return;
     if(!ch.sis.cloth.length||mode==='empty'){chips.push(S_.sell.empty.x);sisAdj(ch,-1);return}
@@ -2736,7 +2740,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(d(100)<=Math.round(M.fail*100)){chips.push(`${cu.n}가 고개를 저었다 · 팔지 못했다`);return}
     const Q=D.sisyphus.quality,q=c.q||0,v=Math.round(c.price*Q.mul[q]*M.mul*tmul*sisComplyMul(ch)*(ordHit?D.sisyphus.orders.mul:1)),pts=M.pts+(match?1:0)+Q.pts[q]+(ordHit?2:0);
     if(match&&(ch.sis.fit||0)<CFG.sis.fit.per*CFG.sis.fit.maxTier){ch.sis.fit=(ch.sis.fit||0)+1;if(ch.sis.fit%CFG.sis.fit.per===0)chips.push(`단골 맞춤 ${ch.sis.fit/CFG.sis.fit.per}단계 · 소속 전투 규칙이 조금 강해진다`)}
-    ch.sis.cloth.splice(idx,1);ch.money+=v;ch.sis.pts+=pts;sisAdj(ch,q>=2?2:1);
+    ch.sis.cloth.splice(idx,1);ch.sis.dSold=(ch.sis.dSold||0)+1;ch.money+=v;ch.sis.pts+=pts;sisAdj(ch,q>=2?2:1);
     chips.push(`판매 · ${cu.n} · ${D.sisyphus.quality.names[q]} · +${sisAn(v)} · 고객 점수 +${pts}`);
     if(ordHit){const Z=D.sisyphus.orders;chips.push(`${Z.done} · ${sisOrderText(ord)} · 값 ×${Z.mul} · 순응도 +${Z.comply} · 단골 맞춤 +${Z.fit}`);sisAdj(ch,Z.comply);ch.sis.fit=Math.max(0,(ch.sis.fit||0)+Z.fit);ch.sis.order=null}sisLearn(ch,'trust',chips,false);sisGradeUp(ch,chips);
   }
@@ -2845,7 +2849,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function sisFree(G){
     const ch=G.ch;if(!sisOn(ch))return null;const sv=ch.sis,S_=D.sisyphus,A=S_.act;
-    if(sv.turnYear!==G.year){sv.turnYear=G.year;sv.turn=Math.max(1,G.year-sv.in+1);sv.st='day1';sv.back=null;sv.fed=0;{const c=[];sisFacCheck(ch,sv.turn,c)}sisRedTick(ch,sv.turn)}
+    if(sv.turnYear!==G.year){
+      {const sumMat=c=>Object.entries(c.sis.mat).reduce((a,[k,n])=>a+((S_.mats[k]&&S_.mats[k].kind==='heal')?0:(n||0)),0)+c.sis.dyes.length;
+        if(sv.dayStart){const d0=sv.dayStart,pt=[],dm=sumMat(ch)-d0.mat,dan=ch.money-d0.an,dp=(sv.pts||0)-d0.pts;
+          if(dm)pt.push(`재료 ${dm>0?'+':'−'}${Math.abs(dm)}`);if(sv.dMade)pt.push(`옷 ${sv.dMade}벌 완성`);if(sv.dSold)pt.push(`옷 ${sv.dSold}벌 판매`);if(dan)pt.push(`${dan>0?'+':'−'}${sisAn(Math.abs(dan))}`);if(dp)pt.push(`고객 점수 +${dp}`);
+          sv.lastDay=pt.length?'어제 · '+pt.join(' · '):''}
+        sv.dMade=0;sv.dSold=0}
+      sv.turnYear=G.year;sv.turn=Math.max(1,G.year-sv.in+1);sv.st='day1';sv.back=null;sv.fed=0;{const c=[];sisFacCheck(ch,sv.turn,c)}sisRedTick(ch,sv.turn);{const sm=Object.entries(ch.sis.mat).reduce((a,[k,n])=>a+((S_.mats[k]&&S_.mats[k].kind==='heal')?0:(n||0)),0)+ch.sis.dyes.length;sv.dayStart={mat:sm,an:ch.money,pts:sv.pts||0}}}
     G.free=true;
     const CS=CFG.sis,ev1=(t,x,l,fx,ok)=>({type:'event',ev:{t,x,c:[{l,ok:{t:ok,fx}}]}}),R=sv.red;
     /* 붕괴(해 52): 징조 → (6층 고객센터) → 통로. 지나면 백화점 밖으로 나온다 */
@@ -2892,7 +2902,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 동화: 소속이 정해진 뒤 한 번, 소속 책장(르루주·르누아르)을 받거나 유행을 따른다(르카키) */
     if(sv.fac&&!sv.assimDone&&sv.st==='day1'){const Z=S_.assim[sv.fac];return {type:'event',ev:{t:Z.t,x:Z.x,c:[{l:Z.l,h:Z.h,ok:{t:Z.ok,fx:{sisAssim:sv.fac}}}]}}}
     if(sv.st==='day1'){
-      return {type:'event',ev:{t:A.day1.t,x:`${A.day1.x}\n\n${sisInv(ch)}`,c:[
+      return {type:'event',ev:{t:A.day1.t,x:`${A.day1.x}\n\n${ch.sis.lastDay?ch.sis.lastDay+'\n\n':''}${sisInv(ch)}`,c:[
         ...sisZones(ch).map(z=>({l:`${z.n}으로 나간다`,h:z.x,ok:{t:'채비를 하고 나선다.',fx:{sisHunt:z.id}}})),
         ...(ch.sis.cloth.length||Object.values(ch.sis.mat).some(n=>n>0)?[{l:A.day1.bench,h:'옷 재단과 손질 · 사냥은 하지 않는다',ok:{t:'작업대에 불을 켠다.',fx:{sisGo:'craft'}}}]:[]),
         ...(sv.cycle>=1?[{l:S_.wall.l,h:S_.wall.h,ok:{t:S_.wall.ok,fx:{sisWall:1}}}]:[]),
@@ -2924,7 +2934,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='day2'){
       sv.lootDone=false;sv.crafted=0;
       const has=ch.sis.cloth.length>0;
-      return {type:'event',ev:{t:A.day2.t,x:`${A.day2.x}\n\n${sisInv(ch)}`,c:[
+      return {type:'event',ev:{t:A.day2.t,x:`${A.day2.x}\n\n${sisInv(ch)}\n${sisGoalText(ch)}`,c:[
         ...(has?[{l:S_.sell.push.n,h:'값은 높지만 거절당할 수 있다',ok:{t:S_.sell.push.x,fx:{sisSell:'push'}}},{l:S_.sell.trust.n,h:'값은 그대로, 믿음을 쌓는다',ok:{t:S_.sell.trust.x,fx:{sisSell:'trust'}}}]:[{l:S_.sell.empty.n,ok:{t:S_.sell.empty.x,fx:{sisSell:'empty'}}}]),
         {l:'거래하러 간다',h:'안이나 재료를 맞바꾼다',ok:{t:'층마다 값을 부르는 이들이 있다.',fx:{sisGo:'trade'}}}]}};
     }
