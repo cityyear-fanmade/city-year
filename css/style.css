@@ -973,3 +973,18 @@ html[data-sis][data-skin] body,html[data-sis] body{
 html[data-sis][data-skin] .wrap,html[data-sis] .wrap{--bw:1px;background:transparent;border-color:var(--line);box-shadow:none;border-radius:10px}
 html[data-sis] .wrap::before,html[data-sis] .wrap::after{display:none}
 html[data-sis] body::before{content:"시지프 백화점";position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:5;font:500 10px/1 var(--mono);letter-spacing:.32em;color:var(--gold);opacity:.6;pointer-events:none}
+
+/* 시지프 층 안내판 · 방송 자막 · 게이지 */
+.sis-bar{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 8%,var(--panel)),var(--panel))}
+.sis-floors{display:flex;gap:6px;justify-content:center}
+.sis-fl{font:600 12px/1 var(--mono);letter-spacing:.06em;min-width:34px;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:6px;color:var(--dim);opacity:.55}
+.sis-fl.lit{opacity:1;color:var(--gold);border-color:var(--gold);text-shadow:0 0 6px color-mix(in srgb,var(--gold) 70%,transparent)}
+.sis-fl.cur{background:var(--gold);color:var(--gold-ink);text-shadow:none}
+.sis-tick{overflow:hidden;white-space:nowrap;border-block:1px dashed var(--line);padding:4px 0;font:12px/1.4 var(--mono);color:var(--dim)}
+.sis-tick span{display:inline-block;padding-left:100%;animation:sistick 26s linear infinite}
+@keyframes sistick{to{transform:translateX(-100%)}}
+.sis-gauges{display:flex;flex-wrap:wrap;gap:6px 12px}
+.sis-g{display:grid;grid-template-columns:auto 80px auto;gap:6px;align-items:center;font:11px/1 var(--mono);color:var(--dim)}
+.sis-g i{display:block;height:6px;border-radius:3px;background:var(--line);position:relative;overflow:hidden}
+.sis-g i::after{content:"";position:absolute;inset:0;width:var(--v);background:var(--gold);border-radius:3px}
+@media (prefers-reduced-motion:reduce){.sis-tick{white-space:normal}.sis-tick span{animation:none;padding-left:0;transform:none}}

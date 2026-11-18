@@ -798,9 +798,21 @@ export function startUI(E,app){
   function showInfNote(text){
     try{const old=document.querySelector('.infnote');if(old)old.remove();const el=document.createElement('div');el.className='infnote';el.setAttribute('role','status');const tx=document.createElement('span');tx.textContent=text;el.appendChild(tx);const x=document.createElement('button');x.type='button';x.className='infnote-x';x.setAttribute('aria-label','닫기');x.textContent='✕';x.addEventListener('click',ev=>{ev.stopPropagation();el.remove()});el.appendChild(x);document.body.appendChild(el);setTimeout(()=>{try{el.remove()}catch(e){}},20200)}catch(e){}
   }
+  /* 시지프 백화점 안에서만 보이는 층 안내판 · 방송 자막 · 상태 게이지(이미지 없이 코드로 그린다) */
+  function vSisBar(){
+    const ch=G&&G.ch,sv=ch&&ch.sis;if(!sv||!CFG.sis.on)return '';
+    const Z=D.sisyphus.zones,order=[['f5','6F'],['f4','4F'],['f1','1F'],['b1','B1'],['b2','B2'],['b3','B3']],gr=sv.grade||0,cur=sv.hunt||sv.pend||null;
+    const cells=order.map(([id,lb])=>{const z=Z.find(x=>x.id===id),lit=z&&z.grade<=gr;return `<span class="sis-fl${lit?' lit':''}${cur===id?' cur':''}" title="${esc(z?z.n:'')}${lit?'':' · 아직 열리지 않음'}">${lb}</span>`}).join('');
+    const C=D.sisyphus.comply,cp=sv.comply==null?5:sv.comply,R=sv.red,msgs=['시즌 안내 방송입니다. 규칙을 지키는 고객께는 층이 열립니다.',(C.names[Math.max(0,Math.min(10,cp))]||'')];
+    if(cp<=D.sisyphus.comply.low)msgs.push('허용되지 않은 행동을 한 고객께서는 간수실로 와 주시기 바랍니다.');
+    if(R&&R.alive&&R.hunger>=5)msgs.push(`${R.name||'붉은 것'}의 허기가 깊어지고 있습니다.`);
+    if(sv.fac==='kaki')msgs.push('이번 시즌의 유행은 전투마다 바뀝니다.');
+    const gg=[['순응도',cp,10]];if(R&&R.alive)gg.push([`${R.name||'붉은 신'}의 허기`,R.hunger||0,10]);if(sv.fac&&(sv.fit||0)>0)gg.push(['단골 맞춤',sv.fit,CFG.sis.fit.per*CFG.sis.fit.maxTier]);
+    const bars=gg.map(([n,v,m])=>`<span class="sis-g"><b>${esc(n)}</b><i style="--v:${Math.round(100*v/m)}%"></i><em>${v}/${m}</em></span>`).join('');
+    return `<div class="sis-bar" role="status"><div class="sis-floors">${cells}</div><div class="sis-tick"><span>${msgs.filter(Boolean).map(esc).join('  ·  ')}</span></div><div class="sis-gauges">${bars}</div></div>`}
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
-    return `<div class="panel stack">
+    return `${vSisBar()}<div class="panel stack">
       <div class="row between"><div class="row"><span class="swatch" style="background:${ch.color}"></span><b class="serif" style="color:${ch.color}">${titledName(ch)}</b><span class="small" style="color:${ch.color}">${E.rankLabel(ch)}</span>${affLabel(ch)}${ch.hard?'<span class="small bad">하드</span>':ch.easy?'<span class="small good">쉬움</span>':''}</div>
       <span class="mono small dim">${E.age(G)}세 · ${G.year>CFG.years?`${G.year}년차 · ${G.infinite&&G.year>CFG.years+CFG.endless.span*CFG.endless.grades.length?'제 2막 무한 모드 · '+(E.gradeRaw(G.year)-CFG.endless.grades.length+1)+'단계':'제 2막 · '+CFG.endless.grades[E.gradeAt(G.year)]}`:`${G.year}/${CFG.years}년차`}</span></div>
       ${bar(ch.hp,s.maxHp)}
