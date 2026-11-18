@@ -37,6 +37,7 @@ const fingerTest=process.argv.includes('--finger');
 /* --sis: 시지프 백화점 시험판. 출생 화면에서 둥지 노동자로 태어나 4년차 갈림길부터 바로 시작할 수 있다 */
 const sisShare=process.argv.includes('--sisshare');
 const sisTest=process.argv.includes('--sis')||sisShare;
+const multi=process.argv.includes('--multi');   /* --multi: 이미지를 data 주소로 박지 않고 dist/multi/ 아래 파일로 내보낸다(아티팩트에 index.html과 assets/ 를 함께 올린다) */
 /* --unlocktest: 해금 출생 시험판 */
 const unlockTest=process.argv.includes('--unlocktest')||allTest||pubTest;   /* 공개 테섭도 해금 출생·직업은 모두 열어 둔다(기록실·꾸미기 보상은 잠긴 채) */
 /* 번역 사전(data/i18n/*.json): 단일 파일 빌드에는 넣고, --pages 빌드는 data/i18n/ 경로에서 읽는다 */
@@ -44,7 +45,7 @@ const i18nData={};try{const {readdirSync}=await import('node:fs');for(const f of
 /* 심볼 이미지(assets/symbol/*.png): 단일 파일 빌드에는 data 주소로 넣고, --pages 빌드는 assets 경로를 그대로 쓴다 */
 const symData={};try{const {readdirSync}=await import('node:fs');for(const f of readdirSync(new URL('../assets/symbol/',import.meta.url)))if(f.endsWith('.png'))symData[f.replace('.png','')]='data:image/png;base64,'+readFileSync(new URL('../assets/symbol/'+f,import.meta.url)).toString('base64')}catch(e){}
 /* 시지프 옷 이미지(assets/sis/*.png): 시험판(--sis)에만 data 주소로 넣는다 */
-const sisData={};if(sisTest){try{const {readdirSync}=await import('node:fs');for(const f of readdirSync(new URL('../assets/sis/',import.meta.url)))if((f.endsWith('.png')||f.endsWith('.webp'))&&!/^sis_(cl_|mannequin|tr_)/.test(f))sisData[f.replace(/\.(png|webp)$/,'')]='data:image/'+(f.endsWith('.webp')?'webp':'png')+';base64,'+readFileSync(new URL('../assets/sis/'+f,import.meta.url)).toString('base64')}catch(e){}}
+const sisData={};if(sisTest){try{const {readdirSync}=await import('node:fs');for(const f of readdirSync(new URL('../assets/sis/',import.meta.url)))if((f.endsWith('.png')||f.endsWith('.webp'))&&!/^sis_(cl_|mannequin|tr_)/.test(f))sisData[f.replace(/\.(png|webp)$/,'')]=multi?'assets/sis/'+f:'data:image/'+(f.endsWith('.webp')?'webp':'png')+';base64,'+readFileSync(new URL('../assets/sis/'+f,import.meta.url)).toString('base64')}catch(e){}}
 const frmData={};try{const {readdirSync}=await import('node:fs');for(const f of readdirSync(new URL('../assets/frame/',import.meta.url)))if(f.endsWith('.png'))frmData[f.replace('.png','')]='data:image/png;base64,'+readFileSync(new URL('../assets/frame/'+f,import.meta.url)).toString('base64')}catch(e){}
 const bgmData={};if(!noBgm&&!noSamples&&!extBgm){for(const st of ['calm','passion','library','wave'])for(const sc of ['calm','fight','fight1','fight2','fight3','fight4','fight5']){try{(bgmData[st]=bgmData[st]||{})[sc]='data:audio/mpeg;base64,'+readFileSync(new URL(`../assets/bgm/${st}_${sc}.mp3`,import.meta.url)).toString('base64')}catch(e){}}}{const td=(process.argv.find(x=>x.startsWith('--bgmtest='))||'').slice(10);if(td&&!noBgm){bgmData.ext={};for(let i=1;i<=5;i++)for(const sc of ['calm','fight']){bgmData.ext['t'+i+'_'+sc]=`assets/bgm/ext/t${i}_${sc}.mp3`}if(bgmData.passion)for(const k of ['fight1','fight2','fight3','fight4','fight5'])delete bgmData.passion[k]}}
 try{bgmData.boss={boss:'data:audio/mpeg;base64,'+readFileSync(new URL('../assets/bgm/boss_boss.mp3',import.meta.url)).toString('base64')}}catch(e){}
@@ -69,7 +70,7 @@ const ai=process.argv.indexOf('--expires'),expires=ai>0?Date.parse(process.argv[
 if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (예: 2026-10-11T11:30:00Z)');process.exit(1)}
 let html=r('dev.html')
   .replace('<link rel="stylesheet" href="css/style.css">',()=>`<style>\n${r('css/style.css')}</style>`)
-  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${process.argv.includes('--pages')?'':`window.CITY_SYM=${JSON.stringify(symData)};${sisTest?`window.CITY_SIS=${JSON.stringify(sisData)};`:''}\n`}${process.argv.includes('--pages')?'':`window.CITY_FRM=${JSON.stringify(frmData)};\n`}${process.argv.includes('--pages')?'':`window.CITY_I18N=${JSON.stringify(i18nData)};\n`}${symTest?'window.CITY_SYMTEST=true;\n':''}${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${jsS}\nconst DATA=${JSON.stringify(D)};\ninitI18n().then(()=>{localize(DATA);window.CITY=startUI(createEngine(DATA),document.getElementById('app'))});\n})();\n</script>`);
+  .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${process.argv.includes('--pages')||multi?'':`window.CITY_SYM=${JSON.stringify(symData)};`}${sisTest&&!process.argv.includes('--pages')?`window.CITY_SIS=${JSON.stringify(sisData)};`:''}\n${process.argv.includes('--pages')||multi?'':`window.CITY_FRM=${JSON.stringify(frmData)};\n`}${process.argv.includes('--pages')?'':`window.CITY_I18N=${JSON.stringify(i18nData)};\n`}${symTest?'window.CITY_SYMTEST=true;\n':''}${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${jsS}\nconst DATA=${JSON.stringify(D)};\ninitI18n().then(()=>{localize(DATA);window.CITY=startUI(createEngine(DATA),document.getElementById('app'))});\n})();\n</script>`);
 if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('\nwindow.CITY_BGM=',`\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_BGM=`);
 if(augdemo)html=html.replace('<title>도시의 한 해</title>','<title>의수 의뢰 체험</title>').replace('\nwindow.CITY_BGM=','\nwindow.CITY_AUGDEMO=true;\nwindow.CITY_BGM=');
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');
@@ -87,5 +88,8 @@ const out=sisShare?'city-year-sis-share.html':sisTest?'city-year-sis-test.html':
 mkdirSync(new URL('../dist/',import.meta.url),{recursive:true});
 /* 본섭(--pages)만 서비스 워커를 등록한다: 홈 화면 설치 + 네트워크 우선(인터넷이 안 될 때만 저장본) */
 if(pages)html=html.replace('</head>',()=>'<script>if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script>\n</head>');
+if(multi){const {cpSync,rmSync}=await import('node:fs');const base=new URL('../dist/multi/',import.meta.url);rmSync(base,{recursive:true,force:true});mkdirSync(base,{recursive:true});
+  for(const d of ['symbol','frame','sis'])cpSync(new URL('../assets/'+d+'/',import.meta.url),new URL('assets/'+d+'/',base),{recursive:true});
+  writeFileSync(new URL('index.html',base),html);console.log(`dist/multi/index.html · ${(html.length/1024).toFixed(0)}KB${expires?' · 종료 '+new Date(expires).toISOString():''}`);process.exit(0)}
 writeFileSync(new URL((pages?'../':'../dist/')+out,import.meta.url),html);
 console.log(`${pages?'':'dist/'}${out} · ${(html.length/1024).toFixed(0)}KB${expires?' · 종료 '+new Date(expires).toISOString():''}`);
