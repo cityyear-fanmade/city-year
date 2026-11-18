@@ -2944,7 +2944,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       sv.lootDone=false;sv.crafted=0;
       const has=ch.sis.cloth.length>0;
       return {type:'event',ev:{t:A.day2.t,x:`${A.day2.x}\n\n${sisInv(ch)}\n${sisGoalText(ch)}`,c:[
-        ...(has?[{l:S_.sell.push.n,h:'값은 높지만 거절당할 수 있다',ok:{t:S_.sell.push.x,fx:{sisSell:'push'}}},{l:S_.sell.trust.n,h:'값은 그대로, 믿음을 쌓는다',ok:{t:S_.sell.trust.x,fx:{sisSell:'trust'}}}]:[{l:S_.sell.empty.n,ok:{t:S_.sell.empty.x,fx:{sisSell:'empty'}}}]),
+        ...(has?(()=>{const Q_=S_.quality,best=ch.sis.cloth.reduce((b,c)=>(c.price*Q_.mul[c.q||0]>b.price*Q_.mul[b.q||0]?c:b),ch.sis.cloth[0]),qp=Q_.pts[best.q||0],pr=m=>`점수 +${S_.sell[m].pts+qp}~${S_.sell[m].pts+qp+1}`;
+          return [{l:S_.sell.push.n,h:`값 ×${S_.sell.push.mul} · 거절 ${Math.round(S_.sell.push.fail*100)}% · ${pr('push')}`,ok:{t:S_.sell.push.x,fx:{sisSell:'push'}}},{l:S_.sell.trust.n,h:`값 ×1 · 거절 없음 · ${pr('trust')}`,ok:{t:S_.sell.trust.x,fx:{sisSell:'trust'}}}]})():[{l:S_.sell.empty.n,ok:{t:S_.sell.empty.x,fx:{sisSell:'empty'}}}]),
         {l:'거래하러 간다',h:'안이나 재료를 맞바꾼다',ok:{t:'층마다 값을 부르는 이들이 있다.',fx:{sisGo:'trade'}}}]}};
     }
     if(sv.st==='trade'){
@@ -2958,7 +2959,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else{c.push({l:`${v.n} · ${o.t}`,h:give,ok:{t:v.x,fx:{sisTrade:{v:v.id,i}}}});multi(0,undefined,sisTradeMax(ch,o),`${v.n} · ${o.t}`,give)}});
       for(const id of ((ch.distForm&&!ch.distStable)?[]:sisShop(ch))){const it=D.items[id];if(ch.money>=it.price)c.push({l:`백화점 매장 · ${it.n}`,h:`${it.e} · ${sisAn(it.price)}`,ok:{t:'가격표를 확인하고 값을 치른다.',fx:{sisBuy:id}}})}
       c.push({l:S_.act.trade.leave,ok:{t:'값 부르는 소리가 멀어진다.',fx:{sisGo:'back'}}});
-      return {type:'event',ev:{t:S_.act.trade.t,x:`${S_.act.trade.x}\n\n${sisInv(ch)}`,c}};
+      const frn=(()=>{if(sv.fac!=='kaki')return '';const tr_=sv.tr||{},zg=id=>{const v=S_.trade.vendors.find(x=>x.id===id),z=v&&S_.zones.find(x=>x.id===v.zone);return z&&z.grade<=sisGrade(ch)},p_=[];if(zg('annette'))p_.push(`아네트와 거래 ${Math.min(3,tr_.annette||0)}/3`);if(zg('palette'))p_.push(`팔레트와 거래 ${Math.min(3,tr_.palette||0)}/3`);return p_.length?`\n${p_.join(' · ')} (세 번 거래하면 곁에 둘 수 있다)`:''})();
+      return {type:'event',ev:{t:S_.act.trade.t,x:`${S_.act.trade.x}\n\n${sisInv(ch)}${frn}`,c}};
     }
     return null;
   }
