@@ -2736,16 +2736,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function sisGoalText(ch){const G_=D.sisyphus.grades,g=ch.sis.grade||0,nx=G_[g+1];if(!nx)return '고객 등급이 가장 높다.';
     const zs=D.sisyphus.zones.filter(z=>z.grade===g+1).map(z=>z.n);
     return `옷을 팔면 고객 점수가 쌓인다 · ${nx.n} 고객까지 ${Math.max(0,nx.at-(ch.sis.pts||0))}점${zs.length?` · ${zs.join('·')}이(가) 열린다`:''}`}
-  /* 붉은 신의 허기를 달랠 황금가죽 망토는 자동으로 팔리지 않게 지켜 둔다(르루주에서 붉은 신이 살아 있고 아직 망토를 입히지 않았을 때) */
-  const sisHold=(ch,c)=>{const R=ch.sis&&ch.sis.red;return !!(c&&c.shape==='gold'&&R&&R.alive&&!R.shroud&&ch.sis.fac==='rouge')};
   function sisSell(ch,mode,chips){
     const S_=D.sisyphus,M=S_.sell[mode];if(!M)return;
-    if(!ch.sis.cloth.length||mode==='empty'){chips.push(S_.sell.empty.x);if(!ch.sis.cloth.some(c=>sisHold(ch,c)))sisAdj(ch,-1);return}
-    if(!ch.sis.cloth.some(c=>!sisHold(ch,c))){chips.push('팔 수 있는 옷이 없다 · 황금가죽 망토는 붉은 신을 위해 남겨 두었다');return}
+    if(!ch.sis.cloth.length||mode==='empty'){chips.push(S_.sell.empty.x);sisAdj(ch,-1);return}
     const cs=S_.customers.filter(c=>c.grade<=sisGrade(ch)),cu=one(cs);
     /* 손님 취향과 맞는 옷을 먼저 고르고, 없으면 값이 가장 높은 옷 */
     const ord=ch.sis.order&&ch.sis.turn<=ch.sis.order.until?ch.sis.order:null;if(ch.sis.order&&!ord)ch.sis.order=null;
-    const tm=c=>sisTasteMul(cu,c.color,c.pattern),idx=ch.sis.cloth.map((c,i)=>i).filter(i=>!sisHold(ch,ch.sis.cloth[i])).sort((a,b)=>{const A=ch.sis.cloth[a],B=ch.sis.cloth[b];return (sisOrderMatch(ord,B)?1e6:0)+B.price*tm(B)-((sisOrderMatch(ord,A)?1e6:0)+A.price*tm(A))})[0];
+    const tm=c=>sisTasteMul(cu,c.color,c.pattern),idx=ch.sis.cloth.map((c,i)=>i).sort((a,b)=>{const A=ch.sis.cloth[a],B=ch.sis.cloth[b];return (sisOrderMatch(ord,B)?1e6:0)+B.price*tm(B)-((sisOrderMatch(ord,A)?1e6:0)+A.price*tm(A))})[0];
     const c=ch.sis.cloth[idx],tmul=tm(c),match=tmul>=1.2,ordHit=sisOrderMatch(ord,c);
     if(d(100)<=Math.round(M.fail*100)){chips.push(`${cu.n}가 고개를 저었다 · 팔지 못했다`);return}
     const Q=D.sisyphus.quality,q=c.q||0,v=Math.round(c.price*Q.mul[q]*M.mul*tmul*sisComplyMul(ch)*(ordHit?D.sisyphus.orders.mul:1)),pts=M.pts+(match?1:0)+Q.pts[q]+(ordHit?2:0)+sisHqPts(c);
@@ -2972,10 +2969,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     if(sv.st==='day2'){
       sv.lootDone=false;sv.crafted=0;
-      const has=ch.sis.cloth.some(c=>!sisHold(ch,c));
+      const has=ch.sis.cloth.length>0;
       return {type:'event',ev:{t:A.day2.t,x:`${A.day2.x}\n\n${sisInv(ch)}\n${sisGoalText(ch)}`,c:[
         ...((()=>{const R2=sv.red;return R2&&R2.alive&&sv.fac==='rouge'&&!R2.shroud&&ch.sis.cloth.some(c=>c.shape==='gold')?[{l:`지은 황금가죽 망토를 ${R2.name||'붉은 신'}에게 입힌다`,h:'허기가 가라앉는다 · 이 옷은 팔 수 없게 된다',ok:{t:S_.red.shroud.ok,fx:{sisWear:1}}}]:[]})()),
-        ...(has?(()=>{const Q_=S_.quality,best=ch.sis.cloth.filter(c=>!sisHold(ch,c)).reduce((b,c)=>(c.price*Q_.mul[c.q||0]>b.price*Q_.mul[b.q||0]?c:b)),qp=Q_.pts[best.q||0]+sisHqPts(best),pr=m=>`점수 +${S_.sell[m].pts+qp}~${S_.sell[m].pts+qp+1}`;
+        ...(has?(()=>{const Q_=S_.quality,best=ch.sis.cloth.reduce((b,c)=>(c.price*Q_.mul[c.q||0]>b.price*Q_.mul[b.q||0]?c:b),ch.sis.cloth[0]),qp=Q_.pts[best.q||0]+sisHqPts(best),pr=m=>`점수 +${S_.sell[m].pts+qp}~${S_.sell[m].pts+qp+1}`;
           return [{l:S_.sell.push.n,h:`값 ×${S_.sell.push.mul} · 거절 ${Math.round(S_.sell.push.fail*100)}% · ${pr('push')}`,ok:{t:S_.sell.push.x,fx:{sisSell:'push'}}},{l:S_.sell.trust.n,h:`값 ×1 · 거절 없음 · ${pr('trust')}`,ok:{t:S_.sell.trust.x,fx:{sisSell:'trust'}}}]})():[{l:S_.sell.empty.n,ok:{t:S_.sell.empty.x,fx:{sisSell:'empty'}}}]),
         {l:'거래하러 간다',h:'안이나 재료를 맞바꾼다',ok:{t:'층마다 값을 부르는 이들이 있다.',fx:{sisGo:'trade'}}}]}};
     }
