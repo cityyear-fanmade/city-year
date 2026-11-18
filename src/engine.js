@@ -3280,6 +3280,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const wp=one(w);
     return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${wp} ${tl}${fam}`,xs:[wp,tl].concat(fam?[fam.trim()]:[]),c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +${CFG.accel.change.story} (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
   function advanceYear(G){
+    {const c0=G.ch,O=c0&&c0.sisEnd&&!c0.sis&&c0.sisDone&&D.sisyphus.outside&&D.sisyphus.outside[c0.sisDone.fac];
+      if(O&&G.year>=53&&G.year<=55){const i=G.year-53;(c0.outSeen=c0.outSeen||{});if(!c0.outSeen[G.year]&&O[i]){c0.outSeen[G.year]=1;const e=O[i],r=c0.sisDone.red,vk=e.v?(c0.sisDone.fac==='rouge'?(r==='with'?'with':'buffet'):(r==='slain'?'slain':'left')):null;
+        return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:e.x+(vk&&e.v[vk]?'\n\n'+e.v[vk]:''),c:e.c}}}}}
     if(CFG.sis.share&&G.ch&&G.ch.sisEnd&&!G.ch.sisShareEnd){G.ch.sisShareEnd=1;return {type:'end',win:true,sisShare:true}}   /* 시지프 공유 시험판: 붕괴를 지나 백화점에서 나오면 여기서 끝난다 */
     hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);staffTick(G.ch,G.year);officeYear(G.ch,G.year);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
