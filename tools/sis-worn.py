@@ -8,7 +8,8 @@ from collections import deque
 from PIL import Image
 import numpy as np
 W,H=412,734
-BASE_W,BASE_Y=190,700   # 받침대 폭(픽셀), 받침대 바닥 높이
+BASE_W,BASE_Y=190,700
+MALE_H,MALE_Y=637,712   # 여성형 결과물의 마네킹 전체 키(픽셀)와 받침대 바닥 높이   # 받침대 폭(픽셀), 받침대 바닥 높이
 def load(p):
     a=np.array(Image.open(p).convert('RGB')).astype(int)
     r,g,b=a[...,0],a[...,1],a[...,2]
@@ -50,7 +51,10 @@ def main(src,dst):
             rw=low.sum(1);bw=int(rw.max());ys_=np.where(rw>bw*0.5)[0]
             by=int(y0+(y1-y0)*0.78)+int(ys_.max());bxs=np.where(low[int(ys_.min()):int(ys_.max())+1].any(0))[0];bcx=(bxs.min()+bxs.max())/2;bw=bxs.max()-bxs.min()
         k=BASE_W/bw
-        cw,ch=W/k,H/k;box=(int(bcx-cw/2),int(by-(BASE_Y)/k),int(bcx+cw/2),int(by-(BASE_Y)/k+ch))
+        if n.startswith('m_'):k=MALE_H/(y1-y0);BY_=MALE_Y
+        else:BY_=BASE_Y
+        if False:pass   # 남성형은 받침대가 더 넓어서 받침대 폭 대신 마네킹 전체 키를 여성형과 같게 맞춘다
+        cw,ch=W/k,H/k;box=(int(bcx-cw/2),int(by-(BY_)/k),int(bcx+cw/2),int(by-(BY_)/k+ch))
         if pale:
             # 마네킹·받침대가 옷과 비슷한 색이라 모양으로 가른다: 목(윗부분 가운데)·받침대(옷 밑단 아래)·검은 외곽선을 뺀다
             hh=y1-y0;rowsw=nong.sum(1)
