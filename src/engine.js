@@ -2752,7 +2752,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(red==='with'){const nm=R.name||'붉은 신';addStats(ch.stats,{maxHp:20,atk:2});ch.hp+=20;(ch.relics=ch.relics||[]).push('동행 · '+nm);ch.flags=ch.flags||{};ch.flags.sisRed=nm;chips.push(`동행 · ${nm} · 최대 HP +20 · 공격 +2`)}
     if(sv.inq===1){ch.titles=ch.titles||[];const T2='접수 번호를 받은 자';if(!ch.titles.includes(T2)){ch.titles.push(T2);(ch.titleLog=ch.titleLog||[]).push(T2);chips.push('칭호 · '+T2)}}
     ch.sisEnd=true;ch.sis=null;
-    if(ch.distDeckPend&&ch.distForm)distortDeck(ch);
+    if(ch.distDeckPend&&ch.distForm){distortDeck(ch);setStable(ch)}   // 백화점의 뒤틀림은 안정형 뒤틀림이다: 장비를 다시 쓰고 더 강해진 뒤틀린 카드팩을 든다
     if(fac!=='kaki'&&!ch.distForm&&!ch.distPick){ch.distPick=true;chips.push('몸이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
   }
   /* 몰랐던 규칙을 겪어서 알게 된다: 안내판에서 못 본 규칙을 어기면 순응이 한 번 더 깎이고, 그 규칙이 목록에 적힌다 */
