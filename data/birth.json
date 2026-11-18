@@ -10352,7 +10352,8 @@
     "n": "황금가죽",
     "kind": "base",
     "img": "sis_m_goldskin",
-    "mul": 1
+    "mul": 1,
+    "hi": 1
    },
    "dye": {
     "n": "염료",
@@ -10375,27 +10376,32 @@
    "wool": {
     "n": "모직",
     "kind": "base",
-    "mul": 1.4
+    "mul": 1.4,
+    "hi": 1
    },
    "silk": {
     "n": "비단",
     "kind": "base",
-    "mul": 2
+    "mul": 2,
+    "hi": 1
    },
    "tanned": {
     "n": "무두질 가죽",
     "kind": "base",
-    "mul": 1.3
+    "mul": 1.3,
+    "hi": 1
    },
    "silver": {
     "n": "은실",
     "kind": "base",
-    "mul": 1.1
+    "mul": 1.1,
+    "hi": 1
    },
    "goldthread": {
     "n": "황금실",
     "kind": "base",
-    "mul": 1.2
+    "mul": 1.2,
+    "hi": 1
    }
   },
   "tailor": {
@@ -11060,7 +11066,11 @@
     "소매",
     "몸판",
     "안감"
-   ]
+   ],
+   "hq": {
+    "pts": 1,
+    "need": 2
+   }
   },
   "explore": {
    "intro": "방송은 아무 일도 없었다는 듯 흐른다. 이곳이 어떤 곳인지 주위를 살펴본다.",
