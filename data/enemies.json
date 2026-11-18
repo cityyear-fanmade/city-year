@@ -9369,7 +9369,8 @@
    "tier": "early",
    "intro": "사람 머리만 한 가죽 덩어리가 벌레 같은 다리로 매장 바닥을 긁으며 다가온다. 이번엔 무슨 유행이냐고 묻는 소리가 가죽 밑에서 새어 나온다.",
    "mat": [
-    "leather"
+    "leather",
+    "cloth"
    ],
    "extra": {
     "mat": "trim",
@@ -9392,7 +9393,8 @@
    "tier": "early",
    "intro": "매대 아래에서 지갑 하나가 입을 벌린다. 안쪽은 비어 있는데도 무언가를 지키는 것처럼 지퍼가 꽉 물려 있다.",
    "mat": [
-    "leather"
+    "leather",
+    "cloth"
    ],
    "extra": {
     "mat": "trim",
@@ -9417,7 +9419,8 @@
    "intro": "작은 봉제인형이 국자를 끌고 주방 문턱에 선다. 오늘의 재료를 고르는 눈이 당신에게서 멈춘다.",
    "mat": [
     "soda",
-    "leather"
+    "leather",
+    "cloth"
    ],
    "extra": {
     "mat": "trim",
