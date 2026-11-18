@@ -1324,7 +1324,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.sisEnter){const S_=D.sisyphus,ks=Object.keys(S_.subj),k=fx.sisEnter==='rand'?one(ks):fx.sisEnter;ch.sisP=null;if(ch.licensed){ch.licensed=false;ch.title=null;chips.push('해결사 자격 반납 · 시지프형을 선고받으면 해결사 일은 할 수 없다')}ch.sis={subj:k,turn:1,grade:0,rewound:0,lean:0,in:ch.year||0,pts:0,st:'day1',mat:{},dyes:[],cloth:[],fac:null,comply:5,rules:[],visited:[],rew:0,cycle:0,inv:[],exploreDone:false,red:null,walls:0};chips.push(S_.subj[k].v||S_.subj[k].t);chips.push('시지프형 선고 · 시지프 백화점에 갇힌다 · 고객 등급 토파즈')}
     if(fx.sisAssim){const Z=D.sisyphus.assim[fx.sisAssim];ch.sis.assimDone=1;if(Z.pack&&!ch.packOffer){ch.packOffer={n:Z.pack.n,cards:Z.pack.cards.slice(),passive:null,e:Z.pack.e,sis:fx.sisAssim};chips.push(`${Z.pack.n} · 덱을 바꿀지 고른다`)}else if(fx.sisAssim==='kaki')chips.push('유행 · 전투마다 유행하는 키워드가 바뀐다')
       if(fx.sisAssim!=='kaki'&&!ch.distForm&&!ch.distPick){ch.distPick=true;chips.push('몸이 뒤틀린다 · 뒤틀림의 이름을 정한다 · 백화점을 나온 뒤에도 그대로다')}}
-    if(fx.sisGo||fx.sisHunt||fx.sisCraft||fx.sisSell||fx.sisTrade||fx.sisRest||fx.sisUpgrade||fx.sisBuy||fx.sisExplore||fx.sisInvent||fx.sisRedBorn||fx.sisRedLang!=null||fx.sisFeed||fx.sisShroud||fx.sisAttack||fx.sisBuffet||fx.sisWall||fx.sisWarden||fx.sisCs||fx.sisOut||fx.sisEx||fx.sisTfight||fx.sisTrendBack||fx.sisWFight||fx.sisBFight||fx.sisFate||fx.sisFloor||fx.sisOrder)sisFx(ch,fx,chips);
+    if(fx.sisGo||fx.sisHunt||fx.sisCraft||fx.sisSell||fx.sisTrade||fx.sisRest||fx.sisUpgrade||fx.sisBuy||fx.sisExplore||fx.sisInvent||fx.sisRedBorn||fx.sisRedLang!=null||fx.sisFeed||fx.sisShroud||fx.sisAttack||fx.sisBuffet||fx.sisWall||fx.sisWarden||fx.sisCs||fx.sisOut||fx.sisEx||fx.sisTfight||fx.sisTrendBack||fx.sisWFight||fx.sisBFight||fx.sisFate||fx.sisFloor||fx.sisOrder||fx.sisPick)sisFx(ch,fx,chips);
     if(fx.tbJoin){const Bd=CFG.nWing.tbBody;addStats(ch.stats,Bd);ch.hp+=Bd.maxHp;chips.push(`N사 육체 시술 · 최대 HP +${Bd.maxHp} · 공격 +${Bd.atk} · 속도 +${Bd.spd} (의체가 아니라 몸 자체를 고친 것이다)`);if(ch.licensed&&ch.rank>CFG.nWing.tbRank){while(ch.rank>CFG.nWing.tbRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급으로 시작한다`)}}
     if(fx.bmRank&&ch.licensed){while(ch.rank>fx.bmRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급이 되었다`)}   // 검은 가면: 전쟁의 실적으로 급수가 오른다
     if(fx.bmLose&&ch.bond&&ch.bond.st!=='lost'&&ch.bond.st!=='declined'&&ch.bond.st!=='left'){const b_=ch.bond;if(b_.st==='married')bondDeath(ch,chips);else{b_.st='lost';ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`곁에 있던 사람을 잃었다 · 최대 정신력 −${BD.lossMind} (영구)`)}b_.dieBy='risk';b_.dieYear=ch.year||0}
@@ -2802,6 +2802,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(F.hp){const h=Math.round(ch.stats.maxHp*F.hp);ch.hp=Math.max(1,ch.hp+h);chips.push(`체력 ${h>0?'+':''}${h}`)}}
     if(fx.sisOrder){const O=fx.sisOrder,Z=D.sisyphus.orders;sv.evDay=sv.turn;sv.orderNext=sv.turn+Z.every;sv.orderOffer=null;
       if(O.take){sv.order={id:O.id,color:O.color,pattern:O.pattern,shape:O.shape||null,until:sv.turn+Z.span};chips.push('주문 접수 · '+sisOrderText(sv.order)+` · 기한 ${Z.span}턴`)}}
+    if(fx.sisPick){const z_=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],t_=z_.targets&&z_.targets[fx.sisPick];if(t_){sv.pickTurn=sv.turn;sv.pickFoe=t_.foe;sv.risk=fx.sisPick==='risk'}}
     if(fx.sisBFight)sv.st='bfight';
     if(fx.sisFate){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.fateDone=1;sv.comply=Math.max(0,(sv.comply==null?5:sv.comply)-1);sv.falls=(sv.falls||0)+1;sv.st='done';sv.rew=(sv.rew||0)+CS.fateBack;sv.rewound=(sv.rewound||0)+CS.fateBack;chips.push(`운명 이탈 · 간수에게 쓰러졌다 · 시간이 ${CS.fateBack}칸 되돌아갔다 · 기억은 그대로 · 샘터에서 깨어났다 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`);sisLearn(ch,'warden',chips,false);ch.titles=ch.titles||[];const T_=D.sisyphus.fate.title;if(!ch.titles.includes(T_)){ch.titles.push(T_);(ch.titleLog=ch.titleLog||[]).push(T_);chips.push('칭호 · '+T_)}}
     if(fx.sisWarden){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.warden=0;sv.comply=Math.max((sv.comply==null?5:sv.comply)+1,CS.wardenComply+1);sv.falls=(sv.falls||0)+1;sv.st='done';chips.push(`간수에게 끌려갔다 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`);sisLearn(ch,'warden',chips,false)}
@@ -2902,13 +2903,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(L&&sv.evDay!==sv.turn&&sv.floorPass!==sv.turn){sv.floorPass=sv.turn;const fe=L.find(e=>!(sv.floorSeen&&sv.floorSeen[e.id])&&sv.turn>=e.from&&sv.turn<=e.to);
           if(fe&&d(100)<=CS.floorChance)return {type:'event',ev:{t:fe.t,x:fe.x,c:fe.c.filter(c=>!c.needDye||sv.dyes.length>=c.needDye).map(c=>Object.assign({},c))}}}}
       const z=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],bosses=z.foes.filter(f=>D.enemies[f].tier==='boss'),norm=z.foes.filter(f=>D.enemies[f].tier!=='boss');
-      const id=bosses.length&&(!norm.length||d(100)<=CFG.sis.bossChance)?one(bosses):one(norm.length?norm:z.foes);
+      if(z.targets&&sv.pickTurn!==sv.turn){const T_=z.targets,P_=S_.pick;return {type:'event',ev:{t:P_.t,x:`${z.n}\n\n${P_.x}`,c:[{l:T_.safe.n,h:P_.safeH,ok:{t:T_.safe.x,fx:{sisPick:'safe'}}},{l:T_.risk.n,h:P_.riskH,ok:{t:T_.risk.x,fx:{sisPick:'risk'}}}]}}}
+      const id=(z.targets&&sv.pickFoe)?sv.pickFoe:(bosses.length&&(!norm.length||d(100)<=CFG.sis.bossChance)?one(bosses):one(norm.length?norm:z.foes));
+      sv.riskNow=!!(z.targets&&sv.pickFoe&&sv.risk);sv.pickFoe=null;
       sv.pend=z.id;sv.foe=id;sv.st='craft';sv.crafted=0;sv.lootDone=false;sv.skipHunt=0;
       return {type:'fight',enemy:id,enc:{sis:true,label:`${z.n} · ${D.enemies[id].n}`}};
     }
     if(sv.st==='craft'){
       const z=sv.skipHunt?null:D.sisyphus.zones.find(x=>x.id===sv.pend),chips=[];
-      if(z&&!sv.lootDone){sisLoot(ch,z,chips);sv.lootDone=true;sv.lootNote=chips.join('\n')}
+      if(z&&!sv.lootDone){sisLoot(ch,z,chips);if(sv.riskNow){chips.push('위험을 무릅쓴 대가');sisLoot(ch,z,chips)}sv.riskNow=false;sv.lootDone=true;sv.lootNote=chips.join('\n')}
       const opts=sv.crafted?[]:D.sisyphus.tailor.shapes.filter(s=>sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok);
       return {type:'event',ev:{t:A.craft.t,sisBench:true,sbCrafted:!!sv.crafted,x:`${sv.lootNote||''}\n\n${A.craft.x}\n\n${sisInv(ch)}`,c:[
         ...opts.map(s=>({l:`${s.n}을 짓는다 (민무늬·회색)`,h:`값 약 ${sisAn(s.price)}`,ok:{t:'가위가 천을 따라 움직인다.',fx:{sisCraft:{shape:s.id,pattern:'plain',color:'gray'}}}})),
