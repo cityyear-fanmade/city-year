@@ -1997,6 +1997,7 @@ ${symRec(r)}
       <button class="btn primary" data-a="sbmake" ${info.ok?'':'disabled'}><b>옷을 짓는다</b></button>`;
     return `${vHud()}<div class="stack" style="gap:8px"><div class="eyebrow">${yearTag()}${E.age(G)}세의 해 · 재단대</div><h2>${ev.t}</h2>${inv[0]&&/사냥/.test(inv[0])?`<p class="small dim" style="white-space:pre-line">${inv[0]}</p>`:''}
       ${tabs}${tab==='up'?vSisUp(ev):cut}
+      ${(()=>{const src=E.sisSources(ch);return src.length?`<details class="more"><summary>재료 얻는 곳</summary><div class="small dim" style="display:grid;gap:4px">${src.map(x=>`<span><b>${esc(x.n)}</b> · ${esc(x.from)}</span>`).join('')}</div></details>`:''})()}
       ${(()=>{const t=String(inv[inv.length-1]||'');if(!t)return '';const L=t.split('\n'),ri=L.findIndex(l=>l==='알게 된 규칙');return `<details class="more"><summary>내 상태 · 재료 · 단골 맞춤 · 순응도 · 알게 된 규칙</summary><div class="small dim" style="white-space:pre-line">${(ri<0?L:L.slice(0,ri)).join('\n')}${ri<0?'':'\n\n'+L.slice(ri).join('\n')}</div></details>`})()}</div>
       <div class="stack" style="gap:8px">${skip>=0?`<button class="btn" data-a="choose" data-i="${skip}"><b>${ev.sbCrafted||tab==='up'?'재단대를 마친다':ev.c[skip].l}</b></button>`:''}</div>`;
   }
