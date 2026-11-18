@@ -807,6 +807,7 @@ export function startUI(E,app){
     const C=D.sisyphus.comply,cp=sv.comply==null?5:sv.comply,R=sv.red,msgs=['시즌 안내 방송입니다. 규칙을 지키는 고객께는 층이 열립니다.',(C.names[Math.max(0,Math.min(10,cp))]||'')];
     if(cp<=D.sisyphus.comply.low)msgs.push('허용되지 않은 행동을 한 고객께서는 간수실로 와 주시기 바랍니다.');
     if(R&&R.alive&&R.hunger>=5)msgs.push(`${R.name||'붉은 것'}의 허기가 깊어지고 있습니다.`);
+    if(R&&R.alive&&!R.shroud&&R.hunger>=8)msgs.push(`${R.name||'붉은 것'}의 허기가 한계에 가깝습니다. 곧 몸이 변합니다.`);
     if(sv.fac==='kaki')msgs.push('이번 시즌의 유행은 전투마다 바뀝니다.');
     const gg=[['순응도',cp,10]];if(R&&R.alive)gg.push([`${R.name||'붉은 신'}의 허기`,R.hunger||0,10]);if(sv.fac&&(sv.fit||0)>0)gg.push(['단골 맞춤',sv.fit,CFG.sis.fit.per*CFG.sis.fit.maxTier]);
     const bars=gg.map(([n,v,m])=>`<span class="sis-g"><b>${esc(n)}</b><i style="--v:${Math.round(100*v/m)}%"></i><em>${v}/${m}</em></span>`).join('');
