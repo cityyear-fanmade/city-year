@@ -2660,7 +2660,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const fm=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].mat,k=one(fm&&fm.length?fm:mats),LR=zone.loot||{lo:1,hi:2},n=(LR.lo-1)+d(LR.hi-LR.lo+1)+((S_.lootGrade||[])[sisGrade(ch)]||0);
     if(k==='soda'){const h=Math.round(ch.stats.maxHp*0.15);ch.hp=Math.min(ch.stats.maxHp,ch.hp+h);out.push(`정육 소다 · 체력 +${h}`)}
     else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');const c=one(open);ch.sis.dyes.push(c.id);out.push(`염료(${c.n}) 1병`)}
-    else{const amt=k==='goldskin'?1:n;if(amt){sisMat(ch,k,amt);out.push(`${S_.mats[k].n} ${amt}`)}else out.push('황금가죽은 나오지 않았다')}
+    else{const boss_=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].tier==='boss',amt=k==='goldskin'?1+(sisGrade(ch)>=4?1:0)+(boss_?1:0):k==='goldthread'?n+(boss_?1:0):n;if(amt){sisMat(ch,k,amt);out.push(`${S_.mats[k].n} ${amt}`)}else out.push('황금가죽은 나오지 않았다')}
     const an=CFG.sis.huntAn[sisGrade(ch)]||5;ch.money+=an;out.push(sisAn(an));
     {const fx_=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].extra;if(fx_&&d(100)<=fx_.pct){sisMat(ch,fx_.mat,1);out.push(`${S_.mats[fx_.mat].n} 1`)}}
     chips.push('사냥 · '+out.join(' · '));
@@ -2796,7 +2796,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.sisShroud){const R=sv.red;if(R&&(sv.mat.resin||0)>=2&&(sv.mat.goldskin||0)>=1){sv.mat.resin-=2;sv.mat.goldskin-=1;R.shroud=true;R.hunger=0;chips.push(`황금가죽 망토 · ${R.name||'붉은 신'}의 허기가 가라앉았다`)}}
     if(fx.sisAttack){const R=sv.red;if(R){R.fightDone=1;sv.st='redfight'}}
     if(fx.sisBuffet){const R=sv.red;if(R){R.buffetDone=1;sv.st='buffetfight'}}
-    if(fx.sisWall){sisMat(ch,'resin',1);sv.lean=Math.max(-CFG.sis.leanMax,sv.lean-2);sisAdj(ch,-2);sv.walls=(sv.walls||0)+1;chips.push('벽 뜯기 · 황금송진 1');sisLearn(ch,'wall',chips,true);if(d(100)<=CS.wallGuard){sv.st='wallfight';chips.push(Zs.wall.guard)}else sv.st='day2'}
+    if(fx.sisWall){const rn_=1+(sisGrade(ch)>=3?1:0);sisMat(ch,'resin',rn_);sv.lean=Math.max(-CFG.sis.leanMax,sv.lean-2);sisAdj(ch,-2);sv.walls=(sv.walls||0)+1;chips.push(`벽 뜯기 · 황금송진 ${rn_}`);sisLearn(ch,'wall',chips,true);if(d(100)<=CS.wallGuard){sv.st='wallfight';chips.push(Zs.wall.guard)}else sv.st='day2'}
     if(fx.sisFloor){const F=fx.sisFloor;(sv.floorSeen=sv.floorSeen||{})[F.id]=1;sv.evDay=sv.turn;
       if(F.an){ch.money=Math.max(0,ch.money+F.an);chips.push(`${F.an>0?'+':'−'}${sisAn(Math.abs(F.an))}`)}
       if(F.comply){sisAdj(ch,F.comply);chips.push(`순응도 ${F.comply>0?'+':''}${F.comply}`)}
