@@ -31,21 +31,43 @@ def main(src,dst):
         green=(g>150)&(r<120)&(b<120)
         mx,mn=a.max(2),a.min(2);sat=(mx-mn)/np.maximum(mx,1)
         beige=(sat>=0.18)&(r>b+30)&~green
-        if beige.sum()<500:print(n,'마네킹(베이지)이 안 보여 건너뜀');continue
+        pale=beige.sum()<500   # 마네킹과 옷이 비슷한 색(분홍빛 회색)이면 모양(위치)으로 가른다
+        if pale:
+            if not (n.startswith('m_')):print(n,'마네킹(베이지)이 안 보여 건너뜀');continue
         h,w=green.shape
         x0,y0,x1,y1=bbox(green)
-        # 마네킹 크기를 일정하게: 받침대(진한 회색) 폭을 기준으로 배율을 정하고, 받침대 바닥·가운데를 같은 자리에 둔다
-        dark=(~green)&(sat<0.18)&(mx<=108)&(mx>30)
-        low=dark[int(y0+(y1-y0)*0.78):y1+1]
-        rw=low.sum(1);bw=int(rw.max());ys_=np.where(rw>bw*0.5)[0]
-        by=int(y0+(y1-y0)*0.78)+int(ys_.max());bxs=np.where(low[ys_.max()-2:ys_.max()+1].any(0))[0]
-        bxs=np.where(low[int(ys_.min()):int(ys_.max())+1].any(0))[0];bcx=(bxs.min()+bxs.max())/2;bw=bxs.max()-bxs.min()
-        k=BASE_W/bw   # 원본 1픽셀 = 결과 k픽셀
+        # 마네킹 크기를 일정하게: 받침대 폭을 기준으로 배율을 정하고, 받침대 바닥·가운데를 같은 자리에 둔다
+        nong=~green
+        if pale:
+            rowsw=nong.sum(1);hh=y1-y0
+            lowrows=[yy for yy in range(int(y0+hh*0.93),y1) if rowsw[yy]>0]   # 받침대 바닥 쪽 줄만(옷 밑단 제외)
+            bw=int(max(rowsw[yy] for yy in lowrows));by=y1
+            sel=[yy for yy in lowrows if rowsw[yy]>=bw*0.5]
+            bxs=np.where(nong[sel[0]:sel[-1]+1].any(0))[0];bcx=(bxs.min()+bxs.max())/2;bw=bxs.max()-bxs.min()
+        else:
+            dark=(~green)&(sat<0.18)&(mx<=108)&(mx>30)
+            low=dark[int(y0+(y1-y0)*0.78):y1+1]
+            rw=low.sum(1);bw=int(rw.max());ys_=np.where(rw>bw*0.5)[0]
+            by=int(y0+(y1-y0)*0.78)+int(ys_.max());bxs=np.where(low[int(ys_.min()):int(ys_.max())+1].any(0))[0];bcx=(bxs.min()+bxs.max())/2;bw=bxs.max()-bxs.min()
+        k=BASE_W/bw
         cw,ch=W/k,H/k;box=(int(bcx-cw/2),int(by-(BASE_Y)/k),int(bcx+cw/2),int(by-(BASE_Y)/k+ch))
-        bmax=int(np.where(beige)[0].max())
-        gray=(~green)&(sat<0.18)&(mx>108)   # 옷의 밝은 회색(진한 회색 봉·받침대·외곽선·검은 띠는 제외)
-        near=np.array(Image.fromarray((beige*255).astype('uint8'),'L').filter(__import__('PIL.ImageFilter',fromlist=['x']).MaxFilter(9)))>127
-        gray&=~near
+        if pale:
+            # 마네킹·받침대가 옷과 비슷한 색이라 모양으로 가른다: 목(윗부분 가운데)·받침대(옷 밑단 아래)·검은 외곽선을 뺀다
+            hh=y1-y0;rowsw=nong.sum(1)
+            shoulder=next(yy for yy in range(y0,y1) if rowsw[yy]>0.30*(x1-x0))   # 어깨가 시작되는 줄
+            # 받침대 시작: 어깨 아래에서 폭이 처음 봉 굵기(전체 폭의 14%) 아래로 줄어드는 줄
+            rod=next((yy for yy in range(int(y0+hh*0.55),y1) if rowsw[yy]<0.20*(x1-x0)),y1)
+            rod=min(rod,int(y1-0.40*bw))   # 받침대 바닥 타원(높이 약 폭의 0.4)은 항상 뺀다
+            cx0=(x0+x1)//2;nk=int((x1-x0)*0.17)
+            gray=nong&(mx>108)
+            gray[:shoulder,max(0,cx0-nk):cx0+nk]=False     # 목 기둥
+            gray[rod:]=False                                # 받침대
+            near=np.zeros_like(gray)
+        else:
+            bmax=int(np.where(beige)[0].max())
+            gray=(~green)&(sat<0.18)&(mx>108)   # 옷의 밝은 회색(진한 회색 봉·받침대·외곽선·검은 띠는 제외)
+            near=np.array(Image.fromarray((beige*255).astype('uint8'),'L').filter(__import__('PIL.ImageFilter',fromlist=['x']).MaxFilter(9)))>127
+            gray&=~near
         ys=np.arange(h)[:,None]
         mask=gray.copy()
         rs=mask.sum(1)>3;run=0;cut=None;seen_g=False        # 옷 밑단 아래 빈 줄이 이어지면 그 아래(받침대 하이라이트)는 버린다
