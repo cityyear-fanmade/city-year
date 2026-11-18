@@ -2976,7 +2976,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const lc=[];if(C.id==='sis_buffet')lc.push(D.sisyphus.red.buffetLose);sisLearn(ch,'fall',lc,false);return {text:D.sisyphus.act.fall.x,chips:[...lc,`샘터에서 깨어났다 · 체력 ${ch.hp}`,lost?`안 ${lost} 잃었다`:'잃은 것은 없다','얻은 물건은 그대로 남아 있다']};
   }
   /* 백화점 안에서는 해가 바뀌어도 일반 사건 대신 조용히 지나가고, 다음 하루가 시작된다 */
-  function sisQuiet(G){return sisOn(G.ch)?{type:'quiet',year:G.year}:null}
+  function sisQuiet(G){const c=G.ch;if(sisOn(c))return {type:'quiet',year:G.year};
+    /* 백화점에서 나온 뒤(밖 이야기 53~55, 2막 56~73)에도 일반 연례 사건·전투는 끼지 않고 시지프 사건만 나온다 */
+    if(c&&c.sisEnd&&!c.sis&&c.sisDone&&!G.infinite&&!CFG.sis.share&&D.sisyphus&&G.year>=53&&G.year<=55+((D.sisyphus.act2||[]).length))return {type:'quiet',year:G.year};
+    return null}
   function tabooOffer(G){const ch=G.ch,T_=D.taboo;if(!T_||!eastN(ch)||(ch.fi??0)<2||ch.flags.tbHunt||ch.flags.tbNo||ch.distForm)return null;const O=T_.offer;
     return {t:O.t,x:O.x,c:[{l:O.yes.l,h:O.yes.h,ok:{t:O.yes.t,fx:{flag:'tbHunt',tbJoin:1}}},{l:O.no.l,h:O.no.h,ok:{t:O.no.t,fx:{flag:'tbNo'}}}]}}
   const routeSt=ch=>ch.rt=ch.rt||{used:{},n:0};
@@ -3309,16 +3312,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${wp} ${tl}${fam}`,xs:[wp,tl].concat(fam?[fam.trim()]:[]),c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +${CFG.accel.change.story} (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
   function advanceYear(G){
     {const c1=G.ch,A2=c1&&c1.sisEnd&&!c1.sis&&c1.sisDone&&!CFG.sis.share&&D.sisyphus.act2;
-      if(A2&&G.year>=56&&G.year<=60){const e=A2[G.year-56];(c1.outSeen=c1.outSeen||{});
+      if(A2&&G.year>=56&&G.year<=55+A2.length){const e=A2[G.year-56];(c1.outSeen=c1.outSeen||{});
         if(e&&!c1.outSeen[G.year]){c1.outSeen[G.year]=1;const sd=c1.sisDone,Ac=c1.sisAct=c1.sisAct||{};
           if(!Ac.key){Ac.key=sd.fac==='rouge'?(sd.red==='with'?'red':'alone'):sd.fac==='noir'?(sd.ol?'ol':'alone'):((c1.bond&&['met','married'].includes(c1.bond.st))?'family':(sd.ann||sd.pal)?'friend':'alone')}
           const role=Ac.role,k=Ac.key==='red'&&G.year>=59?'red_'+(role||'stay'):Ac.key;
-          const vv=k==='friend'?[sd.ann?e.v.ann:'',sd.pal?e.v.pal:''].filter(Boolean).join(' '):(e.v[k]||'');
+          const vv=k==='friend'?[sd.ann?e.v.ann:'',sd.pal?e.v.pal:''].filter(Boolean).join(' '):(e.v[k]||(k.startsWith('red_')?e.v.red:'')||'');
           const hint=(G.year===58&&Ac.key==='red'&&(Ac.walk||0)>=1)?'\n연기 속을 걸어 본 적이 있는 몸이라, 곁의 붉은 것도 손을 먼저 내밀려는 듯하다.':'';
           if(Ac.key==='red'&&!Ac.role){Ac.role=sd.rel==='love'?'spouse':'child'}
           const cs=(e.choices?(Ac.key==='red'?[Object.assign({},(Ac.role==='spouse'?e.choices.red[0]:e.choices.red[1]),{l:'이어서'})]:e.choices.default):e.c);
-          const love=G.year===60&&Ac.key==='red'&&Ac.role==='spouse'&&!c1.sisLover;
-          return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:`${e.x}${vv?'\n\n'+vv:''}${hint}`,c:love?[{l:'인연을 맺는다',ok:{t:'붉은 것이 당신의 손을 잡았다. 이름 붙이지 않은 채 이어 온 관계에 처음으로 이름이 생겼다.',fx:{maxHp:20,sisTitle:'비가 그친 뒤의 사람',sisLover:1}}},{l:'각자의 길을 간다',ok:{t:'손을 놓지 않은 채 한동안 서 있었다. 그러다 천천히 놓았다.',fx:{maxHp:20,sisTitle:'비가 그친 뒤의 사람'}}}]:cs}}}}}
+          const love=G.year===55+A2.length&&Ac.key==='red'&&Ac.role==='spouse'&&!c1.sisLover;
+          return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:`${e.x}${vv?'\n\n'+vv:''}${hint}`,c:love?[{l:'인연을 맺는다',ok:{t:'붉은 것이 당신의 손을 잡았다. 이름 붙이지 않은 채 이어 온 관계에 처음으로 이름이 생겼다.',fx:{maxHp:20,sisTitle:'외곽에 닿은 사람',sisLover:1}}},{l:'각자의 길을 간다',ok:{t:'손을 놓지 않은 채 한동안 서 있었다. 그러다 천천히 놓았다.',fx:{maxHp:20,sisTitle:'외곽에 닿은 사람'}}}]:cs}}}}}
     {const c0=G.ch,O=c0&&c0.sisEnd&&!c0.sis&&c0.sisDone&&D.sisyphus.outside&&D.sisyphus.outside[c0.sisDone.fac];
       if(O&&G.year>=53&&G.year<=55){const i=G.year-53;(c0.outSeen=c0.outSeen||{});if(!c0.outSeen[G.year]&&O[i]){c0.outSeen[G.year]=1;const e=O[i],r=c0.sisDone.red,vk=e.v?(c0.sisDone.fac==='rouge'?(r==='with'?'with':'buffet'):(r==='slain'?'slain':'left')):null;
         return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:e.x+(vk&&e.v[vk]?'\n\n'+e.v[vk]:''),c:e.c}}}}}

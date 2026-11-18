@@ -9928,6 +9928,111 @@
    ],
    "tier": "late",
    "intro": "여럿의 숨소리가 하나로 겹친다. 연기가 몸을 감싼다."
+  },
+  "sis_cyber": {
+   "n": "의체사냥꾼",
+   "why": "비 속에서 의체를 단 사람을 쫓는 자. 사냥은 이번 비로 시작된 것이 아니다.",
+   "color": "#4a5a6a",
+   "hp": 70,
+   "atk": 7,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard",
+    "slash"
+   ],
+   "tier": "mid",
+   "intro": "젖은 금속이 걸음마다 울린다. 사냥꾼은 당신의 몸에서 이음새부터 찾는다."
+  },
+  "sis_cyber2": {
+   "n": "의체사냥 무리",
+   "why": "유례없는 규모로 도시를 훑는 사냥꾼들.",
+   "color": "#3a4a5a",
+   "hp": 104,
+   "atk": 9,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard",
+    "slash",
+    "heavy"
+   ],
+   "tier": "late",
+   "intro": "같은 걸음 소리가 여럿으로 겹친다. 골목마다 포위가 좁혀진다."
+  },
+  "sis_inq": {
+   "n": "N사 이단심문관",
+   "why": "N사의 교리에서 벗어난 몸을 가려내는 심문관.",
+   "color": "#6a6a7a",
+   "hp": 124,
+   "atk": 10,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "precise",
+    "thrust",
+    "guard",
+    "heavy"
+   ],
+   "tier": "late",
+   "intro": "심문관이 서류를 펼치지도 않고 당신의 죄목을 읽는다. 이미 정해져 있던 듯하다."
+  },
+  "sis_inq2": {
+   "n": "수석 이단심문관",
+   "why": "심문관들을 부리는 자. 질문이 곧 판결이다.",
+   "color": "#7a7a8a",
+   "hp": 176,
+   "atk": 12,
+   "eva": 5,
+   "spd": 6,
+   "deck": [
+    "precise",
+    "heavy",
+    "thrust",
+    "guard",
+    "slash"
+   ],
+   "tier": "boss",
+   "intro": "수석 심문관이 비를 맞지 않고 걸어 나온다. 우산 대신 판결문을 들었다."
+  },
+  "sis_brand": {
+   "n": "브랜드 매니저",
+   "why": "백화점의 규율을 몸에 단 매니저. 이곳에서는 두 발로 걷는 인간형으로 나타난다.",
+   "color": "#2a2a3a",
+   "hp": 150,
+   "atk": 11,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "precise",
+    "heavy",
+    "thrust",
+    "guard"
+   ],
+   "tier": "boss",
+   "intro": "매니저가 비 속으로 걸어 나온다. 매장 안의 규율이 거리까지 따라 나온다."
+  },
+  "sis_brand2": {
+   "n": "르루주 브랜드 디렉터",
+   "why": "붉은 천의 규율을 쥔 디렉터.",
+   "color": "#8a2a3a",
+   "hp": 190,
+   "atk": 13,
+   "eva": 5,
+   "spd": 6,
+   "deck": [
+    "slash",
+    "heavy",
+    "precise",
+    "guard",
+    "thrust"
+   ],
+   "tier": "boss",
+   "intro": "디렉터의 소매에서 붉은 천이 빗물처럼 흘러내린다. 몸이 먼저 그 박자를 기억한다."
   }
  },
  "fixedFights": {
