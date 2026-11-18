@@ -2846,7 +2846,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(ex===0){if(sv.trendLost)return {type:'event',ev:{t:O.e3.t,x:O.e3.retry,c:[{l:O.e3.l,ok:{t:O.e3.okRetry,fx:{sisTfight:1}}}]}};
         return {type:'event',ev:{t:O.e1.t,x:O.e1.x,c:O.e1.c.map(c=>({l:c.l,ok:{t:c.t,fx:{sisTfight:1}}}))}}}
       const left=X.spots.filter(p=>!sv.visited.includes(p.id)&&!sv.rules.includes(p.rule));
-      if(left.length)return {type:'event',ev:{t:X.t,x:`${sv.visited.length===0?X.intro+'\n\n':''}${X.x} (${sv.visited.length}/${X.need})`,c:left.map(p=>({l:p.n,ok:{t:p.x,fx:{sisExplore:p.id}}}))}};
+      if(left.length)return {type:'event',ev:{t:X.t,x:`${sv.visited.length===0?X.intro+'\n\n':''}${X.x} (${sv.visited.length}/${X.need})`,c:left.map(p=>{const q=p.n.split(' · ');return {l:q[q.length-1],ok:{t:(q.length>1?q.slice(0,-1).join(' · ')+'\n\n':'')+p.x,fx:{sisExplore:p.id}}}})}};
       sv.exploreDone=true}
     {const i=CS.invTurns.findIndex((t,k)=>sv.turn>=t&&!sv.inv[k]);
       if(sv.st==='day1'&&i>=0){const Z=S_.invent,k=Math.min(i,1);return ev1(Z.t,`${Z.x[k]}\n\n${Z.mem[k]}\n\n${Z.rumor[k]}`,Z.l,{sisInvent:i+1},Z.ok)}}

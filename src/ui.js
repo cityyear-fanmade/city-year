@@ -809,7 +809,7 @@ export function startUI(E,app){
     if(sv.fac==='kaki')msgs.push('이번 시즌의 유행은 전투마다 바뀝니다.');
     const gg=[['순응도',cp,10]];if(R&&R.alive)gg.push([`${R.name||'붉은 신'}의 허기`,R.hunger||0,10]);if(sv.fac&&(sv.fit||0)>0)gg.push(['단골 맞춤',sv.fit,CFG.sis.fit.per*CFG.sis.fit.maxTier]);
     const bars=gg.map(([n,v,m])=>`<span class="sis-g"><b>${esc(n)}</b><i style="--v:${Math.round(100*v/m)}%"></i><em>${v}/${m}</em></span>`).join('');
-    return `<div class="sis-bar" role="status"><div class="sis-floors">${cells}</div><div class="sis-tick"><span>${msgs.filter(Boolean).map(esc).join('  ·  ')}</span></div><div class="sis-gauges">${bars}</div></div>`}
+    return `<div class="sis-bar" role="status"><div class="sis-floors">${cells}</div><div class="sis-tick"><span style="animation-delay:-${Date.now()%26000}ms">${msgs.filter(Boolean).map(esc).join('  ·  ')}</span></div><div class="sis-gauges">${bars}</div></div>`}
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `${vSisBar()}<div class="panel stack">
