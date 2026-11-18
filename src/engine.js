@@ -504,7 +504,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return true;
   }
   /* 히든 보스 전용 책장: 받으면 덱이 통째로 바뀌고 영구 고정, 거절하면 지금 덱 유지 (이전 덱은 카드팩 보관함에 남는다) */
-  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm){ch.packOffer=null;return false}stashPack(ch,P.n);ch.extra=[];ch.finalGiven=false;ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;if(P.orgPack)ch.orgPack=P.orgPack;ch.offers=[];ch.picks=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;syncPackFlags(ch);return true}
+  function acceptPack(ch){const P=ch.packOffer;if(!P)return false;if(ch.distForm&&!P.sis){ch.packOffer=null;return false}stashPack(ch,P.n);ch.extra=[];ch.finalGiven=false;ch.deck=P.cards.concat(ch.deck.filter(id=>D.cards[id].fixed));ch.deckLocked=true;if(P.cm)ch.cardMoney=true;if(P.orgPack)ch.orgPack=P.orgPack;ch.offers=[];ch.picks=[];ch.side=[];if(P.relic)(ch.relics=ch.relics||[]).push(P.relic);if(P.passive)(ch.flags=ch.flags||{})[P.passive]=1;ch.packOffer=null;syncPackFlags(ch);return true}
   /* 흑수 카드: 덱이 고정된 흑수 전용 책장이면 카드를 바로 덱에 넣는다 (돈으로 바뀌지 않게) */
   function hwCard(ch,id,chips){if(ch.deckLocked||ch.cardMoney){forceAdd(ch,id);chips&&chips.push('흑수 카드 · '+D.cards[id].n)}else addCard(ch,id,chips,'흑수 카드')}
   /* 흑수 섞기: 후보 시절 카드(hc_)를 덜어내고 일반 책장에 흑수의 첫 카드를 더한다. 덱은 고정하지 않는다 */
@@ -1322,7 +1322,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     if(fx.sisPre){const P=ch.sisP=ch.sisP||{step:1};P.step=fx.sisPre;if(fx.sisSubj)P.subj=fx.sisSubj;if(fx.sisPre===1)chips.push('N사의 금기에 흥미를 가졌다')}
     if(fx.sisEnter){const S_=D.sisyphus,ks=Object.keys(S_.subj),k=fx.sisEnter==='rand'?one(ks):fx.sisEnter;ch.sisP=null;if(ch.licensed){ch.licensed=false;ch.title=null;chips.push('해결사 자격 반납 · 시지프형을 선고받으면 해결사 일은 할 수 없다')}ch.sis={subj:k,turn:1,grade:0,rewound:0,lean:0,in:ch.year||0,pts:0,st:'day1',mat:{},dyes:[],cloth:[],fac:null,comply:5,rules:[],visited:[],rew:0,cycle:0,inv:[],exploreDone:false,red:null,walls:0};chips.push(S_.subj[k].v||S_.subj[k].t);chips.push('시지프형 선고 · 시지프 백화점에 갇힌다 · 고객 등급 토파즈')}
-    if(fx.sisAssim){const Z=D.sisyphus.assim[fx.sisAssim];ch.sis.assimDone=1;if(Z.pack&&!ch.packOffer){ch.packOffer={n:Z.pack.n,cards:Z.pack.cards.slice(),passive:null,e:Z.pack.e,sis:fx.sisAssim};chips.push(`${Z.pack.n} · 덱을 바꿀지 고른다`)}else if(fx.sisAssim==='kaki')chips.push('유행 · 전투마다 유행하는 키워드가 바뀐다')}
+    if(fx.sisAssim){const Z=D.sisyphus.assim[fx.sisAssim];ch.sis.assimDone=1;if(Z.pack&&!ch.packOffer){ch.packOffer={n:Z.pack.n,cards:Z.pack.cards.slice(),passive:null,e:Z.pack.e,sis:fx.sisAssim};chips.push(`${Z.pack.n} · 덱을 바꿀지 고른다`)}else if(fx.sisAssim==='kaki')chips.push('유행 · 전투마다 유행하는 키워드가 바뀐다')
+      if(fx.sisAssim!=='kaki'&&!ch.distForm&&!ch.distPick){ch.distPick=true;chips.push('몸이 뒤틀린다 · 뒤틀림의 이름을 정한다 · 백화점을 나온 뒤에도 그대로다')}}
     if(fx.sisGo||fx.sisHunt||fx.sisCraft||fx.sisSell||fx.sisTrade||fx.sisRest||fx.sisUpgrade||fx.sisBuy||fx.sisExplore||fx.sisInvent||fx.sisRedBorn||fx.sisRedLang!=null||fx.sisFeed||fx.sisShroud||fx.sisAttack||fx.sisBuffet||fx.sisWall||fx.sisWarden||fx.sisCs||fx.sisOut||fx.sisEx||fx.sisTfight||fx.sisTrendBack||fx.sisWFight)sisFx(ch,fx,chips);
     if(fx.tbJoin){const Bd=CFG.nWing.tbBody;addStats(ch.stats,Bd);ch.hp+=Bd.maxHp;chips.push(`N사 육체 시술 · 최대 HP +${Bd.maxHp} · 공격 +${Bd.atk} · 속도 +${Bd.spd} (의체가 아니라 몸 자체를 고친 것이다)`);if(ch.licensed&&ch.rank>CFG.nWing.tbRank){while(ch.rank>CFG.nWing.tbRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급으로 시작한다`)}}
     if(fx.bmRank&&ch.licensed){while(ch.rank>fx.bmRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급이 되었다`)}   // 검은 가면: 전쟁의 실적으로 급수가 오른다
@@ -2747,7 +2748,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(red==='with'){const nm=R.name||'붉은 신';addStats(ch.stats,{maxHp:20,atk:2});ch.hp+=20;(ch.relics=ch.relics||[]).push('동행 · '+nm);ch.flags=ch.flags||{};ch.flags.sisRed=nm;chips.push(`동행 · ${nm} · 최대 HP +20 · 공격 +2`)}
     if(sv.inq===1){ch.titles=ch.titles||[];const T2='접수 번호를 받은 자';if(!ch.titles.includes(T2)){ch.titles.push(T2);(ch.titleLog=ch.titleLog||[]).push(T2);chips.push('칭호 · '+T2)}}
     ch.sisEnd=true;ch.sis=null;
-    if(fac!=='kaki'){ch.distPick=true;chips.push('몸이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
+    if(fac!=='kaki'&&!ch.distForm&&!ch.distPick){ch.distPick=true;chips.push('몸이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
   }
   /* 몰랐던 규칙을 겪어서 알게 된다: 안내판에서 못 본 규칙을 어기면 순응이 한 번 더 깎이고, 그 규칙이 목록에 적힌다 */
   function sisLearn(ch,id,chips,penalty){const sv=ch.sis;if(!sv||sv.rules.includes(id))return false;sv.rules.push(id);if(penalty)sisAdj(ch,-1);const r=D.sisyphus.rules.find(x=>x.id===id);chips.push('몰랐던 규칙을 겪어서 알게 되었다 · '+r.t);return true}
@@ -2884,7 +2885,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const give=Object.entries(o.give).map(([k,n])=>k==='an'?sisAn(n):`${k==='dye'?'염료':S_.mats[k].n} ${n}`).join(' · ');
         if(Object.keys(o.get).includes('dye')){for(const col of sisColorsOpen(ch).filter(x=>x.id!=='gold'&&x.id!=='gray'))c.push({l:`${v.n} · ${col.n} 염료`,h:`${give} → ${o.t}`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color:col.id}}}})}
         else c.push({l:`${v.n} · ${o.t}`,h:give,ok:{t:v.x,fx:{sisTrade:{v:v.id,i}}}})});
-      for(const id of sisShop(ch)){const it=D.items[id];if(ch.money>=it.price)c.push({l:`백화점 매장 · ${it.n}`,h:`${it.e} · ${sisAn(it.price)}`,ok:{t:'가격표를 확인하고 값을 치른다.',fx:{sisBuy:id}}})}
+      for(const id of (ch.distForm?[]:sisShop(ch))){const it=D.items[id];if(ch.money>=it.price)c.push({l:`백화점 매장 · ${it.n}`,h:`${it.e} · ${sisAn(it.price)}`,ok:{t:'가격표를 확인하고 값을 치른다.',fx:{sisBuy:id}}})}
       c.push({l:S_.act.trade.leave,ok:{t:'값 부르는 소리가 멀어진다.',fx:{sisGo:'back'}}});
       return {type:'event',ev:{t:S_.act.trade.t,x:`${S_.act.trade.x}\n\n${sisInv(ch)}`,c}};
     }
