@@ -2733,15 +2733,20 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.sis.cloth.splice(idx,1);ch.money+=v;ch.sis.pts+=pts;sisAdj(ch,q>=2?2:1);
     chips.push(`판매 · ${cu.n} · ${D.sisyphus.quality.names[q]} · +${sisAn(v)} · 고객 점수 +${pts}`);sisLearn(ch,'trust',chips,false);sisGradeUp(ch,chips);
   }
-  function sisTradeDo(ch,v,i,color,chips){
+  function sisTradeGive(ch,O,color){const colB=O.colorBuy?sisColorsOpen(ch).find(x=>x.id===color&&x.id!=='gold'&&x.id!=='gray'):null;return O.colorBuy?(colB?{an:colB.cost}:null):O.give}
+  function sisTradeMax(ch,O,color){const GV=sisTradeGive(ch,O,color);if(!GV)return 0;let m=99;for(const [k,n] of Object.entries(GV)){const have=k==='an'?ch.money:k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0);m=Math.min(m,Math.floor(have/n))}return m}
+  function sisTradeDo(ch,v,i,color,chips,cnt){
     const S_=D.sisyphus,V=S_.trade.vendors.find(x=>x.id===v),O=V&&V.offers[i];if(!O)return;
-    const colB=O.colorBuy?sisColorsOpen(ch).find(x=>x.id===color&&x.id!=='gold'&&x.id!=='gray'):null;if(O.colorBuy&&!colB)return;const GV=O.colorBuy?{an:colB.cost}:O.give;
-    for(const [k,n] of Object.entries(GV)){const have=k==='an'?ch.money:k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0);if(have<n)return}
-    for(const [k,n] of Object.entries(GV)){if(k==='an')ch.money-=n;else if(k==='dye')for(let q=0;q<n;q++)ch.sis.dyes.shift();else ch.sis.mat[k]-=n}
-    for(const [k,n] of Object.entries(O.get)){if(k==='an')ch.money+=n;else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray'),c=open.find(x=>x.id===color)||one(open);for(let q=0;q<n;q++)ch.sis.dyes.push(c.id)}
-      else if(k==='soda'){const h=Math.round(ch.stats.maxHp*0.2);ch.hp=Math.min(ch.stats.maxHp,ch.hp+h)}
-      else sisMat(ch,k,n)}
-    chips.push(`거래 · ${V.n} · ${O.t}`);
+    const times=Math.min(Math.max(1,cnt|0),sisTradeMax(ch,O,color));let done=0;
+    for(let t=0;t<times;t++){
+      const GV=sisTradeGive(ch,O,color);if(!GV)return;
+      for(const [k,n] of Object.entries(GV)){const have=k==='an'?ch.money:k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0);if(have<n)return chips.push(`거래 · ${V.n} · ${O.t}${done>1?' × '+done:''}`)}
+      for(const [k,n] of Object.entries(GV)){if(k==='an')ch.money-=n;else if(k==='dye')for(let q=0;q<n;q++)ch.sis.dyes.shift();else ch.sis.mat[k]-=n}
+      for(const [k,n] of Object.entries(O.get)){if(k==='an')ch.money+=n;else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray'),c=open.find(x=>x.id===color)||one(open);for(let q=0;q<n;q++)ch.sis.dyes.push(c.id)}
+        else if(k==='soda'){const h=Math.round(ch.stats.maxHp*0.2);ch.hp=Math.min(ch.stats.maxHp,ch.hp+h)}
+        else sisMat(ch,k,n)}
+      done++}
+    if(done)chips.push(`거래 · ${V.n} · ${O.t}${done>1?' × '+done:''}`);
   }
   /* 붕괴 뒤: 백화점에서 나온다. 르카키는 일반 상태, 르루주·르누아르는 뒤틀린 상태로 나온다. 붉은 신은 소속에 따라 동행·뷔페·처치·행방불명 */
   function sisCollapseOut(ch,chips){
@@ -2798,7 +2803,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.sisUpgrade){const r=sisUpgrade(ch,fx.sisUpgrade.i,fx.sisUpgrade.mats||[]);chips.push(...r.chips)}
     if(fx.sisSell){sisSell(ch,fx.sisSell,chips);sv.st='done'}
     if(fx.sisBuy)sisBuy(ch,fx.sisBuy,chips);
-    if(fx.sisTrade)sisTradeDo(ch,fx.sisTrade.v,fx.sisTrade.i,fx.sisTrade.color,chips);
+    if(fx.sisTrade)sisTradeDo(ch,fx.sisTrade.v,fx.sisTrade.i,fx.sisTrade.color,chips,fx.sisTrade.n);
     if(fx.sisGo){if(fx.sisGo==='craft'){sv.skipHunt=1;sv.lootDone=true;sv.lootNote='';sv.crafted=0;sv.st='craft'}else if(fx.sisGo==='back'){sv.st=sv.back||'day1'}else if(fx.sisGo==='trade'){sv.back=sv.st;sv.st='trade'}else sv.st=fx.sisGo}
   }
   function sisInv(ch){
@@ -2904,11 +2909,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='trade'){
       const vs=S_.trade.vendors.filter(v=>D.sisyphus.zones.some(z=>z.id===v.zone&&z.grade<=sisGrade(ch)));const c=[];
       for(const v of vs)v.offers.forEach((o,i)=>{
-        if(o.colorBuy){for(const col of sisColorsOpen(ch).filter(x=>x.id!=='gold'&&x.id!=='gray')){if(ch.money>=col.cost)c.push({l:`${v.n} · ${col.n} 염료`,h:`${sisAn(col.cost)} → 염료 한 병 · 이 색을 칠하면 옷값 +${col.add}안`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color:col.id}}}})}return}
+        const multi=(base,color,m,l0,h0)=>{if(m>=5)c.push({l:`${l0} × 5`,h:`${h0} · 다섯 번 한꺼번에`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color,n:5}}}});if(m>=2&&m!==5)c.push({l:`${l0} × 최대(${m})`,h:`${h0} · 살 수 있는 만큼`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color,n:m}}}})};
+        if(o.colorBuy){for(const col of sisColorsOpen(ch).filter(x=>x.id!=='gold'&&x.id!=='gray')){if(ch.money>=col.cost){c.push({l:`${v.n} · ${col.n} 염료`,h:`${sisAn(col.cost)} → 염료 한 병 · 이 색을 칠하면 옷값 +${col.add}안`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color:col.id}}}});multi(0,col.id,sisTradeMax(ch,o,col.id),`${v.n} · ${col.n} 염료`,`${sisAn(col.cost)} → 염료 한 병`)}}return}
         const ok=Object.entries(o.give).every(([k,n])=>(k==='an'?ch.money:k==='dye'?ch.sis.dyes.length:(ch.sis.mat[k]||0))>=n);if(!ok)return;
         const give=Object.entries(o.give).map(([k,n])=>k==='an'?sisAn(n):`${k==='dye'?'염료':S_.mats[k].n} ${n}`).join(' · ');
-        if(Object.keys(o.get).includes('dye')){for(const col of sisColorsOpen(ch).filter(x=>x.id!=='gold'&&x.id!=='gray'))c.push({l:`${v.n} · ${col.n} 염료`,h:`${give} → ${o.t}`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color:col.id}}}})}
-        else c.push({l:`${v.n} · ${o.t}`,h:give,ok:{t:v.x,fx:{sisTrade:{v:v.id,i}}}})});
+        if(Object.keys(o.get).includes('dye')){for(const col of sisColorsOpen(ch).filter(x=>x.id!=='gold'&&x.id!=='gray')){c.push({l:`${v.n} · ${col.n} 염료`,h:`${give} → ${o.t}`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color:col.id}}}});multi(0,col.id,sisTradeMax(ch,o,col.id),`${v.n} · ${col.n} 염료`,`${give} → ${o.t}`)}}
+        else{c.push({l:`${v.n} · ${o.t}`,h:give,ok:{t:v.x,fx:{sisTrade:{v:v.id,i}}}});multi(0,undefined,sisTradeMax(ch,o),`${v.n} · ${o.t}`,give)}});
       for(const id of ((ch.distForm&&!ch.distStable)?[]:sisShop(ch))){const it=D.items[id];if(ch.money>=it.price)c.push({l:`백화점 매장 · ${it.n}`,h:`${it.e} · ${sisAn(it.price)}`,ok:{t:'가격표를 확인하고 값을 치른다.',fx:{sisBuy:id}}})}
       c.push({l:S_.act.trade.leave,ok:{t:'값 부르는 소리가 멀어진다.',fx:{sisGo:'back'}}});
       return {type:'event',ev:{t:S_.act.trade.t,x:`${S_.act.trade.x}\n\n${sisInv(ch)}`,c}};
