@@ -956,3 +956,20 @@ html:not([lang="ja"]) p,html:not([lang="ja"]) .lead,html:not([lang="ja"]) .small
 @media (prefers-reduced-motion:reduce){.sis-goldglow{animation:none}}
 
 .btn-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn-grid2 .btn{padding:10px 12px;min-width:0}.btn-grid2 .btn b{font-size:14px}.btn-grid2 .btn span{font-size:11px;overflow-wrap:anywhere}
+
+/* ===== 시지프 백화점 테마: html[data-sis] = in | rouge | noir | kaki (백화점 안에서만, 스킨보다 우선) ===== */
+html[data-sis]{--bg:#120f0d;--panel:#1a1512;--panel2:#231c18;--line:#3a2e26;--line2:#5a4636;--fg:#efe6d8;--dim:#b7a894;--gold:#d8b46a;--gold-ink:#1d1405}
+html[data-sis="rouge"]{--bg:#150a0d;--panel:#1d1013;--panel2:#27161a;--line:#4a2229;--line2:#7a343e;--gold:#e0707a;--gold-ink:#220609}
+html[data-sis="noir"]{--bg:#09090c;--panel:#121217;--panel2:#1a1a21;--line:#2a2a33;--line2:#4a4a58;--gold:#b9bccf;--gold-ink:#0a0b10}
+html[data-sis="kaki"]{--bg:#120f0a;--panel:#1b160e;--panel2:#241d12;--line:#3d3320;--line2:#6a5a34;--gold:#e8c36a;--gold-ink:#1d1405}
+html[data-sis][data-skin] body,html[data-sis] body{
+  background:
+    radial-gradient(ellipse at 50% -10%,color-mix(in srgb,var(--gold) 14%,transparent),transparent 55%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 1px,transparent 1px 120px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 96px),
+    var(--bg);
+  background-attachment:fixed;
+}
+html[data-sis][data-skin] .wrap,html[data-sis] .wrap{--bw:1px;background:transparent;border-color:var(--line);box-shadow:none;border-radius:10px}
+html[data-sis] .wrap::before,html[data-sis] .wrap::after{display:none}
+html[data-sis] body::before{content:"시지프 백화점";position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:5;font:500 10px/1 var(--mono);letter-spacing:.32em;color:var(--gold);opacity:.6;pointer-events:none}

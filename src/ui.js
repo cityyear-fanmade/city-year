@@ -2929,6 +2929,8 @@ ${symRec(r)}
     }
   }
   function render(){
+    /* 시지프 백화점 안에서는 고른 스킨과 상관없이 백화점 테마로 바꾼다(소속이 정해지면 그 색) */
+    {const dsx=document.documentElement.dataset,ins=!!(G&&G.ch&&G.ch.sis&&CFG.sis.on&&!['title','end','sisshare','records','chron','chronview','shared'].includes(UI.screen));if(ins)dsx.sis=G.ch.sis.fac||'in';else delete dsx.sis}
     if(window.CITY_LAB){labDraw();return}
     if(window.CITY_AUGDEMO){augDemoDraw();return}
     const s=UI.screen;
