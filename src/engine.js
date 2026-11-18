@@ -2754,7 +2754,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         else sisMat(ch,k,n)}
       done++}
     if(done)chips.push(`거래 · ${V.n} · ${O.t}${done>1?' × '+done:''}`);
-    if(done)(ch.sis.tr=ch.sis.tr||{})[v]=(ch.sis.tr[v]||0)+done;
+    if(done)(ch.sis.tr=ch.sis.tr||{})[v]=(ch.sis.tr[v]||0)+1;   // 거래 횟수(한꺼번에 여러 개를 사도 한 번)
   }
   /* 붕괴 뒤: 백화점에서 나온다. 르카키는 일반 상태, 르루주·르누아르는 뒤틀린 상태로 나온다. 붉은 신은 소속에 따라 동행·뷔페·처치·행방불명 */
   function sisCollapseOut(ch,chips){
@@ -2762,7 +2762,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fac==='rouge'){if(R&&R.alive){red=(sisGrade(ch)>=4&&(R.shroud||R.hunger<8))?'with':'buffet';sisRedDead(ch,red)}else red='buffet'}
     if(fac==='noir'){red=R&&R.state==='slain'?'slain':(R?'left':'none')}
     out=fac==='kaki'?'kaki':fac==='rouge'?(red==='with'?'with':'buffet'):(red==='slain'?'slain':'left');
-    ch.sisDone={fac,ol:!!sv.ol,tr:Object.assign({},sv.tr||{}),fit:sv.fit||0,red,inq:sv.inq||0,name:R&&R.name||'',grade:sisGrade(ch),hard:!!ch.hard};
+    ch.sisDone={fac,ol:!!sv.ol,ann:!!sv.ann,pal:!!sv.pal,tr:Object.assign({},sv.tr||{}),fit:sv.fit||0,red,inq:sv.inq||0,name:R&&R.name||'',grade:sisGrade(ch),hard:!!ch.hard};
     sv.collapsed=true;chips.push(Z.out[out]);
     ch.titles=ch.titles||[];if(!ch.titles.includes(Z.title)){ch.titles.push(Z.title);(ch.titleLog=ch.titleLog||[]).push(Z.title);chips.push('칭호 · '+Z.title)}
     if(red==='with'){const nm=R.name||'붉은 신';addStats(ch.stats,{maxHp:20,atk:2});ch.hp+=20;(ch.relics=ch.relics||[]).push('동행 · '+nm);ch.flags=ch.flags||{};ch.flags.sisRed=nm;chips.push(`동행 · ${nm} · 최대 HP +20 · 공격 +2`)}
@@ -2797,6 +2797,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(F.an){ch.money=Math.max(0,ch.money+F.an);chips.push(`${F.an>0?'+':'−'}${sisAn(Math.abs(F.an))}`)}
       if(F.comply){sisAdj(ch,F.comply);chips.push(`순응도 ${F.comply>0?'+':''}${F.comply}`)}
       if(F.olp){sv.olN=(sv.olN||0)+1;if(sv.olN>=2){sv.ol=1;chips.push('원레그가 곁을 내주었다')}else chips.push('원레그의 독설이 한 마디 줄었다')}
+      if(F.flag){sv[F.flag]=1;chips.push(F.flag==='ann'?'아네트가 곁에 남았다':F.flag==='pal'?'팔레트가 곁에 남았다':'곁에 남았다')}
       if(F.fit){sv.fit=Math.max(0,(sv.fit||0)+F.fit);chips.push(`단골 맞춤 ${F.fit>0?'+':''}${F.fit}`)}
       if(F.dye){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');for(let q=0;q<F.dye;q++){const c=one(open);sv.dyes.push(c.id);chips.push(`염료(${c.n}) 1병`)}}
       if(F.dyeUse){for(let q=0;q<F.dyeUse;q++)sv.dyes.shift();chips.push(`염료 ${F.dyeUse}병을 내놓았다`)}
@@ -2865,7 +2866,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='day1'&&sv.wardenTurn!==sv.turn){sv.wardenTurn=sv.turn;if(sv.turn>5&&(sv.comply==null?5:sv.comply)<=CS.wardenComply&&d(100)<=CS.wardenChance)sv.warden=1}
     if(sv.st==='day1'&&!sv.mgrSeen&&!sv.collapsed&&sv.turn>=28&&sisGrade(ch)>=3){sv.mgrSeen=1;const F=S_.fate;return {type:'event',ev:{t:F.t,x:F.x,c:[{l:F.spare.l,ok:{t:F.spare.ok,fx:{sisGo:'back'}}},{l:F.kill.l,h:F.kill.h,ok:{t:F.kill.ok,fx:{sisFate:1}}}]}}}
     if(sv.st==='day1'&&sv.warden){const W=S_.warden;return ev1(W.t,W.x,W.l,{sisWarden:1},W.ok)}
-    if(sv.st==='day1'&&sv.exploreDone&&!sv.collapsed&&sv.evDay!==sv.turn&&!sv.warden){const L=sv.fac?(S_.facEv||{})[sv.fac]:null,seen=e=>sv.floorSeen&&sv.floorSeen[e.id],fe=(L&&L.find(e=>!seen(e)&&sv.turn>=e.at&&sv.turn<=e.to))||(S_.commonEv||[]).find(e=>!seen(e)&&sv.turn>=e.at&&sv.turn<=e.to);
+    if(sv.st==='day1'&&sv.exploreDone&&!sv.collapsed&&sv.evDay!==sv.turn&&!sv.warden){const L=sv.fac?(S_.facEv||{})[sv.fac]:null,seen=e=>sv.floorSeen&&sv.floorSeen[e.id],fe=(L&&L.find(e=>!seen(e)&&sv.turn>=e.at&&sv.turn<=e.to&&(!e.needTr||Object.entries(e.needTr).every(([k,n])=>((sv.tr||{})[k]||0)>=n))))||(S_.commonEv||[]).find(e=>!seen(e)&&sv.turn>=e.at&&sv.turn<=e.to);
       if(fe)return {type:'event',ev:{t:fe.t,x:fe.x,c:fe.c.filter(c=>!c.needDye||sv.dyes.length>=c.needDye).map(c=>{const o=Object.assign({},c);for(const k of ['ok','fail'])if(o[k])o[k]=Object.assign({},o[k],{fx:Object.assign({sisGo:'day1'},o[k].fx)});return o})}}}
     if(sv.order&&sv.turn>sv.order.until)sv.order=null;
     if(sv.st==='day1'&&sv.exploreDone&&!sv.collapsed&&sv.evDay!==sv.turn&&!sv.warden&&!sv.order&&sv.turn>=Math.max(S_.orders.from,sv.orderNext||0)&&sv.turn<=S_.orders.to){
