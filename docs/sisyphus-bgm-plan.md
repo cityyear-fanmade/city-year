@@ -1,9 +1,10 @@
 # 시지프 전용 음악 계획 (2026-11-18, 아직 만들지 않음)
 
-## 방식
-- 외부 음원은 쓰지 않는다. 기존 `tools/ruen-bgm.py`처럼 **numpy로 직접 합성**해서 mp3로 내보낸다(선율·화성은 직접 지은 것). 사용자가 만든 음악이 있으면 그 파일을 쓴다.
-- 제미나이는 음악 한도가 0이라 쓰지 않는다.
-- 음악은 이어 붙어 반복되므로 끝과 처음이 자연스럽게 이어져야 한다(루프 지점 맞추기).
+## 방식 (2026-11-18 결정: 수노로 만든다)
+- 제미나이는 무료 한도에서 음악이 0이라 쓰지 않는다(결제 연결·유료 호출 금지 규칙). 수노(Suno)로 곡을 만들어 주시면 제가 파일을 게임에 연결한다.
+- 외부 음원은 쓰지 않는다. 수노에서는 특정 곡·가수·게임 이름을 프롬프트에 넣지 않고 분위기와 악기로만 적는다.
+- 수노가 만든 곡은 노래 한 편이라 반복되는 배경음악에 쓰려면 끝과 처음이 이어지게 다듬어야 한다. 아래 "다듬기"를 따른다.
+- 직접 합성(numpy)하는 방식은 수노 결과가 마음에 안 들 때의 대안으로 남겨 둔다.
 
 ## 엔진에 필요한 칸 (지금 구조)
 - `assets/bgm/<스타일>_<장면>.mp3` 한 쌍: 장면은 `calm`(평상시), `fight`(전투), `boss`(보스, 공통 파일 `boss_boss.mp3`).
@@ -28,3 +29,27 @@
 1. 합성(직접 만든 소리)으로 갈지, 직접 만든 음악을 쓰실지.
 2. 곡 수를 1~3번(평상시·전투·보스)까지만 먼저 만들지.
 3. 곡의 분위기가 위와 맞는지(아르데코 라운지가 맞는지).
+
+## 수노 프롬프트 (곡별, 모두 가사 없는 연주곡)
+스타일 칸에 넣을 영어 태그다. "Instrumental"을 켜고 가사는 비운다.
+
+1. 백화점의 낮 (`sisyphus_calm`)
+`instrumental, art deco department store lounge, slow noir jazz, muted piano, upright bass, brushed drums, soft vibraphone, faint chimes, polite and melancholic, 76 bpm, minor key`
+2. 사냥 (`sisyphus_fight`)
+`instrumental, tense dark jazz noir, pulsing bass, metallic percussion like scissors and needles, staccato strings, driving, 104 bpm, minor key`
+3. 간수·신부 (`sisyphus_boss`)
+`instrumental, ominous slow wordless choir pads, tolling bell, low strings, rising drones like a veil unfolding, solemn and eerie, 60 bpm`
+4. 붕괴
+`instrumental, collapsing building, descending bass drone, broadcast static, siren-like synth, sparse piano, dread, 50 bpm`
+5. 시지프의 비 (세 가지 세기로 각각 한 곡)
+- 약한 비: `instrumental, gentle rain ambience, sparse piano, soft pad, melancholic, 54 bpm, A minor`
+- 중간 비: `instrumental, steady heavy rain ambience, low drone, piano and slow strings, uneasy, 54 bpm, A minor`
+- 거센 비: `instrumental, storm and torrential rain, dark drones, tense strings, distant thunder, pulsing low synth, 54 bpm, A minor`
+6. 외곽
+`instrumental, solo piano, warm and sparse, rain far away, quiet hope, 56 bpm`
+
+## 만든 곡을 받을 때 (다듬기·형식)
+- 곡마다 **45~90초**로 자른다. 끝 2초와 시작 2초를 겹쳐 이어서(크로스페이드) 반복해도 끊기지 않게 한다. 수노의 "연장" 기능으로 같은 분위기를 이어 만들어도 된다.
+- 형식은 mp3, 스테레오, 128kbps 이상이면 된다. 음량은 제가 기존 곡에 맞춰 조정한다.
+- 파일 이름은 위 괄호 이름으로 저장해 보내 주면 된다(`sisyphus_calm.mp3` 등). 붕괴·비·외곽은 곡 이름만 알려 주면 된다.
+- 이어서 제가 하는 일: `assets/bgm`에 두기 → 스타일 `sisyphus` 추가 → 시지프 안에서 자동 전환 → 공유 테섭에 파일로 올리기.
