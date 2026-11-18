@@ -3886,6 +3886,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       ch.kids=keep;if(before>keep)chips.push(`자식 ${before-keep}명이 흩어졌다 (${keep}/${KD.max})`);
       if(!foe.hidden&&!foe.abno&&ch.kids<KD.max){ch.kids++;chips.push(`피에 각인된 갈망 · ${foe.n}이(가) 혈귀가 되어 자식이 된다 (${ch.kids}/${KD.max})`)}
     }
+    {const FK=ch.sis&&D.sisyphus.firstKill&&D.sisyphus.firstKill[C.id];   /* 구역 보스는 처음 꺾을 때만 고급 재료·점수·칭호를 따로 준다 */
+      if(FK){const kl=ch.sis.kills=ch.sis.kills||{};if(!kl[C.id]){kl[C.id]=1;sisMat(ch,FK.mat,FK.n);ch.sis.pts+=FK.pts;chips.push(FK.t,`${D.sisyphus.mats[FK.mat].n} ${FK.n}`,`고객 점수 +${FK.pts}`);
+        ch.titles=ch.titles||[];if(!ch.titles.includes(FK.title)){ch.titles.push(FK.title);(ch.titleLog=ch.titleLog||[]).push(FK.title);chips.push('칭호 · '+FK.title)}sisGradeUp(ch,chips)}}}
     if(C.id==='sis_warden'&&ch.sis){ch.sis.brideKill=1}   /* 사냥에서 간수를 꺾으면 신부가 나타나 즉사시키고 1턴 되돌린다 */
     if(C.id==='sis_warden_final'&&ch.sis){ch.sis.wardenDone=1;chips.push(D.sisyphus.collapse.warden.win)}
     if(C.id==='sis_bride'&&ch.sis){ch.sis.brideDone=1;chips.push(D.sisyphus.collapse.bride.win)}
