@@ -9832,13 +9832,13 @@
    "eva": 4,
    "spd": 6,
    "deck": [
-    "heavy",
-    "bloodlet",
-    "rend",
-    "rend",
-    "finale",
-    "guard",
-    "precise"
+    "bf_swallow",
+    "bf_gnaw",
+    "bf_tear",
+    "bf_tear",
+    "bf_last",
+    "bf_table",
+    "bf_pick"
    ],
    "tier": "boss",
    "intro": "벽이 한 겹 벗겨져 있다. 붉은 것의 어깨가 문틀을 넘고, 입 안쪽에서 접시 부딪히는 소리가 난다. 이름을 부르던 사람을 이제 알아보지 못한다.",
@@ -9853,16 +9853,16 @@
    "eva": 5,
    "spd": 7,
    "deck": [
-    "heavy",
-    "bloodlet",
-    "rend",
-    "finale",
-    "guard",
-    "precise"
+    "br_veil",
+    "br_name",
+    "br_read",
+    "br_vow",
+    "br_fold",
+    "br_aim"
    ],
    "tier": "boss",
    "intro": "층 한가운데로 흰 베일이 내려앉는다. 간수가 서 있던 자리에서 누군가 천천히 일어난다. 이번에는 규칙을 읽는 것이 아니라, 규칙을 어긴 사람의 이름을 찾으러 왔다.",
-   "trait": "enrage"
+   "trait": "bride"
   },
   "sis_redtrack": {
    "n": "붉은 옷의 추적자",
