@@ -1324,7 +1324,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.sisEnter){const S_=D.sisyphus,ks=Object.keys(S_.subj),k=fx.sisEnter==='rand'?one(ks):fx.sisEnter;ch.sisP=null;if(ch.licensed){ch.licensed=false;ch.title=null;chips.push('해결사 자격 반납 · 시지프형을 선고받으면 해결사 일은 할 수 없다')}ch.sis={subj:k,turn:1,grade:0,rewound:0,lean:0,in:ch.year||0,pts:0,st:'day1',mat:{},dyes:[],cloth:[],fac:null,comply:5,rules:[],visited:[],rew:0,cycle:0,inv:[],exploreDone:false,red:null,walls:0};chips.push(S_.subj[k].v||S_.subj[k].t);chips.push('시지프형 선고 · 시지프 백화점에 갇힌다 · 고객 등급 토파즈')}
     if(fx.sisAssim){const Z=D.sisyphus.assim[fx.sisAssim];ch.sis.assimDone=1;if(Z.pack&&!ch.packOffer){ch.packOffer={n:Z.pack.n,cards:Z.pack.cards.slice(),passive:null,e:Z.pack.e,sis:fx.sisAssim};chips.push(`${Z.pack.n} · 덱을 바꿀지 고른다`)}else if(fx.sisAssim==='kaki')chips.push('유행 · 전투마다 유행하는 키워드가 바뀐다')
       if(fx.sisAssim!=='kaki'&&!ch.distForm&&!ch.distPick){ch.distPick=true;chips.push('몸이 뒤틀린다 · 뒤틀림의 이름을 정한다 · 백화점을 나온 뒤에도 그대로다')}}
-    if(fx.sisGo||fx.sisHunt||fx.sisCraft||fx.sisSell||fx.sisTrade||fx.sisRest||fx.sisUpgrade||fx.sisBuy||fx.sisExplore||fx.sisInvent||fx.sisRedBorn||fx.sisRedLang!=null||fx.sisFeed||fx.sisShroud||fx.sisAttack||fx.sisBuffet||fx.sisWall||fx.sisWarden||fx.sisCs||fx.sisOut||fx.sisEx||fx.sisTfight||fx.sisTrendBack||fx.sisWFight)sisFx(ch,fx,chips);
+    if(fx.sisGo||fx.sisHunt||fx.sisCraft||fx.sisSell||fx.sisTrade||fx.sisRest||fx.sisUpgrade||fx.sisBuy||fx.sisExplore||fx.sisInvent||fx.sisRedBorn||fx.sisRedLang!=null||fx.sisFeed||fx.sisShroud||fx.sisAttack||fx.sisBuffet||fx.sisWall||fx.sisWarden||fx.sisCs||fx.sisOut||fx.sisEx||fx.sisTfight||fx.sisTrendBack||fx.sisWFight||fx.sisBFight||fx.sisFate)sisFx(ch,fx,chips);
     if(fx.tbJoin){const Bd=CFG.nWing.tbBody;addStats(ch.stats,Bd);ch.hp+=Bd.maxHp;chips.push(`N사 육체 시술 · 최대 HP +${Bd.maxHp} · 공격 +${Bd.atk} · 속도 +${Bd.spd} (의체가 아니라 몸 자체를 고친 것이다)`);if(ch.licensed&&ch.rank>CFG.nWing.tbRank){while(ch.rank>CFG.nWing.tbRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급으로 시작한다`)}}
     if(fx.bmRank&&ch.licensed){while(ch.rank>fx.bmRank){const p=promote(ch);chips.push(...p.chips)}chips.push(`해결사 ${ch.rank}급이 되었다`)}   // 검은 가면: 전쟁의 실적으로 급수가 오른다
     if(fx.bmLose&&ch.bond&&ch.bond.st!=='lost'&&ch.bond.st!=='declined'&&ch.bond.st!=='left'){const b_=ch.bond;if(b_.st==='married')bondDeath(ch,chips);else{b_.st='lost';ch.stats.mindMax=(ch.stats.mindMax||0)-BD.lossMind;ch.mind=Math.min(ch.mind,mindMax(ch));chips.push(`곁에 있던 사람을 잃었다 · 최대 정신력 −${BD.lossMind} (영구)`)}b_.dieBy='risk';b_.dieYear=ch.year||0}
@@ -2772,6 +2772,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.sisAttack){const R=sv.red;if(R){R.fightDone=1;sv.st='redfight'}}
     if(fx.sisBuffet){const R=sv.red;if(R){R.buffetDone=1;sv.st='buffetfight'}}
     if(fx.sisWall){sisMat(ch,'resin',1);sv.lean=Math.max(-CFG.sis.leanMax,sv.lean-2);sisAdj(ch,-2);sv.walls=(sv.walls||0)+1;chips.push('벽 뜯기 · 황금송진 1');sisLearn(ch,'wall',chips,true);if(d(100)<=CS.wallGuard){sv.st='wallfight';chips.push(Zs.wall.guard)}else sv.st='day2'}
+    if(fx.sisBFight)sv.st='bfight';
+    if(fx.sisFate){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.fateDone=1;sv.comply=Math.max(0,(sv.comply==null?5:sv.comply)-1);sv.falls=(sv.falls||0)+1;sv.st='done';chips.push(`운명 이탈 · 샘터에서 깨어났다 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`);ch.titles=ch.titles||[];const T_=D.sisyphus.fate.title;if(!ch.titles.includes(T_)){ch.titles.push(T_);(ch.titleLog=ch.titleLog||[]).push(T_);chips.push('칭호 · '+T_)}}
     if(fx.sisWarden){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.warden=0;sv.comply=Math.max((sv.comply==null?5:sv.comply)+1,CS.wardenComply+1);sv.falls=(sv.falls||0)+1;sv.st='done';chips.push(`간수에게 끌려갔다 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`);sisLearn(ch,'warden',chips,false)}
     if(fx.sisCs){sv.cs=fx.sisCs;if(fx.sisInq!=null)sv.inq=fx.sisInq;if(fx.sisInq===1)chips.push('고객센터 · 문의가 접수되었다')}
     if(fx.sisOut)sisCollapseOut(ch,chips);
@@ -2819,12 +2821,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(sv.st==='wfight'){sv.st='day1';return {type:'fight',enemy:'sis_warden_final',enc:{hidden:true,label:'간수'}}}
         const W=Z.warden,R_=sv.red,v=sv.fac==='rouge'&&R_&&R_.alive?W.with:sv.fac==='noir'?W.noir:sv.fac==='kaki'?W.kaki:'';
         return {type:'event',ev:{t:W.t,x:sv.wardenLost?W.retry:`${W.x}${v?'\n\n'+v:''}`,c:[{l:W.l,ok:{t:sv.wardenLost?W.okRetry:W.ok,fx:{sisWFight:1}}}]}}}
+      if(!sv.brideDone){
+        if(sv.st==='bfight'){sv.st='day1';return {type:'fight',enemy:'sis_bride',enc:{hidden:true,label:'신부'}}}
+        const B_=Z.bride;return {type:'event',ev:{t:B_.t,x:sv.brideLost?B_.retry:B_.x,c:[{l:B_.l,ok:{t:sv.brideLost?B_.okRetry:B_.ok,fx:{sisBFight:1}}}]}}}
       if(sv.cs===1){if(sisGrade(ch)>=4&&sv.fac!=='kaki')return {type:'event',ev:{t:Z.center.t,x:Z.center.x,c:Z.center.c.map(c=>({l:c.l,ok:{t:c.ok,fx:{sisCs:2,sisInq:c.inq}}}))}};sv.cs=2}
       return ev1(Z.exit.t,(sisGrade(ch)>=4&&sv.fac==='kaki'?Z.centerKaki+'\n\n':'')+Z.exit.x+(()=>{const R=sv.red,f=sv.fac;const k=f==='rouge'?((R&&R.alive&&sisGrade(ch)>=4&&(R.shroud||R.hunger<8))?'with':'buffet'):f==='noir'?(R&&R.state==='slain'?'slain':'left'):null;return k&&Z.exitFac&&Z.exitFac[k]?'\n\n'+Z.exitFac[k]:''})(),Z.exit.l,{sisOut:1},'무너지는 층 사이로 한 걸음을 내딛는다.')}
     if(sv.st==='redfight'){sv.st='day2';return {type:'fight',enemy:'sis_red',enc:{hidden:true,label:'붉은 신'}}}
     if(sv.st==='buffetfight'){sv.st='day2';return {type:'fight',enemy:'sis_buffet',enc:{hidden:true,label:'뷔페'}}}
     if(sv.st==='wallfight'){sv.st='day2';return {type:'fight',enemy:'sis_controller',enc:{sis:true,label:'벽 뒤의 경비'}}}
     if(sv.st==='day1'&&sv.wardenTurn!==sv.turn){sv.wardenTurn=sv.turn;if(sv.turn>5&&(sv.comply==null?5:sv.comply)<=CS.wardenComply&&d(100)<=CS.wardenChance)sv.warden=1}
+    if(sv.st==='day1'&&!sv.mgrSeen&&!sv.collapsed&&sv.turn>=28&&sisGrade(ch)>=3){sv.mgrSeen=1;const F=S_.fate;return {type:'event',ev:{t:F.t,x:F.x,c:[{l:F.spare.l,ok:{t:F.spare.ok,fx:{sisGo:'back'}}},{l:F.kill.l,h:F.kill.h,ok:{t:F.kill.ok,fx:{sisFate:1}}}]}}}
     if(sv.st==='day1'&&sv.warden){const W=S_.warden;return ev1(W.t,W.x,W.l,{sisWarden:1},W.ok)}
     if(sv.st==='tfight'){sv.st='day1';return {type:'fight',enemy:'sis_trendy',enc:{sis:true,label:'유행에 민감한 손님'}}}
     if(sv.st==='tpost'){const P=S_.opening.post;return ev1(P.t,P.x,P.l,{sisEx:{to:4,rule:P.rule}},P.ok)}
@@ -2895,7 +2901,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const sisCanRevive=G=>!!(G&&sisOn(G.ch)&&!G.ch.mindDead&&!G.ch.sunk&&!G.ch.distorted);
   function sisRevive(G,C){
     const ch=G.ch,sv=ch.sis,lost=Math.round(ch.money*CFG.sis.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CFG.sis.fallHp));
-    sv.falls=(sv.falls||0)+1;sv.st='day1';sv.lootDone=false;sv.back=null;if(C.id==='sis_red'&&sv.red){sv.red.fightDone=1;sv.red.state='left'}if(C.id==='sis_buffet'&&sv.red){sv.red.buffetDone=0;sv.red.hunger=6}if(C.id==='sis_trendy'&&(sv.exStep||0)<3)sv.trendLost=1;if(C.id==='sis_warden_final')sv.wardenLost=1;
+    sv.falls=(sv.falls||0)+1;sv.st='day1';sv.lootDone=false;sv.back=null;if(C.id==='sis_red'&&sv.red){sv.red.fightDone=1;sv.red.state='left'}if(C.id==='sis_buffet'&&sv.red){sv.red.buffetDone=0;sv.red.hunger=6}if(C.id==='sis_trendy'&&(sv.exStep||0)<3)sv.trendLost=1;if(C.id==='sis_warden_final')sv.wardenLost=1;if(C.id==='sis_bride')sv.brideLost=1;
     const lc=[];if(C.id==='sis_buffet')lc.push(D.sisyphus.red.buffetLose);sisLearn(ch,'fall',lc,false);return {text:D.sisyphus.act.fall.x,chips:[...lc,`샘터에서 깨어났다 · 체력 ${ch.hp}`,lost?`안 ${lost} 잃었다`:'잃은 것은 없다','얻은 물건은 그대로 남아 있다']};
   }
   /* 백화점 안에서는 해가 바뀌어도 일반 사건 대신 조용히 지나가고, 다음 하루가 시작된다 */
@@ -3787,6 +3793,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!foe.hidden&&!foe.abno&&ch.kids<KD.max){ch.kids++;chips.push(`피에 각인된 갈망 · ${foe.n}이(가) 혈귀가 되어 자식이 된다 (${ch.kids}/${KD.max})`)}
     }
     if(C.id==='sis_warden_final'&&ch.sis){ch.sis.wardenDone=1;chips.push(D.sisyphus.collapse.warden.win)}
+    if(C.id==='sis_bride'&&ch.sis){ch.sis.brideDone=1;chips.push(D.sisyphus.collapse.bride.win)}
     if(C.id==='sis_trendy'&&ch.sis){ch.sis.st='tpost';ch.sis.exStep=3;sisMat(ch,'leather',1);chips.push('가죽 조각 1')}
     if(C.id==='sis_red'&&ch.sis&&ch.sis.red){sisRedDead(ch,'slain');chips.push(D.sisyphus.red.slain)}
     if(C.id==='sis_buffet'&&ch.sis&&ch.sis.red){sisRedDead(ch,'buffet');sisMat(ch,'goldskin',1);chips.push(D.sisyphus.red.buffetWin,'황금가죽 1')}
