@@ -1226,6 +1226,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function applyFx(ch,fx){
     const s=ch.stats,chips=[];
+    if(fx.sisRole){(ch.sisAct=ch.sisAct||{}).role=fx.sisRole}
+    if(fx.sisWalk){(ch.sisAct=ch.sisAct||{}).walk=((ch.sisAct||{}).walk||0)+1}
+    if(fx.sisTitle){ch.titles=ch.titles||[];if(!ch.titles.includes(fx.sisTitle)){ch.titles.push(fx.sisTitle);(ch.titleLog=ch.titleLog||[]).push(fx.sisTitle);chips.push('칭호 · '+fx.sisTitle)}}
     if(fx.maxHp){s.maxHp+=fx.maxHp;ch.hp+=fx.maxHp;chips.push('최대 HP '+sg(fx.maxHp))}
     if(fx.hp){ch.hp=clamp(ch.hp+fx.hp,1,s.maxHp);chips.push('HP '+sg(fx.hp))}
     if(fx.mindLoss)loseMind(ch,d(3)+d(3),t=>chips.push(t+' · 2d3'));
@@ -2515,7 +2518,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     else{ensurePacks(ch);stashPack(ch,X.packN2);ch.deck=X.deck2.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false}
   }
   /* 무한런: 마지막 해, 지금 위협 등급(-1이면 아직 기본 연차) */
-  const lastYear=G=>G.infinite?Infinity:CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0);
+  const lastYear=G=>G.infinite?Infinity:CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0)+((G.ch&&G.ch.sisEnd&&D.sisyphus&&D.sisyphus.act2&&!CFG.sis.share)?D.sisyphus.act2.length:0);   /* 시지프 2막: 55년차 뒤 5년(56~60) */
   const gradeAt=y=>y>CFG.years?Math.min(CFG.endless.grades.length-1,Math.floor((y-CFG.years-1)/CFG.endless.span)):-1;
   /* 무한 모드의 위협 등급 번호(상한 없음) */
   const gradeRaw=y=>y>CFG.years?Math.floor((y-CFG.years-1)/CFG.endless.span):-1;
@@ -2763,7 +2766,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 붕괴 뒤: 백화점에서 나온다. 르카키는 일반 상태, 르루주·르누아르는 뒤틀린 상태로 나온다. 붉은 신은 소속에 따라 동행·뷔페·처치·행방불명 */
   function sisCollapseOut(ch,chips){
     const sv=ch.sis,Z=D.sisyphus.collapse,R=sv.red,fac=sv.fac||'kaki';let out='kaki',red='none';
-    if(fac==='rouge'){if(R&&R.alive){red=(sisGrade(ch)>=4&&(R.shroud||R.hunger<8))?'with':'buffet';sisRedDead(ch,red)}else red='buffet'}
+    if(fac==='rouge'){if(R&&R.alive){red=sisRedKey(ch);sisRedDead(ch,red)}else red='buffet'}
     if(fac==='noir'){red=R&&R.state==='slain'?'slain':(R?'left':'none')}
     out=fac==='kaki'?'kaki':fac==='rouge'?(red==='with'?'with':'buffet'):(red==='slain'?'slain':'left');
     ch.sisDone={fac,ol:!!sv.ol,ann:!!sv.ann,pal:!!sv.pal,tr:Object.assign({},sv.tr||{}),fit:sv.fit||0,red,inq:sv.inq||0,name:R&&R.name||'',grade:sisGrade(ch),hard:!!ch.hard};
@@ -2834,6 +2837,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const sisComplyName=ch=>{const C=D.sisyphus.comply;return C.names[Math.max(0,Math.min(10,ch.sis.comply==null?5:ch.sis.comply))]};
   const sisComplyMul=ch=>{const c=ch.sis.comply==null?5:ch.sis.comply,C=D.sisyphus.comply;return c>=C.high?1.15:c<=C.low?0.9:1};
   const sisRulesText=ch=>'알게 된 규칙\n'+ch.sis.rules.map(id=>'· '+D.sisyphus.rules.find(r=>r.id===id).t).join('\n');
+  function sisRedKey(ch){const R=ch.sis.red;if(!(R&&R.alive))return 'buffet';const ok=R.shroud||R.hunger<8,t=R.trust||0;return (sisGrade(ch)>=4&&ok&&t>=0)?'with':(t<0&&ok)?'left':'buffet'}   /* 붉은 신에게 부정적인 선택이 많으면 혼자 나온다 */
   const sisHungerText=R=>R.hunger>=8?'극심하다':R.hunger>=5?'깊다':R.hunger>=3?'느껴진다':'가라앉아 있다';
   const sisFeedCost=ch=>20+15*sisGrade(ch);
   function sisRedTick(ch,turn){const R=ch.sis.red;if(!R||!R.alive)return;if(!R.shroud&&turn>R.born&&(turn-R.born)%2===0)R.hunger=Math.min(10,R.hunger+1);R.log[turn]=R.hunger}
@@ -2869,7 +2873,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(sv.st==='bfight'){sv.st='day1';return {type:'fight',enemy:'sis_bride',enc:{hidden:true,label:'신부'}}}
         const B_=Z.bride;return {type:'event',ev:{t:B_.t,x:sv.brideLost?B_.retry:B_.x,c:[{l:B_.l,ok:{t:sv.brideLost?B_.okRetry:B_.ok,fx:{sisBFight:1}}}]}}}
       if(sv.cs===1){if(sisGrade(ch)>=4&&sv.fac!=='kaki')return {type:'event',ev:{t:Z.center.t,x:Z.center.x,c:Z.center.c.map(c=>({l:c.l,ok:{t:c.ok,fx:{sisCs:2,sisInq:c.inq}}}))}};sv.cs=2}
-      return ev1(Z.exit.t,(sisGrade(ch)>=4&&sv.fac==='kaki'?Z.centerKaki+'\n\n':'')+Z.exit.x+(()=>{const R=sv.red,f=sv.fac;const k=f==='rouge'?((R&&R.alive&&sisGrade(ch)>=4&&(R.shroud||R.hunger<8))?'with':'buffet'):f==='noir'?(R&&R.state==='slain'?'slain':'left'):null;return k&&Z.exitFac&&Z.exitFac[k]?'\n\n'+Z.exitFac[k]:''})(),Z.exit.l,{sisOut:1},'무너지는 층 사이로 한 걸음을 내딛는다.')}
+      return ev1(Z.exit.t,(sisGrade(ch)>=4&&sv.fac==='kaki'?Z.centerKaki+'\n\n':'')+Z.exit.x+(()=>{const R=sv.red,f=sv.fac;const k=f==='rouge'?sisRedKey(ch):f==='noir'?(R&&R.state==='slain'?'slain':'left'):null;return k&&Z.exitFac&&Z.exitFac[k]?'\n\n'+Z.exitFac[k]:''})(),Z.exit.l,{sisOut:1},'무너지는 층 사이로 한 걸음을 내딛는다.')}
     if(sv.st==='redfight'){sv.st='day2';return {type:'fight',enemy:'sis_red',enc:{hidden:true,label:'붉은 신'}}}
     if(sv.st==='buffetfight'){sv.st='day2';return {type:'fight',enemy:'sis_buffet',enc:{hidden:true,label:'뷔페'}}}
     if(sv.st==='wallfight'){sv.st='day2';return {type:'fight',enemy:'sis_controller',enc:{sis:true,label:'벽 뒤의 경비'}}}
@@ -3296,6 +3300,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const wp=one(w);
     return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${wp} ${tl}${fam}`,xs:[wp,tl].concat(fam?[fam.trim()]:[]),c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +${CFG.accel.change.story} (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
   function advanceYear(G){
+    {const c1=G.ch,A2=c1&&c1.sisEnd&&!c1.sis&&c1.sisDone&&!CFG.sis.share&&D.sisyphus.act2;
+      if(A2&&G.year>=56&&G.year<=60){const e=A2[G.year-56];(c1.outSeen=c1.outSeen||{});
+        if(e&&!c1.outSeen[G.year]){c1.outSeen[G.year]=1;const sd=c1.sisDone,Ac=c1.sisAct=c1.sisAct||{};
+          if(!Ac.key){Ac.key=sd.fac==='rouge'?(sd.red==='with'?'red':'alone'):sd.fac==='noir'?(sd.ol?'ol':'alone'):((c1.bond&&['met','married'].includes(c1.bond.st))?'family':(sd.ann||sd.pal)?'friend':'alone')}
+          const role=Ac.role,k=Ac.key==='red'&&G.year>=59?'red_'+(role||'stay'):Ac.key;
+          const vv=k==='friend'?[sd.ann?e.v.ann:'',sd.pal?e.v.pal:''].filter(Boolean).join(' '):(e.v[k]||'');
+          const hint=(G.year===58&&Ac.key==='red'&&(Ac.walk||0)>=1)?'\n연기 속을 걸어 본 적이 있는 몸이라, 곁의 붉은 것도 손을 먼저 내밀려는 듯하다.':'';
+          const cs=(e.choices?(Ac.key==='red'?e.choices.red:e.choices.default):e.c);
+          return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:`${e.x}${vv?'\n\n'+vv:''}${hint}`,c:cs}}}}}
     {const c0=G.ch,O=c0&&c0.sisEnd&&!c0.sis&&c0.sisDone&&D.sisyphus.outside&&D.sisyphus.outside[c0.sisDone.fac];
       if(O&&G.year>=53&&G.year<=55){const i=G.year-53;(c0.outSeen=c0.outSeen||{});if(!c0.outSeen[G.year]&&O[i]){c0.outSeen[G.year]=1;const e=O[i],r=c0.sisDone.red,vk=e.v?(c0.sisDone.fac==='rouge'?(r==='with'?'with':'buffet'):(r==='slain'?'slain':'left')):null;
         return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:e.x+(vk&&e.v[vk]?'\n\n'+e.v[vk]:''),c:e.c}}}}}

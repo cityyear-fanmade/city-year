@@ -9895,6 +9895,39 @@
    ],
    "tier": "mid",
    "intro": "검은 코트가 한 걸음씩 거리를 잰다. 단추 하나 어긋남이 없다."
+  },
+  "sis_rampage": {
+   "n": "날뛰는 뒤틀림",
+   "why": "연기에 몸이 비틀려 날뛰는 존재. 당신을 같은 것으로 알아본다.",
+   "color": "#6a3a4a",
+   "hp": 60,
+   "atk": 6,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard"
+   ],
+   "tier": "mid",
+   "intro": "비틀린 몸이 연기 속에서 한 번 흔들린다. 눈은 당신을 알아본다."
+  },
+  "sis_rampage2": {
+   "n": "날뛰는 뒤틀림의 무리",
+   "why": "연기가 짙어질수록 불어나는 날뛰는 것들.",
+   "color": "#5a2a3a",
+   "hp": 90,
+   "atk": 8,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard",
+    "slash"
+   ],
+   "tier": "late",
+   "intro": "여럿의 숨소리가 하나로 겹친다. 연기가 몸을 감싼다."
   }
  },
  "fixedFights": {
