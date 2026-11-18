@@ -2938,7 +2938,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       return {type:'fight',enemy:id,enc:{sis:true,label:`${z.n} · ${D.enemies[id].n}`}};
     }
     if(sv.st==='craft'){
-      if(sv.brideKill){const K=S_.brideKill;return {type:'event',ev:{t:K.t,x:K.x,c:[{l:K.l,ok:{t:K.ok,fx:{sisBrideKill:1}}}]}}}
+      if(sv.brideKill){const K=S_.brideKill,zk=sv.skipHunt?null:D.sisyphus.zones.find(x=>x.id===sv.pend);
+        /* 간수를 꺾은 보상은 신부가 나타나기 전에 먼저 지급한다(신부는 간수와 별개의 상대). 재료와 안은 되돌아간 뒤에도 남는다 */
+        if(zk&&!sv.lootDone){const lc=[];sisLoot(ch,zk,lc);sv.lootDone=true;sv.lootNote=lc.join('\n')}
+        return {type:'event',ev:{t:K.t,x:`${sv.lootNote?sv.lootNote+'\n\n':''}${K.x}`,c:[{l:K.l,ok:{t:K.ok,fx:{sisBrideKill:1}}}]}}}
       const z=sv.skipHunt?null:D.sisyphus.zones.find(x=>x.id===sv.pend),chips=[];
       if(z&&!sv.lootDone){sisLoot(ch,z,chips);if(sv.riskNow){chips.push('위험을 무릅쓴 대가');sisLoot(ch,z,chips)}sv.riskNow=false;sv.lootDone=true;sv.lootNote=chips.join('\n')}
       const opts=sv.crafted?[]:D.sisyphus.tailor.shapes.filter(s=>sisCraftInfo(ch,{shape:s.id,pattern:'plain',color:'gray'}).ok);
