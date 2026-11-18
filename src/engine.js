@@ -2481,11 +2481,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 육신 뒤틀림: 장비를 모두 벗고(보관함), 깡 능력치 상승, 카드팩은 뒤틀린 카드팩으로 고정, 정신력 시스템이 사라진다.
      이전 카드팩은 보관함에 남고, 안정화 사건(2년마다 40%)을 겪으면 장비·카드팩을 다시 쓸 수 있고 더 강해진 뒤틀린 카드팩을 얻는다 */
   function setDistort(ch,name){
-    const X=CFG.distort,s=ch.stats;
-    for(const it of Object.values(ch.gear)){if(!it)continue;for(const [k,v] of Object.entries(it.fx||{}))if(k!=='dmin'&&k in s)s[k]-=v;(ch.stash=ch.stash||[]).push(it)}
-    ch.gear={};s.dmin=calcDmin(ch);for(const g of ch.gearOffers||[])(ch.stash=ch.stash||[]).push(g);ch.gearOffers=[];
-    addStats(s,X.fx);ch.hp=clamp(ch.hp+(X.fx.maxHp||0),1,s.maxHp);ch.distStable=false;ch.stableNext=(ch.year||0)+X.stable.every;
-    ch.distForm={n:(name||'').trim()||'이름 없는 뒤틀림'};ch.huntNext=(ch.year||0)+(BD.hunt?BD.hunt.gap:3);ch.distPick=false;ch.distortPend=false;ch.distortDone=true;ch.voiceUsed=true;ch.mind=mindMax(ch);
+    const X=CFG.distort,s=ch.stats,dept=!!ch.sis;   // 백화점 전용 뒤틀림: 처음부터 안정형이라 장비를 벗지 않는다
+    if(!dept){for(const it of Object.values(ch.gear)){if(!it)continue;for(const [k,v] of Object.entries(it.fx||{}))if(k!=='dmin'&&k in s)s[k]-=v;(ch.stash=ch.stash||[]).push(it)}
+    ch.gear={};s.dmin=calcDmin(ch);for(const g of ch.gearOffers||[])(ch.stash=ch.stash||[]).push(g);ch.gearOffers=[]}
+    addStats(s,X.fx);ch.hp=clamp(ch.hp+(X.fx.maxHp||0),1,s.maxHp);ch.distStable=dept;ch.stableNext=(ch.year||0)+X.stable.every;
+    ch.distForm={n:(name||'').trim()||'이름 없는 뒤틀림'};if(dept)ch.distForm.dept=1;ch.huntNext=(ch.year||0)+(BD.hunt?BD.hunt.gap:3);ch.distPick=false;ch.distortPend=false;ch.distortDone=true;ch.voiceUsed=true;ch.mind=mindMax(ch);
     if(ch.sis){ch.distDeckPend=true;ch.packOffer=ch.packOffer&&ch.packOffer.sis?ch.packOffer:null}   // 시지프 백화점 안에서는 소속 책장을 그대로 쓴다. 뒤틀린 카드팩은 백화점을 나온 뒤에 들어선다
     else distortDeck(ch);
     (ch.relics=ch.relics||[]).push('뒤틀림 · '+ch.distForm.n);
@@ -2505,11 +2505,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function setStable(ch){
     const X=CFG.distort;if(!ch.distForm||ch.distStable)return false;
-    ch.distStable=true;const fx=ch.deck.filter(id=>D.cards[id].fixed);
-    if(ch.packName===X.packN){ch.packName=X.packN2;ch.deck=X.deck2.concat(fx)}
-    else{ensurePacks(ch);stashPack(ch,X.packN2);ch.deck=X.deck2.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false}
+    ch.distStable=true;stableDeck(ch);
     (ch.relics=ch.relics||[]).push('뒤틀림 안정화');
     return true;
+  }
+  function stableDeck(ch){
+    const X=CFG.distort,fx=ch.deck.filter(id=>D.cards[id].fixed);
+    if(ch.packName===X.packN){ch.packName=X.packN2;ch.deck=X.deck2.concat(fx)}
+    else{ensurePacks(ch);stashPack(ch,X.packN2);ch.deck=X.deck2.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false}
   }
   /* 무한런: 마지막 해, 지금 위협 등급(-1이면 아직 기본 연차) */
   const lastYear=G=>G.infinite?Infinity:CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0);
@@ -2752,7 +2755,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(red==='with'){const nm=R.name||'붉은 신';addStats(ch.stats,{maxHp:20,atk:2});ch.hp+=20;(ch.relics=ch.relics||[]).push('동행 · '+nm);ch.flags=ch.flags||{};ch.flags.sisRed=nm;chips.push(`동행 · ${nm} · 최대 HP +20 · 공격 +2`)}
     if(sv.inq===1){ch.titles=ch.titles||[];const T2='접수 번호를 받은 자';if(!ch.titles.includes(T2)){ch.titles.push(T2);(ch.titleLog=ch.titleLog||[]).push(T2);chips.push('칭호 · '+T2)}}
     ch.sisEnd=true;ch.sis=null;
-    if(ch.distDeckPend&&ch.distForm){distortDeck(ch);setStable(ch)}   // 백화점의 뒤틀림은 안정형 뒤틀림이다: 장비를 다시 쓰고 더 강해진 뒤틀린 카드팩을 든다
+    if(ch.distDeckPend&&ch.distForm){stableDeck(ch);ch.distDeckPend=false}   // 백화점의 뒤틀림은 안정형 뒤틀림이다: 장비를 다시 쓰고 더 강해진 뒤틀린 카드팩을 든다
     if(fac!=='kaki'&&!ch.distForm&&!ch.distPick){ch.distPick=true;chips.push('몸이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
   }
   /* 몰랐던 규칙을 겪어서 알게 된다: 안내판에서 못 본 규칙을 어기면 순응이 한 번 더 깎이고, 그 규칙이 목록에 적힌다 */
@@ -2906,7 +2909,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const give=Object.entries(o.give).map(([k,n])=>k==='an'?sisAn(n):`${k==='dye'?'염료':S_.mats[k].n} ${n}`).join(' · ');
         if(Object.keys(o.get).includes('dye')){for(const col of sisColorsOpen(ch).filter(x=>x.id!=='gold'&&x.id!=='gray'))c.push({l:`${v.n} · ${col.n} 염료`,h:`${give} → ${o.t}`,ok:{t:v.x,fx:{sisTrade:{v:v.id,i,color:col.id}}}})}
         else c.push({l:`${v.n} · ${o.t}`,h:give,ok:{t:v.x,fx:{sisTrade:{v:v.id,i}}}})});
-      for(const id of (ch.distForm?[]:sisShop(ch))){const it=D.items[id];if(ch.money>=it.price)c.push({l:`백화점 매장 · ${it.n}`,h:`${it.e} · ${sisAn(it.price)}`,ok:{t:'가격표를 확인하고 값을 치른다.',fx:{sisBuy:id}}})}
+      for(const id of ((ch.distForm&&!ch.distStable)?[]:sisShop(ch))){const it=D.items[id];if(ch.money>=it.price)c.push({l:`백화점 매장 · ${it.n}`,h:`${it.e} · ${sisAn(it.price)}`,ok:{t:'가격표를 확인하고 값을 치른다.',fx:{sisBuy:id}}})}
       c.push({l:S_.act.trade.leave,ok:{t:'값 부르는 소리가 멀어진다.',fx:{sisGo:'back'}}});
       return {type:'event',ev:{t:S_.act.trade.t,x:`${S_.act.trade.x}\n\n${sisInv(ch)}`,c}};
     }
