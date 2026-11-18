@@ -2821,7 +2821,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(sv.st==='wfight'){sv.st='day1';return {type:'fight',enemy:'sis_warden_final',enc:{hidden:true,label:'간수'}}}
         const W=Z.warden,R_=sv.red,v=sv.fac==='rouge'&&R_&&R_.alive?W.with:sv.fac==='noir'?W.noir:sv.fac==='kaki'?W.kaki:'';
         return {type:'event',ev:{t:W.t,x:sv.wardenLost?W.retry:`${W.x}${v?'\n\n'+v:''}`,c:[{l:W.l,ok:{t:sv.wardenLost?W.okRetry:W.ok,fx:{sisWFight:1}}}]}}}
-      if(!sv.brideDone){
+      if(sv.fac==='rouge'&&!sv.brideDone){   /* 신부는 검은 신의 자리라서 르루주만 맞선다 */
         if(sv.st==='bfight'){sv.st='day1';return {type:'fight',enemy:'sis_bride',enc:{hidden:true,label:'신부'}}}
         const B_=Z.bride;return {type:'event',ev:{t:B_.t,x:sv.brideLost?B_.retry:B_.x,c:[{l:B_.l,ok:{t:sv.brideLost?B_.okRetry:B_.ok,fx:{sisBFight:1}}}]}}}
       if(sv.cs===1){if(sisGrade(ch)>=4&&sv.fac!=='kaki')return {type:'event',ev:{t:Z.center.t,x:Z.center.x,c:Z.center.c.map(c=>({l:c.l,ok:{t:c.ok,fx:{sisCs:2,sisInq:c.inq}}}))}};sv.cs=2}
