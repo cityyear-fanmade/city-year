@@ -2735,7 +2735,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 지금 목표: 판매하면 고객 점수가 쌓이고, 등급이 오르면 더 높은 층이 열린다 */
   function sisGoalText(ch){const G_=D.sisyphus.grades,g=ch.sis.grade||0,nx=G_[g+1];if(!nx)return '고객 등급이 가장 높다.';
     const zs=D.sisyphus.zones.filter(z=>z.grade===g+1).map(z=>z.n);
-    return `옷을 팔면 고객 점수가 쌓인다 · ${nx.n} 고객까지 ${Math.max(0,nx.at-(ch.sis.pts||0))}점${zs.length?` · ${zs.join('·')}이(가) 열린다`:''}`}
+    return `${(ch.sis.pts||0)>0?'':'옷을 팔면 고객 점수가 쌓인다 · '}${nx.n} 고객까지 ${Math.max(0,nx.at-(ch.sis.pts||0))}점${zs.length?` · ${zs.join('·')}이(가) 열린다`:''}`}
   function sisSell(ch,mode,chips){
     const S_=D.sisyphus,M=S_.sell[mode];if(!M)return;
     if(!ch.sis.cloth.length||mode==='empty'){chips.push(S_.sell.empty.x);sisAdj(ch,-1);return}
