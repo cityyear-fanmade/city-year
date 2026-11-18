@@ -2853,7 +2853,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='day1'&&sv.wardenTurn!==sv.turn){sv.wardenTurn=sv.turn;if(sv.turn>5&&(sv.comply==null?5:sv.comply)<=CS.wardenComply&&d(100)<=CS.wardenChance)sv.warden=1}
     if(sv.st==='day1'&&!sv.mgrSeen&&!sv.collapsed&&sv.turn>=28&&sisGrade(ch)>=3){sv.mgrSeen=1;const F=S_.fate;return {type:'event',ev:{t:F.t,x:F.x,c:[{l:F.spare.l,ok:{t:F.spare.ok,fx:{sisGo:'back'}}},{l:F.kill.l,h:F.kill.h,ok:{t:F.kill.ok,fx:{sisFate:1}}}]}}}
     if(sv.st==='day1'&&sv.warden){const W=S_.warden;return ev1(W.t,W.x,W.l,{sisWarden:1},W.ok)}
-    if(sv.st==='day1'&&sv.fac&&!sv.collapsed&&sv.evDay!==sv.turn&&!sv.warden){const L=(S_.facEv||{})[sv.fac],fe=L&&L.find(e=>!(sv.floorSeen&&sv.floorSeen[e.id])&&sv.turn>=e.at&&sv.turn<=e.to);
+    if(sv.st==='day1'&&sv.exploreDone&&!sv.collapsed&&sv.evDay!==sv.turn&&!sv.warden){const L=sv.fac?(S_.facEv||{})[sv.fac]:null,seen=e=>sv.floorSeen&&sv.floorSeen[e.id],fe=(L&&L.find(e=>!seen(e)&&sv.turn>=e.at&&sv.turn<=e.to))||(S_.commonEv||[]).find(e=>!seen(e)&&sv.turn>=e.at&&sv.turn<=e.to);
       if(fe)return {type:'event',ev:{t:fe.t,x:fe.x,c:fe.c.filter(c=>!c.needDye||sv.dyes.length>=c.needDye).map(c=>{const o=Object.assign({},c);for(const k of ['ok','fail'])if(o[k])o[k]=Object.assign({},o[k],{fx:Object.assign({sisGo:'day1'},o[k].fx)});return o})}}}
     if(sv.st==='tfight'){sv.st='day1';return {type:'fight',enemy:'sis_trendy',enc:{sis:true,label:'유행에 민감한 손님'}}}
     if(sv.st==='tpost'){const P=S_.opening.post;return ev1(P.t,P.x,P.l,{sisEx:{to:4,rule:P.rule}},P.ok)}
