@@ -974,7 +974,7 @@ html[data-sis][data-skin] body,html[data-sis] body{
 @media (min-width:1020px){html[data-sis][data-skin],html[data-sis]{background:var(--bg) var(--sisbg-pc,none) center/cover no-repeat fixed}html[data-sis][data-skin] body,html[data-sis] body{background:transparent}}
 @media (max-width:1019px){html[data-sis][data-skin],html[data-sis]{background:var(--bg) var(--sisbg-m,none) center/cover no-repeat fixed}html[data-sis][data-skin] body,html[data-sis] body{background:transparent}}
 
-html[data-sis][data-skin] .wrap,html[data-sis] .wrap{--bw:1px;background:color-mix(in srgb,var(--bg) 92%,transparent);border-color:var(--line);box-shadow:none;border-radius:10px}
+html[data-sis][data-skin] .wrap,html[data-sis] .wrap{--bw:1px;background:linear-gradient(color-mix(in srgb,var(--bg) 90%,transparent),color-mix(in srgb,var(--bg) 90%,transparent)),var(--sistile,none) 0 0/240px repeat;border-color:var(--line);box-shadow:none;border-radius:10px}
 html[data-sis] .wrap::before,html[data-sis] .wrap::after{display:none}
 html[data-sis] body::before{content:"시지프 백화점";position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:5;font:500 10px/1 var(--mono);letter-spacing:.32em;color:var(--gold);opacity:.6;pointer-events:none}
 
@@ -998,3 +998,6 @@ html[data-skin="base"]:not([data-sis])::after{content:"";position:fixed;left:0;r
 @media (max-width:1019px){html[data-skin="base"]:not([data-sis])::after{height:18vh;opacity:.35}}
 /* 일반 테마 스카이라인은 항상 내용 뒤에 */
 html[data-skin="base"]:not([data-sis]) #app{position:relative;z-index:1}
+
+.sis-scene{height:118px;border-radius:8px;border:1px solid var(--line);background-size:cover;background-position:center;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+@media (min-width:1020px){.sis-scene{height:150px}}
