@@ -19,3 +19,10 @@ ChatGPT에서 받은 **원본 파일 그대로**(해상도·색·배경 변경 �
 | sis_w_m_shroud | sis_w_m_shroud.webp | 1086×1448, 휘감은 천 상의 |
 | sis_w_m_gala | sis_w_m_gala.webp | 1086×1448, 예복 |
 | sis_w_m_daily | (아직 없음) | 셔츠 |
+
+## 배경 (2026-11-18, v2 프롬프트)
+| 에셋 ID | 크기 | 비고 |
+|---|---|---|
+| sis_bg_pc_rouge / pc_noir / pc_kaki | 1670×941 | PC 좌우 장식 |
+| sis_bg_m_rouge / m_noir | 941×1672 | 모바일 위·아래 장식 |
+| sis_bg_m_kaki | (아직 없음) | 모바일 카키 |

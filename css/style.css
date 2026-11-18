@@ -970,6 +970,10 @@ html[data-sis][data-skin] body,html[data-sis] body{
     var(--bg);
   background-attachment:fixed;
 }
+/* 시지프 배경 그림(PC 좌우/모바일 위아래) — 변수가 있을 때만 */
+@media (min-width:1020px){html[data-sis][data-skin],html[data-sis]{background:var(--bg) var(--sisbg-pc,none) center/cover no-repeat fixed}html[data-sis][data-skin] body,html[data-sis] body{background:transparent}}
+@media (max-width:1019px){html[data-sis][data-skin],html[data-sis]{background:var(--bg) var(--sisbg-m,none) center/cover no-repeat fixed}html[data-sis][data-skin] body,html[data-sis] body{background:transparent}}
+
 html[data-sis][data-skin] .wrap,html[data-sis] .wrap{--bw:1px;background:transparent;border-color:var(--line);box-shadow:none;border-radius:10px}
 html[data-sis] .wrap::before,html[data-sis] .wrap::after{display:none}
 html[data-sis] body::before{content:"시지프 백화점";position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:5;font:500 10px/1 var(--mono);letter-spacing:.32em;color:var(--gold);opacity:.6;pointer-events:none}

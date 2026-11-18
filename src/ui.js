@@ -2942,7 +2942,7 @@ ${symRec(r)}
   }
   function render(){
     /* 시지프 백화점 안에서는 고른 스킨과 상관없이 백화점 테마로 바꾼다(소속이 정해지면 그 색) */
-    {const dsx=document.documentElement.dataset,ins=!!(G&&G.ch&&G.ch.sis&&CFG.sis.on&&!['title','end','sisshare','records','chron','chronview','shared'].includes(UI.screen));if(ins)dsx.sis=G.ch.sis.fac||'in';else delete dsx.sis}
+    {const dsx=document.documentElement.dataset,ins=!!(G&&G.ch&&G.ch.sis&&CFG.sis.on&&!['title','end','sisshare','records','chron','chronview','shared'].includes(UI.screen));if(ins)dsx.sis=G.ch.sis.fac||'in';else delete dsx.sis;{const SW=window.CITY_SIS||{},f=ins?(G.ch.sis.fac||''):'',st=document.documentElement.style,a=SW['sis_bg_pc_'+f],b=SW['sis_bg_m_'+f];a?st.setProperty('--sisbg-pc','url('+a+')'):st.removeProperty('--sisbg-pc');b?st.setProperty('--sisbg-m','url('+b+')'):st.removeProperty('--sisbg-m')}}
     if(window.CITY_LAB){labDraw();return}
     if(window.CITY_AUGDEMO){augDemoDraw();return}
     const s=UI.screen;
