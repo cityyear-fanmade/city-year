@@ -1016,3 +1016,5 @@ html[data-skin="base"]:not([data-sis]) #app{position:relative;z-index:1}
 .sis-fbar u{position:absolute;top:-3px;width:4px;height:14px;border-radius:2px;background:var(--fg);transform:translateX(-2px);box-shadow:0 0 4px #000}
 .sis-flab{display:flex;justify-content:space-between;font:10px/1 var(--mono);color:var(--dim)}
 .sis-fac small{color:var(--dim);font-size:10.5px;line-height:1.35}
+
+.sis-hn{margin:4px 0 0;line-height:1.4}

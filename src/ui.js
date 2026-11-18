@@ -810,6 +810,10 @@ export function startUI(E,app){
     if(R&&R.alive&&!R.shroud&&R.hunger>=8)msgs.push(`${R.name||'붉은 것'}의 허기가 한계에 가깝습니다. 곧 몸이 변합니다.`);
     if(sv.fac==='kaki')msgs.push('이번 시즌의 유행은 전투마다 바뀝니다.');
     const gg=[['순응도',cp,10]];if(R&&R.alive){gg.push([`${R.name||'붉은 신'}의 허기`,R.hunger||0,10]);gg.push([`${R.name||'붉은 신'}의 추억`,R.memN||0,5])}if(sv.fac&&(sv.fit||0)>0)gg.push(['단골 맞춤',sv.fit,CFG.sis.fit.per*CFG.sis.fit.maxTier]);
+    /* 붉은 신의 허기가 어떻게 오르는지: 2턴마다 +1, 10이 되면 뷔페가 된다. 망토를 입히면 멈춘다 */
+    const hungerNote=(()=>{if(!(R&&R.alive))return '';const nm=R.name||'붉은 신';if(R.shroud)return `<p class="small dim sis-hn">${esc(nm)}은(는) 망토를 입어 허기가 오르지 않는다.</p>`;
+      const t=sv.turn||0,b=R.born||0,left=(t-b)%2===0?2:1;
+      return `<p class="small dim sis-hn">${esc(nm)}의 허기 · 2턴마다 +1 (${left}턴 뒤 +1) · 10이 되면 뷔페로 변한다 · 황금가죽 망토를 입히면 멈춘다</p>`})();
     const bars=gg.map(([n,v,m])=>`<span class="sis-g"><b>${esc(n)}</b><i style="--v:${Math.round(100*v/m)}%"></i><em>${v}/${m}</em></span>`).join('');
     const SWi=window.CITY_SIS||{},sc=(sv.st==='hunt'?sv.hunt:sv.st==='craft'?sv.pend:null),scene=sc&&SWi['sis_scene_'+sc]?`<div class="sis-scene" style="background-image:url(${SWi['sis_scene_'+sc]})" aria-hidden="true"></div>`:'';
     const GR=D.sisyphus.grades,nx=GR[gr+1],season=['봄','여름','가을','겨울'][Math.min(3,Math.floor(((sv.turn||1)-1)/13))],zn=nx?Z.filter(z=>z.grade===gr+1).map(z=>z.n):[];
@@ -817,7 +821,7 @@ export function startUI(E,app){
     const facBar=(()=>{if(sv.fac)return '';const CS_=CFG.sis,L=Math.max(-CS_.leanMax,Math.min(CS_.leanMax,sv.lean||0)),M=CS_.leanMax,pos=Math.round((L+M)/(2*M)*100),lo=Math.round((M-CS_.facLean)/(2*M)*100),hi=Math.round((M+CS_.facLean)/(2*M)*100),left=Math.max(0,CS_.facTurn-(sv.turn||1));
       return `<div class="sis-fac"><b>소속 성향</b><div class="sis-fbar" style="--lo:${lo}%;--hi:${hi}%"><u style="left:${pos}%"></u></div><div class="sis-flab"><span>르누아르</span><span>르카키</span><span>르루주</span></div><small>${left>0?`${left}일 뒤`:'곧'} 소속이 정해집니다 · 지은 옷의 색·무늬 성향이 한쪽으로 쏠리면 그 소속, 옷을 거의 안 지었거나 비슷하면 르카키</small></div>`})();
     const clock=`<span class="sis-clock">${sv.turn||1}일째 · ${season} 시즌</span>`;
-    return `<div class="sis-bar" role="status"><div class="sis-floors">${cells}${clock}</div>${goal}${facBar}${scene}<div class="sis-tick"><span style="animation-delay:-${Date.now()%26000}ms">${msgs.filter(Boolean).map(esc).join('  ·  ')}</span></div><div class="sis-gauges">${bars}</div></div>`}
+    return `<div class="sis-bar" role="status"><div class="sis-floors">${cells}${clock}</div>${goal}${facBar}${scene}<div class="sis-tick"><span style="animation-delay:-${Date.now()%26000}ms">${msgs.filter(Boolean).map(esc).join('  ·  ')}</span></div><div class="sis-gauges">${bars}</div>${hungerNote}</div>`}
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `${vSisBar()}<div class="panel stack">
