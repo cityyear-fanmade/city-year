@@ -1227,6 +1227,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function applyFx(ch,fx){
     const s=ch.stats,chips=[];
     if(fx.sisRole){(ch.sisAct=ch.sisAct||{}).role=fx.sisRole}
+    if(fx.sisLover){ch.sisLover=1;const nm=(ch.sisDone&&ch.sisDone.name)||'붉은 것';ch.bond={st:'met',route:'redgod',variant:0,name:nm,step:0,tries:0,love:1,since:ch.year||60,next:(ch.year||60)+2,saved:false,kids:[]};chips.push(`인연 · ${nm}`)}
     if(fx.sisWalk){(ch.sisAct=ch.sisAct||{}).walk=((ch.sisAct||{}).walk||0)+1}
     if(fx.sisTitle){ch.titles=ch.titles||[];if(!ch.titles.includes(fx.sisTitle)){ch.titles.push(fx.sisTitle);(ch.titleLog=ch.titleLog||[]).push(fx.sisTitle);chips.push('칭호 · '+fx.sisTitle)}}
     if(fx.maxHp){s.maxHp+=fx.maxHp;ch.hp+=fx.maxHp;chips.push('최대 HP '+sg(fx.maxHp))}
@@ -2001,7 +2002,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:P.giveL,h:P.giveH,ok:{t:giveT,fx:deathFx}}]}}
   function bondEvent(G){
     const ch=G.ch,b=ch.bond,y=G.year,B=bondTx(ch);
-    if(!B||ch.distForm||(ch.job&&!(ch.o&&(ch.o.key==='claw'||ch.o.key==='arbiter')))||!b)return null;
+    if(!B||(ch.distForm&&!(ch.sisLover&&ch.distForm.dept))||(ch.job&&!(ch.o&&(ch.o.key==='claw'||ch.o.key==='arbiter')))||!b)return null;   /* 붉은 신과 맺은 연인 인연은 백화점의 뒤틀림이어도 이어진다 */
     const R=bondData(ch);if(!R)return null;
     if(b.companion&&b.st==='met')return null;   // 청혼하지 않고 곁에 남은 인연(헤르메스): 더 이상 인연 사건이 없다
     if(b.st==='married'||b.st==='lost'){
@@ -2912,7 +2913,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 동화: 소속이 정해진 뒤 한 번, 소속 책장(르루주·르누아르)을 받거나 유행을 따른다(르카키) */
     if(sv.fac&&!sv.assimDone&&sv.st==='day1'){const Z=S_.assim[sv.fac];return {type:'event',ev:{t:Z.t,x:Z.x,c:[{l:Z.l,h:Z.h,ok:{t:Z.ok,fx:{sisAssim:sv.fac}}}]}}}
     if(sv.st==='day1'){
-      return {type:'event',ev:{t:A.day1.t,x:`${A.day1.x}\n\n${ch.sis.lastDay?ch.sis.lastDay+'\n\n':''}${sisInv(ch)}`,c:[
+      return {type:'event',ev:{t:A.day1.t,x:`${(A.day1.alt&&A.day1.alt[((ch.sis.turn||1)-1)%A.day1.alt.length])||A.day1.x}\n\n${ch.sis.lastDay?ch.sis.lastDay+'\n\n':''}${sisInv(ch)}`,c:[
         ...sisZones(ch).map(z=>({l:`${z.n}으로 나간다`,h:z.x,ok:{t:'채비를 하고 나선다.',fx:{sisHunt:z.id}}})),
         ...(ch.sis.cloth.length||Object.values(ch.sis.mat).some(n=>n>0)?[{l:A.day1.bench,h:'옷 재단과 손질 · 사냥은 하지 않는다',ok:{t:'작업대에 불을 켠다.',fx:{sisGo:'craft'}}}]:[]),
         ...(sv.cycle>=1?[{l:S_.wall.l,h:S_.wall.h,ok:{t:S_.wall.ok,fx:{sisWall:1}}}]:[]),
@@ -2924,7 +2925,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sv.st==='hunt'){
       {const z0=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],L=(D.sisyphus.floorEv||{})[z0.id];
         if(L&&sv.evDay!==sv.turn&&sv.floorPass!==sv.turn){sv.floorPass=sv.turn;const fe=L.find(e=>!(sv.floorSeen&&sv.floorSeen[e.id])&&sv.turn>=e.from&&sv.turn<=e.to&&(!e.fac||e.fac===sv.fac)&&!(e.skipOl&&sv.ol));
-          if(fe&&d(100)<=CS.floorChance)return {type:'event',ev:{t:fe.t,x:fe.x,c:fe.c.filter(c=>(!c.needDye||sv.dyes.length>=c.needDye)&&(!c.needMat||Object.entries(c.needMat).every(([k,n])=>(sv.mat[k]||0)>=n))).map(c=>Object.assign({},c))}}}}
+          if(fe&&d(100)<=CS.floorChance){const okc=c=>(!c.needDye||sv.dyes.length>=c.needDye)&&(!c.needMat||Object.entries(c.needMat).every(([k,n])=>(sv.mat[k]||0)>=n)),miss=fe.c.filter(c=>!okc(c)).map(c=>`「${c.l}」은 ${[c.needDye?`염료 ${c.needDye}병`:'',...Object.entries(c.needMat||{}).map(([k,n])=>`${S_.mats[k].n} ${n}`)].filter(Boolean).join(' · ')}이(가) 있어야 고를 수 있다`);
+          return {type:'event',ev:{t:fe.t,x:fe.x+(miss.length?'\n\n('+miss.join(' · ')+')':''),c:fe.c.filter(okc).map(c=>Object.assign({},c))}}}}}
       const z=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],bosses=z.foes.filter(f=>D.enemies[f].tier==='boss'),norm=z.foes.filter(f=>D.enemies[f].tier!=='boss');
       if(z.targets&&sv.pickTurn!==sv.turn){const T_=z.targets,P_=S_.pick;return {type:'event',ev:{t:P_.t,x:`${z.n}\n\n${P_.x}\n이 층에서 얻는 재료: ${[...new Set(z.mat)].map(k=>S_.mats[k].n).join('·')} · 한 번에 ${((z.loot||{lo:1}).lo+((S_.lootGrade||[])[sisGrade(ch)]||0))}~${((z.loot||{hi:2}).hi+((S_.lootGrade||[])[sisGrade(ch)]||0))}개`,c:[{l:T_.safe.n,h:P_.safeH,ok:{t:T_.safe.x,fx:{sisPick:'safe'}}},{l:T_.risk.n,h:T_.risk.h||P_.riskH,ok:{t:T_.risk.x,fx:{sisPick:'risk'}}}]}}}
       const id=(z.targets&&sv.pickFoe)?sv.pickFoe:(bosses.length&&(!norm.length||d(100)<=CFG.sis.bossChance)?one(bosses):one(norm.length?norm:z.foes));
@@ -3315,7 +3317,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           const hint=(G.year===58&&Ac.key==='red'&&(Ac.walk||0)>=1)?'\n연기 속을 걸어 본 적이 있는 몸이라, 곁의 붉은 것도 손을 먼저 내밀려는 듯하다.':'';
           if(Ac.key==='red'&&!Ac.role){Ac.role=sd.rel==='love'?'spouse':'child'}
           const cs=(e.choices?(Ac.key==='red'?[Object.assign({},(Ac.role==='spouse'?e.choices.red[0]:e.choices.red[1]),{l:'이어서'})]:e.choices.default):e.c);
-          return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:`${e.x}${vv?'\n\n'+vv:''}${hint}`,c:cs}}}}}
+          const love=G.year===60&&Ac.key==='red'&&Ac.role==='spouse'&&!c1.sisLover;
+          return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:`${e.x}${vv?'\n\n'+vv:''}${hint}`,c:love?[{l:'인연을 맺는다',h:'뒤틀린 몸이어도 이 인연은 이어진다',ok:{t:'붉은 것이 당신의 손을 잡았다. 이름 붙이지 않은 채 이어 온 관계에 처음으로 이름이 생겼다.',fx:{maxHp:20,sisTitle:'비가 그친 뒤의 사람',sisLover:1}}},{l:'각자의 길을 간다',ok:{t:'손을 놓지 않은 채 한동안 서 있었다. 그러다 천천히 놓았다.',fx:{maxHp:20,sisTitle:'비가 그친 뒤의 사람'}}}]:cs}}}}}
     {const c0=G.ch,O=c0&&c0.sisEnd&&!c0.sis&&c0.sisDone&&D.sisyphus.outside&&D.sisyphus.outside[c0.sisDone.fac];
       if(O&&G.year>=53&&G.year<=55){const i=G.year-53;(c0.outSeen=c0.outSeen||{});if(!c0.outSeen[G.year]&&O[i]){c0.outSeen[G.year]=1;const e=O[i],r=c0.sisDone.red,vk=e.v?(c0.sisDone.fac==='rouge'?(r==='with'?'with':'buffet'):(r==='slain'?'slain':'left')):null;
         return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:e.x+(vk&&e.v[vk]?'\n\n'+e.v[vk]:''),c:e.c}}}}}
