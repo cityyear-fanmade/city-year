@@ -2519,7 +2519,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     else{ensurePacks(ch);stashPack(ch,X.packN2);ch.deck=X.deck2.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false}
   }
   /* 무한런: 마지막 해, 지금 위협 등급(-1이면 아직 기본 연차) */
-  const lastYear=G=>G.infinite?Infinity:CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0)+((G.ch&&G.ch.sisEnd&&D.sisyphus&&D.sisyphus.act2&&!CFG.sis.share)?D.sisyphus.act2.length:0);   /* 시지프 2막: 55년차 뒤 5년(56~60) */
+  const lastYear=G=>G.infinite?Infinity:CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0)+((G.ch&&G.ch.sisEnd&&D.sisyphus&&D.sisyphus.act2&&(!CFG.sis.share||CFG.sis.act2))?D.sisyphus.act2.length:0);   /* 시지프 2막: 55년차 뒤 5년(56~60) */
   const gradeAt=y=>y>CFG.years?Math.min(CFG.endless.grades.length-1,Math.floor((y-CFG.years-1)/CFG.endless.span)):-1;
   /* 무한 모드의 위협 등급 번호(상한 없음) */
   const gradeRaw=y=>y>CFG.years?Math.floor((y-CFG.years-1)/CFG.endless.span):-1;
@@ -2978,7 +2978,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 백화점 안에서는 해가 바뀌어도 일반 사건 대신 조용히 지나가고, 다음 하루가 시작된다 */
   function sisQuiet(G){const c=G.ch;if(sisOn(c))return {type:'quiet',year:G.year};
     /* 백화점에서 나온 뒤(밖 이야기 53~55, 2막 56~73)에도 일반 연례 사건·전투는 끼지 않고 시지프 사건만 나온다 */
-    if(c&&c.sisEnd&&!c.sis&&c.sisDone&&!G.infinite&&!CFG.sis.share&&D.sisyphus&&G.year>=53&&G.year<=55+((D.sisyphus.act2||[]).length))return {type:'quiet',year:G.year};
+    if(c&&c.sisEnd&&!c.sis&&c.sisDone&&!G.infinite&&(!CFG.sis.share||CFG.sis.act2)&&D.sisyphus&&G.year>=53&&G.year<=55+((D.sisyphus.act2||[]).length))return {type:'quiet',year:G.year};
     return null}
   function tabooOffer(G){const ch=G.ch,T_=D.taboo;if(!T_||!eastN(ch)||(ch.fi??0)<2||ch.flags.tbHunt||ch.flags.tbNo||ch.distForm)return null;const O=T_.offer;
     return {t:O.t,x:O.x,c:[{l:O.yes.l,h:O.yes.h,ok:{t:O.yes.t,fx:{flag:'tbHunt',tbJoin:1}}},{l:O.no.l,h:O.no.h,ok:{t:O.no.t,fx:{flag:'tbNo'}}}]}}
@@ -3311,7 +3311,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const wp=one(w);
     return {t:`${m*100}해가 지났다 · 세월의 풍경`,x:`${wp} ${tl}${fam}`,xs:[wp,tl].concat(fam?[fam.trim()]:[]),c:[{l:'지나온 세월을 돌아본다',h:`변화의 파편 +${CFG.accel.change.story} (지금 ${(ch.chgShard||0)}개)`,ok:{t:'돌아본 자리가 몸 안쪽으로 접혀 들어갔다.',fx:{accelStory:m}}}]}}
   function advanceYear(G){
-    {const c1=G.ch,A2=c1&&c1.sisEnd&&!c1.sis&&c1.sisDone&&!CFG.sis.share&&D.sisyphus.act2;
+    {const c1=G.ch,A2=c1&&c1.sisEnd&&!c1.sis&&c1.sisDone&&(!CFG.sis.share||CFG.sis.act2)&&D.sisyphus.act2;
       if(A2&&G.year>=56&&G.year<=55+A2.length){const e=A2[G.year-56];(c1.outSeen=c1.outSeen||{});
         if(e&&!c1.outSeen[G.year]){c1.outSeen[G.year]=1;const sd=c1.sisDone,Ac=c1.sisAct=c1.sisAct||{};
           if(!Ac.key){Ac.key=sd.fac==='rouge'?(sd.red==='with'?'red':'alone'):sd.fac==='noir'?(sd.ol?'ol':'alone'):((c1.bond&&['met','married'].includes(c1.bond.st))?'family':(sd.ann||sd.pal)?'friend':'alone')}
@@ -3325,7 +3325,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const c0=G.ch,O=c0&&c0.sisEnd&&!c0.sis&&c0.sisDone&&D.sisyphus.outside&&D.sisyphus.outside[c0.sisDone.fac];
       if(O&&G.year>=53&&G.year<=55){const i=G.year-53;(c0.outSeen=c0.outSeen||{});if(!c0.outSeen[G.year]&&O[i]){c0.outSeen[G.year]=1;const e=O[i],r=c0.sisDone.red,vk=e.v?(c0.sisDone.fac==='rouge'?(r==='with'?'with':'buffet'):(r==='slain'?'slain':'left')):null;
         return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:e.x+(vk&&e.v[vk]?'\n\n'+e.v[vk]:''),c:e.c}}}}}
-    if(CFG.sis.share&&G.ch&&G.ch.sisEnd&&!G.ch.sisShareEnd){G.ch.sisShareEnd=1;return {type:'end',win:true,sisShare:true}}   /* 시지프 공유 시험판: 붕괴를 지나 백화점에서 나오면 여기서 끝난다 */
+    if(CFG.sis.share&&!CFG.sis.act2&&G.ch&&G.ch.sisEnd&&!G.ch.sisShareEnd){G.ch.sisShareEnd=1;return {type:'end',win:true,sisShare:true}}   /* 시지프 공유 시험판: 붕괴를 지나 백화점에서 나오면 여기서 끝난다 */
     hermSync(G.ch);riteSync(G.ch);tattooSync(G.ch);surgSync(G.ch);staffTick(G.ch,G.year);officeYear(G.ch,G.year);
     /* G.free: 해를 넘기지 않는 사건(유물·라만차·뒤틀림 등)이면 true → 화면에 연차를 표시하지 않는다 */
     G.free=true;const mc=G.ch;repairFixed(mc);repairDmin(mc);repairFixer(mc);starPinky(mc);if(isWs(mc))for(const id of (mc.relicIds||[]))if(!(mc.wsRelic&&mc.wsRelic[id]))wsAbsorb(mc,id);autoOffers(mc);if(mc.corp&&corpClearCheck(mc,[]))(mc.relics=mc.relics||[]).push('머리의 시험을 넘었다');if(mc.corp&&!mc.corp.up2&&mc.corp.forb>=CP.forbMax)corpUp2(mc,[]);
