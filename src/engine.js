@@ -3308,6 +3308,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(mc.sunk)return {type:'end',win:false,cause:'sunk'};
     if(mc.mindDead)return {type:'end',win:false,cause:'mind'};
     if(mc.distorted)return {type:'end',win:false,cause:'distort'};
+    if(mc.sis&&sisOn(mc)){const sf0=sisFree(G);if(sf0)return sf0}   /* 시지프 백화점 안에서는 일반 정해진 사건(잊힌 유물 등)보다 시지프 사건이 먼저다 */
+    if(!(mc.sis&&sisOn(mc))){   /* 백화점 안에서는 일반 정해진 사건을 건너뛰고 해만 넘긴다 */
     if(mc.distortPend&&!mc.ego){mc.distortPend=false;mc.distortDone=true;return {type:'event',ev:D.mindEvents.distort}}
     if(hasInn(mc,'mark')&&!mc.markOn&&G.year>=CFG.innate.markYear-1)return {type:'event',ev:D.innateEvents.mark};
     if(D.relicEvent&&!mc.relicEvt&&!mc.hw&&G.year===CFG.relicEvent.year-1){mc.relicEvt=true;return {type:'event',ev:(lakeOn(G.ch)&&D.lake&&D.lake.relicEvent)||D.relicEvent}}
@@ -3371,6 +3373,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const sf=sisFree(G);if(sf)return sf}
     {const rf=routeFree(G);if(rf)return rf}
     {const sv=accelStepEvent(G);if(sv)return {type:'event',ev:sv}}
+    }
     G.free=false;G.year++;
     if(G.year>lastYear(G)){G.year=lastYear(G);const hk=G.ch.hw&&!G.ch.hw.ended?(G.ch.hw.flee?'hwflee':G.ch.hw.accept?'hwmaker':null):null;if(hk)G.ch.hw.ended=true;const cr_=G.endless&&G.ch.o&&G.ch.o.key==='crow'?(G.ch.flags.crow_succeed?'crowsucceed':G.ch.flags.crow_refuse?'crowrefuse':null):G.endless&&G.ch.o&&G.ch.o.herm&&G.ch.beaten.includes('ruen')?(G.ch.flags.herm_obey?'hermobey':'hermfree'):G.endless&&G.ch.o&&G.ch.o.key==='librarian'&&G.ch.flags.lib_done?(G.ch.flags.lib_block?'libclose':'libstay'):G.endless&&G.ch.o&&G.ch.o.key==='claw'&&G.ch.flags.rt_done?(G.ch.flags.cl_return?'clawreturn':'clawstay'):G.endless&&G.ch.o&&G.ch.o.key==='arbiter'&&G.ch.flags.rt_done?(G.ch.flags.ab_keep?'arbkeep':'arbdown'):G.endless&&G.ch.o&&G.ch.o.key==='gweapon'&&G.ch.flags.gw_done?(G.ch.flags.gw_king&&G.ch.gw&&G.ch.gw.form?'gw'+G.ch.gw.form:'gwhuman'):null;return {type:'end',win:true,trueEnd:!!G.endless&&!cr_,hw:hk,crow:cr_}}
     G.ch.year=G.year;
