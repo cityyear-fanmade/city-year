@@ -1008,3 +1008,10 @@ html[data-skin="base"]:not([data-sis]) #app{position:relative;z-index:1}
 .sis-goal b{color:var(--gold)}
 .sis-goal i{font-style:normal;color:var(--gold);font-weight:700}
 .sis-goal span{display:block;color:var(--dim);font-size:11px}
+
+.sis-fac{display:flex;flex-direction:column;gap:3px}
+.sis-fac b{font:600 11px/1 var(--mono);color:var(--gold)}
+.sis-fbar{position:relative;height:10px;border-radius:5px;border:1px solid var(--line);background:linear-gradient(90deg,#4a4a5a 0 var(--lo),#6f6a58 var(--lo) var(--hi),#8a2a35 var(--hi) 100%)}
+.sis-fbar u{position:absolute;top:-3px;width:4px;height:14px;border-radius:2px;background:var(--fg);transform:translateX(-2px);box-shadow:0 0 4px #000}
+.sis-flab{display:flex;justify-content:space-between;font:10px/1 var(--mono);color:var(--dim)}
+.sis-fac small{color:var(--dim);font-size:10.5px;line-height:1.35}

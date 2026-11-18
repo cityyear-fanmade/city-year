@@ -813,8 +813,10 @@ export function startUI(E,app){
     const SWi=window.CITY_SIS||{},sc=(sv.st==='hunt'?sv.hunt:sv.st==='craft'?sv.pend:null),scene=sc&&SWi['sis_scene_'+sc]?`<div class="sis-scene" style="background-image:url(${SWi['sis_scene_'+sc]})" aria-hidden="true"></div>`:'';
     const GR=D.sisyphus.grades,nx=GR[gr+1],season=['봄','여름','가을','겨울'][Math.min(3,Math.floor(((sv.turn||1)-1)/13))],zn=nx?Z.filter(z=>z.grade===gr+1).map(z=>z.n):[];
     const goal=nx?`<div class="sis-goal"><b>${esc(nx.n)} 고객</b>까지 <i>${Math.max(0,nx.at-(sv.pts||0))}점</i>${zn.length?` · ${esc(zn.join('·'))}이(가) 열립니다 (새 재료 ???)`:''} <span>옷을 팔면 고객 점수가 쌓입니다</span></div>`:'<div class="sis-goal"><b>가장 높은 고객 등급</b></div>';
+    const facBar=(()=>{if(sv.fac)return '';const CS_=CFG.sis,L=Math.max(-CS_.leanMax,Math.min(CS_.leanMax,sv.lean||0)),M=CS_.leanMax,pos=Math.round((L+M)/(2*M)*100),lo=Math.round((M-CS_.facLean)/(2*M)*100),hi=Math.round((M+CS_.facLean)/(2*M)*100),left=Math.max(0,CS_.facTurn-(sv.turn||1));
+      return `<div class="sis-fac"><b>소속 성향</b><div class="sis-fbar" style="--lo:${lo}%;--hi:${hi}%"><u style="left:${pos}%"></u></div><div class="sis-flab"><span>르누아르</span><span>르카키</span><span>르루주</span></div><small>${left>0?`${left}일 뒤`:'곧'} 소속이 정해집니다 · 지은 옷의 색·무늬 성향이 한쪽으로 쏠리면 그 소속, 옷을 거의 안 지었거나 비슷하면 르카키</small></div>`})();
     const clock=`<span class="sis-clock">${sv.turn||1}일째 · ${season} 시즌</span>`;
-    return `<div class="sis-bar" role="status"><div class="sis-floors">${cells}${clock}</div>${goal}${scene}<div class="sis-tick"><span style="animation-delay:-${Date.now()%26000}ms">${msgs.filter(Boolean).map(esc).join('  ·  ')}</span></div><div class="sis-gauges">${bars}</div></div>`}
+    return `<div class="sis-bar" role="status"><div class="sis-floors">${cells}${clock}</div>${goal}${facBar}${scene}<div class="sis-tick"><span style="animation-delay:-${Date.now()%26000}ms">${msgs.filter(Boolean).map(esc).join('  ·  ')}</span></div><div class="sis-gauges">${bars}</div></div>`}
   function vHud(){
     const ch=G.ch,s=ch.stats,nx=E.xpNext(ch);
     return `${vSisBar()}<div class="panel stack">
