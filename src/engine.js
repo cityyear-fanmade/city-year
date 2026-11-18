@@ -2486,12 +2486,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     ch.gear={};s.dmin=calcDmin(ch);for(const g of ch.gearOffers||[])(ch.stash=ch.stash||[]).push(g);ch.gearOffers=[];
     addStats(s,X.fx);ch.hp=clamp(ch.hp+(X.fx.maxHp||0),1,s.maxHp);ch.distStable=false;ch.stableNext=(ch.year||0)+X.stable.every;
     ch.distForm={n:(name||'').trim()||'이름 없는 뒤틀림'};ch.huntNext=(ch.year||0)+(BD.hunt?BD.hunt.gap:3);ch.distPick=false;ch.distortPend=false;ch.distortDone=true;ch.voiceUsed=true;ch.mind=mindMax(ch);
-    ensurePacks(ch);
+    if(ch.sis){ch.distDeckPend=true;ch.packOffer=ch.packOffer&&ch.packOffer.sis?ch.packOffer:null}   // 시지프 백화점 안에서는 소속 책장을 그대로 쓴다. 뒤틀린 카드팩은 백화점을 나온 뒤에 들어선다
+    else distortDeck(ch);
+    (ch.relics=ch.relics||[]).push('뒤틀림 · '+ch.distForm.n);
+  }
+  function distortDeck(ch){
+    const X=CFG.distort;ensurePacks(ch);
     const fx=ch.deck.filter(id=>D.cards[id].fixed);
     ch.preDistDeck=ch.deck.slice();   // 토벌 의뢰의 가족은 뒤틀리기 전 책장을 쓴다
     stashPack(ch,X.packN);
-    ch.deck=X.deck.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false;ch.offers=[];ch.picks=[];ch.packOffer=null;
-    (ch.relics=ch.relics||[]).push('뒤틀림 · '+ch.distForm.n);
+    ch.deck=X.deck.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false;ch.offers=[];ch.picks=[];ch.packOffer=null;ch.distDeckPend=false;
   }
   /* 뒤틀림 안정화: 2년마다 stable.chance% — 장비·카드팩을 다시 쓸 수 있고, 더 강해진 뒤틀린 카드팩을 얻는다 */
   function distStableEvent(G){
@@ -2748,6 +2752,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(red==='with'){const nm=R.name||'붉은 신';addStats(ch.stats,{maxHp:20,atk:2});ch.hp+=20;(ch.relics=ch.relics||[]).push('동행 · '+nm);ch.flags=ch.flags||{};ch.flags.sisRed=nm;chips.push(`동행 · ${nm} · 최대 HP +20 · 공격 +2`)}
     if(sv.inq===1){ch.titles=ch.titles||[];const T2='접수 번호를 받은 자';if(!ch.titles.includes(T2)){ch.titles.push(T2);(ch.titleLog=ch.titleLog||[]).push(T2);chips.push('칭호 · '+T2)}}
     ch.sisEnd=true;ch.sis=null;
+    if(ch.distDeckPend&&ch.distForm)distortDeck(ch);
     if(fac!=='kaki'&&!ch.distForm&&!ch.distPick){ch.distPick=true;chips.push('몸이 뒤틀린다 · 뒤틀림의 이름을 정한다')}
   }
   /* 몰랐던 규칙을 겪어서 알게 된다: 안내판에서 못 본 규칙을 어기면 순응이 한 번 더 깎이고, 그 규칙이 목록에 적힌다 */
