@@ -3318,7 +3318,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           if(Ac.key==='red'&&!Ac.role){Ac.role=sd.rel==='love'?'spouse':'child'}
           const cs=(e.choices?(Ac.key==='red'?[Object.assign({},(Ac.role==='spouse'?e.choices.red[0]:e.choices.red[1]),{l:'이어서'})]:e.choices.default):e.c);
           const love=G.year===60&&Ac.key==='red'&&Ac.role==='spouse'&&!c1.sisLover;
-          return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:`${e.x}${vv?'\n\n'+vv:''}${hint}`,c:love?[{l:'인연을 맺는다',h:'뒤틀린 몸이어도 이 인연은 이어진다',ok:{t:'붉은 것이 당신의 손을 잡았다. 이름 붙이지 않은 채 이어 온 관계에 처음으로 이름이 생겼다.',fx:{maxHp:20,sisTitle:'비가 그친 뒤의 사람',sisLover:1}}},{l:'각자의 길을 간다',ok:{t:'손을 놓지 않은 채 한동안 서 있었다. 그러다 천천히 놓았다.',fx:{maxHp:20,sisTitle:'비가 그친 뒤의 사람'}}}]:cs}}}}}
+          return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:`${e.x}${vv?'\n\n'+vv:''}${hint}`,c:love?[{l:'인연을 맺는다',ok:{t:'붉은 것이 당신의 손을 잡았다. 이름 붙이지 않은 채 이어 온 관계에 처음으로 이름이 생겼다.',fx:{maxHp:20,sisTitle:'비가 그친 뒤의 사람',sisLover:1}}},{l:'각자의 길을 간다',ok:{t:'손을 놓지 않은 채 한동안 서 있었다. 그러다 천천히 놓았다.',fx:{maxHp:20,sisTitle:'비가 그친 뒤의 사람'}}}]:cs}}}}}
     {const c0=G.ch,O=c0&&c0.sisEnd&&!c0.sis&&c0.sisDone&&D.sisyphus.outside&&D.sisyphus.outside[c0.sisDone.fac];
       if(O&&G.year>=53&&G.year<=55){const i=G.year-53;(c0.outSeen=c0.outSeen||{});if(!c0.outSeen[G.year]&&O[i]){c0.outSeen[G.year]=1;const e=O[i],r=c0.sisDone.red,vk=e.v?(c0.sisDone.fac==='rouge'?(r==='with'?'with':'buffet'):(r==='slain'?'slain':'left')):null;
         return {type:'event',ev:{t:`${e.t} · ${G.year}년차`,x:e.x+(vk&&e.v[vk]?'\n\n'+e.v[vk]:''),c:e.c}}}}}
