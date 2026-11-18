@@ -2796,7 +2796,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(fx.sisFloor){const F=fx.sisFloor;(sv.floorSeen=sv.floorSeen||{})[F.id]=1;sv.evDay=sv.turn;
       if(F.an){ch.money=Math.max(0,ch.money+F.an);chips.push(`${F.an>0?'+':'−'}${sisAn(Math.abs(F.an))}`)}
       if(F.comply){sisAdj(ch,F.comply);chips.push(`순응도 ${F.comply>0?'+':''}${F.comply}`)}
-      if(F.ol){sv.ol=1;chips.push('원레그가 곁을 내주었다')}
+      if(F.olp){sv.olN=(sv.olN||0)+1;if(sv.olN>=2){sv.ol=1;chips.push('원레그가 곁을 내주었다')}else chips.push('원레그의 독설이 한 마디 줄었다')}
       if(F.fit){sv.fit=Math.max(0,(sv.fit||0)+F.fit);chips.push(`단골 맞춤 ${F.fit>0?'+':''}${F.fit}`)}
       if(F.dye){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');for(let q=0;q<F.dye;q++){const c=one(open);sv.dyes.push(c.id);chips.push(`염료(${c.n}) 1병`)}}
       if(F.dyeUse){for(let q=0;q<F.dyeUse;q++)sv.dyes.shift();chips.push(`염료 ${F.dyeUse}병을 내놓았다`)}
@@ -2902,7 +2902,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     if(sv.st==='hunt'){
       {const z0=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],L=(D.sisyphus.floorEv||{})[z0.id];
-        if(L&&sv.evDay!==sv.turn&&sv.floorPass!==sv.turn){sv.floorPass=sv.turn;const fe=L.find(e=>!(sv.floorSeen&&sv.floorSeen[e.id])&&sv.turn>=e.from&&sv.turn<=e.to&&(!e.fac||e.fac===sv.fac));
+        if(L&&sv.evDay!==sv.turn&&sv.floorPass!==sv.turn){sv.floorPass=sv.turn;const fe=L.find(e=>!(sv.floorSeen&&sv.floorSeen[e.id])&&sv.turn>=e.from&&sv.turn<=e.to&&(!e.fac||e.fac===sv.fac)&&!(e.skipOl&&sv.ol));
           if(fe&&d(100)<=CS.floorChance)return {type:'event',ev:{t:fe.t,x:fe.x,c:fe.c.filter(c=>(!c.needDye||sv.dyes.length>=c.needDye)&&(!c.needMat||Object.entries(c.needMat).every(([k,n])=>(sv.mat[k]||0)>=n))).map(c=>Object.assign({},c))}}}}
       const z=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],bosses=z.foes.filter(f=>D.enemies[f].tier==='boss'),norm=z.foes.filter(f=>D.enemies[f].tier!=='boss');
       if(z.targets&&sv.pickTurn!==sv.turn){const T_=z.targets,P_=S_.pick;return {type:'event',ev:{t:P_.t,x:`${z.n}\n\n${P_.x}`,c:[{l:T_.safe.n,h:P_.safeH,ok:{t:T_.safe.x,fx:{sisPick:'safe'}}},{l:T_.risk.n,h:P_.riskH,ok:{t:T_.risk.x,fx:{sisPick:'risk'}}}]}}}
