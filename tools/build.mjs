@@ -90,6 +90,7 @@ mkdirSync(new URL('../dist/',import.meta.url),{recursive:true});
 if(pages)html=html.replace('</head>',()=>'<script>if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))</script>\n</head>');
 if(multi){const {cpSync,rmSync}=await import('node:fs');const base=new URL('../dist/multi/',import.meta.url);rmSync(base,{recursive:true,force:true});mkdirSync(base,{recursive:true});
   for(const d of ['symbol','frame','sis'])cpSync(new URL('../assets/'+d+'/',import.meta.url),new URL('assets/'+d+'/',base),{recursive:true});
+  cpSync(new URL('../assets/bgm/',import.meta.url),new URL('assets/bgm/',base),{recursive:true});   /* 음악 파일(--extbgm으로 박지 않고 경로로 읽는다) */
   writeFileSync(new URL('index.html',base),html);console.log(`dist/multi/index.html · ${(html.length/1024).toFixed(0)}KB${expires?' · 종료 '+new Date(expires).toISOString():''}`);process.exit(0)}
 writeFileSync(new URL((pages?'../':'../dist/')+out,import.meta.url),html);
 console.log(`${pages?'':'dist/'}${out} · ${(html.length/1024).toFixed(0)}KB${expires?' · 종료 '+new Date(expires).toISOString():''}`);

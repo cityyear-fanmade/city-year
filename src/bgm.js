@@ -102,6 +102,19 @@ export function createBgm(){
     let bt=o.t0+Math.ceil((now+0.1-o.t0)/STEM_BAR)*STEM_BAR;if(bt<now+0.1)bt+=STEM_BAR;
     o.sg.forEach((x,i)=>{const v=x.gain.value;x.gain.cancelScheduledValues(now);x.gain.setValueAtTime(v,now);x.gain.setValueAtTime(v,bt-0.02);x.gain.linearRampToValueAtTime(i+1<=stage?1:0,bt+0.03)})
   }
+  /* 시지프 전용 곡: 이름(day·tailor·hunt·velvet·corridor·boss·rain)이 정해지면 그 곡을 되풀이해서 튼다. 정해지지 않으면(null) 기존 스타일·장면 방식이다 */
+  let sisName=null;
+  const sisSrc=n=>{const M=typeof window!=='undefined'&&window.CITY_BGM;return (M&&M.sis&&M.sis[n])||`assets/bgm/sis_${n}.mp3`};
+  function sisPlay(){
+    const key='sis_'+sisName;
+    if(smp.bad[key]){smpStop(0.5);return}   // 파일을 못 받았으면 조용히 둔다
+    if(smp.cur===key)return;
+    if(!smp.buf[key]){smpLoad(key,sisSrc(sisName));return}   // 읽는 동안은 지금 곡이 계속 난다
+    smpStop(1.0);
+    const now=ctx.currentTime,src=ctx.createBufferSource(),g=ctx.createGain();
+    src.buffer=smp.buf[key];src.loop=true;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+1.2);
+    src.connect(g);g.connect(master);src.start(now);smp.cur=key;smp.node={src,g,ext:0,scene:'sis',off:0,t0:now,dur:src.buffer.duration};
+  }
   function smpPlay(){
     if(stemsUsable()&&stemsPlay())return true;
     {const xs=smpSrc(style,scene);if(xs&&!String(xs).startsWith('data:')&&smp.bad[smpKey(style,scene)]){smpStop(0.5);return true}}   // 외부 음악 파일을 못 받으면 합성음 대신 조용히 둔다
@@ -420,6 +433,7 @@ export function createBgm(){
   }
   function schedule(now,M){
     if(lastScene!==scene||lastStyle!==style){if(lastStyle!==style||lastScene==='boss'||scene==='boss')barN=0;lastScene=scene;lastStyle=style;newEpoch();barT=now+0.32}
+    if(sisName){sisPlay();return}
     if(smpPlay())return;
     if(barT<now)barT=now+0.05;
     const wet=bus._wet;if(wet&&now>duckUntil)wet.gain.setTargetAtTime(M.wet*(scene==='fight'?0.7:1)*(style==='passion'?0.7:style==='library'?1.35:1),now,0.6);
@@ -459,6 +473,8 @@ export function createBgm(){
     setVol(v){vol=Math.max(0,Math.min(1,+v||0));if(on&&ctx)ramp(gainOf(vol),0.3)},
     setMood(k){if(P.moods[k])mood=k},
     setScene(k){scene=k==='boss'?'boss':k==='fight'?'fight':'calm'},
+    setSis(n){const v=n||null;if(v===sisName)return;sisName=v;if(v&&ctx&&!smp.buf['sis_'+v])smpLoad('sis_'+v,sisSrc(v))},   // 시지프 곡 이름(없으면 null). 미리 읽어 둔다
+    sis:()=>sisName,
     setBossTrack(k){bossTrack=k==='ruen'?'ruen':'boss'},
     /* 전투 감정 단계(1~5). 불길 전투곡에서만 들린다 */
     setStage(n){n=Math.max(1,Math.min(5,Math.round(+n)||1));if(n===stage)return;stage=n;stemsApply()},
