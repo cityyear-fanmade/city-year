@@ -9744,13 +9744,14 @@
     "goldskin",
     "goldskin",
     "goldskin",
-    "goldthread",
-    "goldthread",
-    "goldthread",
+    "goldskin",
+    "goldskin",
+    "goldskin",
     "goldthread",
     "goldthread",
     "goldthread"
-   ]
+   ],
+   "extra": {"mat": "goldthread", "pct": 43}
   },
   "sis_red": {
    "n": "붉은 신(미생)",
