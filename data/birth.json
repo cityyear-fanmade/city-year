@@ -11057,12 +11057,12 @@
     "dye": 8,
     "trim": 10,
     "leather": 14,
-    "goldskin": 20,
-    "wool": 8,
-    "silk": 10,
-    "tanned": 16,
-    "silver": 10,
-    "goldthread": 12
+    "goldskin": 30,
+    "wool": 13,
+    "silk": 15,
+    "tanned": 26,
+    "silver": 15,
+    "goldthread": 17
    },
    "title": "런웨이에 오르다",
    "x": "네 부위에 재료를 넣을수록 확률이 오른다(최대 80%). 실패하면 그 옷은 끝난다.",
@@ -11074,7 +11074,9 @@
    ],
    "hq": {
     "pts": 1,
-    "need": 2
+    "need": 2,
+    "mulPer": 0.1,
+    "mulMax": 0.4
    }
   },
   "explore": {

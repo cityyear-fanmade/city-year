@@ -2690,8 +2690,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(co.id!=='gray'&&!ch.sis.dyes.includes(co.id))return {ok:false,why:`${co.n} 염료가 없다`};
     if((ch.sis.mat.trim||0)<tr.length)return {ok:false,why:'가공 재료가 모자라다'};
     if(ch.sis.cloth.length>=CFG.sis.clothMax)return {ok:false,why:'옷걸이가 가득 찼다'};
-    const pk=spec.pick||{},uBase=sisPick(ch,sh.base,need,pk[sh.base]),uAll=uBase.concat(...Object.entries(sh.extra||{}).map(([k,n])=>sisPick(ch,k,n,pk[k]))),hi=sisHiOf(uAll),mul=sisMulOf(uBase),price=Math.round((sh.price*mul)+pt.add+(co.add||0)+tr.reduce((a,x)=>a+x.add,0)),sum=sh.lean+co.lean+tr.reduce((a,x)=>a+x.lean,0);
-    return {ok:true,sh,pt,co,tr,need,price,mul,hq:hi.length,uBase,lean:Math.sign(sum)};
+    const pk=spec.pick||{},uBase=sisPick(ch,sh.base,need,pk[sh.base]),uAll=uBase.concat(...Object.entries(sh.extra||{}).map(([k,n])=>sisPick(ch,k,n,pk[k]))),hi=sisHiOf(uAll),mul=sisMulOf(uBase),HQ=D.sisyphus.quality.hq,hqPct=HQ?Math.min(HQ.mulMax||0,(HQ.mulPer||0)*hi.length):0,price=Math.round(((sh.price*mul)+pt.add+(co.add||0)+tr.reduce((a,x)=>a+x.add,0))*(1+hqPct)),sum=sh.lean+co.lean+tr.reduce((a,x)=>a+x.lean,0);
+    return {ok:true,sh,pt,co,tr,need,price,mul,hq:hi.length,hqPct,uBase,lean:Math.sign(sum)};
   }
   function sisCraft(G,spec){
     const ch=G.ch;if(!sisOn(ch))return {ok:false,why:'백화점 안에서만 할 수 있다'};if(ch.sis.crafted)return {ok:false,why:'오늘은 이미 한 벌을 지었다'};const I=sisCraftInfo(ch,spec);if(!I.ok)return I;
