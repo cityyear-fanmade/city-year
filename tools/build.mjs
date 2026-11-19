@@ -71,8 +71,8 @@ if(ai>0&&!expires){console.error('--expires 뒤에 ISO 시각이 필요하다 (�
 let html=r('dev.html')
   .replace('<link rel="stylesheet" href="css/style.css">',()=>`<style>\n${r('css/style.css')}</style>`)
   .replace('<script type="module" src="src/main.js"></script>',()=>`<script>\nwindow.CITY_H2C=${JSON.stringify(h2c)};\n${process.argv.includes('--pages')||multi?'':`window.CITY_SYM=${JSON.stringify(symData)};`}${sisTest&&!process.argv.includes('--pages')?`window.CITY_SIS=${JSON.stringify(sisData)};`:''}\n${process.argv.includes('--pages')||multi?'':`window.CITY_FRM=${JSON.stringify(frmData)};\n`}${process.argv.includes('--pages')?'':`window.CITY_I18N=${JSON.stringify(i18nData)};\n`}${symTest?'window.CITY_SYMTEST=true;\n':''}${extBgm?'':`window.CITY_BGM=${JSON.stringify(bgmData)};\n`}(()=>{\n${jsS}\nconst DATA=${JSON.stringify(D)};\ninitI18n().then(()=>{localize(DATA);window.CITY=startUI(createEngine(DATA),document.getElementById('app'))});\n})();\n</script>`);
-if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('\nwindow.CITY_BGM=',`\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_BGM=`);
-if(augdemo)html=html.replace('<title>도시의 한 해</title>','<title>의수 의뢰 체험</title>').replace('\nwindow.CITY_BGM=','\nwindow.CITY_AUGDEMO=true;\nwindow.CITY_BGM=');
+if(lab)html=html.replace('<title>도시의 한 해</title>','<title>타격 모션 시험실</title>').replace('\nwindow.CITY_H2C=',`\nwindow.CITY_LAB=true;\n${expires?`window.CITY_EXPIRES=${expires};\n`:''}window.CITY_H2C=`);
+if(augdemo)html=html.replace('<title>도시의 한 해</title>','<title>의수 의뢰 체험</title>').replace('\nwindow.CITY_H2C=','\nwindow.CITY_AUGDEMO=true;\nwindow.CITY_H2C=');
 if(routeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · R사·H사 테스트</title>');
 if(mindTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 정신력 시험</title>');
 if(lakeTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 대호수 테스트</title>');
@@ -80,8 +80,9 @@ if(fingerTest)html=html.replace('<title>도시의 한 해</title>','<title>도�
 if(sisTest)html=html.replace('<title>도시의 한 해</title>',sisShare?'<title>도시의 한 해 · 시지프 백화점</title>':'<title>도시의 한 해 · 시지프 백화점 테스트</title>');
 if(unlockTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 해금 출생 테스트</title>');
 if(expires)html=html.replace(routeTest?'<title>도시의 한 해 · R사·H사 테스트</title>':'<title>도시의 한 해</title>',routeTest?'<title>도시의 한 해 R사 H사 테스트</title>':'<title>도시의 한 해 플레이테스트</title>')
-  .replace('\nwindow.CITY_BGM=',`\nwindow.CITY_EXPIRES=${expires};\nwindow.CITY_BGM=`);
-if(allTest)html=html.replace('\nwindow.CITY_BGM=','\nwindow.CITY_OPENALL=true;\nwindow.CITY_ALLREC=true;\nwindow.CITY_BGM=').replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 개인 시험판</title>');
+  .replace('\nwindow.CITY_H2C=',`\nwindow.CITY_EXPIRES=${expires};\nwindow.CITY_H2C=`);   /* 기준 줄은 언제나 나오는 CITY_H2C: 예전엔 CITY_BGM 줄 앞에 넣어서 --extbgm(CITY_BGM 줄이 없는 빌드)에서는 종료 시각이 조용히 빠졌다 */
+if(expires&&!html.includes('window.CITY_EXPIRES=')){console.error('종료 시각을 넣지 못했다(--expires가 빌드 파일에 들어가지 않음)');process.exit(1)}
+if(allTest)html=html.replace('\nwindow.CITY_H2C=','\nwindow.CITY_OPENALL=true;\nwindow.CITY_ALLREC=true;\nwindow.CITY_H2C=').replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 개인 시험판</title>');
 if(pubTest)html=html.replace('<title>도시의 한 해</title>','<title>도시의 한 해 · 테스트 서버</title>');
 const pages=process.argv.includes('--pages')&&!expires;
 const out=sisShare?'city-year-sis-share.html':sisTest?'city-year-sis-test.html':allTest?'city-year-all-test.html':pubTest?'city-year-public-test.html':symTest?'city-year-symbol-test.html':augdemo?'aug-demo.html':lab?'motion-lab.html':unlockTest?'city-year-unlock-test.html':fingerTest?'city-year-finger-test.html':lakeTest?'city-year-lake-test.html':mindTest?'city-year-mind-test.html':pages?'index.html':routeTest&&expires?'city-year-route-playtest.html':routeTest?'city-year-route-test.html':expires?'city-year-playtest.html':'city-year.html';
