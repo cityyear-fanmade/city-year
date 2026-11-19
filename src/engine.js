@@ -1123,6 +1123,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(at===0&&T_&&!ch.rteam){const rr=rbTeamBy(ch,T_);if(rr){ch.rteam=rr.team;out.push(`${ch.aff.name} · ${ch.rteam} 고정 배치 (${rr.why})`)}else{const r=d(T_.length);ch.rteam=T_[r-1];out.push(`${ch.aff.name} · ${ch.rteam} 배정 (기준에 맞지 않아 1d${T_.length} · ${r})`)}}
     const rows=orgRows(ch,C_);
     ch.assocName=ch.aff.name;
+    /* 이미 전용 카드팩을 쓰는 출신(E.G.O·혈귀·보냐텔리 등)이 협회에 들어가면 책장을 받을지 고른다: 받으면 이전 전용 덱은 카드팩 보관함에 남고, 안 받으면 지금 덱을 유지한다 */
+    if(at===0&&rows&&ch.aff.type==='assoc'&&(ch.deckLocked||ch.cardMoney)&&ch.orgPack!==ch.aff.name&&!ch.packOffer&&!ch.distForm){
+      const ids0=(C_.finalRow?rows.slice(0,-1):rows).flat();
+      ch.packOffer={n:ch.aff.name+' 전용 책장',cards:ids0.slice(),relic:ch.aff.name+' 책장',cm:true,orgPack:ch.aff.name};
+      out.push(`전용 카드팩 · ${ch.aff.name} 책장 ${ids0.length}장 · 받을지 고른다 (받으면 덱이 통째로 바뀌고 이전 전용 덱은 카드팩 보관함에 남는다 · 안 받으면 지금 덱 유지)`);return}
     if(at!==0||!rows||ch.deckLocked||ch.cardMoney)return;
     const ids=(C_.finalRow?rows.slice(0,-1):rows).flat();
     /* R사 날개: 팀 전용 책장은 통째로 강제하지 않고 받을지 고르게 한다(거절하면 지금 덱 유지, 이전 덱은 카드팩 보관함) */
