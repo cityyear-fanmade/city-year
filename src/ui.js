@@ -1278,7 +1278,7 @@ export function startUI(E,app){
     const ch=G.ch;if(!E.isWs(ch))return '';E.wsEnsure(ch);const w=ch.ws;if(!w)return '';
     const st=ch.stash||[],W_=CFG.ws,nm={weapon:'무기',armor:'방어구'},key={weapon:'w',armor:'a'};
     const dead=ch.distForm&&!ch.distStable;
-    const nameRow=sl=>`<div class="row" style="gap:6px"><input id="wsn_${sl}" maxlength="12" autocomplete="off" placeholder="이름 짓기 (12자까지)" value="${esc(((ch.ws.names||{})[sl])||'')}" style="flex:1;min-width:0"><button class="chip" data-a="wsname" data-i="${sl}">이름 정하기</button></div>`;
+    const nameRow=sl=>(ch.gear[sl]&&ch.gear[sl].wsEgo)?'':`<div class="row" style="gap:6px"><input id="wsn_${sl}" maxlength="12" autocomplete="off" placeholder="이름 짓기 (12자까지)" value="${esc(((ch.ws.names||{})[sl])||'')}" style="flex:1;min-width:0"><button class="chip" data-a="wsname" data-i="${sl}">이름 정하기</button></div>`;
     const rows=['weapon','armor'].map(sl=>{
       const cur=ch.gear[sl];if(!cur||!(cur.id==='ws_'+sl||cur.wsEgo))return '';
       const k=w[key[sl]],mats=st.map((m,i)=>[m,i]).filter(([m])=>!(m.id&&String(m.id).startsWith('ws_'))&&!(m.id==='birth'&&m.n==='맨손')&&(m.slot===sl||m.id==='hidmat'));
