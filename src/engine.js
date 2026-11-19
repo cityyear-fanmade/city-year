@@ -2666,7 +2666,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');const c=one(open);ch.sis.dyes.push(c.id);out.push(`염료(${c.n}) 1병`)}
     else{const boss_=!half&&ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].tier==='boss',amt=k==='goldskin'?1+(sisGrade(ch)>=4?1:0)+(boss_?1:0):k==='goldthread'?n+(boss_?1:0):n;if(amt){sisMat(ch,k,amt);out.push(`${S_.mats[k].n} ${amt}`)}else out.push('황금가죽은 나오지 않았다')}
     const an=Math.ceil((CFG.sis.huntAn[sisGrade(ch)]||5)/(half?2:1));ch.money+=an;out.push(sisAn(an));
-    {const fx_=!half&&ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].extra;if(fx_&&d(100)<=fx_.pct){sisMat(ch,fx_.mat,1);out.push(`${S_.mats[fx_.mat].n} 1`)}}
+    {const fxs=!half&&ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].extra;for(const fx_ of (fxs?[].concat(fxs):[]))if(d(100)<=fx_.pct){sisMat(ch,fx_.mat,1);out.push(`${S_.mats[fx_.mat].n} 1`)}}
     chips.push('사냥 · '+out.join(' · '));
     if(!half&&d(100)<=CFG.sis.cardChance)offerPick(ch,D.rewards,chips,'카드 보상');
   }
@@ -2688,14 +2688,15 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(sisHaveCat(ch,sh.base)<need)return {ok:false,why:`${sisCatName(sh.base)}이 모자라다`};
     for(const [k,n] of Object.entries(sh.extra||{}))if(sisHaveCat(ch,k)<n)return {ok:false,why:`${sisCatName(k)}이 모자라다`};
     if(co.id!=='gray'&&!ch.sis.dyes.includes(co.id))return {ok:false,why:`${co.n} 염료가 없다`};
-    if((ch.sis.mat.trim||0)<tr.length)return {ok:false,why:'가공 재료가 모자라다'};
+    const trN=tr.reduce((a,x)=>a+(x.cost||1),0);
+    if((ch.sis.mat.trim||0)<trN)return {ok:false,why:'가공 재료가 모자라다'};
     if(ch.sis.cloth.length>=CFG.sis.clothMax)return {ok:false,why:'옷걸이가 가득 찼다'};
     const pk=spec.pick||{},uBase=sisPick(ch,sh.base,need,pk[sh.base]),uAll=uBase.concat(...Object.entries(sh.extra||{}).map(([k,n])=>sisPick(ch,k,n,pk[k]))),hi=sisHiOf(uAll),mul=sisMulOf(uBase),HQ=D.sisyphus.quality.hq,hqPct=HQ?Math.min(HQ.mulMax||0,(HQ.mulPer||0)*hi.length):0,price=Math.round(((sh.price*mul)+pt.add+(co.add||0)+tr.reduce((a,x)=>a+x.add,0))*(1+hqPct)),sum=sh.lean+co.lean+tr.reduce((a,x)=>a+x.lean,0);
     return {ok:true,sh,pt,co,tr,need,price,mul,hq:hi.length,hqPct,uBase,lean:Math.sign(sum)};
   }
   function sisCraft(G,spec){
     const ch=G.ch;if(!sisOn(ch))return {ok:false,why:'백화점 안에서만 할 수 있다'};if(ch.sis.crafted)return {ok:false,why:'오늘은 이미 한 벌을 지었다'};const I=sisCraftInfo(ch,spec);if(!I.ok)return I;
-    {const pk=spec.pick||{};for(const m of sisPick(ch,I.sh.base,I.need,pk[I.sh.base]))ch.sis.mat[m]--;for(const [k,n] of Object.entries(I.sh.extra||{}))for(const m of sisPick(ch,k,n,pk[k]))ch.sis.mat[m]--}if(I.co.id!=='gray')ch.sis.dyes.splice(ch.sis.dyes.indexOf(I.co.id),1);ch.sis.mat.trim=(ch.sis.mat.trim||0)-I.tr.length;
+    {const pk=spec.pick||{};for(const m of sisPick(ch,I.sh.base,I.need,pk[I.sh.base]))ch.sis.mat[m]--;for(const [k,n] of Object.entries(I.sh.extra||{}))for(const m of sisPick(ch,k,n,pk[k]))ch.sis.mat[m]--}if(I.co.id!=='gray')ch.sis.dyes.splice(ch.sis.dyes.indexOf(I.co.id),1);ch.sis.mat.trim=(ch.sis.mat.trim||0)-I.tr.reduce((a,x)=>a+(x.cost||1),0);
     ch.sis.cloth.push({shape:I.sh.id,pattern:I.pt.id,color:I.co.id,trims:I.tr.map(x=>x.id),price:I.price,lean:I.lean,q:0,hq:I.hq});ch.sis.made=(ch.sis.made||0)+1;ch.sis.dMade=(ch.sis.dMade||0)+1;ch.sis.crafted=1;
     ch.sis.lean=Math.max(-CFG.sis.leanMax,Math.min(CFG.sis.leanMax,ch.sis.lean+I.lean));
     return {ok:true,name:`${I.co.n} ${I.pt.n} ${I.sh.n}`,price:I.price,lean:I.lean};

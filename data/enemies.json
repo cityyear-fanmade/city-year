@@ -9576,6 +9576,7 @@
     "guard"
    ],
    "tier": "late",
+    "extra": {"mat": "velvet", "pct": 20},
    "intro": "외다리로 선 신발관의 주인이 턱을 든다. 두 발로 서 있는 모든 것이 천해 보인다는 얼굴이다.",
    "mat": [
     "trim",
@@ -9605,6 +9606,7 @@
     "guard"
    ],
    "tier": "late",
+    "extra": {"mat": "skinleather", "pct": 20},
    "intro": "붉은 구두를 신은 점원이 나른한 얼굴로 웃는다. 집에 돌아갈 수만 있다면, 하고 낮게 중얼거린다.",
    "mat": [
     "trim",
@@ -9634,6 +9636,7 @@
     "precise"
    ],
    "tier": "late",
+    "extra": [{"mat": "velvet", "pct": 25}, {"mat": "skinleather", "pct": 25}],
    "intro": "살점으로 된 소파가 몸을 일으킨다. 한쪽 끝에 사람의 얼굴이 붙어 있고, 눈알이 얼마 있냐는 말부터 나온다.",
    "mat": [
     "silk",
