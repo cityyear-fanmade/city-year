@@ -2,12 +2,15 @@
    실행: python3 tools/sis-bgm.py <원본 폴더>   (원본은 mp4/mp3 어느 형식이든 ffmpeg가 읽을 수 있으면 된다. 저장소에는 원본을 두지 않는다)
    처리: ① 끝의 페이드아웃(무음 꼬리)을 자른다 ② 끝 4초와 처음 4초를 겹쳐 이어서 반복할 때 끊기지 않게 한다
          ③ 음량을 기존 곡에 맞춘다(보스 -14 LUFS, 나머지 -15.5 LUFS, 최대 -1.5 dBTP) ④ 112kbps 스테레오 mp3
+         ⑤ 전투용 빠른 판(템포 ×1.25, 음높이 그대로): day·velvet·corridor·rain → sis_<이름>_f.mp3
    원본 파일 이름(부분 일치) → 장면 이름: 아래 MAP. 장면 배정은 이 표에서만 바꾼다."""
 import subprocess, sys, os, glob, re, wave
 import numpy as np
 MAP=[('the_empty_ballroom','day'),('after_hours_fitting','tailor'),('weight_of_the_concrete','hunt'),('the_velvet_aisle','velvet'),
      ('the_unmarked_corridor','corridor'),('weight_of_the_iron_sky','boss'),('the_weight_of_the_downpour','rain')]
 LUFS={'boss':-14.0}
+FAST={'day','velvet','corridor','rain'}   # 일반 전투 때 빠른 판(sis_<이름>_f.mp3)이 필요한 곡(hunt는 위험 대상 전용 곡이라 빠른 판이 없다)
+TEMPO=1.25
 XF=4.0
 src=sys.argv[1] if len(sys.argv)>1 else '.'
 out=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','assets','bgm')
@@ -31,8 +34,15 @@ for key,name in MAP:
          f"[t][h]acrossfade=d={XF}:c1=tri:c2=tri[x];[b][x]concat=n=2:v=0:a=1[o]")
     loop=os.path.join(tmp,name+'_loop.wav');run('ffmpeg','-v','error','-y','-i',wav,'-filter_complex',flt,'-map','[o]',loop)
     tgt=LUFS.get(name,-15.5)
-    p=run('ffmpeg','-hide_banner','-i',loop,'-af',f'loudnorm=I={tgt}:TP=-1.5:LRA=11:print_format=json','-f','null','-')
-    import json;j=json.loads(re.search(r'\{[^{}]*"input_i"[^{}]*\}',p.stderr,re.S).group(0))
-    af=(f"loudnorm=I={tgt}:TP=-1.5:LRA=11:measured_I={j['input_i']}:measured_TP={j['input_tp']}:measured_LRA={j['input_lra']}:measured_thresh={j['input_thresh']}:offset={j['target_offset']}:linear=true")
-    dst=os.path.join(out,f'sis_{name}.mp3');run('ffmpeg','-v','error','-y','-i',loop,'-af',af,'-ar','44100','-ac','2','-c:a','libmp3lame','-b:a','112k',dst)
-    print(f"{name:8} ← {os.path.basename(f)[:40]}  본문 {end-2*XF:.0f}초+이음 {XF:.0f}초 · 목표 {tgt} LUFS · {os.path.getsize(dst)/1e6:.1f}MB")
+    import json
+    def encode(inp,dst,pre=''):
+        flt0=(pre+',' if pre else '')
+        p=run('ffmpeg','-hide_banner','-i',inp,'-af',flt0+f'loudnorm=I={tgt}:TP=-1.5:LRA=11:print_format=json','-f','null','-')
+        j=json.loads(re.search(r'\{[^{}]*"input_i"[^{}]*\}',p.stderr,re.S).group(0))
+        af=flt0+f"loudnorm=I={tgt}:TP=-1.5:LRA=11:measured_I={j['input_i']}:measured_TP={j['input_tp']}:measured_LRA={j['input_lra']}:measured_thresh={j['input_thresh']}:offset={j['target_offset']}:linear=true"
+        run('ffmpeg','-v','error','-y','-i',inp,'-af',af,'-ar','44100','-ac','2','-c:a','libmp3lame','-b:a','112k',dst)
+    dst=os.path.join(out,f'sis_{name}.mp3');encode(loop,dst)
+    extra=''
+    if name in FAST:   # 전투용 빠른 판: 같은 곡을 음높이는 그대로 템포만 올린다(전투가 시작되면 같은 위치에서 이어진다)
+        dstf=os.path.join(out,f'sis_{name}_f.mp3');encode(loop,dstf,f'atempo={TEMPO}');extra=f' · 빠른 판 {os.path.getsize(dstf)/1e6:.1f}MB'
+    print(f"{name:8} ← {os.path.basename(f)[:40]}  본문 {end-2*XF:.0f}초+이음 {XF:.0f}초 · 목표 {tgt} LUFS · {os.path.getsize(dst)/1e6:.1f}MB{extra}")

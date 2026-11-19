@@ -102,18 +102,23 @@ export function createBgm(){
     let bt=o.t0+Math.ceil((now+0.1-o.t0)/STEM_BAR)*STEM_BAR;if(bt<now+0.1)bt+=STEM_BAR;
     o.sg.forEach((x,i)=>{const v=x.gain.value;x.gain.cancelScheduledValues(now);x.gain.setValueAtTime(v,now);x.gain.setValueAtTime(v,bt-0.02);x.gain.linearRampToValueAtTime(i+1<=stage?1:0,bt+0.03)})
   }
-  /* 시지프 전용 곡: 이름(day·tailor·hunt·velvet·corridor·boss·rain)이 정해지면 그 곡을 되풀이해서 튼다. 정해지지 않으면(null) 기존 스타일·장면 방식이다 */
-  let sisName=null;
+  /* 시지프 전용 곡: 이름(day·tailor·hunt·velvet·corridor·boss·rain, 전투용 빠른 판은 이름 뒤에 _f)이 정해지면 그 곡을 되풀이해서 튼다. 정해지지 않으면(null) 기존 스타일·장면 방식이다.
+     어색함을 줄이는 방법: ① 같은 곡의 평상 판과 빠른 판(_f)은 같은 위치(비율)에서 이어 붙인다 ② 다른 곡으로 갔다가 돌아오면 떠난 곳에서 이어서 튼다(곡마다 위치를 기억) */
+  let sisName=null;const sisFrac={},SIS_FAST=['day','velvet','corridor','rain'],sisBase=n=>String(n).replace(/_f$/,'');
   const sisSrc=n=>{const M=typeof window!=='undefined'&&window.CITY_BGM;return (M&&M.sis&&M.sis[n])||`assets/bgm/sis_${n}.mp3`};
+  const sisPair=n=>sisBase(n)===n?(SIS_FAST.includes(n)?n+'_f':null):sisBase(n);   // 짝이 되는 판(미리 읽어 둔다)
   function sisPlay(){
     const key='sis_'+sisName;
     if(smp.bad[key]){smpStop(0.5);return}   // 파일을 못 받았으면 조용히 둔다
     if(smp.cur===key)return;
     if(!smp.buf[key]){smpLoad(key,sisSrc(sisName));return}   // 읽는 동안은 지금 곡이 계속 난다
+    const o0=smp.node,buf=smp.buf[key];
+    if(o0&&o0.sisName&&o0.dur){const pos=(((o0.off+(ctx.currentTime-o0.t0))%o0.dur)+o0.dur)%o0.dur;sisFrac[sisBase(o0.sisName)]=pos/o0.dur}   // 떠나는 곡의 위치를 기억
+    const off=(sisFrac[sisBase(sisName)]||0)*buf.duration;
     smpStop(1.0);
     const now=ctx.currentTime,src=ctx.createBufferSource(),g=ctx.createGain();
-    src.buffer=smp.buf[key];src.loop=true;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+1.2);
-    src.connect(g);g.connect(master);src.start(now);smp.cur=key;smp.node={src,g,ext:0,scene:'sis',off:0,t0:now,dur:src.buffer.duration};
+    src.buffer=buf;src.loop=true;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+1.2);
+    src.connect(g);g.connect(master);src.start(now,off);smp.cur=key;smp.node={src,g,ext:0,scene:'sis',sisName,off,t0:now,dur:buf.duration};
   }
   function smpPlay(){
     if(stemsUsable()&&stemsPlay())return true;
@@ -473,7 +478,7 @@ export function createBgm(){
     setVol(v){vol=Math.max(0,Math.min(1,+v||0));if(on&&ctx)ramp(gainOf(vol),0.3)},
     setMood(k){if(P.moods[k])mood=k},
     setScene(k){scene=k==='boss'?'boss':k==='fight'?'fight':'calm'},
-    setSis(n){const v=n||null;if(v===sisName)return;sisName=v;if(v&&ctx&&!smp.buf['sis_'+v])smpLoad('sis_'+v,sisSrc(v))},   // 시지프 곡 이름(없으면 null). 미리 읽어 둔다
+    setSis(n){const v=n||null;if(v===sisName)return;sisName=v;if(v&&ctx){for(const k of [v,sisPair(v)])if(k&&!smp.buf['sis_'+k]&&!smp.bad['sis_'+k])smpLoad('sis_'+k,sisSrc(k))}},   // 시지프 곡 이름(없으면 null). 짝이 되는 판도 미리 읽어 둔다
     sis:()=>sisName,
     setBossTrack(k){bossTrack=k==='ruen'?'ruen':'boss'},
     /* 전투 감정 단계(1~5). 불길 전투곡에서만 들린다 */

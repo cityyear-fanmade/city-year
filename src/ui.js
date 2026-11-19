@@ -2009,22 +2009,26 @@ ${symRec(r)}
   const sisDayText=x=>{x=String(x||'');const i=x.indexOf('\n\n');if(i<0)return null;const head=x.slice(0,i),rest=x.slice(i+2),lines=rest.split('\n');if(!/고객 · .*안/.test(lines[0]))return null;
     const ri=lines.findIndex(l=>l==='알게 된 규칙'),st=(ri<0?lines:lines.slice(0,ri)).join('\n'),rules=ri<0?[]:lines.slice(ri+1);
     return `<p class="lead" style="white-space:pre-line">${head}</p><p class="small mono" style="white-space:pre-line;color:var(--gold)">${st}</p>${rules.length?`<details class="more"><summary>알게 된 규칙 (${rules.length})</summary><div class="small dim" style="white-space:pre-line">${rules.join('\n')}</div></details>`:''}`};
-  /* 시지프 음악: 지금 화면에 맞는 곡 이름. 시지프 밖이면 null(기존 음악) */
+  /* 시지프 음악: 지금 화면에 맞는 곡 이름. 시지프 밖이면 null(기존 음악).
+     전투는 SIS_FIGHT로 고른다: 'mix' = 일반 전투는 지금 곡의 빠른 판(같은 위치에서 이어짐), 위험 대상 전투는 전투곡(hunt), 보스는 보스곡 / 'hunt' = 모든 전투에 전투곡 */
+  const SIS_FIGHT='mix',SIS_FAST_OK=['day','velvet','corridor','rain'];
   function sisTrack(s){
     if(!(G&&G.ch&&CFG.sis.on))return null;
     const c=G.ch,sv=c.sis,y=G.year,act2=!!(c.sisEnd&&!sv&&c.sisDone&&y>=56&&!G.infinite);
     if(!sv&&!act2)return null;
     if(['title','end','sisshare','records','chron','chronview','shared','birth'].includes(s))return null;
     const act2Name=()=>y>=68&&y<=72?'boss':y>=64&&y<=67?'corridor':'rain';
-    if(s==='combat'){const e=C&&D.enemies[C.id],boss=!!(e&&(e.hidden||e.tier==='boss'));
-      return act2?act2Name():boss?'boss':'hunt'}
-    if(act2)return act2Name();
-    if(sv.collapsed||sv.cs)return 'boss';
-    const ev=UI.ev,zone=id=>id==='f4'?'velvet':(id==='b2'||id==='b3')?'corridor':'day';
+    const zone=id=>id==='f4'?'velvet':(id==='b2'||id==='b3')?'corridor':'day';
+    const base=act2?act2Name():(sv.collapsed||sv.cs)?'boss':(sv.st==='hunt'?zone(sv.hunt):sv.st==='craft'?zone(sv.pend):'day');
+    if(s==='combat'){const e=C&&D.enemies[C.id];
+      if(e&&(e.hidden||e.tier==='boss'))return 'boss';
+      if(SIS_FIGHT==='hunt')return 'hunt';
+      if(sv&&sv.riskNow)return 'hunt';
+      return SIS_FAST_OK.includes(base)?base+'_f':base}
+    if(act2||sv.collapsed||sv.cs)return base;
+    const ev=UI.ev;
     if(ev&&ev.sisBench)return 'tailor';
-    if(sv.st==='hunt')return zone(sv.hunt);
-    if(sv.st==='craft')return zone(sv.pend);
-    return 'day'
+    return base
   }
   function vEvent(){
     if(UI.omen)return vOmen();
