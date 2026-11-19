@@ -2745,9 +2745,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const tm=c=>sisTasteMul(cu,c.color,c.pattern),idx=ch.sis.cloth.map((c,i)=>i).sort((a,b)=>{const A=ch.sis.cloth[a],B=ch.sis.cloth[b];return (sisOrderMatch(ord,B)?1e6:0)+B.price*tm(B)-((sisOrderMatch(ord,A)?1e6:0)+A.price*tm(A))})[0];
     const c=ch.sis.cloth[idx],tmul=tm(c),match=tmul>=1.2,ordHit=sisOrderMatch(ord,c);
     if(d(100)<=Math.round(M.fail*100)){chips.push(`${cu.n}가 고개를 저었다 · 팔지 못했다`);return}
-    const Q=D.sisyphus.quality,q=c.q||0,v=Math.round(c.price*Q.mul[q]*M.mul*tmul*sisComplyMul(ch)*(ordHit?D.sisyphus.orders.mul:1)),pts=M.pts+(match?1:0)+Q.pts[q]+(ordHit?2:0)+sisHqPts(c);
+    const Q=D.sisyphus.quality,q=c.q||0,v=Math.round(c.price*Q.mul[q]*M.mul*tmul*sisComplyMul(ch)*(ordHit?D.sisyphus.orders.mul:1)),lux=!!(cu.lux&&!match&&sisHqPts(c)),pts=M.pts+(match?1:0)+Q.pts[q]+(ordHit?2:0)+sisHqPts(c)+(lux?2:0);
     if(match&&(ch.sis.fit||0)<CFG.sis.fit.per*CFG.sis.fit.maxTier){ch.sis.fit=(ch.sis.fit||0)+1;if(ch.sis.fit%CFG.sis.fit.per===0)chips.push(`단골 맞춤 ${ch.sis.fit/CFG.sis.fit.per}단계 · 소속 전투 규칙이 조금 강해진다`)}
     ch.sis.cloth.splice(idx,1);ch.sis.dSold=(ch.sis.dSold||0)+1;ch.money+=v;ch.sis.pts+=pts;sisAdj(ch,q>=2?2:1);
+    if(lux)chips.push(`${cu.n}은 고급 재료에 눈길을 준다 · 고객 점수 +2`);
     chips.push(`판매 · ${cu.n} · ${D.sisyphus.quality.names[q]} · +${sisAn(v)} · 고객 점수 +${pts}`);
     if(ordHit){const Z=D.sisyphus.orders;chips.push(`${Z.done} · ${sisOrderText(ord)} · 값 ×${Z.mul} · 순응도 +${Z.comply} · 단골 맞춤 +${Z.fit}`);sisAdj(ch,Z.comply);ch.sis.fit=Math.max(0,(ch.sis.fit||0)+Z.fit);ch.sis.order=null}sisLearn(ch,'trust',chips,false);sisGradeUp(ch,chips);
   }
@@ -3916,8 +3917,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(FK){const kl=ch.sis.kills=ch.sis.kills||{};if(!kl[C.id]){kl[C.id]=1;sisMat(ch,FK.mat,FK.n);ch.sis.pts+=FK.pts;chips.push(FK.t,`${D.sisyphus.mats[FK.mat].n} ${FK.n}`,`고객 점수 +${FK.pts}`);
         ch.titles=ch.titles||[];if(!ch.titles.includes(FK.title)){ch.titles.push(FK.title);(ch.titleLog=ch.titleLog||[]).push(FK.title);chips.push('칭호 · '+FK.title)}sisGradeUp(ch,chips)}}}
     if(C.id==='sis_warden'&&ch.sis){ch.sis.brideKill=1}   /* 사냥에서 간수를 꺾으면 신부가 나타나 즉사시키고 1턴 되돌린다 */
-    if(C.id==='sis_warden_final'&&ch.sis){ch.sis.wardenDone=1;chips.push(D.sisyphus.collapse.warden.win)}
-    if(C.id==='sis_bride'&&ch.sis){ch.sis.brideDone=1;chips.push(D.sisyphus.collapse.bride.win)}
+    const sisTitle=t=>{ch.titles=ch.titles||[];if(!ch.titles.includes(t)){ch.titles.push(t);(ch.titleLog=ch.titleLog||[]).push(t);chips.push('칭호 · '+t)}};
+    if(C.id==='sis_warden_final'&&ch.sis){ch.sis.wardenDone=1;chips.push(D.sisyphus.collapse.warden.win);sisTitle('간수를 꺾은 손님')}
+    if(C.id==='sis_bride'&&ch.sis){ch.sis.brideDone=1;chips.push(D.sisyphus.collapse.bride.win);sisTitle('신부를 꺾은 손님')}
     if(C.id==='sis_trendy'&&ch.sis){ch.sis.st='tpost';ch.sis.exStep=3;sisMat(ch,'leather',1);chips.push('가죽 조각 1')}
     if(C.id==='sis_red'&&ch.sis&&ch.sis.red){sisRedDead(ch,'slain');chips.push(D.sisyphus.red.slain)}
     if(C.id==='sis_buffet'&&ch.sis&&ch.sis.red){sisRedDead(ch,'buffet');sisMat(ch,'goldskin',1);chips.push(D.sisyphus.red.buffetWin,'황금가죽 1')}
