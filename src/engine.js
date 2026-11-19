@@ -233,6 +233,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 장비 칸마다 하나. 바꾸면 이전 장비 효과를 빼고 새 장비 효과를 더한다. 피해 최소값은 장비 중 가장 큰 값 */
   /* 피해 주사위 최소값 = 장비 중 가장 큰 값 + 재능·성장기에서 온 +1들 (겹치면 더해진다), dminCap 이하 */
   const calcDmin=ch=>Math.min(CFG.dminCap,Math.max(1,...Object.values(ch.gear).map(g=>g.fx.dmin||1))+(ch.stats.dminUp||0));
+  /* 공방 전용 칸 판별: 공방 무기 · 방어구 · 의수, 그리고 E.G.O 무기와 결합한 공방 무기(wsEgo) */
+  const wsIs=(it,slot)=>!!it&&(it.id==='ws_'+slot||(slot==='weapon'&&!!it.wsEgo));
   function equip(ch,item){
     /* 육신 뒤틀림: 장비를 낄 수 없다 (보관함으로) · N사 날개: 의수를 끼지 않는다 (보관함으로) */
     if((ch.distForm&&!ch.distStable)||(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')||(item.slot==='weapon'&&ch.o&&ch.o.herm&&item.id!=='w_herm')||(ch.gw&&ch.gw.proc&&!item.gw&&(item.slot==='weapon'||item.slot==='aug'))){(ch.stash=ch.stash||[]).push(item);return}
@@ -240,7 +242,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 이미 끼고 있는 것과 똑같은 장비를 다시 끼면 아무 일도 일어나지 않는다(보관함에 사본이 생기지 않는다) */
     if(old&&item.id&&old.id===item.id&&old.n===item.n&&old.slot===item.slot&&JSON.stringify(old.fx)===JSON.stringify(item.fx)&&JSON.stringify(old.wx||null)===JSON.stringify(item.wx||null))return;
     /* 공방 해결사의 전용 무기·방어구·의수는 빼거나 다른 장비로 바꿀 수 없다 (다른 장비는 보관함으로) */
-    if(old&&old.id==='ws_'+item.slot&&item.id!==old.id&&isWs(ch)){(ch.stash=ch.stash||[]).push(item);return}
+    if(wsIs(old,item.slot)&&item.id!==old.id&&isWs(ch)){(ch.stash=ch.stash||[]).push(item);return}
     if(old)for(const [k,v] of Object.entries(old.fx))if(k!=='dmin'&&k in s){s[k]-=v;if(k==='maxHp')ch.hp=Math.min(ch.hp,s.maxHp)}
     for(const [k,v] of Object.entries(item.fx))if(k!=='dmin'&&k in s){s[k]+=v;if(k==='maxHp')ch.hp+=v}
     ch.gear[item.slot]=item;
@@ -255,7 +257,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 6시즌: N사 날개 · 의체 심판: 의수를 쓰지 않고, 의체 상대(enemies aug)를 심판한다 ===== */
   const isN=ch=>!!ch.aff&&ch.aff.name===CFG.nWing.name;
   /* 장착이 막히는 까닭 (장비가 말없이 보관함으로 되돌아가던 것을 화면에 알린다): 공방 해결사의 전용 칸 · 뒤틀린 몸 · N사 날개 */
-  const wsLock=(ch,item)=>{const old=ch.gear[item.slot];return !!(old&&old.id==='ws_'+item.slot&&item.id!==old.id&&isWs(ch))};
+  const wsLock=(ch,item)=>{const old=ch.gear[item.slot];return !!(wsIs(old,item.slot)&&item.id!==old.id&&isWs(ch))};
   /* 칸마다 보여 줄 '착용 불가' 안내 (빈 문자열이면 문제없음) */
   const slotWhy=(ch,slot)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':wsLock(ch,{slot,id:''})?'공방 해결사 전용 장비 · 바꿀 수 없다 (산 장비는 재료로 녹인다)':(slot==='aug'&&isN(ch))?'N사 날개 · 의수는 쓰지 않는다 (의복·지팡이 등은 가능)':'';
   const equipWhy=(ch,item)=>(ch.distForm&&!ch.distStable)?'뒤틀린 몸 · 장비를 쥘 수 없다':(item.slot==='weapon'&&ch.o&&ch.o.herm&&item.id!=='w_herm')?'카두세우스-헤르메스 · 다른 무기는 쥘 수 없다 (보관한 히든 무기는 헤르메스의 강화가 된다)':(item.slot==='aug'&&isN(ch)&&(item.kind||'의수')==='의수')?'N사 날개 · 의체를 쓰지 않는다':(ch.gw&&ch.gw.proc&&!item.gw&&(item.slot==='weapon'||item.slot==='aug'))?'날개 시술 · 방어구 말고는 쥘 수 없다 (먹을 수 있다)':wsLock(ch,item)?'공방 해결사 · 전용 장비는 바꿀 수 없다':'';
@@ -350,7 +352,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.egoUses==null)return null;
     const st=ch.stash||[],w=ch.gear.weapon,L=egoLvFor(ch.egoUses),own=w&&egoBase(w.id)?w:st.find(x=>egoBase(x.id));
     if(!own||(own.egoLv||0)>=L)return null;
-    const nw=carryTune(own,egoItem(own.id,L));
+    const nw=carryTune(own,(own.wsEgo&&ch.ws&&ch.ws.egoId===own.id)?wsEgoMerge(ch,wsItem(Object.assign({},ch,{ws:Object.assign({},ch.ws,{egoId:null})}),'weapon')):egoItem(own.id,L));
     if(own===w){equip(ch,nw);ch.stash=ch.stash.filter(x=>x!==own)}else st[st.indexOf(own)]=nw;
     egoDeck(ch,nw.id,L);
     ch.egoNote=`E.G.O ${CFG.egoGrow.tier[L]} · ${nw.n} (${nw.e})`;
@@ -874,6 +876,22 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   const wsMatVal=m=>WS.matValue[Math.max(1,Math.min(5,(m&&m.grade)|0||1))]||1;
   /* 일반 재료: 공방 물건이거나 등급이 4 이하. 히든 재료: 그 밖의 전리품·유물 (5등급 이상이나 등급이 없는 전용 장비) */
   const wsHidden=m=>!!m.hid||!(D.items&&D.items[m.id])&&!((m.grade||0)>=1&&(m.grade||0)<=4)&&!(m.id==='birth'||m.n==='맨손');
+  /* E.G.O 무기와 공방 무기의 결합: E.G.O 무기가 주인공 무기(이름·카드·성장)고, 공방 무기의 능력치와 효과가 덧붙는다 */
+  function wsEgoMerge(ch,R){
+    const eb=egoItem(ch.ws.egoId,egoLvFor(ch.egoUses||0)),fx=Object.assign({},eb.fx||{});
+    for(const [x,v] of Object.entries(R.fx||{}))if(typeof v==='number')fx[x]=(fx[x]||0)+v;
+    const wx=Object.assign({},R.wx||{},eb.wx||{});
+    for(const x of ['extraHit','drain','fairy'])if(R.wx&&R.wx[x]!=null&&wx[x]==null)wx[x]=R.wx[x];
+    return Object.assign({},eb,{fx,wx,wsEgo:true,wsH:R.wsH,wsN:R.wsN,e:`${eb.e} · 공방 결합 ${String(R.e).replace(/ · 피해 d\d+/,'')}`});
+  }
+  /* E.G.O 무기를 가진 채 공방 해결사가 된 판(또는 예전 저장)에서 결합할 E.G.O 무기를 찾아 기록한다 */
+  function wsEgoFind(ch){
+    if(!ch.ws||ch.ws.egoId||ch.egoUses==null)return;
+    const w=ch.gear.weapon,own=(w&&egoBase(w.id))?w:(ch.stash||[]).find(x=>egoBase(x.id));
+    if(own)ch.ws.egoId=own.id;
+  }
+  /* 결합이 끝난 뒤 보관함에 남은 옛 E.G.O 무기(결합 전 사본)를 치운다 */
+  function wsEgoClean(ch){if(ch.ws&&ch.ws.egoId&&ch.stash)ch.stash=ch.stash.filter(x=>!(x.id===ch.ws.egoId&&!x.wsEgo))}
   function wsItem(ch,slot){
     const w=ch.ws,k=w[wsKey(slot)];
     const nmOf=d=>(w.names&&w.names[slot])||d,B_=WS.big;
@@ -881,7 +899,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const tiers=n=>B_.at.map((t,i)=>n>=t?i:-1).filter(i=>i>=0),bigFx=(sl,n)=>{const o={};for(const i of tiers(n))for(const [x,v] of Object.entries(B_[sl][i]))o[x]=(o[x]||0)+v;return o};
     if(slot==='weapon'){const C_=WS.weapon,bf=bigFx('weapon',k.n),atk=C_.base.atk+k.n*C_.normal.atk+(bf.atk||0)+k.h*(C_.hidden.atk||0),dmg=k.h*C_.hidden.dmgB+(bf.dmgB||0),spd=(C_.base.spd||0)+(bf.spd||0),bg=tiers(k.n).length;
       const sp=w.sp||{},wx={dice:C_.dice.slice()};if(sp.baral)wx.extraHit=1;if(sp.gebura)wx.drain=1;if(sp.zena)wx.fairy={add:1,every:2,max:30};
-      return {id:'ws_weapon',slot,wsH:k.h,wsN:k.n,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}${Object.keys(sp).map(x=>' · '+WS_SPN[x]).join('')}`,fx:{atk,spd,dmgB:dmg},wx}}
+      const R_={id:'ws_weapon',slot,wsH:k.h,wsN:k.n,n:nmOf(C_.n),grade:4,e:`공+${atk}${spd?` · 속도+${spd}`:''}${dmg?` · 피해+${dmg}`:''} · 피해 d${C_.dice[1]} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}${Object.keys(sp).map(x=>' · '+WS_SPN[x]).join('')}`,fx:{atk,spd,dmgB:dmg},wx};
+      return w.egoId?wsEgoMerge(ch,R_):R_}
     if(slot==='armor'){const C_=WS.armor,bf=bigFx('armor',k.n),hp=C_.base.maxHp+k.n*C_.normal.maxHp+(bf.maxHp||0)+k.h*(C_.hidden.maxHp||0),rg=bf.regen||0,dr=Math.min(C_.drMax,k.h*C_.hidden.dr+(bf.dr||0)),eva=k.h*C_.hidden.eva,bg=tiers(k.n).length;
       return {id:'ws_armor',slot,n:nmOf(C_.n),grade:4,e:`HP+${hp}${rg?` · 라운드마다 HP+${rg}`:''}${dr?` · 받는 피해 −${dr}%${dr>=C_.drMax?' (최대)':''}`:''}${eva?` · 회피+${eva}`:''} · 강화 ${k.n}단계${k.h?' · 히든 '+k.h:''}${bg?` · 특수 강화 ${bg}/${B_.at.length}`:''}`,fx:{maxHp:hp,dr,eva,regen:rg}}}
     const A_=WS.aug,g=w.g,KD=CFG.custKinds[w.kind]||CFG.custKinds.aug,fx=Object.assign({},w.kind&&w.kind!=='aug'?(A_.baseKind[w.kind]||KD.fx):A_.base),pk=g.picks||[];
@@ -904,12 +923,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function wsOpen(ch,chips){
     if(ch.ws)return;
     ch.ws={y:ch.year||0,ups:0,w:{n:0,h:0,p:0},a:{n:0,h:0,p:0},g:{pick:null,n:0,p:0,h:0,picks:[],pend:0}};
+    wsEgoFind(ch);
     for(const sl of ['weapon','armor','aug']){const it=wsItem(ch,sl);equip(ch,it);chips&&chips.push(`첫 공방 개설 · ${it.n} (${it.e})`)}
-    chips&&chips.push('전용 무기·방어구·의수는 빼거나 바꿀 수 없다 · 다른 장비는 녹여서 재료로 쓴다');
+    wsEgoClean(ch);
+    chips&&chips.push(ch.ws.egoId?'E.G.O 무기가 공방 무기와 결합했다 · E.G.O 무기가 주인공 무기로 남는다':'전용 무기·방어구·의수는 빼거나 바꿀 수 없다 · 다른 장비는 녹여서 재료로 쓴다');if(ch.ws.egoId)chips&&chips.push('전용 무기·방어구·의수는 빼거나 바꿀 수 없다 · 다른 장비는 녹여서 재료로 쓴다');
   }
   /* 전용 장비 이름 짓기: 12자까지, 비우면 기본 이름으로 돌아간다 */
   function wsRename(ch,slot,name){
-    const cur=ch.gear[slot];if(!ch.ws||!isWs(ch)||!cur||cur.id!=='ws_'+slot)return null;
+    const cur=ch.gear[slot];if(!ch.ws||!isWs(ch)||!cur||!wsIs(cur,slot))return null;
     const nm=String(name||'').replace(/\s+/g,' ').trim().slice(0,12);
     ch.ws.names=ch.ws.names||{};if(nm)ch.ws.names[slot]=nm;else delete ch.ws.names[slot];
     equip(ch,carryTune(cur,wsItem(ch,slot)));ch.stash=(ch.stash||[]).filter(x=>x!==cur);return ch.gear[slot].n;
@@ -920,7 +941,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(!ch.ws){wsOpen(ch,[]);return}
     if(!ch.ws.g||!('pick' in ch.ws.g)){ch.ws.g={pick:null};}
     {const g=ch.ws.g;g.n=g.n||0;g.p=g.p||0;g.h=g.h||0;g.picks=g.picks||[];g.pend=g.pend||0}
-    for(const sl of ['weapon','armor','aug'])if(!ch.gear[sl]||ch.gear[sl].id!=='ws_'+sl)equip(ch,wsItem(ch,sl));
+    wsEgoFind(ch);
+    for(const sl of ['weapon','armor','aug'])if(!wsIs(ch.gear[sl],sl))equip(ch,wsItem(ch,sl));
+    wsEgoClean(ch);
     /* 의수 개편 전 저장: 장착 중인 의수를 새 규칙(속도·키워드)으로 다시 만든다 */
     {const a=ch.gear.aug;if(a&&a.id==='ws_aug'&&a.rev!==2){equip(ch,carryTune(a,wsItem(ch,'aug')));ch.stash=(ch.stash||[]).filter(x=>x!==a)}}
   }
@@ -959,7 +982,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function wsMelt(ch,slot,i){
     const w=ch.ws,st=ch.stash||[],m=st[i],cur=ch.gear[slot];
     const mat=!!m&&m.id==='hidmat';
-    if(!w||!isWs(ch)||!cur||cur.id!=='ws_'+slot||!m||isBare(m)||(!mat&&((m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot))||(ch.distForm&&!ch.distStable))return null;
+    if(!w||!isWs(ch)||!cur||!wsIs(cur,slot)||!m||isBare(m)||(!mat&&((m.id&&String(m.id).startsWith('ws_'))||m.slot!==slot))||(ch.distForm&&!ch.distStable))return null;
     const k=w[wsKey(slot)],hid=wsHidden(m);let step=0,newSp=null;
     st.splice(i,1);
     if(D.items&&D.items[m.id]){w.used=w.used||{};w.used[m.id]=(w.used[m.id]||0)+1}
