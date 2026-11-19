@@ -16215,7 +16215,7 @@
        "t": "외다리의 굽이 젖은 바닥을 울렸다.",
        "fx": {
         "atk": 1,
-        "combat": "sis_onelegs"
+        "combat": "sis_onelegs2"
        }
       }
      },
