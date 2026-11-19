@@ -2659,16 +2659,16 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(g===G_.length-1&&ch.sis.assimDone&&!ch.sis.extraGiven){ch.sis.extraGiven=1;for(const id of D.sisyphus.assim[ch.sis.fac].pack.extra)putCard(ch,id,chips,'소속 카드')}}}
   function sisFacCheck(ch,turn,chips){const S_=CFG.sis;if(ch.sis.fac||turn<S_.facTurn)return;const l=ch.sis.lean;ch.sis.fac=(ch.sis.made||0)<S_.facMin?'kaki':l>=S_.facLean?'rouge':l<=-S_.facLean?'noir':'kaki';chips.push('백화점에서 어느 쪽에 가까운지가 정해졌다')}
   const sisZones=ch=>D.sisyphus.zones.filter(z=>z.grade<=sisGrade(ch));
-  function sisLoot(ch,zone,chips){
+  function sisLoot(ch,zone,chips,half){
     const S_=D.sisyphus,out=[];const mats=zone.mat;
-    const fm=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].mat,k=one(fm&&fm.length?fm:mats),LR=zone.loot||{lo:1,hi:2},n=(LR.lo-1)+d(LR.hi-LR.lo+1)+((S_.lootGrade||[])[sisGrade(ch)]||0);
+    const fm=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].mat,k=one(fm&&fm.length?fm:mats),LR=zone.loot||{lo:1,hi:2},n0=(LR.lo-1)+d(LR.hi-LR.lo+1)+((S_.lootGrade||[])[sisGrade(ch)]||0),n=half?Math.ceil(n0/2):n0;
     if(k==='soda'){const h=Math.round(ch.stats.maxHp*0.15);ch.hp=Math.min(ch.stats.maxHp,ch.hp+h);out.push(`정육 소다 · 체력 +${h}`)}
     else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');const c=one(open);ch.sis.dyes.push(c.id);out.push(`염료(${c.n}) 1병`)}
-    else{const boss_=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].tier==='boss',amt=k==='goldskin'?1+(sisGrade(ch)>=4?1:0)+(boss_?1:0):k==='goldthread'?n+(boss_?1:0):n;if(amt){sisMat(ch,k,amt);out.push(`${S_.mats[k].n} ${amt}`)}else out.push('황금가죽은 나오지 않았다')}
-    const an=CFG.sis.huntAn[sisGrade(ch)]||5;ch.money+=an;out.push(sisAn(an));
-    {const fx_=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].extra;if(fx_&&d(100)<=fx_.pct){sisMat(ch,fx_.mat,1);out.push(`${S_.mats[fx_.mat].n} 1`)}}
+    else{const boss_=!half&&ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].tier==='boss',amt=k==='goldskin'?1+(sisGrade(ch)>=4?1:0)+(boss_?1:0):k==='goldthread'?n+(boss_?1:0):n;if(amt){sisMat(ch,k,amt);out.push(`${S_.mats[k].n} ${amt}`)}else out.push('황금가죽은 나오지 않았다')}
+    const an=Math.ceil((CFG.sis.huntAn[sisGrade(ch)]||5)/(half?2:1));ch.money+=an;out.push(sisAn(an));
+    {const fx_=!half&&ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].extra;if(fx_&&d(100)<=fx_.pct){sisMat(ch,fx_.mat,1);out.push(`${S_.mats[fx_.mat].n} 1`)}}
     chips.push('사냥 · '+out.join(' · '));
-    if(d(100)<=CFG.sis.cardChance)offerPick(ch,D.rewards,chips,'카드 보상');
+    if(!half&&d(100)<=CFG.sis.cardChance)offerPick(ch,D.rewards,chips,'카드 보상');
   }
   /* 재료 분류: 원단·가죽·실은 단계가 있고, 높은 단계부터 먼저 쓴다 */
   const sisCat=k=>D.sisyphus.cats[k]?D.sisyphus.cats[k].of:[k];
@@ -2995,6 +2995,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 사냥에서 지면(백화점 설정): 죽지 않고 샘터에서 깨어난다. 진행(그날)만 되돌리고 얻은 물건은 그대로, 안은 일부 잃는다 */
   const sisCanRevive=G=>!!(G&&sisOn(G.ch)&&!G.ch.mindDead&&!G.ch.sunk&&!G.ch.distorted);
   function sisRevive(G,C){
+    {const sv0=G.ch.sis,z0=sv0&&sv0.riskNow&&sv0.st==='craft'&&sv0.foe===C.id&&!sv0.lootDone&&D.sisyphus.zones.find(x=>x.id===sv0.pend);
+      /* 위험 대상에게 졌을 때: 샘터로 돌아가지 않고 그 자리에서 물러선다. 재료는 절반만 챙기고 체력을 많이 잃는다(위험 보상 보너스는 없다) */
+      if(z0){const ch=G.ch;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CFG.sis.riskFallHp));sv0.falls=(sv0.falls||0)+1;sv0.riskNow=false;
+        const lc=[];sisLoot(ch,z0,lc,true);sv0.lootDone=true;sv0.lootNote=lc.join('\n');
+        return {text:D.sisyphus.act.riskFall.x,chips:[`쓰러질 뻔했다 · 체력 ${ch.hp}`,...lc,'위험 대상에게 졌다 · 얻은 것은 절반뿐']}}}
     const ch=G.ch,sv=ch.sis,lost=Math.round(ch.money*CFG.sis.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CFG.sis.fallHp));
     sv.falls=(sv.falls||0)+1;sv.st='day1';sv.lootDone=false;sv.back=null;if(C.id==='sis_red'&&sv.red){sv.red.fightDone=1;sv.red.state='left'}if(C.id==='sis_buffet'&&sv.red){sv.red.buffetDone=0;sv.red.hunger=6}if(C.id==='sis_trendy'&&(sv.exStep||0)<3)sv.trendLost=1;if(C.id==='sis_warden_final')sv.wardenLost=1;if(C.id==='sis_bride')sv.brideLost=1;
     const lc=[];if(C.id==='sis_buffet')lc.push(D.sisyphus.red.buffetLose);sisLearn(ch,'fall',lc,false);return {text:D.sisyphus.act.fall.x,chips:[...lc,`샘터에서 깨어났다 · 체력 ${ch.hp}`,lost?`안 ${lost} 잃었다`:'잃은 것은 없다','얻은 물건은 그대로 남아 있다']};
