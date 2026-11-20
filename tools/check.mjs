@@ -1,12 +1,15 @@
 /* 데이터 검사: npm run check
    1) 없는 카드·적·키워드 참조 찾기  2) 무작위 선택으로 게임을 끝까지 N판 돌려 오류가 없는지 본다 */
-import {loadData} from '../src/data-node.js';
+import {loadData,findDupKeys} from '../src/data-node.js';
 import {validateData,createEngine,mulberry32} from '../src/engine.js';
-const D=loadData(),err=validateData(D);
+const D=loadData(),err=[...findDupKeys(),...validateData(D)];
 if(err.length){console.error('데이터 오류 '+err.length+'건:\n  '+err.join('\n  '));process.exit(1)}
 console.log(`참조 검사 통과 · 카드 ${Object.keys(D.cards).length} · 적 ${Object.keys(D.enemies).length} · 사건 ${D.events.length} · 출신 ${D.origins.length}`);
 
-const E=createEngine(D,{rng:mulberry32(42)}),N=+(process.argv[2]||4000),byOrigin={},seen=new Set(),aff={},end={완주:0,사망:0},rank={},color={n:0},hb={},omen={go:0,away:0},top7={n:0},buys={1:0,2:0,3:0},access={1:0,2:0,3:0},wealth=[],fr={},pinky={n:0,combo:{}};
+const E=createEngine(D,{rng:mulberry32(42)}),reqErr=E.unknownReqs();
+if(reqErr.length){console.error('조건(req) 오류 '+reqErr.length+'건:\n  '+reqErr.join('\n  '));process.exit(1)}
+console.log('중복 키 · 조건 토큰 검사 통과');
+const N=+(process.argv[2]||4000),byOrigin={},seen=new Set(),aff={},end={완주:0,사망:0},rank={},color={n:0},hb={},omen={go:0,away:0},top7={n:0},buys={1:0,2:0,3:0},access={1:0,2:0,3:0},wealth=[],fr={},pinky={n:0,combo:{}};
 for(let g=0;g<N;g++){
   const G=E.newGame(E.newChar());let pending=null;
   for(let guard=0;guard<300;guard++){

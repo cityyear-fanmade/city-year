@@ -8,7 +8,7 @@
 - `css/style.css` · `tools/guide.mjs` → `docs/guide.md` 생성
 
 ## 명령
-- `npm run -s check` 데이터 참조 검사 + 4000판 시뮬 (매 변경 후 필수)
+- `npm run -s check` 데이터 참조 검사 + JSON 중복 키 검사 + `req`/`lockReq` 조건 토큰 검사(엔진 `meets`가 모르는 토큰이면 오류) + 4000판 시뮬 (매 변경 후 필수)
 - 자동 검사: `v8-dev`에 푸시하거나 `v8-dev`로 PR을 올리면 GitHub Actions(`.github/workflows/check.yml`)가 `npm run -s check`를 돌린다(약 1분 15초). `main`에서는 돌지 않고 배포도 하지 않는다. 실패해도 자동 재시도 없이 직접 다시 실행한다
 - `npm run -s pages` 루트 `index.html` 생성 (GitHub Pages 본섭)
 - `npm run -s build` → `dist/city-year.html` (테섭용 단일 파일)

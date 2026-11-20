@@ -1522,6 +1522,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ===== 진행 (7년) ===== */
   /* 조건: licensed / unlicensed / aff(소속 있음) / noaff / aff:<종류> / affname:<이름> / rank<=N /
      flag:<이름>[>=n]. 배열은 모두, {any:[...]}는 하나라도 */
+  let reqProbe=null;
   function meets(ch,req){
     if(!req)return true;
     if(Array.isArray(req))return req.every(r=>meets(ch,r));
@@ -1579,7 +1580,24 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='aff')return !!ch.aff;
     if(req==='noaff')return !ch.aff&&!isFounder(ch);
     if(req.startsWith('aff:'))return !!ch.aff&&ch.aff.type===req.slice(4);
+    if(reqProbe)reqProbe.push(req);   /* 검사 전용: 어느 규칙에도 안 걸린 토큰 기록 (평소 reqProbe=null) */
     return true;
+  }
+  /* 데이터 검사용: meets가 모르는 조건 토큰(맨 끝 return true까지 떨어지는 것)을 찾는다. 규칙을 따로 복제하지 않고 meets 자신을 돌려서 판단한다.
+     req·lockReq 값(문자열 · 배열 · {any:[…]})을 데이터 전체에서 모아 토큰마다 한 번씩 돌린다. 모르는 토큰은 meets에서 조용히 '참'이 되어 사건이 항상 열리므로 오류로 본다 */
+  function unknownReqs(){
+    const out=[],seen=new Set(),ch0={flags:{},paths:{},stats:{},o:{},aff:null,items:{},gear:{},deck:[],beaten:[],minis:[]};
+    const leaf=(r,at)=>{
+      if(typeof r==='string'){if(seen.has(r))return;seen.add(r);reqProbe=[];try{meets(ch0,r)}catch(e){}const hit=reqProbe.length;reqProbe=null;if(hit)out.push(`${at}: 엔진 meets가 모르는 조건 "${r}"`)}
+      else if(Array.isArray(r))r.forEach(x=>leaf(x,at));
+      else if(r&&Array.isArray(r.any))r.any.forEach(x=>leaf(x,at));
+    };
+    const walk=(x,at)=>{
+      if(Array.isArray(x))x.forEach((v,i)=>walk(v,`${at}[${i}]`));
+      else if(x&&typeof x==='object')for(const k in x){if(k==='req'||k==='lockReq')leaf(x[k],`${at}.${k}`);walk(x[k],`${at}.${k}`)}
+    };
+    try{walk(D,'D')}finally{reqProbe=null}
+    return out;
   }
   /* ===== 정신력 ===== */
   const M=CFG.mind;
@@ -5016,7 +5034,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
     return {n,rows,chain:chainSim(n,false),grown:chainSim(n,true),chainIds:chainIds()};
   }
 
-  const API={D,d,reseed,relux,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
+  const API={D,unknownReqs,d,reseed,relux,sample,newChar,setColor,license,promote,rankLabel,applyFx,xpNext,gainXp,rollGrowth,
     wsOpen,wsEnsure,egoItemOf:egoItem,wsRename,wsSetKind,wsSetStaffKw,wsAuxStock,specialPrice,wsMelt,wsAugPick,wsAugChoose,wsAugOk,wsNeed,wsMatVal,wsHidden,
     setPity,sisSources,sisRedNameErr,setSisRedName,boxRoom,sameOk,deckCopies,sellGear,gearSellValue,canSellGear,tuneRewind,tuneRewindCost,tuneFails,sisUpChance,sisCanRevive,sisRevive,sisCraft,sisCraftInfo,sisTasteList,augPasOf,regenParts,regenTotal,cardCost,colorPasv,setColorPick,setPartnerAlias,partnerAliasErr,fleeCheck,fleeEnd,    setLegacy:fn=>{legacyFn=fn},setGhost:fn=>{ghostFn=fn},ghostOf,bondRouteOf,buyMind,mindClinicPrice,equipUp,rankMet,infiniteEvent,setInnateOpen,corpClearCheck,setStable,setStar,upItem,starItem,distStableEvent,innateUnlocks,offerPick,pickTake,pickSkip,isFinger,extraOut,tuneMax,canFingerUp,blankFate,bonCardB,giveRelic,relicChance,acceptPack,acceptPackAlt,repairStats,custKind,custNoun,custIntro,custBuild,nBlocked,wsCustom,declinePack,switchPack,packCan,renamePack,ensurePacks,bonItem,bonNeed,bonUpgrade,egoItem,egoLvFor,isN,deckMax,setSing,setWing,setPill,pillStats,renameForm,singNameErr,wingNameErr,corpType,singChips,mindMax,offerGear,canFound,officeNameErr,setOffice,officeBroker,officeCards,OKW,resolveGear,takeOffer,offerPick,pickTake,pickSkip,dropOffer,deckOut,deckIn,sideDrop,autoOffers,cardBox,boxPool,deckRoom,relicChoices,applyGrowth,earn,priceOf,sellValue,isWs,sellCard,cardPrice,equip,equipStash,equipWhy,routeShop,testPreset,slotWhy,shopAccess,canBuy,buy,canBuySpecial,buySpecial,income,money,encounter,answerOmen,meets,newGame,age,advanceYear,options,checkMod,pathMod,choose,winRewards,
     canFound,pvProfile,staffList,staffLv,staffEventPick,staffPromoEvent,repOf,repMul,officeGrade,officeYear,staffTick,staffCands,hireStaff,dismissStaff,staffOwner,staffIncome,bondEvent,gwEatFx,gwEatDue,pactBuffEvent,isFounder,equip,bloodWeapon,gwEatStash,gwEatOffer,enchant,enchantPrice,enchantable,egoItem,egoDeck,bondSweetEvent,lakeNoFlee,infGrowth,waveEv,hullOf,repairHull,supplyPrice,supplyName,supplyCount,buySupply,useSupply,bondTx,setRbTeam,infEvaCut,infYears,chooseFinger,chooseOrg,lockedOptions,nailThr,setSeongdo,familyHunter,spouseLevel,bondFill,bondData,setTri,triOk,setForm,formOk,formId,bondNameErr,setBondName,bondMarried,nameErr,swapCard,tuneGear,tuneCost,aidCount,buyAid,critPct,lastYear,buyHeal,clinicPrice,buyAmple,ampPrice,gradeAt,gradeRaw,checkDie,setDistort,cardGrade,loseMind,gainMind,mindTier,mindStat,synOf,synTier,kidNameErr,setKidName,egoNameErr,setEgo,delCard,promoNeed,examReady,checkDc,canPromote,ptsName,career,fixedSpec,mkCombat,newRound,queue,autoPick,resolveRound,aiPlan,autoPlay,snap,fightAuto,chainSim,simulate};
