@@ -10,12 +10,25 @@ concurrency:
 permissions:
   contents: read
 jobs:
-  check:
+  lint:
+    name: lint (ESLint 10.1.0)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+  check:
+    name: check (데이터 검사 + 4000판)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
       - run: npm run -s check
