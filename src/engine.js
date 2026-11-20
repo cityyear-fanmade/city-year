@@ -55,8 +55,10 @@ export function validateData(D){
   D.origins.forEach(o=>{card(o.card,`출신 ${o.n}`);for(const k in o.paths||{})if(!D.text.paths[k])err.push(`출신 ${o.n}: 없는 진로 "${k}"`)});
   for(const ev of D.events)if(ev.tag&&!D.text.paths[ev.tag])err.push(`사건 "${ev.t}": 없는 진로 태그 "${ev.tag}"`);
   const evs=[...D.events,D.affiliation,D.promotionExam,D.colorExam,D.redBook,...Object.values(D.corp||{})].filter(Boolean);
+  const checkedFx=new Set();   /* 위 반복이 이미 검사한 fx (아래 전체 검사에서 중복 보고하지 않는다) */
   for(const ev of evs)for(const c of ev.c)for(const r of [c.ok,c.fail].filter(Boolean)){
     if(!r.fx)continue;
+    checkedFx.add(r.fx);
     if(r.fx.card)card(r.fx.card,`사건 "${ev.t}"`);
     if(r.fx.combat)spec(r.fx.combat,`사건 "${ev.t}"`);
     for(const q of r.fx.combatQ||[])spec(q,`사건 "${ev.t}"`);
@@ -65,6 +67,28 @@ export function validateData(D){
     if(c.check&&c.check.path&&!D.text.paths[c.check.path])err.push(`사건 "${ev.t}": 없는 진로 "${c.check.path}"`);
     if(c.check&&!c.fail)err.push(`사건 "${ev.t}" / "${c.l}": 판정이 있으면 fail 필요`);
   }
+  /* 사건 효과(fx)의 참조를 데이터 전체에서 검사한다: 위 목록(D.events 등)에 없는 루트·직원·거미집·시지프·무한 모드 등의 사건도 같은 규칙으로 본다.
+     카드는 존재해야 하고, 전투(combat·combatQ)는 적 id · table:<조우 표> · 동적 자리표시자여야 하며, join은 위와 같은 규칙을 따른다.
+     동적 자리표시자(엔진이 실행 중에 채운다): 'abno'(encounter()가 남은 환상체 중에서 고름), '{foe}'·'{c}'·'{r}' 같은 중괄호 이름(루트 임무가 실행 직전에 바꿔 넣음) */
+  const dynSpec=x=>x==='abno'||/^\{[a-z]+\}$/.test(x);
+  const fxRefs=(fx,at)=>{
+    if(typeof fx.card==='string')card(fx.card,at);else if(fx.card!=null)err.push(`${at}: fx.card는 카드 id 문자열이어야 한다`);
+    const sp=x=>{if(typeof x!=='string')err.push(`${at}: 전투 지정은 문자열이어야 한다`);else if(!dynSpec(x))spec(x,at)};
+    if(fx.combat!=null)sp(fx.combat);
+    if(fx.combatQ!=null){if(Array.isArray(fx.combatQ))fx.combatQ.forEach(sp);else err.push(`${at}: fx.combatQ는 배열이어야 한다`)}
+    const j=fx.join;
+    if(j&&typeof j==='object'){
+      if(j.from&&!(D.orgs[j.from]||[]).length)err.push(`${at}: 소속 목록 orgs.${j.from} 없음`);
+      if(!j.from&&!j.name)err.push(`${at}: join에 name 또는 from 필요`);
+    }
+  };
+  const walkFx=(x,at)=>{
+    if(Array.isArray(x)){x.forEach((v,i)=>walkFx(v,`${at}[${i}]`));return}
+    if(!x||typeof x!=='object')return;
+    if(x.fx&&typeof x.fx==='object'&&!Array.isArray(x.fx)&&!checkedFx.has(x.fx))fxRefs(x.fx,`${at}.fx`);
+    for(const k in x)walkFx(x[k],`${at}.${k}`);
+  };
+  walkFx(D,'D');
   return err;
 }
 
