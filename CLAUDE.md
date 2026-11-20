@@ -11,7 +11,7 @@
 - `npm ci` 개발 도구(ESLint 10.1.0 고정, `package-lock.json`) 설치. 기기를 바꾸거나 새 세션이 시작될 때 한 번. 외부 패키지는 ESLint 하나뿐이고 게임 실행·`check`에는 필요 없다
 - `npm run lint` ESLint 검사(자동 수정 `--fix`는 쓰지 않는다). 지금은 모든 규칙이 경고라서 **오류 0이면 정상**이고, 경고 61개가 기준선이다(`docs/lint-baseline.md`). 경고가 있어도 개발은 막지 않는다
 - `npm run -s check` 데이터 참조 검사 + JSON 중복 키 검사 + `req`/`lockReq` 조건 토큰 검사(엔진 `meets`가 모르는 토큰이면 오류) + 4000판 시뮬 (매 변경 후 필수)
-- 자동 검사: `v8-dev`에 푸시하거나 `v8-dev`로 PR을 올리면 GitHub Actions(`.github/workflows/check.yml`)가 두 작업을 따로 돌린다 — `lint`(`npm ci` + `npm run lint`)와 `check`(`npm run -s check`, 약 1분 5초). 두 작업이 각각 성공·실패로 따로 표시되도록 구성했다(푸시 후 첫 실행에서 확인하기 전까지는 미검증). `main`에서는 돌지 않고 배포도 하지 않는다. 실패해도 자동 재시도 없이 직접 다시 실행한다
+- 자동 검사: `v8-dev`에 푸시하거나 `v8-dev`로 PR을 올리면 GitHub Actions(`.github/workflows/check.yml`)가 두 작업을 따로 돌린다 — `lint`(`npm ci` + `npm run lint`)와 `check`(`npm run -s check`, 약 1분 5초). 두 작업이 각각 성공·실패로 따로 표시된다(2026-11-20 첫 실행 run 44666816474, `v8-dev`: `lint` 성공 · `check` 성공). `main`에서는 돌지 않고 배포도 하지 않는다. 실패해도 자동 재시도 없이 직접 다시 실행한다
 - `npm run -s pages` 루트 `index.html` 생성 (GitHub Pages 본섭)
 - `npm run -s build` → `dist/city-year.html` (테섭용 단일 파일)
 - `node tools/guide.mjs` 가이드 문서 갱신
@@ -28,6 +28,7 @@
 - **다른 기기에서 이어서 작업하기 전:** 원격 저장소의 최신 상태를 확인한다. 미커밋 변경 사항이 있으면 먼저 사용자에게 알린다. 같은 파일을 여러 기기에서 동시에 고치지 않는다
 - **푸시가 거부되면** 강제 푸시(`--force`)하지 않고 원인을 조사해 사용자와 상의한다(병합이 필요하면 `git fetch` 후 병합)
 - **금지:** `main` 수정·병합(예외는 사용자의 명시적 지시·승인이 있을 때뿐이고, 본섭 반영은 위 "본섭 올려" 절차를 따른다), 자동 배포 추가, 게임 로직·데이터 변경을 도구 작업에 섞기, 린트 경고의 자동 수정. 도구 도입과 게임 기능 개발은 커밋·작업을 분리한다
+- **Node 버전:** 프로젝트 기준은 `.nvmrc`의 Node 22(CI도 22)다. 대학 PC는 다른 프로젝트 때문에 Node 24를 유지하며, 이 프로젝트의 `.nvmrc`가 PC의 전역 Node를 바꾸지 않는다(다운그레이드·재설치·버전 관리 도구 설치 금지). 그래서 22뿐 아니라 24에서도 `npm ci` · `npm run lint` · `npm run -s check`가 되는지 확인한다(직접 실행하지 못한 쪽은 미검증으로 보고). Node 버전을 바꿔야 하면 다른 프로젝트에 미치는 영향을 먼저 검토하고 사용자 승인을 받는다
 - **Windows 확인(PC에서 직접):** `node -v`가 22.13 이상인지(ESLint 10 요구) → `npm ci` → `npm run lint`(오류 0 · 경고 61) → `npm run -s check`(`정상 종료 4000/4000`). 줄바꿈 문제가 생기면 그 PC에서 `git config core.autocrlf input`. 번역 도구 `tools/i18n-gemini.mjs`와 `tools/guide.mjs`는 Windows 경로(`new URL().pathname`)·`sleep` 때문에 PC에서 안 돌 수 있다(번역은 제미나이 키가 있는 클라우드 세션에서만 한다)
 
 ## 사용자 규칙

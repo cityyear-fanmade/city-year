@@ -60,4 +60,4 @@ npm run lint                       # 요약: 'N problems (0 errors, N warnings)'
 npm run lint -- -f json -o out.json   # 규칙별·파일별 집계용 상세 출력
 ```
 
-CI의 `lint` 작업은 오류가 있거나 ESLint가 실패할 때만 실패하도록 구성했다(`--max-warnings`는 쓰지 않는다). Actions에서의 실제 동작은 푸시 후 첫 실행 전까지 미검증이다.
+CI의 `lint` 작업은 오류가 있거나 ESLint가 실패할 때만 실패하도록 구성했다(`--max-warnings`는 쓰지 않는다). 2026-11-20 GitHub Actions 첫 실행(run 44666816474, `v8-dev`)에서 `lint`와 `check` 작업이 각각 성공했다.
