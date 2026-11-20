@@ -14,7 +14,11 @@
     "build:pub": "node tools/build.mjs --nobgm --pubtest",
     "build:all": "node tools/build.mjs --nobgm --alltest",
     "pages": "node tools/build.mjs --pages --extbgm",
-    "guide": "node tools/guide.mjs"
+    "guide": "node tools/guide.mjs",
+    "lint": "eslint ."
   },
-  "engines": {"node": ">=18"}
+  "engines": {"node": ">=18"},
+  "devDependencies": {
+    "eslint": "10.1.0"
+  }
 }
