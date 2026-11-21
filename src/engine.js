@@ -4192,7 +4192,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.lightUp=(P.lightUp||0)+CFG.lvLight.up*n}
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
     /* 덱 시너지(일반 키워드 6종): 덱에서 그 키워드가 붙은 카드의 비율이 ratio 이상이면 작은 보너스가 켜진다 */
-    {const S_=CFG.deckSyn;P.deckSyn={};if(S_.on&&ch.deck&&ch.deck.length){for(const k of Object.keys(S_.kws)){const n=ch.deck.filter(id=>D.cards[id]&&((D.cards[id].kw||[]).some(x=>x[0]===k)||(k==='charge'&&D.cards[id].spend))).length;if(n>=((S_.mins||{})[k]||S_.min)&&n/ch.deck.length>=S_.ratio){P.deckSyn[k]=1;mindNote.push(`덱 시너지 · ${D.keywords[k].n} ${n}/${ch.deck.length}장 · ${S_.kws[k]}`)}}}}
+    {const S_=CFG.deckSyn;P.deckSyn={};if(S_.on&&ch.deck&&ch.deck.length){for(const k of Object.keys(S_.kws)){const n=ch.deck.filter(id=>D.cards[id]&&((D.cards[id].kw||[]).some(x=>x[0]===k)||(k==='charge'&&D.cards[id].spend))).length;if(n>=((S_.mins||{})[k]||S_.min)&&n/ch.deck.length>=S_.ratio){P.deckSyn[k]=1;{const vn_=k==='charge'&&CFG.sis.on&&((ch.sis&&ch.sis.fac==='rouge'&&ch.sis.assimDone)||(ch.sisDone&&ch.sisDone.fac==='rouge'));mindNote.push(vn_?`덱 시너지 · 혈맥 ${n}/${ch.deck.length}장 · 시작 혈맥 +${S_.chargeStart}`:`덱 시너지 · ${D.keywords[k].n} ${n}/${ch.deck.length}장 · ${S_.kws[k]}`)}}}}}
     P.trend=!!(CFG.sis.on&&ch.sis&&ch.sis.fac==='kaki'&&ch.sis.assimDone);
     /* 르루주·르누아르의 전투 규칙은 백화점에서 나온 뒤(2막)에도 이어진다. 르카키는 일반 상태로 돌아간다 */
     {const sd0=ch.sisDone,ft=(ch.sis&&ch.sis.fit)||(sd0&&sd0.fit)||0;P.fitTier=Math.min(CFG.sis.fit.maxTier,Math.floor(ft/CFG.sis.fit.per))}
