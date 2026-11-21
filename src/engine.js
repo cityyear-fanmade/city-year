@@ -2891,7 +2891,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(O.take){sv.order={id:O.id,color:O.color,pattern:O.pattern,shape:O.shape||null,until:sv.turn+Z.span};chips.push('주문 접수 · '+sisOrderText(sv.order)+` · 기한 ${Z.span}턴`)}}
     if(fx.sisPick){const z_=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],t_=z_.targets&&z_.targets[fx.sisPick];if(t_){sv.pickTurn=sv.turn;sv.pickFoe=t_.foe;sv.risk=fx.sisPick==='risk'}}
     if(fx.sisBFight)sv.st='bfight';
-    if(fx.sisBrideKill){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.brideKill=0;sv.foe=null;sv.falls=(sv.falls||0)+1;sv.st='done';sv.rew=(sv.rew||0)+1;sv.rewound=(sv.rewound||0)+1;chips.push(`신부가 나타나 한 번에 쓰러뜨렸다 · 시간이 1칸 되돌아갔다 · 기억은 그대로 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`)}
+    if(fx.sisBrideKill){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.brideKill=0;sv.foe=null;sv.falls=(sv.falls||0)+1;sv.st='done';sv.rew=(sv.rew||0)+1;sv.rewound=(sv.rewound||0)+1;chips.push(`이름 모를 것이 나타나 한 번에 쓰러뜨렸다 · 시간이 1칸 되돌아갔다 · 기억은 그대로 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`)}
     if(fx.sisFate){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.fateDone=1;sv.comply=Math.max(0,(sv.comply==null?5:sv.comply)-1);sv.falls=(sv.falls||0)+1;sv.st='done';sv.rew=(sv.rew||0)+CS.fateBack;sv.rewound=(sv.rewound||0)+CS.fateBack;chips.push(`운명 이탈 · 간수에게 쓰러졌다 · 시간이 ${CS.fateBack}칸 되돌아갔다 · 기억은 그대로 · 샘터에서 깨어났다 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`);sisLearn(ch,'warden',chips,false);ch.titles=ch.titles||[];const T_=D.sisyphus.fate.title;if(!ch.titles.includes(T_)){ch.titles.push(T_);(ch.titleLog=ch.titleLog||[]).push(T_);chips.push('칭호 · '+T_)}}
     if(fx.sisWarden){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.warden=0;sv.comply=Math.max((sv.comply==null?5:sv.comply)+1,CS.wardenComply+1);sv.falls=(sv.falls||0)+1;sv.st='done';chips.push(`간수에게 끌려갔다 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`);sisLearn(ch,'warden',chips,false)}
     if(fx.sisCs){sv.cs=fx.sisCs;if(fx.sisInq!=null)sv.inq=fx.sisInq;if(fx.sisInq===1)chips.push('고객센터 · 문의가 접수되었다')}
@@ -2964,10 +2964,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(!sv.wardenDone){
         if(sv.st==='wfight'){sv.st='day1';return {type:'fight',enemy:'sis_warden_final',enc:{hidden:true,label:'간수'}}}
         const W=Z.warden,R_=sv.red,v=sv.fac==='rouge'&&R_&&R_.alive?W.with:sv.fac==='noir'?W.noir:sv.fac==='kaki'?W.kaki:'';
-        return {type:'event',ev:{t:W.t,x:sv.wardenLost?W.retry:`${W.x}${v?'\n\n'+v:''}`,c:[{l:W.l,ok:{t:sv.wardenLost?W.okRetry:W.ok,fx:{sisWFight:1}}}]}}}
+        return {type:'event',ev:{t:W.t,x:`${W.x}${v?'\n\n'+v:''}\n\n${W.warn}`,c:[{l:W.l,ok:{t:W.ok,fx:{sisWFight:1}}}]}}}
       if(!sv.brideDone){   /* 1막 최종전: 모든 소속이 간수 → 신부 연전(여기서는 즉사하지 않는다) */
         if(sv.st==='bfight'){sv.st='day1';return {type:'fight',enemy:'sis_bride',enc:{hidden:true,label:'신부'}}}
-        const B_=Z.bride;return {type:'event',ev:{t:B_.t,x:sv.brideLost?B_.retry:B_.x,c:[{l:B_.l,ok:{t:sv.brideLost?B_.okRetry:B_.ok,fx:{sisBFight:1}}}]}}}
+        const B_=Z.bride;return {type:'event',ev:{t:B_.t,x:B_.x,c:[{l:B_.l,ok:{t:B_.ok,fx:{sisBFight:1}}}]}}}
       if(sv.cs===1){if(sisGrade(ch)>=4&&sv.fac!=='kaki')return {type:'event',ev:{t:Z.center.t,x:Z.center.x,c:Z.center.c.map(c=>({l:c.l,ok:{t:c.ok,fx:{sisCs:2,sisInq:c.inq}}}))}};sv.cs=2}
       return ev1(Z.exit.t,(sisGrade(ch)>=4&&sv.fac==='kaki'?Z.centerKaki+'\n\n':'')+Z.exit.x+(()=>{const R=sv.red,f=sv.fac;const k=f==='rouge'?sisRedKey(ch):f==='noir'?(R&&R.state==='slain'?'slain':'left'):null;return k&&Z.exitFac&&Z.exitFac[k]?'\n\n'+Z.exitFac[k]:''})(),Z.exit.l,{sisOut:1},'무너지는 층 사이로 한 걸음을 내딛는다.')}
     if(sv.st==='redfight'){sv.st='day2';return {type:'fight',enemy:'sis_red',enc:{hidden:true,label:'붉은 신'}}}
@@ -3065,7 +3065,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return null;
   }
   /* 사냥에서 지면(백화점 설정): 죽지 않고 샘터에서 깨어난다. 진행(그날)만 되돌리고 얻은 물건은 그대로, 안은 일부 잃는다 */
-  const sisCanRevive=G=>!!(G&&sisOn(G.ch)&&!G.ch.mindDead&&!G.ch.sunk&&!G.ch.distorted);
+  const sisCanRevive=(G,C)=>!!(G&&sisOn(G.ch)&&!G.ch.mindDead&&!G.ch.sunk&&!G.ch.distorted&&!(C&&CFG.sis.final.includes(C.id)));   /* 1막 최종전(간수·신부)은 백화점의 부활 규칙이 적용되지 않는다: 쓰러지면 부활할 수 없는 죽음 */
   function sisRevive(G,C){
     {const sv0=G.ch.sis,z0=sv0&&sv0.riskNow&&sv0.st==='craft'&&sv0.foe===C.id&&!sv0.lootDone&&D.sisyphus.zones.find(x=>x.id===sv0.pend);
       /* 위험 대상에게 졌을 때: 샘터로 돌아가지 않고 그 자리에서 물러선다. 재료는 절반만 챙기고 체력을 많이 잃는다(위험 보상 보너스는 없다) */
@@ -3073,7 +3073,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         const lc=[];sisLoot(ch,z0,lc,true);sv0.lootDone=true;sv0.lootNote=lc.join('\n');
         return {text:D.sisyphus.act.riskFall.x,chips:[`쓰러질 뻔했다 · 체력 ${ch.hp}`,...lc,'위험 대상에게 졌다 · 얻은 것은 절반뿐']}}}
     const ch=G.ch,sv=ch.sis,lost=Math.round(ch.money*CFG.sis.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CFG.sis.fallHp));
-    sv.falls=(sv.falls||0)+1;sv.st='day1';sv.lootDone=false;sv.back=null;if(C.id==='sis_red'&&sv.red){sv.red.fightDone=1;sv.red.state='left'}if(C.id==='sis_buffet'&&sv.red){sv.red.buffetDone=0;sv.red.hunger=6}if(C.id==='sis_trendy'&&(sv.exStep||0)<3)sv.trendLost=1;if(C.id==='sis_warden_final')sv.wardenLost=1;if(C.id==='sis_bride')sv.brideLost=1;
+    sv.falls=(sv.falls||0)+1;sv.st='day1';sv.lootDone=false;sv.back=null;if(C.id==='sis_red'&&sv.red){sv.red.fightDone=1;sv.red.state='left'}if(C.id==='sis_buffet'&&sv.red){sv.red.buffetDone=0;sv.red.hunger=6}if(C.id==='sis_trendy'&&(sv.exStep||0)<3)sv.trendLost=1;
     const lc=[];if(C.id==='sis_buffet')lc.push(D.sisyphus.red.buffetLose);sisLearn(ch,'fall',lc,false);return {text:D.sisyphus.act.fall.x,chips:[...lc,`샘터에서 깨어났다 · 체력 ${ch.hp}`,lost?`안 ${lost} 잃었다`:'잃은 것은 없다','얻은 물건은 그대로 남아 있다']};
   }
   /* 백화점 안에서는 해가 바뀌어도 일반 사건 대신 조용히 지나가고, 다음 하루가 시작된다 */
@@ -4990,7 +4990,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
     if(E.passive&&E.passive.id==='zena'&&E.zCharge&&E.hp<=0)E.hp=1;   // 충전 중에는 어떤 피해로도 쓰러지지 않는다
     ampUse(C,L);
     if(P.hp<=0&&!C.ch.mindDead&&C.ch.infinite&&C.ch.pact&&pactN(C.ch,'rewind')&&!C.pactRewound){C.pactRewound=1;P.hp=Math.max(1,Math.min(P.maxHp,Math.round(P.maxHp*pactV(C.ch,'rewind'))));L('kw',`  ${P.name} · 되감기 · HP ${P.hp}로 일어난다`)}
-    if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0&&E.passive&&E.passive.id==='lkGenesis'&&(E.reborn||0)<E.passive.times){E.reborn=(E.reborn||0)+1;E.hp=Math.round(E.maxHp*E.passive.back);E.bleed=0;E.rupture=0;E.harpoon=0;L('kw',`${E.name} · 쓰러진 줄 알았던 몸이 호수에서 다시 일어선다 · HP ${E.hp}`)}else if(E.trait==='bride'&&!E.p2&&E.hp<=1){E.p2=1;E.name='????';E.hp=E.maxHp;E.bleed=0;E.rupture=0;E.harpoon=0;L('kw','신부 · 베일이 벗겨진다 · ???? · HP 가득')}else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
+    if(P.hp<=0||C.ch.mindDead)C.over='lose';else if(E.hp<=0&&E.passive&&E.passive.id==='lkGenesis'&&(E.reborn||0)<E.passive.times){E.reborn=(E.reborn||0)+1;E.hp=Math.round(E.maxHp*E.passive.back);E.bleed=0;E.rupture=0;E.harpoon=0;L('kw',`${E.name} · 쓰러진 줄 알았던 몸이 호수에서 다시 일어선다 · HP ${E.hp}`)}else if(E.trait==='bride'&&!E.p2&&E.hp<=1){E.p2=1;E.name='????';E.hp=E.maxHp;E.bleed=0;E.rupture=0;E.harpoon=0;L('kw','신부 · 베일이 벗겨진다 · ???? · HP 가득');brideHold(C)}else if(E.hp<=0)C.over='win';else if(E.passive&&E.passive.id==='trial'&&C.round>=E.passive.rounds)C.over='win';
   }
   /* K사 엠플: 살아 있고 HP가 최대 HP의 belowPct 이하이면 자동으로 쓴다 (한 번에 1개, 전투당 제한 없음) */
   /* HP를 잃는다. 플레이어가 한 번에 쓰러질 피해(공격·출혈·화상·고정 피해 모두)를 받으면, 쓰러지기 전에 K사 엠플이 먼저 쓰이고 받은 피해만큼 회복이 깎인다 (HP − 피해 + 회복) */
@@ -5002,6 +5002,16 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
     if(C.dotR!==C.round){C.dotR=C.round;C.dotT=0}
     if(x>fixed)x=Math.max(fixed,Math.min(x,Math.round(X.maxHp*K.cap)-C.dotT));
     C.dotT+=x;return x}
+  /* 신부 2단계 옹골참(원작 문장 예외 대사, 문구를 바꾸지 않는다): 변신 순간 첫 대사. 이후 HP가 70%·40%·15% 구간에 닿는 바로 그 순간(어떤 피해 경로든) 해당 대사를 순서대로 먼저 친다.
+     한 번에 여러 구간을 넘으면 대사를 모두 순서대로 친 뒤 남은 피해가 그대로 들어간다. 15% 대사 뒤에는 제한이 없다.
+     E.hp를 접근자로 바꿔 직접 피해·지속 피해·고정 피해가 모두 같은 규칙을 타게 한다. */
+  function brideHold(C){
+    const E=C.E,say=D.sisyphus.collapse.bride.say,H=CFG.sis.brideHold;let hp=E.hp,step=0;
+    const talk=i=>{if(C.quiet)return;const x=`${E.name} · ${say[i]}`;C.log.push({t:'kw',s:x});if(C.cur)C.cur.push({t:'kw',s:x})};
+    talk(0);
+    Object.defineProperty(E,'hp',{enumerable:true,configurable:true,get:()=>hp,set:v=>{
+      if(v<hp)while(step<H.length&&v<=Math.max(1,Math.ceil(E.maxHp*H[step])))talk(++step);
+      hp=v}});}
   function hpLoss(C,X,x,L){
     if(X.isP&&X.wx&&X.wx.survive&&!X.survUsed&&x>=X.hp&&!X.distorted){X.survUsed=true;X.hp=1;L('amp',`${X.name} · 바퀴 황제의 끈질김 · 치명적인 피해 ${x}를 HP 1로 버텼다`);return}
     if(X.isP&&X.ample>0&&x>=X.hp&&!X.distorted){
