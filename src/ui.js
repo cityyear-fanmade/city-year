@@ -1469,6 +1469,10 @@ export function startUI(E,app){
   const TITLE_REC=['흑수 필두','본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','의리를 지킨 자','의리를 찢은 자','끝내 갚지 않은 자','배신자를 갚은 자','허무를 넘어선 자','정리 요원장','열차를 내린 자','혈귀를 잠재운 자','특색',...(CFG.sis.on?['런웨이에 오르다']:[])];   // 시지프 백화점이 꺼져 있으면 기록실에 시지프 칭호를 보이지 않는다
   /* 기록실 힌트: 아직 열리지 않은 칭호와 엔딩이 어떤 길 끝에 있는지 짐작만 하게 한다 */
   const TITLE_HINT={'런웨이에 오르다':'시지프 백화점에서 런웨이에 오를 만한 옷을 완성한다','흑수 필두':'홍원에서 승계를 포기하고 흑수로 활동해 필두에 오른다','본부 직속':'협회 최고 자리에 올라 본부의 부름을 넘긴다','특이점 부서':'날개 임원에 오른 뒤 핵심 부서의 심사를 통과한다','상석':'손가락의 서열 맨 위에서 마지막 부름을 통과한다',[CFG.nWing.eastTitle]:'동쪽 외곽 출신으로 N사 날개에 들어가 끝까지 오른다','피의 왈츠':'인연과 함께 핏빛 존재와 맞선다','엄지를 넘어선 자':'엄지의 아랫 조직 끝에서 엄지에게 칼을 뽑는다','정해진 운명':'엄지의 가장 높은 이에게 맞섰다가 쓰러진다','곰과 범을 넘어선 자':'검계의 끝에서 본국의 칼을 마주한다','의리를 지킨 자':'중지의 동생이 되어 받은 장부를 갚고 큰누님의 여섯 대를 버틴다','배신자를 갚은 자':'큰형님이 되어 큰누님을 쓰러뜨린 뒤, 달아난 마티아스를 쫓는다','허무를 넘어선 자':'격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤, 하나가 된 무언가를 마주한다','의리를 찢은 자':'중지의 마지막 장부를 받아들이지 않고 찢는다','끝내 갚지 않은 자':'의리를 찢은 뒤 쫓아오는 중지의 사슬을 끊어낸다','특색':'해결사 1급에서 도시가 색을 불러 줄지 심사를 받는다'};
+  /* 1막 최종전(간수·신부)에서 쓰러진 경우의 종료 문구. 그 밖에는 null */
+  /* 시지프 캐릭터의 73년차 종료 화면: 일반 1막 문구 대신 시지프 전용 문구를 쓴다 */
+  const sis73=()=>!!(G&&G.ch&&G.ch.sisEnd&&!G.endless&&!G.infinite&&UI.endWin&&!UI.trueEnd&&!UI.oldEnd&&!UI.outEnd&&!UI.outerEnd&&!UI.overflowEnd&&!UI.crowEnd&&D.sisyphus&&D.sisyphus.act2End);
+  const finalDead=dt=>(dt&&dt.id&&CFG.sis.final.includes(dt.id)&&D.sisyphus&&D.sisyphus.collapse.dead[dt.id])||null;
   const END_HINT={gwmoth:'날개의 병기였던 몸이, 밤에 어울리는 모습으로 끝에서 군림한다',gwroach:'날개의 병기였던 몸이, 무너지지 않는 모습으로 끝에서 군림한다',gwfly:'날개의 병기였던 몸이, 무리를 이끄는 모습으로 끝에서 군림한다',gwhuman:'날개의 병기였던 몸이, 끝에서 사람으로 남는다',clawreturn:'머리의 명령을 끝까지 따른 발톱이 무언가를 가져온다',clawstay:'머리의 명령을 끝까지 따른 발톱이 무언가를 무너뜨린다',arbkeep:'균형을 맞추던 이가 얻은 것의 한쪽을 남기고 끝낸다',arbdown:'균형을 맞추던 이가 지운 뒤에 자리에서 내려온다',libstay:'도서관에 남은 사서의 끝',libclose:'도서관의 문을 닫는 사서의 끝',hermobey:'지령을 끝까지 따른 대행자의 끝',hermfree:'지령 없이 맞이하는 아침',crowsucceed:'복제체의 길 끝에 닿는다',crowrefuse:'복제체의 길 끝에서 돌아오지 못한다',wfree:'열차를 내리는 길이 있다',wrival:'열차 밖에서 제안이 온다',wstay:'열차에 남는 길이 있다',hwmaker:'가주를 세우고 문 밖을 지킨다',hwflee:'후보를 데리고 가문을 떠난다',hwlose:'붉은 누각의 등이 켜진다',hwhost:'선황충을 받아들이고 가주의 자리에 앉는다',hwfree:'선황충을 받아들이지 않고 가주의 자리에 앉는다',hwbreak:'흑수 부하의 재갈을 많이 모아 철함사를 친다',rcorp:'존재를 끝까지 증명한다',death:'어딘가에서 쓰러진다',mind:'정신력이 0이 된다',distort:'정신력이 한계에 닿아 몸이 뒤틀린다',win:CFG.years+'년을 끝까지 산다',true:'제 2막 마지막 등급을 넘는다',outer:'무한 모드에서 스스로 외곽에서 끝낸다',out_seal:'무한 모드에서 균열로 흘러드는 히든 보스를 모두 쓰러뜨린다',out_star:'무한 모드에서 이름난 상대를 아주 많이 이긴다',out_settle:'무한 모드에서 가족과 오래 산다',distwin:'뒤틀린 채로 '+CFG.years+'년을 넘긴다',old:'무한 모드에서 백 살을 넘겨 산다',blank:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 시작하고, 결혼하지 않은 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',blankwed:'출생 화면에서 "어떤 출생 보정도 없이 시작한다"를 눌러 아무것도 없이 시작하고, 결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',wed:'결혼한 채 '+CFG.years+'년을 채우고 제 2막으로 이어 가지 않고 끝낸다',lovekill:'뒤틀린 채 사랑하던 이에게 쓰러진다',overflow:''};
   /* 엔딩 힌트: 그 엔딩으로 이어지는 갈림길을 한 번이라도 지나치면, 소개 문구가 정확한 조건으로 바뀐다 */
   const END_EXACT={gwmoth:'G사 병기 출신으로 히든 장비를 3개 이상 먹어 왕족 인자를 깨우고 "나방 공주"를 고른 뒤, 73년차 "왕족의 자리에 앉는다"를 고른다',gwroach:'G사 병기 출신으로 히든 장비를 3개 이상 먹어 왕족 인자를 깨우고 "바퀴 황제"를 고른 뒤, 73년차 "왕족의 자리에 앉는다"를 고른다',gwfly:'G사 병기 출신으로 히든 장비를 3개 이상 먹어 왕족 인자를 깨우고 "파리 대왕"을 고른 뒤, 73년차 "왕족의 자리에 앉는다"를 고른다',gwhuman:'G사 병기 출신으로 73년차 "인간으로 남는다"를 고른다',clawreturn:'머리의 발톱 해금 출생으로 2막 끝까지 가서 지정사서들과 도서관 관장 아벨을 쓰러뜨리고, 종막에서 "도서관의 힘을 추출한다"를 고른다',clawstay:'머리의 발톱 해금 출생으로 2막 끝까지 가서 지정사서들과 도서관 관장 아벨을 쓰러뜨리고, 종막에서 "도서관을 파괴한다"를 고른다',arbkeep:'조율자 해금 출생으로 2막 끝까지 가서 지정사서들과 도서관 관장 아벨을 쓰러뜨리고, 종막에서 "도서관의 힘을 추출하고 한쪽을 남긴다"를 고른다',arbdown:'조율자 해금 출생으로 2막 끝까지 가서 지정사서들과 도서관 관장 아벨을 쓰러뜨리고, 종막에서 "도서관을 파괴하고 조율의 자리에서 내려온다"를 고른다',libstay:'도서관의 지정사서로 56년차부터 요동치는 붉은 책, 붉은 안개, 추출 통지서, 푸른 잔향, 검은 침묵, 총류의 층, 침묵의 오케스트라를 지나, 71년차 "응시자"에서 "추출을 받아들인다"를 고르고 73년차에 마지막 장을 덮는다',libclose:'도서관의 지정사서로 71년차 "응시자"에서 "추출을 막는다"를 고르고 바랄과 제나를 쓰러뜨린 뒤 73년차에 마지막 장을 덮는다',hermobey:'신탁대행자 · 헤르메스로 38년차 이후 "가족을 없애라"에서 "지령을 따른다"를 고르고, 제 2막 73년차 "같은 단말기"에서 뤼엔을 쓰러뜨린다.',hermfree:'신탁대행자 · 헤르메스로 "가족을 없애라"에서 "지령을 거부한다"를 고르거나 가족 지령을 거부하고, 거부 연전과 헤르메스의 자비를 받은 뒤 제 2막 73년차에 뤼엔을 쓰러뜨린다.',crowsucceed:'까마귀팀 복제체로 2막 끝(73년차)의 "처분 판정서를 쓰는 사람"에서 "총사령관의 자리를 잇는다"를 고르고 총사령관 니콜라이를 쓰러뜨린다.',crowrefuse:'까마귀팀 복제체로 2막 끝(73년차)의 "처분 판정서를 쓰는 사람"에서 "자리를 거부하고 사령관으로 남는다"를 고르고 총사령관 니콜라이를 쓰러뜨린다.',wfree:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "퇴직 서류에 서명한다"를 고른다.',wrival:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "웨이페어러 컴퍼니의 제안을 받는다"를 고른다.',wstay:'W사에서 열차 직원을 고르고, 제 2막(무한 모드)의 "열차에서 내릴 수 있다면"에서 "서류를 접어 서랍에 넣는다"를 고른다. ("조금 더 생각해 본다"는 5년 뒤 같은 서류가 다시 온다.)',
@@ -1507,10 +1511,6 @@ export function startUI(E,app){
     const ids=Object.keys(D.enemies).filter(id=>/^lake_(ywhale|whale|indigo)/.test(id));
     if(!ids.length||!(r.births||[]).concat(r.seen).some(x=>x==='대호수로 나간 자'||/^lake_/.test(x)))return '';
     const rows=(list,title)=>`<div><span class="small dim">${title}</span><div class="stack" style="gap:6px">${list.map(id=>{const e=D.enemies[id],seen=r.seen.includes(id),won=r.beaten.includes(id);
-  /* 1막 최종전(간수·신부)에서 쓰러진 경우의 종료 문구. 그 밖에는 null */
-  /* 시지프 캐릭터의 73년차 종료 화면: 일반 1막 문구 대신 시지프 전용 문구를 쓴다 */
-  const sis73=()=>!!(G&&G.ch&&G.ch.sisEnd&&!G.endless&&!G.infinite&&UI.endWin&&!UI.trueEnd&&!UI.oldEnd&&!UI.outEnd&&!UI.outerEnd&&!UI.overflowEnd&&!UI.crowEnd&&D.sisyphus&&D.sisyphus.act2End);
-  const finalDead=dt=>(dt&&dt.id&&CFG.sis.final.includes(dt.id)&&D.sisyphus&&D.sisyphus.collapse.dead[dt.id])||null;
       return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${seen?'':' dim'}"${won?` style="color:${e.color};border-color:${e.color}"`:''}>${seen?esc(e.n)+(won?' ✓':''):'???'}</span><span class="small dim">${won?(e.drop?esc(e.drop.e):'쓰러뜨렸다'):seen?'아직 이기지 못했다':'아직 만나지 못했다'}</span></div>`}).join('')}</div></div>`;
     const y=ids.filter(id=>/^lake_ywhale/.test(id)),w=ids.filter(id=>/^lake_whale/.test(id)),o=ids.filter(id=>/^lake_indigo/.test(id));
     return `<div class="panel stack" style="gap:8px"><span class="eyebrow">대호수 도감 · 대재앙 ${w.filter(id=>r.beaten.includes(id)).length}/${w.length} · 어린 고래 ${y.filter(id=>r.beaten.includes(id)).length}/${y.length}</span>${rows(w,'대재앙')}${rows(y,'보스급 고래')}${rows(o,'그 밖에')}</div>`
@@ -2411,6 +2411,7 @@ ${symRec(r)}
   /* 호수 출생의 엔딩 말투: 도시 대신 호수·항구 */
   const cityN=()=>G&&G.ch&&G.ch.flags&&G.ch.flags.lake?'호수':'도시';
   function endLead(c,w){
+    if(w&&sis73())return D.sisyphus.act2End.lead;
     if(c.flags&&c.flags.lake&&!c.job){
       if(!w)return c.title?'칭호는 남았지만, 그 이름을 부를 사람은 이제 없다.':'이름을 부르는 사람은 없었다. 물결만 계속 뱃전을 두드렸다.';
       return c.title?`항구는 이제 당신을 "${esc(c.title)}"(이)라고 부른다. 부두의 선원들이 그 이름을 입에 올린다.`:'항해 일지에 마지막 항해를 적었다. 호수는 여전히 그 자리에 있다.';
@@ -2449,7 +2450,6 @@ ${symRec(r)}
     const jp=(x,a,b)=>{const ch=String(x).replace(/[^가-힣]+$/,'').slice(-1).charCodeAt(0),f=ch>=0xAC00&&ch<=0xD7A3?(ch-0xAC00)%28:0;return x+(a==='으로'?(f&&f!==8?'으로':'로'):f?a:b)};
     const J={eun:x=>jp(x,'은','는'),eul:x=>jp(x,'을','를'),i:x=>jp(x,'이','가'),gwa:x=>jp(x,'과','와'),ro:x=>jp(x,'으로','로')};
     const E_=esc;
-    if(w&&sis73())return D.sisyphus.act2End.lead;
     P.push(`${J.eun(E_(nm))} ${(pl=>pl?pl.n+', ':'')(placeOf(c.o,c.r,c.blank))}${J.ro(E_(c.o.n))} 태어났다. ${J.eul(E_(c.t.n))} 타고났고, ${J.eul(E_(c.f.n))} 짊어진 채, ${J.eul(E_(c.w.n))} 손에 쥐고 이 ${c.flags&&c.flags.lake?'호수의 부두':'도시의 골목'}에 섰다.`);
     /* 데이터의 '을(를)' 같은 표기를 앞 글자 받침에 맞춰 한 가지로 */
     const fixJosa=t=>t.replace(/([가-힣])(은\(는\)|을\(를\)|이\(가\)|과\(와\))/g,(m,ch,j)=>{const code=ch.charCodeAt(0)-0xAC00,f=code%28,pair={'은':['은','는'],'을':['을','를'],'이':['이','가'],'과':['과','와']}[j[0]];return ch+(f?pair[0]:pair[1])});
