@@ -335,7 +335,7 @@ export function startUI(E,app){
       if(!h)return;
       /* 새로 붙은 키워드는 그 칸 위에 잠깐 띄운다 */
       const pv=PREV[side];PREV[side]={...v};
-      if(pv)Object.keys(D.keywords).forEach((k,i)=>{const dlt=(v[k]||0)-(pv[k]||0);if(dlt>0)setTimeout(()=>floatTxt(side,`${D.keywords[k].n} +${dlt}`,kwc(k),'kwf'),120+i*160)});
+      if(pv)Object.keys(D.keywords).forEach((k,i)=>{const dlt=(v[k]||0)-(pv[k]||0);if(dlt>0)setTimeout(()=>floatTxt(side,`${k==='charge'&&X.rouge?'혈맥':D.keywords[k].n} +${dlt}`,kwc(k),'kwf'),120+i*160)});
       h.textContent=`HP ${v.hp}/${X.maxHp}`;
       $('bar-'+side).firstElementChild.style.width=clamp(v.hp/X.maxHp*100,0,100)+'%';
       {const en=$('ent-'+side);if(en)en.classList.toggle('danger',isDanger(v.hp,X.maxHp))}
@@ -511,10 +511,10 @@ export function startUI(E,app){
   /* 걸려 있는 키워드: 수치와 다음에 일어날 일을 같이 보여 준다 */
   const KWHINT={obey:n=>`내 명중 −${n*CFG.hw.obey.hit} · 흑수 부하가 거들 때마다 −1 · 흑수여, 답하라는 전부 푼다`,nail:n=>'망치 카드가 쌓인 못을 흐트러짐으로 바꾼다',stagger:n=>{const st=CFG.nail.stages.filter(g=>n>=g.at).pop(),thr=C&&C.E?E.nailThr(C):CFG.nail.stun.mid;return `기절 ${n}/${thr}${st?` · 명중 −${st.hit}${st.dmg?` · 주는 피해 −${st.dmg}`:''}${st.take?` · 받는 피해 +${st.take}`:''}`:''}`},burn:n=>`라운드 끝에 스택×${CFG.burn.dmg} 피해(내가 받으면 ×${CFG.burn.dmgMe}) · 스택 절반 · 최대 ${CFG.burn.max}`,charge:n=>`쓰면 소모 · 맞으면 −${G&&G.ch&&C&&C.P?C.P.chargeLoss:1}`,ink:n=>`라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반이 된다 (최대 ${CFG.ink.cap})`,sink:n=>`주는 피해 −${Math.floor(n/CFG.sink.per)*CFG.sink.dmg} · 명중 −${CFG.sink.hit*Math.floor(n/CFG.sink.per)} (${CFG.sink.per}당 1단계 · 라운드마다 −1)`,flame:n=>n>=CFG.laev.blueAt?`받는 피해 ×${CFG.laev.blueMul}`:`받는 피해 ×1.5 · ${CFG.laev.blueAt}스택이면 푸른 화염`,bleed:n=>`공격할 때 −${n}`,rupture:n=>`맞을 때 +${n}`,breath:n=>n>=1&&n<=CFG.breath.evaMax?`회피 +${CFG.breath.eva}`:`치명 ${E.critPct(n)}%`};
   function stacks(X){
-    const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?'푸른 화염':D.keywords[k].n} ${X[k]}</b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?`<small>받는 피해 ×${X.blueM||CFG.laev.blueMul} · 라운드마다 ${X[k]*(X.blueD||CFG.laev.blueDot)}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
+    const out=Object.keys(D.keywords).filter(k=>X[k]>0).map(k=>`<span class="chip stk" style="--kc:${kwc(k)}"><b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?'푸른 화염':(k==='charge'&&X.rouge?'혈맥':D.keywords[k].n)} ${X[k]}${k==='charge'&&X.rouge?'/'+X.chargeCap:''}</b>${k==='flame'&&(X.blue||X[k]>=CFG.laev.blueAt)?`<small>받는 피해 ×${X.blueM||CFG.laev.blueMul} · 라운드마다 ${X[k]*(X.blueD||CFG.laev.blueDot)}</small>`:KWHINT[k]?`<small>${KWHINT[k](X[k])}</small>`:''}</span>`);
     if(X.vt>0)out.push(`<span class="chip stk" style="--kc:#8e5fc7"><b>뱀의 장벽 ${X.vt}/${CFG.serpent.max}</b><small>환영난무 빛 −${X.vt} · 피해 +${X.vt}</small></span>`);
     if(X.noir&&X.rule)out.push(`<span class="chip stk" style="--kc:#6b6f86"><b>규율</b><small>${CFG.sis.noir.rules[X.rule]} · 지키면 보호막 +${CFG.sis.noir.keep} · 충전 +${CFG.sis.noir.charge} · 다음 라운드 피해 +${CFG.sis.noir.order}${X.order?' · 지금 정돈 중':''}</small></span>`);
-    if(X.rouge)out.push(`<span class="chip stk" style="--kc:var(--bleed)"><b>맥동 ${X.pulse?'켜짐':'멎음'}</b><small>${X.pulse?'공격 피해 +'+CFG.sis.rouge.dmg+' · 출혈 중인 상대를 맞히면 회복':'체력이 낮다'}</small></span>`);
+    if(X.rouge)out.push(`<span class="chip stk" style="--kc:var(--bleed)"><b>맥동 ${X.pulse?'켜짐':'멎음'}</b><small>${X.pulse?(pk=>`혈맥 ${X.charge||0}/${X.chargeCap} (최고 ${pk}) · 공격 +${Math.floor(pk/CFG.sis.rouge.vein.atk)+(X.fitTier||0)} · 보호막 +${Math.floor(pk/CFG.sis.rouge.vein.shield)} · 회복 ${CFG.sis.rouge.heal+Math.floor(pk/CFG.sis.rouge.vein.heal)}`)(Math.max(X.vPeak||0,X.charge||0)):'체력이 낮다 · 혈맥 보정이 꺼졌다'}</small></span>`);
     if(X.rnail>0)out.push(`<span class="chip stk" style="--kc:#9aa0a6"><b>박힌 못 ${X.rnail}</b><small>${CFG.sis.rouge.per}개마다 라운드 끝에 출혈 +1</small></span>`);
     if(X.trend)out.push(`<span class="chip stk" style="--kc:#8a8f5a"><b>관성 ${X.inertia||0}/${CFG.sis.inertia.cap}</b><small>${(X.inertia||0)>=CFG.sis.inertia.rush?'질주 · 속도 우위 명중 2배 · 피해 +'+CFG.sis.inertia.dmg:CFG.sis.inertia.rush+'에서 질주'}</small></span>`);
     if(X.stunned)out.push('<span class="chip stk" style="--kc:#b07cc6"><b>기절</b><small>이번 라운드 행동 불가 · 회피 0</small></span>');
@@ -529,7 +529,7 @@ export function startUI(E,app){
     return out.length?out.join(''):'<span class="chip dim">상태 없음</span>';
   }
   function kwChips(c){
-    return (c.kw||[]).map(([k,n,to])=>`<span class="chip" style="color:${kwc(k)};border-color:${kwc(k)}">${D.keywords[k].n} +${n}${to==='s'?' 자신':''}</span>`).join('');
+    return (c.kw||[]).map(([k,n,to])=>`<span class="chip" style="color:${kwc(k)};border-color:${kwc(k)}">${k==='charge'&&c.vein?'혈맥':D.keywords[k].n} +${n}${to==='s'?' 자신':''}</span>`).join('');
   }
   /* 보냐텔리 검술 등 카드 고유 효과 문구 */
   const cardFx=c=>[c.serum?'혈청 +'+c.serum+' (3이 쌓이면 적중 피해 ×1.5 후 비움)':'',c.serumBurst?'혈청을 모두 써서 1당 주사위 +1':'',c.seal?'적중 시 봉인 각인 +'+c.seal:'',c.unseal?'봉인 각인 1당 피해 +'+c.unseal+' (각인 소모)':'',c.dmark?'적중 시 처분 표식 +'+c.dmark:'',c.exec?'처분 표식이 있으면 주사위 +'+c.exec:'',c.execHit?'처분 표식이 있으면 명중 +'+c.execHit:'',c.grant?'처분 표식이 있으면 다음 라운드 '+D.cards[c.grant].n+' 카드':'',c.once?'이번 라운드만 쓰는 카드':'',c.gungnir?'이 카드를 낸 라운드는 받는 피해 60% 감소 (공명)':''].filter(Boolean).map(x=>' · '+x).join('');
@@ -544,7 +544,7 @@ export function startUI(E,app){
     if(c.gamble)return `${c.d} · 명중 ${sg(c.hit+(g?g.hit:0))}`;
     const x=[];
     if(c.adv)x.push('명중 2회 굴림');
-    if(c.spend)x.push(`충전 ${c.spend>=99?'전부':c.spend} 소모 · 1당 고정 +${c.fixPer}${c.hits>1?' (적중마다)':''}`);
+    if(c.spend)x.push(`${c.vein?'혈맥':'충전'} ${c.spend>=99?(c.vein?'최대 '+CFG.sis.rouge.vein.spendMax:'전부'):c.spend} 소모${c.fixPer?` · 1당 고정 +${c.fixPer}${c.hits>1?' (적중마다)':''}`:''}${c.spendShield?` · 1당 보호막 +${c.spendShield}`:''}${c.spendHeal?` · 1당 HP +${c.spendHeal}`:''}`);
     if(c.once)x.push('전투당 1회');
     if(c.harpoonPull)x.push(`작살을 모두 당겨 스택당 +${c.harpoonPull.per} 피해`);
     if(c.tremorBurst)x.push(`진동을 모두 터뜨려 스택당 +${c.tremorBurst.per} 피해 (화상이 있으면 ×${CFG.tremor.burnMul})`);
@@ -1024,7 +1024,7 @@ export function startUI(E,app){
       [K.ink.n,'ink',`라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.ink.cap}스택.`],
       [K.burn.n,'burn',`라운드가 끝날 때 스택당 ${CFG.burn.dmg} 피해(내가 받으면 ${CFG.burn.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.burn.max}스택. 적이 거는 화상은 쌓이는 양이 절반이다.`],
       [K.flame.n,'flame',`(레바테인 전용) 최대 ${CFG.stackCap}스택. 받는 피해 ×1.5, 라운드 끝에 1 감소. ${CFG.laev.blueAt}스택 이상이면 푸른 화염이 되어 받는 피해 ×${CFG.laev.blueMul}, 라운드 끝에 스택당 ${CFG.laev.blueDot} 피해를 주고 1 감소한다.`],
-      [K.charge.n,'charge',`자신에게 쌓는 스택. 기본 최대 ${CFG.charge.cap}스택(소속마다 다르다: R사 토끼팀 8, 순록·코뿔소팀 20). 카드가 정한 만큼 소모하면, 소모한 1당 고정 피해(피해 감소 무시, 보호막은 깎임)를 적중마다 더한다. 라운드가 바뀌어도 줄지 않고, 맞으면 줄어든다. 쌓이는 방식도 소속마다 다르다.`],
+      [K.charge.n,'charge',`자신에게 쌓는 스택. 기본 최대 ${CFG.charge.cap}스택(소속마다 다르다: R사 토끼팀 8, 순록·코뿔소팀 20). 카드가 정한 만큼 소모하면, 소모한 1당 고정 피해(피해 감소 무시, 보호막은 깎임)를 적중마다 더한다. 라운드가 바뀌어도 줄지 않고, 맞으면 줄어든다. 쌓이는 방식도 소속마다 다르다. 시지프의 르루주는 이 스택이 「혈맥」(최대 ${CFG.sis.rouge.vein.cap})이 되어, 맥동 중에 쌓인 만큼 공격 피해·라운드 시작 보호막·피 맛 회복이 늘고 맞아도 줄지 않는다.`],
       [K.melody.n,'melody',`음악 카드를 낼 때 자신에게 쌓는 스택. 최대 ${CFG.melody.cap}스택이고, 라운드가 바뀌어도 줄지 않는다. 화음 카드(화음·불협화음·종지)가 선율을 모두 소모하면서 그 타격의 피해에 선율 1당 +${CFG.melody.per}를 더한다. 선율이 3 이상이면 추가로 +${CFG.melody.t3}, 6 이상이면 추가로 +${CFG.melody.t6}. 선율이 최대(${CFG.melody.cap})일 때 터뜨리면 그 타격의 피해가 ${CFG.melody.t9}배가 된다.`],
       [K.sink.n,'sink',`상대에게 쌓는 스택. 최대 ${CFG.stackCap}스택. ${CFG.sink.per}스택마다 한 단계, 단계마다 침잠이 걸린 쪽의 명중 −${CFG.sink.hit} · 주는 피해 −${CFG.sink.dmg}. 라운드마다 1 줄어든다.`],
       [K.wspear.n,'wspear','쪽빛 노인의 작살(전용 무기)이 적중하면 상대에게 쌓인다. 최대 5스택. 스택 하나마다 상대가 입는 출혈 피해가 ×1.2로 곱해진다(5스택이면 약 ×2.5). 한 번의 싸움 동안 유지된다.'],
