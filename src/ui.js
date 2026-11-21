@@ -1508,6 +1508,8 @@ export function startUI(E,app){
     if(!ids.length||!(r.births||[]).concat(r.seen).some(x=>x==='대호수로 나간 자'||/^lake_/.test(x)))return '';
     const rows=(list,title)=>`<div><span class="small dim">${title}</span><div class="stack" style="gap:6px">${list.map(id=>{const e=D.enemies[id],seen=r.seen.includes(id),won=r.beaten.includes(id);
   /* 1막 최종전(간수·신부)에서 쓰러진 경우의 종료 문구. 그 밖에는 null */
+  /* 시지프 캐릭터의 73년차 종료 화면: 일반 1막 문구 대신 시지프 전용 문구를 쓴다 */
+  const sis73=()=>!!(G&&G.ch&&G.ch.sisEnd&&!G.endless&&!G.infinite&&UI.endWin&&!UI.trueEnd&&!UI.oldEnd&&!UI.outEnd&&!UI.outerEnd&&!UI.overflowEnd&&!UI.crowEnd&&D.sisyphus&&D.sisyphus.act2End);
   const finalDead=dt=>(dt&&dt.id&&CFG.sis.final.includes(dt.id)&&D.sisyphus&&D.sisyphus.collapse.dead[dt.id])||null;
       return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${seen?'':' dim'}"${won?` style="color:${e.color};border-color:${e.color}"`:''}>${seen?esc(e.n)+(won?' ✓':''):'???'}</span><span class="small dim">${won?(e.drop?esc(e.drop.e):'쓰러뜨렸다'):seen?'아직 이기지 못했다':'아직 만나지 못했다'}</span></div>`}).join('')}</div></div>`;
     const y=ids.filter(id=>/^lake_ywhale/.test(id)),w=ids.filter(id=>/^lake_whale/.test(id)),o=ids.filter(id=>/^lake_indigo/.test(id));
@@ -2447,6 +2449,7 @@ ${symRec(r)}
     const jp=(x,a,b)=>{const ch=String(x).replace(/[^가-힣]+$/,'').slice(-1).charCodeAt(0),f=ch>=0xAC00&&ch<=0xD7A3?(ch-0xAC00)%28:0;return x+(a==='으로'?(f&&f!==8?'으로':'로'):f?a:b)};
     const J={eun:x=>jp(x,'은','는'),eul:x=>jp(x,'을','를'),i:x=>jp(x,'이','가'),gwa:x=>jp(x,'과','와'),ro:x=>jp(x,'으로','로')};
     const E_=esc;
+    if(w&&sis73())return D.sisyphus.act2End.lead;
     P.push(`${J.eun(E_(nm))} ${(pl=>pl?pl.n+', ':'')(placeOf(c.o,c.r,c.blank))}${J.ro(E_(c.o.n))} 태어났다. ${J.eul(E_(c.t.n))} 타고났고, ${J.eul(E_(c.f.n))} 짊어진 채, ${J.eul(E_(c.w.n))} 손에 쥐고 이 ${c.flags&&c.flags.lake?'호수의 부두':'도시의 골목'}에 섰다.`);
     /* 데이터의 '을(를)' 같은 표기를 앞 글자 받침에 맞춰 한 가지로 */
     const fixJosa=t=>t.replace(/([가-힣])(은\(는\)|을\(를\)|이\(가\)|과\(와\))/g,(m,ch,j)=>{const code=ch.charCodeAt(0)-0xAC00,f=code%28,pair={'은':['은','는'],'을':['을','를'],'이':['이','가'],'과':['과','와']}[j[0]];return ch+(f?pair[0]:pair[1])});
@@ -2509,7 +2512,7 @@ ${symRec(r)}
     if(c.distForm)P.push(`육신은 뒤틀렸고, ${J.i(E_(c.distForm.n))} 이름이 되었다. 그래도 걸음은 멈추지 않았다.`);
     else if(c.ego)P.push(`마음이 무너지려던 순간 붙잡은 모양이 ${J.i(E_(c.ego.n||'E.G.O'))} 되어 곁에 남았다. 그것은 무기이기 전에 버틴 증거였다.`);
     if(c.o&&c.o.key==='librarian'){const n=(c.rt&&c.rt.guests)||0;P.push(`도서관의 지정사서로서 ${n}명의 손님을 책으로 남겼다. 초대장에 적힌 이름은 서가에 올랐고, ${w?'서가는 끝내 외곽으로 옮겨졌다.':'사서가 쓰러진 날 아벨은 그 이름이 적힌 책을 서가에 꽂았다. 책의 등급은 마지막 손님의 등급에 맞춰졌다.'}`)}
-    P.push(w?(tr?`${yr}년. 도시가 붙일 수 있는 가장 높은 이름을 넘어섰다. 발톱도, 조율자도 ${J.eul(E_(nm))} 막지 못했다. 끝이라고 부르던 자리 너머로 길은 이어져 있었다.`:`${yr}년. ${c.flags&&c.flags.lake?'호수는 해마다 깊어졌고':'도시는 해마다 시끄러웠고'} 해마다 조용해졌다. ${J.eun(E_(nm))} 그 소란 속에서 끝까지 서 있었다. 이야기는 여기서 한 막을 내린다.`):'');
+    P.push(w?(sis73()?D.sisyphus.act2End.p.replace('{y}',yr):tr?`${yr}년. 도시가 붙일 수 있는 가장 높은 이름을 넘어섰다. 발톱도, 조율자도 ${J.eul(E_(nm))} 막지 못했다. 끝이라고 부르던 자리 너머로 길은 이어져 있었다.`:`${yr}년. ${c.flags&&c.flags.lake?'호수는 해마다 깊어졌고':'도시는 해마다 시끄러웠고'} 해마다 조용해졌다. ${J.eun(E_(nm))} 그 소란 속에서 끝까지 서 있었다. 이야기는 여기서 한 막을 내린다.`):'');
     return P.filter(Boolean);
   }
   function kinLine(c,w,dt){
@@ -2583,7 +2586,7 @@ ${symRec(r)}
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),tr=w&&UI.trueEnd,df=c.distForm;
     /* 전투 중 E.G.O 개화·뒤틀림 이름을 정하기 전에 판이 끝났으면(전투에서 쓰러짐 등) 결과 화면에서 먼저 정한다 */
     if(c.namePend)return `<div class="stack" style="gap:12px"><div class="eyebrow">이야기를 끝내기 전에</div>${vNamePend()}</div>`;
-    return `<div id="endShot" class="stack" style="gap:12px"><div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow"${df?' style="color:#c25050"':''}>${UI.overflowEnd?'히든 엔딩 · 오버플로우':df?distEyebrow(w,tr,dt):UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':UI.oldEnd?'히든 엔딩 · 늙었다는 것은 살아남았다는 것':tr?'발톱과 조율자를 넘어섰다':blankEnd(c,w)?BLANK_END[blankEnd(c,w)][0]:w?CFG.years+'년을 살아냈다':dt&&dt.id==='hongru'?'홍원에 군주가 태어났다':dt&&dt.hunt&&G.ch.distForm?'당신은 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':cityN()+'는 당신을 기억하지 않는다'} · ${E.age(G)}세</div>
+    return `<div id="endShot" class="stack" style="gap:12px"><div class="stack" style="gap:8px;padding-top:12px"><div class="eyebrow"${df?' style="color:#c25050"':''}>${UI.overflowEnd?'히든 엔딩 · 오버플로우':df?distEyebrow(w,tr,dt):UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':UI.oldEnd?'히든 엔딩 · 늙었다는 것은 살아남았다는 것':tr?'발톱과 조율자를 넘어섰다':blankEnd(c,w)?BLANK_END[blankEnd(c,w)][0]:w?(sis73()?D.sisyphus.act2End.head:CFG.years+'년을 살아냈다'):dt&&dt.id==='hongru'?'홍원에 군주가 태어났다':dt&&dt.hunt&&G.ch.distForm?'당신은 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':cityN()+'는 당신을 기억하지 않는다'} · ${E.age(G)}세</div>
       <h1 style="color:${c.color}">${esc(c.name||careerLine(c))}</h1>
       ${c.name?`<div class="mono small" style="color:${c.color}">${careerLine(c)}</div>`:''}
       ${df?`<div><span class="chip" style="color:#c25050;border-color:#c25050">뒤틀림 · ${esc(df.n)}</span></div>`:''}
@@ -2606,7 +2609,7 @@ ${symRec(r)}
       ${vDailyCmp()}
       ${UI.symNew?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow">심볼 획득</span><p class="small">${esc(UI.symNew)} 심볼을 얻었다. 꾸미기에서 이름 앞에 달 수 있다.</p></div>`:''}
       ${UI.newOrigin?`<div class="panel stack" style="gap:6px;border-color:var(--gold)"><span class="eyebrow">출생 해금</span><p class="small">${esc(UI.newOrigin)} 출생을 이제 골라서 시작할 수 있다. 출생 화면의 '해금된 출생'에서 고른다.</p></div>`:''}
-      ${w&&!SISSHARE&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">제 1막 종료</span><p class="small">여기서 끝내도 된다. 제 2막이 시작되면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 제 2막의 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="endless">제 2막 시작</button></div>`:''}
+      ${w&&!SISSHARE&&!G.endless?`<div class="panel stack" style="gap:6px"><span class="eyebrow">${sis73()?D.sisyphus.act2End.panel.eye:'제 1막 종료'}</span><p class="small">${sis73()?D.sisyphus.act2End.panel.x.replace('{span}',X.span).replace('{grades}',X.grades.join(' → ')):`여기서 끝내도 된다. 제 2막이 시작되면 ${X.span}년마다 도시의 위협 등급이 오른다. ${X.grades.join(' → ')}. 마지막 등급을 넘기면 제 2막의 결말이다. 도중에 쓰러지면 거기까지가 기록이 된다.`}</p><button class="btn primary" data-a="endless">${sis73()?D.sisyphus.act2End.panel.btn:'제 2막 시작'}</button></div>`:''}
       ${w&&!SISSHARE&&UI.outEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">무한 모드 엔딩</span><p class="small">여기서 끝내도 된다. 계속 살아가면 무한 모드가 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
       ${w&&!SISSHARE&&UI.oldEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 엔딩</span><p class="small">여기서 끝내도 된다. 계속 살아가면 무한 모드가 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
       ${w&&!SISSHARE&&(UI.hwEnd||UI.rbEnd)&&G.endless&&!UI.trueEnd?`<div class="panel stack" style="gap:6px"><span class="eyebrow">이야기의 끝</span><p class="small">여기서 끝내도 된다. 계속 살아가면 제 2막이 이어진다. 도중에 쓰러지면 거기까지가 기록이 된다.</p><button class="btn primary" data-a="oldgo">계속 살아간다</button></div>`:''}
@@ -2632,7 +2635,7 @@ ${symRec(r)}
   const shHeadV=h=>/^#\d+$/.test(h)?(SHHEADS[+h.slice(1)]||h):h;
   const foeEnc=ids=>{const u=new Uint8Array(Math.ceil(SHFOES.length/8)),x=[];for(const id of ids){const i=SHFOES.indexOf(id);if(i>=0)u[i>>3]|=1<<(i&7);else x.push(id)}let m=u.length;while(m>0&&!u[m-1])m--;return u8b64(u.slice(0,m))+(x.length?'~'+x.join(','):'')};
   const foeDec=t=>{const [b,x]=String(t||'').split('~'),u=b?b64u8(b):new Uint8Array(0),o=[];for(let i=0;i<SHFOES.length;i++)if(u[i>>3]&(1<<(i&7)))o.push(SHFOES[i]);return o.concat(x?x.split(','):[])};
-  function shareHead(){const w=UI.endWin,dt=UI.death;return UI.overflowEnd?'오버플로우':UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)==='rcorp'?'나는 존재한다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'사랑하던 이의 손에':dt&&dt.id==='hongru'?'홍원에 군주가 태어났다':dt&&dt.cause==='distort'?'뒤틀렸다':cityN()+'는 나를 기억하지 않는다'}
+  function shareHead(){const w=UI.endWin,dt=UI.death;return UI.overflowEnd?'오버플로우':UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)==='rcorp'?'나는 존재한다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?(sis73()?D.sisyphus.act2End.head:CFG.years+'년을 살아냈다'):dt&&dt.hunt&&G.ch.distForm?'사랑하던 이의 손에':dt&&dt.id==='hongru'?'홍원에 군주가 태어났다':dt&&dt.cause==='distort'?'뒤틀렸다':cityN()+'는 나를 기억하지 않는다'}
   /* 링크에 담는 가족·일대기: 받는 쪽은 게임 상태가 없으니 글로 풀어 담는다 */
   const shPlain=t=>String(t).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
   function shFamily(c){
@@ -2694,7 +2697,7 @@ ${symRec(r)}
   /* 공유용 기록 글 */
   function shareText(){
     const c=G.ch,w=UI.endWin,dt=UI.death,X=CFG.endless,gi=E.gradeAt(G.year),lived=w?G.year:Math.max(0,G.year-1);
-    const head=UI.overflowEnd?'오버플로우':UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)==='rcorp'?'나는 존재한다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'나는 사랑하던 이의 손에 쓰러졌다':dt&&dt.id==='hongru'?'홍원에 군주가 태어났다':dt&&dt.cause==='distort'?'나는 뒤틀렸다':cityN()+'는 나를 기억하지 않는다';
+    const head=UI.overflowEnd?'오버플로우':UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)==='rcorp'?'나는 존재한다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?(sis73()?D.sisyphus.act2End.head:CFG.years+'년을 살아냈다'):dt&&dt.hunt&&G.ch.distForm?'나는 사랑하던 이의 손에 쓰러졌다':dt&&dt.id==='hongru'?'홍원에 군주가 태어났다':dt&&dt.cause==='distort'?'나는 뒤틀렸다':cityN()+'는 나를 기억하지 않는다';
     const foes=[...c.beaten,...(c.minis||[])].map(id=>D.enemies[id].n);
     const url=/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.href)?location.href.split('#')[0]:'https://cityyear-fanmade.github.io/city-year/';
     return [`[도시의 한 해] ${head}`,(c.name?`${c.name} · `:'')+careerLine(c).replace(/<[^>]*>/g,'')+(shTitle(c)?` · ${shTitle(c)}`:''),
@@ -2814,7 +2817,7 @@ ${symRec(r)}
     /* 너무 긴 글은 ' · ' 단위로 줄을 나눈다 (한 줄에 글자가 칸 밖으로 넘치지 않게) */
     const wrapW=(t,mx,f)=>{g.font=f;const out=[];let line='';for(const tk of String(t).split(' · ')){const tt=line?line+' · '+tk:tk;if(g.measureText(tt).width>mx&&line){out.push(line);line=tk}else line=tt}if(line)out.push(line);return out};
     const fit=(t,max,size,fam,weight)=>{let z=size;do{g.font=`${weight||''} ${z}px ${fam}`;z-=2}while(g.measureText(t).width>max&&z>20);return g.font};
-    const head=UI.overflowEnd?'오버플로우':UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)==='rcorp'?'나는 존재한다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?CFG.years+'년을 살아냈다':dt&&dt.hunt&&G.ch.distForm?'당신은 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':cityN()+'는 당신을 기억하지 않는다';
+    const head=UI.overflowEnd?'오버플로우':UI.outEnd?OUTEND[UI.outEnd][0]:UI.outerEnd?'외곽에서 이야기를 끝냈다':w&&UI.oldEnd?'늙었다는 것은 살아남았다는 것':w&&UI.trueEnd?'발톱과 조율자를 넘어섰다':blankEnd(G.ch,w)==='rcorp'?'나는 존재한다':blankEnd(G.ch,w)?'아무것도 없던 존재':w?(sis73()?D.sisyphus.act2End.head:CFG.years+'년을 살아냈다'):dt&&dt.hunt&&G.ch.distForm?'당신은 사랑하던 이의 손에 쓰러졌다':dt&&dt.cause==='distort'?'당신은 뒤틀렸다':cityN()+'는 당신을 기억하지 않는다';
     T_('도시의 한 해',W/2,140,`500 34px ${mono}`,gold,'center');
     T_(head,W/2,200,`600 36px ${serif}`,w?gold:'#c46a5a','center');
     const nm=c.name||careerLine(c).replace(/<[^>]*>/g,'').replace(/&amp;/g,'&');
@@ -2866,7 +2869,7 @@ ${symRec(r)}
   function vRecord(c,w,gi){
     const X=CFG.endless,lived=w?G.year:Math.max(0,G.year-1),mini=(c.minis||[]).map(id=>D.enemies[id].n);
     const grade=G.endless?(gi>=0?X.grades[gi]:'—'):'—';
-    const line=G.endless?(w?`${X.grades.length}개 위협 등급을 모두 넘겼다.`:`${grade} 등급에서 멈췄다.`):w?`${CFG.years}년을 끝까지 버텼다.`:lived>CFG.years?`${lived}년을 살았다.`:`${CFG.years}년 중 ${lived}년을 살았다.`;
+    const line=G.endless?(w?`${X.grades.length}개 위협 등급을 모두 넘겼다.`:`${grade} 등급에서 멈췄다.`):w?(sis73()?D.sisyphus.act2End.line.replace('{y}',G.year):`${CFG.years}년을 끝까지 버텼다.`):lived>CFG.years?`${lived}년을 살았다.`:`${CFG.years}년 중 ${lived}년을 살았다.`;
     return `<div class="panel stack" style="gap:6px"><span class="eyebrow">기록</span>
       <div class="row between"><span>산 햇수</span><b class="mono">${lived}년 · ${E.age(G)}세</b></div>
       ${G.endless?`<div class="row between"><span>도달한 위협 등급</span><b class="mono">${grade}</b></div>`:''}
