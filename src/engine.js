@@ -3118,7 +3118,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* ── 도서관 지정사서(R.guest): 해마다 초대장을 받은 손님이 온다. 손님 수(st.guests)로 도서관 위상(stages)이 오르고, 이기면 손님이 책(카드)이 된다 ── */
   const guestStage=(Z,n)=>{let i=0;Z.stages.forEach((s,k)=>{if(n>=s.at)i=k});return i};
   function guestPool(Z,S,ch){
-    const skip=Z.skip||[],hid=(S.ids||[]).filter(id=>D.enemies[id]&&!ch.beaten.includes(id)),tier=Object.keys(D.enemies).filter(id=>!skip.includes(id)&&(S.tiers||[]).includes(D.enemies[id].tier)&&!D.enemies[id].breach&&!D.enemies[id].quest);
+    const skip=Z.skip||[],hid=(S.ids||[]).filter(id=>D.enemies[id]&&!ch.beaten.includes(id)),tier=Object.keys(D.enemies).filter(id=>!skip.includes(id)&&!/^sis_/.test(id)&&(S.tiers||[]).includes(D.enemies[id].tier)&&!D.enemies[id].breach&&!D.enemies[id].quest);   /* 시지프 백화점 적(sis_*)은 일반 루트의 손님 풀에 섞이지 않는다 */
     return hid.length?hid:tier}
   /* 손님의 책: 손님의 덱에서 플레이어가 쓸 수 있는 카드(공격·방어·버프) */
   function guestBooks(id){return [...new Set((D.enemies[id].deck||[]).filter(c=>D.cards[c]&&['atk','def','buff'].includes(D.cards[c].t)&&!D.cards[c].fixed))]}
