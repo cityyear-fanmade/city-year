@@ -2733,12 +2733,12 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const S_=D.sisyphus,out=[];const mats=zone.mat;
     const fm=ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].mat,k=one(fm&&fm.length?fm:mats),LR=zone.loot||{lo:1,hi:2},n0=(LR.lo-1)+d(LR.hi-LR.lo+1)+((S_.lootGrade||[])[sisGrade(ch)]||0),n=half?Math.ceil(n0/2):n0;
     if(k==='soda'){const h=Math.round(ch.stats.maxHp*0.15);ch.hp=Math.min(ch.stats.maxHp,ch.hp+h);out.push(`정육 소다 · 체력 +${h}`)}
-    else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');const c=one(open);ch.sis.dyes.push(c.id);out.push(`염료(${c.n}) 1병`)}
+    else if(k==='dye'){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');const wt=open.flatMap(c=>c.lean?[c,c]:[c]),c=one(wt);ch.sis.dyes.push(c.id);out.push(`염료(${c.n}) 1병`)}
     else{const boss_=!half&&ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].tier==='boss',amt=k==='goldskin'?1+(sisGrade(ch)>=4?1:0)+(boss_?1:0):k==='goldthread'?n+(boss_?1:0):n;if(amt){sisMat(ch,k,amt);out.push(`${S_.mats[k].n} ${amt}`)}else out.push('황금가죽은 나오지 않았다')}
     const an=Math.ceil((CFG.sis.huntAn[sisGrade(ch)]||5)/(half?2:1));ch.money+=an;out.push(sisAn(an));
     {const fxs=!half&&ch.sis.foe&&D.enemies[ch.sis.foe]&&D.enemies[ch.sis.foe].extra;for(const fx_ of (fxs?[].concat(fxs):[]))if(d(100)<=fx_.pct){sisMat(ch,fx_.mat,1);out.push(`${S_.mats[fx_.mat].n} 1`)}}
     chips.push('사냥 · '+out.join(' · '));
-    if(!half&&d(100)<=CFG.sis.cardChance)offerPick(ch,ch.sis&&ch.sis.fac==='rouge'?D.rewards.filter(id=>!/^cg_/.test(id)):D.rewards,chips,'카드 보상');   /* 르루주의 충전은 혈맥이라 충전 카드(cg_)는 보상에서 뺀다 */
+    if(!half&&d(100)<=CFG.sis.cardChance)offerPick(ch,ch.sis&&(ch.sis.fac==='rouge'||ch.sis.fac==='noir')?D.rewards.filter(id=>!/^cg_/.test(id)):D.rewards,chips,'카드 보상');   /* 르루주·르누아르의 충전은 혈맥·보존이라 충전 카드(cg_)는 보상에서 뺀다 */
   }
   /* 재료 분류: 원단·가죽·실은 단계가 있고, 높은 단계부터 먼저 쓴다 */
   const sisCat=k=>D.sisyphus.cats[k]?D.sisyphus.cats[k].of:[k];
@@ -2762,7 +2762,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if((ch.sis.mat.trim||0)<trN)return {ok:false,why:'가공 재료가 모자라다'};
     if(ch.sis.cloth.length>=CFG.sis.clothMax)return {ok:false,why:'옷걸이가 가득 찼다'};
     const pk=spec.pick||{},uBase=sisPick(ch,sh.base,need,pk[sh.base]),uAll=uBase.concat(...Object.entries(sh.extra||{}).map(([k,n])=>sisPick(ch,k,n,pk[k]))),hi=sisHiOf(uAll),mul=sisMulOf(uBase),HQ=D.sisyphus.quality.hq,hqPct=HQ?Math.min(HQ.mulMax||0,(HQ.mulPer||0)*hi.length):0,price=Math.round(((sh.price*mul)+pt.add+(co.add||0)+tr.reduce((a,x)=>a+x.add,0))*(1+hqPct)),sum=sh.lean+co.lean+tr.reduce((a,x)=>a+x.lean,0);
-    return {ok:true,sh,pt,co,tr,need,price,mul,hq:hi.length,hqPct,uBase,lean:Math.sign(sum)};
+    return {ok:true,sh,pt,co,tr,need,price,mul,hq:hi.length,hqPct,uBase,lean:sum>=2?2:sum<=-2?-2:Math.sign(sum)};
   }
   function sisCraft(G,spec){
     const ch=G.ch;if(!sisOn(ch))return {ok:false,why:'백화점 안에서만 할 수 있다'};if(ch.sis.crafted)return {ok:false,why:'오늘은 이미 한 벌을 지었다'};const I=sisCraftInfo(ch,spec);if(!I.ok)return I;
@@ -2883,7 +2883,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(F.olp){sv.olN=(sv.olN||0)+1;if(sv.olN>=2){sv.ol=1;chips.push('원레그가 곁을 내주었다')}else chips.push('원레그의 독설이 한 마디 줄었다')}
       if(F.flag){sv[F.flag]=1;chips.push(F.flag==='ann'?'아네트가 곁에 남았다':F.flag==='pal'?'팔레트가 곁에 남았다':'곁에 남았다')}
       if(F.fit){sv.fit=Math.max(0,(sv.fit||0)+F.fit);chips.push(`단골 맞춤 ${F.fit>0?'+':''}${F.fit}`)}
-      if(F.dye){const open=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray');for(let q=0;q<F.dye;q++){const c=one(open);sv.dyes.push(c.id);chips.push(`염료(${c.n}) 1병`)}}
+      if(F.dye){const open0=sisColorsOpen(ch).filter(c=>c.id!=='gold'&&c.id!=='gray'),lp=F.dyeLean?open0.filter(c=>Math.sign(c.lean||0)===F.dyeLean):[],open=lp.length?lp:open0;for(let q=0;q<F.dye;q++){const c=one(open);sv.dyes.push(c.id);chips.push(`염료(${c.n}) 1병`)}}
       if(F.dyeUse){for(let q=0;q<F.dyeUse;q++)sv.dyes.shift();chips.push(`염료 ${F.dyeUse}병을 내놓았다`)}
       if(F.mat)for(const [k,n] of Object.entries(F.mat)){sisMat(ch,k,n);chips.push(`${D.sisyphus.mats[k].n} ${n}`)}
       if(F.hp){const h=Math.round(ch.stats.maxHp*F.hp);ch.hp=Math.max(1,ch.hp+h);chips.push(`체력 ${h>0?'+':''}${h}`)}}
@@ -4192,14 +4192,14 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const n=Math.floor((ch.lv||1)/CFG.lvLight.at);if(n>0)P.lightUp=(P.lightUp||0)+CFG.lvLight.up*n}
     if(P.wx&&P.wx.lightUp)P.lightUp=(P.lightUp||0)+P.wx.lightUp;
     /* 덱 시너지(일반 키워드 6종): 덱에서 그 키워드가 붙은 카드의 비율이 ratio 이상이면 작은 보너스가 켜진다 */
-    {const S_=CFG.deckSyn;P.deckSyn={};if(S_.on&&ch.deck&&ch.deck.length){for(const k of Object.keys(S_.kws)){const n=ch.deck.filter(id=>D.cards[id]&&((D.cards[id].kw||[]).some(x=>x[0]===k)||(k==='charge'&&D.cards[id].spend))).length;if(n>=((S_.mins||{})[k]||S_.min)&&n/ch.deck.length>=S_.ratio){P.deckSyn[k]=1;{const vn_=k==='charge'&&CFG.sis.on&&((ch.sis&&ch.sis.fac==='rouge'&&ch.sis.assimDone)||(ch.sisDone&&ch.sisDone.fac==='rouge'));mindNote.push(vn_?`덱 시너지 · 혈맥 ${n}/${ch.deck.length}장 · 시작 혈맥 +${S_.chargeStart}`:`덱 시너지 · ${D.keywords[k].n} ${n}/${ch.deck.length}장 · ${S_.kws[k]}`)}}}}}
+    {const S_=CFG.deckSyn;P.deckSyn={};if(S_.on&&ch.deck&&ch.deck.length){for(const k of Object.keys(S_.kws)){const n=ch.deck.filter(id=>D.cards[id]&&((D.cards[id].kw||[]).some(x=>x[0]===k)||(k==='charge'&&D.cards[id].spend))).length;if(n>=((S_.mins||{})[k]||S_.min)&&n/ch.deck.length>=S_.ratio){P.deckSyn[k]=1;{const vn_=k==='charge'&&CFG.sis.on&&((ch.sis&&ch.sis.fac==='rouge'&&ch.sis.assimDone)||(ch.sisDone&&ch.sisDone.fac==='rouge')),pn_=k==='charge'&&CFG.sis.on&&ch.sis&&ch.sis.fac==='noir'&&ch.sis.assimDone;mindNote.push(pn_?`덱 시너지 · 보존 ${n}/${ch.deck.length}장 · 시작 보존 +${S_.chargeStart}`:vn_?`덱 시너지 · 혈맥 ${n}/${ch.deck.length}장 · 시작 혈맥 +${S_.chargeStart}`:`덱 시너지 · ${D.keywords[k].n} ${n}/${ch.deck.length}장 · ${S_.kws[k]}`)}}}}}
     P.trend=!!(CFG.sis.on&&ch.sis&&ch.sis.fac==='kaki'&&ch.sis.assimDone);
     /* 르루주·르누아르의 전투 규칙은 백화점에서 나온 뒤(2막)에도 이어진다. 르카키는 일반 상태로 돌아간다 */
     {const sd0=ch.sisDone,ft=(ch.sis&&ch.sis.fit)||(sd0&&sd0.fit)||0;P.fitTier=Math.min(CFG.sis.fit.maxTier,Math.floor(ft/CFG.sis.fit.per))}
-    {const sd=ch.sisDone;P.rouge=!!(CFG.sis.on&&((ch.sis&&ch.sis.fac==='rouge'&&ch.sis.assimDone)||(sd&&sd.fac==='rouge')));P.noir=!!(CFG.sis.on&&((ch.sis&&ch.sis.fac==='noir'&&ch.sis.assimDone)||(sd&&sd.fac==='noir')));P.rougeWith=!!(P.rouge&&((ch.sis&&ch.sis.red&&ch.sis.red.alive)||(sd&&sd.red==='with')))}
+    {const sd=ch.sisDone;P.rouge=!!(CFG.sis.on&&((ch.sis&&ch.sis.fac==='rouge'&&ch.sis.assimDone)||(sd&&sd.fac==='rouge')));P.noir=!!(CFG.sis.on&&((ch.sis&&ch.sis.fac==='noir'&&ch.sis.assimDone)||(sd&&sd.fac==='noir')));P.pres=!!(CFG.sis.on&&ch.sis&&ch.sis.fac==='noir'&&ch.sis.assimDone);   /* 보존: 백화점 안의 르누아르만 */P.rougeWith=!!(P.rouge&&((ch.sis&&ch.sis.red&&ch.sis.red.alive)||(sd&&sd.red==='with')))}
     P.inkIds=ch.hw&&ch.hw.mission&&hwHave(ch).length?hwHave(ch).map(k=>'zp_'+k):null;
     P.rv=assocOf(ch)==='R사 날개'&&ch.rteam==='까마귀팀'?{t:CFG.raven.tiers.filter(n=>ch.deck.filter(id=>id.startsWith('rv_')).length>=n).length}:null;
-    {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;if(o==='W사 날개'){const fi_=ch.fi??-1;if(fi_>=4)P.chargeRound=4;else if(fi_>=2)P.chargeRound=3}P.chargeHit=CH.hit||0;P.chargeExp=CH.express||null;if(CH.start)P.charge=Math.min(P.chargeCap,(P.charge||0)+CH.start);P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}if(P.deckSyn&&P.deckSyn.charge)P.charge=Math.min(P.chargeCap,(P.charge||0)+CFG.deckSyn.chargeStart);if(P.rouge){P.chargeCap=CFG.sis.rouge.vein.cap;P.chargeLoss=0}   /* 르루주: 충전은 혈맥(최대 30, 맞아도 줄지 않고 소모로만 준다) */
+    {const o=assocOf(ch),CH=o&&(CFG.charge.orgs[o+(ch.rteam?'/'+ch.rteam:'')]||CFG.charge.orgs[o]);if(CH){P.chargeCap=CH.cap||P.chargeCap;P.chargeLoss=CH.loss??P.chargeLoss;P.chargeRound=CH.round||0;if(o==='W사 날개'){const fi_=ch.fi??-1;if(fi_>=4)P.chargeRound=4;else if(fi_>=2)P.chargeRound=3}P.chargeHit=CH.hit||0;P.chargeExp=CH.express||null;if(CH.start)P.charge=Math.min(P.chargeCap,(P.charge||0)+CH.start);P.spd+=CH.spd||0;P.spdBoost=CH.boost||null;P.spdBase=P.spd;P.pw=CH.power||null;P.wl=CH.wall||null;P.focus=CH.focus||null;P.armor=CH.armor||null;P.dmgB0=P.dmgB||0;P.defUp0=P.defUp||0;P.dr0=P.dr||0;P.lostN=0}}if(P.deckSyn&&P.deckSyn.charge)P.charge=Math.min(P.chargeCap,(P.charge||0)+CFG.deckSyn.chargeStart);if(P.rouge){P.chargeCap=CFG.sis.rouge.vein.cap;P.chargeLoss=0}if(P.pres){P.chargeCap=CFG.sis.noir.preserve.cap;P.chargeLoss=0}   /* 르루주: 충전은 혈맥(최대 30, 맞아도 줄지 않고 소모로만 준다) */
     /* 토벌 의뢰의 가족: 주인공이 뒤틀리기 전의 책장과 같은 카드를 쓰고, 능력치는 내 능력치의 배수 (특색급(최고 급수)은 mulTop, 그 밑은 mul) */
     if(e.kidHunt){const K=CFG.bond.hunt,m=(ch.kidFoeLv||0)>=K.topLv?K.mulTop:K.mul;
       E.maxHp=E.hp=Math.max(1,Math.round(P.maxHp*m));E.atk=Math.max(1,Math.round(P.atk*m));E.eva=Math.round(P.eva*m);E.spd=Math.round(P.spd*m);E.deck=(ch.preDistDeck&&ch.preDistDeck.length?ch.preDistDeck:ch.deck).filter(id=>D.cards[id]).slice()}
@@ -4236,7 +4236,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(C.ch.mind-cost>=Math.max(1,mindFloor(C.ch))){C.ch.mind-=cost;P.sm.rings++;const m={t:'kw',s:`망(望) ${P.sm.rings}망 · 정신력 −${cost} (지금 ${C.ch.mind}) · 주는 피해 +${Math.round((SM.dealShin+P.sm.rings*SM.dealRing)*100)}% · 명중 +${P.sm.rings*SM.ringHit}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}}
     P.evaPen=P.evaPenNext||0;P.evaPenNext=0;
     /* 르누아르 규율: 라운드마다 보호막이 저절로 생기고 규칙 한 줄이 정해진다. 지키면 보호막과 충전, 어기면 약한 반동 */
-    if(P.noir&&P.hp>0){const R=CFG.sis.noir;P.shield=Math.min(Math.max(CFG.shieldCap,P.shield||0),(P.shield||0)+R.shield+(P.fitTier||0));P.rule=one(Object.keys(R.rules));P.nAtk=0;P.nNon=0;P.nHeavy=0;const m={t:'kw',s:`${P.name} · 보존 · 보호막 +${R.shield} · 이번 라운드의 규율 · ${R.rules[P.rule]}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
+    if(P.noir&&P.hp>0){const R=CFG.sis.noir,ps_=P.pres?Math.floor((P.charge||0)/R.preserve.shield):0,sh_=R.shield+(P.fitTier||0)+ps_;P.shield=Math.min(Math.max(CFG.shieldCap,P.shield||0),(P.shield||0)+sh_);P.rule=one(Object.keys(R.rules));P.nAtk=0;P.nNon=0;P.nHeavy=0;const m={t:'kw',s:`${P.name} · 규율 · 보호막 +${sh_}${P.pres?` (보존 ${P.charge||0}/${P.chargeCap})`:''} · 이번 라운드의 규율 · ${R.rules[P.rule]}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     /* 르루주 맥동: 라운드마다 체력을 조금 내고 그 라운드의 공격 피해를 올린다(체력이 낮으면 멈춘다) */
     if(P.rouge&&P.hp>0){const R=CFG.sis.rouge,cost=Math.max(1,Math.round(P.maxHp*(P.rougeWith?R.costWith:R.cost)));P.pulse=P.hp>P.maxHp*R.minHp&&P.hp>cost;if(P.pulse)P.hp-=cost;const V=R.vein;if(P.pulse)P.charge=Math.min(P.chargeCap,(P.charge||0)+V.pulse);const vc=veinPeak(P),vsh=P.pulse?Math.floor(vc/V.shield):0;if(vsh>0)P.shield=Math.min(Math.max(CFG.shieldCap,P.shield||0),(P.shield||0)+vsh);const m={t:'kw',s:P.pulse?`${P.name} · 맥동 · 체력 −${cost} · 혈맥 +${V.pulse} (${P.charge}/${P.chargeCap}, 최고 ${vc}) · 공격 피해 +${Math.floor(vc/V.atk)+(P.fitTier||0)}${vsh>0?' · 보호막 +'+vsh:''}${P.rougeWith?' (붉은 신이 곁에 있어 덜 든다)':''}`:`${P.name} · 체력이 낮아 맥동이 멎었다`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     if(P.trend&&P.hp>0){P.trendKw=one(CFG.sis.trendKws);if(C.round>1)P.inertia=Math.max(0,(P.inertia||0)-CFG.sis.inertia.decay);const m={t:'kw',s:`${P.name} · 이번 라운드의 유행 · ${D.keywords[P.trendKw].n} (이 키워드가 +${CFG.sis.trendPlus} · 관성도 더 쌓인다) · 관성 ${P.inertia||0}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
@@ -4263,8 +4263,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(C.round>1)for(const X of [P,E])if(X.awl&&X.awlMark>0)X.awlMark=Math.max(0,X.awlMark-CFG.syn['밤의 송곳'].mark.decay);
     if(C.round>1)for(const X of [P,E])if(X.breath>0)X.breath=Math.max(0,X.breath-(X.blade?(X.bladeBoost&&X.synT>=2?0:CFG.syn['검계'].decay[X.synT]):(X.deckSyn&&X.deckSyn.breath&&C.round%2===0?0:CFG.breath.decay)));
     if(P.blade){const g=P.synT>=2?2:1;P.breath=Math.min(bcap(P),P.breath+g);if(!C.quiet){const m={t:'kw',s:`${P.name} · 호흡결 · 호흡 +${g} (지금 ${P.breath})`};C.log.push(m);C.cur.push(m)}}
-    {const cdOk=id=>!((D.cards[id].cd||0)&&((C.cdUntil||{})[id]||0)>C.round),dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))&&cdOk(id));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
+    {const cdOk=id=>!((D.cards[id].cd||D.cards[id].cdSpent||0)&&((C.cdUntil||{})[id]||0)>C.round),dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))&&cdOk(id));P.hand=sample(dk.length?dk:P.deck,CFG.hand)}
     if(P.form)P.hand=P.hand.map(id=>formId(id,P.form));
+    if(P.pres&&P.charge>=CFG.sis.noir.preserve.cap){const SP=CFG.sis.noir.preserve.special;P.hand=P.hand.map(id=>SP[id]||id)}   /* 보존 100: 지정 카드가 결정타 카드로 바뀐다 */
     if(P.handPlusNext){const dk=P.deck.filter(id=>!(D.cards[id].once&&(C.onceUsed||[]).includes(id))),ex=sample(dk.length?dk:P.deck,P.handPlusNext);P.hand=P.hand.concat(ex);P.handPlusNext=0}
     if(P.furiosoNext){P.hand.push('x_furioso');P.furiosoNext=false}
     if(P.furiosoBm){P.hand.push('bm_furioso');P.furiosoBm=false}
@@ -4389,8 +4390,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function autoPick(C){autoTri(C);autoForm(C);
     const P=C.P,low=P.hp/P.maxHp<0.35;
     if(C.E.passive&&C.E.passive.id==='zena'&&C.E.zShock)return [];   // 제나의 충격파가 닿는 라운드에는 자동 전투도 방어 자세(카드를 내지 않는다)를 취한다
-    const bad=P.bleed+P.rupture+(P.burn||0)+(P.flame||0),vs_=c=>c.spend&&P.rouge?Math.min(P.charge||0,Math.min(c.spend,CFG.sis.rouge.vein.spendMax))*((c.spendShield||0)*0.5+(c.spendHeal&&P.hp/P.maxHp<0.75?c.spendHeal*0.8:0)):0,score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5)+vs_(c):c.t==='buff'?vs_(c)+(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.shield||0)*0.5+(c.passNext||0)*0.4+(c.gain||0)*2-(c.hpCost||0)*0.3+(c.inkCall?9:0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
-      :c.hits*(c.dice*((c.die||6)+1)/2+c.b+(P.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(P.bonB&&BONA.has(c)?P.bonB:0))+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05+(c.spend?Math.min(P.charge||0,c.spend)*(c.fixPer||0)*c.hits:0)+(P.oracle&&P.starId&&c===D.cards[P.starId]?30:0)+(c.nailBurst&&C.E.nail>=Math.min(5,nailThr(C)-(C.E.stagger||0))?(C.E.nail||0)*2*c.nailBurst.mul+(c.nailBurst.add||0):0);
+    const bad=P.bleed+P.rupture+(P.burn||0)+(P.flame||0),vs_=c=>c.spend&&(P.rouge||P.pres)?(c.spendFull&&(P.charge||0)<c.spend?0:Math.min(P.charge||0,P.rouge?Math.min(c.spend,CFG.sis.rouge.vein.spendMax):c.spend)*((c.spendShield||0)*0.5+(c.spendHeal&&P.hp/P.maxHp<0.75?c.spendHeal*0.8:0))):0,score=c=>c.t==='def'?(low?8:c.selfHit?4:0.5)+vs_(c):c.t==='buff'?vs_(c)+(c.kw||[]).reduce((a,k)=>a+k[1]*1.5,0)+(c.shield||0)*0.5+(c.passNext||0)*0.4+(c.gain||0)*2-(c.hpCost||0)*0.3+(c.inkCall?9:0)+(c.heal&&P.hp/P.maxHp<0.75?c.heal*0.8:0)+(c.cleanseRand&&bad>0?c.cleanseRand*1.2:0)
+      :c.hits*(c.dice*((c.die||6)+1)/2+c.b+(P.yeji&&BONA.has(c)?CFG.odin.yeji:0)+(P.bonB&&BONA.has(c)?P.bonB:0))+(c.kw||[]).reduce((a,k)=>a+k[1]*2,0)+c.hit*0.05+(c.spend&&!(c.spendFull&&(P.charge||0)<c.spend)?Math.min(P.charge||0,c.spend)*(c.fixPer||0)*c.hits:0)+(P.oracle&&P.starId&&c===D.cards[P.starId]?30:0)+(c.nailBurst&&C.E.nail>=Math.min(5,nailThr(C)-(C.E.stagger||0))?(C.E.nail||0)*2*c.nailBurst.mul+(c.nailBurst.add||0):0);
     let best=[],bs=-1;
     for(let m=1;m<1<<P.hand.length;m++){
       const idx=P.hand.map((_,i)=>i).filter(i=>m>>i&1);
@@ -4475,7 +4476,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(to!=='s'&&A.kwCapUp&&A.kwCapUp[k])cap_+=A.kwCapUp[k];
       X[k]=Math.min(cap_,b4_+n);
       {const R_=RS_;const gn_=X[k]-b4_;if(R_&&gn_>0){if(A.isP){if(to==='s')R_.buff=(R_.buff||0)+gn_;else R_.debuff=(R_.debuff||0)+gn_}else if(X.isP&&to!=='s')R_.debuffTaken=(R_.debuffTaken||0)+gn_}}
-      L('kw',`  ${X.name}에게 ${k==='charge'&&X.rouge?'혈맥':D.keywords[k].n} +${n} (지금 ${X[k]}/${cap_}${b4_+n>cap_?` · 최대치라 실제 +${X[k]-b4_}`:''})`);
+      L('kw',`  ${X.name}에게 ${k==='charge'&&X.rouge?'혈맥':k==='charge'&&X.pres?'보존':D.keywords[k].n} +${n} (지금 ${X[k]}/${cap_}${b4_+n>cap_?` · 최대치라 실제 +${X[k]-b4_}`:''})`);
       if(k==='bleed'&&to!=='s'&&A.kuro)addCloud(A,L);
     }
   }
@@ -4634,6 +4635,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(!win&&g.self){A.hp=Math.max(1,A.hp-g.self);note+=` 반동 −${g.self}`}}
       if(gr&&gr.n)note+=` 등급${gr.n}`;
       if(A.noir&&A.order){dmg+=CFG.sis.noir.order;note+=` 정돈+${CFG.sis.noir.order}`}
+      if(A.pres&&A.isP){const nb=Math.floor((A.charge||0)/CFG.sis.noir.preserve.atk);if(nb>0){dmg+=nb;note+=` 보존+${nb}`}}
       if(A.rouge&&A.pulse){const rd=Math.floor(veinPeak(A)/CFG.sis.rouge.vein.atk)+(A.fitTier||0);if(rd>0){dmg+=rd;note+=` 맥동+${rd}${A.fitTier?' (단골 맞춤 '+A.fitTier+')':''}`}}
       if(A.trend&&(A.inertia||0)>=CFG.sis.inertia.rush){const rd=CFG.sis.inertia.dmg+(A.fitTier||0);dmg+=rd;note+=` 질주+${rd}${A.fitTier?' (단골 맞춤 '+A.fitTier+')':''}`}
       if(rk)note+=` 서열 강화(주사위+${rk.dice} 피해+${rk.b} 명중+${rk.hit})`;
@@ -4730,7 +4732,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
         if(T_){const r_=B.hp/B.maxHp;if(r_<=T_.from){const x=Math.min(T_.max,T_.base+(T_.from-Math.max(r_,T_.low))/(T_.from-T_.low)*(T_.max-T_.base));red+=x;tw=` 황혼`}}
         if(red>0){const x=Math.floor(dmg*red/100);if(x>0){dmg-=x;note+=`${tw} ${mdr?(B.midDr>=CFG.middle.dr[3]?'초근성 ':'근성 '):''}피해감소${Math.round(red)}%−${x}`}}}
       if(c.spdDice&&A.spd>=c.spdDice[0]){const x=rolls.length*c.spdDice[1];dmg+=x;note+=` 속도 ${A.spd} · 주사위 ${rolls.length}개 +${c.spdDice[1]}=+${x}`}
-      if(A.spent>0&&c.fixPer){const fp=c.fixPer+(A.focusOn?A.focus.fix:0),em=A.expOn?A.chargeExp.mul:1,x=Math.floor(A.spent*fp*em);dmg+=x;note+=` ${A.rouge?'혈맥':'충전'} ${A.spent}×${fp}${em>1?`×${em} 급행`:''}=고정 +${x}`}
+      if(A.spent>0&&c.fixPer){const fp=c.fixPer+(A.focusOn?A.focus.fix:0),em=A.expOn?A.chargeExp.mul:1,x=Math.floor(A.spent*fp*em);dmg+=x;note+=` ${A.rouge?'혈맥':A.pres?'보존':'충전'} ${A.spent}×${fp}${em>1?`×${em} 급행`:''}=고정 +${x}`}
       if(B.kuro&&B.black&&B.synT>=3){dmg=Math.max(1,Math.floor(dmg*CFG.syn['흑운회'].half));note+=' 흑운 ×'+CFG.syn['흑운회'].half}
       if(B.isP&&C.escort&&C.escort.kind==='guard'&&B.escortRound!==C.round&&dmg>1){B.escortRound=C.round;const Z=CFG.escort.guard,es=C.escort,pc=Math.min(Z.cutMax,Z.cut+Z.cutPer*es.lv,Math.max(0,CFG.drCap-(B.redPct||0))),x=Math.floor(dmg*pc/100);if(x>0){dmg-=x;note+=` ${es.name} 막아섬−${x}`}const cd=Z.counter+Z.counterPer*es.lv;A.hp=Math.max(0,A.hp-cd);L('dmg',`  ${es.name} · 수비 · ${A.name}에게 반격 ${cd}`)}
       if(B.passive&&B.passive.id==='lkLantern'&&(B.lights||0)>0){B.lights--;dmg=0;note+=` 빛 촉수가 부서졌다 (남은 ${B.lights})`}
@@ -4921,7 +4923,8 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       }
     }
     queue(C,pp,ep).forEach((st,i)=>{
-      C.step=i;const A=C[st.side],c=st.card;
+      C.step=i;const A=C[st.side];let c=st.card;
+      if(c.base&&A.isP&&A.pres&&(A.charge||0)<c.spend){L('kw',`${A.name} · ${c.n} · 보존이 모자라 일반 카드로 쓰였다 (${A.charge||0}/${c.spend})`);c=D.cards[c.base]}   /* 한 장이 보존 100을 쓰면 남은 결정타 카드는 일반 카드로 쓰인다 */
       if(c.next){const nx_=!A.isP&&A.zChain?zNext(A,c):c.next;if(A.isP)giveNext(A,c.next);else A.forceNext=nx_;L('sys',`${A.name} · ${c.n} · 다음 라운드 ${D.cards[nx_].n} 준비`)}
       if(A.isP&&c.t==='atk'&&(c.shield||c.lightNext)){if(c.shield){A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+c.shield);L('kw',`  ${A.name} · ${c.n} · 보호막 +${c.shield} (지금 ${A.shield})`)}if(c.lightNext){A.lightNext=(A.lightNext||0)+c.lightNext;L('kw',`  ${A.name} · ${c.n} · 다음 라운드 빛 +${c.lightNext}`)}}
       if(A.isP&&c.bloomGrant&&D.cards[c.bloomGrant]){A.bloomUses=(A.bloomUses||0)+1;L('sys',`  ${A.name} · 개화 ${A.bloomUses}회${A.bloomUses%CFG.bloom.every?` · ${CFG.bloom.every-A.bloomUses%CFG.bloom.every}회 더 쓰면 1회용 스킬`:''}`);if(A.bloomUses%CFG.bloom.every===0){giveNext(A,c.bloomGrant);L('sys',`  ${A.name} · ${c.n} · 다음 라운드 손패에 ${D.cards[c.bloomGrant].n} (1회용)`)}}
@@ -4943,10 +4946,11 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       /* 충전: 카드를 낼 때 spend만큼(있는 만큼) 소모하고, 소모한 충전 1당 fixPer의 고정 피해를 적중마다 더한다 */
       if(c.once&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.onceUsed=C.onceUsed||[]).push(id_)}
       if(c.cd&&A.isP){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.cdUntil=C.cdUntil||{})[id_]=C.round+c.cd+1}
-      A.focusOn=!!(A.focus&&A.charge>=A.focus.at);A.expOn=!!(A.chargeExp&&A.charge>=A.chargeExp.at);A.spent=0;if(c.spend&&A.charge>0){if(A.rouge)veinPeak(A);A.spent=Math.min(A.charge,(A.rouge?Math.min(c.spend,CFG.sis.rouge.vein.spendMax):c.spend)+(A.wx&&A.wx.edge?A.wx.edge.spend:0));A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · ${A.rouge?'혈맥':'충전'} ${A.spent} 소모 (남은 ${A.charge}${A.rouge?' · 보정은 최고 '+A.vPeak+' 그대로':''})`);if(A.rouge&&A.spent>0){if(c.spendShield){const sh_=A.spent*c.spendShield;A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+sh_);L('kw',`  ${A.name} · 혈맥으로 보호막 +${sh_} (지금 ${A.shield})`)}if(c.spendHeal){const h_=Math.min(A.maxHp-A.hp,A.spent*c.spendHeal);if(h_>0){A.hp+=h_;L('kw',`  ${A.name} · 혈맥으로 체력 +${h_}`)}}}}
+      A.focusOn=!!(A.focus&&A.charge>=A.focus.at);A.expOn=!!(A.chargeExp&&A.charge>=A.chargeExp.at);A.spent=0;if(c.spendFull&&A.isP&&A.pres&&A.charge<c.spend)L('kw',`${A.name} · ${c.n} · 보존이 모자라 기본 효과만 (${A.charge||0}/${c.spend})`);if(c.spend&&A.charge>0&&!(c.spendFull&&A.charge<c.spend)){if(A.rouge)veinPeak(A);A.spent=Math.min(A.charge,(A.rouge?Math.min(c.spend,CFG.sis.rouge.vein.spendMax):c.spend)+(A.wx&&A.wx.edge?A.wx.edge.spend:0));A.charge-=A.spent;L('kw',`${A.name} · ${c.n} · ${A.rouge?'혈맥':A.pres?'보존':'충전'} ${A.spent} 소모 (남은 ${A.charge}${A.rouge?' · 보정은 최고 '+A.vPeak+' 그대로':''})`);if((A.rouge||A.pres)&&A.spent>0){if(c.spendShield){const sh_=A.spent*c.spendShield;A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+sh_);L('kw',`  ${A.name} · ${A.pres?'보존':'혈맥'}으로 보호막 +${sh_} (지금 ${A.shield})`)}if(c.spendHeal){const h_=Math.min(A.maxHp-A.hp,A.spent*c.spendHeal);if(h_>0){A.hp+=h_;L('kw',`  ${A.name} · ${A.pres?'보존':'혈맥'}으로 체력 +${h_}`)}}}}
       if(A.isP&&c.mindGain){const g=gainMind(C.ch,c.mindGain);if(g)L('kw',`${A.name} · ${c.n} · 정신력 +${g} (${C.ch.mind})`)}
       if(c.t==='def'){A.defRound=C.round;if(c.dodgeCtr)A.dodgeCtr={r:C.round,dmg:c.dodgeCtr.dmg,max:c.dodgeCtr.max||3,n:0};if(c.egBrace){A.egBrace=C.round;A.egBraceN=c.egBrace+(A.mf&&c.egBraceMf||0)}cutStacks(A);if(c.kw)applyKw(A,A===C.P?C.E:C.P,c,L);if(c.charge)A.charge=Math.min(A.chargeCap,A.charge+c.charge);if(c.shield){const sh_=Math.max(0,Math.round((c.shield+(A.prescPlus||0))*(A.isP&&C.ch.infinite&&C.ch.pact?1-pactV(C.ch,'crack'):1)));A.shield=Math.min(Math.max(CFG.shieldCap,A.shield||0),(A.shield||0)+sh_);L('kw',`${A.name} · ${c.n} · 보호막 +${sh_} (지금 ${A.shield})`)}if(c.selfHit)A.passHit+=c.selfHit;const ev=Math.round(((c.eva||CFG.defBonus)+A.defUp+(A.prescPlus||0))*(A.isP&&C.ch.infinite&&C.ch.pact?1-pactV(C.ch,'crack'):1));A.evaB+=ev;if(c.lightNext)A.lightNext=(A.lightNext||0)+c.lightNext;L('sys',`${A.name} · ${c.n} · 이번 라운드 회피 +${ev}${c.lightNext?` · 다음 라운드 빛 +${c.lightNext}`:''}`);push({k:'def',side:A.uid,card:c});return}
       if(P.hp<=0||E.hp<=0)return;
+      if(c.cdSpent&&A.isP&&A.spent>0){const id_=Object.keys(D.cards).find(k=>D.cards[k]===c);if(id_)(C.cdUntil=C.cdUntil||{})[id_]=C.round+c.cdSpent+1}
       act(C,A,c,L,push);
       ampUse(C,L);
     });
@@ -4969,7 +4973,7 @@ if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B
       if(isBlue(X)&&X.hp>0){const x=X.flame*(X.blueD||CFG.laev.blueDot);hpLoss(C,X,x,L);X.flame--;L('dmg',`${X.name} · 푸른 화염 ${x} 피해 (남은 ${X.flame})`)}
       else if(X.flame>0&&!(X.isP&&X.laev==='open')&&!X.wsKeep)X.flame--;
       if(X.isP&&X.noir&&X.rule&&X.hp>0){const R=CFG.sis.noir,ok=X.rule==='few'?(X.nAtk||0)<=2:X.rule==='guard'?(X.nNon||0)>=1:(X.nHeavy||0)>=1;
-        if(ok){X.shield=Math.min(Math.max(CFG.shieldCap,X.shield||0),(X.shield||0)+R.keep);X.charge=Math.min(X.chargeCap,(X.charge||0)+R.charge);X.order=1;L('kw',`${X.name} · 규율을 지켰다 · 보호막 +${R.keep} · 충전 +${R.charge} · 다음 라운드 공격 피해 +${R.order}`)}
+        if(ok){X.shield=Math.min(Math.max(CFG.shieldCap,X.shield||0),(X.shield||0)+R.keep);if(X.pres)X.charge=Math.min(X.chargeCap,(X.charge||0)+R.charge);X.order=1;L('kw',`${X.name} · 규율을 지켰다 · 보호막 +${R.keep}${X.pres?` · 보존 +${R.charge}`:''} · 다음 라운드 공격 피해 +${R.order}`)}
         else{X.order=0;X.hp=Math.max(1,X.hp-R.recoil);L('kw',`${X.name} · 규율을 어겼다 · 반동 ${R.recoil}`)}X.rule=null}
       if(!X.isP&&(X.rnail||0)>=CFG.sis.rouge.per&&X.hp>0){const b=Math.floor(X.rnail/CFG.sis.rouge.per);X.rnail%=CFG.sis.rouge.per;X.bleed=(X.bleed||0)+b;L('kw',`${X.name} · 박힌 못이 벌어진다 · 출혈 +${b}`)}
       /* 화상: 라운드 끝에 스택만큼 피해, 그 뒤 스택은 keep 비율만 남는다 (내림) */
