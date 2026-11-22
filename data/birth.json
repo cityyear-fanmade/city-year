@@ -8740,8 +8740,6 @@
    ]
   },
   "taboo": {
-   "shop": false,
-   "shopInf": true,
    "noFight": false,
    "noBondMeet": true,
    "missions": [
