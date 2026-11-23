@@ -1376,6 +1376,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       else if(k==='fhide'){r.fh++;r.cnext=(ch.year||0)+CFG.hw.fleeGap;chips.push('이번 추격을 피했다 · 추격은 끝나지 않았다')}
       else if(k==='fend'){r.done=1;chips.push('추격이 끝났다')}
     }
+    if(fx.sisHint){ch.flags.sisHint=(ch.flags.sisHint||0)+fx.sisHint;chips.push(`금기 단서 ${ch.flags.sisHint}`)}
     if(fx.sisPre){const P=ch.sisP=ch.sisP||{step:1};P.step=fx.sisPre;if(fx.sisSubj)P.subj=fx.sisSubj;if(fx.sisPre===1)chips.push('N사의 금기에 흥미를 가졌다')}
     if(fx.sisEnter){const S_=D.sisyphus,ks=Object.keys(S_.subj),k=fx.sisEnter==='rand'?one(ks):fx.sisEnter;ch.sisP=null;if(ch.licensed){ch.licensed=false;ch.title=null;chips.push('해결사 자격 반납 · 시지프형을 선고받으면 해결사 일은 할 수 없다')}ch.sis={subj:k,turn:1,grade:0,rewound:0,lean:0,in:ch.year||0,pts:0,st:'day1',mat:{},dyes:[],cloth:[],fac:null,comply:5,rules:[],visited:[],rew:0,cycle:0,inv:[],exploreDone:false,red:null,walls:0};chips.push(S_.subj[k].v||S_.subj[k].t);chips.push('시지프형 선고 · 시지프 백화점에 갇힌다 · 고객 등급 토파즈')}
     if(fx.sisAssim){const Z=D.sisyphus.assim[fx.sisAssim];ch.sis.assimDone=1;if(Z.pack&&!ch.packOffer){ch.packOffer={n:Z.pack.n,cards:Z.pack.cards.slice(),passive:null,e:Z.pack.e,sis:fx.sisAssim};chips.push(`${Z.pack.n} · 덱을 바꿀지 고른다`)}else if(fx.sisAssim==='kaki')chips.push('유행 · 전투마다 유행하는 키워드가 바뀐다')
@@ -1581,7 +1582,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='wtrain')return !!ch.wtrain;
     if(req.startsWith('matstock>='))return (ch.matStock||0)>=+req.slice(10);
     if(req.startsWith('wfi:')){const [a,b]=req.slice(4).split('-').map(Number),i=ch.fi||0;return !!ch.wtrain&&i>=a&&i<=b}
-    if(req==='sisorigin')return !!(CFG.sis.on&&ch.o&&CFG.sis.origins.includes(ch.o.n)&&!ch.flags.sisIn&&!ch.flags.sisP);   // 시지프 백화점: 둥지 시민·둥지 노동자가 4년차 갈림길에서 N사의 규칙을 어길 수 있다 (조율자·발톱 쪽 금기와는 별개)
+    if(req==='sisorigin'||req==='sishand'){const base=!!(CFG.sis.on&&ch.o&&CFG.sis.origins.includes(ch.o.n)&&!ch.flags.sisIn&&!ch.flags.sisP),h2=(ch.flags.sisHint||0)>=CFG.sis.hintNeed;return base&&(req==='sishand'?h2:!h2)}   /* 금기 단서를 충분히 모은 사람에게는 '손을 댄다', 아니면 '흥미를 가진다' */   // 시지프 백화점: 둥지 시민·둥지 노동자가 4년차 갈림길에서 N사의 규칙을 어길 수 있다 (조율자·발톱 쪽 금기와는 별개)
     if(req==='licensed')return ch.licensed;
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
@@ -3095,6 +3096,11 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     /* 백화점에서 나온 뒤(밖 이야기 53~55, 2막 56~73)에도 일반 연례 사건·전투는 끼지 않고 시지프 사건만 나온다 */
     if(c&&c.sisEnd&&!c.sis&&c.sisDone&&!G.infinite&&(!CFG.sis.share||CFG.sis.act2)&&D.sisyphus&&G.year>=53&&G.year<=55+((D.sisyphus.act2||[]).length))return {type:'quiet',year:G.year};
     return null}
+  /* 시지프 진입 전 단서: 둥지 출신은 1년차에 N사의 금기에 의문을 품을지 정하고, 품었다면 2년차에 단서를 모은다. 3년차는 고정 전투, 4년차는 갈림길이다 */
+  function sisHintOffer(G){const ch=G.ch,H=D.sisyphus&&D.sisyphus.hintEv;if(!H||!CFG.sis.on||!ch.o||!CFG.sis.origins.includes(ch.o.n)||ch.flags.sisIn||ch.flags.sisP)return null;
+    const mk=Z=>({t:Z.t,x:Z.x,c:Z.c.map(c=>({l:c.l,h:c.h||undefined,ok:{t:c.t,fx:c.fx||{}}}))});
+    if(G.year===1&&!ch.flags.sisQ&&!ch.flags.sisNoQ)return mk(H.q);
+    if(G.year===2&&ch.flags.sisQ)return mk(H.clue);return null}
   function tabooOffer(G){const ch=G.ch,T_=D.taboo;if(!T_||!eastN(ch)||(ch.fi??0)<2||ch.flags.tbHunt||ch.flags.tbNo||ch.distForm)return null;const O=T_.offer;
     return {t:O.t,x:O.x,c:[{l:O.yes.l,h:O.yes.h,ok:{t:O.yes.t,fx:{flag:'tbHunt',tbJoin:1}}},{l:O.no.l,h:O.no.h,ok:{t:O.no.t,fx:{flag:'tbNo'}}}]}}
   const routeSt=ch=>ch.rt=ch.rt||{used:{},n:0};
@@ -3543,6 +3549,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     {const wv=webStep(G);if(wv)return wv}
     {const gv=gwStep(G);if(gv)return {type:'event',ev:gv}}
     {const te=tabooOffer(G);if(te)return {type:'event',ev:te}}
+    {const se=sisHintOffer(G);if(se)return {type:'event',ev:se}}
     {const sq=sisQuiet(G);if(sq)return sq}
     {const R_=routeOf(G.ch);if(R_&&!(G.infinite&&G.year>routeEnd())){const rf=routeFight(G,R_);if(rf)return rf;const rs=routeStep(G,R_);if(rs)return {type:'event',ev:rs}}}
     {const le=libInfEvent(G);if(le)return {type:'event',ev:le}}   // 도서관 지정사서의 무한 모드 손님
