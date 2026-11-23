@@ -535,8 +535,24 @@ export function startUI(E,app){
   /* 보냐텔리 검술 등 카드 고유 효과 문구 */
   const cardFx=c=>[c.serum?'혈청 +'+c.serum+' (3이 쌓이면 적중 피해 ×1.5 후 비움)':'',c.serumBurst?'혈청을 모두 써서 1당 주사위 +1':'',c.seal?'적중 시 봉인 각인 +'+c.seal:'',c.unseal?'봉인 각인 1당 피해 +'+c.unseal+' (각인 소모)':'',c.dmark?'적중 시 처분 표식 +'+c.dmark:'',c.exec?'처분 표식이 있으면 주사위 +'+c.exec:'',c.execHit?'처분 표식이 있으면 명중 +'+c.execHit:'',c.grant?'처분 표식이 있으면 다음 라운드 '+D.cards[c.grant].n+' 카드':'',c.once?'이번 라운드만 쓰는 카드':'',c.gungnir?'이 카드를 낸 라운드는 받는 피해 60% 감소 (공명)':''].filter(Boolean).map(x=>' · '+x).join('');
   function cardLine(c,g,wx){
+  /* 공격 카드의 설명줄이 자동으로 만들지 못하는 효과 필드들: 이 필드가 있으면 카드에 적힌 효과 설명(d)을 덧붙인다 */
+  const CARD_D_FIELDS=['markB','fixed','egoGrow','bloomGrant','needCloud','ignoreEva','pierce','fsDice','cloudGain','lightNext','erase','needLow','verdict','hermF','cleanseRand','hpCost','vt','vform','vtCost','serpentDmg','hz','spdRupt','ruptB','breathRupt','ruptBreath','shieldDmg','spdFinal','lowHpB','burnDmg','vs','vsTop','gain','wk','nextSwift','handPlus','bm','nailDmg','inertia'];
+  const CARD_D_DUP=[/^\(?\d+d\d+([+-]\d+)?\)?(씩)?$/,/^피해 [+-]?\d+(씩)?$/,/^(출혈|파열|호흡|화상|침잠|충전|못|진동|작살|고래작살|흐트러짐|수흔|선율|정렬|붉은 화염|공허한 순종) \+?\d+(씩)?$/,/^(두|세|네|다섯|여섯|일곱|여덟|아홉) 번( 공격| 찌른다| 베어)?$/,/^\+?\d+연타$/];
+  /* 공격 카드의 숨은 효과 한 줄: 위 필드가 있으면 d를, 없으면 필드 값으로 직접 만든다(상대 출혈 비례 피해 · 적중 회복 · 적중 보호막) */
+  function cardExtra(c){
+    if(c.mat||c.harvest||c.reuse)return '';   /* 이 경우는 d를 이미 덧붙인다 */
+    if(c.d&&CARD_D_FIELDS.some(f=>c[f]!==undefined&&c[f]!==false)){
+      /* d에는 주사위·고정 피해·키워드 칩·타수처럼 윗줄에 이미 나오는 조각도 섞여 있어, 그런 조각은 빼고 효과 설명만 덧붙인다 */
+      const t=c.d.split(' · ').filter(z=>!CARD_D_DUP.some(r=>r.test(z.trim()))).join(' · ');
+      if(t)return ' · '+t}
+    const h=c.hits>1?'매 적중마다':'적중하면',x=[];
+    if(c.bleedDmg)x.push(`상대의 출혈 스택 1당 피해 +${c.bleedDmg}`);
+    if(c.hitHeal)x.push(`${h} HP ${c.hitHeal} 회복`);
+    if(c.hitShield)x.push(`${h} 보호막 +${c.hitShield}`);
+    return x.length?' · '+x.join(' · '):'';
+  }
     if(c.t!=='atk')return (c.d||'')+cardFx(c);
-    return cardLine0(c,g,wx)+cardFx(c)+((c.mat||c.harvest||c.reuse)&&c.d?' · '+c.d:'')+(c.mindCost?` · 정신력 −${c.mindCost}`:'');
+    return cardLine0(c,g,wx)+cardFx(c)+cardExtra(c)+((c.mat||c.harvest||c.reuse)&&c.d?' · '+c.d:'')+(c.mindCost?` · 정신력 −${c.mindCost}`:'');
   }
   /* 타수가 있으면 '(한 타의 피해) × n타'로 적어 주사위 개수(2d6)와 타수가 헷갈리지 않게 한다 */
   const hx=(c,e)=>c.hits>1?`(${e}) × ${c.hits}타`:e;
