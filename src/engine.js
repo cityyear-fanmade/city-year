@@ -2904,7 +2904,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(F.hp){const h=Math.round(ch.stats.maxHp*F.hp);ch.hp=Math.max(1,ch.hp+h);chips.push(`체력 ${h>0?'+':''}${h}`)}}
     if(fx.sisOrder){const O=fx.sisOrder,Z=D.sisyphus.orders;sv.evDay=sv.turn;sv.orderNext=sv.turn+Z.every;sv.orderOffer=null;
       if(O.take){sv.order={id:O.id,color:O.color,pattern:O.pattern,shape:O.shape||null,until:sv.turn+Z.span};chips.push('주문 접수 · '+sisOrderText(sv.order)+` · 기한 ${Z.span}턴`)}}
-    if(fx.sisPick){const z_=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],t_=z_.targets&&z_.targets[fx.sisPick];if(t_){sv.pickTurn=sv.turn;sv.pickFoe=t_.foe;sv.risk=fx.sisPick==='risk'}}
+    if(fx.sisPick){const z_=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],t_=z_.targets&&z_.targets[fx.sisPick];if(t_){sv.pickTurn=sv.turn;sv.pickFoe=Array.isArray(t_.foe)?one(t_.foe):t_.foe;sv.risk=fx.sisPick!=='safe'}   /* foe가 목록이면 그중 하나를 무작위로(날실·씨실 바늘이) */}
     if(fx.sisBFight)sv.st='bfight';
     if(fx.sisBrideKill){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.brideKill=0;sv.foe=null;sv.falls=(sv.falls||0)+1;sv.st='done';sv.rew=(sv.rew||0)+1;sv.rewound=(sv.rewound||0)+1;chips.push(`이름 모를 것이 나타나 한 번에 쓰러뜨렸다 · 시간이 1칸 되돌아갔다 · 기억은 그대로 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`)}
     if(fx.sisFate){const lost=Math.round(ch.money*CS.fallLose);ch.money-=lost;ch.hp=Math.max(1,Math.round(ch.stats.maxHp*CS.fallHp));sv.fateDone=1;sv.comply=Math.max(0,(sv.comply==null?5:sv.comply)-1);sv.falls=(sv.falls||0)+1;sv.st='done';sv.rew=(sv.rew||0)+CS.fateBack;sv.rewound=(sv.rewound||0)+CS.fateBack;chips.push(`운명 이탈 · 간수에게 쓰러졌다 · 시간이 ${CS.fateBack}칸 되돌아갔다 · 기억은 그대로 · 샘터에서 깨어났다 · 안 ${lost} 잃었다 · 체력 ${ch.hp}`);sisLearn(ch,'warden',chips,false);ch.titles=ch.titles||[];const T_=D.sisyphus.fate.title;if(!ch.titles.includes(T_)){ch.titles.push(T_);(ch.titleLog=ch.titleLog||[]).push(T_);chips.push('칭호 · '+T_)}}
@@ -3040,7 +3040,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
           if(fe&&d(100)<=CS.floorChance){const okc=c=>(!c.needDye||sv.dyes.length>=c.needDye)&&(!c.needMat||Object.entries(c.needMat).every(([k,n])=>(sv.mat[k]||0)>=n)),miss=fe.c.filter(c=>!okc(c)).map(c=>`「${c.l}」은 ${[c.needDye?`염료 ${c.needDye}병`:'',...Object.entries(c.needMat||{}).map(([k,n])=>`${S_.mats[k].n} ${n}`)].filter(Boolean).join(' · ')}이(가) 있어야 고를 수 있다`);
           return {type:'event',ev:{t:fe.t,x:fe.x+(miss.length?'\n\n('+miss.join(' · ')+')':''),c:fe.c.filter(okc).map(c=>Object.assign({},c))}}}}}
       const z=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],bosses=z.foes.filter(f=>D.enemies[f].tier==='boss'),norm=z.foes.filter(f=>D.enemies[f].tier!=='boss');
-      if(z.targets&&sv.pickTurn!==sv.turn){const T_=z.targets,P_=S_.pick;return {type:'event',ev:{t:P_.t,x:`${z.n}\n\n${P_.x}\n한 번에 ${((z.loot||{lo:1}).lo+((S_.lootGrade||[])[sisGrade(ch)]||0)+sisXchPlus(ch,z))}~${((z.loot||{hi:2}).hi+((S_.lootGrade||[])[sisGrade(ch)]||0)+sisXchPlus(ch,z))}개`,c:[{l:T_.safe.n,h:`${P_.safeH}${sisFoeMats(T_.safe.foe)}`,ok:{t:T_.safe.x,fx:{sisPick:'safe'}}},{l:T_.risk.n,h:`${T_.risk.h||P_.riskH}${T_.risk.h?'':sisFoeMats(T_.risk.foe)}`,ok:{t:T_.risk.x,fx:{sisPick:'risk'}}}]}}}
+      if(z.targets&&sv.pickTurn!==sv.turn){const T_=z.targets,P_=S_.pick;return {type:'event',ev:{t:P_.t,x:`${z.n}\n\n${P_.x}\n한 번에 ${((z.loot||{lo:1}).lo+((S_.lootGrade||[])[sisGrade(ch)]||0)+sisXchPlus(ch,z))}~${((z.loot||{hi:2}).hi+((S_.lootGrade||[])[sisGrade(ch)]||0)+sisXchPlus(ch,z))}개`,c:[{l:T_.safe.n,h:`${P_.safeH}${sisFoeMats([].concat(T_.safe.foe)[0])}`,ok:{t:T_.safe.x,fx:{sisPick:'safe'}}},{l:T_.risk.n,h:`${T_.risk.h||P_.riskH}${T_.risk.h?'':sisFoeMats(T_.risk.foe)}`,ok:{t:T_.risk.x,fx:{sisPick:'risk'}}},...Object.entries(T_).filter(([k,t])=>k!=='safe'&&k!=='risk'&&!((sv.kills||{})[t.foe])).map(([k,t])=>({l:t.n,h:t.h||P_.riskH,ok:{t:t.x,fx:{sisPick:k}}}))]}}}   /* 위험·안전 말고 한 번만 상대하는 대상(5층 고객들): 처음 꺾기 전까지만 세 번째 선택지로 나온다 */
       const id=(z.targets&&sv.pickFoe)?sv.pickFoe:(bosses.length&&(!norm.length||d(100)<=CFG.sis.bossChance)?one(bosses):one(norm.length?norm:z.foes));
       sv.riskNow=!!(z.targets&&sv.pickFoe&&sv.risk);sv.pickFoe=null;
       sv.pend=z.id;sv.foe=id;sv.st='craft';sv.crafted=0;sv.lootDone=false;sv.skipHunt=0;
@@ -3890,7 +3890,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ev.web)xp=0;   // 거미집 턴은 경험치를 주지 않는다(40턴이 레벨 흐름을 흔들지 않게)
     const up=xp?gainXp(ch,xp):0;if(xp)chips.push('경험치 +'+xp);if(up)chips.push('레벨 업 · Lv '+ch.lv);
     if(fx.combatQ)ch.fightQ=fx.combatQ.slice();
-    let enc=fx.combat?encounter(ch,fx.combat):null;
+    let enc=fx.combat?encounter(ch,fx.combat==='sis_brand'&&ch.sisDone&&ch.sisDone.fac==='rouge'?'sis_brand2':fx.combat):null;   /* 르루주로 나온 판의 브랜드 매니저는 르루주 브랜드 디렉터 */
     if(ch.purge){enc={id:ch.purge};delete ch.purge;chips.push('숙청 · '+D.enemies[enc.id].n)}
     if(ch.lakeNow){const n_=ch.lakeNow;delete ch.lakeNow;enc={id:n_.id,roll:null,table:null,hidden:n_.hidden,label:n_.label}}
     if(enc&&enc.roll)chips.push(`조우 1d100 ${enc.roll} · ${D.enemies[enc.id].n}`);
