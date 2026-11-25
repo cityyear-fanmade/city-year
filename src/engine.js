@@ -1591,7 +1591,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(req==='wtrain')return !!ch.wtrain;
     if(req.startsWith('matstock>='))return (ch.matStock||0)>=+req.slice(10);
     if(req.startsWith('wfi:')){const [a,b]=req.slice(4).split('-').map(Number),i=ch.fi||0;return !!ch.wtrain&&i>=a&&i<=b}
-    if(req==='sisorigin'||req==='sishand'){const base=!!(CFG.sis.on&&ch.o&&CFG.sis.origins.includes(ch.o.n)&&!ch.flags.sisIn&&!ch.flags.sisP),h2=(ch.flags.sisHint||0)>=CFG.sis.hintNeed;return base&&(req==='sishand'?h2:!h2)}   /* 금기 단서를 충분히 모은 사람에게는 '손을 댄다', 아니면 '흥미를 가진다' */   // 시지프 백화점: 둥지 시민·둥지 노동자가 4년차 갈림길에서 N사의 규칙을 어길 수 있다 (조율자·발톱 쪽 금기와는 별개)
+    if(req==='sisorigin'||req==='sishand'){const base=!!(CFG.sis.on&&sisEligible(ch)&&!ch.flags.sisIn&&!ch.flags.sisP),h2=(ch.flags.sisHint||0)>=CFG.sis.hintNeed;return base&&(req==='sishand'?h2:!h2)}   /* 금기 단서를 충분히 모은 사람에게는 '손을 댄다', 아니면 '흥미를 가진다' */   // 시지프 백화점: 둥지 시민·둥지 노동자가 4년차 갈림길에서 N사의 규칙을 어길 수 있다 (조율자·발톱 쪽 금기와는 별개)
     if(req==='licensed')return ch.licensed;
     if(req==='unlicensed')return !ch.licensed;
     if(req.startsWith('noflag:'))return !ch.flags[req.slice(7)];
@@ -2300,7 +2300,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function testPreset(G,key){
     const ch=G.ch,setLv=n=>{ch.xp=xpFor(n);ch.lv=n},bonus=f=>{addStats(ch.stats,f);ch.hp=ch.stats.maxHp},year=y=>{G.year=y-1;ch.year=y-1};
     const mkBond=(y,killed)=>{ch.bond={st:killed?'lost':'married',route:'hermes',variant:0,name:'시험 인연',step:3,tries:1,love:3,since:y-12,next:y+4,saved:false,kids:[{n:'하늘',born:y-7,job:'assoc',told:true,dead:!!killed},{n:'이슬',born:y-3,job:'fixer',told:false,dead:!!killed}]};if(killed){ch.bond.hermKilled=true;ch.famLoss=2}};
-    if(key==='sis4'&&ch.o&&CFG.sis.origins.includes(ch.o.n)){setLv(6);bonus({maxHp:40,atk:4,eva:2,spd:1});year(4);return true}
+    if(key==='sis4'&&ch.o&&sisEligible(ch)){setLv(6);bonus({maxHp:40,atk:4,eva:2,spd:1});year(4);return true}
     if(key==='crow55'&&ch.o&&ch.o.key==='crow'){
       setLv(30);bonus({maxHp:70,atk:14,eva:7,spd:5});routeWeaponUp(ch,'crow',2);
       const R=routeOf(ch),st=routeSt(ch);st.n=4;st.mdone=(R.missions||[]).filter(m=>m.arc!=='cmd').map(m=>m.id);st.mAt=54;st.arc=null;
@@ -2729,6 +2729,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:Z.glitch.t,x:Z.glitch.gl.filter(g=>g.x).map(g=>g.x).join('\n'),gl:Z.glitch.gl,c:[{l:Z.glitch.a,h:'잃는 것은 없다',ok:{t:Z.glitch.at,fx:{}}}]}}
   /* ── 시지프 백화점 2단계: 이틀 사이클(첫째 날 사냥→제작, 둘째 날 판매) · 구역 해금 · 재단대 · 거래 ──
      해마다 free 사건으로 이어지고(sisFree), 하루가 끝나면 해가 넘어간다. 상태는 ch.sis.st: day1 → hunt → craft → day2 → done (거래는 trade) */
+  /* 시지프 백화점에 들어갈 수 있는 출신: 둥지 시민·둥지 노동자, 그리고 태어난 곳이 N사 둥지로 나온 날개 직원 집안·몰락한 가문(출생 화면의 태어난 곳 규칙과 같다: 굴림 번호 % 6 = 3 → N). 도서관의 손님·유물 적성자는 태어난 곳이 N사 둥지로 나오지 않는다 */
+  function sisEligible(ch){const n=ch&&ch.o&&ch.o.n;if(!n)return false;return CFG.sis.origins.includes(n)||(CFG.sis.nestOrigins.includes(n)&&'KRWNJG'[((ch.r&&ch.r.n)||1)%6]==='N')}
   const sisOn=ch=>!!(CFG.sis.on&&ch&&ch.sis);
   const sisGrade=ch=>ch.sis.grade||0;
   const sisAn=n=>`${n}안`;
@@ -3106,7 +3108,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(c&&c.sisEnd&&!c.sis&&c.sisDone&&!G.infinite&&(!CFG.sis.share||CFG.sis.act2)&&D.sisyphus&&G.year>=53&&G.year<=55+((D.sisyphus.act2||[]).length))return {type:'quiet',year:G.year};
     return null}
   /* 시지프 진입 전 단서: 둥지 출신은 1년차에 N사의 금기에 의문을 품을지 정하고, 품었다면 2년차에 단서를 모은다. 3년차는 고정 전투, 4년차는 갈림길이다 */
-  function sisHintOffer(G){const ch=G.ch,H=D.sisyphus&&D.sisyphus.hintEv;if(!H||!CFG.sis.on||!ch.o||!CFG.sis.origins.includes(ch.o.n)||ch.flags.sisIn||ch.flags.sisP)return null;
+  function sisHintOffer(G){const ch=G.ch,H=D.sisyphus&&D.sisyphus.hintEv;if(!H||!CFG.sis.on||!ch.o||!sisEligible(ch)||ch.flags.sisIn||ch.flags.sisP)return null;
     const mk=Z=>({t:Z.t,x:Z.x,c:Z.c.map(c=>({l:c.l,h:c.h||undefined,ok:{t:c.t,fx:c.fx||{}}}))});
     if(G.year===1&&!ch.flags.sisQ&&!ch.flags.sisNoQ)return mk(H.q);
     if(G.year===2&&ch.flags.sisQ)return mk(H.clue);return null}
