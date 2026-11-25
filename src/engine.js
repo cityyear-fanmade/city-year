@@ -3036,7 +3036,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     }
     if(sv.st==='hunt'){
       {const z0=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],L=(D.sisyphus.floorEv||{})[z0.id];
-        if(L&&sv.evDay!==sv.turn&&sv.floorPass!==sv.turn){sv.floorPass=sv.turn;const fe=L.find(e=>!(sv.floorSeen&&sv.floorSeen[e.id])&&sv.turn>=e.from&&sv.turn<=e.to&&(!e.fac||e.fac===sv.fac)&&!(e.skipOl&&sv.ol));
+        if(L&&sv.evDay!==sv.turn&&sv.floorPass!==sv.turn){sv.floorPass=sv.turn;const okE=e=>!(sv.floorSeen&&sv.floorSeen[e.id])&&sv.turn>=e.from&&sv.turn<=e.to&&(!e.fac||e.fac===sv.fac)&&!(e.skipOl&&sv.ol),fe=L.find(e=>e.fac&&okE(e))||L.find(okE);   /* 소속 전용 사건(원레그의 독설 등)을 일반 사건보다 먼저 고른다: 목록 순서 때문에 뒤로 밀려 거의 안 나오던 문제 */
           if(fe&&d(100)<=CS.floorChance){const okc=c=>(!c.needDye||sv.dyes.length>=c.needDye)&&(!c.needMat||Object.entries(c.needMat).every(([k,n])=>(sv.mat[k]||0)>=n)),miss=fe.c.filter(c=>!okc(c)).map(c=>`「${c.l}」은 ${[c.needDye?`염료 ${c.needDye}병`:'',...Object.entries(c.needMat||{}).map(([k,n])=>`${S_.mats[k].n} ${n}`)].filter(Boolean).join(' · ')}이(가) 있어야 고를 수 있다`);
           return {type:'event',ev:{t:fe.t,x:fe.x+(miss.length?'\n\n('+miss.join(' · ')+')':''),c:fe.c.filter(okc).map(c=>Object.assign({},c))}}}}}
       const z=D.sisyphus.zones.find(x=>x.id===sv.hunt)||sisZones(ch)[0],bosses=z.foes.filter(f=>D.enemies[f].tier==='boss'),norm=z.foes.filter(f=>D.enemies[f].tier!=='boss');
