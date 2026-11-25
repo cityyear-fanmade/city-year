@@ -2729,8 +2729,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:Z.glitch.t,x:Z.glitch.gl.filter(g=>g.x).map(g=>g.x).join('\n'),gl:Z.glitch.gl,c:[{l:Z.glitch.a,h:'잃는 것은 없다',ok:{t:Z.glitch.at,fx:{}}}]}}
   /* ── 시지프 백화점 2단계: 이틀 사이클(첫째 날 사냥→제작, 둘째 날 판매) · 구역 해금 · 재단대 · 거래 ──
      해마다 free 사건으로 이어지고(sisFree), 하루가 끝나면 해가 넘어간다. 상태는 ch.sis.st: day1 → hunt → craft → day2 → done (거래는 trade) */
-  /* 시지프 백화점에 들어갈 수 있는 출신: 둥지 시민·둥지 노동자, 그리고 태어난 곳이 N사 둥지로 나온 날개 직원 집안·몰락한 가문(출생 화면의 태어난 곳 규칙과 같다: 굴림 번호 % 6 = 3 → N). 도서관의 손님·유물 적성자는 태어난 곳이 N사 둥지로 나오지 않는다 */
-  function sisEligible(ch){const n=ch&&ch.o&&ch.o.n;if(!n)return false;return CFG.sis.origins.includes(n)||(CFG.sis.nestOrigins.includes(n)&&'KRWNJG'[((ch.r&&ch.r.n)||1)%6]==='N')}
+  /* 시지프 백화점에 들어갈 수 있는 조건: 출신이 CFG.sis.origins에 있고, 출생 화면의 태어난 곳이 「N사 둥지 출신」일 것(굴림 번호 % 6 = 3 → N, ui.js placeOf와 같은 규칙). 도서관의 손님은 N사 둥지에서 태어나지 않는다 */
+  function sisEligible(ch){const n=ch&&ch.o&&ch.o.n;return !!n&&CFG.sis.origins.includes(n)&&'KRWNJG'[((ch.r&&ch.r.n)||1)%6]==='N'}
   const sisOn=ch=>!!(CFG.sis.on&&ch&&ch.sis);
   const sisGrade=ch=>ch.sis.grade||0;
   const sisAn=n=>`${n}안`;

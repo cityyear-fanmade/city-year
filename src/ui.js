@@ -981,7 +981,7 @@ export function startUI(E,app){
     if(n==='E.G.O 적성자')return {n:'L사 둥지 출신',t:'L사 날개의 둥지에서 났다'};
     if(n==='대호수로 나간 자')return {n:'U사 둥지 출신',t:'U사 날개의 둥지에서 났다'};
     if(n==='혈귀'||n==='별에 선택받은 자')return {n:'출신 불명',t:'어디서 났는지 아무도 모른다'};
-    if(n==='도서관의 손님'||n==='유물 적성자'){let k=((r&&r.f)||1)%3;if(k===1&&w==='N')k=2;   /* N사 둥지는 시지프 백화점으로 들어가는 곳이라, 도서관·유물 줄기 출신은 N사 둥지에서 태어나지 않는다(N사 뒷골목으로) */   // 둥지·뒷골목·외곽 중 하나 (굴린 값으로 정함)
+    if(n==='도서관의 손님'||n==='유물 적성자'){let k=((r&&r.f)||1)%3;if(k===1&&w==='N'&&n==='도서관의 손님')k=2;   /* 도서관의 손님은 N사 둥지에서 태어나지 않는다(N사 뒷골목으로). 유물 적성자는 N사 둥지에서 태어날 수 있고 그때 시지프 백화점이 열린다 */   // 둥지·뒷골목·외곽 중 하나 (굴린 값으로 정함)
       return k===0?{n:'외곽 출신',t:'도시 밖 외곽에서 났다'}:k===1?{n:`${w}사 둥지 출신`,t:`${w}사 날개의 둥지에서 났다`}:{n:`${w}사 뒷골목 출신`,t:`${w}사 날개 둥지의 뒷골목에서 났다`}}
     if(n==='보냐텔리 가문')return {n:'둥지 가문 출신',t:'둥지에 뿌리를 둔 가문에서 났다'};
     if(n==='조율자')return {n:'A사 머리 출신',t:'A사 머리에서 조율자로 길러졌다'};
@@ -1772,7 +1772,7 @@ const V1120SEC=[['🆕 카드',[
     '오늘의 시드는 해금 출생·직업과 상관없이, 날마다 정해진 출신으로 모두 같게 시작합니다.',
     '조율자의 집행 권한으로 받는 집행 카드가 3장까지만 늘고, 그 뒤에는 카드 대신 공격이 오르도록 고쳤습니다(덱이 같은 카드로 가득 차던 문제).']]];
   
-  const V1130SEC=[['🆕 시지프 백화점',['N사 둥지 출신이 금기를 어기면… 백화점의 문이 열립니다.','기록실에 시지프 칸과 칭호 11개가 생겼습니다.']],
+  const V1130SEC=[['🆕 시지프 백화점',['N사 둥지 출신이 금기를 어기면… 백화점의 문이 열립니다.','출생 화면의 태어난 곳이 N사 둥지일 때만 해당합니다. 일부 출신은 N사 둥지에서 태어나지 않습니다.','기록실에 시지프 칸과 칭호 11개가 생겼습니다.']],
     ['🆕 튜토리얼',['도움말의 첫 탭 「처음 안내」에서 안내자 앤젤라가 게임이 흘러가는 방식을 17장면으로 보여 줍니다. 한국어 · 일본어 · 영어로 볼 수 있습니다.']],
     ['📅 오늘의 시드',['업데이트 후 이틀 동안 오늘의 시드는 N사 둥지 출신, 타고난 것 2개로 시작합니다. 그 뒤에는 원래대로 돌아갑니다.']],
     ['🔧 카드와 전투',['공격 카드의 숨은 효과가 카드 설명줄에 보입니다.','충전 · 선율 카드를 한쪽만 모으면 짝이 되는 카드를 제안합니다.','전투 순서 줄에 주사위와 속도 보너스가 함께 보입니다.','무한 모드 반동이 4라운드마다 최대 HP의 3%로 바뀌었습니다.','E.G.O 적성자가 개화할 때 카드를 받습니다.']],
@@ -3657,7 +3657,7 @@ const V1120SEC=[['🆕 카드',[
   function newSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0]%1000000000}catch(e){return Math.floor(Math.random()*1e9)}}
   /* 오늘의 시드와 같은 시드(지나간 날의 시드를 번호로 입력한 경우 포함)면 그날의 출신·타고난 것 지정을 그대로 쓴다 */
   const dailyKeyOf=seed=>UI.daily&&seed===dailySeed(UI.daily)?UI.daily:(Object.keys(CFG.dailyPlan||{}).find(k=>dailySeed(k)===seed)||null);
-  function born(seed,name,daily){UI.team=null;const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];{const uo=!dly&&UI.origin&&loadUnlocks().includes('origin:'+UI.origin)?UI.origin:null;BC=E.newChar(!dly&&UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,uo||(dly?(pl&&pl.origin)||CFG.dailyOrigin:null))}UI.newOrigin=null;if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;if(pl&&pl.innate2&&pl.innate2!==pl.innate&&D.innate[pl.innate2])BC.innate2=pl.innate2;BC.seed=seed;BC.name=name||'';BC.fresh=true;if(SISSHARE)sisForce()}
+  function born(seed,name,daily){UI.team=null;const dk=daily?UI.daily:dailyKeyOf(seed),dly=!!dk;E.reseed(seed);const pl=dly&&CFG.dailyPlan[dk];{const uo=!dly&&UI.origin&&loadUnlocks().includes('origin:'+UI.origin)?UI.origin:null;BC=E.newChar(!dly&&UI.job&&loadUnlocks().includes(UI.job)?UI.job:null,uo||(dly?(pl&&pl.origin)||CFG.dailyOrigin:null))}UI.newOrigin=null;if(pl&&pl.place==='N'&&BC.r)BC.r.n=3;if(pl&&pl.innate&&D.innate[pl.innate])BC.innate=pl.innate;if(pl&&pl.innate2&&pl.innate2!==pl.innate&&D.innate[pl.innate2])BC.innate2=pl.innate2;BC.seed=seed;BC.name=name||'';BC.fresh=true;if(SISSHARE)sisForce()}
   /* 화면 폭이 휴대폰/PC 경계를 넘으면 전투 화면을 다시 그린다 (재생 중에는 그대로) */
   window.addEventListener('resize',()=>{if(UI.screen==='combat'&&!PLAYING&&UI.wasMobile!==isMobile())render()});
   app.addEventListener('toggle',e=>{const t=e.target;if(!t.classList)return;
