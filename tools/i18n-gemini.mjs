@@ -1,6 +1,6 @@
 /* 제미나이(무료 한도 안)로 번역 대기 문장을 번역해 사전에 합친다: node tools/i18n-gemini.mjs ja [--limit 줄수] [--dry]
    - 키는 환경이 주소 헤더로 자동 주입한다(주소에 ?key= 를 붙이지 않는다). 결제·유료 호출 없음
-   - 모델 gemini-3.5-flash-lite (분당 15회 · 하루 500회). 한 번에 100줄, 호출 사이 5초 대기. 실패하면 자동 재시도 없이 멈춘다
+   - 모델 gemini-3.5-flash-lite (분당 15회 · 하루 500회). 한 번에 100줄, 호출 사이 5초 대기. 실패하면 자동 재시도 없이 바로 멈춘다(사용자가 다시 실행)
    - 결과는 tools/i18n-merge.mjs 와 같은 검사를 거쳐 data/i18n/<언어>.json 에 들어가고, 통과 못 한 줄은 다음 실행 때 다시 대상이 된다 */
 import {readFileSync,writeFileSync,existsSync,mkdirSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
@@ -50,25 +50,23 @@ const ph=s=>(s.match(/\{[^}]+\}/g)||[]).sort().join('|');
 /* 자리표시 안에 한글이 든 것({배우자}·{아이} 등)은 모델이 영어로 바꿔 버리므로, 보낼 때 {PH1}.. 로 가렸다가 돌려받은 뒤 되돌린다 */
 const maskPh=src=>{const map=[];const m=src.replace(/\{[^}]*[가-힣][^}]*\}/g,x=>{map.push(x);return '{PH'+map.length+'}'});return [m,map]};
 const unmaskPh=(v,map)=>v.replace(/\{PH(\d+)\}/g,(x,i)=>map[i-1]||x);
-let ok=0,bad=0,calls=0;
+let ok=0,bad=0,calls=0,stop='';
+let i0=0;
 for(let i=0;i<todo.length;i+=BATCH){
+  i0=i;
   const part=todo.slice(i,i+BATCH),body={contents:[{parts:[{text:PROMPT+'\n\n[번역할 줄]\n'+part.map(([k,s])=>k+'\t'+maskPh(s)[0]).join('\n')}]}],generationConfig:{temperature:0.3}};
   writeFileSync(new URL('req.json',TMP),JSON.stringify(body));
-  /* 실패하면 틈을 두고 최대 4번 다시 시도한다(20 · 40 · 80 · 160초). 그래도 안 되면 멈춘다. 호출 횟수는 --max-calls까지만 */
-  let r=null,tries=0;
-  for(;;){
-    if(calls>=maxCalls){console.error('호출 상한에 도달 — 멈춤');break}
-    calls++;let out='';
-    try{out=execFileSync('curl',['-sS','-m','120','-X','POST',`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,'-H','Content-Type: application/json','-d','@'+new URL('req.json',TMP).pathname],{encoding:'utf8',maxBuffer:50e6})}catch(e){out=''}
-    try{r=JSON.parse(out)}catch(e){r=null}
-    if(r&&r.candidates)break;
-    const why=r&&r.error?`${r.error.code} ${String(r.error.status||'')}`:'응답 없음';
-    if(r&&r.error&&r.error.code===429&&/quota|limit/i.test(JSON.stringify(r.error))){console.error('한도 초과 — 멈춤:',why);r=null;break}
-    if(tries>=4){console.error(`재시도 4번 실패(${why}) — 멈춤`);r=null;break}
-    const wait=20*Math.pow(2,tries);tries++;console.error(`실패(${why}) — ${wait}초 뒤 다시 시도 ${tries}/4`);execFileSync('sleep',[String(wait)]);r=null
+  /* 자동 재시도 없음: 한 배치에 호출은 한 번뿐이다. 실패하면 이유를 밝히고 바로 멈춘다(앞 배치 결과는 이미 저장됨). 다시 실행하는 것은 사용자가 한다. 호출 횟수는 --max-calls까지만 */
+  if(calls>=maxCalls){console.error('호출 상한에 도달 — 멈춤');break}
+  calls++;let out='',netErr=false;
+  try{out=execFileSync('curl',['-sS','-m','120','-X','POST',`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,'-H','Content-Type: application/json','-d','@'+new URL('req.json',TMP).pathname],{encoding:'utf8',maxBuffer:50e6})}catch(e){out='';netErr=true}
+  let r=null;try{r=JSON.parse(out)}catch(e){}
+  const text=r&&r.candidates&&r.candidates[0]&&r.candidates[0].content&&r.candidates[0].content.parts&&r.candidates[0].content.parts[0]&&r.candidates[0].content.parts[0].text;
+  if(typeof text!=='string'){
+    const c=r&&r.error&&r.error.code;
+    stop=c===429&&/quota|limit/i.test(JSON.stringify(r.error))?'한도 초과(429)':c>=500&&c<600?`서버 오류(${c} ${String(r.error.status||'')})`:c?`API 오류(${c} ${String(r.error.status||'')})`:netErr?'네트워크 오류(curl 실패)':'응답 형식 오류';
+    break
   }
-  if(!r||!r.candidates)break;
-  const text=r.candidates[0].content.parts[0].text;
   const map=new Map(part);
   for(const line of text.split('\n')){const t=line.indexOf('\t');if(t<0)continue;const k=line.slice(0,t).trim(),src=map.get(k);let v=line.slice(t+1).trim();if(src&&v)v=unmaskPh(v,maskPh(src)[1]);if(!src||!v){bad++;continue}
     const vv=v.replace(/\{[^}]+\}/g,''),han=(vv.match(/[가-힣]/g)||[]).length,jp=lang==='en'?/[A-Za-z]/.test(v):/[぀-ヿ一-鿿]/.test(v);
@@ -78,4 +76,5 @@ for(let i=0;i<todo.length;i+=BATCH){
   console.log(`${Math.min(i+BATCH,todo.length)}/${todo.length} · 통과 ${ok} · 제외 ${bad}`);
   if(i+BATCH<todo.length)execFileSync('sleep',['5']);
 }
-console.log(`끝: 사전 ${Object.keys(dict).length}개 · 통과 ${ok} · 제외 ${bad} (제외한 줄은 다음 실행 때 다시 대상)`);
+if(stop){console.error(`중단: ${stop} — ${calls}번째 호출의 배치(${Math.min(i0+1,todo.length)}번째 줄부터)는 저장하지 않았다. 앞 배치 결과는 사전에 남아 있다. 다시 실행하면 이어서 번역한다(자동 재시도 없음)`);process.exitCode=1}
+console.log(`${stop?'중단':'끝'}: 사전 ${Object.keys(dict).length}개 · 통과 ${ok} · 제외 ${bad} (제외한 줄은 다음 실행 때 다시 대상)`);

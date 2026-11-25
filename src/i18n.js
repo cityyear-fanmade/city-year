@@ -93,6 +93,7 @@ function trText(s){
   if(dict[s])return dict[s];
   if(!/[가-힣]/.test(s))return null;
   { const nm=/^(\d+\.\s+)([가-힣][\s\S]*)$/.exec(s); if(nm){const r=trText(nm[2]);if(r)return nm[1]+r} }   /* '1. 열두 번째 손님' 같은 번호 매긴 줄 */
+  { const fm=/^(▾\s+)([가-힣][\s\S]*)$/.exec(s); if(fm){const r=trText(fm[2]);if(r)return fm[1]+r} }   /* 기록실 접는 칸 제목('▾ 칭호 · 최고 등급에 오른 횟수')의 머리 기호는 떼고 번역한다 */
   if(memo.has(s))return memo.get(s);
   if(!PAT)buildPat();
   memo.set(s,null);   /* 같은 글자가 값 안에서 다시 불려도 끝없이 돌지 않게 먼저 비워 둔다 */

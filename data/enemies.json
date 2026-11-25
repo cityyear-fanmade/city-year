@@ -1105,18 +1105,34 @@
     "gearChance": 50
    },
    "thumbDrop": {
-    "n": "동부십검",
+    "n": "천퇴성도",
     "req": "affname:엄지",
     "e": "엄지 검술 · 덱이 검술 10장으로 고정, 이후 카드 대신 돈",
     "gear": {
-     "id": "dongbu",
+     "id": "cheontoe",
      "slot": "weapon",
-     "n": "동부십검",
-     "e": "공+11 · 회피+6 · 적중마다 1d2×2 추가 · 엄지 검술",
+     "n": "천퇴성도",
+     "e": "공+21 · 회피+6 · 피해 2d3 · 적중마다 1d2×1 추가 · 적중 시 감전 1 (스택당 상대 회피 −3, 최대 5) · 적중마다 화상 +1",
      "fx": {
-      "atk": 11,
+      "atk": 21,
       "eva": 6,
-      "extraD2": 2
+      "extraD2": 1
+     },
+     "wx": {
+      "dice": [
+       2,
+       3
+      ],
+      "debuff": {
+       "k": "shock",
+       "n": 1
+      },
+      "hitKw": [
+       [
+        "burn",
+        1
+       ]
+      ]
      }
     },
     "deck": [
@@ -9367,7 +9383,15 @@
     "guard"
    ],
    "tier": "early",
-   "intro": "사람 머리만 한 가죽 덩어리가 벌레 같은 다리로 매장 바닥을 긁으며 다가온다. 이번엔 무슨 유행이냐고 묻는 소리가 가죽 밑에서 새어 나온다."
+   "intro": "사람 머리만 한 가죽 덩어리가 벌레 같은 다리로 매장 바닥을 긁으며 다가온다. 이번엔 무슨 유행이냐고 묻는 소리가 가죽 밑에서 새어 나온다.",
+   "mat": [
+    "leather",
+    "cloth"
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_wallet": {
    "n": "가죽 지갑",
@@ -9383,7 +9407,15 @@
     "drawl"
    ],
    "tier": "early",
-   "intro": "매대 아래에서 지갑 하나가 입을 벌린다. 안쪽은 비어 있는데도 무언가를 지키는 것처럼 지퍼가 꽉 물려 있다."
+   "intro": "매대 아래에서 지갑 하나가 입을 벌린다. 안쪽은 비어 있는데도 무언가를 지키는 것처럼 지퍼가 꽉 물려 있다.",
+   "mat": [
+    "leather",
+    "cloth"
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_souschef": {
    "n": "수셰프",
@@ -9400,7 +9432,16 @@
     "lunge"
    ],
    "tier": "early",
-   "intro": "작은 봉제인형이 국자를 끌고 주방 문턱에 선다. 오늘의 재료를 고르는 눈이 당신에게서 멈춘다."
+   "intro": "작은 봉제인형이 국자를 끌고 주방 문턱에 선다. 오늘의 재료를 고르는 눈이 당신에게서 멈춘다.",
+   "mat": [
+    "soda",
+    "leather",
+    "cloth"
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_needle_warp": {
    "n": "날실 바늘이",
@@ -9417,7 +9458,14 @@
     "precise"
    ],
    "tier": "mid",
-   "intro": "초록 옷의 작은 손님들이 바늘을 곧추세우고 줄지어 다가온다. 시끄러운 소리가 싫다는 말이 한목소리로 되풀이된다."
+   "intro": "초록 옷의 작은 손님들이 바늘을 곧추세우고 줄지어 다가온다. 시끄러운 소리가 싫다는 말이 한목소리로 되풀이된다.",
+   "mat": [
+    "thread",
+    "thread",
+    "thread",
+    "dye",
+    "dye"
+   ]
   },
   "sis_needle_weft": {
    "n": "씨실 바늘이",
@@ -9434,7 +9482,14 @@
     "lunge"
    ],
    "tier": "mid",
-   "intro": "붉은 옷의 작은 손님들이 가로로 줄을 서서 바늘을 휘두른다. 가장자리를 따라 실밥이 터진다."
+   "intro": "붉은 옷의 작은 손님들이 가로로 줄을 서서 바늘을 휘두른다. 가장자리를 따라 실밥이 터진다.",
+   "mat": [
+    "thread",
+    "thread",
+    "thread",
+    "dye",
+    "dye"
+   ]
   },
   "sis_needleking": {
    "n": "바느질의 왕",
@@ -9453,7 +9508,14 @@
    ],
    "tier": "boss",
    "intro": "왕관을 쓰고 천을 두른 목각인형이 일어선다. 바늘이들이 길을 비키고, 땀수를 세는 낮은 목소리가 바닥에서 올라온다.",
-   "trait": "enrage"
+   "trait": "enrage",
+   "mat": [
+    "silver",
+    "silver",
+    "silver",
+    "wool",
+    "wool"
+   ]
   },
   "sis_mannequin": {
    "n": "마네킹",
@@ -9470,14 +9532,25 @@
     "guard"
    ],
    "tier": "mid",
-   "intro": "얼굴 없는 몸통이 옷걸이에서 걸어 내려온다. 입은 옷에는 아직 가격표가 달려 있다."
+   "intro": "얼굴 없는 몸통이 옷걸이에서 걸어 내려온다. 입은 옷에는 아직 가격표가 달려 있다.",
+   "mat": [
+    "wool",
+    "wool",
+    "wool",
+    "leather",
+    "leather"
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_controller": {
    "n": "통제자",
    "why": "가죽실 입구를 지키는 거대한 등껍질의 관리자. 거꾸로 걷는 말투로 주문을 받는다.",
    "color": "#6a6a7a",
-   "hp": 98,
-   "atk": 8,
+   "hp": 294,
+   "atk": 16,
    "eva": 4,
    "spd": 4,
    "deck": [
@@ -9489,14 +9562,57 @@
    ],
    "tier": "boss",
    "intro": "등에 얼굴이 박힌 거대한 껍질이 거꾸로 선 채 말을 건다. 주문서에 적힌 것이 당신의 치수가 아니라는 듯 고개가 돌아간다.",
-   "trait": "bulwark"
+   "trait": "bulwark",
+   "mat": [
+    "tanned",
+    "tanned",
+    "tanned",
+    "tanned",
+    "tanned",
+    "wool",
+    "wool"
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
   },
   "sis_onelegs": {
    "n": "원레그",
    "why": "신발관의 주인. 다리가 적을수록 고귀하다고 믿는다.",
    "color": "#3a3a4a",
-   "hp": 74,
-   "atk": 8,
+   "hp": 296,
+   "atk": 20,
+   "eva": 5,
+   "spd": 5,
+   "deck": [
+    "lunge",
+    "precise",
+    "heavy",
+    "guard"
+   ],
+   "tier": "late",
+    "extra": {"mat": "velvet", "pct": 20},
+   "intro": "외다리로 선 신발관의 주인이 턱을 든다. 두 발로 서 있는 모든 것이 천해 보인다는 얼굴이다.",
+   "mat": [
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "silk",
+    "silk",
+    "silk",
+    "silk"
+   ]
+  },
+  "sis_onelegs2": {
+   "n": "원레그",
+   "why": "신발관의 주인. 다리가 적을수록 고귀하다고 믿는다.",
+   "color": "#3a3a4a",
+   "hp": 207,
+   "atk": 16,
    "eva": 5,
    "spd": 5,
    "deck": [
@@ -9507,13 +9623,13 @@
    ],
    "tier": "late",
    "intro": "외다리로 선 신발관의 주인이 턱을 든다. 두 발로 서 있는 모든 것이 천해 보인다는 얼굴이다."
-  },
+   },
   "sis_dorothea": {
    "n": "도로테아",
    "why": "신발관의 르루주. 바깥을 기억하고 집을 그리워한다.",
    "color": "#b04a5a",
-   "hp": 80,
-   "atk": 8,
+   "hp": 280,
+   "atk": 18,
    "eva": 5,
    "spd": 5,
    "deck": [
@@ -9523,7 +9639,20 @@
     "guard"
    ],
    "tier": "late",
-   "intro": "붉은 구두를 신은 점원이 나른한 얼굴로 웃는다. 집에 돌아갈 수만 있다면, 하고 낮게 중얼거린다."
+    "extra": {"mat": "skinleather", "pct": 20},
+   "intro": "붉은 구두를 신은 점원이 나른한 얼굴로 웃는다. 집에 돌아갈 수만 있다면, 하고 낮게 중얼거린다.",
+   "mat": [
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "silk",
+    "silk",
+    "silk",
+    "silk"
+   ]
   },
   "sis_couch": {
    "n": "살갗 소파",
@@ -9540,14 +9669,27 @@
     "precise"
    ],
    "tier": "late",
-   "intro": "살점으로 된 소파가 몸을 일으킨다. 한쪽 끝에 사람의 얼굴이 붙어 있고, 눈알이 얼마 있냐는 말부터 나온다."
+    "extra": [{"mat": "velvet", "pct": 25}, {"mat": "skinleather", "pct": 25}],
+   "intro": "살점으로 된 소파가 몸을 일으킨다. 한쪽 끝에 사람의 얼굴이 붙어 있고, 눈알이 얼마 있냐는 말부터 나온다.",
+   "mat": [
+    "silk",
+    "silk",
+    "silk",
+    "silk",
+    "trim",
+    "trim",
+    "trim",
+    "trim",
+    "silver",
+    "silver"
+   ]
   },
   "sis_diner": {
    "n": "5층의 고객들",
    "why": "레스토랑에서 식사를 멈추지 않는 거대한 고객들. 몸속이 투명하게 비친다.",
    "color": "#c04a3a",
-   "hp": 112,
-   "atk": 10,
+   "hp": 336,
+   "atk": 20,
    "eva": 5,
    "spd": 5,
    "deck": [
@@ -9558,7 +9700,23 @@
     "guard"
    ],
    "tier": "boss",
-   "intro": "식탁 앞에 앉은 거대한 그림자들이 고개를 돌린다. 몸 안쪽이 유리처럼 비쳐서, 삼킨 것들이 아직 움직이는 것이 보인다."
+   "intro": "식탁 앞에 앉은 거대한 그림자들이 고개를 돌린다. 몸 안쪽이 유리처럼 비쳐서, 삼킨 것들이 아직 움직이는 것이 보인다.",
+   "mat": [
+    "silk",
+    "silk",
+    "silk",
+    "silk",
+    "goldthread",
+    "goldthread",
+    "goldthread",
+    "trim",
+    "trim",
+    "trim",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin"
+   ]
   },
   "sis_fallen": {
    "n": "추락한 마네킹",
@@ -9576,14 +9734,31 @@
     "guard"
    ],
    "tier": "late",
-   "intro": "부서진 팔다리를 실로 이어 붙인 모델이 계단 아래에서 일어난다. 걸음마다 추락하는 소리가 따라온다."
+   "intro": "부서진 팔다리를 실로 이어 붙인 모델이 계단 아래에서 일어난다. 걸음마다 추락하는 소리가 따라온다.",
+   "mat": [
+    "silk",
+    "silk",
+    "silk",
+    "silk",
+    "goldthread",
+    "goldthread",
+    "goldthread",
+    "trim",
+    "trim",
+    "trim",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin"
+   ]
   },
   "sis_warden": {
    "n": "간수",
    "why": "허용되지 않은 행동을 한 고객에게 나타나는 존재. 못이 박힌 광배를 두르고 있다.",
    "color": "#2a2a3a",
-   "hp": 150,
-   "atk": 12,
+   "hp": 225,
+   "atk": 15,
    "eva": 5,
    "spd": 5,
    "deck": [
@@ -9596,7 +9771,317 @@
    ],
    "tier": "boss",
    "intro": "검은 로브 위에 광배가 떠오른다. 등에 박힌 못끝에서 푸른 불꽃이 타오르고, 바닥에 촛대 모양의 못들이 솟아 길을 막는다.",
+   "trait": "enrage",
+   "mat": [
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldskin",
+    "goldthread",
+    "goldthread",
+    "goldthread"
+   ],
+   "extra": {"mat": "goldthread", "pct": 43}
+  },
+  "sis_red": {
+   "n": "붉은 신(미생)",
+   "why": "목소리를 만들기 위해 태어난 것. 벽을 먹고 자랐다.",
+   "color": "#7a1f2a",
+   "hp": 160,
+   "atk": 13,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "bloodlet",
+    "rend",
+    "guard",
+    "precise"
+   ],
+   "tier": "boss",
+   "intro": "붉은 것이 벽을 등지고 선다. 이름을 불러도 대답하지 않는다. 입이 한 번 벌어졌다 닫힌다.",
+   "trait": "thirst"
+  },
+  "sis_trendy": {
+   "n": "유행에 민감한 손님",
+   "why": "가위를 든 손님. 유행에 어긋난 옷을 입은 사람을 가만두지 않는다.",
+   "color": "#6a4a6a",
+   "hp": 34,
+   "atk": 4,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard"
+   ],
+   "tier": "early",
+   "intro": "손님이 가위를 소리 내어 열고 닫는다. 입가는 웃고 있다."
+  },
+  "sis_warden_final": {
+   "n": "간수",
+   "why": "허용되지 않은 행동을 한 고객에게 나타나는 존재. 못이 박힌 광배를 두르고 있다.",
+   "color": "#2a2a3a",
+   "hp": 230,
+   "atk": 15,
+   "eva": 6,
+   "spd": 6,
+   "deck": [
+    "heavy",
+    "rend",
+    "tremor",
+    "finale",
+    "guard",
+    "precise"
+   ],
+   "tier": "boss",
+   "intro": "검은 로브 위에 광배가 떠오른다. 등에 박힌 못끝에서 푸른 불꽃이 타오르고, 바닥에 촛대 모양의 못들이 솟아 길을 막는다. 이번에는 길을 막는 것이 아니라 한 사람을 찾으러 왔다.",
    "trait": "enrage"
+  },
+  "sis_mannequin_lite": {
+   "n": "마네킹",
+   "why": "정신이 무너진 고객의 껍데기. 오래 걸어 다니다 천이 되고 가죽이 된다.",
+   "color": "#8a8a92",
+   "hp": 32,
+   "atk": 3,
+   "eva": 2,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard"
+   ],
+   "tier": "early",
+   "intro": "마네킹 하나가 매장 한가운데서 고개를 돌린다. 옷 한 벌을 걸친 채 얼굴이 없다.",
+   "mat": [
+    "cloth",
+    "cloth",
+    "cloth",
+    "cloth",
+    "cloth",
+    "cloth",
+    "cloth",
+    "leather",
+    "leather",
+    "leather"
+   ],
+   "extra": {
+    "mat": "trim",
+    "pct": 15
+   }
+  },
+  "sis_buffet": {
+   "n": "뷔페",
+   "why": "굶주림이 한 몸으로 자란 것. 붉은 신이라 불리던 것의 다음 모습이다.",
+   "color": "#5a0f18",
+   "hp": 280,
+   "atk": 17,
+   "eva": 4,
+   "spd": 6,
+   "deck": [
+    "bf_swallow",
+    "bf_gnaw",
+    "bf_tear",
+    "bf_tear2",
+    "bf_last",
+    "bf_table",
+    "bf_pick"
+   ],
+   "tier": "boss",
+   "intro": "벽이 한 겹 벗겨져 있다. 붉은 것의 어깨가 문틀을 넘고, 입 안쪽에서 접시 부딪히는 소리가 난다. 이름을 부르던 사람을 이제 알아보지 못한다.",
+   "trait": "famine"
+  },
+  "sis_bride": {
+   "n": "신부",
+   "why": "간수의 로브 속에 있던 존재. 규칙을 지켜 온 쪽의 마지막 얼굴이다.",
+   "color": "#d8d4e0",
+   "hp": 240,
+   "atk": 15,
+   "eva": 5,
+   "spd": 7,
+   "deck": [
+    "br_veil",
+    "br_name",
+    "br_read",
+    "br_vow",
+    "br_fold",
+    "br_aim"
+   ],
+   "tier": "boss",
+   "intro": "층 한가운데로 흰 베일이 내려앉는다. 간수가 서 있던 자리에서 누군가 천천히 일어난다. 이번에는 규칙을 읽는 것이 아니라, 규칙을 어긴 사람의 이름을 찾으러 왔다.",
+   "trait": "bride"
+  },
+  "sis_redtrack": {
+   "n": "붉은 옷의 추적자",
+   "why": "붉은 천 사이에서 따라붙는 추적자. 소매 끝이 붉게 젖어 있다.",
+   "color": "#8a2a35",
+   "hp": 46,
+   "atk": 5,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard"
+   ],
+   "tier": "mid",
+   "intro": "붉은 옷자락이 바닥을 끌며 다가온다. 소매 끝에서 무언가 떨어진다."
+  },
+  "sis_blackcoat": {
+   "n": "규율을 시험하는 검은 코트",
+   "why": "단정한 보폭으로 다가오는 검은 코트. 흐트러진 것을 용서하지 않는다.",
+   "color": "#2a2a33",
+   "hp": 46,
+   "atk": 5,
+   "eva": 4,
+   "spd": 3,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard"
+   ],
+   "tier": "mid",
+   "intro": "검은 코트가 한 걸음씩 거리를 잰다. 단추 하나 어긋남이 없다."
+  },
+  "sis_rampage": {
+   "n": "날뛰는 뒤틀림",
+   "why": "연기에 몸이 비틀려 날뛰는 존재. 당신을 같은 것으로 알아본다.",
+   "color": "#6a3a4a",
+   "hp": 60,
+   "atk": 6,
+   "eva": 3,
+   "spd": 4,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard"
+   ],
+   "tier": "mid",
+   "intro": "비틀린 몸이 연기 속에서 한 번 흔들린다. 눈은 당신을 알아본다."
+  },
+  "sis_rampage2": {
+   "n": "날뛰는 뒤틀림의 무리",
+   "why": "연기가 짙어질수록 불어나는 날뛰는 것들.",
+   "color": "#5a2a3a",
+   "hp": 202,
+   "atk": 16,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard",
+    "slash"
+   ],
+   "tier": "late",
+   "intro": "여럿의 숨소리가 하나로 겹친다. 연기가 몸을 감싼다."
+  },
+  "sis_cyber": {
+   "n": "의체사냥꾼",
+   "why": "비 속에서 의체를 단 사람을 쫓는 자. 사냥은 이번 비로 시작된 것이 아니다.",
+   "color": "#4a5a6a",
+   "hp": 210,
+   "atk": 18,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard",
+    "slash"
+   ],
+   "tier": "mid",
+   "intro": "젖은 금속이 걸음마다 울린다. 사냥꾼은 당신의 몸에서 이음새부터 찾는다."
+  },
+  "sis_cyber2": {
+   "n": "의체사냥 무리",
+   "why": "유례없는 규모로 도시를 훑는 사냥꾼들.",
+   "color": "#3a4a5a",
+   "hp": 234,
+   "atk": 18,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "slash",
+    "thrust",
+    "guard",
+    "slash",
+    "heavy"
+   ],
+   "tier": "late",
+   "intro": "같은 걸음 소리가 여럿으로 겹친다. 골목마다 포위가 좁혀진다."
+  },
+  "sis_inq": {
+   "n": "N사 이단심문관",
+   "why": "N사의 교리에서 벗어난 몸을 가려내는 심문관.",
+   "color": "#6a6a7a",
+   "hp": 186,
+   "atk": 15,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "precise",
+    "thrust",
+    "guard",
+    "heavy"
+   ],
+   "tier": "late",
+   "intro": "심문관이 서류를 펼치지도 않고 당신의 죄목을 읽는다. 이미 정해져 있던 듯하다."
+  },
+  "sis_inq2": {
+   "n": "수석 이단심문관",
+   "why": "심문관들을 부리는 자. 질문이 곧 판결이다.",
+   "color": "#7a7a8a",
+   "hp": 198,
+   "atk": 15,
+   "eva": 5,
+   "spd": 6,
+   "deck": [
+    "precise",
+    "heavy",
+    "thrust",
+    "guard",
+    "slash"
+   ],
+   "tier": "boss",
+   "intro": "수석 심문관이 비를 맞지 않고 걸어 나온다. 우산 대신 판결문을 들었다."
+  },
+  "sis_brand": {
+   "n": "브랜드 매니저",
+   "why": "백화점의 규율을 몸에 단 매니저. 이곳에서는 두 발로 걷는 인간형으로 나타난다.",
+   "color": "#2a2a3a",
+   "hp": 196,
+   "atk": 15,
+   "eva": 4,
+   "spd": 5,
+   "deck": [
+    "precise",
+    "heavy",
+    "thrust",
+    "guard"
+   ],
+   "tier": "boss",
+   "intro": "매니저가 비 속으로 걸어 나온다. 매장 안의 규율이 거리까지 따라 나온다."
+  },
+  "sis_brand2": {
+   "n": "르루주 브랜드 디렉터",
+   "why": "붉은 천의 규율을 쥔 디렉터.",
+   "color": "#8a2a3a",
+   "hp": 214,
+   "atk": 16,
+   "eva": 5,
+   "spd": 6,
+   "deck": [
+    "slash",
+    "heavy",
+    "precise",
+    "guard",
+    "thrust"
+   ],
+   "tier": "boss",
+   "intro": "디렉터의 소매에서 붉은 천이 빗물처럼 흘러내린다. 몸이 먼저 그 박자를 기억한다."
   }
  },
  "fixedFights": {
@@ -10259,6 +10744,14 @@
   "focus": {
    "n": "집중",
    "d": "라운드마다 호흡 +2"
+  },
+  "thirst": {
+   "n": "갈증",
+   "d": "상대가 출혈 중이면 맞힐 때 HP 2 회복"
+  },
+  "famine": {
+   "n": "굶주림",
+   "d": "상대가 출혈 중이면 맞힐 때 HP 3 회복 · HP가 절반 아래가 되면 한 번 HP 15% 회복하고 명중 +10 · 피해 +3"
   }
  },
  "namePool": [
