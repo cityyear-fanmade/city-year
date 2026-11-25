@@ -3,6 +3,7 @@ import {CFG} from './config.js';
 import {clamp,sg,STAT} from './engine.js';
 import {createBgm} from './bgm.js';
 import {createSfx} from './sfx.js';
+import {createTutorial} from './tutorial.js';
 import {LANGS,getLang,setLang,tr,trDom,trNodes,trAny} from './i18n.js';
 
 export function startUI(E,app){
@@ -58,7 +59,15 @@ export function startUI(E,app){
     const b=c.bond;if(b&&b.route&&['met','married','lost','left'].includes(b.st)){const k=b.route+':'+(b.variant||0),lv=(b.st==='married'||b.st==='lost'||b.wed)?2:1;r.lovers=r.lovers||{};if((r.lovers[k]||0)<lv){r.lovers[k]=lv;ch=true}}
     if(c.o&&(D.hiddenOrigins||[]).some(x=>x.n===c.o.n)){r.births=r.births||[];if(!r.births.includes(c.o.n)){r.births.push(c.o.n);ch=true}}
     if(ch)store.set(REC,JSON.stringify(r))};
-  const syncAffs=()=>{syncKin();const c=G&&G.ch;if(!c||!(c.affLog||[]).length)return;const r=loadRec();r.affs=r.affs||[];let ch=false;for(const n of c.affLog)if(!r.affs.includes(n)){r.affs.push(n);ch=true}if(ch)store.set(REC,JSON.stringify(r))};
+  /* 시지프 백화점 기록: 소속(르루주·르누아르·르카키), 간수·신부 처치, 백화점 탈출을 기록실에 남긴다(판마다 한 번씩만 센다) */
+  const syncSis=()=>{const c=G&&G.ch;if(!c||!CFG.sis.on)return;const sv=c.sis,dn=c.sisDone,fac=(sv&&sv.fac)||(dn&&dn.fac);if(!sv&&!dn&&!c.sisEnd)return;
+    const r=loadRec(),S=r.sis=r.sis||{fac:{},warden:0,bride:0,out:0};S.fac=S.fac||{};let ch=false;
+    if(fac&&!c.sisRecFac){S.fac[fac]=(S.fac[fac]||0)+1;c.sisRecFac=1;ch=true}
+    if(sv&&sv.wardenDone&&!c.sisRecW){S.warden=(S.warden||0)+1;c.sisRecW=1;ch=true}
+    if(sv&&sv.brideDone&&!c.sisRecB){S.bride=(S.bride||0)+1;c.sisRecB=1;ch=true}
+    if(c.sisEnd&&!c.sisRecOut){S.out=(S.out||0)+1;c.sisRecOut=1;ch=true}
+    if(ch)store.set(REC,JSON.stringify(r))};
+  const syncAffs=()=>{syncKin();syncSis();const c=G&&G.ch;if(!c||!(c.affLog||[]).length)return;const r=loadRec();r.affs=r.affs||[];let ch=false;for(const n of c.affLog)if(!r.affs.includes(n)){r.affs.push(n);ch=true}if(ch)store.set(REC,JSON.stringify(r))};
   const syncTitles=()=>{syncAffs();const c=G&&G.ch;if(!c||!(c.titleLog||[]).length)return;const done=c.titleSeen||0;if(c.titleLog.length<=done)return;
     const r=loadRec();r.titles=r.titles||{};for(const n of c.titleLog.slice(done))r.titles[n]=(r.titles[n]||0)+1;c.titleSeen=c.titleLog.length;store.set(REC,JSON.stringify(r))};
   E.setInnateOpen(loadRec().unl||[]);
@@ -534,7 +543,6 @@ export function startUI(E,app){
   }
   /* 보냐텔리 검술 등 카드 고유 효과 문구 */
   const cardFx=c=>[c.serum?'혈청 +'+c.serum+' (3이 쌓이면 적중 피해 ×1.5 후 비움)':'',c.serumBurst?'혈청을 모두 써서 1당 주사위 +1':'',c.seal?'적중 시 봉인 각인 +'+c.seal:'',c.unseal?'봉인 각인 1당 피해 +'+c.unseal+' (각인 소모)':'',c.dmark?'적중 시 처분 표식 +'+c.dmark:'',c.exec?'처분 표식이 있으면 주사위 +'+c.exec:'',c.execHit?'처분 표식이 있으면 명중 +'+c.execHit:'',c.grant?'처분 표식이 있으면 다음 라운드 '+D.cards[c.grant].n+' 카드':'',c.once?'이번 라운드만 쓰는 카드':'',c.gungnir?'이 카드를 낸 라운드는 받는 피해 60% 감소 (공명)':''].filter(Boolean).map(x=>' · '+x).join('');
-  function cardLine(c,g,wx){
   /* 공격 카드의 설명줄이 자동으로 만들지 못하는 효과 필드들: 이 필드가 있으면 카드에 적힌 효과 설명(d)을 덧붙인다 */
   const CARD_D_FIELDS=['markB','fixed','egoGrow','bloomGrant','needCloud','ignoreEva','pierce','fsDice','cloudGain','lightNext','erase','needLow','verdict','hermF','cleanseRand','hpCost','vt','vform','vtCost','serpentDmg','hz','spdRupt','ruptB','breathRupt','ruptBreath','shieldDmg','spdFinal','lowHpB','burnDmg','vs','vsTop','gain','wk','nextSwift','handPlus','bm','nailDmg','inertia'];
   const CARD_D_DUP=[/^\(?\d+d\d+([+-]\d+)?\)?(씩)?$/,/^피해 [+-]?\d+(씩)?$/,/^(출혈|파열|호흡|화상|침잠|충전|못|진동|작살|고래작살|흐트러짐|수흔|선율|정렬|붉은 화염|공허한 순종) \+?\d+(씩)?$/,/^(두|세|네|다섯|여섯|일곱|여덟|아홉) 번( 공격| 찌른다| 베어)?$/,/^\+?\d+연타$/];
@@ -551,6 +559,7 @@ export function startUI(E,app){
     if(c.hitShield)x.push(`${h} 보호막 +${c.hitShield}`);
     return x.length?' · '+x.join(' · '):'';
   }
+  function cardLine(c,g,wx){
     if(c.t!=='atk')return (c.d||'')+cardFx(c);
     return cardLine0(c,g,wx)+cardFx(c)+cardExtra(c)+((c.mat||c.harvest||c.reuse)&&c.d?' · '+c.d:'')+(c.mindCost?` · 정신력 −${c.mindCost}`:'');
   }
@@ -1031,7 +1040,7 @@ export function startUI(E,app){
     return `<div class="ov"><div class="ovbg"${closable?' data-a="bagclose"':''}></div><div class="sheet ${cls}" role="dialog" aria-modal="true">${inner}</div></div>`;
   }
   /* 도움말(카드·키워드·규칙): 전투 중에도 열어 볼 수 있는 읽기 전용 창 */
-  const HELPTABS=[['card','카드 읽는 법'],['kw','키워드'],['rule','규칙']];
+  const HELPTABS=[['tut','처음 안내'],['card','카드 읽는 법'],['kw','키워드'],['rule','규칙']];
   function kwDoc(){
     const K=D.keywords,N=CFG.nail.stages.map(g=>`${g.at}: 명중 −${g.hit}${g.dmg?` · 주는 피해 −${g.dmg}`:''}`).join(' / ');
     return [
@@ -1041,15 +1050,18 @@ export function startUI(E,app){
       [K.ink.n,'ink',`라운드가 끝날 때 스택당 ${CFG.ink.dmg} 피해(내가 받으면 ${CFG.ink.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.ink.cap}스택.`],
       [K.burn.n,'burn',`라운드가 끝날 때 스택당 ${CFG.burn.dmg} 피해(내가 받으면 ${CFG.burn.dmgMe}), 그 뒤 스택이 절반으로 줄어든다. 최대 ${CFG.burn.max}스택. 적이 거는 화상은 쌓이는 양이 절반이다.`],
       [K.flame.n,'flame',`(레바테인 전용) 최대 ${CFG.stackCap}스택. 받는 피해 ×1.5, 라운드 끝에 1 감소. ${CFG.laev.blueAt}스택 이상이면 푸른 화염이 되어 받는 피해 ×${CFG.laev.blueMul}, 라운드 끝에 스택당 ${CFG.laev.blueDot} 피해를 주고 1 감소한다.`],
-      [K.charge.n,'charge',`자신에게 쌓는 스택. 기본 최대 ${CFG.charge.cap}스택(소속마다 다르다: R사 토끼팀 8, 순록·코뿔소팀 20). 카드가 정한 만큼 소모하면, 소모한 1당 고정 피해(피해 감소 무시, 보호막은 깎임)를 적중마다 더한다. 라운드가 바뀌어도 줄지 않고, 맞으면 줄어든다. 쌓이는 방식도 소속마다 다르다. 시지프의 르루주는 이 스택이 「혈맥」(최대 ${CFG.sis.rouge.vein.cap})이 되어, 맥동 중에 쌓인 만큼 공격 피해·라운드 시작 보호막·피 맛 회복이 늘고 맞아도 줄지 않는다. 르누아르는 「보존」(최대 ${CFG.sis.noir.preserve.cap})이 되어, 지금 가진 만큼 공격 피해·라운드 시작 보호막이 늘고(쓰면 줄어든다) 100이 되면 결정타 카드가 열린다.`],
-      [K.melody.n,'melody',`음악 카드를 낼 때 자신에게 쌓는 스택. 최대 ${CFG.melody.cap}스택이고, 라운드가 바뀌어도 줄지 않는다. 화음 카드(화음·불협화음·종지)가 선율을 모두 소모하면서 그 타격의 피해에 선율 1당 +${CFG.melody.per}를 더한다. 선율이 3 이상이면 추가로 +${CFG.melody.t3}, 6 이상이면 추가로 +${CFG.melody.t6}. 선율이 최대(${CFG.melody.cap})일 때 터뜨리면 그 타격의 피해가 ${CFG.melody.t9}배가 된다.`],
+      [K.charge.n,'charge',`자신에게 쌓는 스택. 기본 최대 ${CFG.charge.cap}(소속마다 다르다: R사 토끼팀 8, 순록·코뿔소팀 20). 카드가 정한 만큼 소모하면 소모한 1당 고정 피해(피해 감소 무시, 보호막은 깎임)를 적중마다 더한다. 라운드가 바뀌어도 줄지 않고, 맞으면 줄어든다.`],
+      [K.melody.n,'melody',`음악 카드로 쌓는 스택. 최대 ${CFG.melody.cap}, 라운드가 바뀌어도 줄지 않는다. 화음 카드(화음·불협화음·종지)가 선율을 모두 소모해 선율 1당 피해 +${CFG.melody.per}를 더한다. 3 이상이면 +${CFG.melody.t3}, 6 이상이면 +${CFG.melody.t6} 더, 최대일 때 터뜨리면 피해 ${CFG.melody.t9}배.`],
       [K.sink.n,'sink',`상대에게 쌓는 스택. 최대 ${CFG.stackCap}스택. ${CFG.sink.per}스택마다 한 단계, 단계마다 침잠이 걸린 쪽의 명중 −${CFG.sink.hit} · 주는 피해 −${CFG.sink.dmg}. 라운드마다 1 줄어든다.`],
       [K.wspear.n,'wspear','쪽빛 노인의 작살(전용 무기)이 적중하면 상대에게 쌓인다. 최대 5스택. 스택 하나마다 상대가 입는 출혈 피해가 ×1.2로 곱해진다(5스택이면 약 ×2.5). 한 번의 싸움 동안 유지된다.'],
       [K.harpoon.n,'harpoon',`대호수: 작살 카드가 적중하면 상대에게 쌓인다. 최대 ${CFG.harpoon.cap}스택. 당기는 카드(감아올리기·당겨 뜯기·고래 사냥)가 쌓인 작살을 모두 소모해 스택당 고정 피해를 더한다. 로프 끊기는 내게 걸린 작살을 푼다.`],
       [K.nail.n,'nail',`N사 날개: 적중할 때마다 상대에게 쌓인다. 최대 ${CFG.nail.cap}스택. 망치 카드가 쌓인 못을 흐트러짐으로 바꾼다.`],
-      [K.tremor.n,'tremor',`새벽 사무소: 상대에게 쌓인다. 최대 ${CFG.tremor.cap}스택. 공명 폭발 같은 카드가 모두 터뜨려 스택당 피해를 더하고, 상대에게 화상이 있으면 ×${CFG.tremor.burnMul}.`],
+      [K.tremor.n,'tremor',`새벽 사무소: 상대에게 쌓인다. 최대 ${CFG.tremor.cap}스택. 새벽녘 같은 카드가 모두 터뜨려 스택당 피해를 더하고, 상대에게 화상이 있으면 ×${CFG.tremor.burnMul}.`],
       [K.stagger.n,'stagger',`쌓일수록 상대가 약해진다. 최대 ${CFG.nail.staggerCap}스택. ${N}. 주는 피해는 줄고 받는 피해는 늘며, 기준을 넘으면 기절한다.`],
       [K.obey.n,'obey',`최대 ${CFG.hw.obey.cap}스택. 내 명중 −${CFG.hw.obey.hit}(스택당) · 흑수 부하가 거들 때마다 −1.`],
+      ['혈맥 · 르루주','',`충전 스택이 시지프 안의 르루주에게는 혈맥(최대 ${CFG.sis.rouge.vein.cap})이 된다. 맥동(체력 소모) 중에 쌓이고 맞아도 줄지 않는다. 쌓은 최고치로 공격 피해(${CFG.sis.rouge.vein.atk}당 +1), 라운드 시작 보호막(${CFG.sis.rouge.vein.shield}당 +1), 적중 회복(${CFG.sis.rouge.vein.heal}당 +1)이 전투가 끝날 때까지 유지된다.`,'sis'],
+      ['보존 · 르누아르','',`충전 스택이 시지프 안의 르누아르에게는 보존(최대 ${CFG.sis.noir.preserve.cap})이 된다. 지금 가진 만큼 라운드 시작 보호막(${CFG.sis.noir.preserve.shield}당 +1)과 공격 피해(${CFG.sis.noir.preserve.atk}당 +1)가 늘고, 쓰면 줄어든다. ${CFG.sis.noir.preserve.cap}이 되면 결정타 카드가 손패에 열린다.`,'sis'],
+      ['관성 · 르카키','',`시지프 안의 르카키가 카드를 낼 때마다 쌓인다(카드마다 정해진 양, 최대 ${CFG.sis.inertia.cap}, 라운드마다 ${CFG.sis.inertia.decay} 감소). ${CFG.sis.inertia.rush} 이상이면 질주 상태가 되어 타마다 공격 피해 +${CFG.sis.inertia.dmg}, ${CFG.sis.inertia.spdPer}당 명중 계산 속도 +1이다.`,'sis'],
       ['기절','','이번 라운드 행동 불가, 회피 0.'],
       ['스택 상한','',`위에 따로 적지 않은 스택의 최대치는 ${CFG.stackCap}이다. 최대치를 넘겨 쌓으면 넘친 만큼은 사라진다. 방어 카드를 내면 내 출혈·파열이 1/4 줄어든다(적도 같다).`]
     ];
@@ -1082,13 +1094,19 @@ export function startUI(E,app){
     ];
     return `<div class="panel stack" style="gap:8px"><b style="color:var(--gold)">카드 읽는 법</b>${rows.map(([n,x])=>`<div class="stack" style="gap:2px"><b class="small">${esc(n)}</b><span class="small dim">${esc(x)}</span></div>`).join('')}</div>`;
   }
+  /* 처음 안내(튜토리얼 v2): 안내자 앤젤라가 가상의 게임 화면을 보여 주며 설명한다. 화면과 장면은 src/tutorial.js. 실제 게임 상태·기록은 건드리지 않는다 */
+  const TUTKEY='cityYearTutSeen';
+  let TUT=null;const tut=()=>TUT||(TUT=createTutorial({CFG,D,esc,kindBadge,cardLine,sg,getName:()=>UI.tutName||(G&&G.ch&&G.ch.name)||(BC&&BC.name)||'',getLang}));
+  const vTutorial=()=>`<div class="tutlang">${langSeg()}</div>`+tut().view({step:UI.tutStep,pick:UI.tutPick,roll:UI.tutRoll});
   function vHelp(){
-    const t=UI.help==='kw'||UI.help==='rule'?UI.help:'card';
+    const t=UI.help==='kw'||UI.help==='rule'||UI.help==='tut'?UI.help:'card';
     let body='';
-    if(t==='card'){
+    if(t==='tut'){
+      body=vTutorial();
+    }else if(t==='card'){
       body=cardGuide();
     }else if(t==='kw'){
-      body=`<p class="small dim">카드의 키워드와 걸리는 상태의 뜻이다.</p>`+kwDoc().map(([n,k,x])=>`<div class="panel stack" style="gap:3px;padding:10px 12px"><b style="color:${k?kwc(k):'var(--gold)'}">${esc(n)}</b><span class="small">${esc(x)}</span></div>`).join('');
+      body=`<p class="small dim">카드의 키워드와 걸리는 상태의 뜻이다.</p>`+(()=>{const all=kwDoc(),card=([n,k,x])=>`<div class="panel stack" style="gap:3px;padding:10px 12px"><b style="color:${k?kwc(k):'var(--gold)'}">${esc(n)}</b><span class="small">${esc(x)}</span></div>`;return all.filter(e=>e[3]!=='sis').map(card).join('')+(CFG.sis.on?`<details class="panel" style="padding:8px 12px"><summary class="small" style="cursor:pointer;color:var(--gold)">시지프 백화점 전용 키워드 (혈맥 · 보존 · 관성)</summary><div class="stack" style="gap:6px;margin-top:8px">${all.filter(e=>e[3]==='sis').map(card).join('')}</div></details>`:'')})();
     }else{
       body=ruleDoc().map(([n,x])=>`<div class="panel stack" style="gap:3px;padding:10px 12px"><b style="color:var(--gold)">${esc(n)}</b><span class="small">${esc(x)}</span></div>`).join('');
     }
@@ -1395,6 +1413,7 @@ export function startUI(E,app){
     return `${chronBtn('chron-in')}${vTitleSide()}<div class="tmob">${langSeg()}</div><div class="stack" style="gap:6px;padding-top:6px"><div class="eyebrow">Project Moon 팬메이드 · 비공식 · 비영리 · ${VERSION}</div>
       <h1>도시의 한 해</h1></div>
       <p class="lead">주사위로 태어나 열여섯 해를 자라고, 그 뒤 최대 ${CFG.years}년을 직접 살아낸다. 한 해에 사건이 하나씩 찾아오고, 가끔은 칼을 뽑아야 한다.</p>
+      <button class="tutchip${store.get(TUTKEY)?'':' new'}" data-a="tutopen" aria-label="처음 안내 열기"><b>처음이신가요?</b><span>1분 안내 · 주사위 · 카드 · 빛</span><i aria-hidden="true">›</i></button>
       ${vMindTest()}
       ${vUpdates()}
       ${vPlaytest()}
@@ -1483,9 +1502,9 @@ export function startUI(E,app){
     [CFG.nWing.eastTitle]:'동부 외곽 출신으로 해결사 5급 이상일 때 "N사의 제안"을 받아들여 임원까지 올라 "특이점 부서 배치" 심사에 응해 통과한다 (기회 3번, 실패하면 2년 뒤 다시)',
     '특색':'해결사 1급이 되면 오는 "특색 심사"에 응해 통과한다 (기회 3번, 실패하면 2년 뒤 다시). 협회에서 본부 직속이 된 뒤 1급이어도 받을 수 있다',
     '정해진 운명':'엄지에서 반역을 택해 "엄지의 대모"와 싸우다 쓰러져 생을 마친다'});
-  const TITLE_REC=['흑수 필두','본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','의리를 지킨 자','의리를 찢은 자','끝내 갚지 않은 자','배신자를 갚은 자','허무를 넘어선 자','정리 요원장','열차를 내린 자','혈귀를 잠재운 자','특색',...(CFG.sis.on?['런웨이에 오르다']:[])];   // 시지프 백화점이 꺼져 있으면 기록실에 시지프 칭호를 보이지 않는다
+  const TITLE_REC=['흑수 필두','본부 직속','특이점 부서','상석',CFG.nWing.eastTitle,'피의 왈츠','엄지를 넘어선 자','정해진 운명','곰과 범을 넘어선 자','의리를 지킨 자','의리를 찢은 자','끝내 갚지 않은 자','배신자를 갚은 자','허무를 넘어선 자','정리 요원장','열차를 내린 자','혈귀를 잠재운 자','특색',...(CFG.sis.on?['백화점에서 나온 자','외곽에 닿은 사람','접수 번호를 받은 자','운명을 이탈한 자','간수를 꺾은 손님','신부를 꺾은 손님','바늘왕의 손님','통제를 벗어난 손님','굽을 꺾은 손님','식탁에 앉은 손님','런웨이에 오르다']:[])];   // 시지프 백화점이 꺼져 있으면 기록실에 시지프 칭호를 보이지 않는다
   /* 기록실 힌트: 아직 열리지 않은 칭호와 엔딩이 어떤 길 끝에 있는지 짐작만 하게 한다 */
-  const TITLE_HINT={'런웨이에 오르다':'시지프 백화점에서 런웨이에 오를 만한 옷을 완성한다','흑수 필두':'홍원에서 승계를 포기하고 흑수로 활동해 필두에 오른다','본부 직속':'협회 최고 자리에 올라 본부의 부름을 넘긴다','특이점 부서':'날개 임원에 오른 뒤 핵심 부서의 심사를 통과한다','상석':'손가락의 서열 맨 위에서 마지막 부름을 통과한다',[CFG.nWing.eastTitle]:'동쪽 외곽 출신으로 N사 날개에 들어가 끝까지 오른다','피의 왈츠':'인연과 함께 핏빛 존재와 맞선다','엄지를 넘어선 자':'엄지의 아랫 조직 끝에서 엄지에게 칼을 뽑는다','정해진 운명':'엄지의 가장 높은 이에게 맞섰다가 쓰러진다','곰과 범을 넘어선 자':'검계의 끝에서 본국의 칼을 마주한다','의리를 지킨 자':'중지의 동생이 되어 받은 장부를 갚고 큰누님의 여섯 대를 버틴다','배신자를 갚은 자':'큰형님이 되어 큰누님을 쓰러뜨린 뒤, 달아난 마티아스를 쫓는다','허무를 넘어선 자':'격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤, 하나가 된 무언가를 마주한다','의리를 찢은 자':'중지의 마지막 장부를 받아들이지 않고 찢는다','끝내 갚지 않은 자':'의리를 찢은 뒤 쫓아오는 중지의 사슬을 끊어낸다','특색':'해결사 1급에서 도시가 색을 불러 줄지 심사를 받는다'};
+  const TITLE_HINT={'백화점에서 나온 자':'붕괴를 지나 시지프 백화점 밖으로 나온다','외곽에 닿은 사람':'시지프의 비를 지나 백화점 밖의 끝에 닿는다','접수 번호를 받은 자':'백화점 고객센터에서 접수를 받는다','운명을 이탈한 자':'백화점이 정해 둔 길에서 벗어난다','간수를 꺾은 손님':'52년차 붕괴 속에서 간수를 꺾는다','신부를 꺾은 손님':'52년차 마지막 결전에서 신부를 꺾는다','바늘왕의 손님':'지하 2층 염색실의 바느질의 왕을 처음 꺾는다','통제를 벗어난 손님':'지하 3층 수선실의 통제자를 처음 꺾는다','굽을 꺾은 손님':'4층 가구관의 도로테아를 처음 꺾는다','식탁에 앉은 손님':'5층의 긴 식탁에 앉은 고객들을 처음 꺾는다','런웨이에 오르다':'시지프 백화점에서 런웨이에 오를 만한 옷을 완성한다','흑수 필두':'홍원에서 승계를 포기하고 흑수로 활동해 필두에 오른다','본부 직속':'협회 최고 자리에 올라 본부의 부름을 넘긴다','특이점 부서':'날개 임원에 오른 뒤 핵심 부서의 심사를 통과한다','상석':'손가락의 서열 맨 위에서 마지막 부름을 통과한다',[CFG.nWing.eastTitle]:'동쪽 외곽 출신으로 N사 날개에 들어가 끝까지 오른다','피의 왈츠':'인연과 함께 핏빛 존재와 맞선다','엄지를 넘어선 자':'엄지의 아랫 조직 끝에서 엄지에게 칼을 뽑는다','정해진 운명':'엄지의 가장 높은 이에게 맞섰다가 쓰러진다','곰과 범을 넘어선 자':'검계의 끝에서 본국의 칼을 마주한다','의리를 지킨 자':'중지의 동생이 되어 받은 장부를 갚고 큰누님의 여섯 대를 버틴다','배신자를 갚은 자':'큰형님이 되어 큰누님을 쓰러뜨린 뒤, 달아난 마티아스를 쫓는다','허무를 넘어선 자':'격리 실패의 환상체 네 마리를 모두 쓰러뜨린 뒤, 하나가 된 무언가를 마주한다','의리를 찢은 자':'중지의 마지막 장부를 받아들이지 않고 찢는다','끝내 갚지 않은 자':'의리를 찢은 뒤 쫓아오는 중지의 사슬을 끊어낸다','특색':'해결사 1급에서 도시가 색을 불러 줄지 심사를 받는다'};
   /* 1막 최종전(간수·신부)에서 쓰러진 경우의 종료 문구. 그 밖에는 null */
   /* 시지프 캐릭터의 73년차 종료 화면: 일반 1막 문구 대신 시지프 전용 문구를 쓴다 */
   const sis73=()=>!!(G&&G.ch&&G.ch.sisEnd&&!G.endless&&!G.infinite&&UI.endWin&&!UI.trueEnd&&!UI.oldEnd&&!UI.outEnd&&!UI.outerEnd&&!UI.overflowEnd&&!UI.crowEnd&&D.sisyphus&&D.sisyphus.act2End);
@@ -1590,6 +1609,7 @@ export function startUI(E,app){
       ${(()=>{const H=D.hiddenOrigins||[],got=r.births||[];return H.length?`<div class="panel stack" style="gap:6px"><span class="eyebrow">히든 출생 ${H.filter(x=>got.includes(x.n)).length}/${H.length}</span><div class="stack" style="gap:6px">${H.map(x=>{const o=got.includes(x.n);return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline"><span class="chip${o?'':' dim'}" style="justify-self:start">${o?esc(x.n):'???'}</span><span class="small dim">${o?esc(String(x.t||'').split(/(?<=[.다])\s/)[0]):'아직 태어나 보지 못했다'}</span></div>`}).join('')}</div><p class="small dim">그 출생으로 한 번이라도 시작하면 열린다.</p></div>`:''})()}
       ${(()=>{const GR=[['날개','wing'],['협회','assoc'],['사무소','office'],['손가락','finger'],['조직','syn']],all=GR.flatMap(([,k])=>D.orgs[k]||[]),got=(r.affs||[]).filter(n=>all.includes(n));
         return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소속 ${got.length}/${all.length}</span>${GR.map(([n,k])=>`<div><span class="small dim">${n}</span><div class="chips">${(D.orgs[k]||[]).map(o=>`<span class="chip${(r.affs||[]).includes(o)?'':' dim'}">${(r.affs||[]).includes(o)?esc(o):'???'}</span>`).join('')}</div></div>`).join('')}<p class="small dim">한 번이라도 들어간 소속이 열린다.</p></div>`})()}
+      ${CFG.sis.on?(()=>{const S=r.sis||{},F=S.fac||{},fs=[['rouge','르루주'],['noir','르누아르'],['kaki','르카키']],n=(k)=>S[k]||0;return `<div class="panel stack" style="gap:8px"><span class="eyebrow">소속 · 시지프 백화점 ${fs.filter(([k])=>F[k]).length}/${fs.length}</span><div class="chips">${fs.map(([k,nm])=>`<span class="chip${F[k]?'':' dim'}">${F[k]?esc(nm)+' ×'+F[k]:'???'}</span>`).join('')}</div><span class="small dim">간수를 꺾은 횟수 ${n('warden')} · 신부를 꺾은 횟수 ${n('bride')} · 백화점을 나온 횟수 ${n('out')}</span><p class="small dim">백화점에서 지낸 방식에 따라 소속이 정해진다. 한 번이라도 걸어 본 소속이 열린다.</p></div>`})():''}
       ${hiddenDex(r)}
       <div class="panel stack" style="gap:6px"><span class="eyebrow">엔딩 ${r.endings.length}/${ends.length}</span>${r.hardClear?'<span class="small dim">하드 완주 보상 · 모든 엔딩의 정확한 조건이 열려 있습니다</span>':''}<div class="stack" style="gap:6px">${ends.map(([k,n])=>{const op=r.endings.includes(k),pass=!!(r.hints&&r.hints[k])&&END_EXACT[k],hd=!!r.hardClear&&END_EXACT[k];return hintRow(op,esc(n),(op||pass||hd)&&END_EXACT[k]?(!op?(pass?'[갈림길을 지나쳤다] ':'[하드 완주 보상] '):'')+END_EXACT[k]:END_HINT[k])}).join('')}</div></div>
       ${(()=>{const cat=specCat(),ids=Object.keys(cat.g),gs=r.gears||[],pk=Object.keys(cat.p),pg=r.packs||[];return `<div class="panel stack" style="gap:8px"><span class="eyebrow">특수 장비 ${ids.filter(k=>gs.includes(k)).length}/${ids.length}</span><div class="chips">${ids.map(k=>`<span class="chip${gs.includes(k)?'':' dim'}">${gs.includes(k)?esc(cat.g[k]):'???'}</span>`).join('')}</div>
@@ -2321,7 +2341,7 @@ ${symRec(r)}
     const li=!compact?`<ol class="order">${C.order.map((X,i)=>`<li><span class="swatch" style="background:${X.color}"></span><b>${i+1}. ${esc(X.name)}</b>
       ${X.lead?`<span class="chip">빛 +${CFG.orderBonusLight}</span>`:''}${X.fsOn?'<span class="chip">선제</span>':''}
       <span class="mono small dim">${X.r}${X.spd?sg(X.spd):''}${X.cu?' +'+CFG.catchupBonus:''} = ${X.tot}</span></li>`).join('')}</ol>`
-      :C.order.map((X,i)=>`<span class="ordx"><b style="color:${X.color}">${i+1}. ${esc(X.name)}</b> <span class="mono small dim">${X.tot}</span>${X.lead?` <span class="chip">빛 +${CFG.orderBonusLight}</span>`:''}${X.fsOn?' <span class="chip">선제</span>':''}</span>`).join('<span class="dim"> → </span>');
+      :C.order.map((X,i)=>`<span class="ordx"><b style="color:${X.color}">${i+1}. ${esc(X.name)}</b> <span class="mono small dim">${X.r}${X.spd?' '+sg(X.spd):''}${X.cu?' +'+CFG.catchupBonus:''} = ${X.tot}</span>${X.lead?` <span class="chip">빛 +${CFG.orderBonusLight}</span>`:''}${X.fsOn?' <span class="chip">선제</span>':''}</span>`).join('<span class="dim"> → </span>');
     const pen=C.penalty?`<div class="mono small bad">${C.penalty.label} · 내 명중 ${sg(C.penalty.atk)} · 회피 ${sg(C.penalty.eva)}</div>`:'';
     if(compact){
       /* 휴대폰: 접을 수 있는 라운드 패널. 접혀 있어도 요약 줄(재생 중이면 지금 행동)이 보인다 */
@@ -3454,7 +3474,12 @@ ${symRec(r)}
     bag(k){if(UI.bag===k){UI.bag=null;UI.dropAsk=null;UI.bonAsk=null;UI.packSwAsk=null;render();return}UI.bag=k;UI.dropAsk=null;UI.bonAsk=null;UI.packSwAsk=null;render()},
     bonup(i){i=+i;if(UI.bonAsk!==i){UI.bonAsk=i;render();return}UI.bonAsk=null;if(E.bonUpgrade(G.ch,i)){resave();render()}},
     help(){UI.help='card';if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
-    helptab(k){UI.help=k;render()},
+    helptab(k){if(k==='tut'&&UI.help!=='tut'){UI.tutStep=0;UI.tutPick=null}UI.help=k;render()},
+    tutopen(){UI.tutStep=0;UI.tutPick=null;UI.help='tut';store.set(TUTKEY,'1');if(UI.autoTimer){clearTimeout(UI.autoTimer);UI.autoTimer=null}render()},
+    tutgo(k){UI.tutStep=Math.max(0,+k||0);UI.tutPick=null;UI.help='tut';render()},
+    tutroll(){UI.tutRoll=[0,0,0].map(()=>1+Math.floor(Math.random()*100));UI.help='tut';render()},
+    tutpick(k){UI.tutPick=+k;UI.help='tut';render()},
+    tutclose(){UI.tutPick=null;if(typeof window!=='undefined'&&window.CITY_TUTONLY){UI.tutStep=0;UI.help='tut';render();return}UI.help=null;render()},
     rectab(k){UI.recTab=k;render()},
     bagclose(){if(UI.help){UI.help=null;render();return}if(UI.cfg){UI.cfg=false;render();return}UI.bag=null;UI.dropAsk=null;render()},
     fs(i){if(i==null||(i==='on')!==FS.on())FS.toggle()},
@@ -3589,7 +3614,8 @@ ${symRec(r)}
   document.addEventListener('pointerdown',e=>{if(UI.volOpen&&!e.target.closest('.volbox')){UI.volOpen=false;const p=document.querySelector('.volpop');if(p)p.remove()}});
   document.addEventListener('pointerdown',e=>{if(UI.styleOpen&&!e.target.closest('.stylebox')){UI.styleOpen=false;const p=document.querySelector('.stylepop');if(p)p.remove()}});
   app.addEventListener('keydown',e=>{if(e.target.id==='seedIn'&&e.key==='Enter'){e.preventDefault();e.target.blur();ACT.seed()}});
-  app.addEventListener('input',e=>{if(e.target.id==='nm'&&BC)BC.name=e.target.value.trim().slice(0,12);
+  app.addEventListener('input',e=>{if(e.target.id==='tutnm'){UI.tutName=e.target.value.trim().slice(0,12);return}
+  if(e.target.id==='nm'&&BC)BC.name=e.target.value.trim().slice(0,12);
     if(e.target.id==='cardq'){(UI.cf=UI.cf||{}).q=e.target.value.trim();const l=$('cardlist');if(l)l.innerHTML=cardListHtml()}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.bag){UI.bag=null;render()}});
   app.addEventListener('click',e=>{
@@ -3605,6 +3631,14 @@ ${symRec(r)}
   /* 공유된 기록 링크로 열었으면 그 기록부터 보여 준다 */
   try{const h=location.hash||'';if(/#r=/.test(h)){const r=b64d(/#r=([\w-]+)/.exec(h)[1]);if(r&&r.s!=null){UI.shared=r;UI.screen='shared'}}
     else if(/#[ac]=/.test(h))readShared(h).then(r=>{if(r&&r.s!=null){UI.shared=r;UI.screen='shared';render()}}).catch(()=>{})}catch(e){}
+  /* build --tutonly: 튜토리얼만 바로 열어 검토하는 미리보기(공지는 건너뛴다). 끝내기·건너뛰기를 누르면 처음부터 다시 본다 */
+  if(typeof window!=='undefined'&&window.CITY_TUTONLY){store.set('cityYearNotice',NOTICE.id);UI.tutStep=0;UI.tutPick=null;UI.help='tut'}
+  /* 처음 안내는 처음 온 사람에게 딱 한 번만 저절로 열린다. 이미 하던 사람(저장된 판이나 기록이 있음)이나 이미 본 사람, 닫기·건너뛰기로 내린 사람에게는 다시 뜨지 않고, 그 뒤로는 '처음이신가요?'를 직접 눌러야 열린다 */
+  else if(!store.get(TUTKEY)){
+    const r0=loadRec(),old=!!(loadSave()||(r0.seen&&r0.seen.length)||(r0.beaten&&r0.beaten.length)||(r0.endings&&r0.endings.length));
+    store.set(TUTKEY,'1');
+    if(!old&&!UI.shared&&UI.screen==='title'){store.set('cityYearNotice',NOTICE.id);UI.tutStep=0;UI.tutPick=null;UI.help='tut'}
+  }
   render();
   /* 자동 테스트용 상태 조회 */
   return {state:()=>({screen:UI.screen,year:G&&G.year,endWin:UI.endWin,lv:G&&G.ch.lv,aff:G&&G.ch.aff,fi:G&&G.ch.fi,pp:G&&G.ch.pp,fr:G&&G.ch.fr&&G.ch.fr.n,hp:G&&G.ch.hp,dead:!!(UI.death),art:G&&G.ch.art&&G.ch.art.ring}),

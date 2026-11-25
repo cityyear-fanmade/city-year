@@ -239,6 +239,7 @@ button.chip:hover{background:color-mix(in srgb,var(--gold) 14%,transparent)}
 .ent.compact .bar{height:6px}
 .ent.compact .chip{font-size:10.5px;padding:3px 5px}
 .ordline{font-size:13.5px;line-height:1.7}
+.ordline .ordx{display:inline-block;white-space:nowrap}
 .logbox{padding:10px 12px}.logbox summary{font-size:13.5px}.logbox .log{margin-top:8px}
 /* 주사위 무대: 명중·회피 주사위를 항상 한 줄에 나란히, 피해는 아래 줄 (이름이 길어도 세로로 접히지 않게) */
 .dice{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;justify-items:center;gap:8px 6px}
@@ -1018,3 +1019,47 @@ html[data-skin="base"]:not([data-sis]) #app{position:relative;z-index:1}
 .sis-fac small{color:var(--dim);font-size:10.5px;line-height:1.35}
 
 .sis-hn{margin:4px 0 0;line-height:1.4}
+
+/* 처음 안내(튜토리얼 v2): 안내자가 가상의 게임 화면을 보여 준다. 연출은 전투에서 쓰는 keyframes(wob · hurt · settle)를 그대로 부른다 */
+.tutchip{display:flex;align-items:center;gap:8px;width:100%;min-height:40px;padding:6px 12px;font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line2);border-radius:6px;cursor:pointer;text-align:left}
+.tutchip b{font-size:13.5px;color:var(--gold);white-space:nowrap}
+.tutchip span{flex:1;min-width:0;font-size:12px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tutchip i{font-style:normal;color:var(--gold);font-size:18px;line-height:1}
+.tutchip.new{border-color:var(--gold);background:rgba(200,163,90,.08)}
+.tutchip:hover{border-color:var(--gold)}
+.tut2{display:flex;flex-direction:column;gap:10px}
+.tut2-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tut-dots{display:flex;gap:3px;flex:1;justify-content:center;min-width:0}.tut-dots i{flex:1;max-width:14px;height:4px;border-radius:2px;background:var(--line2)}.tut-dots i.done{background:#6d5d38}.tut-dots i.on{background:var(--gold)}
+.tut2-stage{border:1px solid var(--line2);border-radius:8px;background:var(--panel);overflow:hidden}
+.tut2-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);font-size:13.5px}
+.tut2-badge{font:600 11px/1 var(--mono);color:#7fb2e8;border:1px solid #2f4b6b;background:#16273a;border-radius:99px;padding:3px 8px}
+.tut2-body{padding:12px;gap:8px}
+.tut2-note{font-size:11.5px;color:var(--dim);margin-top:-4px}
+.tut2-guide{display:flex;align-items:flex-end;gap:10px}
+.tut2-pic{flex:none;width:96px;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.tut2-say{position:relative;flex:1;min-width:0;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);padding:10px 12px;font-size:14px;line-height:1.6}
+.tut2-say::before{content:"";position:absolute;left:-7px;bottom:22px;width:12px;height:12px;background:var(--panel2);border-left:1px solid var(--line2);border-bottom:1px solid var(--line2);transform:rotate(45deg)}
+.tut2-say p{margin:0 0 6px}.tut2-say p:last-child{margin:0}
+.tut2-name{display:block;font-size:12px;color:var(--gold);margin-bottom:2px}
+.tut-nav{margin-top:2px}
+.tflow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}.tflow span{padding:4px 9px;border:1px solid var(--line2);border-radius:14px;font-size:12.5px;background:var(--panel2)}.tflow i{font-style:normal;color:var(--dim)}
+.tbox{display:flex;flex-direction:column;gap:6px;padding:11px 12px;border:1px solid var(--line2);border-radius:6px;background:var(--panel2);font-size:13.5px;line-height:1.55}
+.tbox b{color:var(--gold)}
+.tfake{display:block;text-align:center;padding:9px 12px;border:1px solid var(--line2);border-radius:6px;font-size:13.5px;color:var(--dim)}.tfake.primary{border-color:var(--gold);color:var(--gold)}.tfake.quiet{opacity:.7}
+.tdie{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:54px;padding:8px 10px;border:2px solid var(--gold);border-radius:8px;background:#1b1810;animation:wob .7s ease-out}
+.tdie b{font:700 20px/1 var(--mono);color:var(--gold)}.tdie i{font:normal 11px/1.3 var(--mono);color:var(--dim);margin-top:3px}
+.tcalc{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid var(--line2);border-radius:6px;background:var(--panel2);font-size:13.5px}
+.tcalc b{font-family:var(--mono)}
+.tres{margin-top:4px;padding-top:6px;border-top:1px dashed var(--line2);font:700 15px/1.4 var(--mono);color:var(--fg)}.tres.good{color:var(--good)}.tres.bad{color:var(--bleed)}
+.tpips{display:flex;gap:6px}.tpip{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2)}.tpip.on{background:var(--gold);border-color:var(--gold)}.tpip.bonus{background:#e6d29a;border-color:#e6d29a;animation:settle .5s ease-out}
+.tcard2{cursor:default;min-height:72px}
+.tut2-hand{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tfoe{display:flex;flex-direction:column;gap:5px;position:relative;padding:10px 12px;border:1px solid var(--line2);border-radius:6px;background:var(--panel2)}
+.tshake{animation:hurt .5s ease-out}
+.thpfall{animation:thpfall .9s ease-out .25s both}
+@keyframes thpfall{from{width:100%}to{width:var(--to)}}
+.tfloat{position:absolute;right:14px;top:6px;font:700 18px/1 var(--mono);color:var(--bleed);animation:tfloat 1.2s ease-out .3s both}
+@keyframes tfloat{0%{opacity:0;transform:translateY(8px)}30%{opacity:1}100%{opacity:0;transform:translateY(-16px)}}
+.tsettle{animation:settle .35s ease-out}
+
+.tutlang{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}.tutlang>.langnote,.tutlang>p{align-self:stretch}.tutlang .langseg button{white-space:nowrap}

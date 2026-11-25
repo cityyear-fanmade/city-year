@@ -405,12 +405,21 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   /* 카드함은 최대 CFG.deck.boxMax장까지 */
   const boxRoom=ch=>(ch.side||[]).length<CFG.deck.boxMax;
   const sameOk=(ch,cid)=>!!(ch.deckLocked||ch.cardMoney)||deckCopies(ch,cid)<CFG.deck.sameMax;
-  /* 선율을 쌓는 카드를 처음 받을 때, 터뜨리는 카드(화음)가 하나도 없으면 화음을 짝으로 한 장 같이 내준다(판마다 한 번) */
-  function melodyPair(ch,cid,chips){
-    const c=D.cards[cid];if(!c||c.chord||!(c.kw||[]).some(k=>k[0]==='melody')||(ch.flags||{}).melodyPair||ch.deckLocked||ch.cardMoney)return;
-    if([...(ch.deck||[]),...(ch.side||[]),...(ch.offers||[])].some(id=>D.cards[id]&&D.cards[id].chord))return;
-    (ch.flags=ch.flags||{}).melodyPair=1;(ch.offers=ch.offers||[]).push('mu_6');chips&&chips.push(`짝 카드 발견 · ${D.cards.mu_6.n} (받을지 고른다)`);
+  /* 짝 카드: 쌓는 카드와 소비하는 카드는 둘 다 있어야 쓸모가 있다. 선율·충전 모두, 한쪽만 처음 받을 때 반대쪽이 하나도 없으면 짝을 한 장 같이 내준다(판마다 종류별로 한 번, 받을지 고른다).
+     소속 전용 책장(혈맥·보존)과 덱이 고정이거나 카드 대신 돈을 쓰는 루트에는 쓰지 않는다 */
+  const PAIR={melody:{stack:'mu_2',eat:'mu_6',nS:'melodyPair2',nE:'melodyPair',lbl:'선율'},charge:{stack:'cg_2',eat:'cg_3',nS:'chargePair2',nE:'chargePair',lbl:'충전'}};
+  const isStack=(c,k)=>!!c&&(c.kw||[]).some(x=>x[0]===k&&x[2]==='s')&&!c.chord&&!c.spend;
+  const isEat=(c,k)=>!!c&&(k==='melody'?!!c.chord:!!c.spend&&!c.vein&&!c.pres);
+  function pairCards(ch,cid,chips){
+    const c=D.cards[cid];if(!c||ch.deckLocked||ch.cardMoney||c.vein||c.pres)return;
+    const all=[...(ch.deck||[]),...(ch.side||[]),...(ch.offers||[])];
+    for(const k of ['melody','charge']){
+      const P=PAIR[k],fl=ch.flags=ch.flags||{};
+      if(isStack(c,k)&&!fl[P.nE]&&!all.some(id=>isEat(D.cards[id],k))){fl[P.nE]=1;(ch.offers=ch.offers||[]).push(P.eat);chips&&chips.push(`짝 카드 발견 · ${D.cards[P.eat].n} (받을지 고른다)`)}
+      else if(isEat(c,k)&&!fl[P.nS]&&!all.some(id=>isStack(D.cards[id],k))){fl[P.nS]=1;(ch.offers=ch.offers||[]).push(P.stack);chips&&chips.push(`짝 카드 발견 · ${D.cards[P.stack].n} (받을지 고른다)`)}
+    }
   }
+  const melodyPair=pairCards;
   function putCard(ch,cid,chips,label){
     melodyPair(ch,cid,chips);
     if(deckRoom(ch)&&sameOk(ch,cid)){ch.deck.push(cid);chips&&chips.push((label||'카드')+' · '+D.cards[cid].n);return}
@@ -1702,8 +1711,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const e=M.ego[type];ch.ego={type,n:name.trim()};if(typeof jr==='function')jr(ch,'ego',{n:name.trim()});ch.egoPick=false;ch.voiceUsed=true;ch.voicePend=false;ch.distortPend=false;
     if(e.hit)ch.stats.atk+=e.hit;if(e.hp){ch.stats.maxHp+=e.hp;ch.hp+=e.hp}
     if(e.eva)ch.stats.eva+=e.eva;
-    /* 고정 전용 카드: 덱 최대 장수 +1 자리에 들어간다 (적성자는 이미 전용 카드가 있다). 덱이 고정이어도 넣는다 */
-    if(e.card&&!ch.deck.includes('e_manifest')&&!ch.deck.includes(e.card))ch.deck.push(e.card);
+    /* 개화 전용 카드(공세·수호): 덱 최대 장수 +1 자리에 들어간다. E.G.O 적성자도 발현 카드와 별개로 받는다. 덱이 고정이어도 넣는다 */
+    if(e.card&&!ch.deck.includes(e.card))ch.deck.push(e.card);
     ch.mind=Math.max(ch.mind,e.floor);(ch.relics=ch.relics||[]).push(`E.G.O · ${ch.ego.n}`);
   }
   /* ===== 6시즌: 기업 루트 (날개 직원 → 특이점 개발 → 날개 설립 → 강화·금기 실험 → 머리의 시험) =====
@@ -4026,12 +4035,13 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       /* 기업 루트: 머리의 시험(발톱 → 조율자)을 끝까지 넘으면 영구 강화 */
       if(ch.corp&&ch.corp.headSeen&&!ch.corp.cleared&&!(ch.corp.chain||[]).length&&CP.chain.every(id=>ch.beaten.includes(id))){ch.corp.cleared=true;chips.push('머리의 시험을 넘었다');corpBump(ch,CP.clear,chips)}
       if(!foe.chain){const h=Math.min(CFG.hidden.winHeal,ch.stats.maxHp-ch.hp);if(h>0){ch.hp+=h;chips.push('숨을 돌린다 · HP +'+h)}}
-      /* 엄지 소속으로 뇌횡: 동부십검 + 엄지 검술 (덱 고정) */
+      /* 엄지 소속으로 뇌횡: 천퇴성도 + 엄지 검술 (덱 고정) */
       const td=foe.thumbDrop&&meets(ch,foe.thumbDrop.req)?foe.thumbDrop:null;
       /* 도서관의 사서: 낮은 확률로 책장 카드 */
       for(const b of foe.bonusCards||[])if(d(100)<=b.chance)addCard(ch,b.card,chips,'책장 카드');
       if(td){addStats(ch.stats,td.fx);ch.hp+=td.fx.maxHp||0;(ch.relics=ch.relics||[]).push(td.n);offerGear(ch,Object.assign({grade:5},td.gear));
-        ch.packOffer={n:'엄지 검술',cards:td.deck.slice(),relic:'엄지 검술'};chips.push(`전리품 · ${td.n} (${td.gear.e}) · 장착할지 고른다`);chips.push('엄지 검술 · 덱을 바꿀지 고른다')}
+        ch.packOffer={n:'엄지 검술',cards:td.deck.slice(),relic:'엄지 검술'};chips.push(`전리품 · ${td.n} (${td.gear.e}) · 장착할지 고른다`);chips.push('엄지 검술 · 덱을 바꿀지 고른다')
+        if(foe.drop&&foe.drop.gears)rollGears(ch,Object.assign({},foe.drop,{gearChance:100}),C,chips)}   /* 엄지는 천퇴성도와 함께 보조 장비(천퇴성의 시가 케이스 등)를 확정으로 받는다 */
       /* 특수환: 승리하면 능력치 하나를 골라 영구 증가 (전리품보다 먼저, 전리품이 맨 끝) */
       if(foe.pill){ch.pillPick=true;chips.push(`${foe.pill.n} · 능력치 하나를 골라 +${foe.pill.v} (영구)`)}
       if(foe.drop&&!td&&!(foe.drop.once&&(ch.relics||[]).includes(foe.drop.n))&&!(ch.o&&ch.o.key==='blackmask'&&foe.dropBm&&foe.dropBm.bmMerge&&(ch.relics||[]).includes(foe.dropBm.n))){const bondOk0=!foe.drop.needBond||(ch.bond&&ch.bond.st==='married'),dr=ch.o&&ch.o.key==='blackmask'&&foe.dropBm?foe.dropBm:!bondOk0&&foe.drop.alt?foe.drop.alt:foe.drop;addStats(ch.stats,dr.fx);if(dr.fx.maxHp)ch.hp+=dr.fx.maxHp;(ch.relics=ch.relics||[]).push(dr.n);
@@ -4245,6 +4255,9 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   function newRound(C){
     C.round++;
     const {P,E}=C;P.triDmg=0;P.triCut=0;C.tri=null;
+    /* 무한 모드 제약 '반동': 몇 라운드마다 최대 HP에 비례해 나도 피해를 받는다(체력은 1 아래로 내려가지 않는다) */
+    {const ch_=C.ch,RC=ch_.infinite&&ch_.pact?CFG.infinite.pact.cons.find(q=>q.id==='recoil'):null,n_=RC?pactN(ch_,'recoil'):0;
+      if(n_>0&&C.round>1&&(C.round-1)%RC.every===0&&P.hp>0){const rc=Math.max(1,Math.round(P.maxHp*RC.v*n_));P.hp=Math.max(1,P.hp-rc);const m={t:'kw',s:`${P.name} · 반동 · HP −${rc}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}
     for(const X_ of [P,E])if((X_.fairy||0)>0)X_.fairy=Math.max(0,X_.fairy-3);
     if(P.auxShield&&P.hp>0){P.shield=Math.min(Math.max(CFG.shieldCap,P.shield||0),(P.shield||0)+P.auxShield);const m={t:'kw',s:`${P.name} · 보조 장비 · 보호막 +${P.auxShield} (지금 ${P.shield})`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     if(P.augPas==='absorb'&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(3,P.maxHp-P.hp);P.hp+=h;const m={t:'kw',s:`${P.name} · 흡수 코어 · HP +${h}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
@@ -4774,7 +4787,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       if(A.passive&&A.passive.id==='lkPale'&&B.isP&&dmg>0){B.pale=(B.pale||0)+1;if(B.pale>=A.passive.at){B.pale=0;loseMind(C.ch,Math.ceil(A.passive.mind/(B.lk&&B.lk.pale?2:1)),t=>L('kw',`  ${A.name} · 창백화 · ${t}`))}else L('kw',`  ${A.name} · 창백화 ${B.pale}/${A.passive.at}`)}
       hpLoss(C,B,dmg,L);
       if(C.ch.infinite&&C.ch.pact&&dmg>0){const ch_=C.ch;
-        if(A.isP){const lv=Math.round(dmg*pactV(ch_,'leech')),rc=Math.round(dmg*pactV(ch_,'recoil'));if(lv>0&&A.hp>0){A.hp=Math.min(A.maxHp,A.hp+lv);L('kw',`  ${A.name} · 흡혈 · HP +${lv}`)}if(rc>0){A.hp=Math.max(1,A.hp-rc);L('kw',`  ${A.name} · 반동 · HP −${rc}`)}}
+        if(A.isP){const lv=Math.round(dmg*pactV(ch_,'leech'));if(lv>0&&A.hp>0){A.hp=Math.min(A.maxHp,A.hp+lv);L('kw',`  ${A.name} · 흡혈 · HP +${lv}`)}}
         else if(B.isP&&A.hp>0){const ct=Math.round(dmg*pactV(ch_,'counter'));if(ct>0){A.hp=Math.max(0,A.hp-ct);L('kw',`  ${B.name} · 반격 · ${A.name} HP −${ct}`)}}}
 if(dmg>0&&!A.isP&&A.passive&&A.passive.id==='zena'&&(A.zph||1)>=2)B.zCage=true;
 if(dmg>0){A.dealtR=C.round;if(C.ch.infinite){A.escN=(A.escN||0)+1;if(B.middle&&B.isP)B.infHit=Math.min(CFG.infinite.midCutMax,(B.infHit||0)+CFG.infinite.midCut)}}

@@ -47,7 +47,7 @@ export function segments(statics){
   }
   return out;
 }
-export function extractAll(files=['ui.js','engine.js','config.js']){
+export function extractAll(files=['ui.js','engine.js','config.js','tutorial.js']){
   const out=new Set();
   for(const f of files){
     const {tpls,strs}=scanFile(readFileSync(new URL('../src/'+f,import.meta.url),'utf8'));
