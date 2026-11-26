@@ -800,6 +800,8 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     if(ch.hw&&(ch.hw.out||ch.hw.done))return A.max;
     /* 해결사가 아닌 해금 출신 5종: 1급 대접으로 명장의 공방까지 이용한다 */
     if(topOrigin(ch))return A.max;
+    /* 시지프 백화점에서 나온 자: 소속도 해결사 급수도 없으니, 백화점에서 쌓은 고객 등급이 급수 역할을 한다(CFG.sis.shopAccess: 고객 등급 → 공방 등급) */
+    if(ch.sisEnd&&ch.sisDone&&!ch.sis){const T_=CFG.sis.shopAccess||[],gr=Math.max(0,Math.min(T_.length-1,ch.sisDone.grade|0));g=Math.max(g,T_[gr]||A.base)}
     /* 까마귀팀 복제체: 덱이 고정이라 카드 대신 장비로 키운다. 무한 모드의 가게에서는 최고 등급(명장의 공방)까지 이용한다 */
     if(ch.o&&ch.o.key==='crow'&&ch.infinite)return A.max;
     /* 대호수에서 배를 맡아 선장이 되면 1급 대접: 항구에서도 최고 등급(명장의 공방)까지 이용한다 */
@@ -2003,7 +2005,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     return {t:T.t,x:T.x,c:[{l:T.a,h:`공격 +${K.atk} · 회피 +${K.eva} · 속도 +${K.spd} · 최대 HP +${K.maxHp} · 주는 피해 +${Math.round(K.dmg*100)}% (영구) · 적의 공격 피해도 +${Math.round(K.enemyDmg*100)}% (영구)`,ok:{t:T.at,fx:{infCentury:n}}}]}
   }
   function kidHuntEvent(G){
-    const ch=G.ch,y=G.year;if(!ch.distForm||(y<(ch.huntNext||0)))return null;
+    const ch=G.ch,y=G.year;if(!ch.distForm||ch.distForm.dept||(y<(ch.huntNext||0)))return null;   /* 백화점에서 뒤틀린 몸(dept)은 밖에서도 가족의 토벌 대상이 아니다: 시지프 안에서 이미 겪은 뒤틀림이다 */
     const k=familyHunter(ch,y);if(!k)return null;
     ch.huntNext=y+BD.hunt.gap;if(d(100)>BD.hunt.chance)return null;
     const H=bondTx(ch).hunt,Lv=Math.max(0,k.lv),e=D.enemies.kid_hunt,Z=BD.hunt;
@@ -2589,14 +2591,17 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
   }
   function setStable(ch){
     const X=CFG.distort;if(!ch.distForm||ch.distStable)return false;
-    ch.distStable=true;stableDeck(ch);
+    ch.distStable=true;stableDeck(ch,false);
     (ch.relics=ch.relics||[]).push('뒤틀림 안정화');
     return true;
   }
-  function stableDeck(ch){
+  /* 더 강해진 뒤틀린 카드팩: 지금 쓰는 팩이 뒤틀린 카드팩이면 그 자리에서 강해지고, 아니면 swap일 때만 지금 팩을 보관함으로 보내고 바꿔 든다.
+     swap=false(뒤틀림 안정화 사건)이면 플레이어가 고른 팩을 건드리지 않고 새 팩을 보관함에만 넣는다 — 무한 모드에서 직접 바꾼 덱이 저절로 뒤틀림 책장으로 바뀌던 문제 */
+  function stableDeck(ch,swap=true){
     const X=CFG.distort,fx=ch.deck.filter(id=>D.cards[id].fixed);
     if(ch.packName===X.packN){ch.packName=X.packN2;ch.deck=X.deck2.concat(fx)}
-    else{ensurePacks(ch);stashPack(ch,X.packN2);ch.deck=X.deck2.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false}
+    else if(swap){ensurePacks(ch);stashPack(ch,X.packN2);ch.deck=X.deck2.concat(fx);ch.deckLocked=true;ch.cardMoney=true;ch.side=[];ch.extra=[];ch.finalGiven=false}
+    else{ensurePacks(ch);const ps=ch.packs,i=ps.findIndex(p=>p.n===X.packN);const snap={n:X.packN2,k:'special',deck:X.deck2.concat(fx),side:[],extra:[],deckLocked:true,cardMoney:true,orgPack:null,finalGiven:false};if(i>=0)ps[i]=snap;else{ps.push(snap);while(ps.length>PACKMAX){const k=ps.findIndex(p=>p.k!=='basic'&&p.n!==ch.birthPack&&p!==snap);if(k<0)break;ps.splice(k,1)}}}
   }
   /* 무한런: 마지막 해, 지금 위협 등급(-1이면 아직 기본 연차) */
   const lastYear=G=>G.infinite?Infinity:CFG.years+(G.endless?CFG.endless.span*CFG.endless.grades.length:0)+((G.ch&&G.ch.sisEnd&&D.sisyphus&&D.sisyphus.act2&&(!CFG.sis.share||CFG.sis.act2))?D.sisyphus.act2.length:0);   /* 시지프 2막: 55년차 뒤 5년(56~60) */
@@ -3209,7 +3214,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       {l:'돌려보낸다',h:'장비를 얻지 못한다 · 정신력 +1',ok:{t:'초대장을 돌려주고 문을 닫았다.',fx:{mindUp:1}}}]}}
   function routeStep(G,R){
     const ch=G.ch,st=routeSt(ch),y=G.year,A=y>CFG.years?'act2':'act1',H=R.hunt;
-    if(ch.distForm)return null;
+    if(ch.distForm&&!(ch.o&&ch.o.herm))return null;   /* 신탁대행자 헤르메스는 뒤틀려도 자기 루트(임무)를 이어 간다 */
     if(H&&st.hunt&&y>=st.hunt.at){
       const T=H.targets[Math.min(st.hunt.idx,H.targets.length-1)],kit=st.hunt.picks.map(id=>(H.kit.find(k=>k.id===id)||{}).n).filter(Boolean);
       st.hunt=null;st.n++;
