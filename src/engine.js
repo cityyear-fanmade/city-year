@@ -2939,7 +2939,10 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
       }
       if(parts.length)out.push({k,n:m.n,from:parts.join(' · ')})
     }
-    out.push({k:'dye',n:'염료',from:'지하 2층(날실·씨실 바늘이)'},{k:'resin',n:'황금송진',from:'벽 뜯기'});
+    /* 고급 재료(황금가죽·황금실)는 아직 열리지 않은 층에서 나와도 얻는 방법을 알려 준다 */
+    const H_=S_.matHow||{};
+    for(const k of ['goldskin','goldthread']){if(!H_[k])continue;let x=out.find(y=>y.k===k);if(!x){x={k,n:S_.mats[k].n,from:H_[k].from};out.push(x)}x.how=H_[k].how}
+    out.push({k:'dye',n:'염료',from:'지하 2층(날실·씨실 바늘이)'},{k:'resin',n:'황금송진',from:'벽 뜯기',how:(H_.resin||{}).how});
     return out}
   function sisInv(ch){
     const S_=D.sisyphus,m=ch.sis.mat,p=[];for(const k of Object.keys(S_.mats)){if(S_.mats[k].kind==='heal')continue;if(m[k])p.push(`${S_.mats[k].n} ${m[k]}`)}
