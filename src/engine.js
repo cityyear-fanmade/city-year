@@ -4267,7 +4267,7 @@ export function createEngine(D,{rng:rng0=Math.random}={}){
     const {P,E}=C;P.triDmg=0;P.triCut=0;C.tri=null;
     /* 무한 모드 제약 '반동': 몇 라운드마다 최대 HP에 비례해 나도 피해를 받는다(체력은 1 아래로 내려가지 않는다) */
     {const ch_=C.ch,RC=ch_.infinite&&ch_.pact?CFG.infinite.pact.cons.find(q=>q.id==='recoil'):null,n_=RC?pactN(ch_,'recoil'):0;
-      if(n_>0&&C.round>1&&(C.round-1)%RC.every===0&&P.hp>0){const rc=Math.max(1,Math.round(P.maxHp*RC.v*n_));P.hp=Math.max(1,P.hp-rc);const m={t:'kw',s:`${P.name} · 반동 · HP −${rc}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}
+      if(n_>0&&C.round>1&&(C.round-1)%RC.every===0&&P.hp>0){const cap_=Math.max(0,Math.round(P.maxHp*CFG.infinite.pact.recoilCap)-(P.recoilLost||0)),rc=Math.min(cap_,Math.max(1,Math.round(P.maxHp*RC.v*n_)),Math.max(0,P.hp-1));P.recoilLost=(P.recoilLost||0)+rc;P.hp-=rc;const m={t:'kw',s:rc>0?`${P.name} · 반동 · HP −${rc}`:`${P.name} · 반동 · 이번 전투의 반동은 여기까지다`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}}
     for(const X_ of [P,E])if((X_.fairy||0)>0)X_.fairy=Math.max(0,X_.fairy-3);
     if(P.auxShield&&P.hp>0){P.shield=Math.min(Math.max(CFG.shieldCap,P.shield||0),(P.shield||0)+P.auxShield);const m={t:'kw',s:`${P.name} · 보조 장비 · 보호막 +${P.auxShield} (지금 ${P.shield})`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}
     if(P.augPas==='absorb'&&P.hp>0&&P.hp<P.maxHp){const h=Math.min(3,P.maxHp-P.hp);P.hp+=h;const m={t:'kw',s:`${P.name} · 흡수 코어 · HP +${h}`};if(!C.quiet){C.log.push(m);C.cur.push(m)}}

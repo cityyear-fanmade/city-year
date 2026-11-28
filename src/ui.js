@@ -3600,6 +3600,7 @@ const V1120SEC=[['🆕 카드',[
       const m=UI.omen.omen;UI.omen=null;UI.fight=st.enemy;UI.enc=st.enc;UI.avoidText=st.avoided?m.awayT:null;render();
     },
     choose(i){
+      {const c_=UI.ev&&UI.ev.pact==='c'&&UI.ev.c&&UI.ev.c[+i];if(c_&&c_.pc&&typeof confirm==='function'&&!confirm(`제약 「${c_.l}」을 영구히 받는다. 고를까?`))return}
       G.ch.rollFx=null;   /* 지난 판정(저장돼 남은 것)이 엉뚱한 사건 결과 때 다시 재생되지 않게, 이번 선택에서 새로 생긴 것만 남긴다 */
       const ev0=UI.ev,r=E.choose(G,UI.ev,+i);syncTitles();
       /* 가족을 영생에 묶는 선택을 한 순간 그 엔딩 업적을 기록한다(실제 엔딩은 이어서 1000살에 난다) */
